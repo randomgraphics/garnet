@@ -46,6 +46,11 @@ int main(int, const char **) {
     auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
     if (!backbuffer) return -1;
 
+    // Create a render target that references the backbuffer
+    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    if (!renderTarget) return -1;
+    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}}});
+
     // Depth texture not used by current workflow (clear + draw triangle to backbuffer only); skip until Texture::create path is implemented.
     // auto depthTexture = Texture::create(*db, "depth_texture", ...);
 
@@ -101,26 +106,22 @@ int main(int, const char **) {
         clearTask.action                            = clearAction;
         auto                              clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
         ClearRenderTarget::A::ClearValues clearVals {};
-        clearVals.colors[0].f4[0] = 0.2f;
-        clearVals.colors[0].f4[1] = 0.3f;
-        clearVals.colors[0].f4[2] = 0.4f;
-        clearVals.colors[0].f4[3] = 1.0f;
-        clearVals.depth           = 1.0f;
-        clearVals.stencil         = 0;
-        clearArgs->clearValues    = clearVals;
-        RenderTarget clearRt {};
-        clearRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
-        clearArgs->renderTarget.value = clearRt;
+        clearVals.colors[0].f4[0]     = 0.2f;
+        clearVals.colors[0].f4[1]     = 0.3f;
+        clearVals.colors[0].f4[2]     = 0.4f;
+        clearVals.colors[0].f4[3]     = 1.0f;
+        clearVals.depth               = 1.0f;
+        clearVals.stencil             = 0;
+        clearArgs->clearValues        = clearVals;
+        clearArgs->renderTarget.value = renderTarget;
         clearTask.arguments           = clearArgs;
         renderWorkflow->tasks.append(clearTask);
 
         // Task: Draw solid triangle (GpuDraw; pipeline created in Phase 6). Mesh optional; no vertex buffer uses 3 vertices.
-        auto drawTask         = Workflow::Task("DrawTriangle");
-        drawTask.action       = drawAction;
-        auto         drawArgs = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        RenderTarget drawRt {};
-        drawRt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
-        drawArgs->renderTarget.value = drawRt;
+        auto drawTask                = Workflow::Task("DrawTriangle");
+        drawTask.action              = drawAction;
+        auto drawArgs                = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawArgs->renderTarget.value = renderTarget;
         drawTask.arguments           = drawArgs;
         renderWorkflow->tasks.append(drawTask);
 

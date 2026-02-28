@@ -192,7 +192,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderPassArguments & argume
     std::vector<vk::RenderingAttachmentInfo> colorAttachments;
     colorAttachments.reserve(renderTarget.colors.size());
     for (size_t i = 0; i < renderTarget.colors.size(); i++) {
-        const auto & color = renderTarget.colors[i];
+        const auto & color = renderTarget.colors[i].target;
         auto [view, dim]   = getColorTargetImageView(color, i, &layoutBarrier);
         if (!view) GN_UNLIKELY {
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create view for render target texture for stage {}.", i);

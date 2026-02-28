@@ -50,54 +50,215 @@ struct TextureView : GpuImageView {
     AutoRef<Sampler> sampler;
 };
 
-struct RenderTarget {
+struct RenderTarget : public Artifact {
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "RenderTarget";
+
+    struct ColorTarget {
+        GpuImageView target;
+        BlendState   blendState;
+        uint32_t     writeMask = 0xFFFFFFFF;
+
+        bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
+        bool operator!=(const ColorTarget & other) const { return !operator==(other); }
+    };
+
     struct DepthStencil {
         AutoRef<Texture>               target;
         gfx::img::PixelFormat          format = gfx::img::PixelFormat::UNKNOWN();
         GpuImageView::SubresourceIndex subresourceIndex {};
-
-        bool empty() const { return !target; }
+        DepthState                     depthState;
+        StencilState                   stencilState;
 
         bool operator==(const DepthStencil & other) const {
             if (target != other.target) return false;
             if (target && subresourceIndex != other.subresourceIndex) return false; // only check subresource index for non-empty texture targets
+            if (depthState != other.depthState) return false;
+            if (stencilState != other.stencilState) return false;
             return true;
         }
 
         bool operator!=(const DepthStencil & other) const { return !operator==(other); }
     };
 
-    StackArray<GpuImageView, 8> colors;
-    DepthStencil                depthStencil;
+    StackArray<ColorTarget, 8> colors;
+    DepthStencil               depthStencil;
+    Viewport                   viewport;
+    ScissorRect                scissorRect;
 
-    bool empty() const { return colors.empty() && depthStencil.empty(); }
+    /// Returns list of artifacts referenced by this render target.
+    virtual SafeArrayAccessor<const Artifact * const> artifacts() const = 0;
 
-    bool operator==(const RenderTarget & other) const { return colors == other.colors && depthStencil == other.depthStencil; }
+    bool operator==(const RenderTarget & other) const {
+        return colors == other.colors && depthStencil == other.depthStencil && viewport == other.viewport && scissorRect == other.scissorRect;
+    }
     bool operator!=(const RenderTarget & other) const { return !operator==(other); }
+
+    struct CreateParameters {
+        // tbd
+    };
+
+    static GN_API AutoRef<RenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
+protected:
+    using Artifact::Artifact;
 };
 
 struct RenderTargetArgument : public Arguments::ArtifactArgument {
-    RenderTargetArgument(Arguments * owner, const char * name)
-        : Arguments::ArtifactArgument(owner, name, Arguments::Usage::Writing + Arguments::Usage::Reading) {}
+    struct BlendState {
+        enum Arg {
+            ZERO = 0,
+            ONE,
+            SRC_COLOR,
+            INV_SRC_COLOR,
+            SRC_ALPHA,
+            INV_SRC_ALPHA,
+            DEST_ALPHA,
+            INV_DEST_ALPHA,
+            DEST_COLOR,
+            INV_DEST_COLOR,
+            BLEND_FACTOR,
+            INV_BLEND_FACTOR,
+        };
 
-    SafeArrayAccessor<const Artifact * const> artifacts() const override {
-        mArtifacts.reserve(8 + 1);
-        mArtifacts.clear();
-        const auto & colors = value.colors;
-        for (size_t i = 0; i < colors.size(); ++i) {
-            if (!colors[i].empty()) {
-                auto a = colors[i].artifact();
-                if (a) mArtifacts.append(a.get());
-            }
+        enum Op {
+            SET = 0,
+            ADD,
+            SUB,
+            REV_SUB,
+            MIN,
+            MAX,
+        };
+
+        // Default blend mode is disabled.
+        Op       colorOp  = Op::SET;
+        Arg      colorSrc = Arg::SRC_COLOR;
+        Arg      colorDst = Arg::ZERO;
+        Op       alphaOp  = Op::SET;
+        Arg      alphaSrc = Arg::SRC_ALPHA;
+        Arg      alphaDst = Arg::ZERO;
+        Vector4f factors  = {0.0f, 0.0f, 0.0f, 0.0f};
+
+        bool operator==(const BlendState & other) const {
+            return colorOp == other.colorOp && colorSrc == other.colorSrc && colorDst == other.colorDst && alphaOp == other.alphaOp &&
+                   alphaSrc == other.alphaSrc && alphaDst == other.alphaDst;
         }
-        if (!value.depthStencil.empty()) mArtifacts.append(value.depthStencil.target.get());
-        return mArtifacts;
+        bool operator!=(const BlendState & other) const { return !operator==(other); }
     };
 
-    RenderTarget value;
+    enum class Compare {
+        NEVER = 0,     // no read, no write
+        LESS,          // read and write
+        LESS_EQUAL,    // read and write
+        EQUAL,         // read and write
+        GREATER_EQUAL, // read and write
+        GREATER,       // read and write
+        NOT_EQUAL,     // read and write
+        ALWAYS,        // write only
+    };
 
-private:
-    mutable DynaArray<const Artifact *> mArtifacts;
+    struct DepthState {
+        // default state equals to depth disabled.
+        Compare func  = Compare::ALWAYS;
+        bool    write = true;
+
+        bool testEnabled() const { return Compare::NEVER != func && Compare::ALWAYS != func; }
+        bool writeEnabled() const { return Compare::NEVER != func && write; }
+
+        bool operator==(const DepthState & other) const { return func == other.func && write == other.write; }
+        bool operator!=(const DepthState & other) const { return !operator==(other); }
+
+        inline static const DepthState DISABLE() { return DepthState {Compare::ALWAYS, true}; }
+    };
+
+    struct StencilState {
+        enum Op {
+            KEEP = 0, // no read, no write
+            ZERO,     // write only
+            REPLACE,  // write only
+            INC_SAT,  // read and write
+            DEC_SAT,  // read and write
+            INVERT,   // read and write
+            INC,      // read and write
+            DEC,      // read and write
+        };
+
+        // default to an state that stencil is effectively disabled.
+        Compare compare   = Compare::ALWAYS; ///< stencil comparison function
+        Op      pass      = KEEP;            ///< stencil operation on pass
+        Op      fail      = KEEP;            ///< stencil operation on fail
+        Op      zFail     = KEEP;            ///< stencil operation on depth fail
+        uint8_t ref       = 0;               ///< stencil reference value
+        uint8_t readMask  = 0xFF;            ///< stencil read mask
+        uint8_t writeMask = 0xFF;            ///< stencil write mask
+
+        bool enabled() const {
+            bool read  = (0 != readMask) && (Compare::NEVER != compare) && (Compare::ALWAYS != compare);
+            bool write = (0 != writeMask) && ((Op::KEEP != pass) || (Op::KEEP != fail) || (Op::KEEP != zFail));
+            return read || write;
+        }
+
+        bool operator==(const StencilState & other) const {
+            return pass == other.pass && fail == other.fail && zFail == other.zFail && compare == other.compare && ref == other.ref &&
+                   readMask == other.readMask && writeMask == other.writeMask;
+        }
+        bool operator!=(const StencilState & other) const { return !operator==(other); }
+    };
+
+    /// Scissor rectangle
+    struct ScissorRect {
+        int32_t  x      = 0;
+        int32_t  y      = 0;
+        uint32_t width  = (~0u); ///< ~0u means all width
+        uint32_t height = (~0u); ///< ~0u means all height;
+
+        bool disabled() const { return (0 == x) && (0 == y) && (~0u == width) && (~0u == height); }
+
+        bool operator==(const ScissorRect & other) const { return x == other.x && y == other.y && width == other.width && height == other.height; }
+        bool operator!=(const ScissorRect & other) const { return !operator==(other); }
+    };
+
+    /// Viewport settings
+    struct Viewport {
+        float x        = 0.0f;
+        float y        = 0.0f;
+        float width    = 0.0f;
+        float height   = 0.0f;
+        float minDepth = 0.0f;
+        float maxDepth = 1.0f;
+
+        bool operator==(const Viewport & other) const {
+            return x == other.x && y == other.y && width == other.width && height == other.height && minDepth == other.minDepth && maxDepth == other.maxDepth;
+        }
+        bool operator!=(const Viewport & other) const { return !operator==(other); }
+    };
+
+    RenderTargetArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::ReadingWriting) {}
+
+    SafeArrayAccessor<const Artifact * const> artifacts() const override {
+        if (!value)
+            return {};
+        else
+            return value->artifacts();
+        // mArtifacts.reserve(8 + 1);
+        // mArtifacts.clear();
+        // if (!value) return mArtifacts;
+        // const auto & colors = value->colors;
+        // for (size_t i = 0; i < colors.size(); ++i) {
+        //     if (!colors[i].target.empty()) {
+        //         auto a = colors[i].target.artifact();
+        //         if (a) mArtifacts.append(a.get());
+        //     }
+        // }
+        // if (!value->depthStencil.target.empty()) mArtifacts.append(value->depthStencil.target.get());
+        // return mArtifacts;
+    };
+
+    AutoRef<RenderTarget>     value;
+    StackArray<BlendState, 8> blendStates;
+    uint32_t                  writeMask = 0xFFFFFFFF;
+    Viewport                  viewport;
+    ScissorRect               scissorRect;
 };
 
 /// Clear render target to certain value. Discard existing content.
@@ -203,107 +364,12 @@ struct SetupRenderStates : public Action {
         FRONT_CW,
     };
 
-    enum ComparisonFunc {
-        CMP_NEVER = 0,
-        CMP_LESS,
-        CMP_LESS_EQUAL,
-        CMP_EQUAL,
-        CMP_GREATER_EQUAL,
-        CMP_GREATER,
-        CMP_NOT_EQUAL,
-        CMP_ALWAYS,
-    };
-
-    enum StencilOp {
-        STENCIL_KEEP = 0,
-        STENCIL_ZERO,
-        STENCIL_REPLACE,
-        STENCIL_INC_SAT,
-        STENCIL_DEC_SAT,
-        STENCIL_INVERT,
-        STENCIL_INC,
-        STENCIL_DEC,
-    };
-    enum BlendArg {
-        BLEND_ZERO = 0,
-        BLEND_ONE,
-        BLEND_SRC_COLOR,
-        BLEND_INV_SRC_COLOR,
-        BLEND_SRC_ALPHA,
-        BLEND_INV_SRC_ALPHA,
-        BLEND_DEST_ALPHA,
-        BLEND_INV_DEST_ALPHA,
-        BLEND_DEST_COLOR,
-        BLEND_INV_DEST_COLOR,
-        BLEND_BLEND_FACTOR,
-        BLEND_INV_BLEND_FACTOR,
-    };
-
-    enum BlendOp {
-        BLEND_OP_ADD = 0,
-        BLEND_OP_SUB,
-        BLEND_OP_REV_SUB,
-        BLEND_OP_MIN,
-        BLEND_OP_MAX,
-    };
-
-    /// Viewport settings
-    struct Viewport {
-        float x        = 0.0f;
-        float y        = 0.0f;
-        float width    = 0.0f;
-        float height   = 0.0f;
-        float minDepth = 0.0f;
-        float maxDepth = 1.0f;
-    };
-
-    /// Scissor rectangle
-    struct ScissorRect {
-        int32_t  x      = 0;
-        int32_t  y      = 0;
-        uint32_t width  = 0;
-        uint32_t height = 0;
-    };
-
     /// Render state descriptor
     struct RenderStateDesc {
         // Rasterizer state
-        std::optional<FillMode>  fillMode;    ///< fill mode (solid, wireframe, point)
-        std::optional<CullMode>  cullMode;    ///< cull mode (none, front, back)
-        std::optional<FrontFace> frontFace;   ///< front face winding (CCW, CW)
-        std::optional<bool>      msaaEnabled; ///< MSAA enabled
-
-        // Depth state
-        std::optional<bool>           depthTestEnabled;  ///< enable depth testing
-        std::optional<bool>           depthWriteEnabled; ///< enable depth writing
-        std::optional<ComparisonFunc> depthFunc;         ///< depth comparison function
-
-        // Stencil state
-        std::optional<bool>           stencilEnabled;   ///< enable stencil testing
-        std::optional<StencilOp>      stencilPassOp;    ///< stencil operation on pass
-        std::optional<StencilOp>      stencilFailOp;    ///< stencil operation on fail
-        std::optional<StencilOp>      stencilZFailOp;   ///< stencil operation on depth fail
-        std::optional<ComparisonFunc> stencilFunc;      ///< stencil comparison function
-        std::optional<uint8_t>        stencilRef;       ///< stencil reference value
-        std::optional<uint8_t>        stencilReadMask;  ///< stencil read mask
-        std::optional<uint8_t>        stencilWriteMask; ///< stencil write mask
-
-        // Blend state
-        std::optional<bool>     blendEnabled;  ///< enable blending
-        std::optional<BlendArg> blendSrc;      ///< source blend factor
-        std::optional<BlendArg> blendDst;      ///< destination blend factor
-        std::optional<BlendOp>  blendOp;       ///< blend operation
-        std::optional<BlendArg> blendAlphaSrc; ///< source alpha blend factor
-        std::optional<BlendArg> blendAlphaDst; ///< destination alpha blend factor
-        std::optional<BlendOp>  blendAlphaOp;  ///< alpha blend operation
-        std::optional<Vector4f> blendFactors;  ///< blend factor color (RGBA)
-
-        // Color write mask (per render target, 4 bits each: RGBA)
-        std::optional<uint32_t> colorWriteMask; ///< color write mask (0xFFFFFFFF = all channels)
-
-        // Viewport and scissor
-        std::optional<Viewport>    viewport;    ///< viewport settings
-        std::optional<ScissorRect> scissorRect; ///< scissor rectangle
+        std::optional<FillMode>  fillMode;  ///< fill mode (solid, wireframe, point)
+        std::optional<CullMode>  cullMode;  ///< cull mode (none, front, back)
+        std::optional<FrontFace> frontFace; ///< front face winding (CCW, CW)
     };
 
     struct A : public Arguments {

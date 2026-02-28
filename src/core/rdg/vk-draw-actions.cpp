@@ -12,9 +12,9 @@ static void trackRenderTargetState(const RenderTarget & renderTarget) {
     // track the state of the color targets.
     for (size_t i = 0; i < renderTarget.colors.size(); i++) {
         const auto & color = renderTarget.colors[i];
-        if (0 == color.image.index()) {
+        if (0 == color.target.image.index()) {
             // this color target is a texture.
-            auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
+            auto tex = std::get<0>(color.target.image).castTo<TextureVulkan>().get();
             if (tex)
                 tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1,
                                      {vk::ImageLayout::eColorAttachmentOptimal,
@@ -22,7 +22,7 @@ static void trackRenderTargetState(const RenderTarget & renderTarget) {
                                       vk::PipelineStageFlagBits::eColorAttachmentOutput});
         } else {
             // this color target is a backbuffer.
-            auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
+            auto bb = std::get<1>(color.target.image).castTo<BackbufferVulkan>().get();
             if (bb)
                 bb->trackImageState({vk::ImageLayout::eColorAttachmentOptimal,
                                      vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
@@ -326,7 +326,7 @@ public:
         if (mPipeline) {
             uint32_t extentW = 0, extentH = 0;
             if (renderTarget.colors.size() > 0) {
-                const auto & c0 = renderTarget.colors[0];
+                const auto & c0 = renderTarget.colors[0].target;
                 if (c0.image.index() == 0) {
                     auto tex = std::get<0>(c0.image).castTo<TextureVulkan>().get();
                     if (tex) {

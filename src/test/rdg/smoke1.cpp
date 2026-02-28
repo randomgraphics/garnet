@@ -33,6 +33,21 @@ int main(int, const char **) {
                   Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = nullptr, .width = displayWidth, .height = displayHeight}});
     if (!backbuffer) return -1;
 
+    // Create render target that references the backbuffer
+    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    if (!renderTarget) return -1;
+    renderTarget->colors.append({
+        .target = GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}}
+        .blendState = BlendState::DEFAULT(),
+        .writeMask = 0xFFFFFFFF,
+        .viewport = Viewport::DEFAULT(),
+        .scissorRect = ScissorRect::DEFAULT(),
+    });
+    renderTarget->depthStencil.target = depthTexture;
+    renderTarget->depthStencil.subresourceIndex = {};
+    renderTarget->depthStencil.depthState = DepthState::DEFAULT();
+    renderTarget->depthStencil.stencilState = StencilState::DEFAULT();
+
     // Create actions
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
@@ -68,9 +83,7 @@ int main(int, const char **) {
     color.colors[0].f4[2]  = 0.0f; // B
     color.colors[0].f4[3]  = 1.0f; // A
     clearArgs->clearValues = color;
-    auto rt                = RenderTarget {};
-    rt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
-    clearArgs->renderTarget.value = rt;
+    clearArgs->renderTarget.value = renderTarget;
     clearTask.arguments           = clearArgs;
     renderWorkflow->tasks.append(clearTask);
 

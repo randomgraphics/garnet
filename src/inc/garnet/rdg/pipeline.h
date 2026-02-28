@@ -44,6 +44,31 @@ protected:
     using Artifact::Artifact;
 };
 
+/// A container for shader constants that are shared by other effects.
+/// For example, the frame related information, the camera information, light information and etc.
+struct SharedShaderConstants : public GpuResource {
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "SharedShaderConstants";
+
+    struct FrameInformation {
+        uint32_t     frameCounter;
+        Microseconds frameDuration;
+    };
+
+    struct ViewInformation {
+        WorldToClipTransformChain transforms;
+        AutoRef<RenderTarget>     renderTarget;
+    };
+
+    struct LightInformation {};
+
+    struct CreateParameters {
+        AutoRef<GpuContext> gpu;
+    };
+
+    static GN_API AutoRef<SharedShaderConstants> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+};
+
 /// Represents lighting information of the surrounding world.
 /// Can be, but not limited to, skybox, reflection probes, global illumination etc.
 struct EnvironmentalLighting : public RenderGraphBuilder {
@@ -76,18 +101,6 @@ struct EnvironmentalLighting : public RenderGraphBuilder {
 protected:
     using RenderGraphBuilder::RenderGraphBuilder;
 };
-
-// struct DirectLighing : public RenderGraphBuilder {
-//     GN_API static const uint64_t         TYPE_ID;
-//     inline static constexpr const char * TYPE_NAME = "DirectLighting";
-
-//     struct CreateParameters {
-//         // tbd
-//     };
-
-// protected:
-//     using RenderGraphBuilder::RenderGraphBuilder;
-// };
 
 /// Store shadow related information for all active lights, to be used
 /// to determine whether a surface point is in shadow or not.
@@ -170,7 +183,7 @@ struct PbrShading : public GpuResource {
         WorldToClipTransformChain      worldToClip;
         AutoRef<EnvironmentalLighting> env;
         AutoRef<ShadowVisibility>      shadow;
-        RenderTarget                   renderTarget;
+        AutoRef<RenderTarget>          renderTarget;
     };
 
     struct CreateParameters {
@@ -191,7 +204,7 @@ struct SkyBox : public GpuResource {
     inline static constexpr const char * TYPE_NAME = "SkyBox";
 
     struct BuildParameters {
-        RenderTarget rt;
+        AutoRef<RenderTarget> rt;
     };
 
     struct CreateParameters {
