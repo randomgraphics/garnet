@@ -14,4 +14,15 @@
     #endif
     #define FBXSDK_SHARED
     #include <fbxsdk.h>
+
+template<typename T, typename O>
+inline int FbxGetTypedSrcObjectCount(O & obj) {
+    return obj.GetSrcObjectCount(FbxCriteria::ObjectType(T::ClassId));
+}
+
+template<typename T, typename O>
+inline T* FbxGetTypedSrcObject(O & obj, int index) {
+    return FbxCast<T>(obj.GetSrcObject(FbxCriteria::ObjectType(T::ClassId), index));
+}
+
 #endif

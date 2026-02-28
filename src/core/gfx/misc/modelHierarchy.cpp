@@ -402,26 +402,23 @@ static const char * sGetTextureFileName(FbxSurfaceMaterial * material, const cha
     FbxProperty prop = material->FindProperty(textureType);
     if (!prop.IsValid()) return NULL;
 
-    int lLayeredTextureCount = prop.GetSrcObjectCount(FbxLayeredTexture::ClassId);
-    if (lLayeredTextureCount > 0) {
+    auto layeredTextureCount = FbxGetTypedSrcObjectCount<FbxLayeredTexture>(prop);
+    if (layeredTextureCount > 0) {
         // Layered texture
-
-        for (int j = 0; j < lLayeredTextureCount; ++j) {
-            FbxLayeredTexture * lLayeredTexture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject(FbxLayeredTexture::ClassId, j));
-
-            int lNbTextures = lLayeredTexture->GetSrcObjectCount(FbxTexture::ClassId);
-
+        for (int j = 0; j < layeredTextureCount; ++j) {
+            auto lLayeredTexture = FbxGetTypedSrcObject<FbxLayeredTexture>(prop, j);
+            if (!lLayeredTexture) continue;
+            int lNbTextures = FbxGetTypedSrcObjectCount<FbxFileTexture>(*lLayeredTexture);
             for (int k = 0; k < lNbTextures; ++k) {
-                FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(lLayeredTexture->GetSrcObject(FbxTexture::ClassId, k));
+                auto lTexture = FbxGetTypedSrcObject<FbxFileTexture>(*lLayeredTexture, k);
                 if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
             }
         }
     } else {
         // Simple texture
-        int lNbTextures = prop.GetSrcObjectCount(FbxTexture::ClassId);
-        for (int j = 0; j < lNbTextures; ++j) {
-
-            FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(prop.GetSrcObject(FbxTexture::ClassId, j));
+        auto textureCount = FbxGetTypedSrcObjectCount<FbxFileTexture>(prop);
+        for (int j = 0; j < textureCount; ++j) {
+            auto lTexture = FbxGetTypedSrcObject<FbxFileTexture>(prop, j);
             if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
         }
     }

@@ -337,26 +337,22 @@ static const char * sGetTextureFileName(const FbxSurfaceMaterial * material, con
     FbxProperty prop = material->FindProperty(textureType);
     if (!prop.IsValid()) return NULL;
 
-    int lLayeredTextureCount = prop.GetSrcObjectCount(FbxLayeredTexture::ClassId);
+    int lLayeredTextureCount = FbxGetTypedSrcObjectCount<FbxLayeredTexture>(prop);
     if (lLayeredTextureCount > 0) {
         // Layered texture
-
         for (int j = 0; j < lLayeredTextureCount; ++j) {
-            FbxLayeredTexture * lLayeredTexture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject(FbxLayeredTexture::ClassId, j));
-
-            int lNbTextures = lLayeredTexture->GetSrcObjectCount(FbxTexture::ClassId);
-
+            FbxLayeredTexture * lLayeredTexture = FbxGetTypedSrcObject<FbxLayeredTexture>(prop, j);
+            int lNbTextures = FbxGetTypedSrcObjectCount<FbxTexture>(*lLayeredTexture);
             for (int k = 0; k < lNbTextures; ++k) {
-                FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(lLayeredTexture->GetSrcObject(FbxTexture::ClassId, k));
+                FbxFileTexture * lTexture = FbxGetTypedSrcObject<FbxFileTexture>(*lLayeredTexture, k);
                 if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
             }
         }
     } else {
         // Simple texture
-        int lNbTextures = prop.GetSrcObjectCount(FbxTexture::ClassId);
+        int lNbTextures = FbxGetTypedSrcObjectCount<FbxFileTexture>(prop);
         for (int j = 0; j < lNbTextures; ++j) {
-
-            FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(prop.GetSrcObject(FbxTexture::ClassId, j));
+            FbxFileTexture * lTexture = FbxGetTypedSrcObject<FbxFileTexture>(prop, j);
             if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
         }
     }
@@ -1145,10 +1141,10 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
 // -----------------------------------------------------------------------------
 static void sLoadFbxMeshes(FatModel & fatmodel, const StrA & filename, FbxSdkWrapper & sdk, FbxScene & scene) {
     // Load meshes
-    int meshCount = FbxGetSrcCount<FbxMesh>(&scene);
+    auto meshCount = FbxGetTypedSrcObjectCount<FbxMesh>(scene);
     for (int i = 0; i < meshCount; i++) {
-        FbxMesh * fbxmesh = FbxGetSrc<FbxMesh>(&scene, i);
-        sLoadFbxMesh(fatmodel, filename, sdk, fbxmesh);
+        auto fbxmesh = FbxGetTypedSrcObject<FbxMesh>(scene, i);
+        if (fbxmesh) sLoadFbxMesh(fatmodel, filename, sdk, fbxmesh);
     }
 }
 
@@ -1183,9 +1179,10 @@ static void sLoadFbxAnimStack(FatModel & fatmodel, FbxAnimStack & fbxanim) {
 // -----------------------------------------------------------------------------
 static void sLoadFbxAnimations(FatModel & fatmodel, FbxScene & fbxscene) {
     // Iterate through all animation stacks in the scene. Load them one by one.
-    int animCount = FbxGetSrcCount<FbxAnimStack>(&fbxscene);
+    auto criteria = FbxCriteria::ObjectType(FbxAnimStack::ClassId);
+    auto animCount = fbxscene->GetSrcObjectCount(criteria);
     for (int i = 0; i < animCount; i++) {
-        FbxAnimStack * fbxanim = FbxGetSrc<FbxAnimStack>(&fbxscene, i);
+        auto fbxanim = FbxCast<FbxAnimStack>(fbxscene->GetSrcObject(criteria, i));
         sLoadFbxAnimStack(fatmodel, *fbxanim);
     }
 }
@@ -1248,8 +1245,8 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
     }
 
     // preallocate material array.
-    int nummat = FbxGetSrcCount<FbxSurfaceMaterial>(gScene);
-    fatmodel.materials.reserve((size_t) nummat);
+    // int nummat = FbxGetSrcCountCompat<FbxSurfaceMaterial>(gScene);
+    // fatmodel.materials.reserve((size_t) nummat);
     // fatmodel.materials.resize( 1 );
     // fatmodel.materials[0].name = "=[DEFAULT]=";
     // fatmodel.materials[0].albedoTexture = "";
