@@ -36,7 +36,10 @@ protected:
     using Artifact::Artifact;
 };
 
-/// Backbuffer represents the swapchain that can be presented to screen.
+/// Backbuffer represents the swapchain that can be drawn to by GPU and presented to screen.
+/// - It is in renderable state if and only if it is prepared but not presented. See
+///   PrepareBackbuffer and PresentBackbuffer actions for more details.
+/// - A newly created backbuffer is always in non-renderable state.
 struct Backbuffer : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "Backbuffer";

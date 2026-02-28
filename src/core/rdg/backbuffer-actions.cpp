@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "backbuffer.h"
-#include <garnet/GNrdg.h>
+#include "gpu-context.h"
+#include "vk-backbuffer.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
@@ -55,43 +56,46 @@ GN_API AutoRef<PrepareBackbuffer> PrepareBackbuffer::create(ArtifactDatabase & d
 // PresentBackbuffer - API-neutral impl (uses BackbufferCommon::present())
 // =============================================================================
 
-class PresentBackbufferImpl : public PresentBackbuffer {
-public:
-    PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
-
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
-
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext *) override {
-        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
-        auto * a              = arguments.castTo<PresentBackbuffer::A>();
-        if (!a) GN_UNLIKELY {
-                GN_ERROR(sLogger)("PresentBackbuffer::execute: invalid arguments");
-                return FAILED;
-            }
-        auto & backbuffer = a->backbuffer.value;
-        if (!backbuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("PresentBackbuffer::execute: backbuffer not set");
-                return FAILED;
-            }
-        auto common = backbuffer->castTo<BackbufferCommon>();
-        if (!common) GN_UNLIKELY {
-                GN_ERROR(sLogger)("PresentBackbuffer::execute: backbuffer is not BackbufferCommon");
-                return FAILED;
-            }
-        common->present(submissionImpl);
-        return PASSED;
-    }
-};
+Action::ExecutionResult PresentBackbufferImpl::execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext *) {
+    auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+    auto * a              = arguments.castTo<PresentBackbuffer::A>();
+    if (!a) GN_UNLIKELY {
+            GN_ERROR(sLogger)("PresentBackbuffer::execute: invalid arguments");
+            return FAILED;
+        }
+    auto & backbuffer = a->backbuffer.value;
+    if (!backbuffer) GN_UNLIKELY {
+            GN_ERROR(sLogger)("PresentBackbuffer::execute: backbuffer not set");
+            return FAILED;
+        }
+    auto common = backbuffer->castTo<BackbufferCommon>();
+    if (!common) GN_UNLIKELY {
+            GN_ERROR(sLogger)("PresentBackbuffer::execute: backbuffer is not BackbufferCommon");
+            return FAILED;
+        }
+    common->present(submissionImpl);
+    return PASSED;
+}
 
 GN_API AutoRef<PresentBackbuffer> PresentBackbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
-    (void) params;
-    auto * p = new PresentBackbufferImpl(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("PresentBackbuffer::create: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
+    if (!params.gpu) GN_UNLIKELY {
+            GN_ERROR(sLogger)("PresentBackbuffer::create: context is null, name='{}'", name);
+            return {};
+        }
+    auto common = static_cast<GpuContextCommon *>(params.gpu.get());
+    switch (common->api()) {
+    case GpuContextCommon::Api::Vulkan:
+        return createVulkanPresentBackbuffer(db, name, params);
+    default: {
+        auto * p = new PresentBackbufferImpl(db, name);
+        if (p->sequence == 0) {
+            GN_ERROR(sLogger)("PresentBackbuffer::create: duplicate type+name, name='{}'", name);
+            delete p;
+            return {};
+        }
+        return AutoRef<PresentBackbuffer>(p);
     }
-    return AutoRef<PresentBackbuffer>(p);
+    }
 }
 
 } // namespace GN::rdg

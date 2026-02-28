@@ -37,7 +37,11 @@ int main(int, const char **) {
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
     renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
-    // depthStencil left default (no depth texture)
+    // clear to solid red for easy verification of readback/save
+    renderTarget->colors[0].clearColor.f4[0] = 1.0f; // R
+    renderTarget->colors[0].clearColor.f4[1] = 0.0f; // G
+    renderTarget->colors[0].clearColor.f4[2] = 0.0f; // B
+    renderTarget->colors[0].clearColor.f4[3] = 1.0f; // A
 
     // Create actions
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
@@ -64,18 +68,11 @@ int main(int, const char **) {
     prepareTask.arguments         = prepareArgs;
     renderWorkflow->tasks.append(prepareTask);
 
-    // Task: Clear render target (solid red for easy verification of readback/save)
-    auto clearTask                = Workflow::Task("Clear render target");
-    clearTask.action              = clearAction;
-    auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-    auto color                    = ClearRenderTarget::A::ClearValues {};
-    color.colors[0].f4[0]         = 1.0f; // R
-    color.colors[0].f4[1]         = 0.0f; // G
-    color.colors[0].f4[2]         = 0.0f; // B
-    color.colors[0].f4[3]         = 1.0f; // A
-    clearArgs->clearValues        = color;
-    clearArgs->renderTarget.value = renderTarget;
-    clearTask.arguments           = clearArgs;
+    // Task: Clear/Set render target (solid red for easy verification of readback/save)
+    auto clearTask   = Workflow::Task("Set render target");
+    clearTask.action = clearAction;
+    auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+    clearArgs->value = renderTarget;
     renderWorkflow->tasks.append(clearTask);
 
     // Task: Present backbuffer

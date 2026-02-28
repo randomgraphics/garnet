@@ -117,12 +117,11 @@ int main(int, const char **) {
         clearTask.arguments           = clearArgs;
         renderWorkflow->tasks.append(clearTask);
 
-        // Task: Draw solid triangle (GpuDraw; pipeline created in Phase 6). Mesh optional; no vertex buffer uses 3 vertices.
-        auto drawTask                = Workflow::Task("DrawTriangle");
-        drawTask.action              = drawAction;
-        auto drawArgs                = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        drawArgs->renderTarget.value = renderTarget;
-        drawTask.arguments           = drawArgs;
+        // Task: Draw solid triangle (GpuDraw uses active render target set by Clear above).
+        auto drawTask      = Workflow::Task("DrawTriangle");
+        drawTask.action    = drawAction;
+        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawTask.arguments = drawArgs;
         renderWorkflow->tasks.append(drawTask);
 
         // Task: Present backbuffer

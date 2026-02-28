@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-backbuffer.h"
+#include "vk-submission-context.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -193,7 +194,8 @@ Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl &) {
             return Action::ExecutionResult::FAILED;
         }
 
-    // Update backbuffer state (transition needed when frame is new).
+    // mSwapChain->beginFrame() updated the backbuffer layout. So we
+    // need to track those changes here.
     trackImageState(TextureVulkan::ImageState::UNDEFINED());
 
     // Update the pending semaphores.
@@ -255,6 +257,46 @@ AutoRef<Backbuffer> createVulkanBackbuffer(ArtifactDatabase & db, const StrA & n
         return {};
     }
     return AutoRef<Backbuffer>(p);
+}
+
+// =============================================================================
+// PresentBackbufferVulkan
+// =============================================================================
+
+class PresentBackbufferVulkan : public PresentBackbufferImpl {
+public:
+    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PresentBackbufferImpl(db, name) {}
+
+    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+        auto   a              = arguments.castTo<PresentBackbuffer::A>();
+        if (!a) GN_UNLIKELY {
+                GN_ERROR(sLogger)("PresentBackbufferVulkan::prepare: invalid arguments");
+                return std::make_pair(FAILED, nullptr);
+            }
+        auto & backbuffer = a->backbuffer.value;
+        if (!backbuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("PresentBackbufferVulkan::prepare: backbuffer not set");
+                return std::make_pair(FAILED, nullptr);
+            }
+
+        // Notify render pass manager to end render pass, if this is the active render target.
+        auto & sc = SubmissionContextVulkan::ensureSubmissionContext(submissionImpl, mGpu);
+        sc.renderPassManager.clearActiveRenderTargetIfBackbuffer(taskInfo, backbuffer);
+
+        // done
+        return std::make_pair(PASSED, nullptr);
+    }
+};
+
+AutoRef<PresentBackbuffer> createVulkanPresentBackbuffer(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters & params) {
+    auto * p = new PresentBackbufferVulkan(db, name);
+    if (p->sequence == 0) {
+        GN_ERROR(sLogger)("createVulkanPresentBackbuffer: duplicate type+name, name='{}'", name);
+        delete p;
+        return {};
+    }
+    return AutoRef<PresentBackbuffer>(p);
 }
 
 } // namespace GN::rdg

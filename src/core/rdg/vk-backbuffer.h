@@ -61,4 +61,6 @@ private:
 /// Returns null on failure or duplicate type+name.
 AutoRef<Backbuffer> createVulkanBackbuffer(ArtifactDatabase & db, const StrA & name, const Backbuffer::CreateParameters & params);
 
+/// Create a Vulkan-backed PresentBackbuffer. Called from PresentBackbuffer::create() when context is Vulkan.
+AutoRef<PresentBackbuffer> createVulkanPresentBackbuffer(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters & params);
 } // namespace GN::rdg

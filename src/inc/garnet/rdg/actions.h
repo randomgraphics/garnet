@@ -183,10 +183,17 @@ struct RenderTarget : public Artifact {
         constexpr bool operator!=(const ScissorRect & other) const { return !operator==(other); }
     };
 
+    union ClearColorValue {
+        float    f4[4];
+        uint32_t u4[4];
+        int32_t  i4[4];
+    };
+
     struct ColorTarget {
-        GpuImageView target {};
-        BlendState   blendState = {};
-        uint8_t      writeMask  = 0xFF; // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
+        GpuImageView    target {};
+        BlendState      blendState = {};
+        uint8_t         writeMask  = 0xFF;                       // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
+        ClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to to solid black.
 
         bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
@@ -198,6 +205,8 @@ struct RenderTarget : public Artifact {
         GpuImageView::SubresourceIndex subresourceIndex {};
         DepthState                     depthState   = {};
         StencilState                   stencilState = {};
+        float                          clearDepth   = 1.0;
+        uint32_t                       clearStencil = 0;
 
         bool operator==(const DepthStencil & other) const {
             if (target != other.target) return false;
@@ -240,39 +249,32 @@ static_assert(GN::rdg::RenderTarget::StencilState {}.enabled() == false);
 static_assert(GN::rdg::RenderTarget::Viewport {}.fullScreen() == true);
 static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
 
-struct RenderTargetArgument : public Arguments::ArtifactArgument {
-    RenderTargetArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::ReadingWriting) {}
-
-    SafeArrayAccessor<const Artifact * const> artifacts() const override {
-        if (value) return value->artifacts();
-        return {};
-    }
-
-    AutoRef<RenderTarget> value;
-};
-
-/// Clear render target to certain value. Discard existing content.
-/// This is the recommended first action to start rendering to a render target.
-/// It tells GPU to discard existing content thus avoid expensive image layout transitions.
+/// Set render target for draw actions. It clears the render target to certain value, discarding existing content.
+/// - This is the required first action to start rendering to a render target.
+/// - It tells GPU to discard existing content thus avoid expensive image layout transitions.
+/// - If the render target is backbuffer, it must be in the renderable state, meaning
+///   the backbuffer is prepared and not presented. See PrepareBackbuffer and
+///   PresentBackbuffer actions for more details.
 struct ClearRenderTarget : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
+
+    struct RenderTargetArgument : public Arguments::ArtifactArgument {
+        RenderTargetArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::ReadingWriting) {}
+
+        SafeArrayAccessor<const Artifact * const> artifacts() const override {
+            if (value) return value->artifacts();
+            return {};
+        }
+
+        AutoRef<RenderTarget> value;
+    };
 
     struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        struct ClearValues {
-            union {
-                float    f4[4];
-                uint32_t u4[4];
-                int32_t  i4[4];
-            } colors[8];
-            float    depth;
-            uint32_t stencil;
-        };
         RenderTargetArgument renderTarget = {this, "renderTarget"};
-        ClearValues          clearValues;
     };
 
     struct CreateParameters {
@@ -286,6 +288,9 @@ protected:
     using Action::Action;
 };
 
+/// This is the action to set the backbuffer into renderable state.
+/// It must be called in pair with PresentBackbuffer action to properly
+/// rotate the swapchain buffers for rendering and presenting.
 struct PrepareBackbuffer : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer";
@@ -309,6 +314,9 @@ protected:
     using Action::Action;
 };
 
+/// This is the action to set the backbuffer into presented state and make it non-renderable.
+/// It must be called in pair with PrepareBackbuffer action to properly
+/// rotate the swapchain buffers for rendering and presenting.
 struct PresentBackbuffer : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "PresentBackbuffer";
@@ -493,6 +501,7 @@ protected:
 };
 
 /// Generic GPU draw action. This is the building block of all other draw actions and effects.
+/// It depends on ClearRenderTarget action to set the render target. Without it, this action will simply fail.
 struct GpuDraw : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GpuDraw";
@@ -531,14 +540,13 @@ struct GpuDraw : public GpuShaderAction {
             uint32_t stride = 0;
         };
 
-        UniformMap           uniforms     = {this, "uniforms"};           ///< uniforms
-        TextureMap           textures     = {this, "textures"};           ///< textures
-        RwImagesMap          images       = {this, "read-write images"};  ///< read-write images
-        RoImagesMap          roImages     = {this, "read-only images"};   ///< read-only images
-        RwBufferMap          buffers      = {this, "read-write buffers"}; ///< read-write random access buffers
-        RoBufferMap          roBuffers    = {this, "read-only buffers"};  ///< read-only random access buffers
-        GeometryArgument     geometry     = {this, "geometry"};           ///< geometry
-        RenderTargetArgument renderTarget = {this, "renderTarget"};       ///< render target
+        UniformMap       uniforms  = {this, "uniforms"};           ///< uniforms
+        TextureMap       textures  = {this, "textures"};           ///< textures
+        RwImagesMap      images    = {this, "read-write images"};  ///< read-write images
+        RoImagesMap      roImages  = {this, "read-only images"};   ///< read-only images
+        RwBufferMap      buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
+        RoBufferMap      roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
+        GeometryArgument geometry  = {this, "geometry"};           ///< geometry
     };
 
     struct CreateParameters {
