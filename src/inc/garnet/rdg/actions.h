@@ -78,7 +78,7 @@ struct RenderTarget {
 
 struct RenderTargetArgument : public Arguments::ArtifactArgument {
     RenderTargetArgument(Arguments * owner, const char * name)
-        : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading) {}
+        : Arguments::ArtifactArgument(owner, name, Arguments::Usage::Writing + Arguments::Usage::Reading) {}
 
     SafeArrayAccessor<const Artifact * const> artifacts() const override {
         mArtifacts.reserve(8 + 1);
@@ -144,7 +144,7 @@ struct PrepareBackbuffer : public Action {
         inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ReadWrite<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
+        ReadWriteArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
     };
 
     struct CreateParameters {
@@ -167,7 +167,7 @@ struct PresentBackbuffer : public Action {
         inline static constexpr const char * TYPE_NAME = "PresentBackbuffer::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ReadOnly<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
+        ReadOnlyArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
     };
 
     struct CreateParameters {
@@ -358,7 +358,7 @@ struct GpuShaderAction : public Action {
 
     template<Arguments::UsageFlag UFlags>
     struct BufferViewMap : public Arguments::ArtifactArgument {
-        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
+        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.reserve(value.size());
@@ -378,7 +378,7 @@ struct GpuShaderAction : public Action {
 
     template<Arguments::UsageFlag UFlags>
     struct ImageViewMap : public Arguments::ArtifactArgument {
-        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags | Arguments::UsageFlag::Optional) {}
+        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
@@ -397,8 +397,7 @@ struct GpuShaderAction : public Action {
     };
 
     struct TextureMap : public Arguments::ArtifactArgument {
-        TextureMap(Arguments * owner, const char * name)
-            : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading | Arguments::UsageFlag::Optional) {}
+        TextureMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
@@ -427,11 +426,11 @@ struct GpuShaderAction : public Action {
         bool valid() const { return binary != nullptr && size > 0 && entry != nullptr; }
     };
 
-    using UniformMap  = BufferViewMap<Arguments::UsageFlag::Reading>;
-    using RwBufferMap = BufferViewMap<Arguments::UsageFlag::RW>;
-    using RoBufferMap = BufferViewMap<Arguments::UsageFlag::Reading>;
-    using RwImagesMap = ImageViewMap<Arguments::UsageFlag::RW>;
-    using RoImagesMap = ImageViewMap<Arguments::UsageFlag::Reading>;
+    using UniformMap  = BufferViewMap<Arguments::Usage::Reading>;
+    using RwBufferMap = BufferViewMap<Arguments::Usage::RW>;
+    using RoBufferMap = BufferViewMap<Arguments::Usage::Reading>;
+    using RwImagesMap = ImageViewMap<Arguments::Usage::RW>;
+    using RoImagesMap = ImageViewMap<Arguments::Usage::Reading>;
 
 protected:
     using Action::Action;
@@ -444,7 +443,7 @@ struct GpuDraw : public GpuShaderAction {
 
     struct GeometryArgument : public Arguments::ArtifactArgument {
         GeometryArgument(Arguments * owner, const char * name)
-            : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading | Arguments::UsageFlag::Optional) {}
+            : Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.reserve(value.instances.size() + value.vertices.size() + 1);

@@ -64,7 +64,7 @@ struct InitIntegerAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "InitIntegerAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        WriteOnly<IntegerArtifact> output = {this, "output"};
+        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -105,9 +105,9 @@ struct AddIntegersAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "AddIntegersAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        ReadOnly<IntegerArtifact>  input1 = {this, "input1"};
-        ReadOnly<IntegerArtifact>  input2 = {this, "input2"};
-        WriteOnly<IntegerArtifact> output = {this, "output"};
+        ReadOnlyArtifact<IntegerArtifact>  input1 = {this, "input1"};
+        ReadOnlyArtifact<IntegerArtifact>  input2 = {this, "input2"};
+        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -151,9 +151,9 @@ struct MultiplyIntegersAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "MultiplyIntegersAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        ReadOnly<IntegerArtifact>  input1 = {this, "input1"};
-        ReadOnly<IntegerArtifact>  input2 = {this, "input2"};
-        WriteOnly<IntegerArtifact> output = {this, "output"};
+        ReadOnlyArtifact<IntegerArtifact>  input1 = {this, "input1"};
+        ReadOnlyArtifact<IntegerArtifact>  input2 = {this, "input2"};
+        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -198,7 +198,7 @@ struct ReadIntegerAction : public Action {
         inline static const uint64_t         TYPE      = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "ReadIntegerAction::A";
         A(): Arguments(TYPE, TYPE_NAME) {}
-        ReadOnly<IntegerArtifact> input = {this, "input"};
+        ReadOnlyArtifact<IntegerArtifact> input = {this, "input"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -393,7 +393,7 @@ public:
         const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument();
         TS_ASSERT(p != nullptr);
         TS_ASSERT_EQUALS(p->name(), "output");
-        TS_ASSERT((p->usage() & GN::rdg::Arguments::UsageFlag::Writing) != GN::rdg::Arguments::UsageFlag::None);
+        TS_ASSERT(p->usage().writing);
         TS_ASSERT(p->next() == nullptr);
     }
 

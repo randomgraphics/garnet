@@ -141,21 +141,35 @@ private:
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
 public:
-    enum class UsageFlag {
-        None     = 0,
-        Optional = 1 << 0,
-        Reading  = 1 << 1,
-        Writing  = 1 << 2,
-        // Aliases for convenience
-        N  = None,
-        O  = Optional,
-        R  = Reading,
-        W  = Writing,
-        RW = Reading | Writing,
+    struct UsageFlag {
+        bool optional : 1 = false;
+        bool reading  : 1 = false;
+        bool writing  : 1 = false;
+
+        constexpr bool operator==(const UsageFlag & other) const { return optional == other.optional && reading == other.reading && writing == other.writing; }
+        constexpr bool operator!=(const UsageFlag & other) const { return optional != other.optional || reading != other.reading || writing != other.writing; }
+
+        constexpr UsageFlag & operator+=(const UsageFlag & other) {
+            optional &= other.optional;
+            reading |= other.reading;
+            writing |= other.writing;
+            return *this;
+        }
+
+        friend constexpr UsageFlag operator+(UsageFlag a, const UsageFlag & b) { return a += b; }
     };
 
-    friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
-    friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
+    struct Usage {
+        inline static constexpr UsageFlag None           = {false, false, false};
+        inline static constexpr UsageFlag Optional       = {true, false, false};
+        inline static constexpr UsageFlag Reading        = {false, true, false};
+        inline static constexpr UsageFlag Writing        = {false, false, true};
+        inline static constexpr UsageFlag ReadingWriting = {false, true, true};
+        inline static constexpr UsageFlag O              = Optional;
+        inline static constexpr UsageFlag R              = Reading;
+        inline static constexpr UsageFlag W              = Writing;
+        inline static constexpr UsageFlag RW             = ReadingWriting;
+    };
 
     /// Base class of all parameters that references one or more artifacts.
     /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
@@ -187,7 +201,7 @@ public:
 
     /// Represents a single artifact parameter of an action.
     /// T must be a subclass of Artifact.
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
+    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
     struct SingleArtifact : public ArtifactArgument {
         SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -199,16 +213,16 @@ public:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnly = SingleArtifact<T, UFlags | UsageFlag::Reading>;
+    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
+    using ReadOnlyArtifact = SingleArtifact<T, UFlags + Usage::Reading>;
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnly = SingleArtifact<T, UFlags | UsageFlag::Writing>;
+    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
+    using WriteOnlyArtifact = SingleArtifact<T, UFlags + Usage::Writing>;
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    using ReadWrite = SingleArtifact<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    template<DerivedFromArtifact T, UsageFlag UFlags = Usage::None>
+    using ReadWriteArtifact = SingleArtifact<T, UFlags + Usage::Reading + Usage::Writing>;
 
-    template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = UsageFlag::None>
+    template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = Usage::None>
     struct ArtifactArray : public ArtifactArgument {
         ArtifactArray(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -217,16 +231,16 @@ public:
         AutoRef<T> values[Count];
     };
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading>;
+    template<typename T, size_t COUNT, UsageFlag UFlags = Usage::None>
+    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading>;
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Writing>;
+    template<typename T, size_t COUNT, UsageFlag UFlags = Usage::None>
+    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Writing>;
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    template<typename T, size_t COUNT, UsageFlag UFlags = Usage::None>
+    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading + Usage::Writing>;
 
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
+    template<typename T, UsageFlag UFlags = Usage::None>
     struct ArtifactVector : public ArtifactArgument {
         ArtifactVector(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -235,14 +249,14 @@ public:
         DynaArray<AutoRef<T>> values;
     };
 
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnlyVector = ArtifactVector<T, UFlags | UsageFlag::Reading>;
+    template<typename T, UsageFlag UFlags = Usage::None>
+    using ReadOnlyVector = ArtifactVector<T, UFlags + Usage::Reading>;
 
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnlyVector = ArtifactVector<T, UFlags | UsageFlag::Writing>;
+    template<typename T, UsageFlag UFlags = Usage::None>
+    using WriteOnlyVector = ArtifactVector<T, UFlags + Usage::Writing>;
 
-    template<typename T, UsageFlag UFlags = UsageFlag::None>
-    using ReadWriteVector = ArtifactVector<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    template<typename T, UsageFlag UFlags = Usage::None>
+    using ReadWriteVector = ArtifactVector<T, UFlags + Usage::Reading + Usage::Writing>;
 
     /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
     const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
@@ -257,7 +271,7 @@ private:
     void enlist(ArtifactArgument * arg) {
         GN_ASSERT(arg);
         GN_ASSERT(arg->name() != nullptr);
-        GN_ASSERT(arg->usage() != UsageFlag::None);
+        GN_ASSERT(arg->usage() != Usage::None);
         DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
         GN_ASSERT(link->prev == nullptr && link->next == nullptr);
 
@@ -312,7 +326,7 @@ protected:
     using Artifact::Artifact;
 };
 
-/// A workflow is a sequence of tasks run in strict sequential order. It can depend on completion of other workflows.
+/// A workflow is a sequence of tasks run in sequential order. It can depend on completion of other workflows.
 /// The render graph runs workflows in a topological order that satisfies these dependencies.
 struct Workflow {
     /// Name for logging and debugging (not required, but recommended. No need to be unique).
@@ -334,6 +348,20 @@ struct Workflow {
     };
 
     DynaArray<Task> tasks;
+
+    /// Collect usage of all artifacts
+    std::unordered_map<uint64_t, Arguments::UsageFlag> collectArtifactArguments() const {
+        std::unordered_map<uint64_t, Arguments::UsageFlag> result;
+        for (const Task & task : tasks) {
+            if (!task.arguments) GN_LIKELY continue;
+            for (const Arguments::ArtifactArgument * p = task.arguments->firstArtifactArgument(); p; p = p->next()) {
+                for (const Artifact * a : p->artifacts()) {
+                    if (a) GN_LIKELY result[a->typeId] += p->usage();
+                }
+            }
+        }
+        return result;
+    }
 };
 
 struct TaskInfo {

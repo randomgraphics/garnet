@@ -79,8 +79,8 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
             if (!args) continue;
             for (const Arguments::ArtifactArgument * p = args->firstArtifactArgument(); p; p = p->next()) {
                 const auto usage = p->usage();
-                const bool read  = (usage & Arguments::UsageFlag::Reading) != Arguments::UsageFlag::None;
-                const bool write = (usage & Arguments::UsageFlag::Writing) != Arguments::UsageFlag::None;
+                const bool read  = usage.reading;
+                const bool write = usage.writing;
                 const auto arts  = p->artifacts();
                 for (size_t k = 0; k < arts.size(); ++k) {
                     const Artifact * a = arts[k];
@@ -176,13 +176,14 @@ static const char * executionResultStr(Action::ExecutionResult r) {
 }
 
 static StrA usageFlagStr(Arguments::UsageFlag u) {
-    using F = Arguments::UsageFlag;
-    if (u == F::None) return "None";
     StrA s;
-    if ((u & F::Optional) != F::None) s += "Optional|";
-    if ((u & F::Reading) != F::None) s += "Reading|";
-    if ((u & F::Writing) != F::None) s += "Writing|";
-    if (!s.empty()) s.popback(); // trailing |
+    if (u.optional) s += "Optional|";
+    if (u.reading) s += "Reading|";
+    if (u.writing) s += "Writing|";
+    if (s.empty())
+        s = "None";
+    else
+        s.popback(); // trailing |
     return s;
 }
 
