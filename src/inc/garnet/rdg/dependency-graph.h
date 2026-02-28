@@ -43,9 +43,13 @@ struct RuntimeType {
 
 protected:
     RuntimeType(uint64_t typeId_, const char * typeName_): typeId(typeId_), typeName(typeName_) {}
+
+    /// Returns a 64-bit integer that uniquely map to the name.
+    /// Same name always returns the same ID.
+    static GN_API uint64_t getStableTypeIdFromName(const char * name);
 };
 
-/// Artifact represents an atomic resource that can be used as input or output of a task.
+/// The basic building block of the render graph module. Base class of everthing that could be added to a render graph.
 struct Artifact : public RefCounter, public RuntimeType {
     ArtifactDatabase & database;
     const StrA         name;
@@ -93,6 +97,46 @@ protected:
 
 inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
     : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
+
+/// A helper class to wrap anything as an artifact.
+/// \param T    Type of the value to wrap.
+/// \param NAME Name of the artifact.
+template<typename T, const char * NAME>
+class TypedArtifact : public Artifact {
+public:
+    inline static const uint64_t TYPE_ID   = getStableTypeIdFromName(StrA::format("{}_{}", NAME, Guid::createRandom().toStr()).data());
+    inline static const char *   TYPE_NAME = NAME;
+
+    T value;
+
+    /// Create a new artifact with default value.
+    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name) {
+        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name));
+        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
+        return p;
+    }
+
+    /// Create a new artifact with a specific value (copy).
+    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name, const T & value) {
+        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name, value));
+        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
+        p->value = value;
+        return p;
+    }
+
+    /// Create a new artifact with a specific value (move).
+    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name, T && value) {
+        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name, std::move(value)));
+        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
+        return p;
+    }
+
+private:
+    // Constructor: only used by create() methods.
+    TypedArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_ID, TYPE_NAME, name), value() {}
+    TypedArtifact(ArtifactDatabase & db, const StrA & name, const T & v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(v) {}
+    TypedArtifact(ArtifactDatabase & db, const StrA & name, T && v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(std::move(v)) {}
+};
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
