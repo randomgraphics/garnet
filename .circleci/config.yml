@@ -1,14 +1,28 @@
 version: 2.1
+
+# Prep git safe.directory and SSH known_hosts so clone does not prompt for host key.
+prep_git: &prep-git
+  run:
+    name: prep git
+    command: |
+      git config --global --add safe.directory /tmp/_circleci_local_build_repo
+      git config --global --add safe.directory /root/project
+
+# commented out for now, since it give github authentication error.
+# shallow_checkout: &shallow-checkout
+#   run:
+#     name: Shallow clone
+#     command: |
+#       git clone --depth 1 --no-tags --branch "${CIRCLE_BRANCH}" "$CIRCLE_REPOSITORY_URL" .
+#       git submodule update --init --recursive
+#       git lfs pull || true
+
 jobs:
   lint:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: lint
@@ -18,12 +32,9 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
-      - checkout
+      - *prep-git
+      - checkout:
+          method: blobless
       - run:
           name: build
           command: |
@@ -38,12 +49,9 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
-      - checkout
+      - *prep-git
+      - checkout:
+          method: blobless
       - run:
           name: build
           command: |
@@ -56,11 +64,7 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: build
@@ -75,11 +79,7 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: build
@@ -92,11 +92,7 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: build
@@ -109,11 +105,7 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: build
@@ -126,11 +118,7 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: build
@@ -143,11 +131,7 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: build
@@ -160,11 +144,7 @@ jobs:
     docker:
       - image: randomgraphics/garnet:latest
     steps:
-      - run:
-          name: prep git
-          command: |
-            git config --global --add safe.directory /tmp/_circleci_local_build_repo
-            git config --global --add safe.directory /root/project
+      - *prep-git
       - checkout
       - run:
           name: build
