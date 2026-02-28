@@ -11,10 +11,10 @@ static GN::Logger * sLogger = getLogger("GN.rdg");
 static void trackRenderTargetState(const RenderTarget & renderTarget) {
     // track the state of the color targets.
     for (size_t i = 0; i < renderTarget.colors.size(); i++) {
-        const auto & color = renderTarget.colors[i];
-        if (0 == color.target.image.index()) {
+        const auto & color = renderTarget.colors[i].target;
+        if (0 == color.image.index()) {
             // this color target is a texture.
-            auto tex = std::get<0>(color.target.image).castTo<TextureVulkan>().get();
+            auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
             if (tex)
                 tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1,
                                      {vk::ImageLayout::eColorAttachmentOptimal,
@@ -22,7 +22,7 @@ static void trackRenderTargetState(const RenderTarget & renderTarget) {
                                       vk::PipelineStageFlagBits::eColorAttachmentOutput});
         } else {
             // this color target is a backbuffer.
-            auto bb = std::get<1>(color.target.image).castTo<BackbufferVulkan>().get();
+            auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
             if (bb)
                 bb->trackImageState({vk::ImageLayout::eColorAttachmentOptimal,
                                      vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
@@ -31,14 +31,12 @@ static void trackRenderTargetState(const RenderTarget & renderTarget) {
     }
 
     // track the state of the depth stencil target.
-    if (!renderTarget.depthStencil.empty()) {
-        auto depth = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
-        if (depth)
-            depth->trackImageState(renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1,
-                                   {vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                                    vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-                                    vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
-    }
+    auto depth = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
+    if (depth)
+        depth->trackImageState(renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1,
+                               {vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                                vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
 }
 
 class ClearRenderTargetVulkan : public ClearRenderTarget {
@@ -68,7 +66,7 @@ public:
             }
 
         // prepare render pass
-        if (!submissionContext.renderPassManager.prepare(taskInfo, a->renderTarget.value)) GN_UNLIKELY {
+        if (!submissionContext.renderPassManager.prepare(taskInfo, *a->renderTarget.value)) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare render pass");
                 return std::make_pair(FAILED, nullptr);
             }
@@ -103,11 +101,11 @@ public:
             }
 
         // execute resource tracker to update GPU resource layout and memory usage.
-        trackRenderTargetState(a->renderTarget.value);
+        trackRenderTargetState(*a->renderTarget.value);
 
         // acquire render pass.
         RenderPassManagerVulkan::RenderPassArguments rpa {
-            .renderTarget  = a->renderTarget.value,
+            .renderTarget  = *a->renderTarget.value,
             .commandBuffer = cb.commandBuffer.handle(),
             .clearValues   = std::make_optional(a->clearValues),
         };
@@ -264,7 +262,7 @@ public:
             }
 
         // prepare render pass
-        if (!submissionContext.renderPassManager.prepare(taskInfo, a->renderTarget.value)) GN_UNLIKELY {
+        if (!submissionContext.renderPassManager.prepare(taskInfo, *a->renderTarget.value)) GN_UNLIKELY {
                 GN_ERROR(sLogger)("GpuDrawVulkan::prepare: failed to prepare render pass");
                 return std::make_pair(FAILED, nullptr);
             }
@@ -282,7 +280,7 @@ public:
                 GN_ERROR(sLogger)("GpuDrawVulkan::execute: arguments is not GpuDraw::A");
                 return FAILED;
             }
-        auto & renderTarget = a->renderTarget.value;
+        const RenderTarget & renderTarget = *a->renderTarget.value;
 
         auto ctx = static_cast<DrawActionContextVulkan *>(context);
         if (!ctx) GN_UNLIKELY {
@@ -328,14 +326,14 @@ public:
             if (renderTarget.colors.size() > 0) {
                 const auto & c0 = renderTarget.colors[0].target;
                 if (c0.image.index() == 0) {
-                    auto tex = std::get<0>(c0.image).castTo<TextureVulkan>().get();
+                    auto tex = std::get<0>(c0.image).template castTo<TextureVulkan>().get();
                     if (tex) {
                         auto dim = tex->dimensions(c0.subresourceIndex.mip);
                         extentW  = dim.width;
                         extentH  = dim.height;
                     }
                 } else {
-                    auto bb = std::get<1>(c0.image).castTo<BackbufferVulkan>().get();
+                    auto bb = std::get<1>(c0.image).template castTo<BackbufferVulkan>().get();
                     if (bb) {
                         extentW = bb->descriptor().width;
                         extentH = bb->descriptor().height;

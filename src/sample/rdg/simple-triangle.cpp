@@ -49,7 +49,7 @@ int main(int, const char **) {
     // Create a render target that references the backbuffer
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
-    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}}});
+    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
 
     // Depth texture not used by current workflow (clear + draw triangle to backbuffer only); skip until Texture::create path is implemented.
     // auto depthTexture = Texture::create(*db, "depth_texture", ...);

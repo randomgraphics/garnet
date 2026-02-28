@@ -9,6 +9,7 @@ namespace GN::rdg {
 GN_API const uint64_t Texture::TYPE_ID              = getNextUniqueTypeId();
 GN_API const uint64_t GpuContext::TYPE_ID           = getNextUniqueTypeId();
 GN_API const uint64_t Backbuffer::TYPE_ID           = getNextUniqueTypeId();
+GN_API const uint64_t RenderTarget::TYPE_ID         = getNextUniqueTypeId();
 GN_API const uint64_t GpuDraw::TYPE_ID              = getNextUniqueTypeId();
 GN_API const uint64_t GpuDraw::A::TYPE_ID           = getNextUniqueTypeId();
 GN_API const uint64_t ClearRenderTarget::A::TYPE_ID = getNextUniqueTypeId();

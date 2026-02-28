@@ -70,8 +70,8 @@ public:
 
 public:
     //@{
-    Vector2() {}
-    Vector2(T ix, T iy): x(ix), y(iy) {}
+    constexpr Vector2() {}
+    constexpr Vector2(T ix, T iy): x(ix), y(iy) {}
     GN_DEFAULT_COPY(Vector2);
     //@}
 
@@ -294,11 +294,11 @@ public:
     // ********************************
 public:
     //@{
-    Vector3() {}
+    constexpr Vector3() {}
     template<typename TX, typename TY, typename TZ>
-    Vector3(TX ix, TY iy, TZ iz): x((T) ix), y((T) iy), z((T) iz) {}
-    Vector3(const glm::vec3 & v): x(v.x), y(v.y), z(v.z) {}
-    Vector3(const Vector2<T> & v, T iz): x(v.x), y(v.y), z(iz) {}
+    constexpr Vector3(TX ix, TY iy, TZ iz): x((T) ix), y((T) iy), z((T) iz) {}
+    constexpr Vector3(const glm::vec3 & v): x(v.x), y(v.y), z(v.z) {}
+    constexpr Vector3(const Vector2<T> & v, T iz): x(v.x), y(v.y), z(iz) {}
     GN_DEFAULT_COPY(Vector3);
     //@}
 
@@ -467,13 +467,13 @@ public:
     // ********************************
 public:
     //@{
-    Vector4() {}
+    constexpr Vector4() {}
     //
-    Vector4(T ix, T iy, T iz, T iw): x(ix), y(iy), z(iz), w(iw) {}
+    constexpr Vector4(T ix, T iy, T iz, T iw): x(ix), y(iy), z(iz), w(iw) {}
     //
-    Vector4(const Vector2<T> & v, T iz, T iw): x(v.x), y(v.y), z(iz), w(iw) {}
+    constexpr Vector4(const Vector2<T> & v, T iz, T iw): x(v.x), y(v.y), z(iz), w(iw) {}
     //
-    Vector4(const Vector3<T> & v, T iw): x(v.x), y(v.y), z(v.z), w(iw) {}
+    constexpr Vector4(const Vector3<T> & v, T iw): x(v.x), y(v.y), z(v.z), w(iw) {}
     GN_DEFAULT_COPY(Vector4);
     //@}
 

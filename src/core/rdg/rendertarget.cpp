@@ -17,7 +17,7 @@ struct RenderTargetImpl : public RenderTarget {
                 if (a) mReferencedArtifacts.append(a.get());
             }
         }
-        if (!depthStencil.target.empty()) mReferencedArtifacts.append(depthStencil.target.get());
+        if (depthStencil.target) mReferencedArtifacts.append(depthStencil.target.get());
         return mReferencedArtifacts;
     }
 

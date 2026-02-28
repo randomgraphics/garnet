@@ -36,17 +36,8 @@ int main(int, const char **) {
     // Create render target that references the backbuffer
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
-    renderTarget->colors.append({
-        .target = GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}}
-        .blendState = BlendState::DEFAULT(),
-        .writeMask = 0xFFFFFFFF,
-        .viewport = Viewport::DEFAULT(),
-        .scissorRect = ScissorRect::DEFAULT(),
-    });
-    renderTarget->depthStencil.target = depthTexture;
-    renderTarget->depthStencil.subresourceIndex = {};
-    renderTarget->depthStencil.depthState = DepthState::DEFAULT();
-    renderTarget->depthStencil.stencilState = StencilState::DEFAULT();
+    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
+    // depthStencil left default (no depth texture)
 
     // Create actions
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
@@ -74,15 +65,15 @@ int main(int, const char **) {
     renderWorkflow->tasks.append(prepareTask);
 
     // Task: Clear render target (solid red for easy verification of readback/save)
-    auto clearTask         = Workflow::Task("Clear render target");
-    clearTask.action       = clearAction;
-    auto clearArgs         = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-    auto color             = ClearRenderTarget::A::ClearValues {};
-    color.colors[0].f4[0]  = 1.0f; // R
-    color.colors[0].f4[1]  = 0.0f; // G
-    color.colors[0].f4[2]  = 0.0f; // B
-    color.colors[0].f4[3]  = 1.0f; // A
-    clearArgs->clearValues = color;
+    auto clearTask                = Workflow::Task("Clear render target");
+    clearTask.action              = clearAction;
+    auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+    auto color                    = ClearRenderTarget::A::ClearValues {};
+    color.colors[0].f4[0]         = 1.0f; // R
+    color.colors[0].f4[1]         = 0.0f; // G
+    color.colors[0].f4[2]         = 0.0f; // B
+    color.colors[0].f4[3]         = 1.0f; // A
+    clearArgs->clearValues        = color;
     clearArgs->renderTarget.value = renderTarget;
     clearTask.arguments           = clearArgs;
     renderWorkflow->tasks.append(clearTask);
