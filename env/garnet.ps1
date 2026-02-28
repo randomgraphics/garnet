@@ -68,6 +68,16 @@ if (-not $(test-path env:VULKAN_SDK)) {
 }
 
 # ==============================================================================
+# Setup FBX SDK
+# ==============================================================================
+
+if (-not $(test-path env:FBX_SDK)) {
+    warn "Environment variable FBX_SDK is missing. All FBX related features will be disabled."
+} elseif (-not $(test-path $env:FBX_SDK)) {
+    error "Environment variable FBX_SDK is not pointing to valid folder."
+}
+
+# ==============================================================================
 # Check Python support
 # ==============================================================================
 
@@ -216,6 +226,7 @@ Garnet build environment ready to use. Happy coding!
 USERNAME         = $env:USERNAME
 GARNET_ROOT      = $env:GARNET_ROOT
 VULKAN_SDK       = $env:VULKAN_SDK
+FBX_SDK          = $env:FBX_SDK
 ANDROID_SDK_ROOT = $env:ANDROID_SDK_ROOT (required for Android build)
 ANDROID_NDK_ROOT = $env:ANDROID_NDK_ROOT (required for Android build)
 JAVA_HOME        = $env:JAVA_HOME (required for Android build)

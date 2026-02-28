@@ -65,6 +65,17 @@ pip install -r ${GARNET_ROOT}/env/requirements.txt
 # pip install --upgrade git-lfs
 # pip install --upgrade git
 
+
+# =============
+# Setup FBX SDK
+# =============
+echo "Checking FBX SDK..."
+if [ -d "${FBX_SDK}" ] ; then
+    echo "FBX SDK found in ${FBX_SDK}".
+else
+    echo "Environment variable FBX_SDK is missing or not pointing to a valid folder. All FBX related features will be disabled."
+fi
+
 # =====
 # alias
 # =====
@@ -121,6 +132,7 @@ echo Garnet build environment ready to use. Happy coding!
 echo
 echo "USERNAME         = $USER"
 echo "GARNET_ROOT      = $GARNET_ROOT"
+echo "FBX_SDK          = $FBX_SDK"
 echo "ANDROID_SDK_ROOT = $ANDROID_SDK_ROOT (required for Android build)"
 echo "ANDROID_NDK_ROOT = $ANDROID_NDK_ROOT (required for Android build)"
 echo "JAVA_HOME        = $JAVA_HOME (required for Android build)"
