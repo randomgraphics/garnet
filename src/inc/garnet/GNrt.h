@@ -56,8 +56,8 @@ struct AABB {
     float GetDiagonalDistance() const { return glm::length(max - min); }
 
     void Merge(const AABB & a, const AABB & b) {
-        min = glm::min(glm::min(min, a.min), b.min);
-        max = glm::max(glm::max(max, a.max), b.max);
+        min = glm::min(a.min, b.min);
+        max = glm::max(a.max, b.max);
         GN_ASSERT(Enclose(a) && Enclose(b));
     }
 
