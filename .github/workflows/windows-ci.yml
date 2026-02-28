@@ -13,45 +13,56 @@ jobs:
       matrix:
         variant: [debug, profile, release]
 
-    env:
-      VK_SDK_VERSION : v1.3.275.0
-
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
       - name: Clone repository
         uses: actions/checkout@v4
         with:
+          # Shallow clone to avoid pulling full history and old/unused large LFS files
           fetch-depth: 1
           lfs: true
           submodules: recursive
+
+      - name: Read Vulkan SDK version
+        id: vkver
+        shell: pwsh
+        run: |
+          $ver = (Get-Content "env/vulkan-sdk-version.txt" -Raw).Trim()
+          if ([string]::IsNullOrWhiteSpace($ver)) { throw "ci/vulkan-sdk-version.txt is empty" }
+          "ver=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Restore Vulkan SDK from cache
         id: vulkan-sdk
         uses: actions/cache@v4
         with:
-          path: c:\dep\vulkan-sdk
-          key: ${{ runner.os }}-vulkan-sdk-${{ env.VK_SDK_VERSION }}
+          path: C:\dep\vulkan-sdk-${{ steps.vkver.outputs.ver }}
+          key: ${{ runner.os }}-vulkan-sdk-${{ steps.vkver.outputs.ver }}
 
-      - name: Install Vulkan SDK (only when it is not cached)
+      - name: Download + unzip Vulkan SDK (cache miss)
         if: steps.vulkan-sdk.outputs.cache-hit != 'true'
-        run: git clone --depth 1 --branch ${{ env.VK_SDK_VERSION }} https://github.com/randomgraphics/vulkan-sdk.git c:\dep\vulkan-sdk
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.vkver.outputs.ver }}"
+          $zipName = "vulkan-sdk-for-windows-$ver.zip"
+          $url = "https://github.com/randomgraphics/vulkan-sdk-for-windows/releases/download/v$ver/$zipName"
 
-      - name: Save Vulkan SDK to cache
-        if: steps.vulkan-sdk.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: c:\dep\vulkan-sdk
-          key: ${{ runner.os }}-vulkan-sdk-${{ env.VK_SDK_VERSION }}
+          New-Item -ItemType Directory -Force -Path C:\dep\vulkan-sdk\${{ steps.vkver.outputs.ver }} | Out-Null
+          $tmpZip = Join-Path $env:RUNNER_TEMP $zipName
 
-      # TODO: cache python packages too.
+          Write-Host "Downloading $url"
+          Invoke-WebRequest -Uri $url -OutFile $tmpZip -UseBasicParsing
+
+          Write-Host "Extracting to C:\dep\vulkan-sdk\${{ steps.vkver.outputs.ver }}"
+          Expand-Archive -Path $tmpZip -DestinationPath C:\dep\vulkan-sdk\${{ steps.vkver.outputs.ver }} -Force
+
       - name: Install Python Packages
         run: python.exe -m pip install --upgrade termcolor
-  
+
       - name: Build
         shell: powershell
         run: |
-          $env:VULKAN_SDK="C:\dep\vulkan-sdk"
+          $env:VULKAN_SDK="C:\dep\vulkan-sdk\${{ steps.vkver.outputs.ver }}\vulkan-sdk-for-windows"
           . env\garnet.ps1
           b ${{ matrix.variant }}
 
