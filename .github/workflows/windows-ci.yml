@@ -36,7 +36,7 @@ jobs:
         id: vulkan-sdk
         uses: actions/cache@v4
         with:
-          path: C:\dep\vulkan-sdk-${{ steps.vkver.outputs.ver }}
+          path: C:\dep\vulkan-sdk\${{ steps.vkver.outputs.ver }}
           key: ${{ runner.os }}-vulkan-sdk-${{ steps.vkver.outputs.ver }}
 
       - name: Download + unzip Vulkan SDK (cache miss)
