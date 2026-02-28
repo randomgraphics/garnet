@@ -21,7 +21,7 @@ inline int FbxGetTypedSrcObjectCount(O & obj) {
 }
 
 template<typename T, typename O>
-inline T* FbxGetTypedSrcObject(O & obj, int index) {
+inline T * FbxGetTypedSrcObject(O & obj, int index) {
     return FbxCast<T>(obj.GetSrcObject(FbxCriteria::ObjectType(T::ClassId), index));
 }
 

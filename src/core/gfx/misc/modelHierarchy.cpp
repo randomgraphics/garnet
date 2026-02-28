@@ -521,8 +521,7 @@ typedef std::unordered_map<MeshVertexKey, uint32_t> MeshVertexHashMap;
 static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, ModelHierarchyDesc::NodeDesc & gnnode, FbxSdkWrapper & sdk, FbxNode * fbxnode,
                          FbxMesh * fbxmesh, const char * meshName) {
     if (!fbxmesh->IsTriangleMesh()) {
-        fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
-        if (NULL == fbxmesh) {
+        if (!sdk.converter->Triangulate(fbxmesh, true)) {
             GN_ERROR(sLogger)("Fail to triangulate fbxmesh node: {}", meshName);
             return;
         }
@@ -534,7 +533,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
         GN_ERROR(sLogger)("The fbxmesh does not have a layer: {}", meshName);
         return;
     }
-    if (NULL == layer0->GetNormals()) { fbxmesh->ComputeVertexNormals(); }
+    if (NULL == layer0->GetNormals()) { fbxmesh->GenerateNormals(); }
 
     // Get basic fbxmesh properties
     int *                     fbxIndices   = fbxmesh->GetPolygonVertices();
