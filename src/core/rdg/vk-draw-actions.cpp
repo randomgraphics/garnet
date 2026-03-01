@@ -27,7 +27,7 @@ public:
         auto taskContext = std::make_unique<DrawActionContextVulkan>();
 
         // prepare command buffer.
-        auto & submissionContext     = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        auto & submissionContext     = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         taskContext->commandBufferId = submissionContext.commandBufferManager.prepare(CommandBufferManagerVulkan::GRAPHICS);
         if (!taskContext->commandBufferId) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare command buffer");
@@ -62,7 +62,7 @@ public:
             }
 
         // acquire command buffer.
-        auto & sc = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        auto & sc = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(ctx->commandBufferId);
         if (!cb.queue || !cb.commandBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire command buffer");
@@ -70,11 +70,7 @@ public:
             }
 
         // acquire render pass.
-        RenderPassManagerVulkan::RenderPassArguments rpa {
-            .renderTarget  = a->renderTarget,
-            .commandBuffer = cb.commandBuffer.handle(),
-        };
-        auto rp = sc.renderPassManager.execute(taskInfo, rpa);
+        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
         if (!rp) GN_UNLIKELY {
                 GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire render pass");
                 return FAILED;
@@ -217,7 +213,7 @@ public:
         auto taskContext = std::make_unique<DrawActionContextVulkan>();
 
         // prepare command buffer.
-        auto & submissionContext     = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        auto & submissionContext     = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         taskContext->commandBufferId = submissionContext.commandBufferManager.prepare(CommandBufferManagerVulkan::GRAPHICS);
         if (!taskContext->commandBufferId) GN_UNLIKELY {
                 GN_ERROR(sLogger)("GpuDrawVulkan::prepare: failed to prepare command buffer");
@@ -247,7 +243,7 @@ public:
             }
 
         // acquire command buffer.
-        auto & sc = SubmissionContextVulkan::get(submissionImpl, mGpu);
+        auto & sc = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(ctx->commandBufferId);
         if (!cb.queue || !cb.commandBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("GpuDrawVulkan::execute: failed to acquire command buffer");

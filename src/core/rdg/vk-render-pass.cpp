@@ -322,7 +322,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     }
 
     // transfer image layout via barrier.
-    layoutBarrier.cmdWrite(arguments.commandBuffer);
+    layoutBarrier.cmdWrite(commandBuffer);
 
     // track the updated render target states
     trackRenderTargetState(renderTarget);
@@ -333,7 +333,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     // setup viewport
     auto viewWidth  = FLT_MAX == renderTarget.viewport.width ? (float) renderArea.extent.width : renderTarget.viewport.width;
     auto viewHeight = FLT_MAX == renderTarget.viewport.height ? (float) renderArea.extent.height : renderTarget.viewport.height;
-    auto viewport   = vk::Viewport(renerTarget.viewport.x, renderTarget.viewport.y, viewWidth, viewHeight, 0, 1);
+    auto viewport   = vk::Viewport(renderTarget.viewport.x, renderTarget.viewport.y, viewWidth, viewHeight, 0, 1);
     commandBuffer.setViewport(0, 1, &viewport);
 
     // setup scissor.

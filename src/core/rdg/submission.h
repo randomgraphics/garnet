@@ -59,7 +59,7 @@ public:
     T & ensureSubmissionContext(Args &&... args) {
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
         if (ctx != mExecutionContexts.end()) { return *ctx->second->template castTo<T>(); }
-        auto newCtx                    = AutoRef<T>(new T(std::forward<Args>(args)...));
+        auto newCtx                    = AutoRef<T>(new T(*this, std::forward<Args>(args)...));
         mExecutionContexts[T::TYPE_ID] = newCtx;
         return *newCtx;
     }

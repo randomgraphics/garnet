@@ -73,6 +73,18 @@ int main(int, const char **) {
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
+    // Create render target artifact (backbuffer + depth; clear values on artifact)
+    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    if (!renderTarget) return -1;
+    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
+    renderTarget->colors[0].clearColor.f4[0] = 0.2f;
+    renderTarget->colors[0].clearColor.f4[1] = 0.3f;
+    renderTarget->colors[0].clearColor.f4[2] = 0.4f;
+    renderTarget->colors[0].clearColor.f4[3] = 1.0f;
+    renderTarget->depthStencil.target        = depthTexture;
+    renderTarget->depthStencil.clearDepth    = 1.0f;
+    renderTarget->depthStencil.clearStencil  = 0;
+
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, compose, present until prepare fails
@@ -88,24 +100,12 @@ int main(int, const char **) {
             prepareTask.arguments         = prepareArgs;
             renderWorkflow->tasks.append(prepareTask);
 
-            // Task: Clear render target (color + depth)
-            auto clearTask                              = Workflow::Task("Clear");
-            clearTask.action                            = clearAction;
-            auto                              clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-            ClearRenderTarget::A::ClearValues clearVals = {};
-            clearVals.colors[0].f4[0]                   = 0.2f;
-            clearVals.colors[0].f4[1]                   = 0.3f;
-            clearVals.colors[0].f4[2]                   = 0.4f;
-            clearVals.colors[0].f4[3]                   = 1.0f;
-            clearVals.depth                             = 1.0f;
-            clearVals.stencil                           = 0;
-            clearArgs->clearValues                      = clearVals;
-            RenderTarget rt                             = {};
-            rt.colors.append(GpuImageView {.image = backbuffer, .subresourceIndex = {}, .subresourceRange = {}});
-            rt.depthStencil.target           = depthTexture;
-            rt.depthStencil.subresourceIndex = {};
-            clearArgs->renderTarget.value    = rt;
-            clearTask.arguments              = clearArgs;
+            // Task: Clear render target (color + depth; clear values on RenderTarget artifact)
+            auto clearTask                = Workflow::Task("Clear");
+            clearTask.action              = clearAction;
+            auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+            clearArgs->renderTarget.value = renderTarget;
+            clearTask.arguments           = clearArgs;
             renderWorkflow->tasks.append(clearTask);
 
             // Task: Compose (draw mesh with texture) - disabled until Compose is uncommented in actions.h

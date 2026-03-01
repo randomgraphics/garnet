@@ -264,8 +264,10 @@ AutoRef<Backbuffer> createVulkanBackbuffer(ArtifactDatabase & db, const StrA & n
 // =============================================================================
 
 class PresentBackbufferVulkan : public PresentBackbufferImpl {
+    AutoRef<GpuContextVulkan> mGpu;
+
 public:
-    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PresentBackbufferImpl(db, name) {}
+    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): PresentBackbufferImpl(db, name), mGpu(std::move(gpu)) {}
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
@@ -281,7 +283,7 @@ public:
             }
 
         // Notify render pass manager to end render pass, if this is the active render target.
-        auto & sc = SubmissionContextVulkan::ensureSubmissionContext(submissionImpl, mGpu);
+        auto & sc = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         sc.renderPassManager.clearActiveRenderTargetIfBackbuffer(taskInfo, backbuffer);
 
         // done
@@ -290,7 +292,12 @@ public:
 };
 
 AutoRef<PresentBackbuffer> createVulkanPresentBackbuffer(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters & params) {
-    auto * p = new PresentBackbufferVulkan(db, name);
+    auto gpu = params.gpu.castTo<GpuContextVulkan>();
+    if (!gpu) GN_UNLIKELY {
+            GN_ERROR(sLogger)("createVulkanPresentBackbuffer: gpu is not Vulkan, name='{}'", name);
+            return {};
+        }
+    auto * p = new PresentBackbufferVulkan(db, name, gpu);
     if (p->sequence == 0) {
         GN_ERROR(sLogger)("createVulkanPresentBackbuffer: duplicate type+name, name='{}'", name);
         delete p;

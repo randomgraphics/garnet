@@ -50,6 +50,10 @@ int main(int, const char **) {
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
     renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
+    renderTarget->colors[0].clearColor.f4[0] = 0.2f;
+    renderTarget->colors[0].clearColor.f4[1] = 0.3f;
+    renderTarget->colors[0].clearColor.f4[2] = 0.4f;
+    renderTarget->colors[0].clearColor.f4[3] = 1.0f;
 
     // Depth texture not used by current workflow (clear + draw triangle to backbuffer only); skip until Texture::create path is implemented.
     // auto depthTexture = Texture::create(*db, "depth_texture", ...);
@@ -101,21 +105,10 @@ int main(int, const char **) {
         prepareTask.arguments         = prepareArgs;
         renderWorkflow->tasks.append(prepareTask);
 
-        // Task: Clear render target (clearValues + renderTarget; no depth/stencil clear for solid triangle)
-        auto clearTask                              = Workflow::Task("Clear");
-        clearTask.action                            = clearAction;
-        auto                              clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-        ClearRenderTarget::A::ClearValues clearVals {};
-        clearVals.colors[0].f4[0]     = 0.2f;
-        clearVals.colors[0].f4[1]     = 0.3f;
-        clearVals.colors[0].f4[2]     = 0.4f;
-        clearVals.colors[0].f4[3]     = 1.0f;
-        clearVals.depth               = 1.0f;
-        clearVals.stencil             = 0;
-        clearArgs->clearValues        = clearVals;
+        // Task: Clear render target (clear color is on the RenderTarget artifact)
+        auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
         clearArgs->renderTarget.value = renderTarget;
-        clearTask.arguments           = clearArgs;
-        renderWorkflow->tasks.append(clearTask);
+        renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
 
         // Task: Draw solid triangle (GpuDraw uses active render target set by Clear above).
         auto drawTask      = Workflow::Task("DrawTriangle");

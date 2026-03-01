@@ -69,11 +69,9 @@ int main(int, const char **) {
     renderWorkflow->tasks.append(prepareTask);
 
     // Task: Clear/Set render target (solid red for easy verification of readback/save)
-    auto clearTask   = Workflow::Task("Set render target");
-    clearTask.action = clearAction;
-    auto clearArgs   = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-    clearArgs->value = renderTarget;
-    renderWorkflow->tasks.append(clearTask);
+    auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+    clearArgs->renderTarget.value = renderTarget;
+    renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
 
     // Task: Present backbuffer
     auto presentTask              = Workflow::Task("Present backbuffer");

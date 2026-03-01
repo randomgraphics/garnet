@@ -341,27 +341,55 @@ struct Workflow {
     ///   - A is reading or writing to an artifact that B is writing to.
     ///   - A is writing to an artifact that B is reading from.
     struct Task {
-        explicit Task(const StrA & name): name(name) {}
         StrA               name; //< name for logging and debugging (not required, but recommended. No need to be unique).
         AutoRef<Action>    action;
         AutoRef<Arguments> arguments;
+
+        explicit Task(const StrA & name): name(name) {}
+
+        Task(const StrA & name, AutoRef<Action> action, AutoRef<Arguments> arguments): name(name), action(std::move(action)), arguments(std::move(arguments)) {}
+
+        Task & setName(const StrA & name) {
+            this->name = name;
+            return *this;
+        }
+
+        Task & setAction(AutoRef<Action> action) {
+            this->action = std::move(action);
+            return *this;
+        }
+
+        Task & setArguments(AutoRef<Arguments> arguments) {
+            this->arguments = std::move(arguments);
+            return *this;
+        }
     };
 
     DynaArray<Task> tasks;
 
-    /// Collect usage of all artifacts
-    std::unordered_map<uint64_t, Arguments::UsageBits> collectArtifactArguments() const {
-        std::unordered_map<uint64_t, Arguments::UsageBits> result;
-        for (const Task & task : tasks) {
-            if (!task.arguments) GN_LIKELY continue;
-            for (const Arguments::ArtifactArgument * p = task.arguments->firstArtifactArgument(); p; p = p->next()) {
-                for (const Artifact * a : p->artifacts()) {
-                    if (a) GN_LIKELY result[a->typeId] += p->usage();
-                }
-            }
-        }
-        return result;
+    Workflow & appendTask(Task && task) {
+        tasks.append(std::move(task));
+        return *this;
     }
+
+    Workflow & appendTask(const StrA & name, AutoRef<Action> action, AutoRef<Arguments> arguments) {
+        tasks.append(Task(name, std::move(action), std::move(arguments)));
+        return *this;
+    }
+
+    // /// Collect usage of all artifacts
+    // std::unordered_map<uint64_t, Arguments::UsageBits> collectArtifactArguments() const {
+    //     std::unordered_map<uint64_t, Arguments::UsageBits> result;
+    //     for (const Task & task : tasks) {
+    //         if (!task.arguments) GN_LIKELY continue;
+    //         for (const Arguments::ArtifactArgument * p = task.arguments->firstArtifactArgument(); p; p = p->next()) {
+    //             for (const Artifact * a : p->artifacts()) {
+    //                 if (a) GN_LIKELY result[a->typeId] += p->usage();
+    //             }
+    //         }
+    //     }
+    //     return result;
+    // }
 };
 
 struct TaskInfo {
