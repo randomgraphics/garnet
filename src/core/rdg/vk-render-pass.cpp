@@ -212,6 +212,7 @@ bool RenderPassManagerVulkan::collectRenderTargetUsage(TaskInfo & taskInfo, Auto
     // Check if this is the very first task.
     if (mRenderPasses.empty()) {
         mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
+        GN_VERBOSE(sLogger)("{} - starting the very first render pass {}", taskInfo, mRenderPasses.back().toString());
         return true;
     }
 
@@ -223,29 +224,37 @@ bool RenderPassManagerVulkan::collectRenderTargetUsage(TaskInfo & taskInfo, Auto
 
     // update render pass information as needed.
     if (changed) {
-        GN_VERBOSE(sLogger)("RenderPassManagerVulkan::prepare: render target changed, starting a new render pass.");
+        mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
+        GN_VERBOSE(sLogger)("{} - render target changed, end render pass {}", taskInfo, mRenderPasses.back().toString());
         mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
+        GN_VERBOSE(sLogger)("{} - render target changed, started new render pass {}.", taskInfo, mRenderPasses.back().toString());
     } else {
         mRenderPasses.back().lastTaskIndex = taskInfo.index;
-        GN_VERBOSE(sLogger)("RenderPassManagerVulkan::prepare: render target not changed, continuing the current render pass.");
+        GN_VERBOSE(sLogger)("{} - updating render pass last task index: {}.", taskInfo, mRenderPasses.back().toString());
     }
     return true;
 }
 
-void RenderPassManagerVulkan::clearActiveRenderTargetIfBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
+void RenderPassManagerVulkan::onPresentingBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
     if (mRenderPasses.empty()) return;
     const auto & rt = mRenderPasses.back().renderTarget;
     if (!rt) return;
     for (const auto & color : rt->colors) {
         if (color.target.artifact() == backbuffer) {
             // this is the back buffer. we need to end the current render pass and create a new one with empty target.
+            mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
+            GN_VERBOSE(sLogger)("{} - presenting backbuffer {}, end last render pass {}.", taskInfo, backbuffer->name, mRenderPasses.back().toString());
             mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = {}});
+            GN_VERBOSE(sLogger)("{} - create a new empty render pass {}.", taskInfo, mRenderPasses.back().toString());
             return;
         }
     }
 }
 
 bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer commandBuffer) {
+    GN_VERBOSE(sLogger)("begin render pass for render target: {}.", renderTarget.name);
+
+    // setup render info.
     auto renderInfo = vk::RenderingInfo().setLayerCount(1);
 
     // Barrier for layout transitions; only entries with actual state changes are added (trackImageState returns true).
@@ -260,7 +269,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
         const auto & color = renderTarget.colors[i];
         auto [view, dim]   = getColorTargetImageView(color.target, i, &layoutBarrier);
         if (!view) GN_UNLIKELY {
-                GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create view for render target texture for stage {}.", i);
+                GN_ERROR(sLogger)("can't create view for render target texture for stage {}.", i);
                 return false;
             }
         const auto & c          = color.clearColor;
@@ -304,7 +313,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     }
 
     // setup render area.
-    GN_VERBOSE(sLogger)("RenderPassManagerVulkan::execute: render pass area: (width={}, height={}).", renderArea.extent.width, renderArea.extent.height);
+    GN_VERBOSE(sLogger)("render pass area: (width={}, height={}).", renderArea.extent.width, renderArea.extent.height);
     renderInfo.setRenderArea(renderArea);
 
     // Add depth/stencil layout transition when present (color transitions added in getColorTargetImageView when needed).
@@ -337,8 +346,8 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     commandBuffer.setViewport(0, 1, &viewport);
 
     // setup scissor.
-    auto scissorWidth  = (~0u) == renderTarget.scissorRect.width ? std::ceil(viewWidth) : renderTarget.scissorRect.width;
-    auto scissorHeight = (~0u) == renderTarget.scissorRect.height ? std::ceil(viewHeight) : renderTarget.scissorRect.height;
+    auto scissorWidth  = (~0u) == renderTarget.scissorRect.width ? (uint32_t) std::ceil(viewWidth) : renderTarget.scissorRect.width;
+    auto scissorHeight = (~0u) == renderTarget.scissorRect.height ? (uint32_t) std::ceil(viewHeight) : renderTarget.scissorRect.height;
     auto scissor       = vk::Rect2D(vk::Offset2D(renderTarget.scissorRect.x, renderTarget.scissorRect.y), vk::Extent2D(scissorWidth, scissorHeight));
     commandBuffer.setScissor(0, 1, &scissor);
 
@@ -347,13 +356,20 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
 
 const RenderPassManagerVulkan::RenderPass * RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) {
     // Find the render pass that the task belongs to.
-    GN_VERBOSE(sLogger)("RenderPassManagerVulkan::execute: {} render pass(es) found.", mRenderPasses.size());
     RenderPass * rp = nullptr;
     for (size_t i = 0; i < mRenderPasses.size(); i++) {
         if (mRenderPasses[i].firstTaskIndex <= taskInfo.index && mRenderPasses[i].lastTaskIndex >= taskInfo.index) { rp = &mRenderPasses[i]; }
     }
     if (!rp) {
-        GN_ERROR(sLogger)("Workflow '{}' task '{}' doesn't seem to be part of any render pass.", taskInfo.workflow, taskInfo.task);
+        auto printRenderPassList = [](const std::vector<RenderPass> & renderPasses) {
+            StrA renderPassList;
+            for (const auto & rp : renderPasses) {
+                renderPassList.append(fmt::format("  Render pass: firstTaskIndex={}, lastTaskIndex={}, renderTarget={}\n", rp.firstTaskIndex, rp.lastTaskIndex,
+                                                  rp.renderTarget ? rp.renderTarget->name : "null"_s));
+            }
+            return renderPassList;
+        };
+        GN_ERROR(sLogger)("{} - doesn't seem to be part of any render pass. Render pass list:\n{}", taskInfo, printRenderPassList(mRenderPasses));
         return nullptr;
     }
 
@@ -362,6 +378,7 @@ const RenderPassManagerVulkan::RenderPass * RenderPassManagerVulkan::execute(Tas
         if (rp->firstTaskIndex == taskInfo.index) {
             if (!beginRenderPass(*rp->renderTarget, commandBuffer)) return nullptr;
         } else if (rp->lastTaskIndex == taskInfo.index) {
+            GN_VERBOSE(sLogger)("{} - end render pass for render target: {}.", taskInfo, rp->renderTarget->name);
             commandBuffer.endRendering();
         }
     }

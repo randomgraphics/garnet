@@ -110,3 +110,13 @@ private:
 };
 
 } // namespace GN::rdg
+
+template<>
+struct fmt::formatter<GN::rdg::TaskInfo> {
+    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
+    template<typename Context>
+    constexpr auto format(GN::rdg::TaskInfo const & taskInfo, Context & ctx) const {
+        return format_to(ctx.out(), "TaskInfo(submission={}, workflow={}, task[{}]={})", taskInfo.submission.name, taskInfo.workflow, taskInfo.index,
+                         taskInfo.task);
+    }
+};

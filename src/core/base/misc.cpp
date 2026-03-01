@@ -75,6 +75,7 @@ GN_API GN::Guid GN::Guid::createRandom() {
     // fallback - continue below
 #elif GN_POSIX
     // Try read kernal uuid file on Linux and Android
+    Guid   g = {};
     FILE * f = ::fopen("/proc/sys/kernel/random/uuid", "rb");
     if (f) {
         char   uuid[37];
@@ -83,7 +84,6 @@ GN_API GN::Guid GN::Guid::createRandom() {
         int data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11;
         if (got == 36 && 36 == ::sscanf(uuid, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", &data1, &data2, &data3, &data4, &data5, &data6, &data7,
                                         &data8, &data9, &data10, &data11)) {
-            Guid g;
             g.data1    = (uint32_t) data1;
             g.data2    = (uint16_t) data2;
             g.data3    = (uint16_t) data3;
@@ -117,8 +117,6 @@ GN_API GN::Guid GN::Guid::createRandom() {
     // fallback - continue below
 #endif
 
-    // Portable C++11-thread-safe fallback
-    Guid g;
     // Thread-safe entropy: rand() is only weakly random. Use address, time, and rand, mix with a static counter.
     static std::atomic<uint32_t> counter {0};
     uint64_t                     ts   = static_cast<uint64_t>(time(nullptr));

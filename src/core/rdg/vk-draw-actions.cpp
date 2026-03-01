@@ -76,13 +76,6 @@ public:
                 return FAILED;
             }
 
-        // end render pass, if this is the last task of the render pass.
-        if (rp->lastTaskIndex == taskInfo.index && rp->renderTarget) {
-            // Not like old render pass, dynamic rendering does not implicitly updates the render target's layout.
-            // So here we don't have to call resource tracker to update the layout either.
-            cb.commandBuffer.handle().endRendering();
-        }
-
         // submit command buffer, if asked to do so.
         // TODO: we need to remember the submission somewhere.
         if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
@@ -277,7 +270,7 @@ public:
         // command buffer.
         auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
         if (!rp) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::execute: failed to end render pass");
+                GN_ERROR(sLogger)("GpuDrawVulkan::execute(): {} - failed to end render pass", taskInfo);
                 return FAILED;
             }
         GN_ASSERT(rp->firstTaskIndex != taskInfo.index); // should never be the beginning of a render pass.

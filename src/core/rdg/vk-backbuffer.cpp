@@ -284,7 +284,7 @@ public:
 
         // Notify render pass manager to end render pass, if this is the active render target.
         auto & sc = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        sc.renderPassManager.clearActiveRenderTargetIfBackbuffer(taskInfo, backbuffer);
+        sc.renderPassManager.onPresentingBackbuffer(taskInfo, backbuffer);
 
         // done
         return std::make_pair(PASSED, nullptr);

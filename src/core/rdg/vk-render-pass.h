@@ -18,6 +18,12 @@ public:
         uint64_t              firstTaskIndex = 0;
         uint64_t              lastTaskIndex  = 0;
         AutoRef<RenderTarget> renderTarget; // could be empty, if this is no render target is set between the first and last task.
+
+        StrA toString() const {
+            auto renderTargetName = renderTarget ? renderTarget->name : "null"_s;
+            auto taskRange        = fmt::format("[{}, {}]", firstTaskIndex, lastTaskIndex);
+            return fmt::format("RenderPass(renderTarget={}, task = {})", renderTargetName, taskRange);
+        }
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params): mGpu(params.gpu) {}
@@ -29,7 +35,7 @@ public:
 
     /// Called by presnet action to end rendering to backbuffer.
     /// If current render target is not this backbufer, then do nothing.
-    void clearActiveRenderTargetIfBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
+    void onPresentingBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
 
     /// Called by task in execution pass to begin render pass.
     const RenderPass * execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer);

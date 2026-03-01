@@ -345,22 +345,23 @@ struct Workflow {
         AutoRef<Action>    action;
         AutoRef<Arguments> arguments;
 
-        explicit Task(const StrA & name): name(name) {}
+        explicit Task(const StrA & name_): name(name_) {}
 
-        Task(const StrA & name, AutoRef<Action> action, AutoRef<Arguments> arguments): name(name), action(std::move(action)), arguments(std::move(arguments)) {}
+        Task(const StrA & name_, AutoRef<Action> action_, AutoRef<Arguments> arguments_)
+            : name(name_), action(std::move(action_)), arguments(std::move(arguments_)) {}
 
-        Task & setName(const StrA & name) {
-            this->name = name;
+        Task & setName(const StrA & name_) {
+            this->name = name_;
             return *this;
         }
 
-        Task & setAction(AutoRef<Action> action) {
-            this->action = std::move(action);
+        Task & setAction(AutoRef<Action> action_) {
+            this->action = std::move(action_);
             return *this;
         }
 
-        Task & setArguments(AutoRef<Arguments> arguments) {
-            this->arguments = std::move(arguments);
+        Task & setArguments(AutoRef<Arguments> arguments_) {
+            this->arguments = std::move(arguments_);
             return *this;
         }
     };
@@ -372,8 +373,8 @@ struct Workflow {
         return *this;
     }
 
-    Workflow & appendTask(const StrA & name, AutoRef<Action> action, AutoRef<Arguments> arguments) {
-        tasks.append(Task(name, std::move(action), std::move(arguments)));
+    Workflow & appendTask(const StrA & name_, AutoRef<Action> action_, AutoRef<Arguments> arguments_) {
+        tasks.append(Task(name_, std::move(action_), std::move(arguments_)));
         return *this;
     }
 
@@ -400,6 +401,8 @@ struct TaskInfo {
 };
 
 struct Submission : RefCounter {
+    const StrA name;
+
     /// Result of execution
     struct Result {
         Action::ExecutionResult executionResult {};
@@ -425,7 +428,7 @@ struct Submission : RefCounter {
     virtual State dumpState() const = 0;
 
 protected:
-    Submission() = default;
+    Submission(const StrA & name_): name(name_) {}
 };
 
 // /// A transient arena is a temporary memory pool that is used to allocate memory for the tasks that are executed.
