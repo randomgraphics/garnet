@@ -41,6 +41,7 @@ int main(int, const char **) {
     // Create a main window of 1280x720
     auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});
     if (!window) return -1;
+    window->show();
 
     // Create backbuffer (window and size are part of Backbuffer descriptor)
     auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
@@ -92,7 +93,7 @@ int main(int, const char **) {
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, compose, present until prepare fails
-    while (true) {
+    while (window->runUntilNoNewEvents()) {
         // Schedule render workflow
         auto renderWorkflow  = renderGraph->createWorkflow("Render");
         renderWorkflow->name = "Render";
