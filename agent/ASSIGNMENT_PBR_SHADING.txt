@@ -1,36 +1,86 @@
 # Assignment: PBR shading effect
 
-Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass EffectContext (frame, camera, lighting, environment) and BuildParameters (material, geometry, render target), call build(workflow, context, params) to add PBR draw task(s) to a workflow, then submit the render graph to render a PBR object.
+Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass BuildParameters (sharedShaderConstants, material, geometry, modelToWorld) and—if needed—RenderGraph (and optionally render target) so that build(params) can create workflow(s) and return a SubGraph; the caller submits those workflows to render a PBR object.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
 Last completed: (none)
-In progress: (none)
+In progress: (none) — Task list refined; ready to start Phase 0.
 --- END PROGRESS ---
 
---- HEADER REVIEW (pipeline.h) ---
+--- HEADER REVIEW (pipeline.h) — UPDATED ---
 
-Checked the sketch in src/inc/garnet/rdg/pipeline.h. Summary:
+Current interface (pipeline.h) as of task-list refinement:
 
-- Public surface is minimal and consistent: PbrShading and nested Material are GpuResources; CreateParameters (gpu), BuildParameters (material, geometry, renderTarget), build(workflow, context, params), create(). EffectContext carries frame, camera, lighting, environmentMap. Good.
+- PbrShading and PbrShading::Material are GpuResources. CreateParameters { gpu }. build(params) returns SubGraph (builtResult + DynaArray<Workflow *> workflows). No separate EffectContext or workflow parameter.
 
-- Possible gaps (to address in implementation or follow-up):
-  1. No model matrix in BuildParameters. The commented PBR action in actions.h had modelMatrix and optional normalMatrix. For "render a PBR object" we may need model-to-world (and optionally normal matrix). Options: add to BuildParameters (e.g. Matrix44f modelMatrix; optional normalMatrix), or document that transform is encoded elsewhere (e.g. in geometry). Task list includes a small task to add model transform if we need it for the first usable path.
-  2. PbrShading::Material::TYPE_NAME is "PbrTextureSet". Intentional (material = texture set). Keep unless we rename the concept.
-  3. EnvironmentMap has TODO for irradiance map, prefiltered map, etc. IBL often needs those; leave as follow-up after basic PBR (single draw with direct lighting + optional simple env) works.
-  4. LightingInfo::Light has "TODO: add shadow information". Out of scope for this assignment.
+- BuildParameters: AutoRef<SharedShaderConstants> sharedShaderConstants; AutoRef<Material> material; GpuGeometry geometry; AffineTransform modelToWorld. So model transform is already present (modelToWorld). No RenderGraph* or RenderTarget in BuildParameters — build() must create workflows, so we need a way to obtain them (add RenderGraph* to BuildParameters in implementation phase if not added to header first).
 
-- pipeline.h has no #includes; it relies on being included after dependency-graph.h, artifacts.h, actions.h, physical.h (via GNrdg.h). No change needed.
+- SharedShaderConstants replaces the earlier "EffectContext" concept: frame/camera/lighting/environment are expected to be provided via this shared resource (pipeline.h has commented ViewInformation, EnvironmentInformation, etc.). SimpleLight (Point, Spot, Directional) is the light representation in pipeline.h.
+
+- SubGraph: struct SubGraph { Action::ExecutionResult builtResult; DynaArray<Workflow *> workflows; }. So build() returns a result and the list of workflows it created; the caller merges these into the submission (e.g. SubmitParameters.workflows).
+
+- Material::TYPE_NAME is "PbrMaterial". Material::load(db, name, LoadParameters): planned to accept GN::File * source (not fileName) so callers can load from disk, memory blob, or embedded resource. Use GN::File directly in pipeline.h; GNbase.h (where File is defined) is already included by GNrdg.h, so no extra includes or forward declarations are needed.
+
+- SkyBox has the same pattern: CreateParameters { gpu }, BuildParameters { sharedShaderConstants }, build() returns SubGraph.
+
+- EnvironmentalLighting / EnvironmentMap is commented out; IBL/irradiance can be follow-up. Shadow info out of scope.
+
+--- PLAN: SharedShaderConstants (public interface and behavior) ---
+
+SharedShaderConstants will eventually provide a set of uniform buffers and textures containing shared GPU resources that are referenced or updated by individual effects (e.g. PbrShading).
+
+Public interface (pipeline.h):
+- Must NOT expose any information about how data is organized on the GPU. Layout, binding slots, descriptor set structure, and buffer/texture allocation are entirely the responsibility of the API-specific implementation (e.g. Vulkan backend in core/rdg).
+- Must provide at least a set of setters so the caller can supply logical data. The caller passes high-level data (frame counter, view matrix, render target, lights, etc.); the implementation copies or references this data and decides how to pack it into uniform buffers and textures for the active graphics API.
+- Suggested logical data and setters (to be added or refined in implementation):
+  - FrameInformation: frameCounter, frameDuration (Microseconds). setFrameInformation(const FrameInformation &).
+  - ViewInformation: full world→view→clip transformation (e.g. worldToView, viewToClip matrices), camera position in world space (Location / WorldUnit) so implementation can translate model and light locations to float3 at runtime, optional RenderTarget reference. setViewInformation(const ViewInformation &).
+  - DirectLightingInformation: list of direct lights (type, position, direction, color, range, cone angles, etc.). setDirectLightingInformation(const DirectLightingInformation &).
+- CreateParameters: at least AutoRef<GpuContext> gpu. create(db, name, params) returns an implementation that satisfies the above.
+- No getters that return GPU layout, buffer pointers, or binding indices in the public header. Any such details live in the implementation and are used when building effect tasks (e.g. when PbrShading::build() fills GpuDraw::A from SharedShaderConstants).
+
+Implementation (core/rdg, backend-specific):
+- Backend implements the setters by storing the logical data and/or uploading to its own uniform buffers and textures. When an effect (e.g. PbrShading) builds a draw task, it obtains from SharedShaderConstants whatever is needed to fill GpuDraw::A (e.g. descriptor sets or resource refs), using backend-specific code paths only in core/rdg, not in the public API.
+
+--- PLAN: Embedded resources (CMake) ---
+
+To avoid runtime file loading, PBR assets (textures, material data, optionally mesh data) are embedded into the sample executable. Use CMake to drive platform-specific embedding:
+
+- **Windows:** Use a .rc (resource script) file. In the .rc file, add RCDATA (or custom resource type) entries that reference the binary asset files (e.g. .png, .jpg, .bin). Add the .rc file to the sample target in CMake (e.g. add it to the executable's sources so the MSVC resource compiler compiles it and the linker links the resource section). At runtime, the sample uses the appropriate Win32 API (e.g. FindResource / LoadResource / LockResource) to get a pointer and size to the embedded blob, then wraps it in a GN::MemFile or similar and passes it to Material::load(db, name, {.gpu = gpu, .source = &memFile}).
+
+- **Linux (and similar):** Use objcopy to turn each asset file into an object file that exposes symbols (e.g. _binary_foo_png_start, _binary_foo_png_end, _binary_foo_png_size). CMake: add_custom_command to run objcopy (e.g. objcopy --input-target=binary --output-target=elf64-x86-64 --rename-section .data=.rodata,contents,alloc,load,readonly,data foo.png foo.png.o). Add the generated .o files to the sample target so they are linked into the executable. At runtime, the sample uses the start/size symbols to wrap the data in GN::MemFile and pass to Material::load.
+
+- **CMake:** Keep platform logic in the sample's CMakeLists (or a shared .cmake include): if(WIN32) add .rc and list asset files in the .rc; else() add_custom_command + target_sources for objcopy-generated .o files. Optionally support both embedded (default) and "load from disk" for development (e.g. a CMake option or runtime path override).
+
+--- PLAN: SubGraph (self-contained workflows; submit and drop) ---
+
+SubGraph is a self-contained list of workflows, together with their tasks and task arguments, that describe an effect (e.g. PBR) and can be submitted to a RenderGraph to render that effect to the screen or to a render target texture.
+
+Behavior and contents:
+- SubGraph holds: builtResult (Action::ExecutionResult from the effect’s build step) and a list of Workflow * (the workflows created by the effect’s build()). Each workflow already contains its tasks and arguments; no separate “task list” is needed at SubGraph level beyond the workflows.
+- Typically produced by effect::build(params): the effect creates one or more workflows on a RenderGraph (from params), appends tasks (e.g. ClearRenderTarget, GpuDraw) with arguments, and returns SubGraph{PASSED, {workflow1, ...}}. The SubGraph thus fully describes what to execute.
+
+Utility methods (to be implemented):
+- submit(RenderGraph & graph, name): Submit this subgraph for execution. Implementation: call graph.submit(SubmitParameters{.workflows = this->workflows, .name = name}). After submit, the workflows are “in flight”; optionally clear the SubGraph’s workflow list to prevent double-submit. Return the Submission object from graph.submit(...).
+- drop(RenderGraph & graph): Drop this subgraph without executing. Implementation: for each workflow in this SubGraph, call graph.dropWorkflow(workflow); then clear this SubGraph’s workflow list so the SubGraph is empty and no longer references those workflows.
+
+Placement:
+- Declarations in pipeline.h (SubGraph is part of the pipeline API). Definitions can live in a .cpp that is part of the rdg core (e.g. pipeline.cpp or subgraph.cpp) and linked into the same module that implements RenderGraph::submit and dropWorkflow, so that submit/drop call into RenderGraph without circular dependency.
+
+Usage in assignment:
+- PbrShading::build(params) returns a SubGraph. The sample (or any caller) can then either subgraph.submit(renderGraph, "PBR") to run it, or subgraph.drop(renderGraph) to discard it. This keeps the assignment consistent with “SubGraph is self-contained and can be submitted or dropped.”
 
 --- REFERENCE ---
 
-- Pipeline / effect API: src/inc/garnet/rdg/pipeline.h (PbrShading, Material, EffectContext, BuildParameters, SkyBox, EnvironmentMap).
-- Actions: src/inc/garnet/rdg/actions.h (GpuDraw, GpuDraw::A, CreateParameters with vs/ps, RenderTarget, GpuGeometry).
-- Dependency graph: src/inc/garnet/rdg/dependency-graph.h (Workflow, Task, RenderGraph::schedule).
+- Pipeline / effect API: src/inc/garnet/rdg/pipeline.h (PbrShading, Material, SharedShaderConstants, BuildParameters, SubGraph, SkyBox; EnvironmentalLighting commented).
+- Actions: src/inc/garnet/rdg/actions.h (GpuDraw, GpuDraw::A with uniforms, textures, geometry; CreateParameters vs/ps; RenderTarget, GpuGeometry).
+- Dependency graph: src/inc/garnet/rdg/dependency-graph.h (Workflow, Task, RenderGraph::createWorkflow, SubmitParameters).
+- Transform: src/inc/garnet/rdg/transform.h (AffineTransform, WorldToClipTransformChain).
 - Artifacts: src/inc/garnet/rdg/artifacts.h (GpuResource, Texture, GpuContext).
-- Physical units: src/inc/garnet/rdg/physical.h (LightingInfo, IntensityRGB, IrradianceRGB, etc.).
+- Physical units / lights: pipeline.h SimpleLight (Point, Spot, Directional); physical.h if needed for units.
 - Existing effect/action impl: src/core/rdg/backbuffer-actions.cpp, src/core/rdg/vk-draw-actions.cpp, src/core/rdg/draw-actions.cpp (GpuDraw::create dispatch).
-- Sample pattern: src/sample/rdg/simple-triangle.cpp, src/sample/rdg/draw-mesh.cpp (schedule workflow, append tasks, submit).
-- Commented PBR action (reference only): src/inc/garnet/rdg/actions.h lines 573–681 (PBRShading, MaterialParams, lights, textures, camera).
+- Sample: src/sample/rdg/draw-mesh.cpp (integration target; do not use simple-triangle). GN::File (and MemFile, DiskFile) is defined in GNbase.h, which is already included by GNrdg.h; use it directly for Material::load(LoadParameters { gpu, source }) with source = File *.
+- Type IDs: src/core/rdg/runtime-type.cpp (register PbrShading, Material, SharedShaderConstants when implemented).
 
 --- BUILD/CI ---
 
@@ -54,35 +104,41 @@ PHASE 0: Setup and type registration
     - Verification: build.py d and env/bin/cit.py pass.
 
 [ ] Task 0.2 — Register PbrShading and PbrShading::Material TYPE_IDs
-    - Ensure PbrShading::TYPE_ID and PbrShading::Material::TYPE_ID are defined and registered (e.g. in runtime-type.cpp or equivalent) so create() and type casting work.
+    - Define PbrShading::TYPE_ID and PbrShading::Material::TYPE_ID in runtime-type.cpp (or equivalent) so create() and type casting work. Register SharedShaderConstants::TYPE_ID when that type is implemented.
     - Verification: Build; no duplicate or missing type ID symbols.
 
 ---
 PHASE 1: PbrShading factory and stub implementation
 ---
 
-[ ] Task 1.1 — Implement PbrShading::create() and a stub implementation class
-    - Add a concrete class (e.g. PbrShadingImpl or PbrShadingVulkan in core/rdg) that extends PbrShading and implements build() as no-op (return PASSED, do not add tasks). Implement PbrShading::create() to instantiate and return it (API dispatch by gpu context if needed; for now Vulkan-only or single impl is fine).
+[ ] Task 1.1 — Implement PbrShading::create() and a Vulkan-specific stub implementation class
+    - Add a Vulkan-specific class (e.g. PbrShadingVulkan in core/rdg) that extends PbrShading and implements build(params) to return SubGraph{PASSED, {}} (no workflows yet). PbrShading::create() instantiates and returns this Vulkan implementation (no multi-backend dispatch required for this assignment).
     - Follow pattern of PrepareBackbuffer::create / GpuDraw::create: create in core, register in db. No new public API in pipeline.h.
-    - Verification: Build. Code can call PbrShading::create(db, name, params) and get non-null AutoRef<PbrShading>; build(workflow, context, params) returns PASSED and does not crash.
+    - Verification: Build. PbrShading::create(db, name, params) returns non-null AutoRef<PbrShading>; build(params) returns SubGraph with builtResult == PASSED and empty workflows.
 
-[ ] Task 1.2 — (Optional) Material::load() stub
-    - Implement Material::load() so it compiles and links; may return nullptr or a minimal artifact. No file loading required yet.
-    - Verification: Build; no undefined Material::load symbol.
+[ ] Task 1.2 — Material::load() stub with GN::File-based API
+    - Implement Material::load() so it compiles and links; LoadParameters accepts GN::File * source (non-null readable stream). Implementation may return nullptr or a minimal artifact; no full loading required yet. This allows loading from disk (DiskFile), memory blob (MemFile), or embedded resource (wrapped pointer/size).
+    - Verification: Build; no undefined Material::load symbol; callers can pass a File * for future disk/memory/embedded use.
 
 ---
 PHASE 2: build() adds a real draw task
 ---
 
-[ ] Task 2.1 — build() creates or reuses a GpuDraw action and appends one task
-    - In PbrShading impl: in build(), create a GpuDraw action (e.g. via GpuDraw::create with PBR vs/ps) or reuse a cached one. Build GpuDraw::A from BuildParameters (geometry, renderTarget) and bind material + context (camera, lighting, environment) into uniforms/textures as defined by the PBR shader. Append one Workflow::Task with that action and arguments.
-    - Use EffectContext (camera.viewProjMatrix, lighting.lights, environmentMap) and BuildParameters (material, geometry, renderTarget). If shaders are not yet available, use placeholder/dummy shaders so the graph runs without producing correct image.
-    - Verification: Build. A workflow that calls pbrShading->build(w, context, params) contains one extra task; submit runs without crash (visual result may be placeholder).
+[ ] Task 2.0 — Add RenderGraph* (and optionally RenderTarget*) to BuildParameters if needed
+    - Current BuildParameters have no way to create workflows. Add RenderGraph * renderGraph to BuildParameters so build() can call renderGraph->createWorkflow(...) and return the workflow(s) in SubGraph. If the PBR workflow should set render target (ClearRenderTarget) before draw, add AutoRef<RenderTarget> renderTarget or obtain from SharedShaderConstants; document in header.
+    - Verification: pipeline.h BuildParameters updated; build() can create and return workflows.
 
-[ ] Task 2.2 — Add model transform to BuildParameters if required
-    - If the first usable path needs a model matrix: add to PbrShading::BuildParameters (e.g. Matrix44f modelMatrix; optional Matrix44f or Matrix33f normalMatrix). Document in header. Wire through to GpuDraw::A (e.g. uniforms) in build().
-    - If we defer transform to a later design (e.g. per-draw in a different API), skip and note in PROGRESS.
-    - Verification: Build; pipeline.h remains minimal; transform is available where the draw needs it.
+[ ] Task 2.1 — build() creates a GpuDraw action and appends one task to a new workflow
+    - In build(): create one workflow via params.renderGraph->createWorkflow("Pbr"). Create or reuse a GpuDraw action (placeholder vs/ps OK). Build GpuDraw::A from BuildParameters (geometry; material and params.sharedShaderConstants → uniforms/textures). Optionally prepend ClearRenderTarget if render target is in params. Append one Workflow::Task with the GpuDraw action and arguments. Return SubGraph{PASSED, {workflow}}.
+    - Wire modelToWorld from BuildParameters into GpuDraw::A (e.g. uniforms) so the draw has the model transform.
+    - Verification: Build. Caller that passes RenderGraph* and calls build(params) gets SubGraph with one workflow containing at least one draw task; submit runs without crash (visual may be placeholder).
+
+[ ] Task 2.2 — (Done) Model transform
+    - modelToWorld is already in BuildParameters (AffineTransform). No header change. Ensure it is wired in Task 2.1.
+
+[ ] Task 2.3 — SubGraph utility methods: submit and drop (per plan above)
+    - Implement SubGraph::submit(RenderGraph & graph, name) and SubGraph::drop(RenderGraph & graph). submit: call graph.submit(SubmitParameters{.workflows = workflows, .name = name}); return submission; optionally clear workflows after submit to avoid double-submit. drop: for each workflow call graph.dropWorkflow(workflow); clear workflows. Declarations in pipeline.h; definitions in core/rdg (e.g. pipeline.cpp or subgraph.cpp).
+    - Verification: Build; sample or test can call subgraph.submit(renderGraph, "PBR") or subgraph.drop(renderGraph) after build().
 
 ---
 PHASE 3: PBR shaders and Vulkan binding
@@ -92,29 +148,32 @@ PHASE 3: PBR shaders and Vulkan binding
     - Add GLSL (or equivalent) sources for a minimal PBR pass: vertex shader (position, normals, UVs, output to fragment), fragment shader (e.g. Disney-style or metallic-roughness: baseColor, metallic, roughness, normal; direct lights from LightingInfo; optional simple env/sky). Compile to SPIR-V and expose as binaries (e.g. headers or assets) for GpuDraw::CreateParameters.
     - Verification: Shaders compile; can be passed into GpuDraw::create for the PBR draw action.
 
-[ ] Task 3.2 — Wire material and context to descriptor/uniform layout
-    - Define how Material (and EffectContext) map to GpuDraw::A: which uniforms (e.g. viewProj, model, material params, light data) and which textures (base color, normal, metallic-roughness, env map, etc.). Implement in PbrShading impl so build() fills GpuDraw::A correctly. Ensure Vulkan backend (GpuDrawVulkan) can bind these (descriptor sets / push constants as per existing pattern).
+[ ] Task 3.2 — Wire material and SharedShaderConstants to descriptor/uniform layout
+    - Define how Material and SharedShaderConstants map to GpuDraw::A: which uniforms (e.g. viewProj, model, material params, light data) and which textures (base color, normal, metallic-roughness, env if any). Implement in PbrShading impl so build() fills GpuDraw::A correctly. Ensure Vulkan backend can bind these (descriptor sets / push constants as per existing pattern).
     - Verification: Build; one frame with a single PBR object and simple lighting produces a plausible image (no need for IBL in first cut).
 
 ---
-PHASE 4: Material and environment (minimal)
+PHASE 4: Material and SharedShaderConstants (minimal)
 ---
 
-[ ] Task 4.1 — Material artifact and load path (minimal)
-    - Implement Material as a GpuResource (backend can be opaque: e.g. a set of texture refs + scalar params). Material::load() from file (e.g. a simple descriptor format or glTF-style refs) or leave load() as stub and support programmatic material creation for the sample.
-    - Verification: Build. Sample or test can create/load a material and pass it to PbrShading::BuildParameters.
+[ ] Task 4.1 — Material artifact and load from GN::File (minimal)
+    - Implement Material as a GpuResource (backend opaque: e.g. texture set + scalar params). Material::load(db, name, LoadParameters) accepts LoadParameters { gpu, source } where source is GN::File * (non-null). Use GN::File directly in pipeline.h; GNbase.h is already included by GNrdg.h. Reading from source supports loading from disk (DiskFile), memory blob (MemFile), or embedded resource (data wrapped as File). No fileName-based load; use File so sample can pass embedded blobs from .rc/objcopy.
+    - Verification: Build. Sample or test can create/load a material (from File) and pass it to PbrShading::BuildParameters.
 
-[ ] Task 4.2 — (Optional) EnvironmentMap::create and use in EffectContext
-    - EnvironmentMap::create() already declared; implement if not yet done. Use in EffectContext for PBR (e.g. ambient + skybox). Irradiance/prefiltered maps can be follow-up.
-    - Verification: Build; context.environmentMap can be set and used in build() for env sampling.
+[ ] Task 4.2 — SharedShaderConstants: public interface and implementation (per plan above)
+    - Public header: expose only logical data structs (FrameInformation, ViewInformation, DirectLightingInformation or equivalent) and virtual setters. ViewInformation must include full world→view→clip transformation (e.g. worldToView, viewToClip) and camera position in world space (Location, WorldUnit) so the implementation can translate model and light positions to float3 at runtime. CreateParameters with gpu; create() factory. No GPU layout, binding indices, or buffer/texture internals in the public API.
+    - Implementation (core/rdg): create() returns backend-specific impl; setters store/upload data; GPU layout and uniform buffers/textures are entirely inside the implementation. When PbrShading (or other effects) build tasks, they use SharedShaderConstants via the public interface and the backend wires the stored data into GpuDraw::A as needed.
+    - Verification: Build; caller can create SharedShaderConstants, set frame/view/light data via setters, and pass it in BuildParameters; build() can use it for PBR draw (no GPU layout in pipeline.h).
 
 ---
-PHASE 5: Integration and sample (optional)
+PHASE 5: Integration and sample (required)
 ---
 
-[ ] Task 5.1 — Add or extend a sample that uses PbrShading
-    - Add a small sample (or extend draw-mesh/simple-triangle) that: creates PbrShading, fills EffectContext (frame, camera, lighting, optional environment), calls build(workflow, context, buildParams) with material, geometry, render target, then submits. Ensure one PBR draw runs and window shows a lit object.
-    - Verification: Run sample; no crash; visible PBR-style result.
+[ ] Task 5.1 — PBR sample in draw-mesh; assets and embedding (required)
+    - Use draw-mesh.cpp (do not extend simple-triangle). Integrate PbrShading: create PbrShading (Vulkan), SharedShaderConstants, fill BuildParameters, build(params), subgraph.submit() (or drop()). One PBR draw runs and window shows a lit object.
+    - Acquire royalty-free PBR textures and models; download into sample folder (e.g. src/sample/rdg/media/ or similar). Include source URL and license (e.g. LICENSE or README in that folder).
+    - Embed assets into the sample executable so the sample does not depend on loading files from disk at runtime (see "PLAN: Embedded resources" above): use CMake to embed via .rc on Windows and objcopy on Linux. Sample opens embedded blobs (MemFile or equivalent from resource/objcopy symbols), passes them to Material::load(db, name, {.gpu, .source = &file}).
+    - Verification: Run sample; no crash; visible PBR result; runs without external asset files when built with embedding.
 
 [ ] Task 5.2 — Final lint and cleanup
     - Run env/bin/cit.py; fix lint. Update PROGRESS and summary of files. Commit assignment complete.
@@ -123,11 +182,11 @@ PHASE 5: Integration and sample (optional)
 Summary of files to touch
 ---
 
-- src/inc/garnet/rdg/pipeline.h — Only if we add model transform (Task 2.2) or minor doc fixes.
-- src/core/rdg/ — New or existing: PbrShading::create() and stub impl (e.g. pbr-shading.cpp or under existing rdg core); type IDs in runtime-type.cpp.
-- src/core/rdg/ — Material::load() stub or impl; EnvironmentMap::create/load if in scope.
+- src/inc/garnet/rdg/pipeline.h — Add RenderGraph* (and optionally RenderTarget) to BuildParameters (Task 2.0); SharedShaderConstants ViewInformation with full world→view→clip and camera position (WorldUnit) (Task 4.2); Material::LoadParameters with GN::File * source (Task 4.1); SubGraph submit/drop declarations (Task 2.3); minor doc fixes if needed.
+- src/core/rdg/ — PbrShadingVulkan (or similar) and PbrShading::create(); type IDs in runtime-type.cpp; Material::load(File * source) stub or impl; SharedShaderConstants::create() and impl with ViewInformation (worldToView, viewToClip, cameraPosition) and no GPU layout in public API (Task 4.2); SubGraph::submit and SubGraph::drop impl (Task 2.3).
 - src/core/rdg/vk-draw-actions.cpp — Only if PBR-specific binding or state is needed beyond GpuDraw::A.
-- Shaders: new directory or under src/sample/rdg/ or src/core/rdg/ — PBR vs/ps sources and SPIR-V build path.
-- Sample: src/sample/rdg/ — New or extended sample for PbrShading (Phase 5).
+- src/inc/garnet/rdg/transform.h — Reference only (AffineTransform already used in BuildParameters.modelToWorld).
+- Shaders: new or under src/sample/rdg/ or src/core/rdg/ — PBR vs/ps sources and SPIR-V build path.
+- Sample: src/sample/rdg/ — draw-mesh.cpp extended for PbrShading; subgraph.submit()/drop(); CMake embeds assets (.rc on Windows, objcopy on Linux); media folder with royalty-free PBR assets + source/license.
 
 --- END ASSIGNMENT ---

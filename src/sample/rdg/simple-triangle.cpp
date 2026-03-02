@@ -98,7 +98,7 @@ int main(int, const char **) {
         auto renderWorkflow  = renderGraph->createWorkflow("Render");
         renderWorkflow->name = "Render";
 
-        // Task: Prepare backbufferg
+        // Task: Prepare backbuffer
         auto prepareTask              = Workflow::Task("Prepare");
         prepareTask.action            = prepareAction;
         auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());

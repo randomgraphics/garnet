@@ -296,6 +296,7 @@ struct Action : public Artifact {
         PASSED,  ///< the action executed successfully.
         WARNING, ///< the action executed successfully, but with warnings.
         FAILED,  ///< the action failed; dependents may be skipped.
+        DROPPED, ///< the action is dropped; dependents are skipped.
     };
 
     /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
