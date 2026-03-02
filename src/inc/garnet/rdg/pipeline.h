@@ -50,12 +50,12 @@ struct SharedShaderConstants : public GpuResource {
     /// Logical frame data. Implementation maps this to GPU resources as needed.
     struct FrameInformation {
         uint32_t     frameCounter = 0;
-        Microseconds frameDuration{};
+        Microseconds frameDuration {};
     };
 
     /// Logical view/camera data. Implementation maps this to GPU resources as needed.
     struct ViewInformation {
-        Matrix44f            worldToClip = Matrix44f::sIdentity();
+        Matrix44f             worldToClip = Matrix44f::sIdentity();
         AutoRef<RenderTarget> renderTarget;
     };
 
@@ -65,17 +65,17 @@ struct SharedShaderConstants : public GpuResource {
 
         /// Point light: position, luminous intensity [cd], range in world units.
         struct Point {
-            Location     position = {};
+            Location     position  = {};
             IntensityRGB intensity = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range    = {};
+            WorldUnit    range     = {};
         } point;
 
         /// Spot light: position, orientation, luminous intensity [cd], range, cone angles.
         struct Spot {
             Location     position          = {};
-            Orientation  orientation      = {};
-            IntensityRGB intensity        = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range            = {};
+            Orientation  orientation       = {};
+            IntensityRGB intensity         = {1.0f, 1.0f, 1.0f, {1.0f}};
+            WorldUnit    range             = {};
             float        cosInnerConeAngle = 1.0f;
             float        cosOuterConeAngle = 1.0f;
         } spot;
@@ -96,8 +96,8 @@ struct SharedShaderConstants : public GpuResource {
         AutoRef<GpuContext> gpu;
     };
 
-    virtual void setFrameInformation(const FrameInformation &)       = 0;
-    virtual void setViewInformation(const ViewInformation &)        = 0;
+    virtual void setFrameInformation(const FrameInformation &)                   = 0;
+    virtual void setViewInformation(const ViewInformation &)                     = 0;
     virtual void setDirectLightingInformation(const DirectLightingInformation &) = 0;
 
     static GN_API AutoRef<SharedShaderConstants> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -197,17 +197,19 @@ protected:
 struct GN_API SubGraph {
     GN_NO_COPY(SubGraph); // not copyable
 
-    RenderGraph *            graph = {};
-    StrA                     name = {};
-    Action::ExecutionResult  builtResult = Action::ExecutionResult::PASSED;
-    DynaArray<Workflow *>    workflows;
+    RenderGraph *           graph       = {};
+    StrA                    name        = {};
+    Action::ExecutionResult builtResult = Action::ExecutionResult::PASSED;
+    DynaArray<Workflow *>   workflows;
 
-    SubGraph(RenderGraph & graph, const StrA & name) : graph(&graph), name(name) {}
+    SubGraph() = default;
+
+    SubGraph(RenderGraph & graph, const StrA & name): graph(&graph), name(name) {}
 
     ~SubGraph() { drop(); }
 
     // move constructor
-    SubGraph(SubGraph && other) noexcept : graph(other.graph), name(other.name), builtResult(other.builtResult), workflows(std::move(other.workflows)) {
+    SubGraph(SubGraph && other) noexcept: graph(other.graph), name(other.name), builtResult(other.builtResult), workflows(std::move(other.workflows)) {
         other.graph = nullptr;
         other.name.clear();
         other.builtResult = Action::ExecutionResult::PASSED;
@@ -218,10 +220,10 @@ struct GN_API SubGraph {
     SubGraph & operator=(SubGraph && other) noexcept {
         if (this == &other) return *this;
         drop(); // drop current graph, if any.
-        graph = other.graph;
-        name = other.name;
+        graph       = other.graph;
+        name        = other.name;
         builtResult = other.builtResult;
-        workflows = std::move(other.workflows);
+        workflows   = std::move(other.workflows);
         other.graph = nullptr;
         other.name.clear();
         other.builtResult = Action::ExecutionResult::PASSED;
@@ -236,10 +238,8 @@ struct GN_API SubGraph {
 
     /// Drop this subgraph without executing. All workflows are dropped and cleared from this SubGraph.
     SubGraph & drop() {
-        GN_ASSERT(graph);
-        for (auto * w : workflows) {
-            graph->dropWorkflow(w);
-        }
+        if (!graph) return *this;
+        for (auto * w : workflows) { graph->dropWorkflow(w); }
         workflows.clear();
         builtResult = Action::ExecutionResult::DROPPED;
         return *this;
@@ -258,7 +258,7 @@ struct PbrShading : public GpuResource {
 
         struct LoadParameters {
             AutoRef<GpuContext> gpu;
-            StrA                fileName;
+            GN::File *          source = {}; ///< non-null readable stream (disk, memory blob, or embedded)
         };
 
         static GN_API AutoRef<Material> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
@@ -268,6 +268,7 @@ struct PbrShading : public GpuResource {
     };
 
     struct BuildParameters {
+        RenderGraph *                  renderGraph = {};
         AutoRef<SharedShaderConstants> sharedShaderConstants;
         AutoRef<Material>              material;
         GpuGeometry                    geometry;
