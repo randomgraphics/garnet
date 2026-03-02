@@ -3,8 +3,8 @@
 Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass BuildParameters (sharedShaderConstants, material, geometry, modelToWorld) and—if needed—RenderGraph (and optionally render target) so that build(params) can create workflow(s) and return a SubGraph; the caller submits those workflows to render a PBR object.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 0.1, Task 0.2 (Phase 0 done).
-In progress: (none) — Ready for Phase 1.
+Last completed: Task 0.1, 0.2, 1.1, 1.2, 2.0, 2.1, 2.2, 2.3 (Phase 0–2 done).
+In progress: (none) — Ready for Phase 3 (PBR shaders and Vulkan binding).
 --- END PROGRESS ---
 
 --- HEADER REVIEW (pipeline.h) — UPDATED ---
