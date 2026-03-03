@@ -59,7 +59,16 @@ public:
             }
         auto drawArgs            = AutoRef<GpuDraw::A>(new GpuDraw::A());
         drawArgs->geometry.value = params.geometry;
-        // modelToWorld: wire in Task 3.2 via uniforms; for now geometry only
+        // Push constants: model (64 bytes) + viewProj (64 bytes), column-major for GLSL.
+        const Matrix44f & model    = params.modelToWorld.matrix();
+        const Matrix44f & viewProj = params.sharedShaderConstants ? params.sharedShaderConstants->getViewInformation().worldToClip : params.worldToClip;
+        drawArgs->pushConstantData.resize(128);
+        float * pc = reinterpret_cast<float *>(drawArgs->pushConstantData.data());
+        for (int col = 0; col < 4; ++col)
+            for (int row = 0; row < 4; ++row) pc[col * 4 + row] = model[row][col];
+        pc += 16;
+        for (int col = 0; col < 4; ++col)
+            for (int row = 0; row < 4; ++row) pc[col * 4 + row] = viewProj[row][col];
         workflow->appendTask("PBR draw", std::move(drawAction), std::move(drawArgs));
         SubGraph sg(*params.renderGraph, "Pbr");
         sg.workflows.append(workflow);
@@ -101,12 +110,22 @@ GN_API AutoRef<PbrShading> PbrShading::create(ArtifactDatabase & db, const StrA 
 }
 
 // =============================================================================
-// Material::load() - stub (File-based API)
+// PbrMaterialImpl - minimal Material implementation (Task 4.1)
+// =============================================================================
+
+class PbrMaterialImpl : public PbrShading::Material {
+    AutoRef<GpuContext> mGpu;
+
+public:
+    PbrMaterialImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
+        : PbrShading::Material(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+};
+
+// =============================================================================
+// Material::load() - load from GN::File (minimal)
 // =============================================================================
 
 GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params) {
-    (void) db;
-    (void) name;
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("PbrShading::Material::load: gpu is null");
             return {};
@@ -115,8 +134,18 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(ArtifactDatabase
             GN_ERROR(sLogger)("PbrShading::Material::load: source is null");
             return {};
         }
-    // Stub: no full loading yet; return nullptr so callers can pass a File * for future use.
-    return {};
+    if (!params.source->readable()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("PbrShading::Material::load: source is not readable");
+            return {};
+        }
+    // Minimal load: no format parsing yet; create material artifact for use in BuildParameters.
+    auto * p = new PbrMaterialImpl(db, name, params.gpu);
+    if (p->sequence == 0) GN_UNLIKELY {
+            GN_ERROR(sLogger)("PbrShading::Material::load: duplicate type+name, name='{}'", name);
+            delete p;
+            return {};
+        }
+    return AutoRef<PbrShading::Material>(p);
 }
 
 } // namespace GN::rdg

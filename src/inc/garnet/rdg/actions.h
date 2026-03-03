@@ -547,6 +547,9 @@ struct GpuDraw : public GpuShaderAction {
         RwBufferMap      buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
         RoBufferMap      roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
         GeometryArgument geometry  = {this, "geometry"};           ///< geometry
+
+        /// Optional push constant data (e.g. model, viewProj). Backend copies to GPU when non-empty.
+        DynaArray<uint8_t> pushConstantData;
     };
 
     struct CreateParameters {

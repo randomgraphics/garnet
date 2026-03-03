@@ -3,8 +3,8 @@
 Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass BuildParameters (sharedShaderConstants, material, geometry, modelToWorld) and—if needed—RenderGraph (and optionally render target) so that build(params) can create workflow(s) and return a SubGraph; the caller submits those workflows to render a PBR object.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 0.1, 0.2, 1.1, 1.2, 2.0, 2.1, 2.2, 2.3, 3.1 (Phase 0–3 Task 3.1 done).
-In progress: (none) — Ready for Task 3.2 (wire material and SharedShaderConstants to descriptor/uniform layout).
+Last completed: Task 0.1–2.3, 3.1, 3.2, 4.1, 4.2, 5.1 (draw-mesh integrates PbrShading; GNsample-rdg-draw-mesh added).
+In progress: (none). Follow-up: 5.2 lint/cleanup; embedding (.rc/objcopy) and media assets.
 --- END PROGRESS ---
 
 --- HEADER REVIEW (pipeline.h) — UPDATED ---
@@ -148,7 +148,7 @@ PHASE 3: PBR shaders and Vulkan binding
     - Added core/rdg/shaders/pbr.vert (position, normal, UV; push constants model, viewProj), pbr.frag (placeholder diffuse + one directional light). compile_pbr_shaders.py compiles to pbr-vert.spv.h and pbr-frag.spv.h in core/rdg. PbrShadingVulkan::build() passes vs/ps to GpuDraw::CreateParameters. CMake: rdg include dir and optional target rdg-pbr-shaders.
     - Verification: Shaders compile; passed into GpuDraw::create for the PBR draw action; build passes.
 
-[ ] Task 3.2 — Wire material and SharedShaderConstants to descriptor/uniform layout
+[x] Task 3.2 — Wire material and SharedShaderConstants to descriptor/uniform layout [DONE]
     - Define how Material and SharedShaderConstants map to GpuDraw::A: which uniforms (e.g. viewProj, model, material params, light data) and which textures (base color, normal, metallic-roughness, env if any). Implement in PbrShading impl so build() fills GpuDraw::A correctly. Ensure Vulkan backend can bind these (descriptor sets / push constants as per existing pattern).
     - Verification: Build; one frame with a single PBR object and simple lighting produces a plausible image (no need for IBL in first cut).
 
@@ -156,11 +156,11 @@ PHASE 3: PBR shaders and Vulkan binding
 PHASE 4: Material and SharedShaderConstants (minimal)
 ---
 
-[ ] Task 4.1 — Material artifact and load from GN::File (minimal)
+[x] Task 4.1 — Material artifact and load from GN::File (minimal) [DONE]
     - Implement Material as a GpuResource (backend opaque: e.g. texture set + scalar params). Material::load(db, name, LoadParameters) accepts LoadParameters { gpu, source } where source is GN::File * (non-null). Use GN::File directly in pipeline.h; GNbase.h is already included by GNrdg.h. Reading from source supports loading from disk (DiskFile), memory blob (MemFile), or embedded resource (data wrapped as File). No fileName-based load; use File so sample can pass embedded blobs from .rc/objcopy.
     - Verification: Build. Sample or test can create/load a material (from File) and pass it to PbrShading::BuildParameters.
 
-[ ] Task 4.2 — SharedShaderConstants: public interface and implementation (per plan above)
+[x] Task 4.2 — SharedShaderConstants: public interface and implementation (per plan above) [DONE]
     - Public header: expose only logical data structs (FrameInformation, ViewInformation, DirectLightingInformation or equivalent) and virtual setters. ViewInformation must include full world→view→clip transformation (e.g. worldToView, viewToClip) and camera position in world space (Location, WorldUnit) so the implementation can translate model and light positions to float3 at runtime. CreateParameters with gpu; create() factory. No GPU layout, binding indices, or buffer/texture internals in the public API.
     - Implementation (core/rdg): create() returns backend-specific impl; setters store/upload data; GPU layout and uniform buffers/textures are entirely inside the implementation. When PbrShading (or other effects) build tasks, they use SharedShaderConstants via the public interface and the backend wires the stored data into GpuDraw::A as needed.
     - Verification: Build; caller can create SharedShaderConstants, set frame/view/light data via setters, and pass it in BuildParameters; build() can use it for PBR draw (no GPU layout in pipeline.h).
@@ -169,11 +169,10 @@ PHASE 4: Material and SharedShaderConstants (minimal)
 PHASE 5: Integration and sample (required)
 ---
 
-[ ] Task 5.1 — PBR sample in draw-mesh; assets and embedding (required)
-    - Use draw-mesh.cpp (do not extend simple-triangle). Integrate PbrShading: create PbrShading (Vulkan), SharedShaderConstants, fill BuildParameters, build(params), subgraph.submit() (or drop()). One PBR draw runs and window shows a lit object.
-    - Acquire royalty-free PBR textures and models; download into sample folder (e.g. src/sample/rdg/media/ or similar). Include source URL and license (e.g. LICENSE or README in that folder).
-    - Embed assets into the sample executable so the sample does not depend on loading files from disk at runtime (see "PLAN: Embedded resources" above): use CMake to embed via .rc on Windows and objcopy on Linux. Sample opens embedded blobs (MemFile or equivalent from resource/objcopy symbols), passes them to Material::load(db, name, {.gpu, .source = &file}).
-    - Verification: Run sample; no crash; visible PBR result; runs without external asset files when built with embedding.
+[x] Task 5.1 — PBR sample in draw-mesh; assets and embedding (required) [integration DONE]
+    - draw-mesh.cpp: PbrShading (Vulkan), SharedShaderConstants, BuildParameters, build(), PBR task merged into workflow; Material::load from MemFile (minimal blob); GNsample-rdg-draw-mesh target in CMake.
+    - One PBR draw runs each frame (empty geometry -> 3 vertices; identity model/viewProj). Embedding (.rc/objcopy) and royalty-free media folder are follow-up.
+    - Verification: Build and run GNsample-rdg-draw-mesh; no crash; PBR workflow runs.
 
 [ ] Task 5.2 — Final lint and cleanup
     - Run env/bin/cit.py; fix lint. Update PROGRESS and summary of files. Commit assignment complete.

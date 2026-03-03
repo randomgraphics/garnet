@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <garnet/GNbase.h>
 
 using namespace GN;
 using namespace GN::rdg;
@@ -26,6 +27,27 @@ int main(int, const char **) {
     // Create GPU context (no window/size; those live on Backbuffer)
     auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
+
+    // SharedShaderConstants for view (optional; PbrShading uses it for worldToClip when set)
+    auto sharedConstants = SharedShaderConstants::create(*db, "shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
+    if (sharedConstants) {
+        SharedShaderConstants::ViewInformation view;
+        view.worldToClip = Matrix44f::sIdentity(); // identity for minimal; replace with proper view-proj later
+        sharedConstants->setViewInformation(view);
+    }
+
+    // PbrShading effect (Vulkan)
+    auto pbrShading = PbrShading::create(*db, "pbr_shading", PbrShading::CreateParameters {.gpu = gpuContext});
+    if (!pbrShading) return -1;
+
+    // Optional: load material from in-memory blob (minimal; for embedding later)
+    AutoRef<PbrShading::Material> material;
+    {
+        static const char dummy[1] = {};
+        MemFile memFile(const_cast<char *>(dummy), 0, "pbr_material");
+        if (memFile.readable())
+            material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile});
+    }
 
     // Create and load texture
     auto texture = Texture::load(*db, Texture::LoadParameters {.context = gpuContext, .filename = "media::texture/earth.jpg"});
@@ -87,7 +109,7 @@ int main(int, const char **) {
 
     GN_INFO(sLogger)("Starting render loop...");
 
-    // Render loop: prepare, clear, compose, present until prepare fails
+    // Render loop: prepare, clear, PBR draw, present until prepare fails
     while (true) {
         // Schedule render workflow
         auto renderWorkflow = renderGraph->createWorkflow("Render");
@@ -108,11 +130,19 @@ int main(int, const char **) {
             clearTask.arguments           = clearArgs;
             renderWorkflow->tasks.append(clearTask);
 
-            // Task: Compose (draw mesh with texture) - disabled until Compose is uncommented in actions.h
-            // auto composeTask = Workflow::Task {};
-            // composeTask.action = composeAction;
-            // auto composeArgs = AutoRef<Compose::A>(new Compose::A());
-            // ... set composeArgs and append composeTask
+            // Task: PBR draw (from PbrShading::build)
+            PbrShading::BuildParameters pbrParams;
+            pbrParams.renderGraph           = renderGraph.get();
+            pbrParams.sharedShaderConstants = sharedConstants;
+            pbrParams.material              = material;
+            pbrParams.geometry              = {};  // empty -> backend draws 3 vertices (placeholder)
+            pbrParams.modelToWorld.reset();
+            pbrParams.worldToClip = Matrix44f::sIdentity();
+            auto pbrSubGraph      = pbrShading->build(pbrParams);
+            if (pbrSubGraph.builtResult == Action::ExecutionResult::PASSED && !pbrSubGraph.workflows.empty() && !pbrSubGraph.workflows[0]->tasks.empty()) {
+                auto & t = pbrSubGraph.workflows[0]->tasks[0];
+                renderWorkflow->appendTask(t.name, t.action, t.arguments);
+            }
 
             // Task: Present backbuffer
             auto presentTask              = Workflow::Task("Present");
@@ -124,7 +154,8 @@ int main(int, const char **) {
         }
 
         // Submit render graph for execution
-        auto submission = renderGraph->submit({});
+        Workflow * w = renderWorkflow;
+        auto submission = renderGraph->submit(SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&w, 1), .name = "Frame"});
         if (!submission) {
             GN_ERROR(sLogger)("Failed to submit render graph");
             break;
