@@ -3,8 +3,8 @@
 Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass BuildParameters (sharedShaderConstants, material, geometry, modelToWorld) and—if needed—RenderGraph (and optionally render target) so that build(params) can create workflow(s) and return a SubGraph; the caller submits those workflows to render a PBR object.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 0.1, 0.2, 1.1, 1.2, 2.0, 2.1, 2.2, 2.3 (Phase 0–2 done).
-In progress: (none) — Ready for Phase 3 (PBR shaders and Vulkan binding).
+Last completed: Task 0.1, 0.2, 1.1, 1.2, 2.0, 2.1, 2.2, 2.3, 3.1 (Phase 0–3 Task 3.1 done).
+In progress: (none) — Ready for Task 3.2 (wire material and SharedShaderConstants to descriptor/uniform layout).
 --- END PROGRESS ---
 
 --- HEADER REVIEW (pipeline.h) — UPDATED ---
@@ -144,9 +144,9 @@ PHASE 2: build() adds a real draw task
 PHASE 3: PBR shaders and Vulkan binding
 ---
 
-[ ] Task 3.1 — Add PBR vertex and fragment shaders (metal/roughness style)
-    - Add GLSL (or equivalent) sources for a minimal PBR pass: vertex shader (position, normals, UVs, output to fragment), fragment shader (e.g. Disney-style or metallic-roughness: baseColor, metallic, roughness, normal; direct lights from LightingInfo; optional simple env/sky). Compile to SPIR-V and expose as binaries (e.g. headers or assets) for GpuDraw::CreateParameters.
-    - Verification: Shaders compile; can be passed into GpuDraw::create for the PBR draw action.
+[x] Task 3.1 — Add PBR vertex and fragment shaders (metal/roughness style) [DONE]
+    - Added core/rdg/shaders/pbr.vert (position, normal, UV; push constants model, viewProj), pbr.frag (placeholder diffuse + one directional light). compile_pbr_shaders.py compiles to pbr-vert.spv.h and pbr-frag.spv.h in core/rdg. PbrShadingVulkan::build() passes vs/ps to GpuDraw::CreateParameters. CMake: rdg include dir and optional target rdg-pbr-shaders.
+    - Verification: Shaders compile; passed into GpuDraw::create for the PBR draw action; build passes.
 
 [ ] Task 3.2 — Wire material and SharedShaderConstants to descriptor/uniform layout
     - Define how Material and SharedShaderConstants map to GpuDraw::A: which uniforms (e.g. viewProj, model, material params, light data) and which textures (base color, normal, metallic-roughness, env if any). Implement in PbrShading impl so build() fills GpuDraw::A correctly. Ensure Vulkan backend can bind these (descriptor sets / push constants as per existing pattern).

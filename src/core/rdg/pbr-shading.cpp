@@ -2,6 +2,8 @@
 #include <garnet/GNrdg.h>
 #include "gpu-context.h"
 #include "vk-gpu-context.h"
+#include "pbr-vert.spv.h"
+#include "pbr-frag.spv.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
@@ -26,8 +28,7 @@ class PbrShadingVulkan : public PbrShading {
     AutoRef<GpuContext> mGpu;
 
 public:
-    PbrShadingVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
-        : PbrShading(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+    PbrShadingVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu): PbrShading(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
 
     GpuContext & gpu() const override { return *mGpu; }
 
@@ -43,10 +44,12 @@ public:
                 sg.builtResult = Action::ExecutionResult::FAILED;
                 return sg;
             }
-        // Create GpuDraw action (placeholder vs/ps for now)
+        // Create GpuDraw action with PBR vertex and fragment shaders
         GpuDraw::CreateParameters drawCp;
-        drawCp.context = mGpu;
-        StrA drawName = StrA::format("pbr_draw_{}", (unsigned long) sequence);
+        drawCp.context  = mGpu;
+        drawCp.vs       = {.binary = (void *) kPbrVertSpv, .size = kPbrVertSpvSize * sizeof(unsigned int), .entry = "main"};
+        drawCp.ps       = {.binary = (void *) kPbrFragSpv, .size = kPbrFragSpvSize * sizeof(unsigned int), .entry = "main"};
+        StrA drawName   = StrA::format("pbr_draw_{}", (unsigned long) sequence);
         auto drawAction = GpuDraw::create(database, drawName, drawCp);
         if (!drawAction) GN_UNLIKELY {
                 SubGraph sg(*params.renderGraph, "Pbr");
@@ -54,7 +57,7 @@ public:
                 params.renderGraph->dropWorkflow(workflow);
                 return sg;
             }
-        auto drawArgs = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        auto drawArgs            = AutoRef<GpuDraw::A>(new GpuDraw::A());
         drawArgs->geometry.value = params.geometry;
         // modelToWorld: wire in Task 3.2 via uniforms; for now geometry only
         workflow->appendTask("PBR draw", std::move(drawAction), std::move(drawArgs));

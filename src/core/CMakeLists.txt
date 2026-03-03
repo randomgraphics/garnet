@@ -59,7 +59,10 @@ GN_add_source_folder(sources gpu2)
 GN_add_source_folder(sources input PCH_SOURCE input/pch.cpp)
 GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
+
+# Build RDG
 GN_add_source_folder(sources rdg PCH_SOURCE rdg/pch.cpp)
+add_subdirectory(rdg)
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
