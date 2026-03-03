@@ -126,22 +126,6 @@ public:
         TS_ASSERT(mat->getBaseColorTexture() != nullptr);
     }
 
-    /// Load material from real file media::pbr/default.material (requires media mounted).
-    void testMaterialLoadFromRealFile() {
-        auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-        TS_ASSERT(db != nullptr);
-        auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
-        if (!gpuContext) return;
-
-        auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
-        TS_ASSERT(fp != nullptr); // fail if media not available
-        if (!fp) return;
-
-        auto mat = PbrShading::Material::load(*db, "test_material_file", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp});
-        TS_ASSERT(mat != nullptr);
-        TS_ASSERT(mat->getBaseColorTexture() != nullptr);
-    }
-
     /// Load lined-metal-sheeting PBR material (baseColor, ARM, normal; requires media mounted).
     /// Verifies texture content via readback: non-empty image and at least one non-zero pixel.
     void testMaterialLoadLinedMetalSheeting() {

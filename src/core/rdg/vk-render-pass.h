@@ -31,6 +31,8 @@ public:
     ~RenderPassManagerVulkan() = default;
 
     /// Called by tasks in prepare pass to collect render target information.
+    /// \param taskInfo The task information.
+    /// \param renderTarget The render target. Or null, if the resuing current render target.
     bool collectRenderTargetUsage(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget);
 
     /// Called by presnet action to end rendering to backbuffer.

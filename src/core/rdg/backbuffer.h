@@ -13,9 +13,9 @@ namespace GN::rdg {
 /// Adds frame boundaries: prepare() = beginning of frame, present() = end of frame.
 class BackbufferCommon : public Backbuffer {
 public:
-    /// Beginning of a frame. Acquire backbuffer image; call before rendering.
+    /// Beginning of a frame. Acquire backbuffer image; call by PrepareBackbuffer action in execution pass.
     virtual Action::ExecutionResult prepare(SubmissionImpl & submission) = 0;
-    /// End of a frame. Present to display; call after rendering.
+    /// End of a frame. Present to display; call by PresentBackbuffer action in execution pass.
     virtual Action::ExecutionResult present(SubmissionImpl & submission) = 0;
 
 protected:
@@ -26,7 +26,7 @@ class PresentBackbufferImpl : public PresentBackbuffer {
 public:
     PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
+    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override;
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext *) override;
 }; // namespace GN::rd;

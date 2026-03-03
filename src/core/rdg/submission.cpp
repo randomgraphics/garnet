@@ -358,7 +358,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                     mTaskStates.append(TaskExecutionState {.workflowName = wfName, .taskName = tName, .index = idx, .validationPassed = true});
                 }
                 auto & pt = pendingTasks.back();
-                GN_VERBOSE(sLogger)("Preparing workflow '{}' task '{}'", pt.info.workflow, pt.info.task);
+                GN_VERBOSE(sLogger)("Preparing {}", pt.info);
                 auto [result, context] = task.action->prepare(pt.info, *task.arguments);
                 pt.context = std::unique_ptr<Action::ExecutionContext>(context); // need to do this before error check to ensure it is released even on error.
                 {
@@ -369,13 +369,13 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                     }
                 }
                 if (result == Action::ExecutionResult::FAILED) {
-                    GN_ERROR(sLogger)("Workflow '{}' task '{}' preparation failed", pt.info.workflow, pt.info.task);
+                    GN_ERROR(sLogger)("{}: preparation failed", pt.info);
                     std::lock_guard<std::mutex> lock2(mStateMutex);
                     mRunResult = Action::ExecutionResult::FAILED;
                     return setResult(Action::ExecutionResult::FAILED);
                 }
                 if (result == Action::ExecutionResult::WARNING) {
-                    GN_VERBOSE(sLogger)("Workflow '{}' task '{}' preparation completed with warnings", pt.info.workflow, pt.info.task);
+                    GN_VERBOSE(sLogger)("{}: preparation completed with warnings", pt.info);
                     hasWarning = true;
                 }
             }
@@ -395,7 +395,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         // step 4: execute workflows sequentially in topological order.
         for (size_t i = 0; i < pendingTasks.size(); ++i) {
             auto & pt = pendingTasks[i];
-            GN_VERBOSE(sLogger)("Executing workflow '{}' task '{}'", pt.info.workflow, pt.info.task);
+            GN_VERBOSE(sLogger)("Executing {}", pt.info);
             auto result = pt.task->action->execute(pt.info, *pt.task->arguments, pt.context.get());
             {
                 std::lock_guard<std::mutex> lock(mStateMutex);
@@ -405,13 +405,13 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                 }
             }
             if (result == Action::ExecutionResult::FAILED) {
-                GN_ERROR(sLogger)("Workflow '{}' task '{}' execution failed", pt.info.workflow, pt.info.task);
+                GN_ERROR(sLogger)("{}: execution failed", pt.info);
                 std::lock_guard<std::mutex> lock(mStateMutex);
                 mRunResult = Action::ExecutionResult::FAILED;
                 return setResult(Action::ExecutionResult::FAILED);
             }
             if (result == Action::ExecutionResult::WARNING) {
-                GN_VERBOSE(sLogger)("Workflow '{}' task '{}' execution completed with warnings", pt.info.workflow, pt.info.task);
+                GN_VERBOSE(sLogger)("{}: execution completed with warnings", pt.info);
                 hasWarning = true;
             }
         }
