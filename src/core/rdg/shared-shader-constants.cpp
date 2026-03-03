@@ -12,13 +12,16 @@ namespace GN::rdg {
 // =============================================================================
 
 class SharedShaderConstantsImpl : public SharedShaderConstants {
+    AutoRef<GpuContext>       mGpu;
     FrameInformation         mFrame;
     ViewInformation          mView;
     DirectLightingInformation mLighting;
 
 public:
-    explicit SharedShaderConstantsImpl(ArtifactDatabase & db, const StrA & name)
-        : SharedShaderConstants(db, TYPE_ID, TYPE_NAME, name) {}
+    SharedShaderConstantsImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
+        : SharedShaderConstants(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+
+    GpuContext & gpu() const override { return *mGpu; }
 
     void setFrameInformation(const FrameInformation & v) override { mFrame = v; }
     void setViewInformation(const ViewInformation & v) override { mView = v; }
@@ -41,7 +44,7 @@ GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(ArtifactData
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan: {
-        auto * p = new SharedShaderConstantsImpl(db, name);
+        auto * p = new SharedShaderConstantsImpl(db, name, params.gpu);
         if (p->sequence == 0) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstants::create: duplicate type+name, name='{}'", name);
                 delete p;

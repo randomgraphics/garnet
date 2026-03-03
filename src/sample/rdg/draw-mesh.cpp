@@ -49,13 +49,9 @@ int main(int, const char **) {
             material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile});
     }
 
-    // Create and load texture
+    // Create and load texture (optional; for future use)
     auto texture = Texture::load(*db, Texture::LoadParameters {.context = gpuContext, .filename = "media::texture/earth.jpg"});
-    if (!texture) return -1;
-
-    // Create and load mesh
-    auto mesh = Mesh::load(*db, Mesh::LoadParameters {.context = gpuContext, .filename = "media::cube/cube.fbx"});
-    if (!mesh) return -1;
+    (void) texture;
 
     // Create a main window of 1280x720
     auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});
@@ -73,17 +69,6 @@ int main(int, const char **) {
     depthDesc.height  = backbufferDesc.height;
     auto depthTexture = Texture::create(*db, "depth_texture", Texture::CreateParameters {.context = gpuContext, .descriptor = depthDesc});
     if (!depthTexture) return -1;
-
-    // Create and initialize sampler
-    auto samplerDesc      = Sampler::Descriptor {};
-    samplerDesc.filterMin = Sampler::Filter::LINEAR;
-    samplerDesc.filterMag = Sampler::Filter::LINEAR;
-    samplerDesc.filterMip = Sampler::Filter::LINEAR;
-    samplerDesc.addressU  = Sampler::AddressMode::REPEAT;
-    samplerDesc.addressV  = Sampler::AddressMode::REPEAT;
-    samplerDesc.addressW  = Sampler::AddressMode::REPEAT;
-    auto sampler          = Sampler::create(*db, "sampler", Sampler::CreateParameters {.context = gpuContext, .descriptor = samplerDesc});
-    if (!sampler) return -1;
 
     // Create and initialize actions (each creates itself and registers via admit())
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
@@ -151,26 +136,26 @@ int main(int, const char **) {
             presentArgs->backbuffer.value = backbuffer;
             presentTask.arguments         = presentArgs;
             renderWorkflow->tasks.append(presentTask);
+
+            // Submit render graph for execution
+            Workflow * w = renderWorkflow;
+            auto submission = renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&w, 1), .name = "Frame"});
+            if (!submission) {
+                GN_ERROR(sLogger)("Failed to submit render graph");
+                break;
+            }
+
+            // Wait for completion and get result
+            auto result = submission->result();
+
+            // If prepare failed (window closed), exit loop
+            if (result.executionResult == Action::ExecutionResult::FAILED) {
+                GN_INFO(sLogger)("Render graph submission failed (likely window closed), exiting");
+                break;
+            }
+
+            if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
         }
-
-        // Submit render graph for execution
-        Workflow * w = renderWorkflow;
-        auto submission = renderGraph->submit(SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&w, 1), .name = "Frame"});
-        if (!submission) {
-            GN_ERROR(sLogger)("Failed to submit render graph");
-            break;
-        }
-
-        // Wait for completion and get result
-        auto result = submission->result();
-
-        // If prepare failed (window closed), exit loop
-        if (result.executionResult == Action::ExecutionResult::FAILED) {
-            GN_INFO(sLogger)("Render graph submission failed (likely window closed), exiting");
-            break;
-        }
-
-        if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
     }
 
     GN_INFO(sLogger)("Render graph draw mesh completed");

@@ -119,6 +119,8 @@ class PbrMaterialImpl : public PbrShading::Material {
 public:
     PbrMaterialImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
         : PbrShading::Material(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+
+    GpuContext & gpu() const override { return *mGpu; }
 };
 
 // =============================================================================
