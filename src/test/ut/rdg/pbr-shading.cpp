@@ -102,9 +102,9 @@ public:
 
         // Empty file: material loads but no textures
         static const char empty[1] = {};
-        MemFile           memFile(const_cast<char *>(empty), 0, "pbr_material");
-        TS_ASSERT(memFile.readable());
-        auto mat = PbrShading::Material::load(*db, "test_material_empty", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile});
+        auto              memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
+        TS_ASSERT(memFile->readable());
+        auto mat = PbrShading::Material::load(*db, "test_material_empty", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile});
         TS_ASSERT(mat != nullptr);
         TS_ASSERT_EQUALS(mat->typeId, PbrShading::Material::TYPE_ID);
     }
@@ -117,11 +117,11 @@ public:
         if (!gpuContext) return;
 
         static const char content[] = "baseColorTexture=texture/earth.jpg\n";
-        MemFile           memFile(const_cast<char *>(content), sizeof(content) - 1, "test.material");
-        TS_ASSERT(memFile.readable());
+        auto              memFile   = AutoRef<MemFile>::make(const_cast<char *>(content), sizeof(content) - 1, "test.material");
+        TS_ASSERT(memFile->readable());
         StrA basePath = "media::";
         auto mat      = PbrShading::Material::load(*db, "test_material_tex",
-                                                   PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile, .basePath = basePath});
+                                                   PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile, .basePath = basePath});
         TS_ASSERT(mat != nullptr);
         TS_ASSERT(mat->getBaseColorTexture() != nullptr);
     }
@@ -133,12 +133,11 @@ public:
         auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
         if (!gpuContext) return;
 
-        auto fp = fs::openFile("media::pbr/default.material", std::ios::in);
+        auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
         TS_ASSERT(fp != nullptr); // fail if media not available
         if (!fp) return;
 
-        auto mat = PbrShading::Material::load(*db, "test_material_file",
-                                              PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp.get(), .basePath = "media::"});
+        auto mat = PbrShading::Material::load(*db, "test_material_file", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp});
         TS_ASSERT(mat != nullptr);
         TS_ASSERT(mat->getBaseColorTexture() != nullptr);
     }
@@ -155,13 +154,12 @@ public:
         TS_ASSERT(fp != nullptr); // fail if media failed to load
         if (!fp) return;
 
-        auto mat = PbrShading::Material::load(
-            *db, "lined_metal_sheeting",
-            PbrShading::Material::LoadParameters {
-                .gpu = gpuContext,
-                .source = fp.get(),
-                .basePath = "media::pbr/lined-metal-sheeting",
-            });
+        auto mat = PbrShading::Material::load(*db, "lined_metal_sheeting",
+                                              PbrShading::Material::LoadParameters {
+                                                  .gpu      = gpuContext,
+                                                  .source   = fp,
+                                                  .basePath = "media::pbr/lined-metal-sheeting",
+                                              });
         TS_ASSERT(mat != nullptr);
         Texture * baseColorTex = mat->getBaseColorTexture();
         TS_ASSERT(baseColorTex != nullptr);

@@ -46,14 +46,14 @@ int main(int, const char **) {
     {
         auto fp = fs::openFile("media::pbr/default.material", std::ios::in);
         if (fp && fp->readable()) {
-            material = PbrShading::Material::load(*db, "pbr_material",
-                                                  PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp.get(), .basePath = "media::"});
+            material =
+                PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp, .basePath = "media::"});
         }
         if (!material) {
             static const char empty[1] = {};
-            MemFile           memFile(const_cast<char *>(empty), 0, "pbr_material");
-            if (memFile.readable())
-                material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile});
+            auto              memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
+            if (memFile->readable())
+                material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile});
         }
     }
 

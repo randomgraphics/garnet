@@ -228,15 +228,15 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
 }
 
 AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params) {
-    StrA   name = params.filename;
-    auto * p    = new TextureVulkan(db, name);
+    StrA name = params.filename;
+    auto p    = AutoRef<TextureVulkan>::make(db, name);
     if (p->sequence == 0) {
         GN_ERROR(sLogger)("loadVulkanTexture: duplicate type+name, name='{}'", name);
-        delete p;
+        p.clear();
         return {};
     }
     if (!p->initFromLoad(params)) {
-        delete p;
+        p.clear();
         return {};
     }
     return AutoRef<Texture>(p);

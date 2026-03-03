@@ -226,10 +226,10 @@ public:
         GN_UNGUARD;
     }
 
-    std::unique_ptr<File> openFile(const StrA & name, std::ios_base::openmode mode) {
+    AutoRef<File> openFile(const StrA & name, std::ios_base::openmode mode) {
         StrA nativeName;
         toNativeDiskFilePath(nativeName, name);
-        auto fp = std::make_unique<DiskFile>();
+        auto fp = AutoRef<DiskFile>::make();
         if (!fp->open(nativeName, mode)) return {};
         return fp;
     }
@@ -331,7 +331,7 @@ public:
         return mNativeFs.glob(result, joinPath(mRootDir, dirName), pattern, recursive, useRegex);
     }
 
-    std::unique_ptr<File> openFile(const StrA & name, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, name), mode); }
+    AutoRef<File> openFile(const StrA & name, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, name), mode); }
 };
 
 // *****************************************************************************
@@ -359,7 +359,7 @@ public:
         return mNativeFs.glob(result, joinPath(mRootDir, dirName), pattern, recursive, useRegex);
     }
 
-    std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, path), mode); }
+    AutoRef<File> openFile(const StrA & path, std::ios_base::openmode mode) { return mNativeFs.openFile(joinPath(mRootDir, path), mode); }
 };
 
 // *****************************************************************************
@@ -427,11 +427,11 @@ public:
         return result;
     }
 
-    std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
+    AutoRef<File> openFile(const StrA & path, std::ios_base::openmode mode) {
         const StrA * root = findRoot(path);
         if (!root) {
             GN_ERROR(sLogger)("file '{}' not found!", path.data());
-            return 0;
+            return {};
         }
         return GN::fs::openFile(joinPath(*root, path), mode);
     }
@@ -482,13 +482,13 @@ class FakeFileSystem : public FileSystem {
 public:
     FakeFileSystem() {}
 
-    bool                  exist(const StrA &) { return false; }
-    bool                  isDir(const StrA &) { return false; }
-    bool                  isFile(const StrA &) { return false; }
-    void                  toNativeDiskFilePath(StrA & result, const StrA & path) { result = path; }
-    bool                  isAbsPath(const StrA &) { return true; }
-    DynaArray<StrA> &     glob(DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool) { return result; }
-    std::unique_ptr<File> openFile(const StrA &, std::ios_base::openmode) { return {}; }
+    bool              exist(const StrA &) { return false; }
+    bool              isDir(const StrA &) { return false; }
+    bool              isFile(const StrA &) { return false; }
+    void              toNativeDiskFilePath(StrA & result, const StrA & path) { result = path; }
+    bool              isAbsPath(const StrA &) { return true; }
+    DynaArray<StrA> & glob(DynaArray<StrA> & result, const StrA &, const StrA &, bool, bool) { return result; }
+    AutoRef<File>     openFile(const StrA &, std::ios_base::openmode) { return {}; }
 };
 
 // *****************************************************************************

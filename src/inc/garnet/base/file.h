@@ -16,7 +16,7 @@ namespace GN {
 ///
 /// basic file interface used with garnet's virtual file system
 ///
-struct GN_API File : public NoCopy {
+struct GN_API File : public RefCounter, public NoCopy {
     /// construct from input stream
     File(std::istream & i, const StrA & name) {
         setStream(&i, nullptr);
@@ -124,16 +124,16 @@ inline File & operator<<(File & fp, const T & t) {
 class GN_API DiskFile : public File {
 public:
     DiskFile() {}
-    ~DiskFile() { close(); }
+    ~DiskFile() override { close(); }
 
     /// open a file
     bool open(const StrA & filename, std::ios_base::openmode mode);
 
-    /// close the file
-    void close() throw();
-
 private:
     std::fstream mFile;
+
+    /// close the file
+    void close() throw();
 };
 
 /// A temporary file that will be automatically deleted after closed.
@@ -142,16 +142,18 @@ public:
     /// default constructor
     TempFile() { open(); }
 
+    ~TempFile() override { close(); }
+
     /// open a temporary file with user specified prefix
     bool open();
-
-    /// close the temporary file
-    void close() throw();
 
 private:
     std::unique_ptr<std::iostream>  mStream;
     std::unique_ptr<std::streambuf> mBuf;
     FILE *                          mFile {};
+
+    /// close the temporary file
+    void close() throw();
 };
 
 ///

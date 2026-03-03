@@ -174,8 +174,22 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(ArtifactDatabase
             delete p;
             return {};
         }
+
+    // Determine the base path to resolve relative texture paths.
+    // If not provided, the the loader will try using the source file's directory as the base path, if it has one.
+    // If the source file does not have a path associated with it (like a memory file), then the texture path
+    // in the material file will be resolved as relative to the current working directory.
     StrA basePath = params.basePath;
-    if (basePath.empty()) basePath = GN::fs::getCurrentDir();
+    if (basePath.empty()) {
+        basePath = GN::fs::dirName(params.source->name());
+        if (basePath.empty()) {
+            GN_WARN(sLogger)
+            ("PbrShading::Material::load: no base path provided and source file has no directory. "
+             "The loader will try to resolve relative texture paths as relative to the current working directory, "
+             "which could yeild undetermined result.");
+            basePath = GN::fs::getCurrentDir();
+        }
+    }
 
     std::istream & in = params.source->input();
     std::string    s;
