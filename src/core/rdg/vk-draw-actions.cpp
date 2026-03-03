@@ -115,8 +115,8 @@ class GpuDrawVulkan : public GpuDraw {
         const auto dev = mGpu->device().handle();
 
         // Pipeline layout: one push constant range for vertex (e.g. PBR model + viewProj, 128 bytes).
-        constexpr uint32_t kPushConstantSize = 128;
-        vk::PushConstantRange pushRange {vk::ShaderStageFlagBits::eVertex, 0, kPushConstantSize};
+        constexpr uint32_t           kPushConstantSize = 128;
+        vk::PushConstantRange        pushRange {vk::ShaderStageFlagBits::eVertex, 0, kPushConstantSize};
         vk::PipelineLayoutCreateInfo layoutCi {{}, 0, nullptr, 1, &pushRange};
         mPipelineLayout = dev.createPipelineLayout(layoutCi);
         if (!mPipelineLayout) GN_UNLIKELY {
@@ -259,7 +259,8 @@ public:
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
             if (!a->pushConstantData.empty()) {
                 const auto size = static_cast<uint32_t>(a->pushConstantData.size());
-                if (size <= 128) cb.commandBuffer.handle().pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, size, a->pushConstantData.data());
+                if (size <= 128)
+                    cb.commandBuffer.handle().pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, size, a->pushConstantData.data());
             }
             // Mesh is optional; when no vertex buffer, use default 3 vertices (e.g. fullscreen triangle).
             uint32_t vertexCount   = 3;

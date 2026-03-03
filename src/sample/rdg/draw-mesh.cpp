@@ -47,11 +47,11 @@ int main(int, const char **) {
         auto fp = fs::openFile("media::pbr/default.material", std::ios::in);
         if (fp && fp->readable()) {
             material = PbrShading::Material::load(*db, "pbr_material",
-                PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp.get(), .basePath = "media::"});
+                                                  PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp.get(), .basePath = "media::"});
         }
         if (!material) {
             static const char empty[1] = {};
-            MemFile memFile(const_cast<char *>(empty), 0, "pbr_material");
+            MemFile           memFile(const_cast<char *>(empty), 0, "pbr_material");
             if (memFile.readable())
                 material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile});
         }
@@ -124,7 +124,7 @@ int main(int, const char **) {
             pbrParams.renderGraph           = renderGraph.get();
             pbrParams.sharedShaderConstants = sharedConstants;
             pbrParams.material              = material;
-            pbrParams.geometry              = {};  // empty -> backend draws 3 vertices (placeholder)
+            pbrParams.geometry              = {}; // empty -> backend draws 3 vertices (placeholder)
             pbrParams.modelToWorld.reset();
             pbrParams.worldToClip = Matrix44f::sIdentity();
             auto pbrSubGraph      = pbrShading->build(pbrParams);
@@ -142,8 +142,8 @@ int main(int, const char **) {
             renderWorkflow->tasks.append(presentTask);
 
             // Submit render graph for execution
-            Workflow * w = renderWorkflow;
-            auto submission = renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&w, 1), .name = "Frame"});
+            Workflow * w          = renderWorkflow;
+            auto       submission = renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&w, 1), .name = "Frame"});
             if (!submission) {
                 GN_ERROR(sLogger)("Failed to submit render graph");
                 break;

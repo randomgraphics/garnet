@@ -13,8 +13,8 @@ namespace GN::rdg {
 
 class SharedShaderConstantsImpl : public SharedShaderConstants {
     AutoRef<GpuContext>       mGpu;
-    FrameInformation         mFrame;
-    ViewInformation          mView;
+    FrameInformation          mFrame;
+    ViewInformation           mView;
     DirectLightingInformation mLighting;
 
 public:
@@ -27,8 +27,8 @@ public:
     void setViewInformation(const ViewInformation & v) override { mView = v; }
     void setDirectLightingInformation(const DirectLightingInformation & v) override { mLighting = v; }
 
-    const FrameInformation & getFrameInformation() const override { return mFrame; }
-    const ViewInformation & getViewInformation() const override { return mView; }
+    const FrameInformation &          getFrameInformation() const override { return mFrame; }
+    const ViewInformation &           getViewInformation() const override { return mView; }
     const DirectLightingInformation & getDirectLightingInformation() const override { return mLighting; }
 };
 

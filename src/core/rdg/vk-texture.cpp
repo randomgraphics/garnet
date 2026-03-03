@@ -23,12 +23,12 @@ static vk::Format pixelFormatToVk(gfx::img::PixelFormat pf) {
 static Texture::Descriptor descriptorFromImageDesc(const gfx::img::ImageDesc & id) {
     gfx::img::PlaneCoord p {};
     Texture::Descriptor  d;
-    d.format = id.format(p);
-    d.width  = (uint32_t) id.width(p);
-    d.height = (uint32_t) id.height(p);
-    d.depth  = (uint32_t) id.depth(p);
-    d.faces  = id.faces;
-    d.levels = id.levels ? (uint32_t) id.levels : (uint32_t) rapid_vulkan::calculateMaxMips(d.width, d.height, d.depth);
+    d.format  = id.format(p);
+    d.width   = (uint32_t) id.width(p);
+    d.height  = (uint32_t) id.height(p);
+    d.depth   = (uint32_t) id.depth(p);
+    d.faces   = id.faces;
+    d.levels  = id.levels ? (uint32_t) id.levels : (uint32_t) rapid_vulkan::calculateMaxMips(d.width, d.height, d.depth);
     d.samples = 1;
     return d;
 }
@@ -61,10 +61,10 @@ static Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
 
 static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descriptor & descriptor, const rapid_vulkan::GlobalInfo & gi) {
     rapid_vulkan::Image::ConstructParameters cp;
-    cp.gi = &gi;
-    cp.info.imageType = (descriptor.depth > 1) ? vk::ImageType::e3D : vk::ImageType::e2D;
-    cp.info.format    = pixelFormatToVk(descriptor.format);
-    cp.info.extent   = vk::Extent3D(descriptor.width, descriptor.height, descriptor.depth);
+    cp.gi               = &gi;
+    cp.info.imageType   = (descriptor.depth > 1) ? vk::ImageType::e3D : vk::ImageType::e2D;
+    cp.info.format      = pixelFormatToVk(descriptor.format);
+    cp.info.extent      = vk::Extent3D(descriptor.width, descriptor.height, descriptor.depth);
     cp.info.mipLevels   = descriptor.levels;
     cp.info.arrayLayers = descriptor.faces;
     cp.info.samples     = (vk::SampleCountFlagBits) descriptor.samples;
@@ -96,10 +96,62 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     return true;
 }
 
+namespace {
+
+gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt) {
+    switch (vkFmt) {
+    case vk::Format::eR8G8B8A8Unorm:
+        return gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM();
+    case vk::Format::eR8G8B8A8Srgb:
+        return gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB();
+    case vk::Format::eB8G8R8A8Unorm:
+        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM();
+    case vk::Format::eB8G8R8A8Srgb:
+        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM();
+    case vk::Format::eR8G8B8Unorm:
+        return gfx::img::PixelFormat::RGB_8_8_8_UNORM();
+    default:
+        return gfx::img::PixelFormat::UNKNOWN();
+    }
+}
+
+gfx::img::Image contentToImage(const rapid_vulkan::Image::Content & content) {
+    if (content.subresources.empty() || content.storage.empty()) return gfx::img::Image();
+    gfx::img::PixelFormat pf = vkFormatToPixelFormat(content.format);
+    if (pf == gfx::img::PixelFormat::UNKNOWN()) return gfx::img::Image();
+    const auto & sub = content.subresources[0];
+    uint32_t     w   = sub.extent.width;
+    uint32_t     h   = sub.extent.height;
+    uint32_t     d   = sub.extent.depth;
+    if (w == 0 || h == 0) return gfx::img::Image();
+    gfx::img::Extent3D extent;
+    extent.set(w, h, d);
+    gfx::img::PlaneDesc planeDesc = gfx::img::PlaneDesc::make(pf, extent);
+    gfx::img::ImageDesc imageDesc = gfx::img::ImageDesc::make(planeDesc, 1, 1, 1);
+    return gfx::img::Image(imageDesc, content.storage.data(), content.storage.size());
+}
+
+} // namespace
+
 gfx::img::Image TextureVulkan::readback() const {
-    // TODO: read back the texture content into an image
-    GN_UNIMPL();
-    return gfx::img::Image();
+    if (!mImage || !mImage->handle()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("TextureVulkan::readback: no image");
+            return gfx::img::Image();
+        }
+    auto * vkCtx = static_cast<GpuContextVulkan *>(mGpuContext.get());
+    if (!vkCtx) GN_UNLIKELY {
+            GN_ERROR(sLogger)("TextureVulkan::readback: invalid context");
+            return gfx::img::Image();
+        }
+    rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
+    if (!gq) GN_UNLIKELY {
+            GN_ERROR(sLogger)("TextureVulkan::readback: no graphics queue");
+            return gfx::img::Image();
+        }
+    rapid_vulkan::Image::ReadContentParameters readParams;
+    readParams.setQueue(*gq);
+    auto content = mImage->readContent(readParams);
+    return contentToImage(content);
 }
 
 AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, const Texture::CreateParameters & params) {
@@ -143,7 +195,7 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     if (0 == mDescriptor.width) return false;
 
     auto * vkCtx = static_cast<GpuContextVulkan *>(params.context.get());
-    mImage      = createVkImage(mDescriptor, vkCtx->globalInfo());
+    mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
 
     mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
@@ -156,20 +208,20 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     for (uint32_t f = 0; f < mDescriptor.faces; ++f)
         for (uint32_t l = 0; l < mDescriptor.levels; ++l) {
             gfx::img::PlaneCoord pc {};
-            pc.face  = (size_t) f;
-            pc.level = (size_t) l;
-            const auto & plane = image.plane(pc);
+            pc.face              = (size_t) f;
+            pc.level             = (size_t) l;
+            const auto &   plane = image.plane(pc);
             const uint32_t w     = (uint32_t) plane.extent.w;
-            const uint32_t h    = (uint32_t) plane.extent.h;
+            const uint32_t h     = (uint32_t) plane.extent.h;
             if (w == 0 || h == 0) continue;
             rapid_vulkan::Image::SetContentParameters sc;
             sc.setQueue(*gq).mipLevel = l;
             sc.arrayLayer             = f;
-            sc.area.w = w;
-            sc.area.h = h;
-            sc.area.d = 1;
-            sc.pitch  = (size_t) plane.pitch;
-            sc.pixels = image.at(pc);
+            sc.area.w                 = w;
+            sc.area.h                 = h;
+            sc.area.d                 = 1;
+            sc.pitch                  = (size_t) plane.pitch;
+            sc.pixels                 = image.at(pc);
             mImage->setContent(sc);
         }
     return true;

@@ -14,7 +14,8 @@ layout(location = 2) out vec2 outTexCoord;
 layout(push_constant, std430) uniform Constants {
     mat4 model;
     mat4 viewProj;
-} pc;
+}
+pc;
 
 void main() {
     vec4 worldPos = pc.model * vec4(inPosition, 1.0);

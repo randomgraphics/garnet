@@ -117,10 +117,10 @@ GN_API AutoRef<PbrShading> PbrShading::create(ArtifactDatabase & db, const StrA 
 // =============================================================================
 
 class PbrMaterialImpl : public PbrShading::Material {
-    AutoRef<GpuContext>    mGpu;
-    AutoRef<Texture>       mBaseColorTexture;
-    AutoRef<Texture>       mMetallicRoughnessTexture;
-    AutoRef<Texture>       mNormalTexture;
+    AutoRef<GpuContext> mGpu;
+    AutoRef<Texture>    mBaseColorTexture;
+    AutoRef<Texture>    mMetallicRoughnessTexture;
+    AutoRef<Texture>    mNormalTexture;
 
 public:
     PbrMaterialImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
@@ -128,8 +128,8 @@ public:
 
     GpuContext & gpu() const override { return *mGpu; }
     Texture *    getBaseColorTexture() const override { return mBaseColorTexture.get(); }
-    Texture * metallicRoughnessTexture() const { return mMetallicRoughnessTexture.get(); }
-    Texture * normalTexture() const { return mNormalTexture.get(); }
+    Texture *    metallicRoughnessTexture() const { return mMetallicRoughnessTexture.get(); }
+    Texture *    normalTexture() const { return mNormalTexture.get(); }
 
     void setBaseColorTexture(AutoRef<Texture> t) { mBaseColorTexture = std::move(t); }
     void setMetallicRoughnessTexture(AutoRef<Texture> t) { mMetallicRoughnessTexture = std::move(t); }
@@ -140,8 +140,8 @@ public:
 static bool parseMaterialLine(const std::string & line, std::string & key, std::string & value) {
     size_t eq = line.find('=');
     if (eq == std::string::npos) return false;
-    key   = line.substr(0, eq);
-    value = line.substr(eq + 1);
+    key       = line.substr(0, eq);
+    value     = line.substr(eq + 1);
     auto trim = [](std::string & s) {
         while (!s.empty() && (s.front() == ' ' || s.front() == '\t')) s.erase(0, 1);
         while (!s.empty() && (s.back() == ' ' || s.back() == '\t')) s.pop_back();
@@ -185,18 +185,20 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(ArtifactDatabase
         std::string key, value;
         if (!parseMaterialLine(s, key, value)) continue;
 
-        StrA valueA(value.c_str());
-        StrA texPath = GN::fs::isAbsPath(valueA) ? valueA : GN::fs::resolvePath(basePath, valueA);
-        AutoRef<Texture> tex = Texture::load(db, Texture::LoadParameters {.context = params.gpu, .filename = texPath});
+        StrA             valueA(value.c_str());
+        StrA             texPath = GN::fs::isAbsPath(valueA) ? valueA : GN::fs::resolvePath(basePath, valueA);
+        AutoRef<Texture> tex     = Texture::load(db, Texture::LoadParameters {.context = params.gpu, .filename = texPath});
         if (!tex) {
             GN_ERROR(sLogger)("PbrShading::Material::load: failed to load texture '{}' for key '{}'", texPath, key);
             continue;
         }
         if (key == "baseColorTexture")
             p->setBaseColorTexture(std::move(tex));
-        else if (key == "metallicRoughnessTexture")
+        else if (key == "metallicRoughnessTexture" || key == "armTexture")
             p->setMetallicRoughnessTexture(std::move(tex));
-        else if (key == "normalTexture")
+        else if (key == "normalTexture" || key == "normalTexture_gl")
+            p->setNormalTexture(std::move(tex));
+        else if (key == "normalTexture_dx" && !p->normalTexture())
             p->setNormalTexture(std::move(tex));
     }
     return AutoRef<PbrShading::Material>(p);

@@ -55,7 +55,7 @@ struct SharedShaderConstants : public GpuResource {
 
     /// Logical view/camera data. Implementation maps this to GPU resources as needed.
     struct ViewInformation {
-        Matrix44f             worldToClip   = Matrix44f::sIdentity();
+        Matrix44f             worldToClip    = Matrix44f::sIdentity();
         Location              cameraPosition = {}; ///< camera position in world space
         AutoRef<RenderTarget> renderTarget;
     };
@@ -101,8 +101,8 @@ struct SharedShaderConstants : public GpuResource {
     virtual void setViewInformation(const ViewInformation &)                     = 0;
     virtual void setDirectLightingInformation(const DirectLightingInformation &) = 0;
 
-    virtual const FrameInformation &         getFrameInformation() const         = 0;
-    virtual const ViewInformation &           getViewInformation() const          = 0;
+    virtual const FrameInformation &          getFrameInformation() const          = 0;
+    virtual const ViewInformation &           getViewInformation() const           = 0;
     virtual const DirectLightingInformation & getDirectLightingInformation() const = 0;
 
     static GN_API AutoRef<SharedShaderConstants> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -263,7 +263,7 @@ struct PbrShading : public GpuResource {
 
         struct LoadParameters {
             AutoRef<GpuContext> gpu;
-            GN::File *          source  = {}; ///< non-null readable stream (disk, memory blob, or embedded)
+            GN::File *          source   = {}; ///< non-null readable stream (disk, memory blob, or embedded)
             StrA                basePath = {}; ///< optional base path to resolve relative texture paths (e.g. "media::materials/")
         };
 
