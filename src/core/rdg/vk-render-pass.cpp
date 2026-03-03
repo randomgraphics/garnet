@@ -240,7 +240,7 @@ void RenderPassManagerVulkan::onPresentingBackbuffer(TaskInfo & taskInfo, AutoRe
     const auto & rt = mRenderPasses.back().renderTarget;
     if (!rt) return;
     for (const auto & color : rt->colors) {
-        if (color.target.artifact() == backbuffer) {
+        if (color.target.artifact() == backbuffer.castTo<Artifact>()) {
             // this is the back buffer. we need to end the current render pass and create a new one with empty target.
             mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
             GN_VERBOSE(sLogger)("{} - presenting backbuffer {}, end last render pass {}.", taskInfo, backbuffer->name, mRenderPasses.back().toString());
