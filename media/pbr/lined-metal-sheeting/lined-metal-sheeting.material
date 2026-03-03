@@ -1,0 +1,3 @@
+baseColorTexture = lined-metal-sheeting_albedo.png
+armTexture       = lined-metal-sheeting_arm.png
+normalTexture_dx = lined-metal-sheeting_normal-dx.png

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <garnet/GNbase.h>
+#include <garnet/base/filesys.h>
 
 using namespace GN;
 using namespace GN::rdg;
@@ -40,18 +41,21 @@ int main(int, const char **) {
     auto pbrShading = PbrShading::create(*db, "pbr_shading", PbrShading::CreateParameters {.gpu = gpuContext});
     if (!pbrShading) return -1;
 
-    // Optional: load material from in-memory blob (minimal; for embedding later)
+    // Load PBR material from file (media::pbr/default.material) or fallback to empty
     AutoRef<PbrShading::Material> material;
     {
-        static const char dummy[1] = {};
-        MemFile memFile(const_cast<char *>(dummy), 0, "pbr_material");
-        if (memFile.readable())
-            material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile});
+        auto fp = fs::openFile("media::pbr/default.material", std::ios::in);
+        if (fp && fp->readable()) {
+            material = PbrShading::Material::load(*db, "pbr_material",
+                PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp.get(), .basePath = "media::"});
+        }
+        if (!material) {
+            static const char empty[1] = {};
+            MemFile memFile(const_cast<char *>(empty), 0, "pbr_material");
+            if (memFile.readable())
+                material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = &memFile});
+        }
     }
-
-    // Create and load texture (optional; for future use)
-    auto texture = Texture::load(*db, Texture::LoadParameters {.context = gpuContext, .filename = "media::texture/earth.jpg"});
-    (void) texture;
 
     // Create a main window of 1280x720
     auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});

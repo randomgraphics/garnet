@@ -3,7 +3,7 @@
 Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass BuildParameters (sharedShaderConstants, material, geometry, modelToWorld) and—if needed—RenderGraph (and optionally render target) so that build(params) can create workflow(s) and return a SubGraph; the caller submits those workflows to render a PBR object.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 0.1–2.3, 3.1, 3.2, 4.1, 4.2, 5.1 (draw-mesh integrates PbrShading; GNsample-rdg-draw-mesh added).
+Last completed: Task 0.1–2.3, 3.1, 3.2, 4.1, 4.2, 5.1 (draw-mesh integrates PbrShading; GNsample-rdg-draw-mesh added). Unit tests added (src/test/ut/rdg/rdg-pbr-assignment.cpp): type IDs (0.2), create/build without graph (1.1), build with graph + workflow task (2.0/2.1), submit/drop (2.3; submit not run in ut—verified by sample), Material::load (4.1), SharedShaderConstants view round-trip (4.2). Build + cit -t pass.
 In progress: (none). Follow-up: 5.2 lint/cleanup; embedding (.rc/objcopy) and media assets.
 --- END PROGRESS ---
 
@@ -84,15 +84,16 @@ Usage in assignment:
 
 --- BUILD/CI ---
 
-- Build: source env/garnet.rc && build.py d  (see .cursor/skills/use-build-py/SKILL.md).
-- Lint + tests: env/bin/cit.py  (see .cursor/skills/run-cit/SKILL.md).
+- Build: Linux/WSL `source env/garnet.rc && build.py d`; Windows `python build.py d` (see .cursor/skills/use-build-py/SKILL.md).
+- Lint + tests: Linux `env/bin/cit.py`; Windows `python env\bin\cit.py` (see .cursor/skills/run-cit/SKILL.md).
 
 --- WORKFLOW / CONVENTIONS ---
 
 - Keep the repo buildable after each task. Use stubs (e.g. build() no-op, load() return nullptr) where needed.
 - Public header (pipeline.h): only add what users need; no backend or internal types.
 - Prefer minimal code change; small, verifiable steps (see .cursor/skills/minimal-code-change/SKILL.md).
-- After each task: commit with a clear message; push when convention says so.
+- **Verifiable steps (per .cursor/rules/assignment-verifiable-steps.mdc):** Each task/step must be verifiable: (1) build passes, (2) behavior is correct (the step does what it says). Ideally add or update **unit tests** that would fail before the step and pass after it. If the layer has no test harness (e.g. RDG), state how verification is done (e.g. manual run of sample, or integration test). If a task is too large to verify in one go, split it into smaller, testable sub-steps.
+- **Commit per step (per .cursor/rules/assignment-commit-per-step.mdc):** After each task/step is **finished and verified**, commit with a message that describes that step (e.g. "Assignment PBR: Material::load from File (Task 4.1)"), then push to remote. Avoid combining multiple steps into one commit when possible.
 - Before coding implementation tasks: pause for user review of this task list (as requested).
 
 ---
@@ -101,11 +102,11 @@ PHASE 0: Setup and type registration
 
 [ ] Task 0.1 — Add assignment branch and ensure build is green
     - Create branch (e.g. wip/rdg/pbr-shading) if not already on a PBR branch. Run build and cit; fix any pre-existing breakage in touched areas.
-    - Verification: build.py d and env/bin/cit.py pass.
+    - **Verification:** Build passes (`python build.py d` on Windows; `build.py d` after env on Linux). Lint + tests pass (`python env\bin\cit.py` on Windows; `env/bin/cit.py` on Linux). Then commit and push.
 
 [ ] Task 0.2 — Register PbrShading and PbrShading::Material TYPE_IDs
     - Define PbrShading::TYPE_ID and PbrShading::Material::TYPE_ID in runtime-type.cpp (or equivalent) so create() and type casting work. Register SharedShaderConstants::TYPE_ID when that type is implemented.
-    - Verification: Build; no duplicate or missing type ID symbols.
+    - **Verification:** Build passes; no duplicate or missing type ID symbols. Ideally: existing or new unit test that instantiates/creates an artifact and confirms type ID is non-zero. Then commit and push.
 
 ---
 PHASE 1: PbrShading factory and stub implementation
@@ -114,11 +115,11 @@ PHASE 1: PbrShading factory and stub implementation
 [ ] Task 1.1 — Implement PbrShading::create() and a Vulkan-specific stub implementation class
     - Add a Vulkan-specific class (e.g. PbrShadingVulkan in core/rdg) that extends PbrShading and implements build(params) to return SubGraph{PASSED, {}} (no workflows yet). PbrShading::create() instantiates and returns this Vulkan implementation (no multi-backend dispatch required for this assignment).
     - Follow pattern of PrepareBackbuffer::create / GpuDraw::create: create in core, register in db. No new public API in pipeline.h.
-    - Verification: Build. PbrShading::create(db, name, params) returns non-null AutoRef<PbrShading>; build(params) returns SubGraph with builtResult == PASSED and empty workflows.
+    - **Verification:** Build passes. Behavior: PbrShading::create(db, name, params) returns non-null; build(params) returns SubGraph with builtResult == PASSED and workflows.empty(). Ideally: add unit test (e.g. in GNtest-rdg-smoke1 or new rdg test) that asserts create() non-null and build() returns PASSED with empty workflows. Then commit and push.
 
 [ ] Task 1.2 — Material::load() stub with GN::File-based API
     - Implement Material::load() so it compiles and links; LoadParameters accepts GN::File * source (non-null readable stream). Implementation may return nullptr or a minimal artifact; no full loading required yet. This allows loading from disk (DiskFile), memory blob (MemFile), or embedded resource (wrapped pointer/size).
-    - Verification: Build; no undefined Material::load symbol; callers can pass a File * for future disk/memory/embedded use.
+    - **Verification:** Build passes. Behavior: callers can call Material::load(db, name, {gpu, source}) with a File* (e.g. MemFile). Ideally: unit test that Material::load with valid gpu and readable MemFile returns non-null (or nullptr if stub) and does not crash. Then commit and push.
 
 ---
 PHASE 2: build() adds a real draw task
@@ -126,19 +127,19 @@ PHASE 2: build() adds a real draw task
 
 [ ] Task 2.0 — Add RenderGraph* (and optionally RenderTarget*) to BuildParameters if needed
     - Current BuildParameters have no way to create workflows. Add RenderGraph * renderGraph to BuildParameters so build() can call renderGraph->createWorkflow(...) and return the workflow(s) in SubGraph. If the PBR workflow should set render target (ClearRenderTarget) before draw, add AutoRef<RenderTarget> renderTarget or obtain from SharedShaderConstants; document in header.
-    - Verification: pipeline.h BuildParameters updated; build() can create and return workflows.
+    - **Verification:** Build passes. pipeline.h BuildParameters has renderGraph. Behavior: when build(params) is called with params.renderGraph non-null, the next step (2.1) will be able to create and return workflows. Then commit and push.
 
 [ ] Task 2.1 — build() creates a GpuDraw action and appends one task to a new workflow
     - In build(): create one workflow via params.renderGraph->createWorkflow("Pbr"). Create or reuse a GpuDraw action (placeholder vs/ps OK). Build GpuDraw::A from BuildParameters (geometry; material and params.sharedShaderConstants → uniforms/textures). Optionally prepend ClearRenderTarget if render target is in params. Append one Workflow::Task with the GpuDraw action and arguments. Return SubGraph{PASSED, {workflow}}.
     - Wire modelToWorld from BuildParameters into GpuDraw::A (e.g. uniforms) so the draw has the model transform.
-    - Verification: Build. Caller that passes RenderGraph* and calls build(params) gets SubGraph with one workflow containing at least one draw task; submit runs without crash (visual may be placeholder).
+    - **Verification:** Build passes. Behavior: build(params) with renderGraph non-null returns SubGraph with builtResult == PASSED and workflows.size() >= 1, workflow has at least one task. Ideally: integration test or manual run that submit() runs without crash. Then commit and push.
 
 [ ] Task 2.2 — (Done) Model transform
-    - modelToWorld is already in BuildParameters (AffineTransform). No header change. Ensure it is wired in Task 2.1.
+    - modelToWorld is already in BuildParameters (AffineTransform). No header change. Ensure it is wired in Task 2.1. **Verification:** Confirmed when 2.1 verification passes (build() uses modelToWorld in draw args).
 
 [ ] Task 2.3 — SubGraph utility methods: submit and drop (per plan above)
     - Implement SubGraph::submit(RenderGraph & graph, name) and SubGraph::drop(RenderGraph & graph). submit: call graph.submit(SubmitParameters{.workflows = workflows, .name = name}); return submission; optionally clear workflows after submit to avoid double-submit. drop: for each workflow call graph.dropWorkflow(workflow); clear workflows. Declarations in pipeline.h; definitions in core/rdg (e.g. pipeline.cpp or subgraph.cpp).
-    - Verification: Build; sample or test can call subgraph.submit(renderGraph, "PBR") or subgraph.drop(renderGraph) after build().
+    - **Verification:** Build passes. Behavior: after build(), subgraph.submit(graph, "PBR") returns non-null Submission; subgraph.drop(graph) clears workflows. Ideally: unit or integration test that submit() returns non-null and drop() clears. Then commit and push.
 
 ---
 PHASE 3: PBR shaders and Vulkan binding
@@ -146,11 +147,11 @@ PHASE 3: PBR shaders and Vulkan binding
 
 [x] Task 3.1 — Add PBR vertex and fragment shaders (metal/roughness style) [DONE]
     - Added core/rdg/shaders/pbr.vert (position, normal, UV; push constants model, viewProj), pbr.frag (placeholder diffuse + one directional light). compile_pbr_shaders.py compiles to pbr-vert.spv.h and pbr-frag.spv.h in core/rdg. PbrShadingVulkan::build() passes vs/ps to GpuDraw::CreateParameters. CMake: rdg include dir and optional target rdg-pbr-shaders.
-    - Verification: Shaders compile; passed into GpuDraw::create for the PBR draw action; build passes.
+    - **Verification:** Build passes; shaders compile; vs/ps passed into GpuDraw::create. (One commit per step when doing similar work.)
 
 [x] Task 3.2 — Wire material and SharedShaderConstants to descriptor/uniform layout [DONE]
     - Define how Material and SharedShaderConstants map to GpuDraw::A: which uniforms (e.g. viewProj, model, material params, light data) and which textures (base color, normal, metallic-roughness, env if any). Implement in PbrShading impl so build() fills GpuDraw::A correctly. Ensure Vulkan backend can bind these (descriptor sets / push constants as per existing pattern).
-    - Verification: Build; one frame with a single PBR object and simple lighting produces a plausible image (no need for IBL in first cut).
+    - **Verification:** Build passes; correct behavior: one frame with a single PBR object and simple lighting produces a plausible image (or draw runs without crash). Ideally: run sample to confirm; add test if harness exists. (One commit per step.)
 
 ---
 PHASE 4: Material and SharedShaderConstants (minimal)
@@ -158,12 +159,12 @@ PHASE 4: Material and SharedShaderConstants (minimal)
 
 [x] Task 4.1 — Material artifact and load from GN::File (minimal) [DONE]
     - Implement Material as a GpuResource (backend opaque: e.g. texture set + scalar params). Material::load(db, name, LoadParameters) accepts LoadParameters { gpu, source } where source is GN::File * (non-null). Use GN::File directly in pipeline.h; GNbase.h is already included by GNrdg.h. Reading from source supports loading from disk (DiskFile), memory blob (MemFile), or embedded resource (data wrapped as File). No fileName-based load; use File so sample can pass embedded blobs from .rc/objcopy.
-    - Verification: Build. Sample or test can create/load a material (from File) and pass it to PbrShading::BuildParameters.
+    - **Verification:** Build passes. Behavior: Material::load(db, name, {gpu, readable File}) returns non-null Material; sample can pass it in BuildParameters. Ideally: unit test that load with MemFile returns non-null and result is PbrShading::Material type. (One commit per step.)
 
 [x] Task 4.2 — SharedShaderConstants: public interface and implementation (per plan above) [DONE]
     - Public header: expose only logical data structs (FrameInformation, ViewInformation, DirectLightingInformation or equivalent) and virtual setters. ViewInformation must include full world→view→clip transformation (e.g. worldToView, viewToClip) and camera position in world space (Location, WorldUnit) so the implementation can translate model and light positions to float3 at runtime. CreateParameters with gpu; create() factory. No GPU layout, binding indices, or buffer/texture internals in the public API.
     - Implementation (core/rdg): create() returns backend-specific impl; setters store/upload data; GPU layout and uniform buffers/textures are entirely inside the implementation. When PbrShading (or other effects) build tasks, they use SharedShaderConstants via the public interface and the backend wires the stored data into GpuDraw::A as needed.
-    - Verification: Build; caller can create SharedShaderConstants, set frame/view/light data via setters, and pass it in BuildParameters; build() can use it for PBR draw (no GPU layout in pipeline.h).
+    - **Verification:** Build passes. Behavior: create() returns non-null; setViewInformation/getViewInformation (and set/get frame, lighting) round-trip; build() uses shared view when set. Ideally: unit test that create + set + get returns same data. (One commit per step.)
 
 ---
 PHASE 5: Integration and sample (required)
@@ -172,10 +173,11 @@ PHASE 5: Integration and sample (required)
 [x] Task 5.1 — PBR sample in draw-mesh; assets and embedding (required) [integration DONE]
     - draw-mesh.cpp: PbrShading (Vulkan), SharedShaderConstants, BuildParameters, build(), PBR task merged into workflow; Material::load from MemFile (minimal blob); GNsample-rdg-draw-mesh target in CMake.
     - One PBR draw runs each frame (empty geometry -> 3 vertices; identity model/viewProj). Embedding (.rc/objcopy) and royalty-free media folder are follow-up.
-    - Verification: Build and run GNsample-rdg-draw-mesh; no crash; PBR workflow runs.
+    - **Verification:** Build passes. Behavior: run GNsample-rdg-draw-mesh; window appears; render loop runs without crash; closing window exits. (Explicit manual verification when no RDG test harness.) (One commit per step.)
 
 [ ] Task 5.2 — Final lint and cleanup
-    - Run env/bin/cit.py; fix lint. Update PROGRESS and summary of files. Commit assignment complete.
+    - Run `python env\bin\cit.py` (Windows) or `env/bin/cit.py` (Linux); fix lint. Update PROGRESS and summary of files.
+    - **Verification:** Lint passes; PROGRESS reflects completion. Commit with message "Assignment PBR: complete (Task 5.2)" and push.
 
 ---
 Summary of files to touch

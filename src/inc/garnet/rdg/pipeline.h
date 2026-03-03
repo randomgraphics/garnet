@@ -263,10 +263,14 @@ struct PbrShading : public GpuResource {
 
         struct LoadParameters {
             AutoRef<GpuContext> gpu;
-            GN::File *          source = {}; ///< non-null readable stream (disk, memory blob, or embedded)
+            GN::File *          source  = {}; ///< non-null readable stream (disk, memory blob, or embedded)
+            StrA                basePath = {}; ///< optional base path to resolve relative texture paths (e.g. "media::materials/")
         };
 
         static GN_API AutoRef<Material> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
+
+        /// Optional: return base color texture if loaded from file. Default returns nullptr.
+        virtual Texture * getBaseColorTexture() const { return nullptr; }
 
     protected:
         using GpuResource::GpuResource;

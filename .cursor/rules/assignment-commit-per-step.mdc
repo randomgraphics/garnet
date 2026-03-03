@@ -1,0 +1,27 @@
+---
+description: Commit and push after each assignment task/step; one commit per step when possible
+alwaysApply: true
+---
+
+# Assignment workflow: commit per step
+
+When working on an assignment that is broken down into **tasks** and **steps**:
+
+1. **After each step or task is finished and verified** (e.g. build passes, tests/lint pass), **commit** the change.
+2. **Push to remote** after that commit (so progress is saved and shareable).
+3. **Avoid combining multiple steps into one commit** when possible. Prefer one logical step/task per commit so history stays clear and easy to revert or review.
+
+## In practice
+
+- Complete one task/step → verify (build, `cit.py`, or assignment criteria) → commit with a message that describes that step → push.
+- If a step is tiny (e.g. doc-only or a single-line fix), it’s still fine to commit it alone.
+- Only batch multiple changes into one commit when they are truly one logical unit (e.g. “add X and its tests in one step” as defined by the assignment).
+
+## Commit message
+
+Use a clear, step-oriented message, e.g.:
+
+- `Assignment PBR: add push constant support to GpuDraw (Task 3.2a)`
+- `Assignment PBR: Material::load from File (Task 4.1)`
+
+This keeps the assignment’s progress visible in git history.

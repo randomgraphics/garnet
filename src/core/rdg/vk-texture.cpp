@@ -1,9 +1,37 @@
 #include "pch.h"
 #include "vk-texture.h"
+#include "vk-gpu-context.h"
+#include <garnet/base/filesys.h>
+#include <garnet/gfx/image.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
 namespace GN::rdg {
+
+// =============================================================================
+// Helpers: pixel format mapping, descriptor from image
+// =============================================================================
+
+static vk::Format pixelFormatToVk(gfx::img::PixelFormat pf) {
+    if (pf == gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM() || pf == gfx::img::PixelFormat::RGBA8()) return vk::Format::eR8G8B8A8Unorm;
+    if (pf == gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB()) return vk::Format::eR8G8B8A8Srgb;
+    if (pf == gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM() || pf == gfx::img::PixelFormat::BGRA8()) return vk::Format::eB8G8R8A8Unorm;
+    if (pf == gfx::img::PixelFormat::RGB_8_8_8_UNORM()) return vk::Format::eR8G8B8Unorm;
+    return vk::Format::eR8G8B8A8Unorm; // fallback
+}
+
+static Texture::Descriptor descriptorFromImageDesc(const gfx::img::ImageDesc & id) {
+    gfx::img::PlaneCoord p {};
+    Texture::Descriptor  d;
+    d.format = id.format(p);
+    d.width  = (uint32_t) id.width(p);
+    d.height = (uint32_t) id.height(p);
+    d.depth  = (uint32_t) id.depth(p);
+    d.faces  = id.faces;
+    d.levels = id.levels ? (uint32_t) id.levels : (uint32_t) rapid_vulkan::calculateMaxMips(d.width, d.height, d.depth);
+    d.samples = 1;
+    return d;
+}
 
 // =============================================================================
 // TextureVulkan
@@ -31,10 +59,19 @@ static Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
     return result;
 }
 
-static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descriptor & descriptor) {
-    GN_UNIMPL();
-    (void) descriptor;
-    return {};
+static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descriptor & descriptor, const rapid_vulkan::GlobalInfo & gi) {
+    rapid_vulkan::Image::ConstructParameters cp;
+    cp.gi = &gi;
+    cp.info.imageType = (descriptor.depth > 1) ? vk::ImageType::e3D : vk::ImageType::e2D;
+    cp.info.format    = pixelFormatToVk(descriptor.format);
+    cp.info.extent   = vk::Extent3D(descriptor.width, descriptor.height, descriptor.depth);
+    cp.info.mipLevels   = descriptor.levels;
+    cp.info.arrayLayers = descriptor.faces;
+    cp.info.samples     = (vk::SampleCountFlagBits) descriptor.samples;
+    cp.info.tiling      = vk::ImageTiling::eOptimal;
+    cp.info.usage       = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
+    cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
+    return rapid_vulkan::Ref<rapid_vulkan::Image>(new rapid_vulkan::Image(cp));
 }
 
 TextureVulkan::TextureVulkan(ArtifactDatabase & db, const StrA & name): TextureCommon(db, name) {
@@ -50,7 +87,8 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     mGpuContext.set(params.context.get());
     mDescriptor = validateDesc(params.descriptor);
     if (0 == mDescriptor.width) return false;
-    mImage = createVkImage(mDescriptor);
+    auto * vkCtx = static_cast<GpuContextVulkan *>(params.context.get());
+    mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
 
     // initialize the subresource image state array.
@@ -79,17 +117,62 @@ AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, c
 }
 
 bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
-    GN_UNIMPL();
     if (sequence == 0) return false;
     if (!params.context) {
         GN_ERROR(sLogger)("TextureVulkan::initFromLoad: context is null");
         return false;
     }
     mGpuContext.set(params.context.get());
-    mDescriptor = Texture::Descriptor {}; // placeholder until load fills it
-    // TODO: load image from file, create VkImage, upload pixels
-    (void) params;
-    return false;
+    StrA path = params.filename;
+    if (path.empty()) {
+        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: filename is empty");
+        return false;
+    }
+    if (!GN::fs::isAbsPath(path)) path = GN::fs::resolvePath(GN::fs::getCurrentDir(), path);
+    auto fp = GN::fs::openFile(path, std::ios::in | std::ios::binary);
+    if (!fp) {
+        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: cannot open file '{}'", path);
+        return false;
+    }
+    gfx::img::Image image = gfx::img::Image::load(fp->input(), path.c_str());
+    if (image.empty()) {
+        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: failed to load image '{}'", path);
+        return false;
+    }
+    mDescriptor = validateDesc(descriptorFromImageDesc(image.desc()));
+    if (0 == mDescriptor.width) return false;
+
+    auto * vkCtx = static_cast<GpuContextVulkan *>(params.context.get());
+    mImage      = createVkImage(mDescriptor, vkCtx->globalInfo());
+    if (!mImage || !mImage->handle()) return false;
+
+    mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
+
+    rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
+    if (!gq) {
+        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: no graphics queue");
+        return false;
+    }
+    for (uint32_t f = 0; f < mDescriptor.faces; ++f)
+        for (uint32_t l = 0; l < mDescriptor.levels; ++l) {
+            gfx::img::PlaneCoord pc {};
+            pc.face  = (size_t) f;
+            pc.level = (size_t) l;
+            const auto & plane = image.plane(pc);
+            const uint32_t w     = (uint32_t) plane.extent.w;
+            const uint32_t h    = (uint32_t) plane.extent.h;
+            if (w == 0 || h == 0) continue;
+            rapid_vulkan::Image::SetContentParameters sc;
+            sc.setQueue(*gq).mipLevel = l;
+            sc.arrayLayer             = f;
+            sc.area.w = w;
+            sc.area.h = h;
+            sc.area.d = 1;
+            sc.pitch  = (size_t) plane.pitch;
+            sc.pixels = image.at(pc);
+            mImage->setContent(sc);
+        }
+    return true;
 }
 
 AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params) {
