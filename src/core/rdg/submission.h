@@ -6,7 +6,46 @@
 #include <optional>
 #include "runtime-type.h"
 
+#define GN_RDG_GET_N_ARG(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
+#define GN_RDG_COUNT_ARGS(...)                                            GN_RDG_GET_N_ARG(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+
+#define GN_RDG_FAIL_ON_FAIL(expr, ...)                                                                                \
+    do {                                                                                                              \
+        auto result___ = (expr);                                                                                      \
+        if (result___ != Action::PASSED && result___ != Action::WARNING) GN_UNLIKELY {                                \
+                if constexpr (GN_RDG_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
+                return result___;                                                                                     \
+            }                                                                                                         \
+    } while (false)
+
+#define GN_RDG_FAIL_ON_FALSE(expr, ...)                                                                               \
+    do {                                                                                                              \
+        if (!(expr)) GN_UNLIKELY {                                                                                    \
+                if constexpr (GN_RDG_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
+                return Action::FAILED;                                                                                \
+            }                                                                                                         \
+    } while (false)
+
 namespace GN::rdg {
+
+class SubmissionImpl;
+
+struct TaskInfo {
+    // /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
+    // struct ExecutionContext : public RuntimeType {
+    //     virtual ~ExecutionContext() = default;
+
+    // protected:
+    //     ExecutionContext(uint64_t typeId, const char * typeName): RuntimeType(typeId, typeName) {}
+    // };
+
+    SubmissionImpl & submission; ///< the submission that the task belongs to.
+    const StrA       workflow;   ///< name of the workflow that the task belongs to.
+    const StrA       task;       ///< name of the task.
+    const uint64_t   index;  ///< index of the task within the entire submission. Can also be used as the unique identifier of the task within the submission.
+    Action &         action; ///< The action processing this task.
+    // AutoRef<ExecutionContext> context {}; ///< context for the task. Usually created by the action's prepare() method and referenced by the execute() method.
+};
 
 struct WorkflowImpl : public Workflow {
     mutable uint64_t sequence = 0;

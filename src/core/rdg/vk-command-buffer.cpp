@@ -43,49 +43,48 @@ rapid_vulkan::Ref<rapid_vulkan::CommandQueue> CommandBufferManagerVulkan::getQue
     return mGraphicsQueue;
 }
 
-// Prepares a command buffer for recording: obtains or reuses a primary command buffer
-// for the given type (graphics/compute/transfer). Starts a new buffer when the type
-// changes or when there are no entries. Returns a 1-based command buffer ID, or 0 on failure.
-uint64_t CommandBufferManagerVulkan::prepare(CommandBufferType type) {
+// Collecting all tasks that needs a command buffer, create an entry for each of them.
+Action::ExecutionResult CommandBufferManagerVulkan::prepare(TaskInfo & taskInfo, CommandBufferType type) {
     rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue = getQueueForType(type);
     if (queue.empty()) GN_UNLIKELY {
-            return 0;
+            return Action::FAILED;
         }
 
-    bool needNew = mEntries.empty() || type != mEntries.back().type;
-    if (needNew) {
-        if (!mEntries.empty()) { mEntries.back().submit = true; }
-        rapid_vulkan::CommandBuffer cb = queue->begin("rdg", vk::CommandBufferLevel::ePrimary);
-        if (!cb) GN_UNLIKELY {
-                return 0;
-            }
-        if (!mEntries.append(Entry {type, false, queue, cb})) GN_UNLIKELY {
-                return 0;
-            }
+    GN_ASSERT(mEntries.find(taskInfo.index) == mEntries.end());
+    mEntries[taskInfo.index] = Entry {type, taskInfo.index, queue};
+
+    return Action::PASSED;
+};
+
+CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(TaskInfo & taskInfo) {
+    auto iter = mEntries.find(taskInfo.index);
+    if (iter == mEntries.end()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: task index {} not found", taskInfo.index);
+            return {};
+        }
+    Entry & e = iter->second;
+
+    if (iter == mEntries.begin()) {
+        // this is the first task that needs command buffer.
+        e.commandBuffer = e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary);
     } else {
-        const Entry & prev = mEntries.back();
-        if (!mEntries.append(Entry {type, false, prev.queue, prev.commandBuffer})) GN_UNLIKELY {
-                return 0;
-            }
+        // get the previous entry.
+        auto    prevIter = std::prev(iter);
+        Entry & prev     = prevIter->second;
+        if (prev.type != e.type) {
+            // the type has changed. need to start a new command buffer.
+            e.commandBuffer = e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary);
+        } else {
+            // the type is the same. reuse the previous command buffer.
+            e.commandBuffer = prev.commandBuffer;
+        }
     }
-    return static_cast<uint64_t>(mEntries.size());
-}
 
-// Resolves a 1-based command buffer ID to a CommandBuffer handle for recording.
-// Marks the last entry in the batch for submission. Returns an empty handle on invalid ID.
-CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(uint64_t commandBufferId) {
-    if (commandBufferId == 0) GN_UNLIKELY {
-            GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: invalid commandBufferId 0");
-            return {};
-        }
-    size_t index = static_cast<size_t>(commandBufferId - 1);
-    if (index >= mEntries.size()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: commandBufferId {} out of range", commandBufferId);
-            return {};
-        }
-    Entry & e = mEntries[index];
-    if (index == mEntries.size() - 1) { e.submit = true; }
-    return CommandBuffer {e.queue, e.commandBuffer, e.submit};
+    // check if we need to submit the command buffer.
+    bool needToSubmit = (iter == std::prev(mEntries.end())) || (iter->second.type != std::next(iter)->second.type);
+
+    // done
+    return CommandBuffer {e.queue, e.commandBuffer, needToSubmit};
 }
 
 } // namespace GN::rdg

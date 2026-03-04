@@ -19,7 +19,6 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
     rapid_vulkan::Instance::ConstructParameters ip;
     ip.apiVersion = VK_API_VERSION_1_3; // requires at least Vulkan 1.3+ to use dynamic rendering feature.
     ip.backtrace  = []() -> std::string { return GN::backtrace().c_str(); };
-    ip.validation = rapid_vulkan::Instance::BREAK_ON_VK_ERROR;
     mInstance.emplace(ip);
     if (!mInstance->handle()) {
         GN_ERROR(sLogger)("GpuContextVulkan::GpuContextVulkan: failed to create Vulkan instance, name='{}'", name);

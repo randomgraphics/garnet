@@ -42,7 +42,7 @@ vk::UniqueSurfaceKHR createSurfaceFromWindow(vk::Instance instance, GN::win::Win
 // BackbufferVulkan - constructor and init
 // =============================================================================
 
-BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): BackbufferCommon(db, name) {
+BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE_ID, TYPE_NAME, name) {
     if (0 == sequence) { GN_ERROR(sLogger)("BackbufferVulkan::BackbufferVulkan: duplicate type+name, name='{}'", name); }
 }
 
@@ -175,11 +175,9 @@ gfx::img::Image BackbufferVulkan::readbackOutsideRenderPass() const {
     return contentToImage(content);
 }
 
-Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl &) {
-    if (!mSwapchain.valid()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BackbufferVulkan::prepare: swapchain not initialized");
-            return Action::ExecutionResult::FAILED;
-        }
+Action::ExecutionResult BackbufferVulkan::beginFrame(const TaskInfo & taskInfo) {
+    GN_RDG_FAIL_ON_FALSE(mSwapchain.valid(), "{} - swapchain not initialized", taskInfo);
+
     // Check if the backbuffer is already prepared.
     if (mActiveFrame) GN_UNLIKELY {
             GN_VERBOSE(sLogger)("BackbufferVulkan::prepare: already prepared. Redundant call is ignored.");
@@ -187,12 +185,9 @@ Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl &) {
         }
 
     // Call beginFrame and store the frame pointer.
-    GN_VERBOSE(sLogger)("BackbufferVulkan::prepare: beginFrame");
+    GN_VERBOSE(sLogger)("{} - begin frame", taskInfo);
     mActiveFrame = mSwapchain->beginFrame();
-    if (!mActiveFrame) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BackbufferVulkan::prepare: beginFrame failed");
-            return Action::ExecutionResult::FAILED;
-        }
+    GN_RDG_FAIL_ON_FALSE(mActiveFrame, "{} - beginFrame failed", taskInfo);
 
     // mSwapChain->beginFrame() updated the backbuffer layout. So we
     // need to track those changes here.
@@ -206,11 +201,8 @@ Action::ExecutionResult BackbufferVulkan::prepare(SubmissionImpl &) {
     return Action::ExecutionResult::PASSED;
 }
 
-Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl &) {
-    if (!mSwapchain.valid()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BackbufferVulkan::present: swapchain not initialized");
-            return Action::ExecutionResult::FAILED;
-        }
+Action::ExecutionResult BackbufferVulkan::present(const TaskInfo & taskInfo) {
+    GN_RDG_FAIL_ON_FALSE(mSwapchain.valid(), "{} - swapchain not initialized", taskInfo);
 
     // Check if the backbuffer is already prepared. If not, ignore this present call.
     if (!mActiveFrame) GN_UNLIKELY {
@@ -235,17 +227,13 @@ Action::ExecutionResult BackbufferVulkan::present(SubmissionImpl &) {
     return Action::ExecutionResult::PASSED;
 }
 
-// =============================================================================
-// createVulkanBackbuffer - API-specific factory
-// =============================================================================
-
 bool BackbufferVulkan::trackImageState(const TextureVulkan::ImageState & newState, TextureVulkan::ImageStateTransitionFlags flags) {
     if (mBackbufferState.curr == newState) return false;
     mBackbufferState.transitTo(newState, flags);
     return true;
 }
 
-AutoRef<Backbuffer> createVulkanBackbuffer(ArtifactDatabase & db, const StrA & name, const Backbuffer::CreateParameters & params) {
+AutoRef<Backbuffer> createBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const Backbuffer::CreateParameters & params) {
     auto * p = new BackbufferVulkan(db, name);
     if (p->sequence == 0) {
         GN_ERROR(sLogger)("createVulkanBackbuffer: duplicate type+name, name='{}'", name);
@@ -260,44 +248,79 @@ AutoRef<Backbuffer> createVulkanBackbuffer(ArtifactDatabase & db, const StrA & n
 }
 
 // =============================================================================
-// PresentBackbufferVulkan
+// PrepareBackbuffer - API-neutral impl (uses BackbufferCommon::prepare())
 // =============================================================================
 
-class PresentBackbufferVulkan : public PresentBackbufferImpl {
-    AutoRef<GpuContextVulkan> mGpu;
-
+/// \note
+///  - Can't use this as a mark of beginning of a frame, since it could be called very late in the frame, like
+///    in a deferred rendering pipeline.
+class PrepareBackbufferVulkan : public PrepareBackbuffer {
 public:
-    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): PresentBackbufferImpl(db, name), mGpu(std::move(gpu)) {}
+    PrepareBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
-        auto   a              = arguments.castTo<PresentBackbuffer::A>();
-        if (!a) GN_UNLIKELY {
-                GN_ERROR(sLogger)("PresentBackbufferVulkan::prepare: invalid arguments");
-                return std::make_pair(FAILED, nullptr);
-            }
-        auto & backbuffer = a->backbuffer.value;
-        if (!backbuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("PresentBackbufferVulkan::prepare: backbuffer not set");
-                return std::make_pair(FAILED, nullptr);
-            }
+    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
-        // Notify render pass manager to end render pass, if this is the active render target.
-        auto & sc = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        sc.renderPassManager.onPresentingBackbuffer(taskInfo, backbuffer);
-
-        // done
-        return std::make_pair(PASSED, nullptr);
+    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+        auto a = arguments.castTo<PrepareBackbuffer::A>();
+        GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PrepareBackbuffer::A", taskInfo);
+        GN_RDG_FAIL_ON_FALSE(a->backbuffer.value, "{} - backbuffer not set", taskInfo);
+        auto bb = a->backbuffer.value->castTo<BackbufferVulkan>();
+        GN_RDG_FAIL_ON_FALSE(bb, "{} - backbuffer is not BackbufferVulkan", taskInfo);
+        return bb->beginFrame(taskInfo);
     }
 };
 
-AutoRef<PresentBackbuffer> createVulkanPresentBackbuffer(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters & params) {
-    auto gpu = params.gpu.castTo<GpuContextVulkan>();
-    if (!gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanPresentBackbuffer: gpu is not Vulkan, name='{}'", name);
-            return {};
-        }
-    auto * p = new PresentBackbufferVulkan(db, name, gpu);
+AutoRef<PrepareBackbuffer> createPrepareBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const PrepareBackbuffer::CreateParameters &) {
+    auto * p = new PrepareBackbufferVulkan(db, name);
+    if (p->sequence == 0) {
+        GN_ERROR(sLogger)("createVulkanPrepareBackbuffer: duplicate type+name, name='{}'", name);
+        delete p;
+        return {};
+    }
+    return AutoRef<PrepareBackbuffer>(p);
+}
+
+// =============================================================================
+// PresentBackbufferVulkan
+// =============================================================================
+
+class PresentBackbufferVulkan : public PresentBackbuffer {
+    AutoRef<GpuContextVulkan> mGpu;
+
+public:
+    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
+
+    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+        auto a = arguments.castTo<PresentBackbuffer::A>();
+        GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
+        auto & backbuffer = a->backbuffer.value;
+        GN_RDG_FAIL_ON_FALSE(backbuffer, "{} - backbuffer not set", taskInfo);
+
+        // standard preparation.
+        auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        GN_RDG_FAIL_ON_FALSE(sc.renderPassManager.preparePresent(taskInfo, backbuffer));
+
+        // done
+        return PASSED;
+    }
+
+    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+        auto a = arguments.castTo<PresentBackbuffer::A>();
+        GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
+        auto bb = a->backbuffer.value->castTo<BackbufferVulkan>();
+        GN_RDG_FAIL_ON_FALSE(bb, "{} - backbuffer is not BackbufferVulkan", taskInfo);
+
+        // standard execution.
+        auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        GN_RDG_FAIL_ON_FAIL(sc.renderPassManager.execute(taskInfo, {}).result);
+
+        // done
+        return bb->present(taskInfo);
+    }
+};
+
+AutoRef<PresentBackbuffer> createPresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters &) {
+    auto * p = new PresentBackbufferVulkan(db, name);
     if (p->sequence == 0) {
         GN_ERROR(sLogger)("createVulkanPresentBackbuffer: duplicate type+name, name='{}'", name);
         delete p;

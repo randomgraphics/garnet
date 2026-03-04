@@ -287,7 +287,7 @@ private:
     friend struct ArtifactArgument;
 };
 
-struct Submission;
+/// A opaque struct to store information of each task in a submission. Defined in submission.h.
 struct TaskInfo;
 
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).
@@ -299,20 +299,12 @@ struct Action : public Artifact {
         DROPPED, ///< the action is dropped; dependents are skipped.
     };
 
-    /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
-    struct ExecutionContext : public RuntimeType {
-        virtual ~ExecutionContext() = default;
-
-    protected:
-        ExecutionContext(uint64_t typeId, const char * typeName): RuntimeType(typeId, typeName) {}
-    };
-
     /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
     /// \param submission The submission that is executing the action.
     /// \param taskInfo The information of the task that is executing the action.
     /// \param arguments The arguments for the action.
-    /// \return A pair of execution result and an optional execution context.
-    virtual std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
+    /// \return The execution result.
+    virtual ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments. The context is the same as the one returned from prepare().
     /// \param submission The submission that is executing the action.
@@ -320,7 +312,7 @@ struct Action : public Artifact {
     /// \param arguments Same as the one passed to prepare().
     /// \param context The context returned from prepare().
     /// \return The execution result.
-    virtual ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext * context) = 0;
+    virtual ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) = 0;
 
 protected:
     /// Inherit constructor from Artifact
@@ -392,13 +384,6 @@ struct Workflow {
     //     }
     //     return result;
     // }
-};
-
-struct TaskInfo {
-    Submission &   submission; ///< the submission that the task belongs to.
-    const StrA     workflow;   ///< name of the workflow that the task belongs to.
-    const StrA     task;       ///< name of the task.
-    const uint64_t index;      ///< index of the task within the entire submission. Can also be used as the unique identifier of the task within the submission.
 };
 
 struct Submission : RefCounter {

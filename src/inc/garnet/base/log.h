@@ -418,6 +418,8 @@ public:
             return *this;
         }
 
+        void format() {}
+
         template<typename... Args>
         void format(fmt::format_string<Args...> formatString, Args &&... args) const {
             return mLogger->doLog(mDesc, internal::StringFormatter<char>(formatString, std::forward<Args>(args)...).result());
@@ -427,6 +429,8 @@ public:
         void format(fmt::wformat_string<Args...> formatString, Args &&... args) {
             return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(formatString, std::forward<Args>(args)...).result());
         }
+
+        void printf() {}
 
         template<typename... Args>
         void printf(fmt::format_string<Args...> formatString, Args &&... args) const {

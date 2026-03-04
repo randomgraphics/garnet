@@ -19,7 +19,7 @@ GN_API AutoRef<Backbuffer> Backbuffer::create(ArtifactDatabase & db, const StrA 
     auto * common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanBackbuffer(db, name, params);
+        return createBackbufferVulkan(db, name, params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("Backbuffer::create: D3D12 backend not implemented yet");
         return {};
@@ -28,6 +28,33 @@ GN_API AutoRef<Backbuffer> Backbuffer::create(ArtifactDatabase & db, const StrA 
         return {};
     default:
         GN_ERROR(sLogger)("Backbuffer::create: unknown API, name='{}'", name);
+        return {};
+    }
+}
+
+GN_API AutoRef<PrepareBackbuffer> PrepareBackbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+    (void) params;
+    auto common = static_cast<GpuContextCommon *>(params.gpu.get());
+    switch (common->api()) {
+    case GpuContextCommon::Api::Vulkan:
+        return createPrepareBackbufferVulkan(db, name, params);
+    default:
+        GN_ERROR(sLogger)("PrepareBackbuffer::create: unknown API, name='{}'", name);
+        return {};
+    }
+}
+
+GN_API AutoRef<PresentBackbuffer> PresentBackbuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+    if (!params.gpu) GN_UNLIKELY {
+            GN_ERROR(sLogger)("PresentBackbuffer::create: context is null, name='{}'", name);
+            return {};
+        }
+    auto common = static_cast<GpuContextCommon *>(params.gpu.get());
+    switch (common->api()) {
+    case GpuContextCommon::Api::Vulkan:
+        return createPresentBackbufferVulkan(db, name, params);
+    default:
+        GN_ERROR(sLogger)("PresentBackbuffer::create: unknown API, name='{}'", name);
         return {};
     }
 }

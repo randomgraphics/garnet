@@ -8,6 +8,10 @@ namespace GN::rdg {
 
 static GN::Logger * sLogger = getLogger("GN.rdg");
 
+// =====================================================================================================================
+// ClearRenderTargetVulkan
+// =====================================================================================================================
+
 class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
 
@@ -15,69 +19,40 @@ public:
     ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
         : ClearRenderTarget(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu) {}
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+        auto & submission = taskInfo.submission;
 
         auto a = arguments.castTo<ClearRenderTarget::A>();
-        if (!a) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: arguments is not ClearRenderTarget::A");
-                return std::make_pair(FAILED, nullptr);
-            }
+        GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
-        auto taskContext = std::make_unique<DrawActionContextVulkan>();
-
-        // prepare command buffer.
-        auto & submissionContext     = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        taskContext->commandBufferId = submissionContext.commandBufferManager.prepare(CommandBufferManagerVulkan::GRAPHICS);
-        if (!taskContext->commandBufferId) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare command buffer");
-                return std::make_pair(FAILED, nullptr);
-            }
-
-        // collect render target usage.
-        if (!submissionContext.renderPassManager.collectRenderTargetUsage(taskInfo, a->renderTarget.value)) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: failed to prepare render pass");
-                return std::make_pair(FAILED, nullptr);
-            }
+        // standard preparation.
+        auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
+        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget.value));
 
         // done
-        return std::make_pair(PASSED, taskContext.release());
+        return Action::PASSED;
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext * context) override {
+    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         bool hasWarning = false;
 
-        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+        auto & submission = taskInfo.submission;
 
         auto a = arguments.castTo<ClearRenderTarget::A>();
-        if (!a) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::prepare: arguments is not ClearRenderTarget::A");
-                return FAILED;
-            }
+        GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
-        auto ctx = static_cast<DrawActionContextVulkan *>(context);
-        if (!ctx) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: context is not DrawActionContextVulkan");
-                return FAILED;
-            }
+        // stadnard execution
+        auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        auto   cb = sc.commandBufferManager.execute(taskInfo);
+        GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
 
-        // acquire command buffer.
-        auto & sc = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(ctx->commandBufferId);
-        if (!cb.queue || !cb.commandBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire command buffer");
-                return FAILED;
-            }
-
-        // acquire render pass.
+        // acquire render pass. End if if needed.
         auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
-        if (!rp) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ClearRenderTargetVulkan::execute: failed to acquire render pass");
-                return FAILED;
-            }
+        GN_RDG_FAIL_ON_FAIL(rp.result);
+        if (rp.needToEnd) cb.commandBuffer.handle().endRendering();
 
         // submit command buffer, if asked to do so.
-        // TODO: we need to remember the submission somewhere.
         if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
 
         // done
@@ -93,6 +68,10 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
         }
     return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(db, name, gpu));
 }
+
+// =====================================================================================================================
+// GpuDrawVulkan
+// =====================================================================================================================
 
 class GpuDrawVulkan : public GpuDraw {
     AutoRef<GpuContextVulkan> mGpu;
@@ -196,54 +175,34 @@ public:
         if (mFragModule) dev.destroyShaderModule(mFragModule);
     }
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
 
         auto a = arguments.castTo<GpuDraw::A>();
-        if (!a) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::prepare: arguments is not GpuDraw::A");
-                return std::make_pair(FAILED, nullptr);
-            }
+        GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
-        auto taskContext = std::make_unique<DrawActionContextVulkan>();
+        // standard preparation.
+        auto & submissionContext = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
+        // pass in an empty render target indicating we are not changing the render target.
+        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, {}));
 
-        // prepare command buffer.
-        auto & submissionContext     = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        taskContext->commandBufferId = submissionContext.commandBufferManager.prepare(CommandBufferManagerVulkan::GRAPHICS);
-        if (!taskContext->commandBufferId) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::prepare: failed to prepare command buffer");
-                return std::make_pair(FAILED, nullptr);
-            }
-
-        // No need to call render pass manager here, since we won't change render target here.
-
-        return std::make_pair(PASSED, taskContext.release());
+        // done
+        return PASSED;
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext * context) override {
+    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         bool hasWarning = false;
 
-        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+        auto & submission = taskInfo.submission;
 
         auto a = arguments.castTo<GpuDraw::A>();
-        if (!a) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::execute: arguments is not GpuDraw::A");
-                return FAILED;
-            }
+        GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
-        auto ctx = static_cast<DrawActionContextVulkan *>(context);
-        if (!ctx) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::execute: context is not DrawActionContextVulkan");
-                return FAILED;
-            }
-
-        // acquire command buffer.
-        auto & sc = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(ctx->commandBufferId);
-        if (!cb.queue || !cb.commandBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::execute: failed to acquire command buffer");
-                return FAILED;
-            }
+        // standard execution.
+        auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        auto   cb = sc.commandBufferManager.execute(taskInfo);
+        GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
 
         createPipelineIfNeeded();
 
@@ -276,11 +235,11 @@ public:
         // call into render pass to end render pass if needed. Must be called after all draw commands are queued in the
         // command buffer.
         auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
-        if (!rp) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::execute(): {} - failed to end render pass", taskInfo);
-                return FAILED;
+        GN_RDG_FAIL_ON_FAIL(rp.result);
+        if (rp.needToEnd) GN_UNLIKELY {
+                GN_VERBOSE(sLogger)("{} - ending render pass", taskInfo);
+                cb.commandBuffer.handle().endRendering();
             }
-        GN_ASSERT(rp->firstTaskIndex != taskInfo.index); // should never be the beginning of a render pass.
 
         // submit command buffer, if asked to do so.
         if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});

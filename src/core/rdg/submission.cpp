@@ -336,13 +336,14 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
 
         // step 3: prepare all tasks in topological order.
         struct PendingTask {
-            Workflow::Task *                          task;
-            TaskInfo                                  info;
-            std::unique_ptr<Action::ExecutionContext> context;
+            Workflow::Task * task;
+            TaskInfo         info;
         };
         DynaArray<PendingTask> pendingTasks;
         bool                   hasWarning = false;
-        for (size_t workflowIdx : executionOrder) {
+        for (size_t executionOrderIdx = 0; executionOrderIdx < executionOrder.size(); ++executionOrderIdx) {
+            size_t workflowIdx = executionOrder[executionOrderIdx];
+            GN_ASSERT(workflowIdx < mValidatedWorkflows.size());
             Workflow * workflow = mValidatedWorkflows[workflowIdx];
             GN_ASSERT(workflow);
             for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
@@ -352,15 +353,15 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                 StrA     tName  = task.name.empty() ? StrA("[unnamed task]") : task.name;
                 uint64_t idx    = (uint64_t) pendingTasks.size();
                 pendingTasks.append(
-                    PendingTask {.task = &task, .info = TaskInfo {.submission = *this, .workflow = wfName, .task = tName, .index = idx}, .context = {}});
+                    PendingTask {.task = &task,
+                                 .info = TaskInfo {.submission = *this, .workflow = wfName, .task = tName, .index = idx, .action = *task.action}});
                 {
                     std::lock_guard<std::mutex> lock(mStateMutex);
                     mTaskStates.append(TaskExecutionState {.workflowName = wfName, .taskName = tName, .index = idx, .validationPassed = true});
                 }
                 auto & pt = pendingTasks.back();
                 GN_VERBOSE(sLogger)("Preparing {}", pt.info);
-                auto [result, context] = task.action->prepare(pt.info, *task.arguments);
-                pt.context = std::unique_ptr<Action::ExecutionContext>(context); // need to do this before error check to ensure it is released even on error.
+                auto result = task.action->prepare(pt.info, *task.arguments);
                 {
                     std::lock_guard<std::mutex> lock(mStateMutex);
                     if (pt.info.index < mTaskStates.size()) {
@@ -396,7 +397,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         for (size_t i = 0; i < pendingTasks.size(); ++i) {
             auto & pt = pendingTasks[i];
             GN_VERBOSE(sLogger)("Executing {}", pt.info);
-            auto result = pt.task->action->execute(pt.info, *pt.task->arguments, pt.context.get());
+            auto result = pt.task->action->execute(pt.info, *pt.task->arguments);
             {
                 std::lock_guard<std::mutex> lock(mStateMutex);
                 if (pt.info.index < mTaskStates.size()) {

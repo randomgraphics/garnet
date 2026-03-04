@@ -207,47 +207,52 @@ inline bool areSameRenderTarget(const AutoRef<RenderTarget> & a, const AutoRef<R
 
 } // namespace
 
-bool RenderPassManagerVulkan::collectRenderTargetUsage(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
-
-    // Check if this is the very first task.
-    if (mRenderPasses.empty()) {
-        mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
-        GN_VERBOSE(sLogger)("{} - starting the very first render pass {}", taskInfo, mRenderPasses.back().toString());
-        return true;
-    }
-
-    // If it is not the first task, then get the current active render target from the end of the render pass list.
-    auto activeRenderTarget = mRenderPasses.back().renderTarget;
-
-    // Check if the render target has changed.
-    bool changed = !areSameRenderTarget(activeRenderTarget, renderTarget);
-
-    // update render pass information as needed.
-    if (changed) {
-        mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
-        GN_VERBOSE(sLogger)("{} - render target changed, end render pass {}", taskInfo, mRenderPasses.back().toString());
-        mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
-        GN_VERBOSE(sLogger)("{} - render target changed, started new render pass {}.", taskInfo, mRenderPasses.back().toString());
-    } else {
-        mRenderPasses.back().lastTaskIndex = taskInfo.index;
-        GN_VERBOSE(sLogger)("{} - updating render pass last task index: {}.", taskInfo, mRenderPasses.back().toString());
-    }
+bool RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
+    auto & entry = mEntries[taskInfo.index];
+    entry.draw   = std::move(renderTarget);
+    GN_ASSERT(entry.isDraw());
+    GN_ASSERT(!entry.isPresent());
     return true;
 }
 
-void RenderPassManagerVulkan::onPresentingBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
-    if (mRenderPasses.empty()) return;
-    const auto & rt = mRenderPasses.back().renderTarget;
-    if (!rt) return;
-    for (const auto & color : rt->colors) {
-        if (color.target.artifact() == backbuffer) {
-            // this is the back buffer. we need to end the current render pass and create a new one with empty target.
-            mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
-            GN_VERBOSE(sLogger)("{} - presenting backbuffer {}, end last render pass {}.", taskInfo, backbuffer->name, mRenderPasses.back().toString());
-            mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = {}});
-            GN_VERBOSE(sLogger)("{} - create a new empty render pass {}.", taskInfo, mRenderPasses.back().toString());
-            return;
+bool RenderPassManagerVulkan::preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
+    if (!backbuffer) GN_UNLIKELY {
+            GN_ERROR(sLogger)("{} - can't present empty backbuffer", taskInfo);
+            return false;
         }
+    auto & entry  = mEntries[taskInfo.index];
+    entry.present = std::move(backbuffer);
+    GN_ASSERT(entry.isPresent());
+    GN_ASSERT(!entry.isDraw());
+    return true;
+}
+
+auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) -> RenderPassExecutionResult {
+    // Find the entry that the task belongs to.
+    auto iter = mEntries.find(taskInfo.index);
+    if (iter == mEntries.end()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("{} - entry not found", taskInfo);
+            return {};
+        }
+
+    auto & entry = iter->second;
+
+    if (entry.isDraw()) {
+        // we need to start a new render pass if one of the following is true:
+        // 1. this is the first task in the render pass.
+        // 2. the previous task is a present action (while the current task is a draw)
+        // 3. the previous task is a draw or clear action with a different render target.
+        bool needtoBegin = iter == mEntries.begin() || std::prev(iter)->second.present || std::prev(iter)->second.draw != entry.draw;
+        if (needtoBegin && !beginRenderPass(*entry.draw, commandBuffer)) return {};
+
+        /// We need to end the render pass if one of the following is true:
+        /// 1. this is the last task in the render pass.
+        /// 2. the next task is drawing to different render target or is present action.
+        bool needToEnd = iter == std::prev(mEntries.end()) || std::next(iter)->second.draw != entry.draw;
+        return {Action::ExecutionResult::PASSED, needToEnd};
+    } else {
+        // this is a present action. currently do nothing, just return.
+        return {Action::ExecutionResult::PASSED};
     }
 }
 
@@ -352,39 +357,6 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     commandBuffer.setScissor(0, 1, &scissor);
 
     return true;
-}
-
-const RenderPassManagerVulkan::RenderPass * RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) {
-    // Find the render pass that the task belongs to.
-    RenderPass * rp = nullptr;
-    for (size_t i = 0; i < mRenderPasses.size(); i++) {
-        if (mRenderPasses[i].firstTaskIndex <= taskInfo.index && mRenderPasses[i].lastTaskIndex >= taskInfo.index) { rp = &mRenderPasses[i]; }
-    }
-    if (!rp) {
-        auto printRenderPassList = [](const std::vector<RenderPass> & renderPasses) {
-            StrA renderPassList;
-            for (const auto & rp : renderPasses) {
-                renderPassList.append(fmt::format("  Render pass: firstTaskIndex={}, lastTaskIndex={}, renderTarget={}\n", rp.firstTaskIndex, rp.lastTaskIndex,
-                                                  rp.renderTarget ? rp.renderTarget->name : "null"_s));
-            }
-            return renderPassList;
-        };
-        GN_ERROR(sLogger)("{} - doesn't seem to be part of any render pass. Render pass list:\n{}", taskInfo, printRenderPassList(mRenderPasses));
-        return nullptr;
-    }
-
-    // If this is the first task of the render pass, start a new render pass.
-    if (rp->renderTarget) {
-        if (rp->firstTaskIndex == taskInfo.index) {
-            if (!beginRenderPass(*rp->renderTarget, commandBuffer)) return nullptr;
-        } else if (rp->lastTaskIndex == taskInfo.index) {
-            GN_VERBOSE(sLogger)("{} - end render pass for render target: {}.", taskInfo, rp->renderTarget->name);
-            commandBuffer.endRendering();
-        }
-    }
-
-    // done
-    return rp;
 }
 
 } // namespace GN::rdg

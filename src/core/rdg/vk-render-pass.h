@@ -14,16 +14,9 @@ public:
         AutoRef<GpuContextVulkan> gpu;
     };
 
-    struct RenderPass {
-        uint64_t              firstTaskIndex = 0;
-        uint64_t              lastTaskIndex  = 0;
-        AutoRef<RenderTarget> renderTarget; // could be empty, if this is no render target is set between the first and last task.
-
-        StrA toString() const {
-            auto renderTargetName = renderTarget ? renderTarget->name : "null"_s;
-            auto taskRange        = fmt::format("[{}, {}]", firstTaskIndex, lastTaskIndex);
-            return fmt::format("RenderPass(renderTarget={}, task = {})", renderTargetName, taskRange);
-        }
+    struct RenderPassExecutionResult {
+        Action::ExecutionResult result    = Action::ExecutionResult::FAILED;
+        bool                    needToEnd = false;
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params): mGpu(params.gpu) {}
@@ -33,18 +26,28 @@ public:
     /// Called by tasks in prepare pass to collect render target information.
     /// \param taskInfo The task information.
     /// \param renderTarget The render target. Or null, if the resuing current render target.
-    bool collectRenderTargetUsage(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget);
+    bool prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget);
 
-    /// Called by presnet action to end rendering to backbuffer.
+    /// Called by present backbuffer task to end rendering to backbuffer.
     /// If current render target is not this backbufer, then do nothing.
-    void onPresentingBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
+    bool preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
 
     /// Called by task in execution pass to begin render pass.
-    const RenderPass * execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer);
+    RenderPassExecutionResult execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer);
 
 private:
+    struct Entry {
+        AutoRef<Backbuffer>   present = {};
+        AutoRef<RenderTarget> draw    = {};
+
+        bool isDraw() const { return !present; }
+        bool isPresent() const { return !!present; }
+
+        bool operator==(const Entry & other) const { return present == other.present && draw == other.draw; }
+    };
+
     AutoRef<GpuContextVulkan> mGpu;
-    std::vector<RenderPass>   mRenderPasses;
+    std::map<uint64_t, Entry> mEntries; // key is the task index. Needs sorted container. Can't use unordered_map.
 
     bool beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer commandBuffer);
 };
