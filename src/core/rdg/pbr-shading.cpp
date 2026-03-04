@@ -28,7 +28,19 @@ AutoRef<Submission> SubGraph::submit() {
 // =============================================================================
 
 class PbrShadingVulkan : public PbrShading {
-    AutoRef<GpuContext> mGpu;
+    AutoRef<GpuContext>      mGpu;
+    mutable AutoRef<GpuDraw> mDrawAction; ///< Created once, reused for each build with different arguments.
+
+    void ensureDrawAction() const {
+        if (mDrawAction) return;
+        GpuDraw::CreateParameters drawCp;
+        drawCp.context = mGpu;
+        drawCp.vs      = {.binary = (void *) kPbrVertSpv, .size = kPbrVertSpvSize * sizeof(unsigned int), .entry = "main"};
+        drawCp.ps      = {.binary = (void *) kPbrFragSpv, .size = kPbrFragSpvSize * sizeof(unsigned int), .entry = "main"};
+        StrA drawName  = StrA::format("pbr_draw_{}", (unsigned long) sequence);
+        mDrawAction    = GpuDraw::create(database, drawName, drawCp);
+        GN_REQUIRE(mDrawAction, fmt::format("Failed to create PBR draw action, name='{}'", drawName));
+    }
 
 public:
     PbrShadingVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu): PbrShading(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
@@ -47,19 +59,14 @@ public:
                 sg.builtResult = Action::ExecutionResult::FAILED;
                 return sg;
             }
-        // Create GpuDraw action with PBR vertex and fragment shaders
-        GpuDraw::CreateParameters drawCp;
-        drawCp.context  = mGpu;
-        drawCp.vs       = {.binary = (void *) kPbrVertSpv, .size = kPbrVertSpvSize * sizeof(unsigned int), .entry = "main"};
-        drawCp.ps       = {.binary = (void *) kPbrFragSpv, .size = kPbrFragSpvSize * sizeof(unsigned int), .entry = "main"};
-        StrA drawName   = StrA::format("pbr_draw_{}", (unsigned long) sequence);
-        auto drawAction = GpuDraw::create(database, drawName, drawCp);
-        if (!drawAction) GN_UNLIKELY {
+        ensureDrawAction();
+        if (!mDrawAction) GN_UNLIKELY {
                 SubGraph sg(*params.renderGraph, "Pbr");
                 sg.builtResult = Action::ExecutionResult::FAILED;
                 params.renderGraph->dropWorkflow(workflow);
                 return sg;
             }
+        // Build arguments from params; the action is reused.
         auto drawArgs            = AutoRef<GpuDraw::A>(new GpuDraw::A());
         drawArgs->geometry.value = params.geometry;
         // Push constants: model (64 bytes) + viewProj (64 bytes), column-major for GLSL.
@@ -72,7 +79,7 @@ public:
         pc += 16;
         for (int col = 0; col < 4; ++col)
             for (int row = 0; row < 4; ++row) pc[col * 4 + row] = viewProj[row][col];
-        workflow->appendTask("PBR draw", std::move(drawAction), std::move(drawArgs));
+        workflow->appendTask("PBR draw", AutoRef<Action>(mDrawAction), std::move(drawArgs));
         SubGraph sg(*params.renderGraph, "Pbr");
         sg.workflows.append(workflow);
         sg.builtResult = Action::ExecutionResult::PASSED;

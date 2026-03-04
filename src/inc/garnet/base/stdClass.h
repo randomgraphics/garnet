@@ -157,7 +157,7 @@ protected:
         /// dtor. Check the boolean value.
         ///
         ~SanityChecker() {
-            GN_ASSERT_EX(StdClass::IS_FAILURE == theClass.mOK || StdClass::IS_SUCCESS == theClass.mOK, "Neither failure() nor success() is called!");
+            GN_ASSERT(StdClass::IS_FAILURE == theClass.mOK || StdClass::IS_SUCCESS == theClass.mOK, "Neither failure() nor success() is called!");
         }
     };
 #endif

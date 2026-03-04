@@ -1037,8 +1037,8 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
     }
 
     // make sure all objects are linked into the tree.
-    GN_ASSERT_EX(scene.root.calcChildrenCount() == scene.objects.size(),
-                 StrA::format("numchildren={}, numobjects={}", scene.root.calcChildrenCount(), scene.objects.size()).data());
+    GN_ASSERT(scene.root.calcChildrenCount() == scene.objects.size(),
+              fmt::format("numchildren={}, numobjects={}", scene.root.calcChildrenCount(), scene.objects.size()));
 
     // calculate bounding box for each node, in post order
     TreeTraversePostOrder<AseGeoObject> ttpost(&scene.root);

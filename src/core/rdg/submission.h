@@ -6,24 +6,21 @@
 #include <optional>
 #include "runtime-type.h"
 
-#define GN_RDG_GET_N_ARG(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
-#define GN_RDG_COUNT_ARGS(...)                                            GN_RDG_GET_N_ARG(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
-
-#define GN_RDG_FAIL_ON_FAIL(expr, ...)                                                                                \
-    do {                                                                                                              \
-        auto result___ = (expr);                                                                                      \
-        if (result___ != Action::PASSED && result___ != Action::WARNING) GN_UNLIKELY {                                \
-                if constexpr (GN_RDG_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
-                return result___;                                                                                     \
-            }                                                                                                         \
+#define GN_RDG_FAIL_ON_FAIL(expr, ...)                                                                            \
+    do {                                                                                                          \
+        auto result___ = (expr);                                                                                  \
+        if (result___ != Action::PASSED && result___ != Action::WARNING) GN_UNLIKELY {                            \
+                if constexpr (GN_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
+                return result___;                                                                                 \
+            }                                                                                                     \
     } while (false)
 
-#define GN_RDG_FAIL_ON_FALSE(expr, ...)                                                                               \
-    do {                                                                                                              \
-        if (!(expr)) GN_UNLIKELY {                                                                                    \
-                if constexpr (GN_RDG_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
-                return Action::FAILED;                                                                                \
-            }                                                                                                         \
+#define GN_RDG_FAIL_ON_FALSE(expr, ...)                                                                           \
+    do {                                                                                                          \
+        if (!(expr)) GN_UNLIKELY {                                                                                \
+                if constexpr (GN_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
+                return Action::FAILED;                                                                            \
+            }                                                                                                     \
     } while (false)
 
 namespace GN::rdg {

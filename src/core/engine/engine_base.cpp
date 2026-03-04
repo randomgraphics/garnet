@@ -272,5 +272,5 @@ GN_API int GN::engine::impl::onEntityCtor(Entity * e) {
 GN_API void GN::engine::impl::onEntityDtor(int id) {
     std::lock_guard<std::mutex> lock(s_engine.entityLock);
 
-    GN_VERIFY(s_engine.entities.remove(id));
+    GN_REQUIRE(s_engine.entities.remove(id));
 }

@@ -6,7 +6,7 @@ namespace GN::rdg {
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 CommandBufferManagerVulkan::CommandBufferManagerVulkan(const ConstructParameters & params) {
-    GN_VERIFY_EX(params.gpu, "GPU context can't be empty.");
+    GN_REQUIRE(params.gpu, "GPU context can't be empty.");
     mGpu                                 = params.gpu;
     const rapid_vulkan::Device &     dev = mGpu->device();
     const rapid_vulkan::GlobalInfo * gi  = dev.gi();

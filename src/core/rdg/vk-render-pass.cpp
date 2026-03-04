@@ -117,7 +117,7 @@ vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthSt
 
     auto depthFormat = getDepthViewFormat(image->desc().format);
     if (depthFormat == vk::Format::eUndefined) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: supported depth texture format: {}.", (uint32_t) image->desc().format);
+            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: supported depth texture format: {}.", rapid_vulkan::vkFormat2String(image->desc().format));
             return {};
         }
 

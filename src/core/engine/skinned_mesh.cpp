@@ -915,7 +915,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             if (!mVisual->addModel(model)) continue;
 
             // remember the subset information.
-            GN_VERIFY(mSubsets.resize(mSubsets.size() + 1));
+            GN_REQUIRE(mSubsets.resize(mSubsets.size() + 1));
             mSubsets.back().skeleton = fatmesh.skeleton;
             mSubsets.back().joints   = fatsubset.joints;
 

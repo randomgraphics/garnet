@@ -183,12 +183,12 @@ class StringFormatter {
         if (!formatString || !*formatString) return;
         if constexpr (std::is_same_v<CHAR, char>) {
             auto s = fmt::format("Printf syntax is deprecated: {}", formatString);
-            GN_ASSERT_EX(!lookForPrintfSpecifiers(formatString), s.c_str());
+            GN_ASSERT(!lookForPrintfSpecifiers(formatString), s.c_str());
         } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
             auto s = fmt::format(L"Printf syntax is deprecated: {}", formatString);
-            GN_ASSERT_EX(!lookForPrintfSpecifiers(formatString), s.c_str());
+            GN_ASSERT(!lookForPrintfSpecifiers(formatString), s.c_str());
         } else {
-            GN_ASSERT_EX(!lookForPrintfSpecifiers(formatString), "Printf syntax is deprecated");
+            GN_ASSERT(!lookForPrintfSpecifiers(formatString), "Printf syntax is deprecated");
         }
     }
 #else
@@ -198,9 +198,9 @@ class StringFormatter {
 
     static void printInvalidFormatSyntax([[maybe_unused]] const CHAR * formatString, [[maybe_unused]] const char * what) {
         if constexpr (std::is_same_v<CHAR, char>) {
-            GN_ASSERT_EX(false, fmt::format("{}: {}", what, formatString).c_str());
+            GN_ASSERT(false, fmt::format("{}: {}", what, formatString));
         } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
-            GN_ASSERT_EX(false, fmt::format(L"{}: {}", WideString(what).wstr, formatString).c_str());
+            GN_ASSERT(false, fmt::format(L"{}: {}", WideString(what).wstr, formatString));
         }
     }
 

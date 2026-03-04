@@ -15,7 +15,7 @@
 #if VERIFY_AABB_TREE
     // Use TREE_GN_VERIFY() on verification that could be slow.
     // For fast and simple verification, just use GN_ASSERT()
-    #define TREE_GN_VERIFY GN_VERIFY
+    #define TREE_GN_VERIFY GN_REQUIRE
 #else
     #define TREE_GN_VERIFY(...) (void(0))
 #endif
@@ -116,12 +116,12 @@ struct DistanceMap {
 
     // verify integrety of the distance map
     bool Verify() const {
-        GN_VERIFY(nodes.size() * (nodes.size() - 1) == distances.size() * 2);
+        GN_REQUIRE(nodes.size() * (nodes.size() - 1) == distances.size() * 2);
 
         for (auto a = nodes.begin(); a != nodes.end(); ++a) {
 
             // nodes in distance map should have no parents.
-            GN_VERIFY(nullptr == (*a)->parent);
+            GN_REQUIRE(nullptr == (*a)->parent);
 
             VerifySubTree(*a);
 
@@ -132,11 +132,11 @@ struct DistanceMap {
                 int  count = 0;
                 for (auto iter = distances.begin(); iter != distances.end(); ++iter) {
                     auto & d2 = iter->second;
-                    GN_VERIFY(d2.d == iter->first);
+                    GN_REQUIRE(d2.d == iter->first);
                     if (d2.d != d1.d) continue;
                     if ((d2.n1 == *a && d2.n2 == *b) || (d2.n1 == *b && d2.n2 == *a)) { ++count; }
                 }
-                GN_VERIFY(1 == count);
+                GN_REQUIRE(1 == count);
             }
         }
 
@@ -147,8 +147,8 @@ struct DistanceMap {
                 times[iter->second.n1]++;
                 times[iter->second.n2]++;
             }
-            GN_VERIFY(times.size() == nodes.size());
-            for (auto t : times) GN_VERIFY(t.second == nodes.size() - 1);
+            GN_REQUIRE(times.size() == nodes.size());
+            for (auto t : times) GN_REQUIRE(t.second == nodes.size() - 1);
         }
 
         return true;
@@ -394,7 +394,7 @@ static bool VerifyAABBTree(const std::vector<AABBTree::Node *> & nodes, const AA
     // all node pointers must be unqiue.
     auto clone = nodes;
     clone.erase(std::unique(clone.begin(), clone.end()), clone.end());
-    GN_VERIFY(clone.size() == nodes.size());
+    GN_REQUIRE(clone.size() == nodes.size());
 
     std::set<size_t> primitives;
     if (primitiveCount > 0) {
@@ -403,37 +403,37 @@ static bool VerifyAABBTree(const std::vector<AABBTree::Node *> & nodes, const AA
 
     // With the current way we build the BVH, the first primitiveCount node are leaf nodes.
     // The last node is root node.
-    GN_VERIFY(root == nodes.back());
+    GN_REQUIRE(root == nodes.back());
     size_t leafcount1 = 0;
     for (const auto & n : nodes) {
 
         // check root node
         if (n->parent) {
-            GN_VERIFY(n != root);
+            GN_REQUIRE(n != root);
         } else {
-            GN_VERIFY(n == root);
+            GN_REQUIRE(n == root);
         }
 
         // All leaf nodes are at the beginning the node list.
         if (n->IsLeaf()) {
             // Once isLeafNode is set to false, we should see no more leaf nodes.
             if (primitiveCount > 0) {
-                GN_VERIFY(firstPrimitiveId <= (size_t) n->primitive && (size_t) n->primitive <= (firstPrimitiveId + primitiveCount));
-                GN_VERIFY(primitives.find(n->primitive) != primitives.end());
+                GN_REQUIRE(firstPrimitiveId <= (size_t) n->primitive && (size_t) n->primitive <= (firstPrimitiveId + primitiveCount));
+                GN_REQUIRE(primitives.find(n->primitive) != primitives.end());
                 primitives.erase(n->primitive);
             }
             leafcount1++;
         } else {
-            GN_VERIFY(n->primitive < 0);
+            GN_REQUIRE(n->primitive < 0);
         }
 
-        GN_VERIFY(!n->parent || std::find(nodes.begin(), nodes.end(), n->parent) != nodes.end());
-        GN_VERIFY(!n->left || std::find(nodes.begin(), nodes.end(), n->left) != nodes.end());
-        GN_VERIFY(!n->right || std::find(nodes.begin(), nodes.end(), n->right) != nodes.end());
-        if (n == root) { GN_VERIFY(!n->parent); }
+        GN_REQUIRE(!n->parent || std::find(nodes.begin(), nodes.end(), n->parent) != nodes.end());
+        GN_REQUIRE(!n->left || std::find(nodes.begin(), nodes.end(), n->left) != nodes.end());
+        GN_REQUIRE(!n->right || std::find(nodes.begin(), nodes.end(), n->right) != nodes.end());
+        if (n == root) { GN_REQUIRE(!n->parent); }
     }
-    GN_VERIFY(primitives.empty());
-    if (primitiveCount > 0) { GN_VERIFY(leafcount1 == primitiveCount); }
+    GN_REQUIRE(primitives.empty());
+    if (primitiveCount > 0) { GN_REQUIRE(leafcount1 == primitiveCount); }
 
     // DFS traverse the tree
     size_t                             leafcount2 = 0;
@@ -443,32 +443,32 @@ static bool VerifyAABBTree(const std::vector<AABBTree::Node *> & nodes, const AA
     while (!s.empty()) {
         auto p = s.top();
         s.pop();
-        GN_VERIFY(p);
+        GN_REQUIRE(p);
         if (p->IsLeaf()) {
             ++leafcount2;
-            GN_VERIFY(!p->left);
-            GN_VERIFY(!p->right);
-            GN_VERIFY((int) firstPrimitiveId <= p->primitive);
-            if (primitiveCount > 0) { GN_VERIFY(p->primitive < (int) (firstPrimitiveId + primitiveCount)); }
+            GN_REQUIRE(!p->left);
+            GN_REQUIRE(!p->right);
+            GN_REQUIRE((int) firstPrimitiveId <= p->primitive);
+            if (primitiveCount > 0) { GN_REQUIRE(p->primitive < (int) (firstPrimitiveId + primitiveCount)); }
             if (elements) {
                 auto e = elements + (p->primitive - (int) firstPrimitiveId) * TRAITS::ELEMENT_COUNT_PER_PRIMITIVE;
                 auto b = TRAITS::Construct(e);
-                GN_VERIFY(p->box.Enclose(b));
+                GN_REQUIRE(p->box.Enclose(b));
             }
         } else {
             s.push(p->right);
             s.push(p->left);
-            GN_VERIFY(p->left);
-            GN_VERIFY(p->right);
-            GN_VERIFY(p->left->parent == p);
-            GN_VERIFY(p->right->parent == p);
-            GN_VERIFY(p->box.Enclose(p->left->box));
-            GN_VERIFY(p->box.Enclose(p->right->box));
+            GN_REQUIRE(p->left);
+            GN_REQUIRE(p->right);
+            GN_REQUIRE(p->left->parent == p);
+            GN_REQUIRE(p->right->parent == p);
+            GN_REQUIRE(p->box.Enclose(p->left->box));
+            GN_REQUIRE(p->box.Enclose(p->right->box));
         }
         ++total;
     }
-    GN_VERIFY(leafcount2 == leafcount1);
-    GN_VERIFY(total == nodes.size());
+    GN_REQUIRE(leafcount2 == leafcount1);
+    GN_REQUIRE(total == nodes.size());
 
     // done
     return true;
@@ -707,14 +707,14 @@ std::vector<AABB> AABBTree::Serialize() const {
             const auto & n = v[i];
             for (auto c : n.children) {
                 if (c > 0) {
-                    GN_VERIFY(!pointers[c]);
+                    GN_REQUIRE(!pointers[c]);
                     pointers[c] = true;
 
                     // the vector is sorted in DFS order. So child index
                     // must be bigger than parent index.
-                    GN_VERIFY(i < c && c < v.size());
+                    GN_REQUIRE(i < c && c < v.size());
 
-                    GN_VERIFY(n.Enclose(v[c]));
+                    GN_REQUIRE(n.Enclose(v[c]));
                 } else {
                     primitives.insert(primitives.end(), -c);
                     primMin = std::min(primMin, -c);
@@ -724,11 +724,11 @@ std::vector<AABB> AABBTree::Serialize() const {
             }
         }
         // all nodes, except root, should have one and only one node pointing to it.
-        GN_VERIFY(!pointers[0]);
-        for (size_t i = 1; i < pointers.size(); ++i) { GN_VERIFY(pointers[i]); }
+        GN_REQUIRE(!pointers[0]);
+        for (size_t i = 1; i < pointers.size(); ++i) { GN_REQUIRE(pointers[i]); }
 
         // all primitives have been included in the
-        GN_VERIFY(leafCount == primitives.size());
+        GN_REQUIRE(leafCount == primitives.size());
 
         // traverse the tree
         int leafCount2 = 0;
@@ -750,8 +750,8 @@ std::vector<AABB> AABBTree::Serialize() const {
                 }
             }
         }
-        GN_VERIFY(totalCount == v.size());
-        GN_VERIFY(leafCount2 == leafCount);
+        GN_REQUIRE(totalCount == v.size());
+        GN_REQUIRE(leafCount2 == leafCount);
     }
 #endif
 

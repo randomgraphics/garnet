@@ -68,7 +68,7 @@ static D3D12_PRIMITIVE_TOPOLOGY tod3d(PrimitiveType p) {
 //
 // -----------------------------------------------------------------------------
 GN::gfx::D3D12Gpu2::D3D12Gpu2(const CreateParameters & cp) {
-    GN_VERIFY(cp.window);
+    GN_REQUIRE(cp.window);
 
     // enable debug layer
     UINT dxgiflags = 0;

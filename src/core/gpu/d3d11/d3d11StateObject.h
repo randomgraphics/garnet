@@ -382,7 +382,7 @@ public:
         item->desc             = desc;
 
         // add to hash. make sure it is indeed inserted as a new item.
-        GN_VERIFY(mHashTable.insert({desc, item}).second);
+        GN_REQUIRE(mHashTable.insert({desc, item}).second);
 
         // update LRU
         InsertToHead(item);

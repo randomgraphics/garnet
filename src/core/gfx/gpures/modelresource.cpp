@@ -762,7 +762,7 @@ bool GN::gfx::ModelResource::Impl::setEffectResource(GpuResource * resource) {
     }
 
     // reapply mesh
-    GN_VERIFY(setMeshResource(mMeshResource, &mMeshSubset));
+    GN_REQUIRE(setMeshResource(mMeshResource, &mMeshSubset));
 
     // reapply textures
     size_t numtextures = effect ? effect->numTextures() : 0;
@@ -988,10 +988,10 @@ void GN::gfx::ModelResource::Impl::clear() {
 void GN::gfx::ModelResource::Impl::copyFrom(const Impl & other) {
     clear();
 
-    GN_VERIFY(setEffectResource(other.mEffectResource));
+    GN_REQUIRE(setEffectResource(other.mEffectResource));
     GN_ASSERT(mPasses.size() == other.mPasses.size());
 
-    GN_VERIFY(setMeshResource(other.mMeshResource, &other.mMeshSubset));
+    GN_REQUIRE(setMeshResource(other.mMeshResource, &other.mMeshSubset));
 
     GN_ASSERT(mTextures.size() == other.mTextures.size());
     for (uint32_t i = 0; i < other.mTextures.size(); ++i) { mTextures[i].setResource(*this, i, other.mTextures[i].getResource()); }
@@ -1006,7 +1006,7 @@ void GN::gfx::ModelResource::Impl::copyFrom(const Impl & other) {
 void GN::gfx::ModelResource::Impl::onEffectChanged(EffectResource & r) {
     GN_ASSERT(&r == mEffectResource);
 
-    GN_VERIFY(setEffectResource(&r));
+    GN_REQUIRE(setEffectResource(&r));
 }
 
 //
@@ -1015,7 +1015,7 @@ void GN::gfx::ModelResource::Impl::onEffectChanged(EffectResource & r) {
 void GN::gfx::ModelResource::Impl::onMeshChanged(MeshResource & r) {
     GN_ASSERT(&r == mMeshResource);
 
-    GN_VERIFY(setMeshResource(&r, &mMeshSubset));
+    GN_REQUIRE(setMeshResource(&r, &mMeshSubset));
 }
 
 /*static void UpdateVertexBinding( VertexElement & ve, const char * fullBindingName )
