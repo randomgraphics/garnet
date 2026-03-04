@@ -41,10 +41,20 @@ int main(int, const char **) {
     // Create a main window of 1280x720
     auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});
     if (!window) return -1;
+    window->show();
 
     // Create backbuffer (window and size are part of Backbuffer descriptor)
     auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
     if (!backbuffer) return -1;
+
+    // Create a render target that references the backbuffer
+    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    if (!renderTarget) return -1;
+    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
+    renderTarget->colors[0].clearColor.f4[0] = 0.2f;
+    renderTarget->colors[0].clearColor.f4[1] = 0.3f;
+    renderTarget->colors[0].clearColor.f4[2] = 0.4f;
+    renderTarget->colors[0].clearColor.f4[3] = 1.0f;
 
     // Depth texture not used by current workflow (clear + draw triangle to backbuffer only); skip until Texture::create path is implemented.
     // auto depthTexture = Texture::create(*db, "depth_texture", ...);
@@ -70,77 +80,54 @@ int main(int, const char **) {
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
-    // GenericDraw with SPIR-V from compiled headers (Phase 4); workflow task added in Phase 5.
-    auto                          vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
-    auto                          fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
-    GenericDraw::CreateParameters drawParams {};
-    drawParams.context     = gpuContext;
-    drawParams.vs          = GenericDraw::ShaderStageDesc {.shaderBinary = vertBlob, .entryPoint = "main"};
-    drawParams.ps          = GenericDraw::ShaderStageDesc {.shaderBinary = fragBlob, .entryPoint = "main"};
-    auto genericDrawAction = GenericDraw::create(*db, "draw_triangle", drawParams);
-    if (!genericDrawAction) return -1;
+    // GpuDraw with SPIR-V from compiled headers (Phase 4); workflow task added in Phase 5.
+    auto                      vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
+    auto                      fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
+    GpuDraw::CreateParameters drawParams {};
+    drawParams.context = gpuContext;
+    drawParams.vs      = {.binary = vertBlob->data(), .size = vertBlob->size(), .entry = "main"};
+    drawParams.ps      = {.binary = fragBlob->data(), .size = fragBlob->size(), .entry = "main"};
+    auto drawAction    = GpuDraw::create(*db, "draw_triangle", drawParams);
+    if (!drawAction) return -1;
 
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, compose, present until prepare fails
-    while (true) {
+    while (window->runUntilNoNewEvents()) {
         // Schedule render workflow
-        auto renderWorkflow = renderGraph->schedule("Render");
-        if (renderWorkflow) {
-            renderWorkflow->name = "Render";
+        auto renderWorkflow  = renderGraph->createWorkflow("Render");
+        renderWorkflow->name = "Render";
 
-            // Task: Prepare backbufferg
-            auto prepareTask              = Workflow::Task("Prepare");
-            prepareTask.action            = prepareAction;
-            auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-            prepareArgs->backbuffer.value = backbuffer;
-            prepareTask.arguments         = prepareArgs;
-            renderWorkflow->tasks.append(prepareTask);
+        // Task: Prepare backbufferg
+        auto prepareTask              = Workflow::Task("Prepare");
+        prepareTask.action            = prepareAction;
+        auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+        prepareArgs->backbuffer.value = backbuffer;
+        prepareTask.arguments         = prepareArgs;
+        renderWorkflow->tasks.append(prepareTask);
 
-            // Task: Clear render target (clearValues + renderTarget; no depth/stencil clear for solid triangle)
-            auto clearTask                              = Workflow::Task("Clear");
-            clearTask.action                            = clearAction;
-            auto                              clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-            ClearRenderTarget::A::ClearValues clearVals {};
-            clearVals.colors[0].f4[0] = 0.2f;
-            clearVals.colors[0].f4[1] = 0.3f;
-            clearVals.colors[0].f4[2] = 0.4f;
-            clearVals.colors[0].f4[3] = 1.0f;
-            clearVals.depth           = 1.0f;
-            clearVals.stencil         = 0;
-            clearArgs->clearValues    = clearVals;
-            RenderTarget clearRt {};
-            clearRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
-            clearArgs->renderTarget.value = clearRt;
-            clearTask.arguments           = clearArgs;
-            renderWorkflow->tasks.append(clearTask);
+        // Task: Clear render target (clear color is on the RenderTarget artifact)
+        auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+        clearArgs->renderTarget.value = renderTarget;
+        renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
 
-            // Task: Draw solid triangle (GenericDraw; pipeline created in Phase 6)
-            auto drawTask                         = Workflow::Task("DrawTriangle");
-            drawTask.action                       = genericDrawAction;
-            auto                         drawArgs = AutoRef<GenericDraw::A>(new GenericDraw::A());
-            GenericDraw::DrawArguments & dp       = drawArgs->drawParams;
-            dp.vertexCount                        = 3;
-            dp.instanceCount                      = 1;
-            dp.firstVertex                        = 0;
-            dp.firstInstance                      = 0;
-            RenderTarget drawRt {};
-            drawRt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
-            drawArgs->renderTarget.value = drawRt;
-            drawTask.arguments           = drawArgs;
-            renderWorkflow->tasks.append(drawTask);
+        // Task: Draw solid triangle (GpuDraw uses active render target set by Clear above).
+        auto drawTask      = Workflow::Task("DrawTriangle");
+        drawTask.action    = drawAction;
+        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawTask.arguments = drawArgs;
+        renderWorkflow->tasks.append(drawTask);
 
-            // Task: Present backbuffer
-            auto presentTask              = Workflow::Task("Present");
-            presentTask.action            = presentAction;
-            auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-            presentArgs->backbuffer.value = backbuffer;
-            presentTask.arguments         = presentArgs;
-            renderWorkflow->tasks.append(presentTask);
-        }
+        // Task: Present backbuffer
+        auto presentTask              = Workflow::Task("Present");
+        presentTask.action            = presentAction;
+        auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+        presentArgs->backbuffer.value = backbuffer;
+        presentTask.arguments         = presentArgs;
+        renderWorkflow->tasks.append(presentTask);
 
         // Submit render graph for execution
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({.workflows = {&renderWorkflow, 1}});
         if (!submission) {
             GN_ERROR(sLogger)("Failed to submit render graph");
             break;

@@ -146,7 +146,11 @@ inline int getEnvInteger(const char * name, int defaultValue) {
 ///
 /// GUID class
 ///
-struct GN_API Guid {
+struct Guid {
+
+    /// Create a random GUID.
+    static GN_API Guid createRandom();
+
     ///
     /// Hasing
     ///
@@ -173,7 +177,7 @@ struct GN_API Guid {
     ///
     /// \note: this is not thread safe
     ///
-    const char * toStr() const;
+    GN_API const char * toStr() const;
 
     //@}
 

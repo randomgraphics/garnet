@@ -250,7 +250,7 @@ public:
     }
 
     /// Return size of the formatted string, not including the null terminator.
-    template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, char>::value), bool> = true>
+    template<typename... Args, std::enable_if_t<std::is_convertible<CHAR, char>::value, bool> = true>
     constexpr static size_t formattedSize(fmt::format_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
         try {
@@ -265,7 +265,7 @@ public:
     }
 
     /// Return size of the formatted string, not including the null terminator.
-    template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, wchar_t>::value), bool> = true>
+    template<typename... Args, std::enable_if_t<std::is_convertible<CHAR, wchar_t>::value, bool> = true>
     constexpr static size_t formattedSize(fmt::wformat_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
         try {
@@ -279,7 +279,7 @@ public:
         }
     }
 
-    template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, char>::value), bool> = true>
+    template<typename... Args, std::enable_if_t<std::is_convertible<CHAR, char>::value, bool> = true>
     StringFormatter(fmt::format_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
         try {
@@ -302,7 +302,7 @@ public:
         }
     }
 
-    template<typename... Args, std::enable_if_t<(std::is_convertible<CHAR, wchar_t>::value), bool> = true>
+    template<typename... Args, std::enable_if_t<std::is_convertible<CHAR, wchar_t>::value, bool> = true>
     StringFormatter(fmt::wformat_string<Args...> formatString, Args &&... args) {
         checkForPrintf(formatString.get().data());
         try {

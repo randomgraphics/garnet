@@ -1,0 +1,133 @@
+# Assignment: PBR shading effect
+
+Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass EffectContext (frame, camera, lighting, environment) and BuildParameters (material, geometry, render target), call build(workflow, context, params) to add PBR draw task(s) to a workflow, then submit the render graph to render a PBR object.
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: (none)
+In progress: (none)
+--- END PROGRESS ---
+
+--- HEADER REVIEW (pipeline.h) ---
+
+Checked the sketch in src/inc/garnet/rdg/pipeline.h. Summary:
+
+- Public surface is minimal and consistent: PbrShading and nested Material are GpuResources; CreateParameters (gpu), BuildParameters (material, geometry, renderTarget), build(workflow, context, params), create(). EffectContext carries frame, camera, lighting, environmentMap. Good.
+
+- Possible gaps (to address in implementation or follow-up):
+  1. No model matrix in BuildParameters. The commented PBR action in actions.h had modelMatrix and optional normalMatrix. For "render a PBR object" we may need model-to-world (and optionally normal matrix). Options: add to BuildParameters (e.g. Matrix44f modelMatrix; optional normalMatrix), or document that transform is encoded elsewhere (e.g. in geometry). Task list includes a small task to add model transform if we need it for the first usable path.
+  2. PbrShading::Material::TYPE_NAME is "PbrTextureSet". Intentional (material = texture set). Keep unless we rename the concept.
+  3. EnvironmentMap has TODO for irradiance map, prefiltered map, etc. IBL often needs those; leave as follow-up after basic PBR (single draw with direct lighting + optional simple env) works.
+  4. LightingInfo::Light has "TODO: add shadow information". Out of scope for this assignment.
+
+- pipeline.h has no #includes; it relies on being included after dependency-graph.h, artifacts.h, actions.h, physical.h (via GNrdg.h). No change needed.
+
+--- REFERENCE ---
+
+- Pipeline / effect API: src/inc/garnet/rdg/pipeline.h (PbrShading, Material, EffectContext, BuildParameters, SkyBox, EnvironmentMap).
+- Actions: src/inc/garnet/rdg/actions.h (GpuDraw, GpuDraw::A, CreateParameters with vs/ps, RenderTarget, GpuGeometry).
+- Dependency graph: src/inc/garnet/rdg/dependency-graph.h (Workflow, Task, RenderGraph::schedule).
+- Artifacts: src/inc/garnet/rdg/artifacts.h (GpuResource, Texture, GpuContext).
+- Physical units: src/inc/garnet/rdg/physical.h (LightingInfo, IntensityRGB, IrradianceRGB, etc.).
+- Existing effect/action impl: src/core/rdg/backbuffer-actions.cpp, src/core/rdg/vk-draw-actions.cpp, src/core/rdg/draw-actions.cpp (GpuDraw::create dispatch).
+- Sample pattern: src/sample/rdg/simple-triangle.cpp, src/sample/rdg/draw-mesh.cpp (schedule workflow, append tasks, submit).
+- Commented PBR action (reference only): src/inc/garnet/rdg/actions.h lines 573–681 (PBRShading, MaterialParams, lights, textures, camera).
+
+--- BUILD/CI ---
+
+- Build: source env/garnet.rc && build.py d  (see .cursor/skills/use-build-py/SKILL.md).
+- Lint + tests: env/bin/cit.py  (see .cursor/skills/run-cit/SKILL.md).
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep the repo buildable after each task. Use stubs (e.g. build() no-op, load() return nullptr) where needed.
+- Public header (pipeline.h): only add what users need; no backend or internal types.
+- Prefer minimal code change; small, verifiable steps (see .cursor/skills/minimal-code-change/SKILL.md).
+- After each task: commit with a clear message; push when convention says so.
+- Before coding implementation tasks: pause for user review of this task list (as requested).
+
+---
+PHASE 0: Setup and type registration
+---
+
+[ ] Task 0.1 — Add assignment branch and ensure build is green
+    - Create branch (e.g. wip/rdg/pbr-shading) if not already on a PBR branch. Run build and cit; fix any pre-existing breakage in touched areas.
+    - Verification: build.py d and env/bin/cit.py pass.
+
+[ ] Task 0.2 — Register PbrShading and PbrShading::Material TYPE_IDs
+    - Ensure PbrShading::TYPE_ID and PbrShading::Material::TYPE_ID are defined and registered (e.g. in runtime-type.cpp or equivalent) so create() and type casting work.
+    - Verification: Build; no duplicate or missing type ID symbols.
+
+---
+PHASE 1: PbrShading factory and stub implementation
+---
+
+[ ] Task 1.1 — Implement PbrShading::create() and a stub implementation class
+    - Add a concrete class (e.g. PbrShadingImpl or PbrShadingVulkan in core/rdg) that extends PbrShading and implements build() as no-op (return PASSED, do not add tasks). Implement PbrShading::create() to instantiate and return it (API dispatch by gpu context if needed; for now Vulkan-only or single impl is fine).
+    - Follow pattern of PrepareBackbuffer::create / GpuDraw::create: create in core, register in db. No new public API in pipeline.h.
+    - Verification: Build. Code can call PbrShading::create(db, name, params) and get non-null AutoRef<PbrShading>; build(workflow, context, params) returns PASSED and does not crash.
+
+[ ] Task 1.2 — (Optional) Material::load() stub
+    - Implement Material::load() so it compiles and links; may return nullptr or a minimal artifact. No file loading required yet.
+    - Verification: Build; no undefined Material::load symbol.
+
+---
+PHASE 2: build() adds a real draw task
+---
+
+[ ] Task 2.1 — build() creates or reuses a GpuDraw action and appends one task
+    - In PbrShading impl: in build(), create a GpuDraw action (e.g. via GpuDraw::create with PBR vs/ps) or reuse a cached one. Build GpuDraw::A from BuildParameters (geometry, renderTarget) and bind material + context (camera, lighting, environment) into uniforms/textures as defined by the PBR shader. Append one Workflow::Task with that action and arguments.
+    - Use EffectContext (camera.viewProjMatrix, lighting.lights, environmentMap) and BuildParameters (material, geometry, renderTarget). If shaders are not yet available, use placeholder/dummy shaders so the graph runs without producing correct image.
+    - Verification: Build. A workflow that calls pbrShading->build(w, context, params) contains one extra task; submit runs without crash (visual result may be placeholder).
+
+[ ] Task 2.2 — Add model transform to BuildParameters if required
+    - If the first usable path needs a model matrix: add to PbrShading::BuildParameters (e.g. Matrix44f modelMatrix; optional Matrix44f or Matrix33f normalMatrix). Document in header. Wire through to GpuDraw::A (e.g. uniforms) in build().
+    - If we defer transform to a later design (e.g. per-draw in a different API), skip and note in PROGRESS.
+    - Verification: Build; pipeline.h remains minimal; transform is available where the draw needs it.
+
+---
+PHASE 3: PBR shaders and Vulkan binding
+---
+
+[ ] Task 3.1 — Add PBR vertex and fragment shaders (metal/roughness style)
+    - Add GLSL (or equivalent) sources for a minimal PBR pass: vertex shader (position, normals, UVs, output to fragment), fragment shader (e.g. Disney-style or metallic-roughness: baseColor, metallic, roughness, normal; direct lights from LightingInfo; optional simple env/sky). Compile to SPIR-V and expose as binaries (e.g. headers or assets) for GpuDraw::CreateParameters.
+    - Verification: Shaders compile; can be passed into GpuDraw::create for the PBR draw action.
+
+[ ] Task 3.2 — Wire material and context to descriptor/uniform layout
+    - Define how Material (and EffectContext) map to GpuDraw::A: which uniforms (e.g. viewProj, model, material params, light data) and which textures (base color, normal, metallic-roughness, env map, etc.). Implement in PbrShading impl so build() fills GpuDraw::A correctly. Ensure Vulkan backend (GpuDrawVulkan) can bind these (descriptor sets / push constants as per existing pattern).
+    - Verification: Build; one frame with a single PBR object and simple lighting produces a plausible image (no need for IBL in first cut).
+
+---
+PHASE 4: Material and environment (minimal)
+---
+
+[ ] Task 4.1 — Material artifact and load path (minimal)
+    - Implement Material as a GpuResource (backend can be opaque: e.g. a set of texture refs + scalar params). Material::load() from file (e.g. a simple descriptor format or glTF-style refs) or leave load() as stub and support programmatic material creation for the sample.
+    - Verification: Build. Sample or test can create/load a material and pass it to PbrShading::BuildParameters.
+
+[ ] Task 4.2 — (Optional) EnvironmentMap::create and use in EffectContext
+    - EnvironmentMap::create() already declared; implement if not yet done. Use in EffectContext for PBR (e.g. ambient + skybox). Irradiance/prefiltered maps can be follow-up.
+    - Verification: Build; context.environmentMap can be set and used in build() for env sampling.
+
+---
+PHASE 5: Integration and sample (optional)
+---
+
+[ ] Task 5.1 — Add or extend a sample that uses PbrShading
+    - Add a small sample (or extend draw-mesh/simple-triangle) that: creates PbrShading, fills EffectContext (frame, camera, lighting, optional environment), calls build(workflow, context, buildParams) with material, geometry, render target, then submits. Ensure one PBR draw runs and window shows a lit object.
+    - Verification: Run sample; no crash; visible PBR-style result.
+
+[ ] Task 5.2 — Final lint and cleanup
+    - Run env/bin/cit.py; fix lint. Update PROGRESS and summary of files. Commit assignment complete.
+
+---
+Summary of files to touch
+---
+
+- src/inc/garnet/rdg/pipeline.h — Only if we add model transform (Task 2.2) or minor doc fixes.
+- src/core/rdg/ — New or existing: PbrShading::create() and stub impl (e.g. pbr-shading.cpp or under existing rdg core); type IDs in runtime-type.cpp.
+- src/core/rdg/ — Material::load() stub or impl; EnvironmentMap::create/load if in scope.
+- src/core/rdg/vk-draw-actions.cpp — Only if PBR-specific binding or state is needed beyond GpuDraw::A.
+- Shaders: new directory or under src/sample/rdg/ or src/core/rdg/ — PBR vs/ps sources and SPIR-V build path.
+- Sample: src/sample/rdg/ — New or extended sample for PbrShading (Phase 5).
+
+--- END ASSIGNMENT ---

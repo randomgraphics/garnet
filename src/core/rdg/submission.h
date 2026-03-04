@@ -8,6 +8,14 @@
 
 namespace GN::rdg {
 
+struct WorkflowImpl : public Workflow {
+    mutable uint64_t sequence = 0;
+
+    explicit WorkflowImpl(const StrA & name_) { name = name_; }
+
+    static WorkflowImpl * promote(Workflow * workflow) { return static_cast<WorkflowImpl *>(workflow); }
+};
+
 /// Implementation of Submission. Holds all intermediate data and context for a single submit.
 /// Processes workflows asynchronously: validate, build dependency graph, topological sort, execute.
 class SubmissionImpl : public Submission {
@@ -21,7 +29,7 @@ public:
     };
 
     /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (pointers).
-    SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params);
+    SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params);
 
     ~SubmissionImpl() override;
 
@@ -51,7 +59,7 @@ public:
     T & ensureSubmissionContext(Args &&... args) {
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
         if (ctx != mExecutionContexts.end()) { return *ctx->second->template castTo<T>(); }
-        auto newCtx                    = AutoRef<T>(new T(std::forward<Args>(args)...));
+        auto newCtx                    = AutoRef<T>(new T(*this, std::forward<Args>(args)...));
         mExecutionContexts[T::TYPE_ID] = newCtx;
         return *newCtx;
     }
@@ -85,8 +93,8 @@ private:
     std::unordered_map<uint64_t, AutoRef<Context>> mExecutionContexts;
 
     // Owned workflows (taken from graph on construction)
-    DynaArray<Workflow *>        mWorkflows;
-    DynaArray<Workflow *>        mValidatedWorkflows;
+    DynaArray<WorkflowImpl *>    mWorkflows;
+    DynaArray<WorkflowImpl *>    mValidatedWorkflows;
     DynaArray<DynaArray<size_t>> mDependencyGraph;
 
     // State for dumpState() (written by run(), read by dumpState())
@@ -98,7 +106,17 @@ private:
     bool              validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex);
     bool              validateAndBuildDependencyGraph();
     DynaArray<size_t> topologicalSort();
-    Result            run(Parameters params);
+    Result            run(const RenderGraph::SubmitParameters & params);
 };
 
 } // namespace GN::rdg
+
+template<>
+struct fmt::formatter<GN::rdg::TaskInfo> {
+    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
+    template<typename Context>
+    constexpr auto format(GN::rdg::TaskInfo const & taskInfo, Context & ctx) const {
+        return format_to(ctx.out(), "TaskInfo(submission={}, workflow={}, task[{}]={})", taskInfo.submission.name, taskInfo.workflow, taskInfo.index,
+                         taskInfo.task);
+    }
+};

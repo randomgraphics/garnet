@@ -56,7 +56,7 @@ PHASE 2: RDG unit test updates (match new Argument types and API)
 ---
 
 [x] Task 2.1 — Fix test argument types and initializers (rdg-smoke.cpp)
-    - Use ReadOnly<IntegerArtifact> / WriteOnly<IntegerArtifact> (not ReadOnly<AutoRef<IntegerArtifact>>). SingleArtifact has member AutoRef<T> value. Initialize each artifact parameter with (auto_reflection, "name", usage): e.g. output = { auto_reflection, "output", Arguments::UsageFlag::Writing }, input1 = { auto_reflection, "input1", Arguments::UsageFlag::Reading }. ArtifactArgument ctor is 3-arg (rr, name, usage). If the header only exposes a 2-arg ctor for SingleArtifact (rr, name), then usage comes from UFlags and initializers may be 2-arg; match the header as-is.
+    - Use ReadOnly<IntegerArtifact> / WriteOnly<IntegerArtifact> (not ReadOnly<AutoRef<IntegerArtifact>>). SingleArtifact has member AutoRef<T> value. Initialize each artifact parameter with (auto_reflection, "name", usage): e.g. output = { auto_reflection, "output", Arguments::Usages::Writing }, input1 = { auto_reflection, "input1", Arguments::Usages::Reading }. ArtifactArgument ctor is 3-arg (rr, name, usage). If the header only exposes a 2-arg ctor for SingleArtifact (rr, name), then usage comes from UFlags and initializers may be 2-arg; match the header as-is.
     - Unit test: Build and run testRenderGraphArithmetic; assert it passes (correct types and initializers allow execution and firstArtifactArgument()/next() to see parameters).
     - Verification: Build passes; testRenderGraphArithmetic passes.
 

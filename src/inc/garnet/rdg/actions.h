@@ -2,36 +2,217 @@
 
 #include <variant>
 #include <map>
+#include <optional>
 
 namespace GN::rdg {
 
-struct RenderTarget {
-    struct ColorTarget {
-        std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> target;
-        Texture::SubresourceIndex                           subresourceIndex; ///< only used for non-empty texture targets
+// Representa a view to a GPU image. Could be a texture or a backbuffer.
+struct GpuImageView {
+    struct SubresourceIndex {
+        uint32_t mip  = 0; ///< index into mipmap chain
+        uint32_t face = 0; ///< index into array of faces
 
-        bool empty() const { return target.index() == 1 && std::get<1>(target) == nullptr; }
+        bool operator==(const SubresourceIndex & other) const { return mip == other.mip && face == other.face; }
+        bool operator!=(const SubresourceIndex & other) const { return !operator==(other); }
+    };
 
-        AutoRef<Artifact> artifact() const {
-            if (target.index() == 0) return std::get<0>(target);
-            if (target.index() == 1) return std::get<1>(target);
-            return {};
+    struct SubresourceRange {
+        uint32_t numMipLevels   = (uint32_t) -1; ///< -1 means all mip levels
+        uint32_t numArrayLayers = (uint32_t) -1; ///< -1 means all array layers
+
+        bool operator==(const SubresourceRange & other) const { return numMipLevels == other.numMipLevels && numArrayLayers == other.numArrayLayers; }
+        bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
+    };
+
+    std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> image;
+    gfx::img::PixelFormat                               format           = gfx::img::PixelFormat::UNKNOWN();
+    SubresourceIndex                                    subresourceIndex = {}; // default to mip level 0, face 0
+    SubresourceRange                                    subresourceRange = {}; // default to all mip levels, all array layers
+
+    bool empty() const { return 0 == image.index() ? std::get<0>(image) == nullptr : std::get<1>(image) == nullptr; }
+    bool isTexture() const { return image.index() == 0; }
+    bool isBackbuffer() const { return image.index() == 1; }
+
+    AutoRef<Artifact> artifact() const {
+        if (image.index() == 0)
+            return std::get<0>(image);
+        else
+            return std::get<1>(image);
+    }
+
+    bool operator==(const GpuImageView & other) const {
+        return image == other.image && format == other.format && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange;
+    }
+    bool operator!=(const GpuImageView & other) const { return !operator==(other); }
+};
+
+struct TextureView : GpuImageView {
+    AutoRef<Sampler> sampler;
+};
+
+struct RenderTarget : public Artifact {
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "RenderTarget";
+
+    struct BlendState {
+        enum Arg {
+            ZERO = 0,
+            ONE,
+            SRC_COLOR,
+            INV_SRC_COLOR,
+            SRC_ALPHA,
+            INV_SRC_ALPHA,
+            DEST_ALPHA,
+            INV_DEST_ALPHA,
+            DEST_COLOR,
+            INV_DEST_COLOR,
+            BLEND_FACTOR,
+            INV_BLEND_FACTOR,
+        };
+
+        enum Op {
+            ADD,
+            SUB,
+            REV_SUB,
+            MIN,
+            MAX,
+        };
+
+        // Default blend mode is disabled.
+        Op       colorOp  = Op::ADD;
+        Arg      colorSrc = Arg::ONE;
+        Arg      colorDst = Arg::ZERO;
+        Op       alphaOp  = Op::ADD;
+        Arg      alphaSrc = Arg::ONE;
+        Arg      alphaDst = Arg::ZERO;
+        Vector4f factors  = {0.0f, 0.0f, 0.0f, 0.0f};
+
+        constexpr bool enabled() const {
+            return colorOp != Op::ADD || colorSrc != Arg::ONE || colorDst != Arg::ZERO || alphaOp != Op::ADD || alphaSrc != Arg::ONE || alphaDst != Arg::ZERO;
         }
+        constexpr bool operator==(const BlendState & other) const {
+            return colorOp == other.colorOp && colorSrc == other.colorSrc && colorDst == other.colorDst && alphaOp == other.alphaOp &&
+                   alphaSrc == other.alphaSrc && alphaDst == other.alphaDst;
+        }
+        constexpr bool operator!=(const BlendState & other) const { return !operator==(other); }
+    };
 
-        bool operator==(const ColorTarget & other) const { return target == other.target && subresourceIndex == other.subresourceIndex; }
+    enum class Compare {
+        NEVER = 0,     // no read, no write
+        LESS,          // read and write
+        LESS_EQUAL,    // read and write
+        EQUAL,         // read and write
+        GREATER_EQUAL, // read and write
+        GREATER,       // read and write
+        NOT_EQUAL,     // read and write
+        ALWAYS,        // write only
+    };
 
+    struct DepthState {
+        // default state equals to depth disabled.
+        Compare func  = Compare::ALWAYS;
+        bool    write = false;
+
+        constexpr bool testEnabled() const { return Compare::NEVER != func && Compare::ALWAYS != func; }
+        constexpr bool writeEnabled() const { return Compare::NEVER != func && write; }
+        constexpr bool operator==(const DepthState & other) const { return func == other.func && write == other.write; }
+        constexpr bool operator!=(const DepthState & other) const { return !operator==(other); }
+    };
+
+    struct StencilState {
+        enum Op {
+            KEEP = 0, // no read, no write
+            ZERO,     // write only
+            REPLACE,  // write only
+            INC_SAT,  // read and write
+            DEC_SAT,  // read and write
+            INVERT,   // read and write
+            INC,      // read and write
+            DEC,      // read and write
+        };
+
+        // default to an state that stencil is effectively disabled.
+        Compare compare   = Compare::ALWAYS; ///< stencil comparison function
+        Op      pass      = KEEP;            ///< stencil operation on pass
+        Op      fail      = KEEP;            ///< stencil operation on fail
+        Op      zFail     = KEEP;            ///< stencil operation on depth fail
+        uint8_t ref       = 0;               ///< stencil reference value
+        uint8_t readMask  = 0xFF;            ///< stencil read mask
+        uint8_t writeMask = 0xFF;            ///< stencil write mask
+
+        constexpr bool enabled() const {
+            bool read  = (0 != readMask) && (Compare::NEVER != compare) && (Compare::ALWAYS != compare);
+            bool write = (0 != writeMask) && ((Op::KEEP != pass) || (Op::KEEP != fail) || (Op::KEEP != zFail));
+            return read || write;
+        }
+        constexpr bool operator==(const StencilState & other) const {
+            return pass == other.pass && fail == other.fail && zFail == other.zFail && compare == other.compare && ref == other.ref &&
+                   readMask == other.readMask && writeMask == other.writeMask;
+        }
+        constexpr bool operator!=(const StencilState & other) const { return !operator==(other); }
+    };
+
+    /// Viewport settings. Defines tranform of normalized device coordinates (NDC) to Window coordinates.
+    ///   - Left top is (-1, 1) in NDC space, map to Window space coordiante (0, 0).
+    ///   - Right bottom is (1, -1) in NDC space, map to Window space coordiante (width, height).
+    ///   - Set width and/or heigh to FLT_MAX indicating the current size of the render target.
+    struct Viewport {
+        float x        = 0.0f;
+        float y        = 0.0f;
+        float width    = FLT_MAX; ///< default to current size of the render target.
+        float height   = FLT_MAX; ///< default to current size of the render target.
+        float minDepth = 0.0f;
+        float maxDepth = 1.0f;
+
+        constexpr bool fullScreen() const { return 0.0f == x && 0.0f == y && FLT_MAX == width && FLT_MAX == height; }
+        constexpr bool operator==(const Viewport & other) const {
+            return x == other.x && y == other.y && width == other.width && height == other.height && minDepth == other.minDepth && maxDepth == other.maxDepth;
+        }
+        constexpr bool operator!=(const Viewport & other) const { return !operator==(other); }
+    };
+
+    /// Scissor rectangle in Window coordinates. (0, 0) is the left top corner of the window.
+    struct ScissorRect {
+        int32_t  x      = 0;
+        int32_t  y      = 0;
+        uint32_t width  = (~0u); ///< Set to (~0u) indicating with of the current window.
+        uint32_t height = (~0u); ///< Set to (~0u) indicating height of the current window.
+
+        constexpr bool disabled() const { return (0 == x) && (0 == y) && (~0u == width) && (~0u == height); }
+        constexpr bool operator==(const ScissorRect & other) const { return x == other.x && y == other.y && width == other.width && height == other.height; }
+        constexpr bool operator!=(const ScissorRect & other) const { return !operator==(other); }
+    };
+
+    union ClearColorValue {
+        float    f4[4];
+        uint32_t u4[4];
+        int32_t  i4[4];
+    };
+
+    struct ColorTarget {
+        GpuImageView    target {};
+        BlendState      blendState = {};
+        uint8_t         writeMask  = 0xFF;                       // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
+        ClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to to solid black.
+
+        bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
 
     struct DepthStencil {
-        AutoRef<Texture>          target;
-        Texture::SubresourceIndex subresourceIndex {};
-
-        bool empty() const { return !target; }
+        AutoRef<Texture>               target;
+        gfx::img::PixelFormat          format = gfx::img::PixelFormat::UNKNOWN();
+        GpuImageView::SubresourceIndex subresourceIndex {};
+        DepthState                     depthState   = {};
+        StencilState                   stencilState = {};
+        float                          clearDepth   = 1.0;
+        uint32_t                       clearStencil = 0;
 
         bool operator==(const DepthStencil & other) const {
             if (target != other.target) return false;
             if (target && subresourceIndex != other.subresourceIndex) return false; // only check subresource index for non-empty texture targets
+            if (depthState != other.depthState) return false;
+            if (stencilState != other.stencilState) return false;
             return true;
         }
 
@@ -39,60 +220,61 @@ struct RenderTarget {
     };
 
     StackArray<ColorTarget, 8> colors;
-    DepthStencil               depthStencil;
+    DepthStencil               depthStencil = {};
+    Viewport                   viewport     = {};
+    ScissorRect                scissorRect  = {};
 
-    bool empty() const { return colors.empty() && depthStencil.empty(); }
+    /// Returns list of artifacts referenced by this render target.
+    virtual SafeArrayAccessor<const Artifact * const> artifacts() const = 0;
 
-    bool operator==(const RenderTarget & other) const { return colors == other.colors && depthStencil == other.depthStencil; }
+    bool operator==(const RenderTarget & other) const {
+        return colors == other.colors && depthStencil == other.depthStencil && viewport == other.viewport && scissorRect == other.scissorRect;
+    }
     bool operator!=(const RenderTarget & other) const { return !operator==(other); }
-};
 
-struct RenderTargetArgument : public Arguments::ArtifactArgument {
-    RenderTargetArgument(Arguments * owner, const char * name)
-        : Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Writing | Arguments::UsageFlag::Reading) {}
-
-    SafeArrayAccessor<const Artifact * const> artifacts() const override {
-        mArtifacts.reserve(8 + 1);
-        mArtifacts.clear();
-        const auto & colors = value.colors;
-        for (size_t i = 0; i < colors.size(); ++i) {
-            if (!colors[i].empty()) {
-                auto a = colors[i].artifact();
-                if (a) mArtifacts.append(a.get());
-            }
-        }
-        if (!value.depthStencil.empty()) mArtifacts.append(value.depthStencil.target.get());
-        return mArtifacts;
+    struct CreateParameters {
+        // tbd
     };
 
-    RenderTarget value;
+    static GN_API AutoRef<RenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
-private:
-    mutable DynaArray<const Artifact *> mArtifacts;
+protected:
+    using Artifact::Artifact;
 };
 
-/// Clear render target to certain value. Discard existing content.
-/// This is the recommended first action to start rendering to a render target.
-/// It tells GPU to discard existing content thus avoid expensive image layout transitions.
+static_assert(GN::rdg::RenderTarget::BlendState {}.enabled() == false);
+static_assert(GN::rdg::RenderTarget::DepthState {}.testEnabled() == false);
+static_assert(GN::rdg::RenderTarget::DepthState {}.writeEnabled() == false);
+static_assert(GN::rdg::RenderTarget::StencilState {}.enabled() == false);
+static_assert(GN::rdg::RenderTarget::Viewport {}.fullScreen() == true);
+static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
+
+/// Set render target for draw actions. It clears the render target to certain value, discarding existing content.
+/// - This is the required first action to start rendering to a render target.
+/// - It tells GPU to discard existing content thus avoid expensive image layout transitions.
+/// - If the render target is backbuffer, it must be in the renderable state, meaning
+///   the backbuffer is prepared and not presented. See PrepareBackbuffer and
+///   PresentBackbuffer actions for more details.
 struct ClearRenderTarget : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
+
+    struct RenderTargetArgument : public Arguments::ArtifactArgument {
+        RenderTargetArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::ReadingWriting) {}
+
+        SafeArrayAccessor<const Artifact * const> artifacts() const override {
+            if (value) return value->artifacts();
+            return {};
+        }
+
+        AutoRef<RenderTarget> value;
+    };
 
     struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        struct ClearValues {
-            union {
-                float    f4[4];
-                uint32_t u4[4];
-                int32_t  i4[4];
-            } colors[8];
-            float    depth;
-            uint32_t stencil;
-        };
         RenderTargetArgument renderTarget = {this, "renderTarget"};
-        ClearValues          clearValues;
     };
 
     struct CreateParameters {
@@ -106,6 +288,9 @@ protected:
     using Action::Action;
 };
 
+/// This is the action to set the backbuffer into renderable state.
+/// It must be called in pair with PresentBackbuffer action to properly
+/// rotate the swapchain buffers for rendering and presenting.
 struct PrepareBackbuffer : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer";
@@ -115,7 +300,7 @@ struct PrepareBackbuffer : public Action {
         inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ReadWrite<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
+        ReadWriteArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
     };
 
     struct CreateParameters {
@@ -129,6 +314,9 @@ protected:
     using Action::Action;
 };
 
+/// This is the action to set the backbuffer into presented state and make it non-renderable.
+/// It must be called in pair with PrepareBackbuffer action to properly
+/// rotate the swapchain buffers for rendering and presenting.
 struct PresentBackbuffer : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "PresentBackbuffer";
@@ -138,7 +326,7 @@ struct PresentBackbuffer : public Action {
         inline static constexpr const char * TYPE_NAME = "PresentBackbuffer::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ReadOnly<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
+        ReadOnlyArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
     };
 
     struct CreateParameters {
@@ -174,107 +362,12 @@ struct SetupRenderStates : public Action {
         FRONT_CW,
     };
 
-    enum ComparisonFunc {
-        CMP_NEVER = 0,
-        CMP_LESS,
-        CMP_LESS_EQUAL,
-        CMP_EQUAL,
-        CMP_GREATER_EQUAL,
-        CMP_GREATER,
-        CMP_NOT_EQUAL,
-        CMP_ALWAYS,
-    };
-
-    enum StencilOp {
-        STENCIL_KEEP = 0,
-        STENCIL_ZERO,
-        STENCIL_REPLACE,
-        STENCIL_INC_SAT,
-        STENCIL_DEC_SAT,
-        STENCIL_INVERT,
-        STENCIL_INC,
-        STENCIL_DEC,
-    };
-    enum BlendArg {
-        BLEND_ZERO = 0,
-        BLEND_ONE,
-        BLEND_SRC_COLOR,
-        BLEND_INV_SRC_COLOR,
-        BLEND_SRC_ALPHA,
-        BLEND_INV_SRC_ALPHA,
-        BLEND_DEST_ALPHA,
-        BLEND_INV_DEST_ALPHA,
-        BLEND_DEST_COLOR,
-        BLEND_INV_DEST_COLOR,
-        BLEND_BLEND_FACTOR,
-        BLEND_INV_BLEND_FACTOR,
-    };
-
-    enum BlendOp {
-        BLEND_OP_ADD = 0,
-        BLEND_OP_SUB,
-        BLEND_OP_REV_SUB,
-        BLEND_OP_MIN,
-        BLEND_OP_MAX,
-    };
-
-    /// Viewport settings
-    struct Viewport {
-        float x        = 0.0f;
-        float y        = 0.0f;
-        float width    = 0.0f;
-        float height   = 0.0f;
-        float minDepth = 0.0f;
-        float maxDepth = 1.0f;
-    };
-
-    /// Scissor rectangle
-    struct ScissorRect {
-        int32_t  x      = 0;
-        int32_t  y      = 0;
-        uint32_t width  = 0;
-        uint32_t height = 0;
-    };
-
     /// Render state descriptor
     struct RenderStateDesc {
         // Rasterizer state
-        std::optional<FillMode>  fillMode;    ///< fill mode (solid, wireframe, point)
-        std::optional<CullMode>  cullMode;    ///< cull mode (none, front, back)
-        std::optional<FrontFace> frontFace;   ///< front face winding (CCW, CW)
-        std::optional<bool>      msaaEnabled; ///< MSAA enabled
-
-        // Depth state
-        std::optional<bool>           depthTestEnabled;  ///< enable depth testing
-        std::optional<bool>           depthWriteEnabled; ///< enable depth writing
-        std::optional<ComparisonFunc> depthFunc;         ///< depth comparison function
-
-        // Stencil state
-        std::optional<bool>           stencilEnabled;   ///< enable stencil testing
-        std::optional<StencilOp>      stencilPassOp;    ///< stencil operation on pass
-        std::optional<StencilOp>      stencilFailOp;    ///< stencil operation on fail
-        std::optional<StencilOp>      stencilZFailOp;   ///< stencil operation on depth fail
-        std::optional<ComparisonFunc> stencilFunc;      ///< stencil comparison function
-        std::optional<uint8_t>        stencilRef;       ///< stencil reference value
-        std::optional<uint8_t>        stencilReadMask;  ///< stencil read mask
-        std::optional<uint8_t>        stencilWriteMask; ///< stencil write mask
-
-        // Blend state
-        std::optional<bool>     blendEnabled;  ///< enable blending
-        std::optional<BlendArg> blendSrc;      ///< source blend factor
-        std::optional<BlendArg> blendDst;      ///< destination blend factor
-        std::optional<BlendOp>  blendOp;       ///< blend operation
-        std::optional<BlendArg> blendAlphaSrc; ///< source alpha blend factor
-        std::optional<BlendArg> blendAlphaDst; ///< destination alpha blend factor
-        std::optional<BlendOp>  blendAlphaOp;  ///< alpha blend operation
-        std::optional<Vector4f> blendFactors;  ///< blend factor color (RGBA)
-
-        // Color write mask (per render target, 4 bits each: RGBA)
-        std::optional<uint32_t> colorWriteMask; ///< color write mask (0xFFFFFFFF = all channels)
-
-        // Viewport and scissor
-        std::optional<Viewport>    viewport;    ///< viewport settings
-        std::optional<ScissorRect> scissorRect; ///< scissor rectangle
+        std::optional<FillMode>  fillMode;  ///< fill mode (solid, wireframe, point)
+        std::optional<CullMode>  cullMode;  ///< cull mode (none, front, back)
+        std::optional<FrontFace> frontFace; ///< front face winding (CCW, CW)
     };
 
     struct A : public Arguments {
@@ -294,26 +387,42 @@ protected:
     using Action::Action;
 };
 
+/// Represent a GPU renderable geometry.
+struct GpuGeometry {
+    struct VertexFormat {
+        // TBD
+    };
+
+    struct GeometryBuffer : BufferView {
+        /// For vertex buffers, this is the size of the vertex in bytes.
+        /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
+        /// For instanced buffers, this is the size of the instance in bytes.
+        uint32_t stride = 0;
+
+        /// Number of elements in the buffer.
+        size_t count() const { return size / stride; }
+    };
+
+    VertexFormat              format;
+    DynaArray<GeometryBuffer> instances;
+    DynaArray<GeometryBuffer> vertices;
+    GeometryBuffer            indices;
+};
+
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
-struct ShaderAction : public Action {
-    struct ShaderResourceBinding {
-        uint32_t set  = 0;
-        uint32_t slot = 0;
+struct GpuShaderAction : public Action {
+    // struct ShaderResourceBinding {
+    //     uint32_t set  = 0;
+    //     uint32_t slot = 0;
 
-        bool operator==(const ShaderResourceBinding & other) const { return set == other.set && slot == other.slot; }
-        bool operator!=(const ShaderResourceBinding & other) const { return !operator==(other); }
-        bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
-    };
+    //     bool operator==(const ShaderResourceBinding & other) const { return set == other.set && slot == other.slot; }
+    //     bool operator!=(const ShaderResourceBinding & other) const { return !operator==(other); }
+    //     bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
+    // };
 
-    struct BufferView {
-        AutoRef<Buffer> buffer;
-        uint32_t        offset = 0;
-        uint32_t        size   = 0;
-    };
-
-    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    template<Arguments::UsageBits UFlags>
     struct BufferViewMap : public Arguments::ArtifactArgument {
-        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
+        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.reserve(value.size());
@@ -331,50 +440,36 @@ struct ShaderAction : public Action {
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    struct ImageView {
-        AutoRef<Texture>          texture;
-        gfx::img::PixelFormat     format = gfx::img::PixelFormat::UNKNOWN();
-        Texture::SubresourceIndex subresourceIndex;
-        Texture::SubresourceRange subresourceRange;
-    };
-
-    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
+    template<Arguments::UsageBits UFlags>
     struct ImageViewMap : public Arguments::ArtifactArgument {
-        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
+        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
             for (const auto & [name, view] : value) {
                 (void) name;
-                if (view.texture) { mArtifacts.append(view.texture.get()); }
+                auto artifact = view.artifact();
+                if (artifact) { mArtifacts.append(artifact.get()); }
             }
             return mArtifacts;
         }
 
-        std::map<StrA, ImageView> value;
+        std::map<StrA, GpuImageView> value;
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    struct TextureView : ImageView {
-        AutoRef<Texture> texture;
-        AutoRef<Sampler> sampler;
-    };
-
-    template<Arguments::UsageFlag UFlags = Arguments::UsageFlag::Reading>
-    struct TextureViewMap : public Arguments::ArtifactArgument {
-        TextureViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags) {}
+    struct TextureMap : public Arguments::ArtifactArgument {
+        TextureMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
             for (const auto & [name, view] : value) {
                 (void) name;
-                if (view.texture) {
-                    mArtifacts.append(view.texture.get());
-                    // check sampler only if texture is not empty
-                    if (view.sampler) { mArtifacts.append(view.sampler.get()); }
-                }
+                auto artifact = view.artifact();
+                if (artifact) { mArtifacts.append(artifact.get()); }
+                if (view.sampler) { mArtifacts.append(view.sampler.get()); }
             }
             return mArtifacts;
         }
@@ -385,57 +480,50 @@ struct ShaderAction : public Action {
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
+    /// Shader binary that can be used to create the actual GPU shader program.
+    struct ShaderBinary {
+        void *       binary = nullptr; ///< pointer to the shader binary code.
+        size_t       size   = 0;       ///< size of the shader binary code.
+        const char * entry  = nullptr; ///< entry point name.
+
+        bool empty() const { return binary == nullptr || size == 0 || entry == nullptr; }
+        bool valid() const { return binary != nullptr && size > 0 && entry != nullptr; }
+    };
+
+    using UniformMap  = BufferViewMap<Arguments::Usage::Reading>;
+    using RwBufferMap = BufferViewMap<Arguments::Usage::RW>;
+    using RoBufferMap = BufferViewMap<Arguments::Usage::Reading>;
+    using RwImagesMap = ImageViewMap<Arguments::Usage::RW>;
+    using RoImagesMap = ImageViewMap<Arguments::Usage::Reading>;
+
 protected:
     using Action::Action;
 };
 
-} // namespace GN::rdg
-
-namespace std {
-
-template<>
-struct hash<GN::rdg::ShaderAction::ShaderResourceBinding> {
-    size_t operator()(const GN::rdg::ShaderAction::ShaderResourceBinding & key) const {
-        auto hash = std::hash<uint32_t>()(key.set);
-        GN::combineHash(hash, key.slot);
-        return hash;
-    }
-};
-
-} // namespace std
-
-namespace GN::rdg {
-
-/// Generic draw action for quick GPU draw prototyping. It emphasizes ease of use and flexibility over extreme performance.
-struct GenericDraw : public ShaderAction {
+/// Generic GPU draw action. This is the building block of all other draw actions and effects.
+/// It depends on ClearRenderTarget action to set the render target. Without it, this action will simply fail.
+struct GpuDraw : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "GenericDraw";
+    inline static constexpr const char * TYPE_NAME = "GpuDraw";
 
-    /// Draw parameters
-    struct DrawArguments {
-        uint32_t vertexCount   = 0; ///< number of vertices to draw
-        uint32_t instanceCount = 1; ///< number of instances to draw
-        uint32_t firstVertex   = 0; ///< first vertex index
-        uint32_t firstInstance = 0; ///< first instance index
-    };
-
-    struct MeshParameter : public Arguments::ArtifactArgument {
-        MeshParameter(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::UsageFlag::Reading) {}
+    struct GeometryArgument : public Arguments::ArtifactArgument {
+        GeometryArgument(Arguments * owner, const char * name)
+            : Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            if (!value) return {};
-            const auto & desc = value->descriptor();
+            mArtifacts.reserve(value.instances.size() + value.vertices.size() + 1);
             mArtifacts.clear();
-            for (const auto & [name, vertex] : desc.vertices) {
-                (void) name;
-                if (!vertex.buffer) continue;
-                mArtifacts.append(vertex.buffer.get());
+            for (const auto & vb : value.instances) {
+                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
             }
-            if (desc.indexBuffer) { mArtifacts.append(desc.indexBuffer.get()); }
+            for (const auto & vb : value.vertices) {
+                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
+            }
+            if (value.indices.buffer) { mArtifacts.append(value.indices.buffer.get()); }
             return mArtifacts;
         }
 
-        AutoRef<Mesh> value;
+        GpuGeometry value;
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
@@ -443,40 +531,41 @@ struct GenericDraw : public ShaderAction {
 
     struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "GenericDraw::A";
+        inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        MeshParameter        mesh         = {this, "mesh"};
-        BufferViewMap<>      buffers      = {this, "buffers"};      ///< buffer views, key is shader variable name
-        ImageViewMap<>       images       = {this, "images"};       ///< image views, key is shader variable name
-        TextureViewMap<>     textures     = {this, "textures"};     ///< texture views, key is shader variable name
-        RenderTargetArgument renderTarget = {this, "renderTarget"}; ///< render target
-        DrawArguments        drawParams;                            ///< draw parameters
-    };
+        struct GeometryView : BufferView {
+            /// For vertex buffers, this is the size of the vertex in bytes.
+            /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
+            uint32_t stride = 0;
+        };
 
-    /// Shader stage description
-    struct ShaderStageDesc {
-        AutoRef<Blob> shaderBinary; ///< shader binary code
-        StrA          entryPoint;   ///< entry point name
+        UniformMap       uniforms  = {this, "uniforms"};           ///< uniforms
+        TextureMap       textures  = {this, "textures"};           ///< textures
+        RwImagesMap      images    = {this, "read-write images"};  ///< read-write images
+        RoImagesMap      roImages  = {this, "read-only images"};   ///< read-only images
+        RwBufferMap      buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
+        RoBufferMap      roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
+        GeometryArgument geometry  = {this, "geometry"};           ///< geometry
     };
 
     struct CreateParameters {
-        AutoRef<GpuContext>            context;
-        std::optional<ShaderStageDesc> vs; ///< vertex shader
-        std::optional<ShaderStageDesc> ds; ///< domain shader
-        std::optional<ShaderStageDesc> hs; ///< hull shader
-        std::optional<ShaderStageDesc> gs; ///< geometry shader
-        std::optional<ShaderStageDesc> ps; ///< pixel shader
+        AutoRef<GpuContext> context;
+        ShaderBinary        vs; ///< vertex shader
+        ShaderBinary        ds; ///< domain shader
+        ShaderBinary        hs; ///< hull shader
+        ShaderBinary        gs; ///< geometry shader
+        ShaderBinary        ps; ///< pixel shader
     };
 
-    static GN_API AutoRef<GenericDraw> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuDraw> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
-    using ShaderAction::ShaderAction;
+    using GpuShaderAction::GpuShaderAction;
 };
 
-/// Generic compute action for quick GPU compute prototyping. It emphasizes ease of use and flexibility over extreme performance.
-struct GenericCompute : public ShaderAction {
+/// Generic GPU compute action. It is the building block of all GPU compute operations.
+struct GpuCompute : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GenericCompute";
 
@@ -492,27 +581,43 @@ struct GenericCompute : public ShaderAction {
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        BufferViewMap<>                         uniforms = {this, "uniforms"}; ///< uniform buffers
-        TextureViewMap<>                        textures = {this, "textures"}; ///< textures
-        BufferViewMap<Arguments::UsageFlag::RW> buffers  = {this, "buffers"};  ///< storage buffers
-        ImageViewMap<Arguments::UsageFlag::RW>  images   = {this, "images"};   ///< storage images
-        DispatchSize                            groups;                        ///< thread group counts
+        UniformMap   uniforms  = {this, "uniforms"};           ///< uniform buffers
+        TextureMap   textures  = {this, "textures"};           ///< textures
+        RwBufferMap  buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
+        RoBufferMap  roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
+        RwImagesMap  images    = {this, "read-write images"};  ///< read-write images
+        RoImagesMap  roImages  = {this, "read-only images"};   ///< read-only images
+        DispatchSize groups;                                   ///< thread group counts
     };
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
+        ShaderBinary        cs; ///< compute shader
     };
 
-    static GN_API AutoRef<GenericCompute> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuCompute> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
-    using ShaderAction::ShaderAction;
+    using GpuShaderAction::GpuShaderAction;
 };
+
+// namespace std {
+
+// template<>
+// struct hash<GN::rdg::GpuShaderAction::ShaderResourceBinding> {
+//     size_t operator()(const GN::rdg::GpuShaderAction::ShaderResourceBinding & key) const {
+//         auto hash = std::hash<uint32_t>()(key.set);
+//         GN::combineHash(hash, key.slot);
+//         return hash;
+//     }
+// };
+
+// } // namespace std
 
 // /// Composes one solid color and a set of textures into a single output texture.
 // /// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
 // /// Output: one texture (parameter "output").
-// struct Compose : public ShaderAction {
+// struct Compose : public GpuShaderAction {
 //     GN_API static const uint64_t TYPE;
 
 //     struct A : public Arguments {
@@ -527,12 +632,12 @@ protected:
 //     virtual bool reset() = 0;
 
 // protected:
-//     using ShaderAction::ShaderAction;
+//     using GpuShaderAction::GpuShaderAction;
 // };
 
 // /// Physically Based Rendering (PBR) action using Disney PBR shading model.
 // /// Renders objects with realistic material properties including base color, metallic, roughness, and normal mapping.
-// struct PBRShading : public ShaderAction {
+// struct PBRShading : public GpuShaderAction {
 //     GN_API static const uint64_t TYPE;
 
 //     /// Light types for PBR lighting
@@ -635,7 +740,7 @@ protected:
 //                        ) = 0;
 
 // protected:
-//     using ShaderAction::ShaderAction;
+//     using GpuShaderAction::GpuShaderAction;
 // };
 
 } // namespace GN::rdg

@@ -8,7 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-SubmissionImpl::SubmissionImpl(DynaArray<Workflow *> pendingWorkflows, const Parameters & params) {
+SubmissionImpl::SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params): Submission(params.name) {
     GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
     mFuture    = std::async(std::launch::async, [this, params]() -> Result { return run(params); });
@@ -53,7 +53,7 @@ bool SubmissionImpl::validateTask(const Workflow::Task & task, const StrA & work
 
 bool SubmissionImpl::validateAndBuildDependencyGraph() {
     for (size_t workflowIdx = 0; workflowIdx < mWorkflows.size(); ++workflowIdx) {
-        Workflow * workflow = mWorkflows[workflowIdx];
+        auto workflow = mWorkflows[workflowIdx];
         GN_ASSERT(workflow);
 
         for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
@@ -73,14 +73,14 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
     DynaArray<ArtifactSet> workflowReads(mValidatedWorkflows.size());
     DynaArray<ArtifactSet> workflowWrites(mValidatedWorkflows.size());
     for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
-        Workflow * w = mValidatedWorkflows[i];
+        auto w = mValidatedWorkflows[i];
         for (const Workflow::Task & task : w->tasks) {
             Arguments * args = task.arguments.get();
             if (!args) continue;
             for (const Arguments::ArtifactArgument * p = args->firstArtifactArgument(); p; p = p->next()) {
                 const auto usage = p->usage();
-                const bool read  = (usage & Arguments::UsageFlag::Reading) != Arguments::UsageFlag::None;
-                const bool write = (usage & Arguments::UsageFlag::Writing) != Arguments::UsageFlag::None;
+                const bool read  = usage.reading;
+                const bool write = usage.writing;
                 const auto arts  = p->artifacts();
                 for (size_t k = 0; k < arts.size(); ++k) {
                     const Artifact * a = arts[k];
@@ -175,14 +175,15 @@ static const char * executionResultStr(Action::ExecutionResult r) {
     }
 }
 
-static StrA usageFlagStr(Arguments::UsageFlag u) {
-    using F = Arguments::UsageFlag;
-    if (u == F::None) return "None";
+static StrA usageFlagStr(Arguments::UsageBits u) {
     StrA s;
-    if ((u & F::Optional) != F::None) s += "Optional|";
-    if ((u & F::Reading) != F::None) s += "Reading|";
-    if ((u & F::Writing) != F::None) s += "Writing|";
-    if (!s.empty()) s.popback(); // trailing |
+    if (u.optional) s += "Optional|";
+    if (u.reading) s += "Reading|";
+    if (u.writing) s += "Writing|";
+    if (s.empty())
+        s = "None";
+    else
+        s.popback(); // trailing |
     return s;
 }
 
@@ -212,7 +213,7 @@ Submission::State SubmissionImpl::dumpState() const {
     for (size_t orderIdx = 0; orderIdx < mExecutionOrder.size(); ++orderIdx) {
         size_t wfIdx = mExecutionOrder[orderIdx];
         if (wfIdx >= mValidatedWorkflows.size()) continue;
-        Workflow * w = mValidatedWorkflows[wfIdx];
+        auto w = mValidatedWorkflows[wfIdx];
         if (!w) continue;
 
         out += StrA::format("\n--- Workflow [{}] \"{}\" (sequence={}, order={}) ---\n", wfIdx, w->name.empty() ? "[unnamed]" : w->name.c_str(),
@@ -285,7 +286,7 @@ Submission::State SubmissionImpl::dumpState() const {
     return result;
 }
 
-Submission::Result SubmissionImpl::run(Parameters) {
+Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
     cleanup(false); // clean up any residual data from previous runs, but keep pending workflows.
 
     auto setResult = [](Action::ExecutionResult executionResult) -> Result {

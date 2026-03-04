@@ -64,7 +64,7 @@ struct InitIntegerAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "InitIntegerAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        WriteOnly<IntegerArtifact> output = {this, "output"};
+        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -105,9 +105,9 @@ struct AddIntegersAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "AddIntegersAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        ReadOnly<IntegerArtifact>  input1 = {this, "input1"};
-        ReadOnly<IntegerArtifact>  input2 = {this, "input2"};
-        WriteOnly<IntegerArtifact> output = {this, "output"};
+        ReadOnlyArtifact<IntegerArtifact>  input1 = {this, "input1"};
+        ReadOnlyArtifact<IntegerArtifact>  input2 = {this, "input2"};
+        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -151,9 +151,9 @@ struct MultiplyIntegersAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "MultiplyIntegersAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        ReadOnly<IntegerArtifact>  input1 = {this, "input1"};
-        ReadOnly<IntegerArtifact>  input2 = {this, "input2"};
-        WriteOnly<IntegerArtifact> output = {this, "output"};
+        ReadOnlyArtifact<IntegerArtifact>  input1 = {this, "input1"};
+        ReadOnlyArtifact<IntegerArtifact>  input2 = {this, "input2"};
+        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -198,7 +198,7 @@ struct ReadIntegerAction : public Action {
         inline static const uint64_t         TYPE      = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "ReadIntegerAction::A";
         A(): Arguments(TYPE, TYPE_NAME) {}
-        ReadOnly<IntegerArtifact> input = {this, "input"};
+        ReadOnlyArtifact<IntegerArtifact> input = {this, "input"};
     };
 
     std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
@@ -246,8 +246,9 @@ public:
         TS_ASSERT(result != nullptr);
 
         // Workflow 1: Initialize values (1, 2, 3)
+        DynaArray<GN::rdg::Workflow *> workflows;
         {
-            auto * workflow = renderGraph->schedule("initialize_values");
+            auto * workflow = renderGraph->createWorkflow("initialize_values");
             TS_ASSERT(workflow != nullptr);
 
             // Task 1: Initialize 'one' to 1
@@ -297,11 +298,13 @@ public:
                 task.arguments = initArgs;
                 workflow->tasks.append(task);
             }
+
+            workflows.append(workflow);
         }
 
         // Workflow 2: Compute sum = 1 + 2
         {
-            auto * workflow = renderGraph->schedule("compute_sum");
+            auto * workflow = renderGraph->createWorkflow("compute_sum");
             TS_ASSERT(workflow != nullptr);
 
             auto addAction = GN::rdg::AddIntegersAction::create(*db, "add_1_2");
@@ -317,11 +320,13 @@ public:
             task.action    = addAction;
             task.arguments = addArgs;
             workflow->tasks.append(task);
+
+            workflows.append(workflow);
         }
 
         // Workflow 3: Compute result = 3 * sum
         {
-            auto * workflow = renderGraph->schedule("compute_result");
+            auto * workflow = renderGraph->createWorkflow("compute_result");
             TS_ASSERT(workflow != nullptr);
 
             auto multiplyAction = GN::rdg::MultiplyIntegersAction::create(*db, "multiply_3_sum");
@@ -337,10 +342,12 @@ public:
             task.action    = multiplyAction;
             task.arguments = multiplyArgs;
             workflow->tasks.append(task);
+
+            workflows.append(workflow);
         }
 
-        // Submit all scheduled workflows for execution
-        auto submission = renderGraph->submit({});
+        // Submit all created workflows for execution
+        auto submission = renderGraph->submit({.workflows = workflows});
         TS_ASSERT(submission != nullptr);
 
         // Wait for completion and get result
@@ -369,14 +376,12 @@ public:
         auto                                   renderGraph = GN::rdg::RenderGraph::create(params);
         TS_ASSERT(renderGraph != nullptr);
 
-        GN::rdg::Workflow * w1 = renderGraph->schedule("w1");
-        GN::rdg::Workflow * w2 = renderGraph->schedule("w2");
-        GN::rdg::Workflow * w3 = renderGraph->schedule("w3");
+        GN::rdg::Workflow * w1 = renderGraph->createWorkflow("w1");
+        GN::rdg::Workflow * w2 = renderGraph->createWorkflow("w2");
+        GN::rdg::Workflow * w3 = renderGraph->createWorkflow("w3");
         TS_ASSERT(w1 != nullptr);
         TS_ASSERT(w2 != nullptr);
         TS_ASSERT(w3 != nullptr);
-        TS_ASSERT(w1->sequence < w2->sequence);
-        TS_ASSERT(w2->sequence < w3->sequence);
     }
 
     void testArgumentsArtifactArgumentsDiscovery() {
@@ -388,7 +393,7 @@ public:
         const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument();
         TS_ASSERT(p != nullptr);
         TS_ASSERT_EQUALS(p->name(), "output");
-        TS_ASSERT((p->usage() & GN::rdg::Arguments::UsageFlag::Writing) != GN::rdg::Arguments::UsageFlag::None);
+        TS_ASSERT(p->usage().writing);
         TS_ASSERT(p->next() == nullptr);
     }
 
@@ -423,7 +428,7 @@ public:
         auto x = GN::rdg::IntegerArtifact::create(*db, "x");
         TS_ASSERT(x != nullptr);
 
-        auto * w0 = renderGraph->schedule("writer_first");
+        auto * w0 = renderGraph->createWorkflow("writer_first");
         TS_ASSERT(w0 != nullptr);
         auto init0          = GN::rdg::InitIntegerAction::create(*db, "init0");
         init0->initValue    = 1;
@@ -433,7 +438,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1 = renderGraph->schedule("writer_second");
+        auto * w1 = renderGraph->createWorkflow("writer_second");
         TS_ASSERT(w1 != nullptr);
         auto init1          = GN::rdg::InitIntegerAction::create(*db, "init1");
         init1->initValue    = 2;
@@ -443,7 +448,7 @@ public:
         w1->tasks.back().action    = init1;
         w1->tasks.back().arguments = args1;
 
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1})});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();
@@ -461,7 +466,7 @@ public:
         TS_ASSERT(x != nullptr);
         TS_ASSERT(y != nullptr);
 
-        auto * w0 = renderGraph->schedule("writer");
+        auto w0 = renderGraph->createWorkflow("writer");
         TS_ASSERT(w0 != nullptr);
         auto init0          = GN::rdg::InitIntegerAction::create(*db, "init_x");
         init0->initValue    = 10;
@@ -471,7 +476,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1 = renderGraph->schedule("reader");
+        auto w1 = renderGraph->createWorkflow("reader");
         TS_ASSERT(w1 != nullptr);
         auto add1           = GN::rdg::AddIntegersAction::create(*db, "add");
         auto args1          = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
@@ -482,7 +487,8 @@ public:
         w1->tasks.back().action    = add1;
         w1->tasks.back().arguments = args1;
 
-        auto submission = renderGraph->submit({});
+        auto workflows  = std::vector<GN::rdg::Workflow *>({w0, w1});
+        auto submission = renderGraph->submit({.workflows = workflows});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();
@@ -501,7 +507,7 @@ public:
         TS_ASSERT(x != nullptr);
         TS_ASSERT(y != nullptr);
 
-        auto * w0           = renderGraph->schedule("writer");
+        auto * w0           = renderGraph->createWorkflow("writer");
         auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
         init0->initValue    = 1;
         auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
@@ -510,7 +516,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1          = renderGraph->schedule("reader");
+        auto * w1          = renderGraph->createWorkflow("reader");
         auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read_x");
         auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
         args1->input.value = x;
@@ -518,7 +524,7 @@ public:
         w1->tasks.back().action    = read1;
         w1->tasks.back().arguments = args1;
 
-        auto * w2           = renderGraph->schedule("writer_second");
+        auto * w2           = renderGraph->createWorkflow("writer_second");
         auto   init2        = GN::rdg::InitIntegerAction::create(*db, "overwrite_x");
         init2->initValue    = 2;
         auto args2          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
@@ -527,7 +533,7 @@ public:
         w2->tasks.back().action    = init2;
         w2->tasks.back().arguments = args2;
 
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();
@@ -544,7 +550,7 @@ public:
         auto x = GN::rdg::IntegerArtifact::create(*db, "x");
         TS_ASSERT(x != nullptr);
 
-        auto * w0           = renderGraph->schedule("writer");
+        auto * w0           = renderGraph->createWorkflow("writer");
         auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
         init0->initValue    = 5;
         auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
@@ -553,7 +559,7 @@ public:
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1          = renderGraph->schedule("reader1");
+        auto * w1          = renderGraph->createWorkflow("reader1");
         auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read1");
         auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
         args1->input.value = x;
@@ -561,7 +567,7 @@ public:
         w1->tasks.back().action    = read1;
         w1->tasks.back().arguments = args1;
 
-        auto * w2          = renderGraph->schedule("reader2");
+        auto * w2          = renderGraph->createWorkflow("reader2");
         auto   read2       = GN::rdg::ReadIntegerAction::create(*db, "read2");
         auto   args2       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
         args2->input.value = x;
@@ -569,7 +575,7 @@ public:
         w2->tasks.back().action    = read2;
         w2->tasks.back().arguments = args2;
 
-        auto submission = renderGraph->submit({});
+        auto submission = renderGraph->submit({DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
         TS_ASSERT(submission != nullptr);
         submission->result();
         auto state = submission->dumpState();

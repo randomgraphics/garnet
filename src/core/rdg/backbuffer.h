@@ -22,4 +22,13 @@ protected:
     BackbufferCommon(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE_ID, TYPE_NAME, name) {}
 };
 
+class PresentBackbufferImpl : public PresentBackbuffer {
+public:
+    PresentBackbufferImpl(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
+
+    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
+
+    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext *) override;
+}; // namespace GN::rd;
+
 } // namespace GN::rdg

@@ -64,72 +64,49 @@ int main(int, const char **) {
     if (!sampler) return -1;
 
     // Create and initialize actions (each creates itself and registers via admit())
-    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.context = gpuContext});
+    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
 
-    auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.context = gpuContext});
+    auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
     if (!clearAction) return -1;
 
-    auto clearDepthAction = ClearDepthStencil::create(*db, "clear_depth_action", ClearDepthStencil::CreateParameters {.context = gpuContext});
-    if (!clearDepthAction) return -1;
-
-    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.context = gpuContext});
+    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
+
+    // Create render target artifact (backbuffer + depth; clear values on artifact)
+    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    if (!renderTarget) return -1;
+    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
+    renderTarget->colors[0].clearColor.f4[0] = 0.2f;
+    renderTarget->colors[0].clearColor.f4[1] = 0.3f;
+    renderTarget->colors[0].clearColor.f4[2] = 0.4f;
+    renderTarget->colors[0].clearColor.f4[3] = 1.0f;
+    renderTarget->depthStencil.target        = depthTexture;
+    renderTarget->depthStencil.clearDepth    = 1.0f;
+    renderTarget->depthStencil.clearStencil  = 0;
 
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, compose, present until prepare fails
     while (true) {
         // Schedule render workflow
-        auto renderWorkflow = renderGraph->schedule();
+        auto renderWorkflow = renderGraph->createWorkflow("Render");
         if (renderWorkflow) {
-            renderWorkflow->name = "Render";
-
             // Task: Prepare backbuffer
-            auto prepareTask   = Workflow::Task {};
-            prepareTask.action = prepareAction;
-            auto prepareArgs   = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-            prepareArgs->backbuffer.set(backbuffer);
-            prepareTask.arguments = prepareArgs;
+            auto prepareTask              = Workflow::Task("Prepare");
+            prepareTask.action            = prepareAction;
+            auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+            prepareArgs->backbuffer.value = backbuffer;
+            prepareTask.arguments         = prepareArgs;
             renderWorkflow->tasks.append(prepareTask);
 
-            // Task: Clear render target
-            auto clearTask   = Workflow::Task {};
-            clearTask.action = clearAction;
-
-            auto clearArgs = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-
-            auto clearColor = ClearRenderTarget::A::ClearColor {};
-            clearColor.r    = 0.2f;
-            clearColor.g    = 0.3f;
-            clearColor.b    = 0.4f;
-            clearColor.a    = 1.0f;
-            clearArgs->color.set(clearColor);
-
-            auto rt   = RenderTarget {};
-            rt.target = backbuffer;
-            rt.sub    = Texture::SubresourceIndex();
-            clearArgs->renderTarget.set(rt);
-
-            clearTask.arguments = clearArgs;
+            // Task: Clear render target (color + depth; clear values on RenderTarget artifact)
+            auto clearTask                = Workflow::Task("Clear");
+            clearTask.action              = clearAction;
+            auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+            clearArgs->renderTarget.value = renderTarget;
+            clearTask.arguments           = clearArgs;
             renderWorkflow->tasks.append(clearTask);
-
-            // Task: Clear depth
-            auto clearDepthTask   = Workflow::Task {};
-            clearDepthTask.action = clearDepthAction;
-
-            auto clearDepthArgs = AutoRef<ClearDepthStencil::A>(new ClearDepthStencil::A());
-
-            clearDepthArgs->depth.set(1.0f);
-            clearDepthArgs->stencil.set(0);
-
-            auto depthRt   = RenderTarget {};
-            depthRt.target = depthTexture;
-            depthRt.sub    = Texture::SubresourceIndex();
-            clearDepthArgs->depthStencil.set(depthRt);
-
-            clearDepthTask.arguments = clearDepthArgs;
-            renderWorkflow->tasks.append(clearDepthTask);
 
             // Task: Compose (draw mesh with texture) - disabled until Compose is uncommented in actions.h
             // auto composeTask = Workflow::Task {};
@@ -138,11 +115,11 @@ int main(int, const char **) {
             // ... set composeArgs and append composeTask
 
             // Task: Present backbuffer
-            auto presentTask   = Workflow::Task {};
-            presentTask.action = presentAction;
-            auto presentArgs   = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-            presentArgs->backbuffer.set(backbuffer);
-            presentTask.arguments = presentArgs;
+            auto presentTask              = Workflow::Task("Present");
+            presentTask.action            = presentAction;
+            auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+            presentArgs->backbuffer.value = backbuffer;
+            presentTask.arguments         = presentArgs;
             renderWorkflow->tasks.append(presentTask);
         }
 
@@ -157,12 +134,12 @@ int main(int, const char **) {
         auto result = submission->result();
 
         // If prepare failed (window closed), exit loop
-        if (result.result == Action::ExecutionResult::FAILED) {
+        if (result.executionResult == Action::ExecutionResult::FAILED) {
             GN_INFO(sLogger)("Render graph submission failed (likely window closed), exiting");
             break;
         }
 
-        if (result.result == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
+        if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
     }
 
     GN_INFO(sLogger)("Render graph draw mesh completed");

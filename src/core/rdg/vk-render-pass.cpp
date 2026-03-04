@@ -5,7 +5,9 @@
 
 namespace GN::rdg {
 
-static GN::Logger * sLogger = GN::getLogger("GN.rdg");
+namespace {
+
+GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 // static vk::Format pixelFormatToVk(gfx::img::PixelFormat pf) {
 //     if (pf == gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM() || pf == gfx::img::PixelFormat::RGBA8()) return vk::Format::eR8G8B8A8Unorm;
@@ -14,12 +16,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 //     return vk::Format::eR8G8B8A8Unorm;
 // }
 
-std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const RenderTarget::ColorTarget & color, [[maybe_unused]] size_t stage) {
+std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const GpuImageView & color, [[maybe_unused]] size_t stage) {
     const rapid_vulkan::Image * image  = nullptr;
     vk::Extent2D                extent = {0, 0};
-    if (color.target.index() == 0) {
+    if (color.image.index() == 0) {
         // this color target is a texture.
-        auto tex = std::get<0>(color.target).castTo<TextureVulkan>().get();
+        auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
         if (!tex) GN_UNLIKELY {
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: render target texture is not set for stage {}", stage);
                 return {};
@@ -29,11 +31,12 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const R
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the render target texture for stage {} is not properly initialized.", stage);
                 return {};
             }
-        auto dim     = tex->dimensions(color.subresourceIndex.mip);
-        extent.width = std::min(dim.width, extent.width);
+        auto dim      = tex->dimensions(color.subresourceIndex.mip);
+        extent.width  = dim.width;
+        extent.height = dim.height;
     } else {
         // this color target is a backbuffer.
-        auto bb = std::get<1>(color.target).castTo<BackbufferVulkan>().get();
+        auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
         if (!bb) {
             GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: render target backbuffer is not set for stage {}", stage);
             return {};
@@ -50,20 +53,19 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const R
     return {image, extent};
 }
 
-static constexpr TextureVulkan::ImageState COLOR_ATTACHMENT_STATE {
+constexpr TextureVulkan::ImageState COLOR_ATTACHMENT_STATE {
     vk::ImageLayout::eColorAttachmentOptimal,
     vk::AccessFlagBits::eColorAttachmentWrite,
     vk::PipelineStageFlagBits::eColorAttachmentOutput,
 };
-static constexpr TextureVulkan::ImageStateTransitionFlags DISCARD_CONTENT {.discardContent = true};
+constexpr TextureVulkan::ImageStateTransitionFlags DISCARD_CONTENT {.discardContent = true};
 
-static std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const RenderTarget::ColorTarget & color, size_t stage,
-                                                                      rapid_vulkan::Barrier * barrier = nullptr) {
+std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuImageView & color, size_t stage, rapid_vulkan::Barrier * barrier = nullptr) {
     auto [image, baseExtent] = getColorTargetImage(color, stage);
     if (!image) GN_UNLIKELY return {nullptr, {0, 0}};
 
-    if (color.target.index() == 0) {
-        auto * tex = std::get<0>(color.target).castTo<TextureVulkan>().get();
+    if (color.image.index() == 0) {
+        auto * tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
         if (tex && tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT)) {
             const auto * st = tex->getImageState(color.subresourceIndex.mip, color.subresourceIndex.face);
             if (st) {
@@ -72,7 +74,7 @@ static std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const Rend
             }
         }
     } else {
-        auto * bb = std::get<1>(color.target).castTo<BackbufferVulkan>().get();
+        auto * bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
         if (bb && bb->trackImageState(COLOR_ATTACHMENT_STATE, DISCARD_CONTENT)) {
             const auto &              st = bb->getImageState();
             vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
@@ -88,7 +90,7 @@ static std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const Rend
     return {image->getView(viewParams), vk::Extent2D(mipExtent.width, mipExtent.height)};
 }
 
-static vk::Format getDepthViewFormat(vk::Format format) {
+vk::Format getDepthViewFormat(vk::Format format) {
     if (format == vk::Format::eD16Unorm) return vk::Format::eD16Unorm;
     if (format == vk::Format::eD32Sfloat) return vk::Format::eD32Sfloat;
     if (format == vk::Format::eD24UnormS8Uint) return vk::Format::eX8D24UnormPack32;
@@ -96,14 +98,14 @@ static vk::Format getDepthViewFormat(vk::Format format) {
     return vk::Format::eUndefined;
 }
 
-static vk::Format getStencilViewFormat(vk::Format format) {
+vk::Format getStencilViewFormat(vk::Format format) {
     if (format == vk::Format::eD16UnormS8Uint) return vk::Format::eS8Uint;
     if (format == vk::Format::eD24UnormS8Uint) return vk::Format::eS8Uint;
     if (format == vk::Format::eD32SfloatS8Uint) return vk::Format::eS8Uint;
     return vk::Format::eUndefined;
 }
 
-static vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
+vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
     auto depth = depthStencil.target.castTo<TextureVulkan>().get();
     if (!depth) GN_UNLIKELY return {};
 
@@ -134,7 +136,7 @@ static vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & 
     return view;
 }
 
-static vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
+vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
     auto depth = depthStencil.target.castTo<TextureVulkan>().get();
     if (!depth) GN_UNLIKELY return {};
 
@@ -166,21 +168,93 @@ static vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil 
     return stencilView;
 }
 
-bool RenderPassManagerVulkan::prepare(TaskInfo & taskInfo, const RenderTarget & renderTarget) {
-    bool changed = !mPrevRenderTarget || *mPrevRenderTarget != renderTarget;
+void trackRenderTargetState(const RenderTarget & renderTarget) {
+    // track the state of the color targets.
+    for (size_t i = 0; i < renderTarget.colors.size(); i++) {
+        const auto & color = renderTarget.colors[i].target;
+        if (0 == color.image.index()) {
+            // this color target is a texture.
+            auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
+            if (tex)
+                tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1,
+                                     {vk::ImageLayout::eColorAttachmentOptimal,
+                                      vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
+                                      vk::PipelineStageFlagBits::eColorAttachmentOutput});
+        } else {
+            // this color target is a backbuffer.
+            auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
+            if (bb)
+                bb->trackImageState({vk::ImageLayout::eColorAttachmentOptimal,
+                                     vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
+                                     vk::PipelineStageFlagBits::eColorAttachmentOutput});
+        }
+    }
+
+    // track the state of the depth stencil target.
+    auto depth = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
+    if (depth)
+        depth->trackImageState(renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1,
+                               {vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                                vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
+}
+
+inline bool areSameRenderTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
+    if (a == b) return true;    // same object, or both empty.
+    if (!a || !b) return false; // one is empty, the other is not.
+    return *a == *b;
+}
+
+} // namespace
+
+bool RenderPassManagerVulkan::collectRenderTargetUsage(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
+
+    // Check if this is the very first task.
+    if (mRenderPasses.empty()) {
+        mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
+        GN_VERBOSE(sLogger)("{} - starting the very first render pass {}", taskInfo, mRenderPasses.back().toString());
+        return true;
+    }
+
+    // If it is not the first task, then get the current active render target from the end of the render pass list.
+    auto activeRenderTarget = mRenderPasses.back().renderTarget;
+
+    // Check if the render target has changed.
+    bool changed = !areSameRenderTarget(activeRenderTarget, renderTarget);
+
+    // update render pass information as needed.
     if (changed) {
-        GN_VERBOSE(sLogger)("RenderPassManagerVulkan::prepare: render target changed, starting a new render pass.");
-        mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index});
+        mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
+        GN_VERBOSE(sLogger)("{} - render target changed, end render pass {}", taskInfo, mRenderPasses.back().toString());
+        mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
+        GN_VERBOSE(sLogger)("{} - render target changed, started new render pass {}.", taskInfo, mRenderPasses.back().toString());
     } else {
         mRenderPasses.back().lastTaskIndex = taskInfo.index;
-        GN_VERBOSE(sLogger)("RenderPassManagerVulkan::prepare: render target not changed, continuing the current render pass.");
+        GN_VERBOSE(sLogger)("{} - updating render pass last task index: {}.", taskInfo, mRenderPasses.back().toString());
     }
     return true;
 }
 
-bool RenderPassManagerVulkan::beginRenderPass(const RenderPassArguments & arguments) {
-    const RenderTarget & renderTarget = arguments.renderTarget;
+void RenderPassManagerVulkan::onPresentingBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
+    if (mRenderPasses.empty()) return;
+    const auto & rt = mRenderPasses.back().renderTarget;
+    if (!rt) return;
+    for (const auto & color : rt->colors) {
+        if (color.target.artifact() == backbuffer.castTo<Artifact>()) {
+            // this is the back buffer. we need to end the current render pass and create a new one with empty target.
+            mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
+            GN_VERBOSE(sLogger)("{} - presenting backbuffer {}, end last render pass {}.", taskInfo, backbuffer->name, mRenderPasses.back().toString());
+            mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = {}});
+            GN_VERBOSE(sLogger)("{} - create a new empty render pass {}.", taskInfo, mRenderPasses.back().toString());
+            return;
+        }
+    }
+}
 
+bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer commandBuffer) {
+    GN_VERBOSE(sLogger)("begin render pass for render target: {}.", renderTarget.name);
+
+    // setup render info.
     auto renderInfo = vk::RenderingInfo().setLayerCount(1);
 
     // Barrier for layout transitions; only entries with actual state changes are added (trackImageState returns true).
@@ -193,16 +267,13 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderPassArguments & argume
     colorAttachments.reserve(renderTarget.colors.size());
     for (size_t i = 0; i < renderTarget.colors.size(); i++) {
         const auto & color = renderTarget.colors[i];
-        auto [view, dim]   = getColorTargetImageView(color, i, &layoutBarrier);
+        auto [view, dim]   = getColorTargetImageView(color.target, i, &layoutBarrier);
         if (!view) GN_UNLIKELY {
-                GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create view for render target texture for stage {}.", i);
+                GN_ERROR(sLogger)("can't create view for render target texture for stage {}.", i);
                 return false;
             }
-        auto clearValue = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f); // clear to black by default.
-        if (arguments.clearValues) {
-            const auto & c = arguments.clearValues->colors[i];
-            clearValue.setFloat32({c.f4[0], c.f4[1], c.f4[2], c.f4[3]});
-        }
+        const auto & c          = color.clearColor;
+        auto         clearValue = vk::ClearColorValue(c.f4[0], c.f4[1], c.f4[2], c.f4[3]);
         colorAttachments.push_back(vk::RenderingAttachmentInfo()
                                        .setImageView(view)
                                        .setLoadOp(vk::AttachmentLoadOp::eClear)
@@ -223,8 +294,8 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderPassArguments & argume
             .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
             .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0))); // TODO: get clear value from ClearRenderTarget action.
         renderInfo.setPDepthAttachment(&depthAttachment);
-        auto dim                 = renderTarget.depthStencil.target.castTo<TextureVulkan>().get()->dimensions(renderTarget.depthStencil.subresourceIndex.mip);
-        renderArea.extent.width  = std::min(dim.width, renderArea.extent.width);
+        auto dim = renderTarget.depthStencil.target.castTo<TextureVulkan>().get()->dimensions(renderTarget.depthStencil.subresourceIndex.mip);
+        // .extent.width  = std::min(dim.width, renderArea.extent.width);
         renderArea.extent.height = std::min(dim.height, renderArea.extent.height);
     }
 
@@ -242,7 +313,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderPassArguments & argume
     }
 
     // setup render area.
-    GN_VERBOSE(sLogger)("RenderPassManagerVulkan::execute: render pass area: (width={}, height={}).", renderArea.extent.width, renderArea.extent.height);
+    GN_VERBOSE(sLogger)("render pass area: (width={}, height={}).", renderArea.extent.width, renderArea.extent.height);
     renderInfo.setRenderArea(renderArea);
 
     // Add depth/stencil layout transition when present (color transitions added in getColorTargetImageView when needed).
@@ -258,28 +329,58 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderPassArguments & argume
         vk::ImageSubresourceRange range(aspect, renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1);
         layoutBarrier.i(depthImg->handle(), {}, access, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, range);
     }
-    layoutBarrier.cmdWrite(arguments.commandBuffer);
+
+    // transfer image layout via barrier.
+    layoutBarrier.cmdWrite(commandBuffer);
+
+    // track the updated render target states
+    trackRenderTargetState(renderTarget);
 
     // start a new dynamic render pass.
-    arguments.commandBuffer.beginRendering(renderInfo);
+    commandBuffer.beginRendering(renderInfo);
+
+    // setup viewport
+    auto viewWidth  = FLT_MAX == renderTarget.viewport.width ? (float) renderArea.extent.width : renderTarget.viewport.width;
+    auto viewHeight = FLT_MAX == renderTarget.viewport.height ? (float) renderArea.extent.height : renderTarget.viewport.height;
+    auto viewport   = vk::Viewport(renderTarget.viewport.x, renderTarget.viewport.y, viewWidth, viewHeight, 0, 1);
+    commandBuffer.setViewport(0, 1, &viewport);
+
+    // setup scissor.
+    auto scissorWidth  = (~0u) == renderTarget.scissorRect.width ? (uint32_t) std::ceil(viewWidth) : renderTarget.scissorRect.width;
+    auto scissorHeight = (~0u) == renderTarget.scissorRect.height ? (uint32_t) std::ceil(viewHeight) : renderTarget.scissorRect.height;
+    auto scissor       = vk::Rect2D(vk::Offset2D(renderTarget.scissorRect.x, renderTarget.scissorRect.y), vk::Extent2D(scissorWidth, scissorHeight));
+    commandBuffer.setScissor(0, 1, &scissor);
+
     return true;
 }
 
-const RenderPassManagerVulkan::RenderPass * RenderPassManagerVulkan::execute(TaskInfo & taskInfo, const RenderPassArguments & arguments) {
+const RenderPassManagerVulkan::RenderPass * RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) {
     // Find the render pass that the task belongs to.
-    GN_VERBOSE(sLogger)("RenderPassManagerVulkan::execute: {} render pass(es) found.", mRenderPasses.size());
     RenderPass * rp = nullptr;
     for (size_t i = 0; i < mRenderPasses.size(); i++) {
         if (mRenderPasses[i].firstTaskIndex <= taskInfo.index && mRenderPasses[i].lastTaskIndex >= taskInfo.index) { rp = &mRenderPasses[i]; }
     }
     if (!rp) {
-        GN_ERROR(sLogger)("Workflow '{}' task '{}' doesn't seem to be part of any render pass.", taskInfo.workflow, taskInfo.task);
+        auto printRenderPassList = [](const std::vector<RenderPass> & renderPasses) {
+            StrA renderPassList;
+            for (const auto & rp : renderPasses) {
+                renderPassList.append(fmt::format("  Render pass: firstTaskIndex={}, lastTaskIndex={}, renderTarget={}\n", rp.firstTaskIndex, rp.lastTaskIndex,
+                                                  rp.renderTarget ? rp.renderTarget->name : "null"_s));
+            }
+            return renderPassList;
+        };
+        GN_ERROR(sLogger)("{} - doesn't seem to be part of any render pass. Render pass list:\n{}", taskInfo, printRenderPassList(mRenderPasses));
         return nullptr;
     }
 
     // If this is the first task of the render pass, start a new render pass.
-    if (rp->firstTaskIndex == taskInfo.index) {
-        if (!beginRenderPass(arguments)) return nullptr;
+    if (rp->renderTarget) {
+        if (rp->firstTaskIndex == taskInfo.index) {
+            if (!beginRenderPass(*rp->renderTarget, commandBuffer)) return nullptr;
+        } else if (rp->lastTaskIndex == taskInfo.index) {
+            GN_VERBOSE(sLogger)("{} - end render pass for render target: {}.", taskInfo, rp->renderTarget->name);
+            commandBuffer.endRendering();
+        }
     }
 
     // done

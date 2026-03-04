@@ -4,28 +4,29 @@
 
 #include <concepts>
 #include <functional>
-#include <optional>
 #include <unordered_map>
 
 namespace GN::rdg {
 
-// Render graph: workflows are scheduled (possibly from multiple threads), then executed in topological order.
+// Render graph: workflows are created (possibly from multiple threads), then executed in topological order.
 //
 // - Action: contains the code/logic for an operation. Declares a set of predefined parameters (input and/or output).
 // - Task: one Action + one arguments value (an action-defined struct, type-erased as std::any) to run that action.
 // - Workflow: a sequence of tasks run in strict sequential order. A workflow can depend on completion of other workflows.
-// - RenderGraph: schedule workflows (thread-safe); submit() submits all scheduled workflows for async execution in a topological order that satisfies
+// - RenderGraph: create workflows (thread-safe); submit() submits selected list of workflows for async execution in a topological order that satisfies
 // dependencies.
-//   After submit(), the graph is reset and all workflow pointers from schedule() are invalidated.
 
 struct ArtifactDatabase;
 
 struct RuntimeType {
-    /// The unique identifier of the type.
+    /// The unique identifier of the type for fast lookup and comparison.
+    /// This is a runtime ID generated each time application starts.
+    /// It is guaranteed to be unique within the entire application, even across DLL boundaries.
+    /// But DO NOT use it in external assets or files, since they are not stable and will change from session to session.
     const uint64_t typeId;
 
-    /// The name of the type. For debugging and logging. No need to be unique.
-    /// Must be a static constant string literal.
+    /// The name of the type. No need to be unique, for now.
+    /// \note We could enforce uniqueness of the name too, if we want a stable ID for each type in the future.
     const char * const typeName;
 
     template<typename T>
@@ -42,9 +43,13 @@ struct RuntimeType {
 
 protected:
     RuntimeType(uint64_t typeId_, const char * typeName_): typeId(typeId_), typeName(typeName_) {}
+
+    /// Returns a 64-bit integer that uniquely map to the name.
+    /// Same name always returns the same ID.
+    static GN_API uint64_t getStableTypeIdFromName(const char * name);
 };
 
-/// Artifact represents an atomic resource that can be used as input or output of a task.
+/// The basic building block of the render graph module. Base class of everthing that could be added to a render graph.
 struct Artifact : public RefCounter, public RuntimeType {
     ArtifactDatabase & database;
     const StrA         name;
@@ -93,24 +98,78 @@ protected:
 inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
     : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
 
+/// A helper class to wrap anything as an artifact.
+/// \param T    Type of the value to wrap.
+/// \param NAME Name of the artifact.
+template<typename T, const char * NAME>
+class TypedArtifact : public Artifact {
+public:
+    inline static const uint64_t TYPE_ID   = getStableTypeIdFromName(StrA::format("{}_{}", NAME, Guid::createRandom().toStr()).data());
+    inline static const char *   TYPE_NAME = NAME;
+
+    T value;
+
+    /// Create a new artifact with default value.
+    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name) {
+        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name));
+        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
+        return p;
+    }
+
+    /// Create a new artifact with a specific value (copy).
+    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name, const T & value) {
+        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name, value));
+        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
+        p->value = value;
+        return p;
+    }
+
+    /// Create a new artifact with a specific value (move).
+    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name, T && value) {
+        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name, std::move(value)));
+        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
+        return p;
+    }
+
+private:
+    // Constructor: only used by create() methods.
+    TypedArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_ID, TYPE_NAME, name), value() {}
+    TypedArtifact(ArtifactDatabase & db, const StrA & name, const T & v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(v) {}
+    TypedArtifact(ArtifactDatabase & db, const StrA & name, T && v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(std::move(v)) {}
+};
+
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
 public:
-    enum class UsageFlag {
-        None     = 0,
-        Optional = 1 << 0,
-        Reading  = 1 << 1,
-        Writing  = 1 << 2,
-        // Aliases for convenience
-        N  = None,
-        O  = Optional,
-        R  = Reading,
-        W  = Writing,
-        RW = Reading | Writing,
+    struct UsageBits {
+        bool optional : 1 = false;
+        bool reading  : 1 = false;
+        bool writing  : 1 = false;
+
+        constexpr bool operator==(const UsageBits & other) const { return optional == other.optional && reading == other.reading && writing == other.writing; }
+        constexpr bool operator!=(const UsageBits & other) const { return optional != other.optional || reading != other.reading || writing != other.writing; }
+
+        constexpr UsageBits & operator+=(const UsageBits & other) {
+            optional &= other.optional;
+            reading |= other.reading;
+            writing |= other.writing;
+            return *this;
+        }
+
+        friend constexpr UsageBits operator+(UsageBits a, const UsageBits & b) { return a += b; }
     };
 
-    friend constexpr UsageFlag operator|(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) | uint32_t(b)); }
-    friend constexpr UsageFlag operator&(UsageFlag a, UsageFlag b) { return UsageFlag(uint32_t(a) & uint32_t(b)); }
+    struct Usage {
+        inline static constexpr UsageBits None           = {false, false, false};
+        inline static constexpr UsageBits Optional       = {true, false, false};
+        inline static constexpr UsageBits Reading        = {false, true, false};
+        inline static constexpr UsageBits Writing        = {false, false, true};
+        inline static constexpr UsageBits ReadingWriting = {false, true, true};
+        inline static constexpr UsageBits O              = Optional;
+        inline static constexpr UsageBits R              = Reading;
+        inline static constexpr UsageBits W              = Writing;
+        inline static constexpr UsageBits RW             = ReadingWriting;
+    };
 
     /// Base class of all parameters that references one or more artifacts.
     /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
@@ -118,7 +177,7 @@ public:
         virtual ~ArtifactArgument() {}
 
         auto name() const -> const char * { return mName; }
-        auto usage() const -> UsageFlag { return mUsage; }
+        auto usage() const -> UsageBits { return mUsage; }
 
         /// Returns list of artifacts referenced by this argument.
         virtual auto artifacts() const -> SafeArrayAccessor<const Artifact * const> = 0;
@@ -128,21 +187,21 @@ public:
         const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
 
     protected:
-        ArtifactArgument(Arguments * owner, const char * name, UsageFlag usage): mName(name), mUsage(usage) {
+        ArtifactArgument(Arguments * owner, const char * name, UsageBits usage): mName(name), mUsage(usage) {
             mLink.context = this;
             owner->enlist(this);
         }
 
     private:
         const char * mName;
-        UsageFlag    mUsage;
+        UsageBits    mUsage;
         DoubleLink   mLink;
         friend class Arguments;
     };
 
     /// Represents a single artifact parameter of an action.
     /// T must be a subclass of Artifact.
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
     struct SingleArtifact : public ArtifactArgument {
         SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -154,16 +213,16 @@ public:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnly = SingleArtifact<T, UFlags | UsageFlag::Reading>;
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
+    using ReadOnlyArtifact = SingleArtifact<T, UFlags + Usage::Reading>;
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnly = SingleArtifact<T, UFlags | UsageFlag::Writing>;
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
+    using WriteOnlyArtifact = SingleArtifact<T, UFlags + Usage::Writing>;
 
-    template<DerivedFromArtifact T, UsageFlag UFlags = UsageFlag::None>
-    using ReadWrite = SingleArtifact<T, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
+    using ReadWriteArtifact = SingleArtifact<T, UFlags + Usage::Reading + Usage::Writing>;
 
-    template<DerivedFromArtifact T, size_t Count, UsageFlag UFlags = UsageFlag::None>
+    template<DerivedFromArtifact T, size_t Count, UsageBits UFlags = Usage::None>
     struct ArtifactArray : public ArtifactArgument {
         ArtifactArray(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
@@ -172,14 +231,32 @@ public:
         AutoRef<T> values[Count];
     };
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading>;
+    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
+    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading>;
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Writing>;
+    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
+    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Writing>;
 
-    template<typename T, size_t COUNT, UsageFlag UFlags = UsageFlag::None>
-    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags | UsageFlag::Reading | UsageFlag::Writing>;
+    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
+    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading + Usage::Writing>;
+
+    template<typename T, UsageBits UFlags = Usage::None>
+    struct ArtifactVector : public ArtifactArgument {
+        ArtifactVector(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
+
+        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), values.size()}; }
+
+        DynaArray<AutoRef<T>> values;
+    };
+
+    template<typename T, UsageBits UFlags = Usage::None>
+    using ReadOnlyVector = ArtifactVector<T, UFlags + Usage::Reading>;
+
+    template<typename T, UsageBits UFlags = Usage::None>
+    using WriteOnlyVector = ArtifactVector<T, UFlags + Usage::Writing>;
+
+    template<typename T, UsageBits UFlags = Usage::None>
+    using ReadWriteVector = ArtifactVector<T, UFlags + Usage::Reading + Usage::Writing>;
 
     /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
     const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
@@ -194,7 +271,7 @@ private:
     void enlist(ArtifactArgument * arg) {
         GN_ASSERT(arg);
         GN_ASSERT(arg->name() != nullptr);
-        GN_ASSERT(arg->usage() != UsageFlag::None);
+        GN_ASSERT(arg->usage() != Usage::None);
         DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
         GN_ASSERT(link->prev == nullptr && link->next == nullptr);
 
@@ -249,16 +326,11 @@ protected:
     using Artifact::Artifact;
 };
 
-/// A workflow is a sequence of tasks run in strict sequential order. It can depend on completion of other workflows.
+/// A workflow is a sequence of tasks run in sequential order. It can depend on completion of other workflows.
 /// The render graph runs workflows in a topological order that satisfies these dependencies.
 struct Workflow {
     /// Name for logging and debugging (not required, but recommended. No need to be unique).
     StrA name;
-
-    /// The unique monotonically increasing sequence number of the workflow.
-    /// If (A->sequence - B->sequence) > 0, then A is considered newer than, or "after", B.
-    /// We use signed integer as the sequence number. So it can overflow safely.
-    int64_t sequence;
 
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
     /// \note
@@ -269,13 +341,56 @@ struct Workflow {
     ///   - A is reading or writing to an artifact that B is writing to.
     ///   - A is writing to an artifact that B is reading from.
     struct Task {
-        explicit Task(const StrA & name): name(name) {}
         StrA               name; //< name for logging and debugging (not required, but recommended. No need to be unique).
         AutoRef<Action>    action;
         AutoRef<Arguments> arguments;
+
+        explicit Task(const StrA & name_): name(name_) {}
+
+        Task(const StrA & name_, AutoRef<Action> action_, AutoRef<Arguments> arguments_)
+            : name(name_), action(std::move(action_)), arguments(std::move(arguments_)) {}
+
+        Task & setName(const StrA & name_) {
+            this->name = name_;
+            return *this;
+        }
+
+        Task & setAction(AutoRef<Action> action_) {
+            this->action = std::move(action_);
+            return *this;
+        }
+
+        Task & setArguments(AutoRef<Arguments> arguments_) {
+            this->arguments = std::move(arguments_);
+            return *this;
+        }
     };
 
     DynaArray<Task> tasks;
+
+    Workflow & appendTask(Task && task) {
+        tasks.append(std::move(task));
+        return *this;
+    }
+
+    Workflow & appendTask(const StrA & name_, AutoRef<Action> action_, AutoRef<Arguments> arguments_) {
+        tasks.append(Task(name_, std::move(action_), std::move(arguments_)));
+        return *this;
+    }
+
+    // /// Collect usage of all artifacts
+    // std::unordered_map<uint64_t, Arguments::UsageBits> collectArtifactArguments() const {
+    //     std::unordered_map<uint64_t, Arguments::UsageBits> result;
+    //     for (const Task & task : tasks) {
+    //         if (!task.arguments) GN_LIKELY continue;
+    //         for (const Arguments::ArtifactArgument * p = task.arguments->firstArtifactArgument(); p; p = p->next()) {
+    //             for (const Artifact * a : p->artifacts()) {
+    //                 if (a) GN_LIKELY result[a->typeId] += p->usage();
+    //             }
+    //         }
+    //     }
+    //     return result;
+    // }
 };
 
 struct TaskInfo {
@@ -286,9 +401,7 @@ struct TaskInfo {
 };
 
 struct Submission : RefCounter {
-    struct Parameters {
-        StrA name; ///< name of the submission.
-    };
+    const StrA name;
 
     /// Result of execution
     struct Result {
@@ -315,38 +428,68 @@ struct Submission : RefCounter {
     virtual State dumpState() const = 0;
 
 protected:
-    Submission() = default;
+    Submission(const StrA & name_): name(name_) {}
 };
 
-/// Render graph: schedule workflows (thread-safe), then submit them for async execution.
+// /// A transient arena is a temporary memory pool that is used to allocate memory for the tasks that are executed.
+// /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
+// /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
+// struct TransientArena {
+//     virtual ~TransientArena() = default;
+
+//     GN_NO_COPY(TransientArena);
+//     GN_NO_MOVE(TransientArena);
+
+// protected:
+//     TransientArena() = default;
+// };
+
+/// Render graph: create workflows (thread-safe), then submit them for async execution.
 struct RenderGraph {
     struct CreateParameters {
         // For future use
+    };
+
+    struct SubmitParameters {
+        /// The order of the workflow is important. A workflow in front of the array (smaller index)
+        /// is considered older than the ones in the back of the array (larger index).
+        /// Also, a workflow is always newer than any previously submitted workflows.
+        SafeArrayAccessor<Workflow *> workflows;
+
+        /// name of the submission. For logging and debugging.
+        StrA name = "[unnamed submission]"_s;
     };
 
     /// Create a new render graph instance
     static GN_API RenderGraph * create(const CreateParameters & params);
 
     /// @brief Destroy the render graph instance. This method will try its best to cancel all pending tasks and workflows.
-    /// Once the method returns, the render graph is no longer usable, all pointers returned from schedule() are invalidated,
+    /// Once the method returns, the render graph is no longer usable, all pointers returned from createWorkflow() are invalidated,
     /// all workflows are either finished or cancelled. The detailed result can be queried via the submission object returned by submit().
     virtual ~RenderGraph() = default;
 
-    /// Schedule a new workflow.
+    /// Create a new workflow.
     /// \param name The name of the workflow.
-    /// \return a pointer to the scheduled workflow. The pointer is valid until submit() is called.
-    /// \note
-    ///  - The returned workflow is free to modify until submit() is called.
-    ///  - Call to submit() will invalidate all scheduled workflow pointers.
-    ///  - Modifying workflow that has been submitted is undefined behavior.
-    ///  - A newly scheduled workflow is always considered newer than any previously scheduled workflow.
-    ///  - A task in newer workflow might depend on a task in older workflow, but never vise versa.
-    virtual Workflow * schedule(StrA name) = 0;
+    /// \return a pointer to the created workflow. The pointer is valid after passed to submit().
+    ///         Modifying submitted workflow is undefined behavior.
+    virtual Workflow * createWorkflow(StrA name) = 0;
 
-    /// Submit all scheduled workflows for async execution in a topological order that satisfies workflow dependencies.
-    /// Returns immediately; execution may not be complete when this method returns.
-    /// After submission, the graph is reset to initial state and ready for new scheduling.
-    virtual AutoRef<Submission> submit(const Submission::Parameters & params) = 0;
+    // /// Add a transient arena to the render graph. The arena is used to allocate temporary used only by the the next submission.
+    // /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
+    // /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
+    // /// \param arena The transient arena to add.
+    // virtual void addTransientArena(TransientArena * arena) = 0;
+
+    /// Submit workflows for <b>blocking</b> async execution in a topological order that satisfies workflow dependencies.
+    virtual AutoRef<Submission> submit(const SubmitParameters & params) = 0;
+
+    /// Helper function to properly drop a workflow.
+    /// \note You can't drop an already submitted workflow. That'll cause undefined behavior.
+    void dropWorkflow(Workflow * workflow) {
+        if (!workflow) return;
+        workflow->tasks.clear();
+        submit({.workflows = {&workflow, 1}, .name = StrA::format("Dropped workflow {}", workflow->name)});
+    }
 
 protected:
     RenderGraph() = default;

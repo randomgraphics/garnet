@@ -33,6 +33,16 @@ int main(int, const char **) {
                   Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = nullptr, .width = displayWidth, .height = displayHeight}});
     if (!backbuffer) return -1;
 
+    // Create render target that references the backbuffer
+    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    if (!renderTarget) return -1;
+    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
+    // clear to solid red for easy verification of readback/save
+    renderTarget->colors[0].clearColor.f4[0] = 1.0f; // R
+    renderTarget->colors[0].clearColor.f4[1] = 0.0f; // G
+    renderTarget->colors[0].clearColor.f4[2] = 0.0f; // B
+    renderTarget->colors[0].clearColor.f4[3] = 1.0f; // A
+
     // Create actions
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
@@ -44,9 +54,9 @@ int main(int, const char **) {
     if (!presentAction) return -1;
 
     // Schedule render workflow
-    auto renderWorkflow = renderGraph->schedule("Render");
+    auto renderWorkflow = renderGraph->createWorkflow("Render");
     if (!renderWorkflow) {
-        GN_ERROR(sLogger)("Failed to schedule render workflow");
+        GN_ERROR(sLogger)("Failed to create render workflow");
         return -1;
     }
 
@@ -58,21 +68,10 @@ int main(int, const char **) {
     prepareTask.arguments         = prepareArgs;
     renderWorkflow->tasks.append(prepareTask);
 
-    // Task: Clear render target (solid red for easy verification of readback/save)
-    auto clearTask         = Workflow::Task("Clear render target");
-    clearTask.action       = clearAction;
-    auto clearArgs         = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-    auto color             = ClearRenderTarget::A::ClearValues {};
-    color.colors[0].f4[0]  = 1.0f; // R
-    color.colors[0].f4[1]  = 0.0f; // G
-    color.colors[0].f4[2]  = 0.0f; // B
-    color.colors[0].f4[3]  = 1.0f; // A
-    clearArgs->clearValues = color;
-    auto rt                = RenderTarget {};
-    rt.colors.append(RenderTarget::ColorTarget {.target = backbuffer, .subresourceIndex = {}});
-    clearArgs->renderTarget.value = rt;
-    clearTask.arguments           = clearArgs;
-    renderWorkflow->tasks.append(clearTask);
+    // Task: Clear/Set render target (solid red for easy verification of readback/save)
+    auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+    clearArgs->renderTarget.value = renderTarget;
+    renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
 
     // Task: Present backbuffer
     auto presentTask              = Workflow::Task("Present backbuffer");
@@ -83,7 +82,7 @@ int main(int, const char **) {
     renderWorkflow->tasks.append(presentTask);
 
     // Submit render graph for execution
-    auto submission = renderGraph->submit({});
+    auto submission = renderGraph->submit({.workflows = {&renderWorkflow, 1}});
     if (!submission) {
         GN_ERROR(sLogger)("Failed to submit render graph");
         return -1;
