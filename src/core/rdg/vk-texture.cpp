@@ -17,6 +17,7 @@ static vk::Format pixelFormatToVk(gfx::img::PixelFormat pf) {
     if (pf == gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB()) return vk::Format::eR8G8B8A8Srgb;
     if (pf == gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM() || pf == gfx::img::PixelFormat::BGRA8()) return vk::Format::eB8G8R8A8Unorm;
     if (pf == gfx::img::PixelFormat::RGB_8_8_8_UNORM()) return vk::Format::eR8G8B8Unorm;
+    if (pf == gfx::img::PixelFormat::RG_24_UNORM_8_UINT()) return vk::Format::eD24UnormS8Uint;
     return vk::Format::eR8G8B8A8Unorm; // fallback
 }
 
@@ -69,7 +70,13 @@ static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descr
     cp.info.arrayLayers = descriptor.faces;
     cp.info.samples     = (vk::SampleCountFlagBits) descriptor.samples;
     cp.info.tiling      = vk::ImageTiling::eOptimal;
-    cp.info.usage       = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
+    cp.info.usage       = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
+
+    vk::FormatProperties props = gi.physical.getFormatProperties(cp.info.format);
+    vk::FormatFeatureFlags optimalFeatures = props.optimalTilingFeatures;
+    if (optimalFeatures & vk::FormatFeatureFlagBits::eColorAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eColorAttachment;
+    if (optimalFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+
     cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
     return rapid_vulkan::Ref<rapid_vulkan::Image>(new rapid_vulkan::Image(cp));
 }

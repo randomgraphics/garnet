@@ -90,22 +90,18 @@ std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuImageVie
     return {image->getView(viewParams), vk::Extent2D(mipExtent.width, mipExtent.height)};
 }
 
-vk::Format getDepthViewFormat(vk::Format format) {
-    if (format == vk::Format::eD16Unorm) return vk::Format::eD16Unorm;
-    if (format == vk::Format::eD32Sfloat) return vk::Format::eD32Sfloat;
-    if (format == vk::Format::eD24UnormS8Uint) return vk::Format::eX8D24UnormPack32;
-    if (format == vk::Format::eD32SfloatS8Uint) return vk::Format::eD32Sfloat;
-    return vk::Format::eUndefined;
+/// True if the format supports depth/stencil attachment per device capabilities (optimal tiling).
+static bool formatSupportsDepthStencilAttachment(vk::PhysicalDevice physical, vk::Format format) {
+    vk::FormatProperties props = physical.getFormatProperties(format);
+    return (props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) != vk::FormatFeatureFlags();
 }
 
-vk::Format getStencilViewFormat(vk::Format format) {
-    if (format == vk::Format::eD16UnormS8Uint) return vk::Format::eS8Uint;
-    if (format == vk::Format::eD24UnormS8Uint) return vk::Format::eS8Uint;
-    if (format == vk::Format::eD32SfloatS8Uint) return vk::Format::eS8Uint;
-    return vk::Format::eUndefined;
+/// True if the format has a stencil component (combined depth-stencil). When true, use the same image view for both depth and stencil attachments.
+static bool formatHasStencil(vk::Format format) {
+    return format == vk::Format::eD16UnormS8Uint || format == vk::Format::eD24UnormS8Uint || format == vk::Format::eD32SfloatS8Uint;
 }
 
-vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
+vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const RenderTarget::DepthStencil & depthStencil) {
     auto depth = depthStencil.target.castTo<TextureVulkan>().get();
     if (!depth) GN_UNLIKELY return {};
 
@@ -115,57 +111,35 @@ vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthSt
             return {};
         }
 
-    auto depthFormat = getDepthViewFormat(image->desc().format);
-    if (depthFormat == vk::Format::eUndefined) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: supported depth texture format: {}.", rapid_vulkan::vkFormat2String(image->desc().format));
+    if (!formatSupportsDepthStencilAttachment(physical, image->desc().format)) GN_UNLIKELY {
+            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: format does not support depth/stencil attachment: {}.", rapid_vulkan::vkFormat2String(image->desc().format));
             return {};
         }
 
+    auto aspect = formatHasStencil(image->desc().format) ? (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil) : vk::ImageAspectFlagBits::eDepth;
     auto depthViewParams =
         rapid_vulkan::Image::GetViewParameters()
             .setType(vk::ImageViewType::e2D)
-            .setFormat(depthFormat)
-            .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, depthStencil.subresourceIndex.mip, 1, depthStencil.subresourceIndex.face, 1));
+            .setFormat(image->desc().format)
+            .setRange(vk::ImageSubresourceRange(aspect, depthStencil.subresourceIndex.mip, 1, depthStencil.subresourceIndex.face, 1));
     auto view = image->getView(depthViewParams);
     if (!view) GN_UNLIKELY {
             GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create depth view for depth target texture.");
             return {};
         }
 
-    // done
     return view;
 }
 
-vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
+/// For combined depth-stencil formats returns the same view as depth (use one view for both attachments). Otherwise returns null.
+vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil & depthStencil, vk::ImageView depthView) {
+    if (!depthView) return {};
     auto depth = depthStencil.target.castTo<TextureVulkan>().get();
-    if (!depth) GN_UNLIKELY return {};
-
+    if (!depth) return {};
     auto image = depth->image();
-    if (!image) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the depth target texture is not properly initialized.");
-            return {};
-        }
-
-    auto stencilFormat = getStencilViewFormat(image->desc().format);
-    if (stencilFormat == vk::Format::eUndefined) {
-        // the depth texture's format does not have a stencil component. This is NOT an error.
-        return {};
-    }
-
-    // setup stencil attachment, only if the depth texture's format has a stencil component.
-    auto stencilViewParams = rapid_vulkan::Image::GetViewParameters()
-                                 .setType(vk::ImageViewType::e2D)
-                                 .setFormat(stencilFormat)
-                                 .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eStencil, depthStencil.subresourceIndex.mip, 1,
-                                                                     depthStencil.subresourceIndex.face, 1));
-    auto stencilView = image->getView(stencilViewParams);
-    if (!stencilView) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create stencil view for depth target texture.");
-            return {};
-        }
-
-    // done.
-    return stencilView;
+    if (!image) return {};
+    if (!formatHasStencil(image->desc().format)) return {};
+    return depthView; // same view for both depth and stencil
 }
 
 void trackRenderTargetState(const RenderTarget & renderTarget) {
@@ -313,29 +287,25 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     }
     renderInfo.setColorAttachments(colorAttachments);
 
-    // setup depth attachment
+    // setup depth attachment (and stencil when combined format: same view for both)
+    vk::PhysicalDevice          physical  = mGpu->globalInfo().physical;
     vk::RenderingAttachmentInfo depthAttachment, stencilAttachment;
-    auto                        depthView = getDepthTargetImageView(renderTarget.depthStencil);
+    auto                        depthView = getDepthTargetImageView(physical, renderTarget.depthStencil);
     if (depthView) {
         depthAttachment.setImageView(depthView)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
             .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0))); // TODO: get clear value from ClearRenderTarget action.
+            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.depthStencil.clearDepth, (uint32_t) renderTarget.depthStencil.clearStencil)));
         renderInfo.setPDepthAttachment(&depthAttachment);
+        auto stencilView = getStencilTargetImageView(renderTarget.depthStencil, depthView);
+        if (stencilView) {
+            stencilAttachment.setImageView(stencilView)
+                .setLoadOp(vk::AttachmentLoadOp::eClear)
+                .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+                .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.depthStencil.clearDepth, (uint32_t) renderTarget.depthStencil.clearStencil)));
+            renderInfo.setPStencilAttachment(&stencilAttachment);
+        }
         auto dim = renderTarget.depthStencil.target.castTo<TextureVulkan>().get()->dimensions(renderTarget.depthStencil.subresourceIndex.mip);
-        // .extent.width  = std::min(dim.width, renderArea.extent.width);
-        renderArea.extent.height = std::min(dim.height, renderArea.extent.height);
-    }
-
-    // setup stencil attachment
-    auto stencilView = getStencilTargetImageView(renderTarget.depthStencil);
-    if (stencilView) {
-        stencilAttachment.setImageView(stencilView)
-            .setLoadOp(vk::AttachmentLoadOp::eClear)
-            .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0))); // TODO: get clear value from ClearRenderTarget action.
-        renderInfo.setPStencilAttachment(&stencilAttachment);
-        auto dim                 = renderTarget.depthStencil.target.castTo<TextureVulkan>().get()->dimensions(renderTarget.depthStencil.subresourceIndex.mip);
         renderArea.extent.width  = std::min(dim.width, renderArea.extent.width);
         renderArea.extent.height = std::min(dim.height, renderArea.extent.height);
     }
@@ -345,14 +315,12 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     renderInfo.setRenderArea(renderArea);
 
     // Add depth/stencil layout transition when present (color transitions added in getColorTargetImageView when needed).
-    if (depthView || stencilView) {
+    if (depthView) {
         auto depthTex = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
         auto depthImg = depthTex->image();
         GN_ASSERT(depthImg);
-
-        vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eNone;
-        if (depthView) aspect |= vk::ImageAspectFlagBits::eDepth;
-        if (stencilView) aspect |= vk::ImageAspectFlagBits::eStencil;
+        vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
+        if (formatHasStencil(depthImg->desc().format)) aspect |= vk::ImageAspectFlagBits::eStencil;
         vk::AccessFlags           access = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
         vk::ImageSubresourceRange range(aspect, renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1);
         layoutBarrier.i(depthImg->handle(), {}, access, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, range);

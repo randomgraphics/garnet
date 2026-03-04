@@ -399,8 +399,61 @@ protected:
 
 /// Represent a GPU renderable geometry.
 struct GpuGeometry {
+    /// API-agnostic vertex attribute format; backend maps to native (e.g. VkFormat).
+    enum class AttributeFormat : uint8_t {
+        F32_1,
+        F32_2,
+        F32_3,
+        F32_4,
+        F16_1,
+        F16_2,
+        F16_3,
+        F16_4,
+        U32_1,
+        U32_2,
+        U32_3,
+        U32_4,
+        U16_1,
+        U16_2,
+        U16_3,
+        U16_4,
+        U8_1,
+        U8_2,
+        U8_3,
+        U8_4,
+        I32_1,
+        I32_2,
+        I32_3,
+        I32_4,
+        I16_1,
+        I16_2,
+        I16_3,
+        I16_4,
+        I8_1,
+        I8_2,
+        I8_3,
+        I8_4,
+    };
+
+    /// Describes one vertex attribute (shader location, format, byte offset in vertex).
+    struct VertexAttribute {
+        uint32_t        location = 0; ///< index into the vertex buffer array.
+        uint32_t        offset   = 0; ///< byte offset from the beginning of a vertex.
+        AttributeFormat format   = AttributeFormat::F32_3;
+
+        bool operator==(const VertexAttribute & other) const {
+            return location == other.location && format == other.format && offset == other.offset;
+        }
+        bool operator!=(const VertexAttribute & other) const { return !operator==(other); }
+    };
+
+    /// Vertex layout description. Geometry loader and sample code must populate this to match vertex buffer layout.
     struct VertexFormat {
-        // TBD
+        DynaArray<VertexAttribute> attributes;
+
+        bool empty() const { return attributes.empty(); }
+        bool operator==(const VertexFormat & other) const { return attributes == other.attributes; }
+        bool operator!=(const VertexFormat & other) const { return !operator==(other); }
     };
 
     struct GeometryBuffer : BufferView {

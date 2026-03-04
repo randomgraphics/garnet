@@ -73,13 +73,54 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
 // GpuDrawVulkan
 // =====================================================================================================================
 
+static vk::Format toVkFormat(GpuGeometry::AttributeFormat f) {
+    using F = GpuGeometry::AttributeFormat;
+    switch (f) {
+    case F::F32_1: return vk::Format::eR32Sfloat;
+    case F::F32_2: return vk::Format::eR32G32Sfloat;
+    case F::F32_3: return vk::Format::eR32G32B32Sfloat;
+    case F::F32_4: return vk::Format::eR32G32B32A32Sfloat;
+    case F::F16_1: return vk::Format::eR16Sfloat;
+    case F::F16_2: return vk::Format::eR16G16Sfloat;
+    case F::F16_3: return vk::Format::eR16G16B16Sfloat;
+    case F::F16_4: return vk::Format::eR16G16B16A16Sfloat;
+    case F::U32_1: return vk::Format::eR32Uint;
+    case F::U32_2: return vk::Format::eR32G32Uint;
+    case F::U32_3: return vk::Format::eR32G32B32Uint;
+    case F::U32_4: return vk::Format::eR32G32B32A32Uint;
+    case F::U16_1: return vk::Format::eR16Uint;
+    case F::U16_2: return vk::Format::eR16G16Uint;
+    case F::U16_3: return vk::Format::eR16G16B16Uint;
+    case F::U16_4: return vk::Format::eR16G16B16A16Uint;
+    case F::U8_1: return vk::Format::eR8Uint;
+    case F::U8_2: return vk::Format::eR8G8Uint;
+    case F::U8_3: return vk::Format::eR8G8B8Uint;
+    case F::U8_4: return vk::Format::eR8G8B8A8Uint;
+    case F::I32_1: return vk::Format::eR32Sint;
+    case F::I32_2: return vk::Format::eR32G32Sint;
+    case F::I32_3: return vk::Format::eR32G32B32Sint;
+    case F::I32_4: return vk::Format::eR32G32B32A32Sint;
+    case F::I16_1: return vk::Format::eR16Sint;
+    case F::I16_2: return vk::Format::eR16G16Sint;
+    case F::I16_3: return vk::Format::eR16G16B16Sint;
+    case F::I16_4: return vk::Format::eR16G16B16A16Sint;
+    case F::I8_1: return vk::Format::eR8Sint;
+    case F::I8_2: return vk::Format::eR8G8Sint;
+    case F::I8_3: return vk::Format::eR8G8B8Sint;
+    case F::I8_4: return vk::Format::eR8G8B8A8Sint;
+    default: return vk::Format::eR32G32B32Sfloat;
+    }
+}
+
 class GpuDrawVulkan : public GpuDraw {
     AutoRef<GpuContextVulkan> mGpu;
     GpuDraw::CreateParameters mCreateParams {};
     vk::ShaderModule          mVertModule {};
     vk::ShaderModule          mFragModule {};
     vk::PipelineLayout        mPipelineLayout {};
-    vk::Pipeline              mPipeline {}; // null until pipeline creation (Phase 6 / Task 6.3)
+    vk::Pipeline              mPipeline {};
+    GpuGeometry::VertexFormat mCachedVertexFormat {};
+    uint32_t                  mCachedStride = 0;
 
     static vk::ShaderModule createShaderModule(vk::Device device, const void * code, size_t codeSize) {
         if (!code || codeSize == 0 || (codeSize % 4) != 0) return {};
@@ -89,29 +130,50 @@ class GpuDrawVulkan : public GpuDraw {
         return device.createShaderModule(ci);
     }
 
-    void createPipelineIfNeeded() {
-        if (mPipeline || !mVertModule || !mFragModule) return;
+    void ensurePipelineLayout() {
+        if (mPipelineLayout) return;
         const auto dev = mGpu->device().handle();
-
-        // Pipeline layout: one push constant range for vertex (e.g. PBR model + viewProj, 128 bytes).
         constexpr uint32_t           kPushConstantSize = 128;
         vk::PushConstantRange        pushRange {vk::ShaderStageFlagBits::eVertex, 0, kPushConstantSize};
         vk::PipelineLayoutCreateInfo layoutCi {{}, 0, nullptr, 1, &pushRange};
         mPipelineLayout = dev.createPipelineLayout(layoutCi);
-        if (!mPipelineLayout) GN_UNLIKELY {
-                GN_WARN(sLogger)("GpuDrawVulkan: createPipelineLayout failed, name='{}'", this->name.c_str());
-                return;
-            }
+        if (!mPipelineLayout) GN_UNLIKELY { GN_WARN(sLogger)("GpuDrawVulkan: createPipelineLayout failed, name='{}'", this->name.c_str()); }
+    }
+
+    /// Build and cache pipeline for the given geometry. Uses geometry.format and first vertex buffer stride.
+    void ensurePipelineForGeometry(const GpuGeometry & geom) {
+        if (!mVertModule || !mFragModule) return;
+        if (geom.format.empty() || geom.vertices.empty() || geom.vertices[0].stride == 0) return;
+        const uint32_t stride = static_cast<uint32_t>(geom.vertices[0].stride);
+        if (mPipeline && mCachedVertexFormat == geom.format && mCachedStride == stride) return;
+
+        const auto dev = mGpu->device().handle();
+        if (mPipeline) {
+            dev.destroyPipeline(mPipeline);
+            mPipeline = nullptr;
+        }
+
+        ensurePipelineLayout();
+        if (!mPipelineLayout) return;
+
+        mCachedVertexFormat = geom.format;
+        mCachedStride        = stride;
 
         const char * vertEntry = mCreateParams.vs.entry ? mCreateParams.vs.entry : "main";
         const char * fragEntry = mCreateParams.ps.entry ? mCreateParams.ps.entry : "main";
-
         vk::PipelineShaderStageCreateInfo stages[2] = {
             {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, mVertModule, vertEntry},
             {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, mFragModule, fragEntry},
         };
 
-        vk::PipelineVertexInputStateCreateInfo   vertexInput {};
+        vk::VertexInputBindingDescription binding {0, stride, vk::VertexInputRate::eVertex};
+        DynaArray<vk::VertexInputAttributeDescription> vkAttrs;
+        vkAttrs.reserve(geom.format.attributes.size());
+        for (const auto & a : geom.format.attributes)
+            vkAttrs.append({a.location, 0, toVkFormat(a.format), a.offset});
+
+        vk::PipelineVertexInputStateCreateInfo vertexInput {
+            {}, 1, &binding, static_cast<uint32_t>(vkAttrs.size()), vkAttrs.data()};
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly {{}, vk::PrimitiveTopology::eTriangleList};
         vk::PipelineRasterizationStateCreateInfo rasterization {};
         rasterization.lineWidth = 1.0f;
@@ -121,17 +183,14 @@ class GpuDrawVulkan : public GpuDraw {
         vk::PipelineColorBlendStateCreateInfo  colorBlend {{}, false, {}, blendAttachment};
         vk::PipelineMultisampleStateCreateInfo multisample {};
         multisample.rasterizationSamples = vk::SampleCountFlagBits::e1;
-
         vk::PipelineViewportStateCreateInfo viewportState {};
         viewportState.viewportCount = 1;
         viewportState.scissorCount  = 1;
-
         vk::DynamicState                   dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         vk::PipelineDynamicStateCreateInfo dynamicState {{}, 2, dynamicStates};
-
         vk::PipelineRenderingCreateInfo renderingCi {};
-        vk::Format                      colorFormat = vk::Format::eB8G8R8A8Unorm; // common swapchain format
-        renderingCi.setColorAttachmentFormats(colorFormat);
+        const vk::Format                colorFormats[] = {vk::Format::eB8G8R8A8Unorm};
+        renderingCi.setColorAttachmentFormats(colorFormats);
 
         vk::GraphicsPipelineCreateInfo pipeCi {};
         pipeCi.setPNext(&renderingCi);
@@ -144,13 +203,13 @@ class GpuDrawVulkan : public GpuDraw {
         pipeCi.setPColorBlendState(&colorBlend);
         pipeCi.setPMultisampleState(&multisample);
         pipeCi.setLayout(mPipelineLayout);
-        pipeCi.setRenderPass(nullptr); // dynamic rendering
+        pipeCi.setRenderPass(nullptr);
 
         auto result = dev.createGraphicsPipeline(nullptr, pipeCi);
         if (result.result != vk::Result::eSuccess) GN_UNLIKELY {
                 GN_ERROR(sLogger)("GpuDrawVulkan: createGraphicsPipeline failed, name='{}'", this->name.c_str());
-                dev.destroyPipelineLayout(mPipelineLayout);
-                mPipelineLayout = nullptr;
+                mCachedVertexFormat.attributes.clear();
+                mCachedStride = 0;
                 return;
             }
         mPipeline = result.value;
@@ -204,16 +263,15 @@ public:
         auto   cb = sc.commandBufferManager.execute(taskInfo);
         GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
 
-        createPipelineIfNeeded();
+        const GpuGeometry & geom = a->geometry.value;
+        const bool hasGeometry = !geom.format.empty() && !geom.vertices.empty() && geom.vertices[0].stride > 0;
+        if (hasGeometry) ensurePipelineForGeometry(geom);
 
-        // Task 7.1: if vs/ps were provided but pipeline is missing (creation failed), fail the task.
-        const bool requiredShaders = mCreateParams.vs.binary && mCreateParams.ps.binary;
-        if (requiredShaders && !mPipeline) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - vs/ps provided but pipeline not created", taskInfo);
+        if (hasGeometry && !mPipeline) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - geometry has vertex format but pipeline creation failed", taskInfo);
                 return FAILED;
             }
 
-        // When pipeline is valid: set viewport/scissor from render target extent, then bind and draw (Task 3.3 / 6.4).
         if (mPipeline) {
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
             if (!a->constants.empty()) {
@@ -225,14 +283,10 @@ public:
                     return FAILED;
                 }
             }
-            // Mesh is optional; when no vertex buffer, use default 3 vertices (e.g. fullscreen triangle).
-            uint32_t vertexCount   = 3;
+            uint32_t vertexCount   = hasGeometry ? (uint32_t) geom.vertices[0].count() : 0;
             uint32_t instanceCount = 1;
             uint32_t firstVertex   = 0;
             uint32_t firstInstance = 0;
-            if (!a->geometry.value.vertices.empty() && a->geometry.value.vertices[0].stride > 0) {
-                vertexCount = (uint32_t) a->geometry.value.vertices[0].count();
-            }
             if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
         }
 
