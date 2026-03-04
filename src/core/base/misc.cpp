@@ -104,7 +104,7 @@ GN_API GN::Guid GN::Guid::createRandom() {
         char   uuid[37];
         size_t got = ::fread(uuid, 1, 36, f);
         ::fclose(f);
-        if (g.fromStr(uuid)) return g;
+        if (36 == got && g.fromStr(uuid)) return g;
     }
     // fallback - continue below
 #elif defined(_WIN32)
