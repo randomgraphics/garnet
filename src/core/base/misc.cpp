@@ -66,8 +66,8 @@ GN_API void GN::getEnv(StrA & result, const char * name) {
 
 GN_API bool GN::Guid::fromStr(const char * str) {
     int data1_, data2_, data3_, data4_, data5_, data6_, data7_, data8_, data9_, data10_, data11_;
-    if (36 == ::sscanf(str, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", &data1_, &data2_, &data3_, &data4_, &data5_, &data6_, &data7_,
-                        &data8_, &data9_, &data10_, &data11_)) {
+    if (36 == ::sscanf(str, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", &data1_, &data2_, &data3_, &data4_, &data5_, &data6_, &data7_, &data8_, &data9_,
+                       &data10_, &data11_)) {
         data1    = (uint32_t) data1_;
         data2    = (uint16_t) data2_;
         data3    = (uint16_t) data3_;
@@ -93,7 +93,7 @@ GN_API GN::Guid GN::Guid::createRandom() {
 #if GN_DARWIN
     // Use Darwin API generator
     uuid_t uuid;
-    char uuid_str[37];
+    char   uuid_str[37];
     uuid_generate(uuid);
     uuid_unparse(uuid, uuid_str);
     if (g.fromStr(uuid_str)) return g;

@@ -40,17 +40,8 @@ private:
         AutoRef<Backbuffer>   present = {};
         AutoRef<RenderTarget> draw    = {};
 
-        bool isDraw() const { return !present; }
+        bool isDraw() const { return !present && !!draw; }
         bool isPresent() const { return !!present; }
-
-        bool operator==(const Entry & other) const {
-            // compare present first.
-            if (present != other.present) return false;
-            // compare draw next.
-            if (draw == other.draw) return true; // same render target, or both empty.
-            if (!draw || !other.draw) return false; // one is empty, the other is not.
-            return *draw == *other.draw;
-        }
     };
 
     AutoRef<GpuContextVulkan> mGpu;

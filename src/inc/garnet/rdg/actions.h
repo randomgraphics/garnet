@@ -40,6 +40,16 @@ struct GpuImageView {
             return std::get<1>(image);
     }
 
+    AutoRef<Backbuffer> backbuffer() const {
+        if (isBackbuffer()) return std::get<1>(image);
+        return {};
+    }
+
+    AutoRef<Texture> texture() const {
+        if (isTexture()) return std::get<0>(image);
+        return {};
+    }
+
     bool operator==(const GpuImageView & other) const {
         return image == other.image && format == other.format && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange;
     }
@@ -579,7 +589,6 @@ struct GpuCompute : public GpuShaderAction {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-
 
         InlineConstants constants;                                ///< inline constants. Backend copies to GPU when non-empty.
         UniformMap      uniforms  = {this, "uniforms"};           ///< uniform buffers

@@ -199,13 +199,35 @@ void trackRenderTargetState(const RenderTarget & renderTarget) {
                                 vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
 }
 
+bool sameDrawTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
+    if (a == b) return true;    // same render target pointer.
+    if (!a || !b) return false; // one is empty, the other is not.
+    return *a == *b;
+}
+
 } // namespace
 
 bool RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
-    auto & entry = mEntries[taskInfo.index];
-    entry.draw   = std::move(renderTarget);
-    GN_ASSERT(entry.isDraw());
-    GN_ASSERT(!entry.isPresent());
+    GN_ASSERT(mEntries.find(taskInfo.index) == mEntries.end());
+
+    // validate the render target.
+    if (!renderTarget) {
+        // this means we are resuing the same render taget of the previous draw action.
+        if (mEntries.empty()) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - empty render target is not allowed on the first draw task.", taskInfo);
+                return false;
+            }
+        const auto & prev = mEntries.rbegin()->second;
+        if (!prev.draw) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - empty render target is not allowed, when the previous action is presenting backbuffer.", taskInfo);
+                return false;
+            }
+        renderTarget = prev.draw;
+    }
+    GN_ASSERT(renderTarget);
+    mEntries[taskInfo.index] = Entry {.draw = std::move(renderTarget)};
+    GN_ASSERT(mEntries[taskInfo.index].isDraw());
+    GN_ASSERT(!mEntries[taskInfo.index].isPresent());
     return true;
 }
 
@@ -214,10 +236,23 @@ bool RenderPassManagerVulkan::preparePresent(TaskInfo & taskInfo, AutoRef<Backbu
             GN_ERROR(sLogger)("{} - can't present empty backbuffer", taskInfo);
             return false;
         }
-    auto & entry  = mEntries[taskInfo.index];
-    entry.present = std::move(backbuffer);
-    GN_ASSERT(entry.isPresent());
-    GN_ASSERT(!entry.isDraw());
+
+    // See if we are presenting the same backbuffer that was drawn to in the previous action.
+    // If not, we inherit the draw target from the previous action.
+    AutoRef<RenderTarget> drawTarget = mEntries.rbegin()->second.draw;
+    if (drawTarget) {
+        const auto & colors = drawTarget->colors;
+        for (size_t i = 0; i < colors.size(); i++) {
+            if (backbuffer == colors[i].target.backbuffer()) {
+                // we are presenting the backbuffer that was drawn to in the previous action.
+                drawTarget = {};
+                break;
+            }
+        }
+    }
+    mEntries[taskInfo.index] = Entry {.present = std::move(backbuffer), .draw = std::move(drawTarget)};
+    GN_ASSERT(!mEntries[taskInfo.index].isDraw());
+    GN_ASSERT(mEntries[taskInfo.index].isPresent());
     return true;
 }
 
@@ -231,23 +266,17 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer com
 
     auto & entry = iter->second;
 
-    if (entry.isDraw()) {
-        // we need to start a new render pass if one of the following is true:
-        // 1. this is the first task in the render pass.
-        // 2. the previous task is a present action (while the current task is a draw)
-        // 3. the previous task is a draw or clear action with a different render target.
-        bool needtoBegin = iter == mEntries.begin() || std::prev(iter)->second.present || std::prev(iter)->second.draw != entry.draw;
-        if (needtoBegin && !beginRenderPass(*entry.draw, commandBuffer)) return {};
+    // we need to start a new render pass if current task is a draw task, and one of the following is true:
+    // 1. this is the first task in the render pass.
+    // 2. the previous task is drawing to a different render target.
+    bool needtoBegin = entry.isDraw() && ((iter == mEntries.begin()) || (!sameDrawTarget(entry.draw, std::prev(iter)->second.draw)));
+    if (needtoBegin && !beginRenderPass(*entry.draw, commandBuffer)) return {};
 
-        /// We need to end the render pass if one of the following is true:
-        /// 1. this is the last task in the render pass.
-        /// 2. the next task is drawing to different render target or is present action.
-        bool needToEnd = iter == std::prev(mEntries.end()) || std::next(iter)->second.draw != entry.draw;
-        return {Action::ExecutionResult::PASSED, needToEnd};
-    } else {
-        // this is a present action. currently do nothing, just return.
-        return {Action::ExecutionResult::PASSED};
-    }
+    /// We need to end the render pass if one of the following is true:
+    /// 1. this is the last draw/clear/present task in the render pass.
+    /// 2. the next task is drawing to different render target.
+    bool needToEnd = iter == std::prev(mEntries.end()) || !sameDrawTarget(entry.draw, std::next(iter)->second.draw);
+    return {Action::ExecutionResult::PASSED, needToEnd};
 }
 
 bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer commandBuffer) {
