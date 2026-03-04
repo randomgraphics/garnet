@@ -62,5 +62,4 @@ AutoRef<PrepareBackbuffer> createPrepareBackbufferVulkan(ArtifactDatabase & db, 
 
 /// Create a Vulkan-backed PresentBackbuffer. Called from PresentBackbuffer::create() when context is Vulkan.
 AutoRef<PresentBackbuffer> createPresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters & params);
-
 } // namespace GN::rdg
