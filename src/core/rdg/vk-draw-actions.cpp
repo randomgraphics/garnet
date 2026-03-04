@@ -209,17 +209,21 @@ public:
         // Task 7.1: if vs/ps were provided but pipeline is missing (creation failed), fail the task.
         const bool requiredShaders = mCreateParams.vs.binary && mCreateParams.ps.binary;
         if (requiredShaders && !mPipeline) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan::execute: vs/ps provided but pipeline not created, name='{}'", this->name.c_str());
+                GN_ERROR(sLogger)("{} - vs/ps provided but pipeline not created", taskInfo);
                 return FAILED;
             }
 
         // When pipeline is valid: set viewport/scissor from render target extent, then bind and draw (Task 3.3 / 6.4).
         if (mPipeline) {
             cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
-            if (!a->pushConstantData.empty()) {
-                const auto size = static_cast<uint32_t>(a->pushConstantData.size());
+            if (!a->constants.empty()) {
+                const auto size = static_cast<uint32_t>(a->constants.size());
                 if (size <= 128)
-                    cb.commandBuffer.handle().pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, size, a->pushConstantData.data());
+                    cb.commandBuffer.handle().pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, size, a->constants.data());
+                else {
+                    GN_ERROR(sLogger)("{} - inline constants size is too large, size={}", taskInfo, size);
+                    return FAILED;
+                }
             }
             // Mesh is optional; when no vertex buffer, use default 3 vertices (e.g. fullscreen triangle).
             uint32_t vertexCount   = 3;

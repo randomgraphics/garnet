@@ -43,7 +43,14 @@ private:
         bool isDraw() const { return !present; }
         bool isPresent() const { return !!present; }
 
-        bool operator==(const Entry & other) const { return present == other.present && draw == other.draw; }
+        bool operator==(const Entry & other) const {
+            // compare present first.
+            if (present != other.present) return false;
+            // compare draw next.
+            if (draw == other.draw) return true; // same render target, or both empty.
+            if (!draw || !other.draw) return false; // one is empty, the other is not.
+            return *draw == *other.draw;
+        }
     };
 
     AutoRef<GpuContextVulkan> mGpu;

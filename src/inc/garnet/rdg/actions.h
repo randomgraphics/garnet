@@ -6,7 +6,7 @@
 
 namespace GN::rdg {
 
-// Representa a view to a GPU image. Could be a texture or a backbuffer.
+// Represents a view to a GPU image. Could be a texture or a backbuffer.
 struct GpuImageView {
     struct SubresourceIndex {
         uint32_t mip  = 0; ///< index into mipmap chain
@@ -480,6 +480,10 @@ struct GpuShaderAction : public Action {
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
+    /// Represent small chunk of constants that can be passed to the shader as immediate data.
+    /// This is usually used for small constants (like model matrix, mesh color and etc) that changes on each draw call.
+    using InlineConstants = DynaArray<uint8_t>;
+
     /// Shader binary that can be used to create the actual GPU shader program.
     struct ShaderBinary {
         void *       binary = nullptr; ///< pointer to the shader binary code.
@@ -534,12 +538,7 @@ struct GpuDraw : public GpuShaderAction {
         inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        struct GeometryView : BufferView {
-            /// For vertex buffers, this is the size of the vertex in bytes.
-            /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
-            uint32_t stride = 0;
-        };
-
+        InlineConstants  constants;                                ///< immediate constants. Backend copies to GPU when non-empty.
         UniformMap       uniforms  = {this, "uniforms"};           ///< uniforms
         TextureMap       textures  = {this, "textures"};           ///< textures
         RwImagesMap      images    = {this, "read-write images"};  ///< read-write images
@@ -547,9 +546,6 @@ struct GpuDraw : public GpuShaderAction {
         RwBufferMap      buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
         RoBufferMap      roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
         GeometryArgument geometry  = {this, "geometry"};           ///< geometry
-
-        /// Optional push constant data (e.g. model, viewProj). Backend copies to GPU when non-empty.
-        DynaArray<uint8_t> pushConstantData;
     };
 
     struct CreateParameters {
@@ -584,13 +580,15 @@ struct GpuCompute : public GpuShaderAction {
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        UniformMap   uniforms  = {this, "uniforms"};           ///< uniform buffers
-        TextureMap   textures  = {this, "textures"};           ///< textures
-        RwBufferMap  buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
-        RoBufferMap  roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
-        RwImagesMap  images    = {this, "read-write images"};  ///< read-write images
-        RoImagesMap  roImages  = {this, "read-only images"};   ///< read-only images
-        DispatchSize groups;                                   ///< thread group counts
+
+        InlineConstants constants;                                ///< inline constants. Backend copies to GPU when non-empty.
+        UniformMap      uniforms  = {this, "uniforms"};           ///< uniform buffers
+        TextureMap      textures  = {this, "textures"};           ///< textures
+        RwBufferMap     buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
+        RoBufferMap     roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
+        RwImagesMap     images    = {this, "read-write images"};  ///< read-write images
+        RoImagesMap     roImages  = {this, "read-only images"};   ///< read-only images
+        DispatchSize    groups;                                   ///< thread group counts
     };
 
     struct CreateParameters {

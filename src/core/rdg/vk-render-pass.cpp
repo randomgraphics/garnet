@@ -199,12 +199,6 @@ void trackRenderTargetState(const RenderTarget & renderTarget) {
                                 vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
 }
 
-inline bool areSameRenderTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
-    if (a == b) return true;    // same object, or both empty.
-    if (!a || !b) return false; // one is empty, the other is not.
-    return *a == *b;
-}
-
 } // namespace
 
 bool RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {

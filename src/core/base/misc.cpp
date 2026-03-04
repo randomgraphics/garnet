@@ -64,44 +64,51 @@ GN_API void GN::getEnv(StrA & result, const char * name) {
 #endif
 }
 
+GN_API bool GN::Guid::fromStr(const char * str) {
+    int data1_, data2_, data3_, data4_, data5_, data6_, data7_, data8_, data9_, data10_, data11_;
+    if (36 == ::sscanf(str, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", &data1_, &data2_, &data3_, &data4_, &data5_, &data6_, &data7_,
+                        &data8_, &data9_, &data10_, &data11_)) {
+        data1    = (uint32_t) data1_;
+        data2    = (uint16_t) data2_;
+        data3    = (uint16_t) data3_;
+        data4[0] = (uint8_t) data4_;
+        data4[1] = (uint8_t) data5_;
+        data4[2] = (uint8_t) data6_;
+        data4[3] = (uint8_t) data7_;
+        data4[4] = (uint8_t) data8_;
+        data4[5] = (uint8_t) data9_;
+        data4[6] = (uint8_t) data10_;
+        data4[7] = (uint8_t) data11_;
+        return true;
+    }
+    return false;
+}
+
 //
 //
 // -----------------------------------------------------------------------------
 GN_API GN::Guid GN::Guid::createRandom() {
+    Guid g = {};
+
 #if GN_DARWIN
     // Use Darwin API generator
-    Guid g = {};
-    if (KERN_SUCCESS == ::uuid_create(&g)) { return g; }
-    // fallback - continue below
+    uuid_t uuid;
+    char uuid_str[37];
+    uuid_generate(uuid);
+    uuid_unparse(uuid, uuid_str);
+    if (g.fromStr(uuid_str)) return g;
 #elif GN_POSIX
     // Try read kernal uuid file on Linux and Android
-    Guid   g = {};
     FILE * f = ::fopen("/proc/sys/kernel/random/uuid", "rb");
     if (f) {
         char   uuid[37];
         size_t got = ::fread(uuid, 1, 36, f);
         ::fclose(f);
-        int data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11;
-        if (got == 36 && 36 == ::sscanf(uuid, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", &data1, &data2, &data3, &data4, &data5, &data6, &data7,
-                                        &data8, &data9, &data10, &data11)) {
-            g.data1    = (uint32_t) data1;
-            g.data2    = (uint16_t) data2;
-            g.data3    = (uint16_t) data3;
-            g.data4[0] = (uint8_t) data4;
-            g.data4[1] = (uint8_t) data5;
-            g.data4[2] = (uint8_t) data6;
-            g.data4[3] = (uint8_t) data7;
-            g.data4[4] = (uint8_t) data8;
-            g.data4[5] = (uint8_t) data9;
-            g.data4[6] = (uint8_t) data10;
-            g.data4[7] = (uint8_t) data11;
-            return g;
-        }
+        if (g.fromStr(uuid)) return g;
     }
     // fallback - continue below
 #elif defined(_WIN32)
     // Use Windows API generator
-    Guid g = {};
     GUID win_guid;
     if (CoCreateGuid(&win_guid) == S_OK) {
         // Map fields

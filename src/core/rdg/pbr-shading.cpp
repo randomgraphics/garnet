@@ -65,8 +65,8 @@ public:
         // Push constants: model (64 bytes) + viewProj (64 bytes), column-major for GLSL.
         const Matrix44f & model    = params.modelToWorld.matrix();
         const Matrix44f & viewProj = params.sharedShaderConstants ? params.sharedShaderConstants->getViewInformation().worldToClip : params.worldToClip;
-        drawArgs->pushConstantData.resize(128);
-        float * pc = reinterpret_cast<float *>(drawArgs->pushConstantData.data());
+        drawArgs->constants.resize(128);
+        float * pc = reinterpret_cast<float *>(drawArgs->constants.data());
         for (int col = 0; col < 4; ++col)
             for (int row = 0; row < 4; ++row) pc[col * 4 + row] = model[row][col];
         pc += 16;
