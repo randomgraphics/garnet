@@ -151,6 +151,7 @@ class GpuDrawVulkan : public GpuDraw {
     vk::ShaderModule          mVertModule {};
     vk::ShaderModule          mFragModule {};
     vk::PipelineLayout        mPipelineLayout {};
+    vk::Pipeline              mNoGeomPipeline {}; ///< pipeline for shader-generated vertices (no vertex input)
     vk::Pipeline              mPipeline {};
     GpuGeometry::VertexFormat mCachedVertexFormat {};
     uint32_t                  mCachedStride = 0;
@@ -173,6 +174,63 @@ class GpuDrawVulkan : public GpuDraw {
         if (!mPipelineLayout) GN_UNLIKELY {
                 GN_WARN(sLogger)("GpuDrawVulkan: createPipelineLayout failed, name='{}'", this->name.c_str());
             }
+    }
+
+    /// Build and cache the no-vertex-input pipeline for shader-generated vertices (e.g. gl_VertexIndex triangles).
+    void ensureNoGeomPipeline() {
+        if (mNoGeomPipeline) return;
+        if (!mVertModule || !mFragModule) return;
+
+        ensurePipelineLayout();
+        if (!mPipelineLayout) return;
+
+        const auto dev = mGpu->device().handle();
+
+        const char *                      vertEntry = mCreateParams.vs.entry ? mCreateParams.vs.entry : "main";
+        const char *                      fragEntry = mCreateParams.ps.entry ? mCreateParams.ps.entry : "main";
+        vk::PipelineShaderStageCreateInfo stages[2] = {
+            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, mVertModule, vertEntry},
+            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, mFragModule, fragEntry},
+        };
+
+        vk::PipelineVertexInputStateCreateInfo   vertexInput {}; // no vertex input
+        vk::PipelineInputAssemblyStateCreateInfo inputAssembly {{}, vk::PrimitiveTopology::eTriangleList};
+        vk::PipelineRasterizationStateCreateInfo rasterization {};
+        rasterization.lineWidth = 1.0f;
+        vk::PipelineColorBlendAttachmentState blendAttachment {};
+        blendAttachment.colorWriteMask =
+            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        vk::PipelineColorBlendStateCreateInfo  colorBlend {{}, false, {}, blendAttachment};
+        vk::PipelineMultisampleStateCreateInfo multisample {};
+        multisample.rasterizationSamples = vk::SampleCountFlagBits::e1;
+        vk::PipelineViewportStateCreateInfo viewportState {};
+        viewportState.viewportCount                        = 1;
+        viewportState.scissorCount                         = 1;
+        vk::DynamicState                   dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+        vk::PipelineDynamicStateCreateInfo dynamicState {{}, 2, dynamicStates};
+        vk::PipelineRenderingCreateInfo    renderingCi {};
+        const vk::Format                   colorFormats[] = {vk::Format::eB8G8R8A8Unorm};
+        renderingCi.setColorAttachmentFormats(colorFormats);
+
+        vk::GraphicsPipelineCreateInfo pipeCi {};
+        pipeCi.setPNext(&renderingCi);
+        pipeCi.setStages(stages);
+        pipeCi.setPVertexInputState(&vertexInput);
+        pipeCi.setPInputAssemblyState(&inputAssembly);
+        pipeCi.setPRasterizationState(&rasterization);
+        pipeCi.setPViewportState(&viewportState);
+        pipeCi.setPDynamicState(&dynamicState);
+        pipeCi.setPColorBlendState(&colorBlend);
+        pipeCi.setPMultisampleState(&multisample);
+        pipeCi.setLayout(mPipelineLayout);
+        pipeCi.setRenderPass(nullptr);
+
+        auto result = dev.createGraphicsPipeline(nullptr, pipeCi);
+        if (result.result != vk::Result::eSuccess) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GpuDrawVulkan: createGraphicsPipeline (no-geom) failed, name='{}'", this->name.c_str());
+                return;
+            }
+        mNoGeomPipeline = result.value;
     }
 
     /// Build and cache pipeline for the given geometry. Uses geometry.format and first vertex buffer stride.
@@ -262,6 +320,7 @@ public:
     ~GpuDrawVulkan() override {
         const auto dev = mGpu->device().handle();
         if (mPipeline) dev.destroyPipeline(mPipeline);
+        if (mNoGeomPipeline) dev.destroyPipeline(mNoGeomPipeline);
         if (mPipelineLayout) dev.destroyPipelineLayout(mPipelineLayout);
         if (mVertModule) dev.destroyShaderModule(mVertModule);
         if (mFragModule) dev.destroyShaderModule(mFragModule);
@@ -298,15 +357,25 @@ public:
 
         const GpuGeometry & geom        = a->geometry.value;
         const bool          hasGeometry = !geom.format.empty() && !geom.vertices.empty() && geom.vertices[0].stride > 0;
-        if (hasGeometry) ensurePipelineForGeometry(geom);
 
-        if (hasGeometry && !mPipeline) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - geometry has vertex format but pipeline creation failed", taskInfo);
-                return FAILED;
-            }
+        vk::Pipeline activePipeline {};
+        uint32_t     vertexCount = 0;
+        if (hasGeometry) {
+            ensurePipelineForGeometry(geom);
+            if (!mPipeline) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("{} - geometry has vertex format but pipeline creation failed", taskInfo);
+                    return FAILED;
+                }
+            activePipeline = mPipeline;
+            vertexCount    = (uint32_t) geom.vertices[0].count();
+        } else if (geom.vertexCount > 0) {
+            ensureNoGeomPipeline();
+            activePipeline = mNoGeomPipeline;
+            vertexCount    = geom.vertexCount;
+        }
 
-        if (mPipeline) {
-            cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline);
+        if (activePipeline) {
+            cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, activePipeline);
             if (!a->constants.empty()) {
                 const auto size = static_cast<uint32_t>(a->constants.size());
                 if (size <= 128)
@@ -316,11 +385,7 @@ public:
                     return FAILED;
                 }
             }
-            uint32_t vertexCount   = hasGeometry ? (uint32_t) geom.vertices[0].count() : 0;
-            uint32_t instanceCount = 1;
-            uint32_t firstVertex   = 0;
-            uint32_t firstInstance = 0;
-            if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, instanceCount, firstVertex, firstInstance);
+            if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, 1, 0, 0);
         }
 
         // call into render pass to end render pass if needed. Must be called after all draw commands are queued in the

@@ -111,11 +111,13 @@ int main(int, const char **) {
         clearArgs->renderTarget.value = renderTarget;
         renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
 
-        // Task: Draw solid triangle (GpuDraw uses active render target set by Clear above).
-        auto drawTask      = Workflow::Task("DrawTriangle");
-        drawTask.action    = drawAction;
-        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        drawTask.arguments = drawArgs;
+        // Task: Draw solid triangle. No vertex buffer; the vertex shader generates
+        // the triangle from gl_VertexIndex. Set vertexCount on the geometry argument.
+        auto drawTask                        = Workflow::Task("DrawTriangle");
+        drawTask.action                      = drawAction;
+        auto drawArgs                        = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawArgs->geometry.value.vertexCount = 3;
+        drawTask.arguments                   = drawArgs;
         renderWorkflow->tasks.append(drawTask);
 
         // Task: Present backbuffer

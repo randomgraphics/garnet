@@ -468,6 +468,7 @@ struct GpuGeometry {
     DynaArray<GeometryBuffer> instances;
     DynaArray<GeometryBuffer> vertices;
     GeometryBuffer            indices;
+    uint32_t                  vertexCount = 0; ///< explicit vertex count; used when vertices array is empty (shader-generated vertices).
 };
 
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
