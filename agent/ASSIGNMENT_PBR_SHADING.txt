@@ -4,7 +4,13 @@ Goal: Implement the PBR shading effect as sketched in pipeline.h. The public hea
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
 Last completed: Task 0.1–2.3, 3.1, 3.2, 4.1, 4.2, 5.1 (draw-mesh integrates PbrShading; GNsample-rdg-draw-mesh added). Unit tests added (src/test/ut/rdg/rdg-pbr-assignment.cpp): type IDs (0.2), create/build without graph (1.1), build with graph + workflow task (2.0/2.1), submit/drop (2.3; submit not run in ut—verified by sample), Material::load (4.1), SharedShaderConstants view round-trip (4.2). Build + cit -t pass.
-In progress: (none). Follow-up: 5.2 lint/cleanup; embedding (.rc/objcopy) and media assets.
+  Also completed (new work, build passes):
+  - GLM integration in transform.h (Task 6.0): AffineTransform and WorldToClipTransformChain fully
+    rewritten with glm::vec3/quat/mat4; all methods inlined in class body (no transform.cpp needed);
+    glm::value_ptr() in pbr-shading.cpp for push constants; glm::mat4 worldToClip in pipeline.h
+    ViewInformation and BuildParameters; draw-mesh.cpp updated to glm::vec3 / glm::radians().
+In progress: Phase 6 — Vulkan UBO SharedShaderConstants (PLANNED, not yet coded).
+  See PHASE 6 section below for full design.
 --- END PROGRESS ---
 
 --- HEADER REVIEW (pipeline.h) — UPDATED ---
@@ -180,14 +186,183 @@ PHASE 5: Integration and sample (required)
     - **Verification:** Lint passes; PROGRESS reflects completion. Commit with message "Assignment PBR: complete (Task 5.2)" and push.
 
 ---
+PHASE 6: Vulkan UBO SharedShaderConstants (PLANNED — not yet implemented)
+---
+
+GOAL: SharedShaderConstantsVulkan maintains a fixed set of device-local uniform buffers (UBOs)
+organized by update frequency. On set*() the data is uploaded into ring-buffered GPU buffers.
+PbrShading exposes those buffers as named BufferViews in GpuDraw::A::uniforms. GpuDrawVulkan
+(newly) processes the uniforms map: creates descriptor sets and binds them at draw time.
+
+KEY DESIGN DECISIONS (reached after planning discussion):
+  1. No GpuContextVulkan changes. Descriptor set layouts live inside each class that needs them.
+     Vulkan pipeline layout compatibility is guaranteed by definition equality (same binding count,
+     types, stageFlags), not by sharing VkDescriptorSetLayout handles.
+  2. Reuse GpuDraw::A::uniforms (existing map<StrA,BufferView>). No new fields added to GpuDraw::A.
+     No type coupling between GpuDrawVulkan and SharedShaderConstants.
+  3. GPU async safety via ring buffering (kRingSize = 3). Both SSC and GpuDrawVulkan maintain 3
+     independent copies and advance their slot counter once per draw. They stay in sync because
+     both advance exactly once per execute() / getBufferViews() call.
+  4. UBOs are device-local (eDeviceLocal | eTransferDst). Uploads use
+     rapid_vulkan::Buffer::setContent() which handles staging internally.
+  5. Push constants for model + worldToClip remain unchanged (PBR shader reads them). The UBO
+     worldToClip is an addition for future shaders.
+
+GPU STRUCT LAYOUT (std140) — all in vk-shared-shader-constants.h:
+  constexpr uint32_t kRingSize  = 3;
+  constexpr uint32_t kMaxLights = 8;
+
+  struct GpuFrameData {                                   // 16 B
+      uint32_t frameCounter; float frameDuration; float _pad[2];
+  };
+  struct GpuViewData {                                    // 80 B
+      glm::mat4 worldToClip; glm::vec4 cameraPosition;
+  };
+  struct GpuDirectLightData {                             // 64 B
+      int32_t type; float _pad0[3];
+      glm::vec4 positionRange;  // xyz=pos, w=range (point/spot)
+      glm::vec4 direction;      // xyz=dir (directional/spot)
+      glm::vec4 intensity;      // rgb=value, w=magnitude
+      float cosInner; float cosOuter; float _pad1[2];
+  };
+  struct GpuLightingData {                                // 16 + 8*64 = 528 B
+      uint32_t lightCount; float _pad[3];
+      GpuDirectLightData lights[kMaxLights];
+  };
+
+DATA FLOW:
+  SharedShaderConstantsVulkan  --getBufferViews()--> PbrShading::build()
+    --> drawArgs->uniforms["b_frame"/"b_view"/"b_lighting"]
+    --> GpuDrawVulkan::execute() processes uniforms map
+    --> vkCmdBindDescriptorSets
+
+[ ] Task 6.1 — Create vk-shared-shader-constants.h and vk-shared-shader-constants.cpp
+    Files: src/core/rdg/vk-shared-shader-constants.h, src/core/rdg/vk-shared-shader-constants.cpp
+    - Declare / implement SharedShaderConstantsVulkan (extends SharedShaderConstants).
+    - Members: mFrameUbo[kRingSize], mViewUbo[kRingSize], mLightUbo[kRingSize] (rapid_vulkan::Buffer,
+      device-local eUniformBuffer|eTransferDst); mSlot = 0; CPU-side dirty flags.
+    - set*() overrides: store logical data into CPU struct, mark dirty.
+    - getBufferViews(): pack dirty CPU structs → GPU structs → Buffer::setContent() for current
+      slot; return std::array<{name, BufferView}, 3>; advance mSlot = (mSlot+1) % kRingSize.
+      Buffer::SetContentParameters: queueFamily = gi.graphicsQueueFamily, queueIndex = 0.
+    - Constructor: create all 9 UBOs.
+    - Destructor: UBOs destroyed via rapid_vulkan::Ref RAII.
+    - Also add factory: AutoRef<SharedShaderConstants> createVulkanSharedShaderConstants(...).
+    **Verification:** Build passes. Unit test: create SSC, call set*, getBufferViews() returns 3
+    entries with non-null buffer handles.
+    Commit: "Assignment PBR: SharedShaderConstantsVulkan with ring-buffered UBOs (Task 6.1)"
+
+[ ] Task 6.2 — shared-shader-constants.cpp: dispatch Vulkan branch to new class
+    File: src/core/rdg/shared-shader-constants.cpp
+    - Change Vulkan case in SharedShaderConstants::create() to call createVulkanSharedShaderConstants
+      instead of SharedShaderConstantsImpl.
+    **Verification:** Build passes. Existing unit test for SSC (set/get view info) still passes.
+    Commit: "Assignment PBR: dispatch SSC Vulkan to SharedShaderConstantsVulkan (Task 6.2)"
+
+[ ] Task 6.3 — GpuDrawVulkan: implement uniforms map → descriptor sets binding
+    File: src/core/rdg/vk-draw-actions.cpp
+    New members on GpuDrawVulkan:
+      vk::DescriptorSetLayout              mUniformLayout {};
+      vk::DescriptorPool                   mUniformPool   {};
+      std::array<vk::DescriptorSet,kRingSize> mUniformSets {};
+      uint32_t                             mUniformSlot   = 0;
+    New helper ensureUniformLayout(uint32_t bindingCount):
+      - Creates mUniformLayout with bindingCount UBO bindings (binding=0..N-1, eUniformBuffer,
+        eVertex|eFragment stage).
+      - Creates mUniformPool (kRingSize * bindingCount descriptors of type eUniformBuffer).
+      - Allocates kRingSize descriptor sets from pool using mUniformLayout.
+    Update ensurePipelineLayout():
+      - If mUniformLayout exists, include it as set 0 in the pipeline layout.
+      - mPipelineLayout = createPipelineLayout({setLayouts[0..n]}, {pushRange}).
+      - Note: mPipelineLayout must be recreated if mUniformLayout was not yet set at first call.
+        Simplest: always call ensureUniformLayout before ensurePipelineLayout, or rebuild layout
+        when mUniformLayout is first created. For prototype: rebuild if layout was already created
+        without descriptor sets (destroy old, create new).
+    In execute(), before draw, if !a->uniforms.empty():
+      - ensureUniformLayout((uint32_t)a->uniforms.size());
+      - For each {name, view} in a->uniforms (alphabetical order):
+          get VkBuffer from static_cast<BufferVulkan*>(view.buffer.get())->vkHandle();
+          fill vk::DescriptorBufferInfo {handle, view.offset, view.size};
+          fill vk::WriteDescriptorSet {mUniformSets[mUniformSlot], binding, 0, 1, eUniformBuffer,
+                                       {}, &bi};
+      - dev.updateDescriptorSets(writes);
+      - cb.bindDescriptorSets(eGraphics, mPipelineLayout, 0, mUniformSets[mUniformSlot], {});
+      - mUniformSlot = (mUniformSlot + 1) % kRingSize;
+    Destructor: destroy mUniformPool (implicitly frees sets), destroy mUniformLayout.
+    **Verification:** Build passes. Run draw-mesh sample — no validation errors, no crash.
+    Commit: "Assignment PBR: GpuDrawVulkan binds uniforms map as descriptor sets (Task 6.3)"
+
+[ ] Task 6.4 — PbrShading: populate drawArgs->uniforms from SSC
+    File: src/core/rdg/pbr-shading.cpp
+    In PbrShadingVulkan::build() before appendTask:
+      if (params.sharedShaderConstants) {
+          auto * ssc = static_cast<SharedShaderConstantsVulkan*>(
+                           params.sharedShaderConstants.get());
+          for (auto & uv : ssc->getBufferViews())
+              drawArgs->uniforms[uv.name] = uv.view;
+      }
+    Note: include vk-shared-shader-constants.h from pbr-shading.cpp (it's in the same core/rdg dir).
+    **Verification:** Build passes. Run draw-mesh sample; SSC UBOs visible to GPU pipeline.
+    Commit: "Assignment PBR: PbrShading forwards SSC UBOs to GpuDraw uniforms (Task 6.4)"
+
+[ ] Task 6.5 — Build + verify end-to-end (build.py d + cit.py + run sample)
+    - Full build, run cit.py, run GNsample-rdg-draw-mesh.
+    - Confirm no Vulkan validation errors (VK_LAYER_KHRONOS_validation output clean).
+    **Verification:** Build green, tests pass, sample runs without crash.
+    Commit: "Assignment PBR: Phase 6 complete — Vulkan UBO SSC (Task 6.5)"
+
+IMPLEMENTATION NOTES:
+  - vk-shared-shader-constants.cpp needs to #include "vk-buffer.h" (for BufferVulkan used in
+    getBufferViews()) and "vk-gpu-context.h" (for GpuContextVulkan / globalInfo()).
+  - BufferView is defined in actions.h (GpuShaderAction::BufferView with buffer, offset, size).
+    Check actual field names before coding; currently: BufferView { AutoRef<Buffer> buffer;
+    uint64_t offset = 0; uint64_t size = 0; } (see actions.h ~line 481+).
+  - rapid_vulkan::Buffer::SetContentParameters needs queueFamily from gi.graphicsQueueFamily
+    and queueIndex = 0. Use mGpu->globalInfo().graphicsQueueFamily.
+  - GpuDrawVulkan's pipeline layout currently has 0 descriptor sets. When uniforms are first seen
+    in execute(), ensureUniformLayout is called, which creates the layout. The pipeline layout
+    must then include the new layout. Since the pipeline and its layout are already created at
+    that point, the simplest fix: destroy and recreate mPipelineLayout (and mPipeline) after
+    mUniformLayout is newly created. This is acceptable for a prototype.
+  - kRingSize = 3 is defined in vk-shared-shader-constants.h; vk-draw-actions.cpp can either
+    include that header or define its own constexpr uint32_t kDescriptorRingSize = 3.
+
+---
 Summary of files to touch
 ---
 
-- src/inc/garnet/rdg/pipeline.h — Add RenderGraph* (and optionally RenderTarget) to BuildParameters (Task 2.0); SharedShaderConstants ViewInformation with full world→view→clip and camera position (WorldUnit) (Task 4.2); Material::LoadParameters with GN::File * source (Task 4.1); SubGraph submit/drop declarations (Task 2.3); minor doc fixes if needed.
-- src/core/rdg/ — PbrShadingVulkan (or similar) and PbrShading::create(); type IDs in runtime-type.cpp; Material::load(File * source) stub or impl; SharedShaderConstants::create() and impl with ViewInformation (worldToView, viewToClip, cameraPosition) and no GPU layout in public API (Task 4.2); SubGraph::submit and SubGraph::drop impl (Task 2.3).
-- src/core/rdg/vk-draw-actions.cpp — Only if PBR-specific binding or state is needed beyond GpuDraw::A.
-- src/inc/garnet/rdg/transform.h — Reference only (AffineTransform already used in BuildParameters.modelToWorld).
-- Shaders: new or under src/sample/rdg/ or src/core/rdg/ — PBR vs/ps sources and SPIR-V build path.
-- Sample: src/sample/rdg/ — draw-mesh.cpp extended for PbrShading; subgraph.submit()/drop(); CMake embeds assets (.rc on Windows, objcopy on Linux); media folder with royalty-free PBR assets + source/license.
+ALREADY CHANGED (build passes on branch wip/rdg/pbr-shading):
+- src/inc/garnet/rdg/transform.h — REWRITTEN with GLM (glm::vec3/quat/mat4); AffineTransform
+  and WorldToClipTransformChain fully inlined; #includes glm/mat4x4.hpp, glm/vec3.hpp,
+  glm/gtc/quaternion.hpp, glm/gtc/matrix_transform.hpp, glm/ext/matrix_clip_space.hpp,
+  glm/ext/matrix_transform.hpp.
+- src/core/rdg/transform.cpp — Stub only (all logic moved to header).
+- src/inc/garnet/rdg/pipeline.h — worldToClip changed to glm::mat4 in ViewInformation and
+  BuildParameters; #include <glm/mat4x4.hpp> added.
+- src/core/rdg/pbr-shading.cpp — Uses glm::value_ptr() for push constants; #include
+  <glm/gtc/type_ptr.hpp> added.
+- src/sample/rdg/draw-mesh.cpp — Camera uses glm::vec3 brace-init and glm::radians().
+- src/test/ut/rdg/pbr-shading.cpp — worldToClip = glm::mat4(1.f) (was Matrix44f::sIdentity()).
+- src/core/rdg/vk-buffer.h/cpp — BufferVulkan implementation (vertex/index buffer backing).
+- src/core/rdg/buffer.cpp — Buffer::create() dispatch to createVulkanBuffer().
+- src/core/rdg/vk-draw-actions.cpp — vkCmdBindVertexBuffers implemented.
+- src/core/rdg/runtime-type.cpp — Buffer::TYPE_ID added.
+- src/core/rdg/TODO.md — Created with vk-buffer device-local optimization note.
+
+TO BE CHANGED (Phase 6):
+- src/core/rdg/vk-shared-shader-constants.h — NEW: GpuFrameData/GpuViewData/GpuLightingData
+  GPU structs; SharedShaderConstantsVulkan declaration.
+- src/core/rdg/vk-shared-shader-constants.cpp — NEW: ring-buffered UBOs, set*() upload,
+  getBufferViews() returning std::array<{name,BufferView},3>.
+- src/core/rdg/shared-shader-constants.cpp — Dispatch Vulkan to SharedShaderConstantsVulkan.
+- src/core/rdg/vk-draw-actions.cpp — GpuDrawVulkan: add uniforms-map → descriptor set binding
+  (descriptor pool + layout + kRingSize sets + update + bind in execute()).
+- src/core/rdg/pbr-shading.cpp — Populate drawArgs->uniforms from ssc->getBufferViews().
+
+ORIGINAL PLAN (completed):
+- src/inc/garnet/rdg/pipeline.h — Add RenderGraph*, Material::LoadParameters, SubGraph methods.
+- src/core/rdg/ — PbrShadingVulkan, type IDs, Material::load, SharedShaderConstants, SubGraph.
+- Shaders: src/core/rdg/shaders/pbr.vert + pbr.frag, compiled to spv headers.
+- Sample: src/sample/rdg/draw-mesh.cpp with PbrShading integration.
 
 --- END ASSIGNMENT ---

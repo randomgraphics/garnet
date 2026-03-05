@@ -1,81 +1,95 @@
 #pragma once
 
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
+#include <glm/gtc/quaternion.hpp>        // glm::quat, glm::mat4_cast, glm::angleAxis
+#include <glm/gtc/matrix_transform.hpp>  // glm::translate, glm::scale, glm::normalize
+#include <glm/ext/matrix_clip_space.hpp> // glm::perspectiveRH_ZO
+#include <glm/ext/matrix_transform.hpp>  // glm::lookAtRH
+
 namespace GN::rdg {
 
 using Location    = Vector3<WorldUnit>;
 using Orientation = Quaternionf;
 
-/// General affine transform: translation, rotation and scaling. It can be represented by a 4x4 matrix.
-/// But internally, it could use other more efficient representations, such as quaternion, etc.
+/// General affine transform: translation, rotation and non-uniform scaling.
+/// Uses GLM internally for SIMD-friendly TRS matrix construction.
+/// All methods are defined in the class body and are implicitly inline.
 struct AffineTransform {
-    /// reset to identity transform.
     void reset() {
-        mPosition = {0.0f, 0.0f, 0.0f};
-        mRotation = Quaternionf::sIdentity();
-        mScale    = {1.0f, 1.0f, 1.0f};
-        mMatrix   = Matrix44f::sIdentity();
-        mIsDirty  = false;
+        mPosition = glm::vec3(0.f);
+        mRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+        mScale    = glm::vec3(1.f);
+        mMatrix   = glm::mat4(1.f);
+        mDirty    = false;
     }
 
-    /// Set the translation component.
-    GN_API void setLocation(Vector3f position);
+    void setLocation(glm::vec3 position) {
+        mPosition = position;
+        mDirty    = true;
+    }
+    void setRotation(glm::quat rotation) {
+        mRotation = rotation;
+        mDirty    = true;
+    }
+    void setRotation(float angle, glm::vec3 axis) {
+        mRotation = glm::angleAxis(angle, glm::normalize(axis));
+        mDirty    = true;
+    }
+    void setUniformScale(float scale) {
+        mScale = glm::vec3(scale);
+        mDirty = true;
+    }
+    void setNonUniformScale(glm::vec3 scale) {
+        mScale = scale;
+        mDirty = true;
+    }
 
-    /// Set the rotation component from a quaternion.
-    GN_API void setRotation(Quaternionf rotation);
-
-    /// Set the rotation component from an angle (radians) and axis.
-    GN_API void setRotation(float angle, Vector3f axis);
-
-    /// Set uniform scaling on all axes.
-    GN_API void setUniformScale(float scale);
-
-    /// Set non-uniform scaling per axis.
-    GN_API void setNonUniformScale(Vector3f scale);
-
-    /// Get the 4×4 matrix representation of this transform (lazily rebuilt).
-    GN_API const Matrix44f & matrix() const;
+    /// Returns the TRS matrix (Translate * Rotate * Scale), rebuilt lazily.
+    const glm::mat4 & matrix() const {
+        if (!mDirty) return mMatrix;
+        mDirty  = false;
+        mMatrix = glm::translate(glm::mat4(1.f), mPosition) * glm::mat4_cast(mRotation) * glm::scale(glm::mat4(1.f), mScale);
+        return mMatrix;
+    }
 
 private:
-    Vector3f            mPosition = {0.0f, 0.0f, 0.0f};
-    Quaternionf         mRotation = Quaternionf::sIdentity();
-    Vector3f            mScale    = {1.0f, 1.0f, 1.0f};
-    mutable Matrix44f   mMatrix   = Matrix44f::sIdentity();
-    mutable bool        mIsDirty  = false;
+    glm::vec3         mPosition = glm::vec3(0.f);
+    glm::quat         mRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+    glm::vec3         mScale    = glm::vec3(1.f);
+    mutable glm::mat4 mMatrix   = glm::mat4(1.f);
+    mutable bool      mDirty    = false;
 };
 
-/// The conventional world -> view -> clip transformation.
+/// World → view → clip transform chain for a perspective camera.
+/// Uses GLM throughout; all methods implicitly inline.
 struct WorldToClipTransformChain {
-    Vector3f eye    = {0.0f, 0.0f, 5.0f};
-    Vector3f target = {0.0f, 0.0f, 0.0f};
-    Vector3f up     = {0.0f, 1.0f, 0.0f};
-    float    fovy   = GN_PI / 3.0f; ///< vertical field of view in radians
-    float    aspect = 16.0f / 9.0f;
-    float    znear  = 0.1f;
-    float    zfar   = 100.0f;
+    glm::vec3 eye    = {0.f, 0.f, 5.f};
+    glm::vec3 target = {0.f, 0.f, 0.f};
+    glm::vec3 up     = {0.f, 1.f, 0.f};
+    float     fovy   = glm::radians(60.f); ///< vertical FOV in radians
+    float     aspect = 16.f / 9.f;
+    float     znear  = 0.1f;
+    float     zfar   = 100.f;
 
-    void setCamera(Vector3f eye_, Vector3f target_, Vector3f up_) {
-        eye    = eye_;
-        target = target_;
-        up     = up_;
+    void setCamera(glm::vec3 e, glm::vec3 t, glm::vec3 u) {
+        eye    = e;
+        target = t;
+        up     = u;
+    }
+    void setPerspective(float f, float a, float n, float r) {
+        fovy   = f;
+        aspect = a;
+        znear  = n;
+        zfar   = r;
     }
 
-    void setPerspective(float fovy_, float aspect_, float znear_, float zfar_) {
-        fovy   = fovy_;
-        aspect = aspect_;
-        znear  = znear_;
-        zfar   = zfar_;
-    }
-
-    /// Returns the combined world-to-clip matrix (view * projection).
-    /// Projection uses D3D-style depth [0, 1] with Y-axis negated for Vulkan NDC.
-    Matrix44f matrix() const {
-        Matrix44f view;
-        view.lookAtRh(eye, target, up);
-        Matrix44f proj;
-        proj.perspectiveD3DRh(fovy, aspect, znear, zfar);
-        // Vulkan NDC has Y pointing down; negate projection row 1 to flip Y.
-        proj.rows[1] = -proj.rows[1];
-        return proj * view;
+    /// Returns view-projection matrix. Uses RH coordinates and [0,1] depth (Vulkan).
+    /// Row 1 of the projection is negated to flip Y for Vulkan's Y-down NDC.
+    glm::mat4 matrix() const {
+        glm::mat4 proj = glm::perspectiveRH_ZO(fovy, aspect, znear, zfar);
+        proj[1][1] *= -1.f; // Vulkan NDC has Y pointing down
+        return proj * glm::lookAtRH(eye, target, up);
     }
 };
 

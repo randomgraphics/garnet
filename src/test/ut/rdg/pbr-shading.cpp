@@ -174,7 +174,7 @@ public:
         TS_ASSERT(shared != nullptr);
 
         SharedShaderConstants::ViewInformation view;
-        view.worldToClip    = Matrix44f::sIdentity();
+        view.worldToClip    = glm::mat4(1.f);
         view.cameraPosition = {};
         shared->setViewInformation(view);
 

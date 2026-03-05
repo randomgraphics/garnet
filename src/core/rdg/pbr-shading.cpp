@@ -1,12 +1,10 @@
 #include "pch.h"
-#include <garnet/GNrdg.h>
-#include <garnet/base/filesys.h>
-#include "gpu-context.h"
 #include "vk-gpu-context.h"
 #include "pbr-vert.spv.h"
 #include "pbr-frag.spv.h"
 #include <sstream>
 #include <string>
+#include <glm/gtc/type_ptr.hpp>
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
@@ -69,16 +67,14 @@ public:
         // Build arguments from params; the action is reused.
         auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
         drawArgs->geometry = params.geometry;
-        // Push constants: model (64 bytes) + viewProj (64 bytes), column-major for GLSL.
-        const Matrix44f & model    = params.modelToWorld.matrix();
-        const Matrix44f & viewProj = params.sharedShaderConstants ? params.sharedShaderConstants->getViewInformation().worldToClip : params.worldToClip;
+        // Push constants: model (64 bytes) + viewProj (64 bytes).
+        // GLM stores mat4 in column-major order, matching GLSL layout, so memcpy directly.
+        const glm::mat4 & model    = params.modelToWorld.matrix();
+        const glm::mat4 & viewProj = params.sharedShaderConstants ? params.sharedShaderConstants->getViewInformation().worldToClip : params.worldToClip;
         drawArgs->constants.resize(128);
         float * pc = reinterpret_cast<float *>(drawArgs->constants.data());
-        for (int col = 0; col < 4; ++col)
-            for (int row = 0; row < 4; ++row) pc[col * 4 + row] = model[row][col];
-        pc += 16;
-        for (int col = 0; col < 4; ++col)
-            for (int row = 0; row < 4; ++row) pc[col * 4 + row] = viewProj[row][col];
+        memcpy(pc, glm::value_ptr(model), 64);
+        memcpy(pc + 16, glm::value_ptr(viewProj), 64);
         workflow->appendTask("PBR draw", AutoRef<Action>(mDrawAction), std::move(drawArgs));
         SubGraph sg(*params.renderGraph, "Pbr");
         sg.workflows.append(workflow);

@@ -95,7 +95,7 @@ int main(int, const char **) {
         renderWorkflow->name = "Render";
 
         renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
-        renderWorkflow->appendTask("Clear",   clearAction,   ClearRenderTarget::A::make(renderTarget));
+        renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
 
         // No vertex buffer; the vertex shader generates the triangle from gl_VertexIndex.
         auto drawArgs                  = AutoRef<GpuDraw::A>(new GpuDraw::A());

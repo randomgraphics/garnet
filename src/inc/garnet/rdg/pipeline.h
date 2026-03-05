@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/mat4x4.hpp>
 #include <mutex>
 
 namespace GN::rdg {
@@ -55,7 +56,7 @@ struct SharedShaderConstants : public GpuResource {
 
     /// Logical view/camera data. Implementation maps this to GPU resources as needed.
     struct ViewInformation {
-        Matrix44f             worldToClip    = Matrix44f::sIdentity();
+        glm::mat4             worldToClip    = glm::mat4(1.f);
         Location              cameraPosition = {}; ///< camera position in world space
         AutoRef<RenderTarget> renderTarget;
     };
@@ -291,7 +292,7 @@ struct PbrShading : public GpuResource {
         GpuGeometry                    geometry;
         AffineTransform                modelToWorld;
         /// World-to-clip (view-projection) matrix. Used for push constants when SharedShaderConstants view is not yet available.
-        Matrix44f worldToClip = Matrix44f::sIdentity();
+        glm::mat4 worldToClip = glm::mat4(1.f);
     };
 
     struct CreateParameters {

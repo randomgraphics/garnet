@@ -10,7 +10,7 @@ bool BufferVulkan::setContent(const void * data, uint64_t size) {
             GN_ERROR(sLogger)("BufferVulkan::setContent: data or size is null/zero, name='{}'", name);
             return false;
         }
-    auto & gi = mGpu->globalInfo();
+    auto &                                    gi = mGpu->globalInfo();
     rapid_vulkan::Buffer::ConstructParameters cp;
     cp.name   = name.c_str();
     cp.gi     = &gi;

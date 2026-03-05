@@ -390,7 +390,7 @@ public:
                 // Bind each vertex buffer; skip null buffers.
                 for (uint32_t i = 0; i < (uint32_t) geom.vertices.size(); ++i) {
                     if (!geom.vertices[i].buffer) continue;
-                    auto *         vkBuf = static_cast<BufferVulkan *>(geom.vertices[i].buffer.get());
+                    auto *         vkBuf  = static_cast<BufferVulkan *>(geom.vertices[i].buffer.get());
                     vk::Buffer     handle = vkBuf->vkHandle();
                     vk::DeviceSize offset = geom.vertices[i].offset;
                     cb.commandBuffer.handle().bindVertexBuffers(i, 1, &handle, &offset);

@@ -5,13 +5,12 @@
 namespace GN::rdg {
 
 class BufferVulkan : public Buffer {
-    AutoRef<GpuContextVulkan>              mGpu;
+    AutoRef<GpuContextVulkan>               mGpu;
     rapid_vulkan::Ref<rapid_vulkan::Buffer> mVkBuffer;
-    uint64_t                               mSize = 0;
+    uint64_t                                mSize = 0;
 
 public:
-    BufferVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
-        : Buffer(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+    BufferVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): Buffer(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
 
     GpuContext & gpu() const override { return *mGpu; }
 

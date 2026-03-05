@@ -293,8 +293,8 @@ struct ClearRenderTarget : public Action {
         RenderTargetArgument renderTarget = {this, "renderTarget"};
 
         static AutoRef<A> make(AutoRef<RenderTarget> rt) {
-            auto a                   = AutoRef<A>(new A());
-            a->renderTarget.value    = std::move(rt);
+            auto a                = AutoRef<A>(new A());
+            a->renderTarget.value = std::move(rt);
             return a;
         }
     };
@@ -325,7 +325,7 @@ struct PrepareBackbuffer : public Action {
         ReadWriteArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {
-            auto a       = AutoRef<A>(new A());
+            auto a        = AutoRef<A>(new A());
             a->backbuffer = std::move(bb);
             return a;
         }

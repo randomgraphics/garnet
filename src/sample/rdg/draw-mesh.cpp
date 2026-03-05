@@ -66,7 +66,7 @@ static const Vertex kBoxVertices[] = {
     {-0.5f,-0.5f, 0.5f,  0,-1,0,  0,0},
 };
 // clang-format on
-static constexpr uint32_t kBoxVertexCount = (uint32_t)(sizeof(kBoxVertices) / sizeof(kBoxVertices[0]));
+static constexpr uint32_t kBoxVertexCount = (uint32_t) (sizeof(kBoxVertices) / sizeof(kBoxVertices[0]));
 
 // -------------------------------------------------------------------------
 // Helpers
@@ -87,7 +87,7 @@ static AutoRef<Buffer> createBoxVertexBuffer(ArtifactDatabase & db, AutoRef<GpuC
 
 static GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
     GpuGeometry geom;
-    geom.format.attributes.append(GpuGeometry::VertexAttribute {0, 0,  GpuGeometry::AttributeFormat::F32_3}); // position
+    geom.format.attributes.append(GpuGeometry::VertexAttribute {0, 0, GpuGeometry::AttributeFormat::F32_3});  // position
     geom.format.attributes.append(GpuGeometry::VertexAttribute {1, 12, GpuGeometry::AttributeFormat::F32_3}); // normal
     geom.format.attributes.append(GpuGeometry::VertexAttribute {2, 24, GpuGeometry::AttributeFormat::F32_2}); // texcoord
     GpuGeometry::GeometryBuffer vb;
@@ -102,34 +102,31 @@ static GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
 static AutoRef<PbrShading::Material> loadPbrMaterial(ArtifactDatabase & db, AutoRef<GpuContext> gpu) {
     auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
     if (fp && fp->readable()) {
-        auto mat = PbrShading::Material::load(
-            db, "pbr_material",
-            PbrShading::Material::LoadParameters {
-                .gpu      = gpu,
-                .source   = fp,
-                .basePath = "media::pbr/lined-metal-sheeting/",
-            });
+        auto mat = PbrShading::Material::load(db, "pbr_material",
+                                              PbrShading::Material::LoadParameters {
+                                                  .gpu      = gpu,
+                                                  .source   = fp,
+                                                  .basePath = "media::pbr/lined-metal-sheeting/",
+                                              });
         if (mat) return mat;
         GN_WARN(sLogger)("Failed to load PBR material from file, using empty material");
     }
     // Fallback: empty material
-    static const char  empty[1] = {};
-    AutoRef<MemFile>   memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
+    static const char empty[1] = {};
+    AutoRef<MemFile>  memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
     return PbrShading::Material::load(db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpu, .source = memFile});
 }
 
 static WorldToClipTransformChain buildCamera(uint32_t width, uint32_t height) {
     WorldToClipTransformChain camera;
-    camera.setCamera(
-        Vector3f(1.8f, 1.4f, 2.4f), // eye: slightly off-axis to show 3 faces
-        Vector3f(0.0f, 0.0f, 0.0f), // look at box center
-        Vector3f(0.0f, 1.0f, 0.0f)  // world up
+    camera.setCamera({1.8f, 1.4f, 2.4f}, // eye: slightly off-axis to show 3 faces
+                     {0.0f, 0.0f, 0.0f}, // look at box center
+                     {0.0f, 1.0f, 0.0f}  // world up
     );
-    camera.setPerspective(
-        GN_PI / 3.0f,                        // 60 degree vertical FOV
-        (float) width / (float) height,      // aspect ratio
-        0.1f,                                // near plane
-        100.0f                               // far plane
+    camera.setPerspective(glm::radians(60.f),             // 60 degree vertical FOV
+                          (float) width / (float) height, // aspect ratio
+                          0.1f,                           // near plane
+                          100.0f                          // far plane
     );
     return camera;
 }
@@ -138,7 +135,7 @@ static AffineTransform buildModelTransform() {
     AffineTransform model;
     model.reset();
     // Rotate box 30 degrees around Y so we see a corner
-    model.setRotation(GN_PI / 6.0f, Vector3f(0.0f, 1.0f, 0.0f));
+    model.setRotation(glm::radians(30.f), glm::vec3(0.f, 1.f, 0.f));
     return model;
 }
 
@@ -207,7 +204,7 @@ int main(int, const char **) {
     if (sharedConstants) {
         SharedShaderConstants::ViewInformation view;
         view.worldToClip    = camera.matrix();
-        view.cameraPosition = Location {WorldUnit((int64_t)(1.8f * 1e6f)), WorldUnit((int64_t)(1.4f * 1e6f)), WorldUnit((int64_t)(2.4f * 1e6f))};
+        view.cameraPosition = Location {WorldUnit((int64_t) (1.8f * 1e6f)), WorldUnit((int64_t) (1.4f * 1e6f)), WorldUnit((int64_t) (2.4f * 1e6f))};
         view.renderTarget   = renderTarget;
         sharedConstants->setViewInformation(view);
         sharedConstants->setDirectLightingInformation(lighting);
