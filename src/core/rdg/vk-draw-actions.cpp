@@ -76,39 +76,72 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, 
 static vk::Format toVkFormat(GpuGeometry::AttributeFormat f) {
     using F = GpuGeometry::AttributeFormat;
     switch (f) {
-    case F::F32_1: return vk::Format::eR32Sfloat;
-    case F::F32_2: return vk::Format::eR32G32Sfloat;
-    case F::F32_3: return vk::Format::eR32G32B32Sfloat;
-    case F::F32_4: return vk::Format::eR32G32B32A32Sfloat;
-    case F::F16_1: return vk::Format::eR16Sfloat;
-    case F::F16_2: return vk::Format::eR16G16Sfloat;
-    case F::F16_3: return vk::Format::eR16G16B16Sfloat;
-    case F::F16_4: return vk::Format::eR16G16B16A16Sfloat;
-    case F::U32_1: return vk::Format::eR32Uint;
-    case F::U32_2: return vk::Format::eR32G32Uint;
-    case F::U32_3: return vk::Format::eR32G32B32Uint;
-    case F::U32_4: return vk::Format::eR32G32B32A32Uint;
-    case F::U16_1: return vk::Format::eR16Uint;
-    case F::U16_2: return vk::Format::eR16G16Uint;
-    case F::U16_3: return vk::Format::eR16G16B16Uint;
-    case F::U16_4: return vk::Format::eR16G16B16A16Uint;
-    case F::U8_1: return vk::Format::eR8Uint;
-    case F::U8_2: return vk::Format::eR8G8Uint;
-    case F::U8_3: return vk::Format::eR8G8B8Uint;
-    case F::U8_4: return vk::Format::eR8G8B8A8Uint;
-    case F::I32_1: return vk::Format::eR32Sint;
-    case F::I32_2: return vk::Format::eR32G32Sint;
-    case F::I32_3: return vk::Format::eR32G32B32Sint;
-    case F::I32_4: return vk::Format::eR32G32B32A32Sint;
-    case F::I16_1: return vk::Format::eR16Sint;
-    case F::I16_2: return vk::Format::eR16G16Sint;
-    case F::I16_3: return vk::Format::eR16G16B16Sint;
-    case F::I16_4: return vk::Format::eR16G16B16A16Sint;
-    case F::I8_1: return vk::Format::eR8Sint;
-    case F::I8_2: return vk::Format::eR8G8Sint;
-    case F::I8_3: return vk::Format::eR8G8B8Sint;
-    case F::I8_4: return vk::Format::eR8G8B8A8Sint;
-    default: return vk::Format::eR32G32B32Sfloat;
+    case F::F32_1:
+        return vk::Format::eR32Sfloat;
+    case F::F32_2:
+        return vk::Format::eR32G32Sfloat;
+    case F::F32_3:
+        return vk::Format::eR32G32B32Sfloat;
+    case F::F32_4:
+        return vk::Format::eR32G32B32A32Sfloat;
+    case F::F16_1:
+        return vk::Format::eR16Sfloat;
+    case F::F16_2:
+        return vk::Format::eR16G16Sfloat;
+    case F::F16_3:
+        return vk::Format::eR16G16B16Sfloat;
+    case F::F16_4:
+        return vk::Format::eR16G16B16A16Sfloat;
+    case F::U32_1:
+        return vk::Format::eR32Uint;
+    case F::U32_2:
+        return vk::Format::eR32G32Uint;
+    case F::U32_3:
+        return vk::Format::eR32G32B32Uint;
+    case F::U32_4:
+        return vk::Format::eR32G32B32A32Uint;
+    case F::U16_1:
+        return vk::Format::eR16Uint;
+    case F::U16_2:
+        return vk::Format::eR16G16Uint;
+    case F::U16_3:
+        return vk::Format::eR16G16B16Uint;
+    case F::U16_4:
+        return vk::Format::eR16G16B16A16Uint;
+    case F::U8_1:
+        return vk::Format::eR8Uint;
+    case F::U8_2:
+        return vk::Format::eR8G8Uint;
+    case F::U8_3:
+        return vk::Format::eR8G8B8Uint;
+    case F::U8_4:
+        return vk::Format::eR8G8B8A8Uint;
+    case F::I32_1:
+        return vk::Format::eR32Sint;
+    case F::I32_2:
+        return vk::Format::eR32G32Sint;
+    case F::I32_3:
+        return vk::Format::eR32G32B32Sint;
+    case F::I32_4:
+        return vk::Format::eR32G32B32A32Sint;
+    case F::I16_1:
+        return vk::Format::eR16Sint;
+    case F::I16_2:
+        return vk::Format::eR16G16Sint;
+    case F::I16_3:
+        return vk::Format::eR16G16B16Sint;
+    case F::I16_4:
+        return vk::Format::eR16G16B16A16Sint;
+    case F::I8_1:
+        return vk::Format::eR8Sint;
+    case F::I8_2:
+        return vk::Format::eR8G8Sint;
+    case F::I8_3:
+        return vk::Format::eR8G8B8Sint;
+    case F::I8_4:
+        return vk::Format::eR8G8B8A8Sint;
+    default:
+        return vk::Format::eR32G32B32Sfloat;
     }
 }
 
@@ -132,12 +165,14 @@ class GpuDrawVulkan : public GpuDraw {
 
     void ensurePipelineLayout() {
         if (mPipelineLayout) return;
-        const auto dev = mGpu->device().handle();
+        const auto                   dev               = mGpu->device().handle();
         constexpr uint32_t           kPushConstantSize = 128;
         vk::PushConstantRange        pushRange {vk::ShaderStageFlagBits::eVertex, 0, kPushConstantSize};
         vk::PipelineLayoutCreateInfo layoutCi {{}, 0, nullptr, 1, &pushRange};
         mPipelineLayout = dev.createPipelineLayout(layoutCi);
-        if (!mPipelineLayout) GN_UNLIKELY { GN_WARN(sLogger)("GpuDrawVulkan: createPipelineLayout failed, name='{}'", this->name.c_str()); }
+        if (!mPipelineLayout) GN_UNLIKELY {
+                GN_WARN(sLogger)("GpuDrawVulkan: createPipelineLayout failed, name='{}'", this->name.c_str());
+            }
     }
 
     /// Build and cache pipeline for the given geometry. Uses geometry.format and first vertex buffer stride.
@@ -157,23 +192,21 @@ class GpuDrawVulkan : public GpuDraw {
         if (!mPipelineLayout) return;
 
         mCachedVertexFormat = geom.format;
-        mCachedStride        = stride;
+        mCachedStride       = stride;
 
-        const char * vertEntry = mCreateParams.vs.entry ? mCreateParams.vs.entry : "main";
-        const char * fragEntry = mCreateParams.ps.entry ? mCreateParams.ps.entry : "main";
+        const char *                      vertEntry = mCreateParams.vs.entry ? mCreateParams.vs.entry : "main";
+        const char *                      fragEntry = mCreateParams.ps.entry ? mCreateParams.ps.entry : "main";
         vk::PipelineShaderStageCreateInfo stages[2] = {
             {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, mVertModule, vertEntry},
             {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, mFragModule, fragEntry},
         };
 
-        vk::VertexInputBindingDescription binding {0, stride, vk::VertexInputRate::eVertex};
+        vk::VertexInputBindingDescription              binding {0, stride, vk::VertexInputRate::eVertex};
         DynaArray<vk::VertexInputAttributeDescription> vkAttrs;
         vkAttrs.reserve(geom.format.attributes.size());
-        for (const auto & a : geom.format.attributes)
-            vkAttrs.append({a.location, 0, toVkFormat(a.format), a.offset});
+        for (const auto & a : geom.format.attributes) vkAttrs.append({a.location, 0, toVkFormat(a.format), a.offset});
 
-        vk::PipelineVertexInputStateCreateInfo vertexInput {
-            {}, 1, &binding, static_cast<uint32_t>(vkAttrs.size()), vkAttrs.data()};
+        vk::PipelineVertexInputStateCreateInfo   vertexInput {{}, 1, &binding, static_cast<uint32_t>(vkAttrs.size()), vkAttrs.data()};
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly {{}, vk::PrimitiveTopology::eTriangleList};
         vk::PipelineRasterizationStateCreateInfo rasterization {};
         rasterization.lineWidth = 1.0f;
@@ -184,12 +217,12 @@ class GpuDrawVulkan : public GpuDraw {
         vk::PipelineMultisampleStateCreateInfo multisample {};
         multisample.rasterizationSamples = vk::SampleCountFlagBits::e1;
         vk::PipelineViewportStateCreateInfo viewportState {};
-        viewportState.viewportCount = 1;
-        viewportState.scissorCount  = 1;
+        viewportState.viewportCount                        = 1;
+        viewportState.scissorCount                         = 1;
         vk::DynamicState                   dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         vk::PipelineDynamicStateCreateInfo dynamicState {{}, 2, dynamicStates};
-        vk::PipelineRenderingCreateInfo renderingCi {};
-        const vk::Format                colorFormats[] = {vk::Format::eB8G8R8A8Unorm};
+        vk::PipelineRenderingCreateInfo    renderingCi {};
+        const vk::Format                   colorFormats[] = {vk::Format::eB8G8R8A8Unorm};
         renderingCi.setColorAttachmentFormats(colorFormats);
 
         vk::GraphicsPipelineCreateInfo pipeCi {};
@@ -263,8 +296,8 @@ public:
         auto   cb = sc.commandBufferManager.execute(taskInfo);
         GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
 
-        const GpuGeometry & geom = a->geometry.value;
-        const bool hasGeometry = !geom.format.empty() && !geom.vertices.empty() && geom.vertices[0].stride > 0;
+        const GpuGeometry & geom        = a->geometry.value;
+        const bool          hasGeometry = !geom.format.empty() && !geom.vertices.empty() && geom.vertices[0].stride > 0;
         if (hasGeometry) ensurePipelineForGeometry(geom);
 
         if (hasGeometry && !mPipeline) GN_UNLIKELY {

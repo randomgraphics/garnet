@@ -99,7 +99,7 @@ int main(int, const char **) {
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, PBR draw, present until prepare fails
-    while(window->runUntilNoNewEvents()) {
+    while (window->runUntilNoNewEvents()) {
         // Schedule render workflow
         auto renderWorkflow = renderGraph->createWorkflow("Render");
         if (renderWorkflow) {
@@ -123,7 +123,8 @@ int main(int, const char **) {
             // When providing geometry, the loader/sample must set geometry.format (VertexFormat) and
             // geometry.vertices (buffer, offset, size, stride). PBR shader expects: location 0 vec3 position,
             // location 1 vec3 normal, location 2 vec2 texCoord; stride typically 32 bytes.
-            // Example: geom.format.attributes = {{0, GpuGeometry::AttributeFormat::F32_3, 0}, {1, GpuGeometry::AttributeFormat::F32_3, 12}, {2, GpuGeometry::AttributeFormat::F32_2, 24}};
+            // Example: geom.format.attributes = {{0, GpuGeometry::AttributeFormat::F32_3, 0}, {1, GpuGeometry::AttributeFormat::F32_3, 12}, {2,
+            // GpuGeometry::AttributeFormat::F32_2, 24}};
             //          geom.vertices.append({buffer, offset, size, stride});
             PbrShading::BuildParameters pbrParams;
             pbrParams.renderGraph           = renderGraph.get();
@@ -147,8 +148,8 @@ int main(int, const char **) {
             renderWorkflow->tasks.append(presentTask);
 
             // Submit render graph for execution
-            Workflow * w          = renderWorkflow;
-            auto       submission = renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&w, 1), .name = "Frame"});
+            auto submission =
+                renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&renderWorkflow, 1), .name = "Frame"});
             if (!submission) {
                 GN_ERROR(sLogger)("Failed to submit render graph");
                 break;

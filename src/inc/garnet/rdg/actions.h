@@ -441,9 +441,7 @@ struct GpuGeometry {
         uint32_t        offset   = 0; ///< byte offset from the beginning of a vertex.
         AttributeFormat format   = AttributeFormat::F32_3;
 
-        bool operator==(const VertexAttribute & other) const {
-            return location == other.location && format == other.format && offset == other.offset;
-        }
+        bool operator==(const VertexAttribute & other) const { return location == other.location && format == other.format && offset == other.offset; }
         bool operator!=(const VertexAttribute & other) const { return !operator==(other); }
     };
 

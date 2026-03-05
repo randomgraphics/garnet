@@ -72,7 +72,7 @@ static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descr
     cp.info.tiling      = vk::ImageTiling::eOptimal;
     cp.info.usage       = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
 
-    vk::FormatProperties props = gi.physical.getFormatProperties(cp.info.format);
+    vk::FormatProperties   props           = gi.physical.getFormatProperties(cp.info.format);
     vk::FormatFeatureFlags optimalFeatures = props.optimalTilingFeatures;
     if (optimalFeatures & vk::FormatFeatureFlagBits::eColorAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eColorAttachment;
     if (optimalFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
