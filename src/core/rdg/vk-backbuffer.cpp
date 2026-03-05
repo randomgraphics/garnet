@@ -184,9 +184,16 @@ Action::ExecutionResult BackbufferVulkan::beginFrame(const TaskInfo & taskInfo) 
             return Action::ExecutionResult::WARNING;
         }
 
-    // Call beginFrame and store the frame pointer.
-    GN_VERBOSE(sLogger)("{} - begin frame", taskInfo);
-    mActiveFrame = mSwapchain->beginFrame();
+    try {
+        GN_VERBOSE(sLogger)("{} - begin frame", taskInfo);
+        mActiveFrame = mSwapchain->beginFrame();
+    } catch (const std::exception & e) {
+        GN_VERBOSE(sLogger)("{} - beginFrame failed (e.g. window closed): {}", taskInfo, e.what());
+        return Action::ExecutionResult::FAILED;
+    } catch (...) {
+        GN_VERBOSE(sLogger)("{} - beginFrame failed with unknown exception", taskInfo);
+        return Action::ExecutionResult::FAILED;
+    }
     GN_RDG_FAIL_ON_FALSE(mActiveFrame, "{} - beginFrame failed", taskInfo);
 
     // mSwapChain->beginFrame() updated the backbuffer layout. So we
@@ -212,10 +219,21 @@ Action::ExecutionResult BackbufferVulkan::present(const TaskInfo & taskInfo) {
 
     // Call present() and update the image state to post-present layout.
     GN_VERBOSE(sLogger)("BackbufferVulkan::present: present frame");
-    auto pp = rapid_vulkan::Swapchain::PresentParameters(
-        rapid_vulkan::Swapchain::BackbufferStatus {mBackbufferState.curr.layout, mBackbufferState.curr.access, mBackbufferState.curr.stages});
-    pp.setRenderFinished(vk::ArrayProxy<vk::Semaphore>((uint32_t) mPendingSemaphores.size(), mPendingSemaphores.data()));
-    auto newStatus = mSwapchain->present(pp);
+    rapid_vulkan::Swapchain::BackbufferStatus newStatus;
+    try {
+        auto pp = rapid_vulkan::Swapchain::PresentParameters(
+            rapid_vulkan::Swapchain::BackbufferStatus {mBackbufferState.curr.layout, mBackbufferState.curr.access, mBackbufferState.curr.stages});
+        pp.setRenderFinished(vk::ArrayProxy<vk::Semaphore>((uint32_t) mPendingSemaphores.size(), mPendingSemaphores.data()));
+        newStatus = mSwapchain->present(pp);
+    } catch (const std::exception & e) {
+        GN_VERBOSE(sLogger)("BackbufferVulkan::present failed (e.g. window closed): {}", e.what());
+        mActiveFrame = nullptr;
+        return Action::ExecutionResult::FAILED;
+    } catch (...) {
+        GN_VERBOSE(sLogger)("BackbufferVulkan::present failed with unknown exception");
+        mActiveFrame = nullptr;
+        return Action::ExecutionResult::FAILED;
+    }
     trackImageState({newStatus.layout, newStatus.access, newStatus.stages});
 
     // Remember the backbuffer image and its post-present state for readbackOutsideRenderPass() (before frame is invalidated).

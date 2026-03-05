@@ -99,7 +99,7 @@ int main(int, const char **) {
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, PBR draw, present until prepare fails
-    while (true) {
+    while(window->runUntilNoNewEvents()) {
         // Schedule render workflow
         auto renderWorkflow = renderGraph->createWorkflow("Render");
         if (renderWorkflow) {
