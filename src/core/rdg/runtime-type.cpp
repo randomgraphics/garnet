@@ -21,5 +21,6 @@ GN_API const uint64_t PresentBackbuffer::TYPE_ID     = getNextUniqueTypeId();
 GN_API const uint64_t SharedShaderConstants::TYPE_ID = getNextUniqueTypeId();
 GN_API const uint64_t PbrShading::TYPE_ID            = getNextUniqueTypeId();
 GN_API const uint64_t PbrShading::Material::TYPE_ID  = getNextUniqueTypeId();
+GN_API const uint64_t Buffer::TYPE_ID                = getNextUniqueTypeId();
 
 } // namespace GN::rdg

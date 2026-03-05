@@ -8,144 +8,244 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 
+// -------------------------------------------------------------------------
+// Box mesh geometry
+// -------------------------------------------------------------------------
+
+struct Vertex {
+    float px, py, pz; // position
+    float nx, ny, nz; // normal
+    float u, v;       // texcoord
+};
+static_assert(sizeof(Vertex) == 32);
+
+// One quad face = 2 triangles (6 vertices), winding CCW viewed from outside.
+// clang-format off
+static const Vertex kBoxVertices[] = {
+    // Front face (+Z, normal 0,0,1)
+    {-0.5f,-0.5f, 0.5f,  0,0,1,  0,1},
+    { 0.5f,-0.5f, 0.5f,  0,0,1,  1,1},
+    { 0.5f, 0.5f, 0.5f,  0,0,1,  1,0},
+    {-0.5f,-0.5f, 0.5f,  0,0,1,  0,1},
+    { 0.5f, 0.5f, 0.5f,  0,0,1,  1,0},
+    {-0.5f, 0.5f, 0.5f,  0,0,1,  0,0},
+    // Back face (-Z, normal 0,0,-1)
+    { 0.5f,-0.5f,-0.5f,  0,0,-1,  0,1},
+    {-0.5f,-0.5f,-0.5f,  0,0,-1,  1,1},
+    {-0.5f, 0.5f,-0.5f,  0,0,-1,  1,0},
+    { 0.5f,-0.5f,-0.5f,  0,0,-1,  0,1},
+    {-0.5f, 0.5f,-0.5f,  0,0,-1,  1,0},
+    { 0.5f, 0.5f,-0.5f,  0,0,-1,  0,0},
+    // Right face (+X, normal 1,0,0)
+    { 0.5f,-0.5f, 0.5f,  1,0,0,  0,1},
+    { 0.5f,-0.5f,-0.5f,  1,0,0,  1,1},
+    { 0.5f, 0.5f,-0.5f,  1,0,0,  1,0},
+    { 0.5f,-0.5f, 0.5f,  1,0,0,  0,1},
+    { 0.5f, 0.5f,-0.5f,  1,0,0,  1,0},
+    { 0.5f, 0.5f, 0.5f,  1,0,0,  0,0},
+    // Left face (-X, normal -1,0,0)
+    {-0.5f,-0.5f,-0.5f, -1,0,0,  0,1},
+    {-0.5f,-0.5f, 0.5f, -1,0,0,  1,1},
+    {-0.5f, 0.5f, 0.5f, -1,0,0,  1,0},
+    {-0.5f,-0.5f,-0.5f, -1,0,0,  0,1},
+    {-0.5f, 0.5f, 0.5f, -1,0,0,  1,0},
+    {-0.5f, 0.5f,-0.5f, -1,0,0,  0,0},
+    // Top face (+Y, normal 0,1,0)
+    {-0.5f, 0.5f, 0.5f,  0,1,0,  0,1},
+    { 0.5f, 0.5f, 0.5f,  0,1,0,  1,1},
+    { 0.5f, 0.5f,-0.5f,  0,1,0,  1,0},
+    {-0.5f, 0.5f, 0.5f,  0,1,0,  0,1},
+    { 0.5f, 0.5f,-0.5f,  0,1,0,  1,0},
+    {-0.5f, 0.5f,-0.5f,  0,1,0,  0,0},
+    // Bottom face (-Y, normal 0,-1,0)
+    {-0.5f,-0.5f,-0.5f,  0,-1,0,  0,1},
+    { 0.5f,-0.5f,-0.5f,  0,-1,0,  1,1},
+    { 0.5f,-0.5f, 0.5f,  0,-1,0,  1,0},
+    {-0.5f,-0.5f,-0.5f,  0,-1,0,  0,1},
+    { 0.5f,-0.5f, 0.5f,  0,-1,0,  1,0},
+    {-0.5f,-0.5f, 0.5f,  0,-1,0,  0,0},
+};
+// clang-format on
+static constexpr uint32_t kBoxVertexCount = (uint32_t)(sizeof(kBoxVertices) / sizeof(kBoxVertices[0]));
+
+// -------------------------------------------------------------------------
+// Helpers
+// -------------------------------------------------------------------------
+
+static AutoRef<Buffer> createBoxVertexBuffer(ArtifactDatabase & db, AutoRef<GpuContext> gpu) {
+    auto buf = Buffer::create(db, "box_vertex_buffer", Buffer::CreateParameters {.context = gpu, .size = sizeof(kBoxVertices)});
+    if (!buf) {
+        GN_ERROR(sLogger)("Failed to create box vertex buffer");
+        return {};
+    }
+    if (!buf->setContent(kBoxVertices, sizeof(kBoxVertices))) {
+        GN_ERROR(sLogger)("Failed to upload box vertex data");
+        return {};
+    }
+    return buf;
+}
+
+static GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
+    GpuGeometry geom;
+    geom.format.attributes.append(GpuGeometry::VertexAttribute {0, 0,  GpuGeometry::AttributeFormat::F32_3}); // position
+    geom.format.attributes.append(GpuGeometry::VertexAttribute {1, 12, GpuGeometry::AttributeFormat::F32_3}); // normal
+    geom.format.attributes.append(GpuGeometry::VertexAttribute {2, 24, GpuGeometry::AttributeFormat::F32_2}); // texcoord
+    GpuGeometry::GeometryBuffer vb;
+    vb.buffer = std::move(vertexBuffer);
+    vb.offset = 0;
+    vb.size   = sizeof(kBoxVertices);
+    vb.stride = sizeof(Vertex);
+    geom.vertices.append(vb);
+    return geom;
+}
+
+static AutoRef<PbrShading::Material> loadPbrMaterial(ArtifactDatabase & db, AutoRef<GpuContext> gpu) {
+    auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
+    if (fp && fp->readable()) {
+        auto mat = PbrShading::Material::load(
+            db, "pbr_material",
+            PbrShading::Material::LoadParameters {
+                .gpu      = gpu,
+                .source   = fp,
+                .basePath = "media::pbr/lined-metal-sheeting/",
+            });
+        if (mat) return mat;
+        GN_WARN(sLogger)("Failed to load PBR material from file, using empty material");
+    }
+    // Fallback: empty material
+    static const char  empty[1] = {};
+    AutoRef<MemFile>   memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
+    return PbrShading::Material::load(db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpu, .source = memFile});
+}
+
+static WorldToClipTransformChain buildCamera(uint32_t width, uint32_t height) {
+    WorldToClipTransformChain camera;
+    camera.setCamera(
+        Vector3f(1.8f, 1.4f, 2.4f), // eye: slightly off-axis to show 3 faces
+        Vector3f(0.0f, 0.0f, 0.0f), // look at box center
+        Vector3f(0.0f, 1.0f, 0.0f)  // world up
+    );
+    camera.setPerspective(
+        GN_PI / 3.0f,                        // 60 degree vertical FOV
+        (float) width / (float) height,      // aspect ratio
+        0.1f,                                // near plane
+        100.0f                               // far plane
+    );
+    return camera;
+}
+
+static AffineTransform buildModelTransform() {
+    AffineTransform model;
+    model.reset();
+    // Rotate box 30 degrees around Y so we see a corner
+    model.setRotation(GN_PI / 6.0f, Vector3f(0.0f, 1.0f, 0.0f));
+    return model;
+}
+
+static SharedShaderConstants::DirectLightingInformation buildLighting() {
+    SharedShaderConstants::DirectLightingInformation lighting;
+    SharedShaderConstants::DirectLight               light;
+    light.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
+    light.directional.orientation = Quaternionf::sIdentity();
+    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {3000.0f}}; // warm white, 3000 lux
+    lighting.lights.append(light);
+    return lighting;
+}
+
+// -------------------------------------------------------------------------
+// main
+// -------------------------------------------------------------------------
+
 int main(int, const char **) {
     enableCRTMemoryCheck();
 
-    // Create artifact database with auto-registration of built-in artifacts
     auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    if (!db) {
-        GN_ERROR(sLogger)("Failed to create artifact database");
-        return -1;
-    }
+    if (!db) return -1;
 
-    // Create render graph
     auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
-    if (!renderGraph) {
-        GN_ERROR(sLogger)("Failed to create render graph");
-        return -1;
-    }
+    if (!renderGraph) return -1;
 
-    // Create GPU context (no window/size; those live on Backbuffer)
     auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
 
-    // SharedShaderConstants for view (optional; PbrShading uses it for worldToClip when set)
-    auto sharedConstants = SharedShaderConstants::create(*db, "shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
-    if (sharedConstants) {
-        SharedShaderConstants::ViewInformation view;
-        view.worldToClip = Matrix44f::sIdentity(); // identity for minimal; replace with proper view-proj later
-        sharedConstants->setViewInformation(view);
-    }
-
-    // PbrShading effect (Vulkan)
     auto pbrShading = PbrShading::create(*db, "pbr_shading", PbrShading::CreateParameters {.gpu = gpuContext});
     if (!pbrShading) return -1;
 
-    // Load PBR material from file (media::pbr/default.material) or fallback to empty
-    AutoRef<PbrShading::Material> material;
-    {
-        auto fp = fs::openFile("media::pbr/default.material", std::ios::in);
-        if (fp && fp->readable()) {
-            material =
-                PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = fp, .basePath = "media::"});
-        }
-        if (!material) {
-            static const char empty[1] = {};
-            auto              memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
-            if (memFile->readable())
-                material = PbrShading::Material::load(*db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile});
-        }
-    }
+    auto material = loadPbrMaterial(*db, gpuContext);
+    if (!material) return -1;
 
-    // Create a main window of 1280x720
-    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});
+    auto vertexBuffer = createBoxVertexBuffer(*db, gpuContext);
+    if (!vertexBuffer) return -1;
+
+    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR Box", .clientWidth = 1280, .clientHeight = 720});
     if (!window) return -1;
+    window->show();
 
-    // Create backbuffer (window and size are part of Backbuffer descriptor)
     auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
     if (!backbuffer) return -1;
-    const auto & backbufferDesc = backbuffer->descriptor();
+    const auto & bbDesc = backbuffer->descriptor();
 
-    // Create and initialize depth texture (match backbuffer size)
-    auto depthDesc    = Texture::Descriptor {};
-    depthDesc.format  = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
-    depthDesc.width   = backbufferDesc.width;
-    depthDesc.height  = backbufferDesc.height;
-    auto depthTexture = Texture::create(*db, "depth_texture", Texture::CreateParameters {.context = gpuContext, .descriptor = depthDesc});
-    if (!depthTexture) return -1;
+    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    if (!renderTarget) return -1;
+    renderTarget->colors.append(RenderTarget::ColorTarget {.target = GpuImageView {.image = backbuffer}}.setClearColor(0.1f, 0.1f, 0.15f, 1.0f));
 
-    // Create and initialize actions (each creates itself and registers via admit())
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
-
     auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
     if (!clearAction) return -1;
-
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
-    // Create render target artifact (backbuffer + depth; clear values on artifact)
-    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
-    if (!renderTarget) return -1;
-    renderTarget->colors.append(RenderTarget::ColorTarget {.target = GpuImageView {.image = backbuffer}}.setClearColor(0.2f, 0.3f, 0.4f, 1.0f));
-    renderTarget->depthStencil.target        = depthTexture;
-    renderTarget->depthStencil.clearDepth    = 1.0f;
-    renderTarget->depthStencil.clearStencil  = 0;
+    // Build scene transforms once (static scene, no animation)
+    auto camera      = buildCamera(bbDesc.width, bbDesc.height);
+    auto modelXform  = buildModelTransform();
+    auto boxGeometry = buildBoxGeometry(vertexBuffer);
+    auto lighting    = buildLighting();
 
-    GN_INFO(sLogger)("Starting render loop...");
-
-    // Render loop: prepare, clear, PBR draw, present until prepare fails
-    while (window->runUntilNoNewEvents()) {
-        // Schedule render workflow
-        auto renderWorkflow = renderGraph->createWorkflow("Render");
-        if (renderWorkflow) {
-            renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
-            // Task: Clear render target (color + depth; clear values on RenderTarget artifact)
-            renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
-
-            // Task: PBR draw (from PbrShading::build)
-            // When providing geometry, the loader/sample must set geometry.format (VertexFormat) and
-            // geometry.vertices (buffer, offset, size, stride). PBR shader expects: location 0 vec3 position,
-            // location 1 vec3 normal, location 2 vec2 texCoord; stride typically 32 bytes.
-            // Example: geom.format.attributes = {{0, GpuGeometry::AttributeFormat::F32_3, 0}, {1, GpuGeometry::AttributeFormat::F32_3, 12}, {2,
-            // GpuGeometry::AttributeFormat::F32_2, 24}};
-            //          geom.vertices.append({buffer, offset, size, stride});
-            PbrShading::BuildParameters pbrParams;
-            pbrParams.renderGraph           = renderGraph.get();
-            pbrParams.sharedShaderConstants = sharedConstants;
-            pbrParams.material              = material;
-            pbrParams.geometry              = {}; // empty: no vertex format -> nothing drawn
-            pbrParams.modelToWorld.reset();
-            pbrParams.worldToClip = Matrix44f::sIdentity();
-            auto pbrSubGraph      = pbrShading->build(pbrParams);
-            if (pbrSubGraph.builtResult == Action::ExecutionResult::PASSED && !pbrSubGraph.workflows.empty() && !pbrSubGraph.workflows[0]->tasks.empty()) {
-                auto & t = pbrSubGraph.workflows[0]->tasks[0];
-                renderWorkflow->appendTask(t.name, t.action, t.arguments);
-            }
-
-            renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
-
-            // Submit render graph for execution
-            auto submission =
-                renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&renderWorkflow, 1), .name = "Frame"});
-            if (!submission) {
-                GN_ERROR(sLogger)("Failed to submit render graph");
-                break;
-            }
-
-            // Wait for completion and get result
-            auto result = submission->result();
-
-            // If prepare failed (window closed), exit loop
-            if (result.executionResult == Action::ExecutionResult::FAILED) {
-                GN_INFO(sLogger)("Render graph submission failed (likely window closed), exiting");
-                break;
-            }
-
-            if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph submission completed with warnings"); }
-        }
+    // SharedShaderConstants: set view and lighting
+    auto sharedConstants = SharedShaderConstants::create(*db, "shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
+    if (sharedConstants) {
+        SharedShaderConstants::ViewInformation view;
+        view.worldToClip    = camera.matrix();
+        view.cameraPosition = Location {WorldUnit((int64_t)(1.8f * 1e6f)), WorldUnit((int64_t)(1.4f * 1e6f)), WorldUnit((int64_t)(2.4f * 1e6f))};
+        view.renderTarget   = renderTarget;
+        sharedConstants->setViewInformation(view);
+        sharedConstants->setDirectLightingInformation(lighting);
     }
 
-    GN_INFO(sLogger)("Render graph draw mesh completed");
+    GN_INFO(sLogger)("Starting PBR box render loop...");
+
+    while (window->runUntilNoNewEvents()) {
+        auto renderWorkflow = renderGraph->createWorkflow("Render");
+        if (!renderWorkflow) break;
+
+        renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
+        renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
+
+        PbrShading::BuildParameters pbrParams;
+        pbrParams.renderGraph           = renderGraph.get();
+        pbrParams.sharedShaderConstants = sharedConstants;
+        pbrParams.material              = material;
+        pbrParams.geometry              = boxGeometry;
+        pbrParams.modelToWorld          = modelXform;
+        pbrParams.worldToClip           = camera.matrix();
+        auto pbrSubGraph                = pbrShading->build(pbrParams);
+        if (pbrSubGraph.builtResult == Action::ExecutionResult::PASSED && !pbrSubGraph.workflows.empty()) {
+            for (auto & task : pbrSubGraph.workflows[0]->tasks) renderWorkflow->appendTask(task.name, task.action, task.arguments);
+        }
+
+        renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
+
+        auto submission = renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&renderWorkflow, 1), .name = "Frame"});
+        if (!submission) {
+            GN_ERROR(sLogger)("Failed to submit render graph");
+            break;
+        }
+        auto result = submission->result();
+        if (result.executionResult == Action::ExecutionResult::FAILED) break;
+        if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph completed with warnings"); }
+    }
+
+    GN_INFO(sLogger)("PBR box demo finished");
     return 0;
 }

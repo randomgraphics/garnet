@@ -3,6 +3,7 @@
 #include "vk-submission-context.h"
 #include "vk-backbuffer.h"
 #include "vk-texture.h"
+#include "vk-buffer.h"
 
 namespace GN::rdg {
 
@@ -383,6 +384,16 @@ public:
                 else {
                     GN_ERROR(sLogger)("{} - inline constants size is too large, size={}", taskInfo, size);
                     return FAILED;
+                }
+            }
+            if (hasGeometry) {
+                // Bind each vertex buffer; skip null buffers.
+                for (uint32_t i = 0; i < (uint32_t) geom.vertices.size(); ++i) {
+                    if (!geom.vertices[i].buffer) continue;
+                    auto *         vkBuf = static_cast<BufferVulkan *>(geom.vertices[i].buffer.get());
+                    vk::Buffer     handle = vkBuf->vkHandle();
+                    vk::DeviceSize offset = geom.vertices[i].offset;
+                    cb.commandBuffer.handle().bindVertexBuffers(i, 1, &handle, &offset);
                 }
             }
             if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, 1, 0, 0);

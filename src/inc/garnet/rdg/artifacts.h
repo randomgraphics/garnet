@@ -158,36 +158,16 @@ struct Buffer : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "Buffer";
 
-    // /// Buffer usage flags.
-    // enum Usage {
-    //     VERTEX,       ///< Vertex buffer
-    //     INDEX,        ///< Index buffer
-    //     CONSTANT,     ///< Constant/uniform buffer
-    //     STORAGE,      ///< Storage (RW) buffer
-    //     INDIRECT,     ///< Indirect command buffer
-    //     TRANSFER_SRC, ///< Can be used as transfer source
-    //     TRANSFER_DST  ///< Can be used as transfer destination
-    // };
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        uint64_t            size = 0; ///< Size of the buffer in bytes.
+    };
 
-    // /// Buffer descriptor for creation/reset.
-    // struct Descriptor {
-    //     size_t size        = 0;      ///< Number of bytes for the buffer.
-    //     Usage  usage       = VERTEX; ///< Usage flag.
-    //     bool   cpuWritable = false;  ///< CPU can write (mapped buffer).
-    //     bool   cpuReadable = false;  ///< CPU can read (mapped buffer).
-    // };
+    /// Synchronously upload CPU data into this buffer.
+    /// \return true on success.
+    virtual bool setContent(const void * data, uint64_t size) = 0;
 
-    // struct CreateParameters {
-    //     AutoRef<GpuContext> context;
-    //     Descriptor          descriptor;
-    // };
-
-    // /// Return the current buffer descriptor.
-    // virtual const Descriptor & descriptor() const = 0;
-
-    // /// Create a new instance of empty Buffer. The buffer is not bound to any GPU resource yet.
-    // /// Must call reset() at least once for the buffer to be valid to use.
-    // static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<Buffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
