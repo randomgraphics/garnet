@@ -24,10 +24,11 @@
 /// This macro will perform assertion in all builds, in case you want assert in
 /// release build. Normally, you don't need this.
 ///
-#define GN_REQUIRE(exp, ...)            \
-    if (!(exp)) {                       \
-        GN_ASSERT_FAILURE(__VA_ARGS__); \
-    } else                              \
+#define GN_REQUIRE(exp, ...)                \
+    if (!(exp)) GN_UNLIKELY {               \
+            GN_ASSERT_FAILURE(__VA_ARGS__); \
+        }                                   \
+    else                                    \
         void(0)
 
 ///

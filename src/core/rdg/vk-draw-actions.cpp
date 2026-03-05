@@ -355,7 +355,7 @@ public:
         auto   cb = sc.commandBufferManager.execute(taskInfo);
         GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
 
-        const GpuGeometry & geom        = a->geometry.value;
+        const GpuGeometry & geom        = a->geometry;
         const bool          hasGeometry = !geom.format.empty() && !geom.vertices.empty() && geom.vertices[0].stride > 0;
 
         vk::Pipeline activePipeline {};

@@ -67,8 +67,8 @@ public:
                 return sg;
             }
         // Build arguments from params; the action is reused.
-        auto drawArgs            = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        drawArgs->geometry.value = params.geometry;
+        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawArgs->geometry = params.geometry;
         // Push constants: model (64 bytes) + viewProj (64 bytes), column-major for GLSL.
         const Matrix44f & model    = params.modelToWorld.matrix();
         const Matrix44f & viewProj = params.sharedShaderConstants ? params.sharedShaderConstants->getViewInformation().worldToClip : params.worldToClip;

@@ -62,9 +62,6 @@ protected:
     Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name);
 };
 
-template<class T>
-concept DerivedFromArtifact = std::derived_from<T, Artifact>;
-
 /// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
 struct ArtifactDatabase {
     struct CreateParameters {
@@ -138,6 +135,9 @@ private:
     TypedArtifact(ArtifactDatabase & db, const StrA & name, T && v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(std::move(v)) {}
 };
 
+template<class T>
+concept DerivedFromArtifact = std::derived_from<T, Artifact>;
+
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
 public:
@@ -209,18 +209,61 @@ public:
 
         AutoRef<T> value;
 
+        SingleArtifact(const AutoRef<T> & value_): value(value_) {}
+
+        SingleArtifact(AutoRef<T> && value_): value(std::move(value_)) {}
+
+        SingleArtifact & operator=(const AutoRef<T> & value_) {
+            value = value_;
+            return *this;
+        }
+
+        SingleArtifact & operator=(AutoRef<T> && value_) {
+            value = std::move(value_);
+            return *this;
+        }
+
+        bool empty() const { return value.empty(); }
+
+        void clear() { value.clear(); }
+
+        void set(const AutoRef<T> & value_) { value = value_; }
+
+        void set(AutoRef<T> && value_) { value = std::move(value_); }
+
+        auto get() const { return value.get(); }
+
+        auto addr() const { return value.addr(); }
+
+        void attach(T * value_) { value.attach(value_); }
+
+        auto detach() { return value.detach(); }
+
+        template<typename T2>
+        auto castTo() const {
+            return value.template castTo<T2>();
+        }
+
+        operator const AutoRef<T> &() const { return value; }
+
+        operator AutoRef<T> &() { return value; }
+
+        T * operator->() const { return value.get(); }
+
+        T & operator*() const { return *value; }
+
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
-    using ReadOnlyArtifact = SingleArtifact<T, UFlags + Usage::Reading>;
+    template<typename T, UsageBits UFlags = Usage::None>
+    using ReadOnlyArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Reading>;
 
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
-    using WriteOnlyArtifact = SingleArtifact<T, UFlags + Usage::Writing>;
+    template<typename T, UsageBits UFlags = Usage::None>
+    using WriteOnlyArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Writing>;
 
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
-    using ReadWriteArtifact = SingleArtifact<T, UFlags + Usage::Reading + Usage::Writing>;
+    template<typename T, UsageBits UFlags = Usage::None>
+    using ReadWriteArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Reading + Usage::Writing>;
 
     template<DerivedFromArtifact T, size_t Count, UsageBits UFlags = Usage::None>
     struct ArtifactArray : public ArtifactArgument {
@@ -229,6 +272,28 @@ public:
         SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), Count}; }
 
         AutoRef<T> values[Count];
+
+        auto begin() const { return &values[0]; }
+
+        auto end() const { return &values[Count - 1]; }
+
+        const auto & front() const { return values[0]; }
+
+        const auto & back() const { return values[Count - 1]; }
+
+        auto & front() { return values[0]; }
+
+        auto & back() { return values[Count - 1]; }
+
+        auto operator[](size_t index) const {
+            GN_REQUIRE(index < Count);
+            return values[index];
+        }
+
+        auto operator[](size_t index) {
+            GN_REQUIRE(index < Count);
+            return values[index];
+        }
     };
 
     template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
@@ -247,6 +312,36 @@ public:
         SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), values.size()}; }
 
         DynaArray<AutoRef<T>> values;
+
+        bool empty() const { return values.empty(); }
+
+        void clear() { values.clear(); }
+
+        auto size() const { return values.size(); }
+
+        auto data() const { return values.data(); }
+
+        auto data() { return values.data(); }
+
+        auto begin() const { return values.begin(); }
+
+        auto begin() { return values.begin(); }
+
+        auto end() const { return values.end(); }
+
+        auto end() { return values.end(); }
+
+        const auto & front() const { return values.front(); }
+
+        auto & front() { return values.front(); }
+
+        const auto & back() const { return values.back(); }
+
+        auto & back() { return values.back(); }
+
+        auto operator[](size_t index) const { return values[index]; }
+
+        auto operator[](size_t index) { return values[index]; }
     };
 
     template<typename T, UsageBits UFlags = Usage::None>

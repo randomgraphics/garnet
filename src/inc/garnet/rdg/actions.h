@@ -203,7 +203,15 @@ struct RenderTarget : public Artifact {
         GpuImageView    target {};
         BlendState      blendState = {};
         uint8_t         writeMask  = 0xFF;                       // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
-        ClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to to solid black.
+        ClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to solid black.
+
+        ColorTarget & setClearColor(float r, float g, float b, float a = 1.0f) {
+            clearColor.f4[0] = r;
+            clearColor.f4[1] = g;
+            clearColor.f4[2] = b;
+            clearColor.f4[3] = a;
+            return *this;
+        }
 
         bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
@@ -269,15 +277,13 @@ struct ClearRenderTarget : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
 
-    struct RenderTargetArgument : public Arguments::ArtifactArgument {
-        RenderTargetArgument(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::ReadingWriting) {}
+    struct RenderTargetArgument : public Arguments::SingleArtifact<RenderTarget, Arguments::Usage::ReadingWriting> {
+        RenderTargetArgument(Arguments * owner, const char * name): Arguments::SingleArtifact<RenderTarget, Arguments::Usage::ReadingWriting>(owner, name) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             if (value) return value->artifacts();
             return {};
         }
-
-        AutoRef<RenderTarget> value;
     };
 
     struct A : public Arguments {
@@ -285,6 +291,12 @@ struct ClearRenderTarget : public Action {
         inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
         RenderTargetArgument renderTarget = {this, "renderTarget"};
+
+        static AutoRef<A> make(AutoRef<RenderTarget> rt) {
+            auto a                   = AutoRef<A>(new A());
+            a->renderTarget.value    = std::move(rt);
+            return a;
+        }
     };
 
     struct CreateParameters {
@@ -311,6 +323,12 @@ struct PrepareBackbuffer : public Action {
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         ReadWriteArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
+
+        static AutoRef<A> make(AutoRef<Backbuffer> bb) {
+            auto a       = AutoRef<A>(new A());
+            a->backbuffer = std::move(bb);
+            return a;
+        }
     };
 
     struct CreateParameters {
@@ -337,6 +355,12 @@ struct PresentBackbuffer : public Action {
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         ReadOnlyArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
+
+        static AutoRef<A> make(AutoRef<Backbuffer> bb) {
+            auto a        = AutoRef<A>(new A());
+            a->backbuffer = std::move(bb);
+            return a;
+        }
     };
 
     struct CreateParameters {
@@ -482,9 +506,33 @@ struct GpuShaderAction : public Action {
     //     bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
     // };
 
+    template<typename T>
+    struct MapArgument : public Arguments::ArtifactArgument {
+        MapArgument(Arguments * owner, const char * name, Arguments::UsageBits usage)
+            : Arguments::ArtifactArgument(owner, name, usage + Arguments::Usage::Optional) {}
+
+        std::map<StrA, T> value;
+
+        bool empty() const { return value.empty(); }
+
+        void clear() { value.clear(); }
+
+        auto size() const { return value.size(); }
+
+        auto begin() const { return value.begin(); }
+
+        auto begin() { return value.begin(); }
+
+        auto end() const { return value.end(); }
+
+        auto end() { return value.end(); }
+
+        auto find(const StrA & name) const { return value.find(name); }
+    };
+
     template<Arguments::UsageBits UFlags>
-    struct BufferViewMap : public Arguments::ArtifactArgument {
-        BufferViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
+    struct BufferViewMap : public MapArgument<BufferView> {
+        BufferViewMap(Arguments * owner, const char * name): MapArgument<BufferView>(owner, name, UFlags) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.reserve(value.size());
@@ -496,15 +544,15 @@ struct GpuShaderAction : public Action {
             return mArtifacts;
         }
 
-        std::map<StrA, BufferView> value;
+        auto & operator[](const StrA & name) { return value[name]; }
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
     template<Arguments::UsageBits UFlags>
-    struct ImageViewMap : public Arguments::ArtifactArgument {
-        ImageViewMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, UFlags + Arguments::Usage::Optional) {}
+    struct ImageViewMap : public MapArgument<GpuImageView> {
+        ImageViewMap(Arguments * owner, const char * name): MapArgument<GpuImageView>(owner, name, UFlags) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
@@ -516,14 +564,14 @@ struct GpuShaderAction : public Action {
             return mArtifacts;
         }
 
-        std::map<StrA, GpuImageView> value;
+        auto & operator[](const StrA & name) { return value[name]; }
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    struct TextureMap : public Arguments::ArtifactArgument {
-        TextureMap(Arguments * owner, const char * name): Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
+    struct TextureViewMap : public MapArgument<TextureView> {
+        TextureViewMap(Arguments * owner, const char * name): MapArgument<TextureView>(owner, name, Arguments::Usage::Reading) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
             mArtifacts.clear();
@@ -536,7 +584,7 @@ struct GpuShaderAction : public Action {
             return mArtifacts;
         }
 
-        std::map<StrA, TextureView> value;
+        auto & operator[](const StrA & name) { return value[name]; }
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
@@ -572,24 +620,32 @@ struct GpuDraw : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GpuDraw";
 
-    struct GeometryArgument : public Arguments::ArtifactArgument {
+    struct GeometryArgument : public Arguments::ArtifactArgument, public GpuGeometry {
         GeometryArgument(Arguments * owner, const char * name)
             : Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
 
         SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.reserve(value.instances.size() + value.vertices.size() + 1);
+            mArtifacts.reserve(instances.size() + vertices.size() + 1);
             mArtifacts.clear();
-            for (const auto & vb : value.instances) {
+            for (const auto & vb : instances) {
                 if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
             }
-            for (const auto & vb : value.vertices) {
+            for (const auto & vb : vertices) {
                 if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
             }
-            if (value.indices.buffer) { mArtifacts.append(value.indices.buffer.get()); }
+            if (indices.buffer) { mArtifacts.append(indices.buffer.get()); }
             return mArtifacts;
         }
 
-        GpuGeometry value;
+        auto operator=(const GpuGeometry & geometry) -> GpuGeometry & {
+            *(GpuGeometry *) this = geometry;
+            return *this;
+        }
+
+        auto operator=(GpuGeometry && geometry) -> GpuGeometry & {
+            *(GpuGeometry *) this = std::move(geometry);
+            return *this;
+        }
 
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
@@ -602,7 +658,7 @@ struct GpuDraw : public GpuShaderAction {
 
         InlineConstants  constants;                                ///< immediate constants. Backend copies to GPU when non-empty.
         UniformMap       uniforms  = {this, "uniforms"};           ///< uniforms
-        TextureMap       textures  = {this, "textures"};           ///< textures
+        TextureViewMap   textures  = {this, "textures"};           ///< textures
         RwImagesMap      images    = {this, "read-write images"};  ///< read-write images
         RoImagesMap      roImages  = {this, "read-only images"};   ///< read-only images
         RwBufferMap      buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
@@ -644,7 +700,7 @@ struct GpuCompute : public GpuShaderAction {
 
         InlineConstants constants;                                ///< inline constants. Backend copies to GPU when non-empty.
         UniformMap      uniforms  = {this, "uniforms"};           ///< uniform buffers
-        TextureMap      textures  = {this, "textures"};           ///< textures
+        TextureViewMap  textures  = {this, "textures"};           ///< textures
         RwBufferMap     buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
         RoBufferMap     roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
         RwImagesMap     images    = {this, "read-write images"};  ///< read-write images

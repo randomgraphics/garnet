@@ -87,11 +87,7 @@ int main(int, const char **) {
     // Create render target artifact (backbuffer + depth; clear values on artifact)
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
-    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
-    renderTarget->colors[0].clearColor.f4[0] = 0.2f;
-    renderTarget->colors[0].clearColor.f4[1] = 0.3f;
-    renderTarget->colors[0].clearColor.f4[2] = 0.4f;
-    renderTarget->colors[0].clearColor.f4[3] = 1.0f;
+    renderTarget->colors.append(RenderTarget::ColorTarget {.target = GpuImageView {.image = backbuffer}}.setClearColor(0.2f, 0.3f, 0.4f, 1.0f));
     renderTarget->depthStencil.target        = depthTexture;
     renderTarget->depthStencil.clearDepth    = 1.0f;
     renderTarget->depthStencil.clearStencil  = 0;
@@ -103,21 +99,9 @@ int main(int, const char **) {
         // Schedule render workflow
         auto renderWorkflow = renderGraph->createWorkflow("Render");
         if (renderWorkflow) {
-            // Task: Prepare backbuffer
-            auto prepareTask              = Workflow::Task("Prepare");
-            prepareTask.action            = prepareAction;
-            auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-            prepareArgs->backbuffer.value = backbuffer;
-            prepareTask.arguments         = prepareArgs;
-            renderWorkflow->tasks.append(prepareTask);
-
+            renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
             // Task: Clear render target (color + depth; clear values on RenderTarget artifact)
-            auto clearTask                = Workflow::Task("Clear");
-            clearTask.action              = clearAction;
-            auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-            clearArgs->renderTarget.value = renderTarget;
-            clearTask.arguments           = clearArgs;
-            renderWorkflow->tasks.append(clearTask);
+            renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
 
             // Task: PBR draw (from PbrShading::build)
             // When providing geometry, the loader/sample must set geometry.format (VertexFormat) and
@@ -139,13 +123,7 @@ int main(int, const char **) {
                 renderWorkflow->appendTask(t.name, t.action, t.arguments);
             }
 
-            // Task: Present backbuffer
-            auto presentTask              = Workflow::Task("Present");
-            presentTask.action            = presentAction;
-            auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-            presentArgs->backbuffer.value = backbuffer;
-            presentTask.arguments         = presentArgs;
-            renderWorkflow->tasks.append(presentTask);
+            renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
 
             // Submit render graph for execution
             auto submission =
