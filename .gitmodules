@@ -30,3 +30,7 @@
 	path = src/3rdparty/backward-cpp
 	url = https://github.com/bombela/backward-cpp.git
 	shallow = true
+[submodule "src/3rdparty/glfw"]
+	path = src/3rdparty/glfw
+	url = https://github.com/glfw/glfw.git
+	shallow = true

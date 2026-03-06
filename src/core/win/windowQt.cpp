@@ -1,4 +1,5 @@
-﻿#include "pch.h"
+// DEPRECATED: Qt window backend. Prefer GLFW (window-glfw) when building with HAS_GLFW.
+#include "pch.h"
 #ifdef HAS_QT
     #include "windowQt.h"
     #include <QtCore/QSize>

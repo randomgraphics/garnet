@@ -43,6 +43,8 @@ public:
         return mDevice.value();
     }
 
+    intptr_t getVulkanInstanceHandle() const override { return (intptr_t) (void *) instance().handle(); }
+
     const rapid_vulkan::GlobalInfo & globalInfo() const {
         GN_ASSERT(mDevice.has_value() && mDevice.value().gi());
         return *mDevice.value().gi();

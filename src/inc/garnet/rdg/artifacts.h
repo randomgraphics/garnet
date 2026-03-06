@@ -1,6 +1,5 @@
 #pragma once
 
-#include <garnet/GNwin.h>
 #include <garnet/gfx/image.h>
 #include <unordered_map>
 #include <variant>
@@ -24,6 +23,10 @@ struct GpuContext : public Artifact {
     /// Create a new instance of GpuContext.
     static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
+    /// Vulkan instance handle (VkInstance cast to intptr_t) for use with Window::getVulkanSurfaceHandle.
+    /// Returns 0 if this context is not Vulkan.
+    virtual intptr_t getVulkanInstanceHandle() const { return 0; }
+
 protected:
     using Artifact::Artifact;
 };
@@ -44,14 +47,34 @@ struct Backbuffer : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "Backbuffer";
 
-    /// Window and size (and format) for backbuffer. If win is null, headless; width/height must be positive.
-    /// If win is non-null and width/height are 0, use window client size.
+    /// Surface/window handle and size for backbuffer. Decoupled from window system; caller passes native handles.
+    /// If handle is 0, create a headless backbuffer. width/height must be positive.
     /// If format is UNKNOWN(), automatically select the best back buffer format.
     struct Descriptor {
-        GN::win::Window *     win    = {};
+        /// Native window/surface/layer handle. API- and platform-dependent:
+        /// - D3D12: HWND.
+        /// - Vulkan: VkSurfaceKHR
+        /// - Metal: CAMetalLayer*.
+        intptr_t              window = 0;
         gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
-        uint32_t              width  = 0;
-        uint32_t              height = 0;
+        uint32_t              width  = 1280;
+        uint32_t              height = 720;
+
+        Descriptor & setWindow(intptr_t handle_) {
+            window = handle_;
+            return *this;
+        }
+
+        Descriptor & setFormat(gfx::img::PixelFormat format_) {
+            format = format_;
+            return *this;
+        }
+
+        Descriptor & setDimensions(uint32_t width_, uint32_t height_) {
+            width  = width_;
+            height = height_;
+            return *this;
+        }
     };
 
     struct CreateParameters {

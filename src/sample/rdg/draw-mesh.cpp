@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <garnet/GNbase.h>
+#include <garnet/GNwin.h>
 #include <garnet/base/filesys.h>
 
 using namespace GN;
@@ -66,7 +67,6 @@ static const Vertex kBoxVertices[] = {
     {-0.5f,-0.5f, 0.5f,  0,-1,0,  0,0},
 };
 // clang-format on
-static constexpr uint32_t kBoxVertexCount = (uint32_t) (sizeof(kBoxVertices) / sizeof(kBoxVertices[0]));
 
 // -------------------------------------------------------------------------
 // Helpers
@@ -176,9 +176,13 @@ int main(int, const char **) {
 
     auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR Box", .clientWidth = 1280, .clientHeight = 720});
     if (!window) return -1;
-    window->show();
+    // Window owns the surface; do not destroy it. Destroy backbuffer before window.
+    intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+    if (!surface) return -1;
 
-    auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
+    auto backbuffer = Backbuffer::create(*db, "backbuffer",
+        Backbuffer::CreateParameters {.context = gpuContext,
+            .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(1280, 720)});
     if (!backbuffer) return -1;
     const auto & bbDesc = backbuffer->descriptor();
 

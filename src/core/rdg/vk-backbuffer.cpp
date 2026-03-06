@@ -6,38 +6,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
 namespace GN::rdg {
 
-namespace {
-
-vk::UniqueSurfaceKHR createSurfaceFromWindow(vk::Instance instance, GN::win::Window * win) {
-    if (!win) return {};
-#if GN_MSWIN
-    vk::Win32SurfaceCreateInfoKHR info = {};
-    info.hinstance                     = reinterpret_cast<HINSTANCE>(win->getModuleHandle());
-    info.hwnd                          = reinterpret_cast<HWND>(win->getWindowHandle());
-    return instance.createWin32SurfaceKHRUnique(info);
-#elif GN_LINUX
-    #if HAS_X11
-    // Garnet uses X11 window (WindowX11) on Linux; create Xlib surface.
-    vk::XlibSurfaceCreateInfoKHR info = {};
-    info.dpy                          = reinterpret_cast<Display *>(win->getDisplayHandle());
-    info.window                       = static_cast<Window>(win->getWindowHandle());
-    return instance.createXlibSurfaceKHRUnique(info);
-    #else
-    vk::WaylandSurfaceCreateInfoKHR info = {};
-    info.display                         = reinterpret_cast<wl_display *>(win->getDisplayHandle());
-    info.surface                         = reinterpret_cast<wl_surface *>(win->getWindowHandle());
-    return instance.createWaylandSurfaceKHRUnique(info);
-    #endif
-#else
-    (void) instance;
-    (void) win;
-    GN_ERROR(sLogger)("createSurfaceFromWindow: not implemented for this platform");
-    return {};
-#endif
-}
-
-} // namespace
-
 // =============================================================================
 // BackbufferVulkan - constructor and init
 // =============================================================================
@@ -46,7 +14,9 @@ BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Ba
     if (0 == sequence) { GN_ERROR(sLogger)("BackbufferVulkan::BackbufferVulkan: duplicate type+name, name='{}'", name); }
 }
 
-BackbufferVulkan::~BackbufferVulkan() { GN_INFO(sLogger)("Destorying Vulkan backbuffer, name='{}'", name); }
+BackbufferVulkan::~BackbufferVulkan() {
+    GN_INFO(sLogger)("Destorying Vulkan backbuffer, name='{}'", name);
+}
 
 bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     if (0 == sequence) return false;
@@ -55,33 +25,15 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     mGpuContext = params.context.castTo<GpuContextVulkan>();
     mDescriptor = params.descriptor;
 
-    const auto & inst = mGpuContext->instance();
-    const auto & dev  = mGpuContext->device();
-
-    size_t w = mDescriptor.width;
-    size_t h = mDescriptor.height;
-    if (mDescriptor.win && (w == 0 || h == 0)) {
-        auto sz = mDescriptor.win->getClientSize();
-        if (w == 0) w = sz.x;
-        if (h == 0) h = sz.y;
-    }
-    mDescriptor.width  = static_cast<uint32_t>(w);
-    mDescriptor.height = static_cast<uint32_t>(h);
-    if (w == 0 || h == 0) {
-        GN_ERROR(sLogger)("BackbufferVulkan::init: invalid dimensions {}x{}, name='{}'", w, h, name);
+    if (mDescriptor.width == 0 || mDescriptor.height == 0) {
+        GN_ERROR(sLogger)("BackbufferVulkan::init: invalid dimensions {}x{} (caller must set positive width/height)", mDescriptor.width, mDescriptor.height);
         return false;
     }
 
-    vk::SurfaceKHR surfaceHandle = {};
-    if (mDescriptor.win) {
-        mSurface = createSurfaceFromWindow(inst.handle(), mDescriptor.win);
-        if (mSurface) surfaceHandle = mSurface.get();
-    }
-
     rapid_vulkan::Swapchain::ConstructParameters scp;
-    scp.setDevice(dev);
-    scp.setDimensions(w, h);
-    if (surfaceHandle) scp.setSurface(surfaceHandle);
+    scp.setDevice(mGpuContext->device());
+    scp.setDimensions(mDescriptor.width, mDescriptor.height);
+    scp.setSurface(vk::SurfaceKHR((VkSurfaceKHR) (void *) mDescriptor.window));
     scp.depthStencilFormat.mode = rapid_vulkan::Swapchain::DepthStencilFormat::DISABLED; // do not automatically create depth buffer
 
     try {

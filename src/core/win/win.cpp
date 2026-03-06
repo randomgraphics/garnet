@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "window-glfw.h"
 #include "windowMsw.h"
 #include "windowX11.h"
 #include "windowQt.h"
@@ -25,6 +26,7 @@ public:
     intptr_t          getMonitorHandle() const { return (intptr_t) 1; }
     intptr_t          getWindowHandle() const { return (intptr_t) 1; }
     intptr_t          getModuleHandle() const { return (intptr_t) 1; }
+    intptr_t          getVulkanSurfaceHandle(intptr_t) const { return 0; }
     Vector2<uint32_t> getClientSize() const { return Vector2<uint32_t>(640, 480); }
     void              show() {}
     void              hide() {}
@@ -94,7 +96,13 @@ GN_API const WindowCreateParameters WCP_FULLSCREEN_RENDER_WINDOW = {
 GN_API Window * createWindow(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
-#ifdef HAS_QT
+#ifdef HAS_GLFW
+
+    AutoObjPtr<WindowGlfw> p(new WindowGlfw);
+    if (!p->init(wcp)) return 0;
+    return p.detach();
+
+#elif HAS_QT
 
     AutoObjPtr<WindowQt> p(new WindowQt);
     if (!p->init(wcp)) return 0;
@@ -134,7 +142,13 @@ GN_API Window * createWindow(const WindowCreateParameters & wcp) {
 GN_API Window * attachToExistingWindow(const WindowAttachingParameters & wap) {
     GN_GUARD;
 
-#ifdef HAS_QT
+#ifdef HAS_GLFW
+
+    (void) wap;
+    GN_WARN(sLogger)("attachToExistingWindow is not supported with GLFW backend; use platform-specific backend (e.g. MSW/X11) or createWindow.");
+    return nullptr;
+
+#elif HAS_QT
 
     AutoObjPtr<WindowQt> p(new WindowQt);
     if (!p->init(wap)) return 0;

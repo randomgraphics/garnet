@@ -25,6 +25,11 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
         return;
     }
     rapid_vulkan::Device::ConstructParameters dp;
+#if GN_DARWIN
+    // Vulkan 1.3 spec says dynamic rendering part of the core feature that can be used w/o enable it explicitly.
+    // However, MoltenVK requires it to be enabled explicitly.
+    dp.addDeviceExtension("VK_KHR_dynamic_rendering");
+#endif
     dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);

@@ -38,7 +38,6 @@ public:
 private:
     AutoRef<GpuContextVulkan>                  mGpuContext;
     Backbuffer::Descriptor                     mDescriptor;
-    vk::UniqueSurfaceKHR                       mSurface;
     rapid_vulkan::Ref<rapid_vulkan::Swapchain> mSwapchain;
     TextureVulkan::ImageStateTransition        mBackbufferState;
     const rapid_vulkan::Swapchain::Frame *     mActiveFrame = nullptr;

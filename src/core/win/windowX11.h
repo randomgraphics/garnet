@@ -56,6 +56,7 @@ public:
     intptr_t          getMonitorHandle() const { return (intptr_t) mScreenNumber; }
     intptr_t          getWindowHandle() const { return (intptr_t) mWindow; }
     intptr_t          getModuleHandle() const { return (intptr_t) 1; }
+    intptr_t          getVulkanSurfaceHandle(intptr_t) const { GN_UNIMPL_WARNING(); return 0; }
     Vector2<uint32_t> getClientSize() const;
     void              show() { GN_UNIMPL_WARNING(); }
     void              hide() { GN_UNIMPL_WARNING(); }

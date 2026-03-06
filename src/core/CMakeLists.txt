@@ -122,7 +122,11 @@ target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_20)
 target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
 
-# Qt6 build is disabled for now.
+# GLFW window backend (preferred; cross-platform)
+add_core_libs(glfw)
+target_compile_definitions(GNcore PRIVATE HAS_GLFW=1)
+
+# Qt6 window backend (deprecated; kept for reference, do not delete yet)
 # if(Qt6Widgets_FOUND)
 #     add_core_libs(Qt::Widgets)
 #     target_compile_definitions(GNcore PRIVATE HAS_QT=1)

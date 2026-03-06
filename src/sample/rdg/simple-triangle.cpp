@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <garnet/GNwin.h>
 
 #include "solid-triangle-vert.spv.h"
 #include "solid-triangle-frag.spv.h"
@@ -38,13 +39,18 @@ int main(int, const char **) {
     // auto mesh = Mesh::load(*db, Mesh::LoadParameters {.context = gpuContext, .filename = "media::cube/cube.fbx"});
     // if (!mesh) return -1;
 
-    // Create a main window of 1280x720
-    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});
+    // Create a main window and surface of 1280x720
+    uint32_t windowWidth = 1280;
+    uint32_t windowHeight = 720;
+    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight});
     if (!window) return -1;
-    window->show();
+    // Window owns the surface; do not destroy it. Destroy backbuffer before window.
+    intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+    if (!surface) return -1;
 
-    // Create backbuffer (window and size are part of Backbuffer descriptor)
-    auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
+    auto backbuffer = Backbuffer::create(*db, "backbuffer",
+        Backbuffer::CreateParameters {.context = gpuContext,
+            .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(windowWidth, windowHeight)});
     if (!backbuffer) return -1;
 
     // Create a render target that references the backbuffer

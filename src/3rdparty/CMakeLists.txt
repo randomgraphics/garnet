@@ -27,5 +27,12 @@ set(BUILD_SHARED_LIBS OFF)
 set(FT_DISABLE_GPL ON)
 add_subdirectory(freetype)
 
+# Build GLFW (window/input, cross-platform)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(glfw)
+
 # Build other 3rd party libs
 add_subdirectory(src)

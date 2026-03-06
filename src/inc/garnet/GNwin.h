@@ -24,11 +24,18 @@ public:
     /// \name window properties
     //@{
 
-    virtual intptr_t          getDisplayHandle() const = 0;
-    virtual intptr_t          getMonitorHandle() const = 0;
-    virtual intptr_t          getWindowHandle() const  = 0;
-    virtual intptr_t          getModuleHandle() const  = 0;
-    virtual Vector2<uint32_t> getClientSize() const    = 0;
+    virtual intptr_t          getDisplayHandle() const       = 0;
+    virtual intptr_t          getMonitorHandle() const       = 0;
+    virtual intptr_t          getWindowHandle() const        = 0;
+    virtual intptr_t          getModuleHandle() const        = 0;
+    virtual Vector2<uint32_t> getClientSize() const          = 0;
+
+    /// Returns a VkSurfaceKHR for the given Vulkan instance (\p vulkanInstanceHandle is
+    /// VkInstance cast to intptr_t). The window owns the surface: it is created and
+    /// destroyed by the window using the same allocator; surfaces are destroyed when
+    /// the window is destroyed. Caller must not destroy the surface. Returns 0 on failure
+    /// or if unsupported. Multiple calls with the same instance return the same handle.
+    virtual intptr_t getVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const = 0;
 
     //@}
 
@@ -71,7 +78,7 @@ struct WindowCreateParameters {
 };
 
 struct WindowAttachingParameters {
-    intptr_t display; ///< display handle. X windows only. Ingored on other platforms.
+    intptr_t display; ///< display handle. X windows only. Ignored on other platforms.
     intptr_t window;  ///< the external window handle.
 };
 
