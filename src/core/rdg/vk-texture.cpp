@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "vk-texture.h"
 #include "vk-gpu-context.h"
-#include <garnet/base/filesys.h>
-#include <garnet/gfx/image.h>
+#include "vk-format-utils.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -12,14 +11,6 @@ namespace GN::rdg {
 // Helpers: pixel format mapping, descriptor from image
 // =============================================================================
 
-static vk::Format pixelFormatToVk(gfx::img::PixelFormat pf) {
-    if (pf == gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM() || pf == gfx::img::PixelFormat::RGBA8()) return vk::Format::eR8G8B8A8Unorm;
-    if (pf == gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB()) return vk::Format::eR8G8B8A8Srgb;
-    if (pf == gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM() || pf == gfx::img::PixelFormat::BGRA8()) return vk::Format::eB8G8R8A8Unorm;
-    if (pf == gfx::img::PixelFormat::RGB_8_8_8_UNORM()) return vk::Format::eR8G8B8Unorm;
-    if (pf == gfx::img::PixelFormat::RG_24_UNORM_8_UINT()) return vk::Format::eD24UnormS8Uint;
-    return vk::Format::eR8G8B8A8Unorm; // fallback
-}
 
 static Texture::Descriptor descriptorFromImageDesc(const gfx::img::ImageDesc & id) {
     gfx::img::PlaneCoord p {};
@@ -64,7 +55,7 @@ static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descr
     rapid_vulkan::Image::ConstructParameters cp;
     cp.gi               = &gi;
     cp.info.imageType   = (descriptor.depth > 1) ? vk::ImageType::e3D : vk::ImageType::e2D;
-    cp.info.format      = pixelFormatToVk(descriptor.format);
+    cp.info.format      = pixelFormatToVkFormat(descriptor.format);
     cp.info.extent      = vk::Extent3D(descriptor.width, descriptor.height, descriptor.depth);
     cp.info.mipLevels   = descriptor.levels;
     cp.info.arrayLayers = descriptor.faces;

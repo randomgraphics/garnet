@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "vk-backbuffer.h"
 #include "vk-submission-context.h"
+#include "vk-format-utils.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -45,21 +46,6 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
 }
 
 namespace {
-
-gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt) {
-    switch (vkFmt) {
-    case vk::Format::eR8G8B8A8Unorm:
-        return gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM();
-    case vk::Format::eR8G8B8A8Srgb:
-        return gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB();
-    case vk::Format::eB8G8R8A8Unorm:
-        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM();
-    case vk::Format::eB8G8R8A8Srgb:
-        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM(); // no BGRA sRGB in rapid-image; use UNORM
-    default:
-        return gfx::img::PixelFormat::UNKNOWN();
-    }
-}
 
 gfx::img::Image contentToImage(const rapid_vulkan::Image::Content & content) {
     if (content.subresources.empty() || content.storage.empty()) return gfx::img::Image();
