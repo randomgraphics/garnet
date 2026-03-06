@@ -1,6 +1,7 @@
 #include "pch.h"
 #define RAPID_VULKAN_IMPLEMENTATION
 #include "vk-gpu-context.h"
+#include "vk-pso-factory.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -33,9 +34,18 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
     dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
+    if (mDevice->handle()) mPsoFactory = std::make_unique<PsoFactoryVulkan>(*this);
 }
 
-GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name); }
+GpuContextVulkan::~GpuContextVulkan() {
+    mPsoFactory.reset();
+    GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name);
+}
+
+PsoFactoryVulkan & GpuContextVulkan::psoFactory() {
+    GN_ASSERT(mPsoFactory);
+    return *mPsoFactory;
+}
 
 // =============================================================================
 // createVulkanGpuContext - API-specific factory

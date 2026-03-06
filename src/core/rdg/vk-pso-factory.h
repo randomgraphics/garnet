@@ -27,6 +27,20 @@ struct GraphicsPsoKey {
     bool operator!=(const GraphicsPsoKey & other) const { return !(*this == other); }
 };
 
+/// Shader and vertex input data for creating a PSO on cache miss. Required when getOrCreateGraphicsPso misses.
+struct GraphicsPsoCreateParams {
+    const void *    vsSpirv   = nullptr;
+    size_t          vsSize    = 0;
+    const char *    vsEntry   = "main";
+    const void *    psSpirv   = nullptr;
+    size_t          psSize    = 0;
+    const char *    psEntry   = "main";
+    const void *    va        = nullptr; ///< vk::VertexInputAttributeDescription array; use when key.noVertexInput == 0
+    uint32_t        vaCount   = 0;
+    const void *    vb        = nullptr; ///< vk::VertexInputBindingDescription array; use when key.noVertexInput == 0
+    uint32_t        vbCount   = 0;
+};
+
 /// PSO factory: get-or-create graphics pipelines keyed by GraphicsPsoKey. Owned by GpuContextVulkan.
 class PsoFactoryVulkan {
 public:
@@ -36,8 +50,9 @@ public:
     PsoFactoryVulkan(const PsoFactoryVulkan &) = delete;
     PsoFactoryVulkan & operator=(const PsoFactoryVulkan &) = delete;
 
-    /// Returns cached or newly created graphics pipeline for the key. Returns null on failure.
-    rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> getOrCreateGraphicsPso(const GraphicsPsoKey & key);
+    /// Returns cached or newly created graphics pipeline for the key. On cache miss, uses \p params to create (vs/ps SPIR-V required); returns null if miss and params invalid.
+    rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> getOrCreateGraphicsPso(const GraphicsPsoKey & key,
+                                                                                    const GraphicsPsoCreateParams * params = nullptr);
 
 private:
     class Impl;

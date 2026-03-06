@@ -19,14 +19,18 @@
 #define RAPID_VULKAN_ENABLE_DEBUG_BUILD GN_BUILD_DEBUG_ENABLED
 // TODO: hook rapid_vulkan log with GN::Logger
 #include <rapid-vulkan/rapid-vulkan.h>
+#include <memory>
 #include <optional>
 
 namespace GN::rdg {
+
+class PsoFactoryVulkan;
 
 /// Vulkan-backed GpuContext (initialized via rapid-vulkan Instance + Device).
 class GpuContextVulkan : public GpuContextCommon {
     std::optional<rapid_vulkan::Instance> mInstance;
     std::optional<rapid_vulkan::Device>   mDevice;
+    std::unique_ptr<PsoFactoryVulkan>    mPsoFactory;
 
 public:
     GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -49,6 +53,8 @@ public:
         GN_ASSERT(mDevice.has_value() && mDevice.value().gi());
         return *mDevice.value().gi();
     }
+
+    PsoFactoryVulkan & psoFactory();
 };
 
 /// Create a Vulkan-backed GpuContext. Called from GpuContext::create() when api is "vulkan".
