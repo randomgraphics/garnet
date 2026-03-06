@@ -17,9 +17,9 @@ class PsoFactoryVulkan::Impl {
 public:
     GpuContextVulkan *                                                                    gpu = nullptr;
     std::unordered_map<GraphicsPsoKey, rapid_vulkan::Ref<rapid_vulkan::GraphicsPipeline>> cache;
-    std::unordered_map<uint64_t, ShaderPair>                                               shaderCache;
+    std::unordered_map<uint64_t, ShaderPair>                                              shaderCache;
 
-    explicit Impl(GpuContextVulkan & gpu_) : gpu(&gpu_) {}
+    explicit Impl(GpuContextVulkan & gpu_): gpu(&gpu_) {}
 
     ShaderPair * getOrCreateShaders(uint64_t shaderHash, const GraphicsPsoCreateParams & params) {
         auto it = shaderCache.find(shaderHash);
@@ -31,7 +31,7 @@ public:
         vcp.setGi(gi);
         vcp.setSpirv(params.vsSize / 4, static_cast<const uint32_t *>(params.vsSpirv));
         vcp.entry = params.vsEntry ? params.vsEntry : "main";
-        auto vs = std::make_unique<rapid_vulkan::Shader>(vcp);
+        auto vs   = std::make_unique<rapid_vulkan::Shader>(vcp);
         if (!vs->handle()) {
             GN_WARN(sLogger)("PsoFactoryVulkan: failed to create vertex shader");
             return nullptr;
@@ -43,12 +43,12 @@ public:
             fcp.setGi(gi);
             fcp.setSpirv(params.psSize / 4, static_cast<const uint32_t *>(params.psSpirv));
             fcp.entry = params.psEntry ? params.psEntry : "main";
-            fs = std::make_unique<rapid_vulkan::Shader>(fcp);
+            fs        = std::make_unique<rapid_vulkan::Shader>(fcp);
             if (!fs->handle()) fs.reset();
         }
         ShaderPair p;
-        p.vs = std::move(vs);
-        p.fs = std::move(fs);
+        p.vs     = std::move(vs);
+        p.fs     = std::move(fs);
         auto ins = shaderCache.emplace(shaderHash, std::move(p));
         return &ins.first->second;
     }
@@ -63,8 +63,8 @@ PsoFactoryVulkan::~PsoFactoryVulkan() {
     _impl = nullptr;
 }
 
-rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrCreateGraphicsPso(const GraphicsPsoKey & key,
-                                                                                                  const GraphicsPsoCreateParams * params) {
+rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrCreateGraphicsPso(const GraphicsPsoKey &          key,
+                                                                                                 const GraphicsPsoCreateParams * params) {
     if (!_impl || !_impl->gpu) return {};
     auto it = _impl->cache.find(key);
     if (it != _impl->cache.end()) return it->second;

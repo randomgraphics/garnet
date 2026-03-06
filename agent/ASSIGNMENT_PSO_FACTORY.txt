@@ -3,8 +3,8 @@
 Goal: Introduce a standalone, self-contained PSO (Pipeline State Object) factory that builds Vulkan graphics pipelines on demand and caches them to avoid redundancy. Build on top of rapid_vulkan's CommandBuffer, GraphicsPipeline, Drawable, DrawPack and other utility classes; modify the command buffer manager and the rapid_vulkan library as needed to support this. The factory must support efficient lookup of existing PSOs via a compact key structure (bit fields for memory efficiency). The generic draw path must support many draw variants (no vertex input vs per-vertex format/stride, different shaders, etc.). The factory lives as a data member of GpuContextVulkan. When the PSO factory is complete, redo the generic draw action (GpuDrawVulkan) to use the factory and the rapid_vulkan recording path (Drawable → DrawPack → CommandBuffer::render).
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 0.1, 0.5.1, 0.5.2, 1.1, 2.1 (pipeline creation in factory with GraphicsPsoCreateParams, shader cache), 2.2 (factory in GpuContextVulkan).
-In progress: Task 3 (redo GpuDrawVulkan to use factory, Drawable, DrawPack).
+Last completed: Task 0.1, 0.5.1, 0.5.2, 1.1, 2.1, 2.2, 3.1, 3.2, 3.3 (GpuDrawVulkan uses PSO factory, Drawable, DrawPack, CommandBuffer::render; BufferVulkan::refVkBuffer for vertex buffers; format fixed; CIT lint OK; RDG smoke1 passes; OGL unit test failure in headless ignored).
+In progress: Task 4 (optional tests, final lint).
 --- END PROGRESS ---
 
 --- REFERENCE ---

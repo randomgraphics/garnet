@@ -4,6 +4,7 @@
 #include "vk-backbuffer.h"
 #include "vk-texture.h"
 #include "vk-buffer.h"
+#include "vk-pso-factory.h"
 
 namespace GN::rdg {
 
@@ -146,186 +147,30 @@ static vk::Format toVkFormat(GpuGeometry::AttributeFormat f) {
     }
 }
 
+static uint64_t hashShaderBinary(const void * vs, size_t vsSize, const void * ps, size_t psSize) {
+    uint64_t     h = 0xcbf29ce484222325ULL; // FNV-1a offset
+    const auto * p = static_cast<const uint8_t *>(vs);
+    for (size_t i = 0; i < vsSize; ++i) h = (h ^ p[i]) * 0x100000001b3ULL;
+    if (ps && psSize > 0) {
+        p = static_cast<const uint8_t *>(ps);
+        for (size_t i = 0; i < psSize; ++i) h = (h ^ p[i]) * 0x100000001b3ULL;
+    }
+    return h;
+}
+
+static uint64_t hashVertexFormat(const GpuGeometry::VertexFormat & fmt) {
+    uint64_t h = 0;
+    for (const auto & a : fmt.attributes) h = h * 31 + (uint64_t) a.location + ((uint64_t) a.offset << 8) + ((uint64_t) static_cast<uint8_t>(a.format) << 16);
+    return h & ((1ULL << 27) - 1); // 27 bits
+}
+
 class GpuDrawVulkan : public GpuDraw {
     AutoRef<GpuContextVulkan> mGpu;
     GpuDraw::CreateParameters mCreateParams {};
-    vk::ShaderModule          mVertModule {};
-    vk::ShaderModule          mFragModule {};
-    vk::PipelineLayout        mPipelineLayout {};
-    vk::Pipeline              mNoGeomPipeline {}; ///< pipeline for shader-generated vertices (no vertex input)
-    vk::Pipeline              mPipeline {};
-    GpuGeometry::VertexFormat mCachedVertexFormat {};
-    uint32_t                  mCachedStride = 0;
-
-    static vk::ShaderModule createShaderModule(vk::Device device, const void * code, size_t codeSize) {
-        if (!code || codeSize == 0 || (codeSize % 4) != 0) return {};
-        vk::ShaderModuleCreateInfo ci {};
-        ci.codeSize = codeSize;
-        ci.pCode    = reinterpret_cast<const uint32_t *>(code);
-        return device.createShaderModule(ci);
-    }
-
-    void ensurePipelineLayout() {
-        if (mPipelineLayout) return;
-        const auto                   dev               = mGpu->device().handle();
-        constexpr uint32_t           kPushConstantSize = 128;
-        vk::PushConstantRange        pushRange {vk::ShaderStageFlagBits::eVertex, 0, kPushConstantSize};
-        vk::PipelineLayoutCreateInfo layoutCi {{}, 0, nullptr, 1, &pushRange};
-        mPipelineLayout = dev.createPipelineLayout(layoutCi);
-        if (!mPipelineLayout) GN_UNLIKELY {
-                GN_WARN(sLogger)("GpuDrawVulkan: createPipelineLayout failed, name='{}'", this->name.c_str());
-            }
-    }
-
-    /// Build and cache the no-vertex-input pipeline for shader-generated vertices (e.g. gl_VertexIndex triangles).
-    void ensureNoGeomPipeline() {
-        if (mNoGeomPipeline) return;
-        if (!mVertModule || !mFragModule) return;
-
-        ensurePipelineLayout();
-        if (!mPipelineLayout) return;
-
-        const auto dev = mGpu->device().handle();
-
-        const char *                      vertEntry = mCreateParams.vs.entry ? mCreateParams.vs.entry : "main";
-        const char *                      fragEntry = mCreateParams.ps.entry ? mCreateParams.ps.entry : "main";
-        vk::PipelineShaderStageCreateInfo stages[2] = {
-            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, mVertModule, vertEntry},
-            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, mFragModule, fragEntry},
-        };
-
-        vk::PipelineVertexInputStateCreateInfo   vertexInput {}; // no vertex input
-        vk::PipelineInputAssemblyStateCreateInfo inputAssembly {{}, vk::PrimitiveTopology::eTriangleList};
-        vk::PipelineRasterizationStateCreateInfo rasterization {};
-        rasterization.lineWidth = 1.0f;
-        vk::PipelineColorBlendAttachmentState blendAttachment {};
-        blendAttachment.colorWriteMask =
-            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-        vk::PipelineColorBlendStateCreateInfo  colorBlend {{}, false, {}, blendAttachment};
-        vk::PipelineMultisampleStateCreateInfo multisample {};
-        multisample.rasterizationSamples = vk::SampleCountFlagBits::e1;
-        vk::PipelineViewportStateCreateInfo viewportState {};
-        viewportState.viewportCount                        = 1;
-        viewportState.scissorCount                         = 1;
-        vk::DynamicState                   dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
-        vk::PipelineDynamicStateCreateInfo dynamicState {{}, 2, dynamicStates};
-        vk::PipelineRenderingCreateInfo    renderingCi {};
-        const vk::Format                   colorFormats[] = {vk::Format::eB8G8R8A8Unorm};
-        renderingCi.setColorAttachmentFormats(colorFormats);
-
-        vk::GraphicsPipelineCreateInfo pipeCi {};
-        pipeCi.setPNext(&renderingCi);
-        pipeCi.setStages(stages);
-        pipeCi.setPVertexInputState(&vertexInput);
-        pipeCi.setPInputAssemblyState(&inputAssembly);
-        pipeCi.setPRasterizationState(&rasterization);
-        pipeCi.setPViewportState(&viewportState);
-        pipeCi.setPDynamicState(&dynamicState);
-        pipeCi.setPColorBlendState(&colorBlend);
-        pipeCi.setPMultisampleState(&multisample);
-        pipeCi.setLayout(mPipelineLayout);
-        pipeCi.setRenderPass(nullptr);
-
-        auto result = dev.createGraphicsPipeline(nullptr, pipeCi);
-        if (result.result != vk::Result::eSuccess) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan: createGraphicsPipeline (no-geom) failed, name='{}'", this->name.c_str());
-                return;
-            }
-        mNoGeomPipeline = result.value;
-    }
-
-    /// Build and cache pipeline for the given geometry. Uses geometry.format and first vertex buffer stride.
-    void ensurePipelineForGeometry(const GpuGeometry & geom) {
-        if (!mVertModule || !mFragModule) return;
-        if (geom.format.empty() || geom.vertices.empty() || geom.vertices[0].stride == 0) return;
-        const uint32_t stride = static_cast<uint32_t>(geom.vertices[0].stride);
-        if (mPipeline && mCachedVertexFormat == geom.format && mCachedStride == stride) return;
-
-        const auto dev = mGpu->device().handle();
-        if (mPipeline) {
-            dev.destroyPipeline(mPipeline);
-            mPipeline = nullptr;
-        }
-
-        ensurePipelineLayout();
-        if (!mPipelineLayout) return;
-
-        mCachedVertexFormat = geom.format;
-        mCachedStride       = stride;
-
-        const char *                      vertEntry = mCreateParams.vs.entry ? mCreateParams.vs.entry : "main";
-        const char *                      fragEntry = mCreateParams.ps.entry ? mCreateParams.ps.entry : "main";
-        vk::PipelineShaderStageCreateInfo stages[2] = {
-            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, mVertModule, vertEntry},
-            {vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, mFragModule, fragEntry},
-        };
-
-        vk::VertexInputBindingDescription              binding {0, stride, vk::VertexInputRate::eVertex};
-        DynaArray<vk::VertexInputAttributeDescription> vkAttrs;
-        vkAttrs.reserve(geom.format.attributes.size());
-        for (const auto & a : geom.format.attributes) vkAttrs.append({a.location, 0, toVkFormat(a.format), a.offset});
-
-        vk::PipelineVertexInputStateCreateInfo   vertexInput {{}, 1, &binding, static_cast<uint32_t>(vkAttrs.size()), vkAttrs.data()};
-        vk::PipelineInputAssemblyStateCreateInfo inputAssembly {{}, vk::PrimitiveTopology::eTriangleList};
-        vk::PipelineRasterizationStateCreateInfo rasterization {};
-        rasterization.lineWidth = 1.0f;
-        vk::PipelineColorBlendAttachmentState blendAttachment {};
-        blendAttachment.colorWriteMask =
-            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-        vk::PipelineColorBlendStateCreateInfo  colorBlend {{}, false, {}, blendAttachment};
-        vk::PipelineMultisampleStateCreateInfo multisample {};
-        multisample.rasterizationSamples = vk::SampleCountFlagBits::e1;
-        vk::PipelineViewportStateCreateInfo viewportState {};
-        viewportState.viewportCount                        = 1;
-        viewportState.scissorCount                         = 1;
-        vk::DynamicState                   dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
-        vk::PipelineDynamicStateCreateInfo dynamicState {{}, 2, dynamicStates};
-        vk::PipelineRenderingCreateInfo    renderingCi {};
-        const vk::Format                   colorFormats[] = {vk::Format::eB8G8R8A8Unorm};
-        renderingCi.setColorAttachmentFormats(colorFormats);
-
-        vk::GraphicsPipelineCreateInfo pipeCi {};
-        pipeCi.setPNext(&renderingCi);
-        pipeCi.setStages(stages);
-        pipeCi.setPVertexInputState(&vertexInput);
-        pipeCi.setPInputAssemblyState(&inputAssembly);
-        pipeCi.setPRasterizationState(&rasterization);
-        pipeCi.setPViewportState(&viewportState);
-        pipeCi.setPDynamicState(&dynamicState);
-        pipeCi.setPColorBlendState(&colorBlend);
-        pipeCi.setPMultisampleState(&multisample);
-        pipeCi.setLayout(mPipelineLayout);
-        pipeCi.setRenderPass(nullptr);
-
-        auto result = dev.createGraphicsPipeline(nullptr, pipeCi);
-        if (result.result != vk::Result::eSuccess) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuDrawVulkan: createGraphicsPipeline failed, name='{}'", this->name.c_str());
-                mCachedVertexFormat.attributes.clear();
-                mCachedStride = 0;
-                return;
-            }
-        mPipeline = result.value;
-    }
 
 public:
     GpuDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
-        : GpuDraw(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu), mCreateParams(params) {
-        const auto dev = mGpu->device().handle();
-        if (params.vs.binary) mVertModule = createShaderModule(dev, params.vs.binary, params.vs.size);
-        if (params.ps.binary) mFragModule = createShaderModule(dev, params.ps.binary, params.ps.size);
-        bool vsFail = (params.vs.binary && !mVertModule);
-        bool psFail = (params.ps.binary && !mFragModule);
-        if (vsFail || psFail) { GN_WARN(sLogger)("GpuDrawVulkan: failed to create one or more shader modules, name='{}'", name.c_str()); }
-    }
-
-    ~GpuDrawVulkan() override {
-        const auto dev = mGpu->device().handle();
-        if (mPipeline) dev.destroyPipeline(mPipeline);
-        if (mNoGeomPipeline) dev.destroyPipeline(mNoGeomPipeline);
-        if (mPipelineLayout) dev.destroyPipelineLayout(mPipelineLayout);
-        if (mVertModule) dev.destroyShaderModule(mVertModule);
-        if (mFragModule) dev.destroyShaderModule(mFragModule);
-    }
+        : GpuDraw(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu), mCreateParams(params) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
@@ -333,13 +178,10 @@ public:
         auto a = arguments.castTo<GpuDraw::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
-        // standard preparation.
         auto & submissionContext = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        // pass in an empty render target indicating we are not changing the render target.
         GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, {}));
 
-        // done
         return PASSED;
     }
 
@@ -351,7 +193,6 @@ public:
         auto a = arguments.castTo<GpuDraw::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
-        // standard execution.
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
         GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
@@ -359,48 +200,94 @@ public:
         const GpuGeometry & geom        = a->geometry;
         const bool          hasGeometry = !geom.format.empty() && !geom.vertices.empty() && geom.vertices[0].stride > 0;
 
-        vk::Pipeline activePipeline {};
-        uint32_t     vertexCount = 0;
-        if (hasGeometry) {
-            ensurePipelineForGeometry(geom);
-            if (!mPipeline) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("{} - geometry has vertex format but pipeline creation failed", taskInfo);
-                    return FAILED;
-                }
-            activePipeline = mPipeline;
-            vertexCount    = (uint32_t) geom.vertices[0].count();
-        } else if (geom.vertexCount > 0) {
-            ensureNoGeomPipeline();
-            activePipeline = mNoGeomPipeline;
-            vertexCount    = geom.vertexCount;
+        uint32_t vertexCount = 0;
+        if (hasGeometry)
+            vertexCount = (uint32_t) geom.vertices[0].count();
+        else if (geom.vertexCount > 0)
+            vertexCount = geom.vertexCount;
+
+        if (vertexCount == 0) {
+            auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
+            GN_RDG_FAIL_ON_FAIL(rp.result);
+            if (rp.needToEnd) cb.commandBuffer.handle().endRendering();
+            if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
+            return hasWarning ? WARNING : PASSED;
         }
 
-        if (activePipeline) {
-            cb.commandBuffer.handle().bindPipeline(vk::PipelineBindPoint::eGraphics, activePipeline);
-            if (!a->constants.empty()) {
-                const auto size = static_cast<uint32_t>(a->constants.size());
-                if (size <= 128)
-                    cb.commandBuffer.handle().pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, size, a->constants.data());
-                else {
+        if (!mCreateParams.vs.binary || mCreateParams.vs.size == 0) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - GpuDraw has no vertex shader", taskInfo);
+                return FAILED;
+            }
+
+        GraphicsPsoKey key {};
+        key.shaderHash       = hashShaderBinary(mCreateParams.vs.binary, mCreateParams.vs.size, mCreateParams.ps.binary, mCreateParams.ps.size);
+        key.noVertexInput    = hasGeometry ? 0 : 1;
+        key.vertexStride     = hasGeometry ? static_cast<uint64_t>(geom.vertices[0].stride) & ((1ULL << 16) - 1) : 0;
+        key.vertexFormatHash = hasGeometry ? hashVertexFormat(geom.format) : 0;
+        key.colorFormat      = static_cast<uint64_t>(vk::Format::eB8G8R8A8Unorm) & ((1ULL << 12) - 1);
+        key.pushConstantSize = 128;
+
+        GraphicsPsoCreateParams createParams {};
+        createParams.vsSpirv = mCreateParams.vs.binary;
+        createParams.vsSize  = mCreateParams.vs.size;
+        createParams.vsEntry = mCreateParams.vs.entry ? mCreateParams.vs.entry : "main";
+        createParams.psSpirv = mCreateParams.ps.binary;
+        createParams.psSize  = mCreateParams.ps.size;
+        createParams.psEntry = mCreateParams.ps.entry ? mCreateParams.ps.entry : "main";
+
+        DynaArray<vk::VertexInputAttributeDescription> vkAttrs;
+        DynaArray<vk::VertexInputBindingDescription>   vkBinds;
+        if (hasGeometry) {
+            const uint32_t stride = static_cast<uint32_t>(geom.vertices[0].stride);
+            vkBinds.append({0, stride, vk::VertexInputRate::eVertex});
+            for (const auto & attr : geom.format.attributes) vkAttrs.append({attr.location, 0, toVkFormat(attr.format), attr.offset});
+            createParams.va      = vkAttrs.data();
+            createParams.vaCount = static_cast<uint32_t>(vkAttrs.size());
+            createParams.vb      = vkBinds.data();
+            createParams.vbCount = static_cast<uint32_t>(vkBinds.size());
+        }
+
+        auto pipeline = mGpu->psoFactory().getOrCreateGraphicsPso(key, &createParams);
+        if (!pipeline) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - PSO factory returned null pipeline", taskInfo);
+                return FAILED;
+            }
+
+        if (!a->constants.empty()) {
+            const auto size = static_cast<uint32_t>(a->constants.size());
+            if (size > 128) GN_UNLIKELY {
                     GN_ERROR(sLogger)("{} - inline constants size is too large, size={}", taskInfo, size);
                     return FAILED;
                 }
-            }
-            if (hasGeometry) {
-                // Bind each vertex buffer; skip null buffers.
-                for (uint32_t i = 0; i < (uint32_t) geom.vertices.size(); ++i) {
-                    if (!geom.vertices[i].buffer) continue;
-                    auto *         vkBuf  = static_cast<BufferVulkan *>(geom.vertices[i].buffer.get());
-                    vk::Buffer     handle = vkBuf->vkHandle();
-                    vk::DeviceSize offset = geom.vertices[i].offset;
-                    cb.commandBuffer.handle().bindVertexBuffers(i, 1, &handle, &offset);
-                }
-            }
-            if (vertexCount > 0) cb.commandBuffer.handle().draw(vertexCount, 1, 0, 0);
         }
 
-        // call into render pass to end render pass if needed. Must be called after all draw commands are queued in the
-        // command buffer.
+        rapid_vulkan::Drawable::ConstructParameters dcp;
+        dcp.setPipeline(pipeline);
+        rapid_vulkan::Drawable drawable(dcp);
+
+        if (!a->constants.empty()) drawable.c(0, a->constants.size(), a->constants.data(), vk::ShaderStageFlagBits::eVertex);
+
+        if (hasGeometry && !geom.vertices.empty() && geom.vertices[0].buffer) {
+            auto *                                  bv  = static_cast<BufferVulkan *>(geom.vertices[0].buffer.get());
+            rapid_vulkan::Ref<rapid_vulkan::Buffer> ref = bv->refVkBuffer();
+            if (ref) {
+                const rapid_vulkan::BufferView view {ref, geom.vertices[0].offset, vk::DeviceSize(-1)};
+                drawable.v(vk::ArrayProxy<const rapid_vulkan::BufferView>(1, &view));
+            }
+        }
+
+        rapid_vulkan::GraphicsPipeline::DrawParameters drawParams {};
+        drawParams.setNonIndexed(vertexCount, 0).setInstance(1, 0);
+        drawable.draw(drawParams);
+
+        rapid_vulkan::Ref<const rapid_vulkan::DrawPack> drawPack = drawable.compile();
+        if (!drawPack || drawPack->empty()) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - Drawable compile produced empty DrawPack", taskInfo);
+                return FAILED;
+            }
+
+        cb.commandBuffer.render(drawPack);
+
         auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
         GN_RDG_FAIL_ON_FAIL(rp.result);
         if (rp.needToEnd) GN_UNLIKELY {
@@ -408,7 +295,6 @@ public:
                 cb.commandBuffer.handle().endRendering();
             }
 
-        // submit command buffer, if asked to do so.
         if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
 
         return hasWarning ? WARNING : PASSED;

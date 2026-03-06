@@ -30,7 +30,7 @@ class PsoFactoryVulkan;
 class GpuContextVulkan : public GpuContextCommon {
     std::optional<rapid_vulkan::Instance> mInstance;
     std::optional<rapid_vulkan::Device>   mDevice;
-    std::unique_ptr<PsoFactoryVulkan>    mPsoFactory;
+    std::unique_ptr<PsoFactoryVulkan>     mPsoFactory;
 
 public:
     GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
