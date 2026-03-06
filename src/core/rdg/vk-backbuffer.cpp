@@ -14,9 +14,7 @@ BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Ba
     if (0 == sequence) { GN_ERROR(sLogger)("BackbufferVulkan::BackbufferVulkan: duplicate type+name, name='{}'", name); }
 }
 
-BackbufferVulkan::~BackbufferVulkan() {
-    GN_INFO(sLogger)("Destorying Vulkan backbuffer, name='{}'", name);
-}
+BackbufferVulkan::~BackbufferVulkan() { GN_INFO(sLogger)("Destorying Vulkan backbuffer, name='{}'", name); }
 
 bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     if (0 == sequence) return false;

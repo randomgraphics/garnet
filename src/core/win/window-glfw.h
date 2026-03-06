@@ -10,12 +10,12 @@
 
 struct GLFWwindow;
 struct GLFWmonitor;
-#include <unordered_map>
+    #include <unordered_map>
 
-#if HAS_VULKAN
-#include <vulkan/vulkan.h>
-#endif
-#include <GLFW/glfw3.h>
+    #if HAS_VULKAN
+        #include <vulkan/vulkan.h>
+    #endif
+    #include <GLFW/glfw3.h>
 
 namespace GN {
 namespace win {
@@ -45,9 +45,9 @@ private:
         mWindow  = nullptr;
         mMonitor = nullptr;
         mClosing = false;
-#if HAS_VULKAN
+    #if HAS_VULKAN
         mVulkanSurfaces.clear();
-#endif
+    #endif
     }
 
     // ********************************
@@ -76,13 +76,13 @@ private:
     bool          mClosing;
     bool          mOwned; ///< true if we created the window; false if attached (unsupported with GLFW)
 
-#if HAS_VULKAN
+    #if HAS_VULKAN
     struct VulkanSurfaceEntry {
         VkSurfaceKHR            surface    = {}; ///< created by glfwCreateWindowSurface
         PFN_vkDestroySurfaceKHR pfnDestroy = {}; ///< from glfwGetInstanceProcAddress; used in quit()
     };
     mutable std::unordered_map<intptr_t, VulkanSurfaceEntry> mVulkanSurfaces; ///< instance (intptr_t) -> entry; window owns, destroyed in quit()
-#endif
+    #endif
 
     bool createWindow(const WindowCreateParameters & wcp);
 };

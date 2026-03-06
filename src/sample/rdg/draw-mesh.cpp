@@ -180,9 +180,9 @@ int main(int, const char **) {
     intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
     if (!surface) return -1;
 
-    auto backbuffer = Backbuffer::create(*db, "backbuffer",
-        Backbuffer::CreateParameters {.context = gpuContext,
-            .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(1280, 720)});
+    auto backbuffer = Backbuffer::create(
+        *db, "backbuffer",
+        Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(1280, 720)});
     if (!backbuffer) return -1;
     const auto & bbDesc = backbuffer->descriptor();
 

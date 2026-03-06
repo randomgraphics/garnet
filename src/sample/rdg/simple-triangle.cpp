@@ -40,17 +40,19 @@ int main(int, const char **) {
     // if (!mesh) return -1;
 
     // Create a main window and surface of 1280x720
-    uint32_t windowWidth = 1280;
+    uint32_t windowWidth  = 1280;
     uint32_t windowHeight = 720;
-    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight});
+    auto     window =
+        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight});
     if (!window) return -1;
     // Window owns the surface; do not destroy it. Destroy backbuffer before window.
     intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
     if (!surface) return -1;
 
-    auto backbuffer = Backbuffer::create(*db, "backbuffer",
-        Backbuffer::CreateParameters {.context = gpuContext,
-            .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(windowWidth, windowHeight)});
+    auto backbuffer =
+        Backbuffer::create(*db, "backbuffer",
+                           Backbuffer::CreateParameters {.context    = gpuContext,
+                                                         .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(windowWidth, windowHeight)});
     if (!backbuffer) return -1;
 
     // Create a render target that references the backbuffer

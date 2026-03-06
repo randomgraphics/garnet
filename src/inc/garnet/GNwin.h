@@ -24,11 +24,11 @@ public:
     /// \name window properties
     //@{
 
-    virtual intptr_t          getDisplayHandle() const       = 0;
-    virtual intptr_t          getMonitorHandle() const       = 0;
-    virtual intptr_t          getWindowHandle() const        = 0;
-    virtual intptr_t          getModuleHandle() const        = 0;
-    virtual Vector2<uint32_t> getClientSize() const          = 0;
+    virtual intptr_t          getDisplayHandle() const = 0;
+    virtual intptr_t          getMonitorHandle() const = 0;
+    virtual intptr_t          getWindowHandle() const  = 0;
+    virtual intptr_t          getModuleHandle() const  = 0;
+    virtual Vector2<uint32_t> getClientSize() const    = 0;
 
     /// Returns a VkSurfaceKHR for the given Vulkan instance (\p vulkanInstanceHandle is
     /// VkInstance cast to intptr_t). The window owns the surface: it is created and

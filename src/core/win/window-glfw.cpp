@@ -34,13 +34,12 @@ bool GN::win::WindowGlfw::init(const WindowAttachingParameters &) {
 void GN::win::WindowGlfw::quit() {
     GN_GUARD;
 
-#if HAS_VULKAN
+    #if HAS_VULKAN
     for (const auto & kv : mVulkanSurfaces) {
-        if (kv.second.pfnDestroy && kv.second.surface)
-            kv.second.pfnDestroy((VkInstance) kv.first, kv.second.surface, nullptr);
+        if (kv.second.pfnDestroy && kv.second.surface) kv.second.pfnDestroy((VkInstance) kv.first, kv.second.surface, nullptr);
     }
     mVulkanSurfaces.clear();
-#endif
+    #endif
 
     if (mWindow && mOwned) {
         glfwDestroyWindow(mWindow);
@@ -64,24 +63,19 @@ intptr_t GN::win::WindowGlfw::getDisplayHandle() const {
     return 0; // GLFW does not expose display handle; 0 means default.
 }
 
-intptr_t GN::win::WindowGlfw::getMonitorHandle() const {
-    return (intptr_t) mMonitor;
-}
+intptr_t GN::win::WindowGlfw::getMonitorHandle() const { return (intptr_t) mMonitor; }
 
-intptr_t GN::win::WindowGlfw::getWindowHandle() const {
-    return (intptr_t) mWindow;
-}
+intptr_t GN::win::WindowGlfw::getWindowHandle() const { return (intptr_t) mWindow; }
 
 intptr_t GN::win::WindowGlfw::getVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const {
-#if HAS_VULKAN
+    #if HAS_VULKAN
     if (!mWindow) {
         GN_ERROR(sLogger)("getVulkanSurfaceHandle: window not created");
         return 0;
     }
     if (!vulkanInstanceHandle) return 0;
     auto it = mVulkanSurfaces.find(vulkanInstanceHandle);
-    if (it != mVulkanSurfaces.end())
-        return (intptr_t) (void *) it->second.surface;
+    if (it != mVulkanSurfaces.end()) return (intptr_t) (void *) it->second.surface;
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkResult     err     = glfwCreateWindowSurface((VkInstance) vulkanInstanceHandle, mWindow, nullptr, &surface);
     if (err != VK_SUCCESS || surface == VK_NULL_HANDLE) {
@@ -95,16 +89,14 @@ intptr_t GN::win::WindowGlfw::getVulkanSurfaceHandle(intptr_t vulkanInstanceHand
     }
     mVulkanSurfaces[vulkanInstanceHandle] = VulkanSurfaceEntry {surface, pfn};
     return (intptr_t) (void *) surface;
-#else
+    #else
     (void) vulkanInstanceHandle;
     GN_ERROR(sLogger)("getVulkanSurfaceHandle: Vulkan not supported in this build");
     return 0;
-#endif
+    #endif
 }
 
-intptr_t GN::win::WindowGlfw::getModuleHandle() const {
-    return (intptr_t) 1;
-}
+intptr_t GN::win::WindowGlfw::getModuleHandle() const { return (intptr_t) 1; }
 
 GN::Vector2<uint32_t> GN::win::WindowGlfw::getClientSize() const {
     Vector2<uint32_t> sz(0, 0);
@@ -182,7 +174,7 @@ bool GN::win::WindowGlfw::createWindow(const WindowCreateParameters & wcp) {
         mon = glfwGetPrimaryMonitor();
 
     const char * title = wcp.caption.empty() ? "Garnet" : wcp.caption.c_str();
-    mWindow = glfwCreateWindow(width, height, title, mon, nullptr);
+    mWindow            = glfwCreateWindow(width, height, title, mon, nullptr);
     if (!mWindow) {
         GN_ERROR(sLogger)("glfwCreateWindow failed.");
         glfwTerminate();
