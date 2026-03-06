@@ -1,0 +1,159 @@
+# Assignment: Vulkan PSO factory and cache
+
+Goal: Introduce a standalone, self-contained PSO (Pipeline State Object) factory that builds Vulkan graphics pipelines on demand and caches them to avoid redundancy. Build on top of rapid_vulkan's CommandBuffer, GraphicsPipeline, Drawable, DrawPack and other utility classes; modify the command buffer manager and the rapid_vulkan library as needed to support this. The factory must support efficient lookup of existing PSOs via a compact key structure (bit fields for memory efficiency). The generic draw path must support many draw variants (no vertex input vs per-vertex format/stride, different shaders, etc.). The factory lives as a data member of GpuContextVulkan. When the PSO factory is complete, redo the generic draw action (GpuDrawVulkan) to use the factory and the rapid_vulkan recording path (Drawable → DrawPack → CommandBuffer::render).
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: (none)
+In progress: (none)
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+- GpuContextVulkan: src/core/rdg/vk-gpu-context.h, vk-gpu-context.cpp (device(), instance(); add PSO factory as member).
+- Current PSO creation: src/core/rdg/vk-draw-actions.cpp — GpuDrawVulkan::ensurePipelineLayout(), ensureNoGeomPipeline(), ensurePipelineForGeometry(); mPipelineLayout, mNoGeomPipeline, mPipeline, mCachedVertexFormat, mCachedStride.
+- GpuGeometry / vertex format: src/inc/garnet/rdg/actions.h — GpuGeometry, VertexFormat, AttributeFormat, VertexAttribute.
+- rapid_vulkan (build on top of): src/3rdparty/rapid-vulkan/inc/rapid-vulkan/rapid-vulkan.h, rapid-vulkan.cpp
+  - CommandBuffer: handle(), render(Ref<const DrawPack>). CommandQueue::begin() returns CommandBuffer.
+  - GraphicsPipeline: Pipeline subclass; ConstructParameters (pass, subpass, vs, fs, va, vb, viewports, scissors, dynamic, etc.); requires vk::RenderPass today — extend for dynamic rendering.
+  - Drawable: ConstructParameters(pipeline); b()/t()/s()/c()/v()/i()/draw()/dispatch(); compile() -> Ref<const DrawPack>.
+  - DrawPack: pipeline, descriptors, constants, vertexBuffers, vertexOffsets, indexBuffer, draw/dispatch; cmdRender(vk::CommandBuffer, RenderParameters); RenderParameters = device, descriptorSetAllocator, previous.
+  - Shader: ConstructParameters(gi, spirv, entry); setSpirv(); used by GraphicsPipeline for vs/fs.
+- Command buffer manager: src/core/rdg/vk-command-buffer.h, vk-command-buffer.cpp — execute() returns struct { queue, commandBuffer (rapid_vulkan::CommandBuffer), submit }; use commandBuffer.render(drawPack) for recording.
+- Vulkan: dynamic rendering via VkPipelineRenderingCreateInfo (color formats, optional depth); no VkRenderPass. GpuContextVulkan already enables dynamicRendering.
+- Naming: lowercase-hyphen filenames; see .cursor/skills/filename-naming-convention/SKILL.md.
+
+--- BUILD/CI ---
+
+- Build: Linux/WSL `source env/garnet.rc && build.py d`; Windows `python build.py d` (see .cursor/skills/use-build-py/SKILL.md).
+- Lint + tests: `env/bin/cit.py` (Linux) or `python env\bin\cit.py` (Windows) (see .cursor/skills/run-cit/SKILL.md).
+- RDG tests: src/test/ut/rdg/rdg-smoke.cpp (and related); run sample GNsample-rdg-draw-mesh or GNsample-rdg-simple-triangle to verify draw path.
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep the repo buildable after each task. Prefer small, verifiable steps (see .cursor/rules/assignment-verifiable-steps.mdc and minimal-code-change skill).
+- Commit per step after verification (see .cursor/rules/assignment-commit-per-step.mdc). Push after each commit.
+- PSO factory is Vulkan-only and lives in core/rdg; no public API in inc/garnet/rdg beyond what already exists (GpuDraw, GpuGeometry).
+- Use GN_UNLIKELY for error paths; prefer inline for small hot-path accessors (see use-gn-unlikely and inline-small-functions skills).
+
+---
+PHASE 0: Setup and scope
+---
+
+[ ] Task 0.1 — Branch and ensure build is green
+    - Create branch (e.g. wip/pso-cache or wip/rdg-pso-factory). Run build and cit; fix any pre-existing breakage in touched areas.
+    - Verification: Build passes; cit.py passes. Commit and push.
+
+---
+PHASE 0.5: Build on rapid_vulkan — extend library and command buffer manager
+---
+
+Goal: Build the PSO factory and draw path on top of rapid_vulkan's CommandBuffer, GraphicsPipeline, Drawable, DrawPack. Modify rapid_vulkan and the RDG command buffer manager as needed.
+
+[ ] Task 0.5.1 — Extend rapid_vulkan::GraphicsPipeline for dynamic rendering
+    - rapid_vulkan::GraphicsPipeline::ConstructParameters currently requires vk::RenderPass and subpass. RDG uses dynamic rendering (beginRendering, no VkRenderPass). Extend so that:
+      - When pass is null (or a new option “use dynamic rendering” is set), do not pass a render pass into VkGraphicsPipelineCreateInfo; instead chain VkPipelineRenderingCreateInfo (or vk::PipelineRenderingCreateInfo) with color attachment format(s) and optional depth/stencil format. Use pNext on GraphicsPipelineCreateInfo. Vulkan 1.3 core / VK_KHR_dynamic_rendering requires this for pipelines used with vkCmdBeginRendering.
+      - API option: e.g. setDynamicRendering(vk::Format colorFormat, vk::Format depthFormat = {}) or setColorFormat/setDepthFormat when pass is null. Keep existing setRenderPass() behavior when pass is non-null.
+    - Implementation: in rapid-vulkan.cpp GraphicsPipeline constructor, branch: if dynamic rendering, set ci.setPNext(&renderingInfo) and do not set renderPass/subpass (or use VK_NULL_HANDLE); else keep current behavior.
+    - Verification: Build passes. A minimal test or later GpuDraw path can create a GraphicsPipeline with dynamic rendering and use it in a frame that uses beginRendering (no beginRenderPass). Commit with message e.g. "Assignment PSO factory: extend rapid_vulkan GraphicsPipeline for dynamic rendering (Task 0.5.1)".
+
+[ ] Task 0.5.2 — Command buffer manager: expose rapid_vulkan::CommandBuffer for render(DrawPack)
+    - CommandBufferManagerVulkan::execute() already returns a struct containing rapid_vulkan::CommandBuffer. Ensure RDG draw code can call commandBuffer.render(drawPack) (i.e. use the rapid_vulkan CommandBuffer API, not only .handle()). No API change required if the returned commandBuffer is already rapid_vulkan::CommandBuffer; otherwise add an accessor or document that callers should use .commandBuffer.render(...). If the current type is opaque or only .handle() is exposed, change the return type or add a getter so that execute() clearly provides a rapid_vulkan::CommandBuffer that supports .render(Ref<const DrawPack>).
+    - Verification: Build passes. Code that holds the result of execute() can invoke .render(drawPack) on the command buffer. Commit with message e.g. "Assignment PSO factory: command buffer manager supports render(DrawPack) (Task 0.5.2)".
+
+---
+Key design (memory-efficient, fast lookup)
+---
+
+The PSO key must enable efficient lookup: small size (good cache behavior, fast hashing) and unambiguous equality. Use bit fields so the key is as compact as possible.
+
+- Shader identity: Use a 64-bit hash derived from (vertex module, fragment module, entry point names) so the key does not store pointers; same shader combo always produces the same hash.
+- Vertex input: Use bit fields — e.g. no_vertex_input:1; when present: vertex_stride (e.g. 16 bits, max 64K); and a 32-bit hash of GpuGeometry::VertexFormat (attributes) so different formats get different keys without storing variable-length data.
+- Color format: vk::Format fits in 16 bits; use a bit field.
+- Layout: Push constant size (e.g. 8 bits, 0..256) and optionally descriptor set layout count (2 bits) as bit fields; or a 32-bit layout key if layout cache is separate.
+- Fixed state (topology, rasterization, blend, multisample, dynamic state) can be omitted and applied in the builder for current draws.
+- Total key size: aim for one or two 64-bit words (8–16 bytes) so the key is cheap to copy and hash. Implement operator== and std::hash<GraphicsPsoKey> for O(1) lookup in std::unordered_map.
+
+---
+PHASE 1: PSO descriptor and key types (bit-field key)
+---
+
+Goal: Define the immutable key that uniquely identifies a graphics PSO for caching. The key must use bit fields for memory efficiency and be hashable and comparable for efficient lookup (see Key design section below).
+
+[ ] Task 1.1 — Add GraphicsPsoKey with bit fields for memory-efficient key
+    - Introduce GraphicsPsoKey (in vk-pso-factory.h) that encodes everything needed to build one graphics PSO and to detect duplicates, using bit fields to minimize size:
+      - Shader: 64-bit hash of (vertex module handle, fragment module handle, vs entry name, ps entry name) so the key is self-contained and pointer-free.
+      - Vertex input: bit fields — no_vertex_input:1; vertex_stride:16 (0 when no input); vertex_format_hash:32 (hash of GpuGeometry::VertexFormat when has input).
+      - Color format: bit field (e.g. 16 bits) storing vk::Format for the single color attachment.
+      - Layout: bit fields for push_constant_size:8 (e.g. 0..256); reserved or layout_id for future descriptor set layout.
+    - Keep total key size to one or two 64-bit words (8–16 bytes). Implement operator== and std::hash<GraphicsPsoKey> for efficient map lookup.
+    - Fixed state (topology eTriangleList, rasterization, blend, multisample, dynamic viewport/scissor) is applied in the builder, not in the key.
+    - Verification: Build passes. Key type compiles; unit test that two keys with same field values are equal and have same hash; two keys differing in one field are unequal and (with high probability) different hash. Commit with message e.g. "Assignment PSO factory: add GraphicsPsoKey with bit fields (Task 1.1)".
+
+[ ] Task 1.2 — Add pipeline layout cache / get-or-create layout
+    - Pipeline layout is shared when push constant range and descriptor set layout(s) match. Either:
+      (A) Cache pipeline layouts in the factory by a small “LayoutKey” (push range + set layout handles), or
+      (B) Have the factory create layout on demand per PSO key and cache only the full PSO (layout owned by each cached entry).
+    - Recommended: (A) Separate layout cache so multiple PSOs can share one layout. Define LayoutKey (push range, 0..N set layout handles), implement getOrCreateLayout(LayoutKey) -> vk::PipelineLayout; store layouts in a map, destroy in factory destructor.
+    - Verification: Build passes. Factory (or a minimal stub) can return a layout for a given LayoutKey; second call with same key returns same layout. Commit with message e.g. "Assignment PSO factory: add pipeline layout cache (Task 1.2)".
+
+---
+PHASE 2: PSO factory class and integration into GpuContextVulkan
+---
+
+[ ] Task 2.1 — Implement PsoFactoryVulkan class (get-or-create PSO on top of rapid_vulkan, efficient cache lookup)
+    - New files: vk-pso-factory.h, vk-pso-factory.cpp.
+    - Class PsoFactoryVulkan: holds reference to GpuContextVulkan (which provides device/GlobalInfo). Implements getOrCreateGraphicsPso(GraphicsPsoKey const & key) returning rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> (or equivalent so Drawable/DrawPack can use it). Use std::unordered_map keyed by GraphicsPsoKey for O(1) lookup. To build a pipeline from a key: create rapid_vulkan::Shader from SPIR-V (Shader::ConstructParameters with gi, setSpirv, entry) when needed for the shader combo; build GraphicsPipeline via GraphicsPipeline::ConstructParameters with setDynamicRendering(colorFormat), vs/fs Shader*, vertex va/vb from key (or from key + cached reflection), dynamic viewport/scissor. Cache Ref<const GraphicsPipeline>; pipelines are owned by the cache and destroyed in the factory destructor.
+    - Pipeline layout is owned by each cached GraphicsPipeline (rapid_vulkan Pipeline holds layout); no separate layout cache required if every PSO carries its layout. Alternatively keep a LayoutKey-based layout cache and create pipelines with that layout (rapid_vulkan may require layout to come from reflection; follow existing Pipeline construction pattern).
+    - Destructor: clear cache (release Ref<GraphicsPipeline>).
+    - Public API: getOrCreateGraphicsPso(key) -> Ref<const GraphicsPipeline> (or a small struct { pipeline, layout } if callers need layout directly).
+    - Verification: Build passes. Unit test or rdg-smoke: create factory, request PSO with key (no vertex input, dummy shader modules), get non-null pipeline; request same key again, get same pipeline. Commit with message e.g. "Assignment PSO factory: PsoFactoryVulkan get-or-create using rapid_vulkan (Task 2.1)".
+
+[ ] Task 2.2 — Store PsoFactoryVulkan as member of GpuContextVulkan
+    - In vk-gpu-context.h: add member (e.g. std::unique_ptr<PsoFactoryVulkan> mPsoFactory or value type if default-constructible). Construct in GpuContextVulkan constructor (after device is valid); destroy in destructor (order: factory before device).
+    - Expose accessor: PsoFactoryVulkan & psoFactory() (or psoFactory()); RDG code calls gpu->psoFactory().getOrCreateGraphicsPso(key) to get rapid_vulkan::Ref<const GraphicsPipeline> for use with Drawable/DrawPack.
+    - Verification: Build passes. Any code that holds GpuContextVulkan can access the factory (e.g. from vk-draw-actions or test). Commit with message e.g. "Assignment PSO factory: add factory as member of GpuContextVulkan (Task 2.2)".
+
+---
+PHASE 3: Redo generic draw action (GpuDrawVulkan) utilizing the PSO factory
+---
+
+[ ] Task 3.1 — Build GraphicsPsoKey from GpuDraw parameters and geometry
+    - In GpuDrawVulkan (or a small helper used by it): from CreateParameters (vs/ps modules, entry names) and from GpuGeometry (empty => no-geom key; else vertex format + stride) and color format, build a GraphicsPsoKey (populate the bit-field key: shader hash, no_vertex_input, vertex_stride, vertex_format_hash, color format, push_constant_size). Reuse the same pipeline layout path as today (push constant 0..128 bytes vertex stage) unless Task 1.2 already centralizes it.
+    - Verification: Build passes. GpuDrawVulkan can construct a valid key for both “no geometry” and “with geometry” cases. Commit with message e.g. "Assignment PSO factory: build GraphicsPsoKey from GpuDraw params (Task 3.1)".
+
+[ ] Task 3.2 — Redo generic draw to use PSO factory, Drawable, DrawPack and CommandBuffer::render
+    - Remove per-draw pipeline layout and pipeline caches from GpuDrawVulkan. In execute(): (1) Build GraphicsPsoKey from current draw; (2) get pipeline from factory: auto pipeline = mGpu->psoFactory().getOrCreateGraphicsPso(key); (3) Build a rapid_vulkan::Drawable from that pipeline (Drawable::ConstructParameters { pipeline }), set push constants (c()), vertex buffers (v()) from GpuDraw::A, set draw params (draw()); (4) compile() to get Ref<const DrawPack>; (5) get command buffer from submission context (execute()) and call cb.commandBuffer.render(drawPack) with appropriate DrawPack::RenderParameters (device from mGpu->device().handle(), descriptorSetAllocator if descriptors are used; for push-only draws descriptor sets can be empty). Do not record bindPipeline/pushConstants/draw manually; use the rapid_vulkan path throughout.
+    - GpuDrawVulkan still holds shader binaries (or creates rapid_vulkan::Shader on demand) for key hashing; the factory owns the cached GraphicsPipeline. Set DrawPack::RenderParameters::device from GpuContextVulkan::device().handle() (or equivalent from rapid_vulkan GlobalInfo).
+    - Verification: Build passes. Run rdg-smoke and/or GNsample-rdg-draw-mesh (or simple-triangle); no Vulkan validation errors; rendering unchanged. Commit with message e.g. "Assignment PSO factory: GpuDrawVulkan uses factory, Drawable, DrawPack, CommandBuffer::render (Task 3.2)".
+
+[ ] Task 3.3 — Cleanup and edge cases
+    - Remove any dead code from GpuDrawVulkan (old ensure* methods, unused members). Handle missing shader modules or invalid key: factory returns null or GpuDrawVulkan skips draw and returns FAILED; log appropriately.
+    - Verification: Build passes; cit.py passes; sample runs without regression. Commit with message e.g. "Assignment PSO factory: cleanup GpuDrawVulkan (Task 3.3)".
+
+---
+PHASE 4: Verification and documentation
+---
+
+[ ] Task 4.1 — Add unit test for PSO cache behavior
+    - In src/test/ut/rdg/ (or equivalent): test that requesting the same GraphicsPsoKey twice returns the same pipeline (and same layout if exposed). Optionally test that different keys (e.g. different vertex format) return different pipelines. Requires a valid GpuContextVulkan and device; use existing rdg test setup if available.
+    - Verification: Build passes; cit.py -t runs the new test and it passes. Commit with message e.g. "Assignment PSO factory: unit test for cache (Task 4.1)".
+
+[ ] Task 4.2 — Final lint and PROGRESS update
+    - Run env/bin/cit.py (or python env\bin\cit.py); fix any lint. Update PROGRESS block in this file to mark all tasks complete. Optionally add a short comment in vk-pso-factory.h describing the factory’s role and usage.
+    - Verification: Lint passes; PROGRESS reflects completion. Commit with message e.g. "Assignment PSO factory: complete (Task 4.2)" and push.
+
+---
+Summary of files to touch
+---
+
+- rapid_vulkan (modify as needed): src/3rdparty/rapid-vulkan/inc/rapid-vulkan/rapid-vulkan.h, rapid-vulkan.cpp — Extend GraphicsPipeline::ConstructParameters for dynamic rendering (optional render pass; setDynamicRendering / PipelineRenderingCreateInfo).
+- Command buffer manager: src/core/rdg/vk-command-buffer.h, vk-command-buffer.cpp — Ensure execute() exposes rapid_vulkan::CommandBuffer so callers can call .render(DrawPack).
+- New: src/core/rdg/vk-pso-factory.h — PsoFactoryVulkan, GraphicsPsoKey (bit-field key), LayoutKey (or equivalent), accessors.
+- New: src/core/rdg/vk-pso-factory.cpp — Factory implementation (cache keyed by GraphicsPsoKey; build rapid_vulkan::GraphicsPipeline via Shader + ConstructParameters with dynamic rendering).
+- Modified: src/core/rdg/vk-gpu-context.h — Add mPsoFactory and psoFactory() accessor.
+- Modified: src/core/rdg/vk-gpu-context.cpp — Construct and destroy mPsoFactory in ctor/dtor.
+- Modified: src/core/rdg/vk-draw-actions.cpp — Remove per-draw pipeline/layout cache; use PSO factory, build Drawable from pipeline, compile to DrawPack, call cb.commandBuffer.render(drawPack).
+- Optional: src/test/ut/rdg/rdg-smoke.cpp or new rdg-pso-factory.cpp — Unit test for PSO cache.
+- CMake: Add vk-pso-factory.cpp to rdg target if not auto-discovered.
+
+--- END ASSIGNMENT ---
