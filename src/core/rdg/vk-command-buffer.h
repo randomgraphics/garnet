@@ -17,6 +17,7 @@ public:
         TRANSFER,
     };
 
+    /// Command buffer and queue from execute(). Use commandBuffer.render(drawPack) to record a DrawPack.
     struct CommandBuffer {
         rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue;
         rapid_vulkan::CommandBuffer                   commandBuffer {};
