@@ -11,7 +11,6 @@ namespace GN::rdg {
 // Helpers: pixel format mapping, descriptor from image
 // =============================================================================
 
-
 static Texture::Descriptor descriptorFromImageDesc(const gfx::img::ImageDesc & id) {
     gfx::img::PlaneCoord p {};
     Texture::Descriptor  d;
