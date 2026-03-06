@@ -278,4 +278,265 @@ struct BufferView {
 //     using GpuResource::GpuResource;
 // };
 
+// Represents a view to a GPU image. Could be a texture or a backbuffer.
+struct GpuImageView {
+    struct SubresourceIndex {
+        uint32_t mip  = 0; ///< index into mipmap chain
+        uint32_t face = 0; ///< index into array of faces
+
+        bool operator==(const SubresourceIndex & other) const { return mip == other.mip && face == other.face; }
+        bool operator!=(const SubresourceIndex & other) const { return !operator==(other); }
+    };
+
+    struct SubresourceRange {
+        uint32_t numMipLevels   = (uint32_t) -1; ///< -1 means all mip levels
+        uint32_t numArrayLayers = (uint32_t) -1; ///< -1 means all array layers
+
+        bool operator==(const SubresourceRange & other) const { return numMipLevels == other.numMipLevels && numArrayLayers == other.numArrayLayers; }
+        bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
+    };
+
+    std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> image;
+    gfx::img::PixelFormat                               format           = gfx::img::PixelFormat::UNKNOWN();
+    SubresourceIndex                                    subresourceIndex = {}; // default to mip level 0, face 0
+    SubresourceRange                                    subresourceRange = {}; // default to all mip levels, all array layers
+
+    bool empty() const { return 0 == image.index() ? std::get<0>(image) == nullptr : std::get<1>(image) == nullptr; }
+    bool isTexture() const { return image.index() == 0; }
+    bool isBackbuffer() const { return image.index() == 1; }
+
+    AutoRef<Artifact> artifact() const {
+        if (image.index() == 0)
+            return std::get<0>(image);
+        else
+            return std::get<1>(image);
+    }
+
+    AutoRef<Backbuffer> backbuffer() const {
+        if (isBackbuffer()) return std::get<1>(image);
+        return {};
+    }
+
+    AutoRef<Texture> texture() const {
+        if (isTexture()) return std::get<0>(image);
+        return {};
+    }
+
+    bool operator==(const GpuImageView & other) const {
+        return image == other.image && format == other.format && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange;
+    }
+    bool operator!=(const GpuImageView & other) const { return !operator==(other); }
+};
+
+struct TextureView : GpuImageView {
+    AutoRef<Sampler> sampler;
+};
+
+struct RenderTarget : public Artifact {
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "RenderTarget";
+
+    struct BlendState {
+        enum Arg {
+            ZERO = 0,
+            ONE,
+            SRC_COLOR,
+            INV_SRC_COLOR,
+            SRC_ALPHA,
+            INV_SRC_ALPHA,
+            DEST_ALPHA,
+            INV_DEST_ALPHA,
+            DEST_COLOR,
+            INV_DEST_COLOR,
+            BLEND_FACTOR,
+            INV_BLEND_FACTOR,
+        };
+
+        enum Op {
+            ADD,
+            SUB,
+            REV_SUB,
+            MIN,
+            MAX,
+        };
+
+        // Default blend mode is disabled.
+        Op       colorOp  = Op::ADD;
+        Arg      colorSrc = Arg::ONE;
+        Arg      colorDst = Arg::ZERO;
+        Op       alphaOp  = Op::ADD;
+        Arg      alphaSrc = Arg::ONE;
+        Arg      alphaDst = Arg::ZERO;
+        Vector4f factors  = {0.0f, 0.0f, 0.0f, 0.0f};
+
+        constexpr bool enabled() const {
+            return colorOp != Op::ADD || colorSrc != Arg::ONE || colorDst != Arg::ZERO || alphaOp != Op::ADD || alphaSrc != Arg::ONE || alphaDst != Arg::ZERO;
+        }
+        constexpr bool operator==(const BlendState & other) const {
+            return colorOp == other.colorOp && colorSrc == other.colorSrc && colorDst == other.colorDst && alphaOp == other.alphaOp &&
+                   alphaSrc == other.alphaSrc && alphaDst == other.alphaDst;
+        }
+        constexpr bool operator!=(const BlendState & other) const { return !operator==(other); }
+    };
+
+    enum class Compare {
+        NEVER = 0,     // no read, no write
+        LESS,          // read and write
+        LESS_EQUAL,    // read and write
+        EQUAL,         // read and write
+        GREATER_EQUAL, // read and write
+        GREATER,       // read and write
+        NOT_EQUAL,     // read and write
+        ALWAYS,        // write only
+    };
+
+    struct DepthState {
+        // default state equals to depth disabled.
+        Compare func  = Compare::ALWAYS;
+        bool    write = false;
+
+        constexpr bool testEnabled() const { return Compare::NEVER != func && Compare::ALWAYS != func; }
+        constexpr bool writeEnabled() const { return Compare::NEVER != func && write; }
+        constexpr bool operator==(const DepthState & other) const { return func == other.func && write == other.write; }
+        constexpr bool operator!=(const DepthState & other) const { return !operator==(other); }
+    };
+
+    struct StencilState {
+        enum Op {
+            KEEP = 0, // no read, no write
+            ZERO,     // write only
+            REPLACE,  // write only
+            INC_SAT,  // read and write
+            DEC_SAT,  // read and write
+            INVERT,   // read and write
+            INC,      // read and write
+            DEC,      // read and write
+        };
+
+        // default to an state that stencil is effectively disabled.
+        Compare compare   = Compare::ALWAYS; ///< stencil comparison function
+        Op      pass      = KEEP;            ///< stencil operation on pass
+        Op      fail      = KEEP;            ///< stencil operation on fail
+        Op      zFail     = KEEP;            ///< stencil operation on depth fail
+        uint8_t ref       = 0;               ///< stencil reference value
+        uint8_t readMask  = 0xFF;            ///< stencil read mask
+        uint8_t writeMask = 0xFF;            ///< stencil write mask
+
+        constexpr bool enabled() const {
+            bool read  = (0 != readMask) && (Compare::NEVER != compare) && (Compare::ALWAYS != compare);
+            bool write = (0 != writeMask) && ((Op::KEEP != pass) || (Op::KEEP != fail) || (Op::KEEP != zFail));
+            return read || write;
+        }
+        constexpr bool operator==(const StencilState & other) const {
+            return pass == other.pass && fail == other.fail && zFail == other.zFail && compare == other.compare && ref == other.ref &&
+                   readMask == other.readMask && writeMask == other.writeMask;
+        }
+        constexpr bool operator!=(const StencilState & other) const { return !operator==(other); }
+    };
+
+    /// Viewport settings. Defines tranform of normalized device coordinates (NDC) to Window coordinates.
+    ///   - Left top is (-1, 1) in NDC space, map to Window space coordiante (0, 0).
+    ///   - Right bottom is (1, -1) in NDC space, map to Window space coordiante (width, height).
+    ///   - Set width and/or heigh to FLT_MAX indicating the current size of the render target.
+    struct Viewport {
+        float x        = 0.0f;
+        float y        = 0.0f;
+        float width    = FLT_MAX; ///< default to current size of the render target.
+        float height   = FLT_MAX; ///< default to current size of the render target.
+        float minDepth = 0.0f;
+        float maxDepth = 1.0f;
+
+        constexpr bool fullScreen() const { return 0.0f == x && 0.0f == y && FLT_MAX == width && FLT_MAX == height; }
+        constexpr bool operator==(const Viewport & other) const {
+            return x == other.x && y == other.y && width == other.width && height == other.height && minDepth == other.minDepth && maxDepth == other.maxDepth;
+        }
+        constexpr bool operator!=(const Viewport & other) const { return !operator==(other); }
+    };
+
+    /// Scissor rectangle in Window coordinates. (0, 0) is the left top corner of the window.
+    struct ScissorRect {
+        int32_t  x      = 0;
+        int32_t  y      = 0;
+        uint32_t width  = (~0u); ///< Set to (~0u) indicating with of the current window.
+        uint32_t height = (~0u); ///< Set to (~0u) indicating height of the current window.
+
+        constexpr bool disabled() const { return (0 == x) && (0 == y) && (~0u == width) && (~0u == height); }
+        constexpr bool operator==(const ScissorRect & other) const { return x == other.x && y == other.y && width == other.width && height == other.height; }
+        constexpr bool operator!=(const ScissorRect & other) const { return !operator==(other); }
+    };
+
+    union ClearColorValue {
+        float    f4[4];
+        uint32_t u4[4];
+        int32_t  i4[4];
+    };
+
+    struct ColorTarget {
+        GpuImageView    target {};
+        BlendState      blendState = {};
+        uint8_t         writeMask  = 0xFF;                       // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
+        ClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to solid black.
+
+        ColorTarget & setClearColor(float r, float g, float b, float a = 1.0f) {
+            clearColor.f4[0] = r;
+            clearColor.f4[1] = g;
+            clearColor.f4[2] = b;
+            clearColor.f4[3] = a;
+            return *this;
+        }
+
+        bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
+        bool operator!=(const ColorTarget & other) const { return !operator==(other); }
+    };
+
+    struct DepthStencil {
+        AutoRef<Texture>               target;
+        gfx::img::PixelFormat          format = gfx::img::PixelFormat::UNKNOWN();
+        GpuImageView::SubresourceIndex subresourceIndex {};
+        DepthState                     depthState   = {};
+        StencilState                   stencilState = {};
+        float                          clearDepth   = 1.0;
+        uint32_t                       clearStencil = 0;
+
+        bool operator==(const DepthStencil & other) const {
+            if (target != other.target) return false;
+            if (target && subresourceIndex != other.subresourceIndex) return false; // only check subresource index for non-empty texture targets
+            if (depthState != other.depthState) return false;
+            if (stencilState != other.stencilState) return false;
+            return true;
+        }
+
+        bool operator!=(const DepthStencil & other) const { return !operator==(other); }
+    };
+
+    StackArray<ColorTarget, 8> colors;
+    DepthStencil               depthStencil = {};
+    Viewport                   viewport     = {};
+    ScissorRect                scissorRect  = {};
+
+    /// Returns list of artifacts referenced by this render target.
+    virtual SafeArrayAccessor<const Artifact * const> artifacts() const = 0;
+
+    bool operator==(const RenderTarget & other) const {
+        return colors == other.colors && depthStencil == other.depthStencil && viewport == other.viewport && scissorRect == other.scissorRect;
+    }
+    bool operator!=(const RenderTarget & other) const { return !operator==(other); }
+
+    struct CreateParameters {
+        // tbd
+    };
+
+    static GN_API AutoRef<RenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
+protected:
+    using Artifact::Artifact;
+};
+
+static_assert(GN::rdg::RenderTarget::BlendState {}.enabled() == false);
+static_assert(GN::rdg::RenderTarget::DepthState {}.testEnabled() == false);
+static_assert(GN::rdg::RenderTarget::DepthState {}.writeEnabled() == false);
+static_assert(GN::rdg::RenderTarget::StencilState {}.enabled() == false);
+static_assert(GN::rdg::RenderTarget::Viewport {}.fullScreen() == true);
+static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
+
 } // namespace GN::rdg

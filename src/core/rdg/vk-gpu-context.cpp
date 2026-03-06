@@ -42,11 +42,6 @@ GpuContextVulkan::~GpuContextVulkan() {
     GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name);
 }
 
-PsoFactoryVulkan & GpuContextVulkan::psoFactory() {
-    GN_ASSERT(mPsoFactory);
-    return *mPsoFactory;
-}
-
 // =============================================================================
 // createVulkanGpuContext - API-specific factory
 // =============================================================================

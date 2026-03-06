@@ -35,6 +35,9 @@ public:
     /// Called by task in execution pass to begin render pass.
     RenderPassExecutionResult execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer);
 
+    /// Current render target for the given task (set by prepareDraw). Null if task has no draw target.
+    const RenderTarget * getCurrentDrawTarget(uint64_t taskIndex) const;
+
 private:
     struct Entry {
         AutoRef<Backbuffer>   present = {};

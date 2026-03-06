@@ -90,12 +90,12 @@ static GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
     geom.format.attributes.append(GpuGeometry::VertexAttribute {0, 0, GpuGeometry::AttributeFormat::F32_3});  // position
     geom.format.attributes.append(GpuGeometry::VertexAttribute {1, 12, GpuGeometry::AttributeFormat::F32_3}); // normal
     geom.format.attributes.append(GpuGeometry::VertexAttribute {2, 24, GpuGeometry::AttributeFormat::F32_2}); // texcoord
-    GpuGeometry::GeometryBuffer vb;
+    GpuGeometry::VertexBuffer vb;
     vb.buffer = std::move(vertexBuffer);
     vb.offset = 0;
-    vb.size   = sizeof(kBoxVertices);
     vb.stride = sizeof(Vertex);
     geom.vertices.append(vb);
+    geom.vertexCount = static_cast<uint32_t>(sizeof(kBoxVertices) / sizeof(Vertex));
     return geom;
 }
 

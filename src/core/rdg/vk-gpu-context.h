@@ -54,7 +54,10 @@ public:
         return *mDevice.value().gi();
     }
 
-    PsoFactoryVulkan & psoFactory();
+    PsoFactoryVulkan & psoFactory() const {
+        GN_ASSERT(!mPsoFactory);
+        return *mPsoFactory;
+    }
 };
 
 /// Create a Vulkan-backed GpuContext. Called from GpuContext::create() when api is "vulkan".

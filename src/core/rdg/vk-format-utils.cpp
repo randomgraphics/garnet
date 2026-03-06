@@ -275,4 +275,76 @@ gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt) {
     return PF::UNKNOWN();
 }
 
+vk::Format vertexAttributeFormatToVk(GpuGeometry::AttributeFormat f) {
+    using F = GpuGeometry::AttributeFormat;
+    switch (f) {
+    case F::F32_1:
+        return vk::Format::eR32Sfloat;
+    case F::F32_2:
+        return vk::Format::eR32G32Sfloat;
+    case F::F32_3:
+        return vk::Format::eR32G32B32Sfloat;
+    case F::F32_4:
+        return vk::Format::eR32G32B32A32Sfloat;
+    case F::F16_1:
+        return vk::Format::eR16Sfloat;
+    case F::F16_2:
+        return vk::Format::eR16G16Sfloat;
+    case F::F16_3:
+        return vk::Format::eR16G16B16Sfloat;
+    case F::F16_4:
+        return vk::Format::eR16G16B16A16Sfloat;
+    case F::U32_1:
+        return vk::Format::eR32Uint;
+    case F::U32_2:
+        return vk::Format::eR32G32Uint;
+    case F::U32_3:
+        return vk::Format::eR32G32B32Uint;
+    case F::U32_4:
+        return vk::Format::eR32G32B32A32Uint;
+    case F::U16_1:
+        return vk::Format::eR16Uint;
+    case F::U16_2:
+        return vk::Format::eR16G16Uint;
+    case F::U16_3:
+        return vk::Format::eR16G16B16Uint;
+    case F::U16_4:
+        return vk::Format::eR16G16B16A16Uint;
+    case F::U8_1:
+        return vk::Format::eR8Uint;
+    case F::U8_2:
+        return vk::Format::eR8G8Uint;
+    case F::U8_3:
+        return vk::Format::eR8G8B8Uint;
+    case F::U8_4:
+        return vk::Format::eR8G8B8A8Uint;
+    case F::I32_1:
+        return vk::Format::eR32Sint;
+    case F::I32_2:
+        return vk::Format::eR32G32Sint;
+    case F::I32_3:
+        return vk::Format::eR32G32B32Sint;
+    case F::I32_4:
+        return vk::Format::eR32G32B32A32Sint;
+    case F::I16_1:
+        return vk::Format::eR16Sint;
+    case F::I16_2:
+        return vk::Format::eR16G16Sint;
+    case F::I16_3:
+        return vk::Format::eR16G16B16Sint;
+    case F::I16_4:
+        return vk::Format::eR16G16B16A16Sint;
+    case F::I8_1:
+        return vk::Format::eR8Sint;
+    case F::I8_2:
+        return vk::Format::eR8G8Sint;
+    case F::I8_3:
+        return vk::Format::eR8G8B8Sint;
+    case F::I8_4:
+        return vk::Format::eR8G8B8A8Sint;
+    default:
+        return vk::Format::eR32G32B32Sfloat;
+    }
+}
+
 } // namespace GN::rdg

@@ -254,6 +254,12 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer com
     return {Action::ExecutionResult::PASSED, needToEnd};
 }
 
+const RenderTarget * RenderPassManagerVulkan::getCurrentDrawTarget(uint64_t taskIndex) const {
+    auto it = mEntries.find(taskIndex);
+    if (it == mEntries.end()) GN_UNLIKELY return nullptr;
+    return it->second.draw.get();
+}
+
 bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer commandBuffer) {
     GN_VERBOSE(sLogger)("begin render pass for render target: {}.", renderTarget.name);
 
