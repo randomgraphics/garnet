@@ -31,10 +31,10 @@ struct TypeNameKeyHash {
 
 class ArtifactDatabaseImpl : public ArtifactDatabase {
     // Map from (type, name) to artifact
-    std::unordered_map<TypeNameKey, AutoRef<Artifact>, TypeNameKeyHash> mArtifactsById;
+    std::unordered_map<TypeNameKey, WeakRef<Artifact>, TypeNameKeyHash> mArtifactsById;
 
     // Map from sequence number to artifact (for fast lookup by sequence)
-    std::unordered_map<uint64_t, AutoRef<Artifact>> mArtifactsBySeq;
+    std::unordered_map<uint64_t, WeakRef<Artifact>> mArtifactsBySeq;
 
     // Sequence number counter
     uint64_t mNextSequence = 1;
@@ -57,9 +57,8 @@ public:
         }
 
         uint64_t          seq = mNextSequence++;
-        AutoRef<Artifact> ref(artifact);
-        mArtifactsById[key]  = ref;
-        mArtifactsBySeq[seq] = ref;
+        mArtifactsById[key]  = WeakRef<Artifact>(artifact);
+        mArtifactsBySeq[seq] = WeakRef<Artifact>(artifact);
         return seq;
     }
 
@@ -68,7 +67,11 @@ public:
 
         TypeNameKey key {type, name};
         auto        it = mArtifactsById.find(key);
-        if (it != mArtifactsById.end()) { return it->second; }
+        if (it != mArtifactsById.end()) {
+            AutoRef<Artifact> ref = it->second.promote();
+            if (ref) return ref;
+            mArtifactsById.erase(it);
+        }
         return AutoRef<Artifact>();
     }
 
@@ -76,7 +79,11 @@ public:
         std::lock_guard<std::mutex> lock(mMutex);
 
         auto it = mArtifactsBySeq.find(sequence);
-        if (it != mArtifactsBySeq.end()) { return it->second; }
+        if (it != mArtifactsBySeq.end()) {
+            AutoRef<Artifact> ref = it->second.promote();
+            if (ref) return ref;
+            mArtifactsBySeq.erase(it);
+        }
         return AutoRef<Artifact>();
     }
 
@@ -85,8 +92,8 @@ public:
 
         auto it = mArtifactsBySeq.find(sequence);
         if (it == mArtifactsBySeq.end()) { return false; }
-
-        Artifact *  a = it->second;
+        auto a = it->second.promote();
+        if (!a) return false;
         TypeNameKey key {a->typeId, a->name};
         mArtifactsBySeq.erase(it);
         mArtifactsById.erase(key);

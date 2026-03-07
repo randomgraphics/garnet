@@ -55,7 +55,7 @@ public:
     }
 
     PsoFactoryVulkan & psoFactory() const {
-        GN_ASSERT(!mPsoFactory);
+        GN_ASSERT(mPsoFactory);
         return *mPsoFactory;
     }
 };

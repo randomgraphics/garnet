@@ -37,10 +37,7 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
     if (mDevice->handle()) mPsoFactory = std::make_unique<PsoFactoryVulkan>(*this);
 }
 
-GpuContextVulkan::~GpuContextVulkan() {
-    mPsoFactory.reset();
-    GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name);
-}
+GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name); }
 
 // =============================================================================
 // createVulkanGpuContext - API-specific factory

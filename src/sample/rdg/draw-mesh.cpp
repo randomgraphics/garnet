@@ -174,7 +174,7 @@ int main(int, const char **) {
     auto vertexBuffer = createBoxVertexBuffer(*db, gpuContext);
     if (!vertexBuffer) return -1;
 
-    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR Box", .clientWidth = 1280, .clientHeight = 720});
+    auto window = std::unique_ptr<win::Window>(win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR Box", .clientWidth = 1280, .clientHeight = 720}));
     if (!window) return -1;
     // Window owns the surface; do not destroy it. Destroy backbuffer before window.
     intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());

@@ -11,12 +11,12 @@
 namespace GN {
 /// Reference counted smart pointer. Support both strong and weak reference.
 /// Note that behavior  of this class is different than the Windows COM pointer:
-/// A newly  instance of RefCoutner will have reference counter set to 0,
+/// A newly  instance of RefCounter will have reference counter set to 0,
 /// instead of 1. There are a few reasons why it is this way:
 ///  - The class can be used in non-ref-counted way. This makes it possible to
 ///    use subclass of RefCounted as a member of another class.
 ///  - This makes the AutoRef class logic much more consistent and less error prone.
-///    Whenever a raw pointer is given to AutoRef class, always call addref(), regarless
+///    Whenever a raw pointer is given to AutoRef class, always call addref(), regardless
 ///    the raw pointer is newly constructed or is passed from another AutoRef()
 // -------------------------------------------------------------------------
 class RefCounter {
@@ -69,6 +69,27 @@ public:
     /// get current reference counter value
     ///
     int getref() const throw() { return mRef; }
+
+    /// Increase reference counter if and only if the reference counter is greater than zero.
+    /// Return the new reference counter value if the reference counter was increased, otherwise return 0.
+    /// This method is currently used to promote weak references to strong references in a thread safe
+    /// and lock-free way.
+    int32_t increfIfNotZero() const throw() {
+        auto expected = mRef.load();
+        for (;;) {
+            if (expected == 0) {
+                // If the value is 0, we do not increment and break the loop
+                return 0;
+            }
+            // 2. Try to swap the value if it's still 'expected'
+            // If it fails, 'expected' is updated with the actual current value
+            if (mRef.compare_exchange_strong(expected, expected + 1)) {
+                // 3. If the swap succeeds, the operation is complete
+                return expected + 1;
+            }
+            // 4. If it fails, the loop continues with the updated 'expected' value
+        }
+    }
 
     ///
     /// Return the weak object associated with this reference counted object.
@@ -385,7 +406,7 @@ inline AutoRef<T> referenceTo(T * ptr) {
 }
 
 ///
-/// Weak refernce to smart pointer object
+/// Weak reference to a smart pointer object
 // -------------------------------------------------------------------------
 template<typename X>
 class WeakRef {
@@ -471,7 +492,8 @@ public:
         AutoRef<X> result;
         if (mObj) {
             mObj->lock.lock();
-            result.set((XPTR) mObj->ptr);
+            auto p = (XPTR) mObj->ptr;
+            if (p && p->increfIfNotZero() > 0) { result.attach(p); }
             mObj->lock.unlock();
         }
         return result;
@@ -492,6 +514,7 @@ public:
         if (this == &rhs) return *this;
         clear();
         moveFrom(rhs);
+        return *this;
     }
 
     bool operator!() const { return empty(); }

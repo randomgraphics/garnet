@@ -11,11 +11,11 @@
 ///
 /// Assert failure
 ///
-#define GN_ASSERT_FAILURE(...)                                                                                                                     \
-    if (true) {                                                                                                                                    \
-        static bool sIgnoredForever = false;                                                                                                       \
-        if (!sIgnoredForever) { GN::internal::handleAssertFailure(__VA_ARGS__ __VA_OPT__(, ) __FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever); } \
-    } else                                                                                                                                         \
+#define GN_ASSERT_FAILURE(...)                                                                                                       \
+    if (true) {                                                                                                                      \
+        static bool sIgnoredForever = false;                                                                                         \
+        if (!sIgnoredForever) { GN::internal::handleAssertFailure(__FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever, __VA_ARGS__); } \
+    } else                                                                                                                           \
         void(0)
 
 ///
@@ -260,23 +260,19 @@ namespace internal {
 ///
 /// Handle assert failure
 ///
-GN_API void handleAssertFailure(const char * msg, const char * file, int line, const char * func, bool * ignoreForever) throw();
+GN_API void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, const char * msg = "") throw();
 
 ///
 /// Handle assert failure
 ///
-GN_API void handleAssertFailure(const wchar_t * msg, const char * file, int line, const char * func, bool * ignoreForever) throw();
+GN_API void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, const wchar_t * msg) throw();
 
-inline void handleAssertFailure(const std::string & message, const char * file, int line, const char * func, bool * ignoreForever) throw() {
-    return handleAssertFailure(message.c_str(), file, line, func, ignoreForever);
+inline void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, std::string && message) throw() {
+    return handleAssertFailure(file, line, func, ignoreForever, message.c_str());
 }
 
-inline void handleAssertFailure(const std::wstring & message, const char * file, int line, const char * func, bool * ignoreForever) throw() {
-    return handleAssertFailure(message.c_str(), file, line, func, ignoreForever);
-}
-
-inline void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever) throw() {
-    return handleAssertFailure("Required condition is not met.", file, line, func, ignoreForever);
+inline void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, std::wstring && message) throw() {
+    return handleAssertFailure(file, line, func, ignoreForever, message.c_str());
 }
 
 } // namespace internal

@@ -55,7 +55,7 @@ struct Artifact : public RefCounter, public RuntimeType {
     const StrA         name;
     const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
 
-    virtual ~Artifact() {}
+    virtual ~Artifact();
 
 protected:
     /// Constructor
@@ -63,6 +63,7 @@ protected:
 };
 
 /// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
+/// The database is only holding weak references to all artifacts, so it is not responsible for the lifetime of the artifacts.
 struct ArtifactDatabase {
     struct CreateParameters {
         // TBD
@@ -79,7 +80,7 @@ struct ArtifactDatabase {
     ///       if 0 (duplicate type+name), delete the new instance and return null.
     virtual uint64_t admit(Artifact * artifact) = 0;
 
-    /// Erase an artifact instance by its sequence number.
+    /// Erase an artifact instance by its sequence number. Usually called by destructor of the artifact.
     virtual bool erase(uint64_t sequence) = 0;
 
     /// Search for an artifact instance by type and name.
@@ -94,6 +95,10 @@ protected:
 
 inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
     : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
+
+inline Artifact::~Artifact() {
+    if (sequence) database.erase(sequence);
+}
 
 /// A helper class to wrap anything as an artifact.
 /// \param T    Type of the value to wrap.

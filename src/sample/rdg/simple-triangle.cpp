@@ -1,5 +1,4 @@
 #include "pch.h"
-#include <garnet/GNwin.h>
 
 #include "solid-triangle-vert.spv.h"
 #include "solid-triangle-frag.spv.h"
@@ -42,8 +41,8 @@ int main(int, const char **) {
     // Create a main window and surface of 1280x720
     uint32_t windowWidth  = 1280;
     uint32_t windowHeight = 720;
-    auto     window =
-        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight});
+    auto     window       = std::unique_ptr<win::Window>(
+        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight}));
     if (!window) return -1;
     // Window owns the surface; do not destroy it. Destroy backbuffer before window.
     intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());

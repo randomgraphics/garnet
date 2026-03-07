@@ -62,7 +62,7 @@ static uint64_t hashStencilState(const RenderTarget::StencilState & s) {
 
 RenderTargetKey RenderTargetKey::make(const RenderTarget & renderTarget) {
     RenderTargetKey k;
-    k.colorCount    = 0;
+    k.colorCount    = static_cast<uint8_t>(renderTarget.colors.size());
     uint64_t stateH = 0;
     for (size_t i = 0; i < renderTarget.colors.size() && k.colorCount < kMaxColorTargets; ++i) {
         const auto & c = renderTarget.colors[i];
@@ -312,16 +312,27 @@ PsoFactoryVulkan::~PsoFactoryVulkan() {
 }
 
 rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrCreateGraphicsPso(const GraphicsPsoCreateParams & params) {
-    if (!_impl || !_impl->gpu) return {};
+    if (!_impl || !_impl->gpu) {
+        GN_ERROR(sLogger)("PsoFactoryVulkan: no impl or gpu");
+        return {};
+    }
     const GraphicsPsoKey key = makeKey(params);
-    if (key.renderTargetKey.colorCount == 0) return {};
     auto it = _impl->cache.find(key);
     if (it != _impl->cache.end()) return it->second;
-    if (!params.vs.binary || params.vs.size == 0) return {};
+    if (!params.vs.binary || params.vs.size == 0) {
+        GN_ERROR(sLogger)("PsoFactoryVulkan: invalid vertex shader");
+        return {};
+    }
     ShaderPair * shaders = _impl->getOrCreateShaders(key.shaderKey.hash, params);
-    if (!shaders || !shaders->vs) return {};
+    if (!shaders || !shaders->vs) {
+        GN_ERROR(sLogger)("PsoFactoryVulkan: failed to create shaders");
+        return {};
+    }
     const rapid_vulkan::GlobalInfo * gi = _impl->gpu->device().gi();
-    if (!gi) return {};
+    if (!gi) {
+        GN_ERROR(sLogger)("PsoFactoryVulkan: no GlobalInfo");
+        return {};
+    }
     rapid_vulkan::GraphicsPipeline::ConstructParameters cp;
     cp.setName("pso-factory-pipeline");
     cp.setVS(shaders->vs.get());
@@ -336,7 +347,7 @@ rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrC
     }
     rapid_vulkan::Ref<rapid_vulkan::GraphicsPipeline> pipe(new rapid_vulkan::GraphicsPipeline(cp));
     if (!pipe->handle()) {
-        GN_WARN(sLogger)("PsoFactoryVulkan: failed to create graphics pipeline");
+        GN_ERROR(sLogger)("PsoFactoryVulkan: failed to create graphics pipeline");
         return {};
     }
     _impl->cache[key] = pipe;
