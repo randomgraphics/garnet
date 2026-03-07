@@ -11,11 +11,11 @@
 ///
 /// Assert failure
 ///
-#define GN_ASSERT_FAILURE(...)                                                                                                       \
-    if (true) {                                                                                                                      \
-        static bool sIgnoredForever = false;                                                                                         \
-        if (!sIgnoredForever) { GN::internal::handleAssertFailure(__FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever, __VA_ARGS__); } \
-    } else                                                                                                                           \
+#define GN_ASSERT_FAILURE(...)                                                                                                         \
+    if (true) {                                                                                                                        \
+        static bool sIgnoredForever = false;                                                                                           \
+        if (!sIgnoredForever) { GN::internal::handleAssertFailure(__FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever, ##__VA_ARGS__); } \
+    } else                                                                                                                             \
         void(0)
 
 ///

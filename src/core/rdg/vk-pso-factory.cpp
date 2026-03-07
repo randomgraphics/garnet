@@ -317,7 +317,7 @@ rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrC
         return {};
     }
     const GraphicsPsoKey key = makeKey(params);
-    auto it = _impl->cache.find(key);
+    auto                 it  = _impl->cache.find(key);
     if (it != _impl->cache.end()) return it->second;
     if (!params.vs.binary || params.vs.size == 0) {
         GN_ERROR(sLogger)("PsoFactoryVulkan: invalid vertex shader");

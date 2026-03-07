@@ -56,7 +56,7 @@ public:
             return 0;
         }
 
-        uint64_t          seq = mNextSequence++;
+        uint64_t seq         = mNextSequence++;
         mArtifactsById[key]  = WeakRef<Artifact>(artifact);
         mArtifactsBySeq[seq] = WeakRef<Artifact>(artifact);
         return seq;
