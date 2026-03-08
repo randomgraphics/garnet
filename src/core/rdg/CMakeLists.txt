@@ -13,6 +13,5 @@ if(VULKAN_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling PBR GLSL to SPIR-V headers"
     )
-    add_custom_target(rdg-pbr-shaders DEPENDS "${_pbr_vert_h}" "${_pbr_frag_h}")
-    set(RDG_PBR_SHADER_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
+    add_custom_target(GNcore-rdg-shaders DEPENDS ${_pbr_vert_h} ${_pbr_frag_h})
 endif()

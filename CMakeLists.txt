@@ -100,9 +100,20 @@ function(GN_add_source_folder result folder)
         list(APPEND header_patterns ${folder}/${x})
     endforeach()
     file(GLOB headers ${header_patterns})
+    if (${arg_VERBOSE})
+        GN_print_status("Globbed header files: ${headers}")
+    endif()
+
+    # glob extra sources
+    if(arg_EXTRA_SOURCES)
+        file(GLOB extra_sources ${arg_EXTRA_SOURCES})
+        if (${arg_VERBOSE})
+            GN_print_status("Globbed extra sources: ${extra_sources}")
+        endif()
+    endif()
 
     # done
-    set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} ${arg_EXTRA_SOURCES} PARENT_SCOPE)
+    set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} ${extra_sources} PARENT_SCOPE)
 endfunction()
 
 # =======================
