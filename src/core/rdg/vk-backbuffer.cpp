@@ -35,12 +35,17 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     scp.setSurface(vk::SurfaceKHR((VkSurfaceKHR) (void *) mDescriptor.window));
     scp.depthStencilFormat.mode = rapid_vulkan::Swapchain::DepthStencilFormat::DISABLED; // do not automatically create depth buffer
 
+    scp.backbufferFormat = pixelFormatToVkFormat(mDescriptor.format);
+
     try {
         mSwapchain = rapid_vulkan::Ref<rapid_vulkan::Swapchain>::make(scp);
     } catch (const std::exception & e) {
         GN_ERROR(sLogger)("BackbufferVulkan::init: Swapchain creation failed: {}, name='{}'", e.what(), name);
         return false;
     }
+
+    mDescriptor.format = vkFormatToPixelFormat(mSwapchain->cp().backbufferFormat);
+    GN_REQUIRE(mDescriptor.format != gfx::img::PixelFormat::UNKNOWN());
 
     return true;
 }

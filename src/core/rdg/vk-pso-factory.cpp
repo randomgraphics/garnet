@@ -211,7 +211,7 @@ static auto getGpuImageViewFormat(const GpuImageView & view) {
     }
 }
 
-static void applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::ConstructParameters & cp, const RenderTarget & rt) {
+static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::ConstructParameters & cp, const RenderTarget & rt) {
     std::vector<vk::Format> colorFormats;
     uint32_t                renderTargetWidth  = (~0u);
     uint32_t                renderTargetHeight = (~0u);
@@ -229,13 +229,18 @@ static void applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
                 .setDstAlphaBlendFactor(blendArgToVk(b.alphaDst))
                 .setAlphaBlendOp(blendOpToVk(b.alphaOp));
         }
+
+        auto f = getGpuImageViewFormat(c.target);
+        if (f == gfx::img::PixelFormat::UNKNOWN()) {
+            GN_ERROR(sLogger)("RenderTarget {}: color target [{}] pixel format is UNKNOWN: ", rt.name, i);
+            return false;
+        }
+
         cp.attachments.push_back(v);
         auto [width, height] = getGpuImageViewDimension(c.target);
         renderTargetWidth    = std::min(renderTargetWidth, width);
         renderTargetHeight   = std::min(renderTargetHeight, height);
 
-        auto f = getGpuImageViewFormat(c.target);
-        if (f == gfx::img::PixelFormat::UNKNOWN()) continue;
         colorFormats.push_back(static_cast<vk::Format>(pixelFormatToVkFormat(f)));
     }
     if (cp.attachments.empty()) {
@@ -252,7 +257,7 @@ static void applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
 
     // get depth target dimensions
     vk::Format depthFormat = vk::Format::eUndefined;
-    if (rt.depthStencil.target) {
+    if (rt.depthStencil.target && (rt.depthStencil.depthState.testEnabled() || rt.depthStencil.depthState.writeEnabled())) {
         GpuImageView depthView;
         depthView.image            = rt.depthStencil.target;
         depthView.subresourceIndex = rt.depthStencil.subresourceIndex;
@@ -289,6 +294,9 @@ static void applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
     auto scissorWidth  = (~0u) == rt.scissorRect.width ? renderTargetWidth : (uint32_t) std::ceil(viewWidth);
     auto scissorHeight = (~0u) == rt.scissorRect.height ? renderTargetHeight : (uint32_t) std::ceil(viewHeight);
     cp.scissors.push_back(vk::Rect2D(vk::Offset2D(rt.scissorRect.x, rt.scissorRect.y), vk::Extent2D(scissorWidth, scissorHeight)));
+
+    // done
+    return true;
 }
 
 // --- GpuGeometryKey ---
@@ -399,7 +407,7 @@ rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrC
     cp.setName("pso-factory-pipeline");
     cp.setVS(shaders->vs.get());
     cp.setFS(shaders->fs.get());
-    applyRenderTargetToPipeline(cp, params.renderTarget);
+    if (!applyRenderTargetToPipeline(cp, params.renderTarget)) return {};
     if (!key.geometryKey.noVertexInput && !params.geometry.format.empty() && !params.geometry.vertices.empty()) {
         const uint32_t stride = static_cast<uint32_t>(params.geometry.vertices[0].stride);
         cp.vb.push_back({0, stride, vk::VertexInputRate::eVertex});

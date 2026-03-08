@@ -295,17 +295,18 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     renderInfo.setColorAttachments(colorAttachments);
 
     // setup depth attachment (and stencil when combined format: same view for both)
-    vk::PhysicalDevice          physical = mGpu->globalInfo().physical;
+    const auto &                depthStencil = renderTarget.depthStencil;
+    vk::PhysicalDevice          physical     = mGpu->globalInfo().physical;
     vk::RenderingAttachmentInfo depthAttachment, stencilAttachment;
-    auto                        depthView = getDepthTargetImageView(physical, renderTarget.depthStencil);
-    if (depthView) {
+    auto                        depthView = getDepthTargetImageView(physical, depthStencil);
+    if (depthView && (depthStencil.depthState.testEnabled() || depthStencil.depthState.writeEnabled())) {
         depthAttachment.setImageView(depthView)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
             .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
             .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.depthStencil.clearDepth, (uint32_t) renderTarget.depthStencil.clearStencil)));
         renderInfo.setPDepthAttachment(&depthAttachment);
         auto stencilView = getStencilTargetImageView(renderTarget.depthStencil, depthView);
-        if (stencilView) {
+        if (stencilView && depthStencil.stencilState.enabled()) {
             stencilAttachment.setImageView(stencilView)
                 .setLoadOp(vk::AttachmentLoadOp::eClear)
                 .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)

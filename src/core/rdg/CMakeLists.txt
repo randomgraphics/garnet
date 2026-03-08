@@ -1,8 +1,18 @@
-# Optional: regenerate PBR SPIR-V headers after editing core/rdg/shaders/*.vert|*.frag
+# Regenerate PBR SPIR-V headers in build dir when shader sources or script change (builds automatically with GNcore).
 if(VULKAN_FOUND)
-    add_custom_target(rdg-pbr-shaders
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compile_pbr_shaders.py
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    find_package(Python3 REQUIRED)
+    set(_pbr_vert_h ${CMAKE_CURRENT_BINARY_DIR}/pbr-vert.spv.h)
+    set(_pbr_frag_h ${CMAKE_CURRENT_BINARY_DIR}/pbr-frag.spv.h)
+    # On Windows run scripts via python.exe; WORKING_DIRECTORY = binary dir so "." is the output dir.
+    add_custom_command(
+        OUTPUT "${_pbr_vert_h}" "${_pbr_frag_h}"
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compile_pbr_shaders.py "."
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/compile_pbr_shaders.py
+                ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pbr.vert
+                ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pbr.frag
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling PBR GLSL to SPIR-V headers"
     )
+    add_custom_target(rdg-pbr-shaders DEPENDS "${_pbr_vert_h}" "${_pbr_frag_h}")
+    set(RDG_PBR_SHADER_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
 endif()

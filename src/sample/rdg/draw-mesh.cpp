@@ -189,9 +189,15 @@ int main(int, const char **) {
     if (!backbuffer) return -1;
     const auto & bbDesc = backbuffer->descriptor();
 
+    auto depthTexture = Texture::create(
+        *db, "depth_texture",
+        Texture::CreateParameters {.context    = gpuContext,
+                                   .descriptor = Texture::Descriptor {}.setDimensions(1280, 720).setFormat(gfx::img::PixelFormat::RG_24_UNORM_8_UINT())});
+
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
     renderTarget->colors.append(RenderTarget::ColorTarget {.target = GpuImageView {.image = backbuffer}}.setClearColor(0.1f, 0.1f, 0.15f, 1.0f));
+    renderTarget->depthStencil.setTarget(depthTexture).setDepthState(RenderTarget::DepthState {.func = RenderTarget::Compare::LESS, .write = true});
 
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
