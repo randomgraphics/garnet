@@ -434,9 +434,9 @@ struct RenderTarget : public Artifact {
         constexpr bool operator!=(const StencilState & other) const { return !operator==(other); }
     };
 
-    /// Viewport settings. Defines tranform of normalized device coordinates (NDC) to Window coordinates.
-    ///   - Left top is (-1, 1) in NDC space, map to Window space coordiante (0, 0).
-    ///   - Right bottom is (1, -1) in NDC space, map to Window space coordiante (width, height).
+    /// Viewport settings. Defines transform of normalized device coordinates (NDC) to Window coordinates.
+    ///   - Left top is (-1, 1) in NDC space, map to Window space coordinate (0, 0).
+    ///   - Right bottom is (1, -1) in NDC space, map to Window space coordinate (width, height).
     ///   - Set width and/or heigh to FLT_MAX indicating the current size of the render target.
     struct Viewport {
         float x        = 0.0f;

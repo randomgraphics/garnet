@@ -17,7 +17,24 @@
     #define NOMINMAX
 #endif
 #define RAPID_VULKAN_ENABLE_DEBUG_BUILD GN_BUILD_DEBUG_ENABLED
-// TODO: hook rapid_vulkan log with GN::Logger
+#define RAPID_VULKAN_LOG(severity, prefix, message)                                                                                     \
+    do {                                                                                                                                \
+        GN::Logger::LogLevel logLevel = GN::Logger::LogLevel::INFO;                                                                     \
+        if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::FATAL) {                                                                   \
+            logLevel = GN::Logger::LogLevel::FATAL;                                                                                     \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::ERROR_) {                                                           \
+            logLevel = GN::Logger::LogLevel::ERROR_;                                                                                    \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::WARNING) {                                                          \
+            logLevel = GN::Logger::LogLevel::WARN;                                                                                      \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::INFO) {                                                             \
+            logLevel = GN::Logger::LogLevel::INFO;                                                                                      \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::VERBOSE) {                                                          \
+            logLevel = GN::Logger::LogLevel::VERBOSE;                                                                                   \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::DEBUG) {                                                            \
+            logLevel = GN::Logger::LogLevel::INFO;                                                                                      \
+        }                                                                                                                               \
+        GN::Logger::LogHelper(GN::getLogger("GN.rdg.vk"), logLevel, __FUNCTION__, __FILE__, __LINE__).format("{} {}", prefix, message); \
+    } while (false)
 #include <rapid-vulkan/rapid-vulkan.h>
 #include <memory>
 #include <optional>

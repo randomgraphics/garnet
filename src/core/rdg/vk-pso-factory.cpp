@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <memory>
 #include <string>
+#include <algorithm> // for std::min
 
 namespace GN::rdg {
 
@@ -177,21 +178,46 @@ static vk::ColorComponentFlags writeMaskToVk(uint8_t w) {
     return f ? f : (vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
 }
 
+static std::pair<uint32_t, uint32_t> getGpuImageViewDimension(const GpuImageView & view) {
+    uint32_t baseWidth  = 0;
+    uint32_t baseHeight = 0;
+    if (auto tex = view.texture().get()) {
+        const auto & desc = tex->descriptor();
+        baseWidth         = desc.width;
+        baseHeight        = desc.height;
+    } else if (auto bb = view.backbuffer().get()) {
+        const auto & desc = bb->descriptor();
+        baseWidth         = desc.width;
+        baseHeight        = desc.height;
+    } else {
+        return {0, 0};
+    }
+    uint32_t width  = std::max(1u, baseWidth >> view.subresourceIndex.mip);
+    uint32_t height = std::max(1u, baseHeight >> view.subresourceIndex.mip);
+    return {width, height};
+}
+
+static auto getGpuImageViewFormat(const GpuImageView & view) {
+    if (view.format != gfx::img::PixelFormat::UNKNOWN()) return view.format;
+    if (auto tex = view.texture().get()) {
+        const auto & desc = tex->descriptor();
+        return desc.format;
+    } else if (auto bb = view.backbuffer().get()) {
+        const auto & desc = bb->descriptor();
+        return desc.format;
+    } else {
+        GN_ERROR(sLogger)("Can't get GpuImageView default format: no texture or backbuffer.");
+        return gfx::img::PixelFormat::UNKNOWN();
+    }
+}
+
 static void applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::ConstructParameters & cp, const RenderTarget & rt) {
     std::vector<vk::Format> colorFormats;
-    for (size_t i = 0; i < rt.colors.size(); ++i) {
-        if (rt.colors[i].target.format == gfx::img::PixelFormat::UNKNOWN()) continue;
-        colorFormats.push_back(static_cast<vk::Format>(pixelFormatToVkFormat(rt.colors[i].target.format)));
-    }
-    vk::Format depthFormat = vk::Format::eUndefined;
-    if (rt.depthStencil.target && rt.depthStencil.format != gfx::img::PixelFormat::UNKNOWN())
-        depthFormat = static_cast<vk::Format>(pixelFormatToVkFormat(rt.depthStencil.format));
-    if (!colorFormats.empty()) cp.setDynamicRendering(colorFormats, depthFormat);
-
+    uint32_t                renderTargetWidth  = (~0u);
+    uint32_t                renderTargetHeight = (~0u);
     cp.attachments.clear();
     for (size_t i = 0; i < rt.colors.size(); ++i) {
         const auto & c = rt.colors[i];
-        if (c.target.format == gfx::img::PixelFormat::UNKNOWN()) continue;
         const auto & b = c.blendState;
         auto         v = vk::PipelineColorBlendAttachmentState {}.setColorWriteMask(writeMaskToVk(c.writeMask));
         if (b.enabled()) {
@@ -204,12 +230,42 @@ static void applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
                 .setAlphaBlendOp(blendOpToVk(b.alphaOp));
         }
         cp.attachments.push_back(v);
+        auto [width, height] = getGpuImageViewDimension(c.target);
+        renderTargetWidth    = std::min(renderTargetWidth, width);
+        renderTargetHeight   = std::min(renderTargetHeight, height);
+
+        auto f = getGpuImageViewFormat(c.target);
+        if (f == gfx::img::PixelFormat::UNKNOWN()) continue;
+        colorFormats.push_back(static_cast<vk::Format>(pixelFormatToVkFormat(f)));
     }
     if (cp.attachments.empty()) {
         cp.attachments.push_back(vk::PipelineColorBlendAttachmentState().setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
                                                                                            vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA));
     }
 
+    // setup blend constants
+    // TODO: warning, if each target has different blend constant. it is not supported by Vulkan yet.
+    if (!rt.colors.empty() && rt.colors[0].blendState.enabled()) {
+        const auto & v    = rt.colors[0].blendState.factors;
+        cp.blendConstants = {v.x, v.y, v.z, v.w};
+    }
+
+    // get depth target dimensions
+    vk::Format depthFormat = vk::Format::eUndefined;
+    if (rt.depthStencil.target) {
+        GpuImageView depthView;
+        depthView.image            = rt.depthStencil.target;
+        depthView.subresourceIndex = rt.depthStencil.subresourceIndex;
+        auto [width, height]       = getGpuImageViewDimension(depthView);
+        renderTargetWidth          = std::min(renderTargetWidth, width);
+        renderTargetHeight         = std::min(renderTargetHeight, height);
+        depthFormat                = pixelFormatToVkFormat(getGpuImageViewFormat(depthView));
+    }
+
+    // setup color and depth format
+    cp.setDynamicRendering(colorFormats, depthFormat);
+
+    // setup depth stencil state
     const auto & ds = rt.depthStencil;
     cp.depth.setDepthTestEnable(ds.depthState.testEnabled())
         .setDepthWriteEnable(ds.depthState.writeEnabled())
@@ -223,10 +279,16 @@ static void applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
     } else {
         cp.depth.setStencilTestEnable(false);
     }
-    if (!rt.colors.empty() && rt.colors[0].blendState.enabled()) {
-        const auto & v    = rt.colors[0].blendState.factors;
-        cp.blendConstants = {v.x, v.y, v.z, v.w};
-    }
+
+    // setup viewport
+    auto viewWidth  = FLT_MAX == rt.viewport.width ? (float) renderTargetWidth : (float) rt.viewport.width;
+    auto viewHeight = FLT_MAX == rt.viewport.height ? (float) renderTargetHeight : (float) rt.viewport.height;
+    cp.viewports.push_back(vk::Viewport(rt.viewport.x, rt.viewport.y, viewWidth, viewHeight, rt.viewport.minDepth, rt.viewport.maxDepth));
+
+    // setup scissor
+    auto scissorWidth  = (~0u) == rt.scissorRect.width ? renderTargetWidth : (uint32_t) std::ceil(viewWidth);
+    auto scissorHeight = (~0u) == rt.scissorRect.height ? renderTargetHeight : (uint32_t) std::ceil(viewHeight);
+    cp.scissors.push_back(vk::Rect2D(vk::Offset2D(rt.scissorRect.x, rt.scissorRect.y), vk::Extent2D(scissorWidth, scissorHeight)));
 }
 
 // --- GpuGeometryKey ---
@@ -338,8 +400,6 @@ rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrC
     cp.setVS(shaders->vs.get());
     cp.setFS(shaders->fs.get());
     applyRenderTargetToPipeline(cp, params.renderTarget);
-    cp.dynamicViewport(1);
-    cp.dynamicScissor(1);
     if (!key.geometryKey.noVertexInput && !params.geometry.format.empty() && !params.geometry.vertices.empty()) {
         const uint32_t stride = static_cast<uint32_t>(params.geometry.vertices[0].stride);
         cp.vb.push_back({0, stride, vk::VertexInputRate::eVertex});
