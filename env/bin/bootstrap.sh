@@ -17,7 +17,8 @@ sudo apt-get install -y \
     ninja-build \
     vulkan-sdk \
     clang-15 \
-    clang-format-12 
+    clang-format-14 \
+    libxkbcommon-dev \
 
 # install python modules
 python3 -m pip install --upgrade pip
