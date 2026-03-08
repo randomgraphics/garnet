@@ -60,7 +60,9 @@ def main():
 
     for src in (vert_src, frag_src):
         spv = out_dir / (src.stem + src.suffix + ".spv")
-        cmd = [glslc, str(src), "-o", str(spv), "-O"]
+        # -g keeps OpName in SPIR-V so rapid-vulkan reflection can get vertex input names; -O optimizes.
+        cmd = [glslc, str(src), "-o", str(spv), "-O", "-g"]
+        print(' '.join(cmd))
         r = subprocess.run(cmd)
         if r.returncode != 0:
             print(f"glslc failed: {' '.join(cmd)}", file=sys.stderr)
