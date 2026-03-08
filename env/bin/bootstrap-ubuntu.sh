@@ -19,6 +19,7 @@ sudo apt-get install -y \
     clang-15 \
     clang-format-14 \
     libxkbcommon-dev \
+    pkg-config \
 
 # install python modules
 python3 -m pip install --upgrade pip
