@@ -190,6 +190,15 @@ if (NOT ANDROID)
     endif()
 endif()
 
+if (APPLE AND VULKAN_FOUND)
+# Setup LC_RPATH on macos to point to where libvulkan.dylib is. So the executable can load it at runtime.
+# FIXME: this ties the executable to the Vulkan SDK install location on the current build machine. It means
+# the executable might not run on other machines.
+get_filename_component(Vulkan_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
+set(CMAKE_BUILD_RPATH ${Vulkan_LIB_DIR})
+GN_print_status("Setting up LC_RPATH for Vulkan SDK on macOS: ${Vulkan_LIB_DIR}")
+endif()
+
 # ===================
 # call subdirectories
 # ===================
