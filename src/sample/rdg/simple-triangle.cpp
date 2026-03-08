@@ -44,6 +44,8 @@ int main(int, const char **) {
     auto     window       = std::unique_ptr<win::Window>(
         win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight}));
     if (!window) return -1;
+    window->show();
+
     // Window owns the surface; do not destroy it. Destroy backbuffer before window.
     intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
     if (!surface) return -1;
