@@ -156,7 +156,7 @@ bool level_c::bsptree_check_poly(uint /*section_id*/, const clipfrustum_c & /*cf
             {
                 // get intersection of near-plane and [eyepoint,*vlist]
                 Vector3f v;
-                GN_VERIFY( intersection_plane_segment(v, cf.planes[0],
+                GN_REQUIRE( intersection_plane_segment(v, cf.planes[0],
                     cf.eye_point, *vlist) );
 
                 // check visibility between intersection and *vlist

@@ -15,12 +15,12 @@ static inline void sSet_ALPHA_TEST(int val) {
 //
 //
 // ----------------------------------------------------------------------------
-static inline void sSet_ALPHA_FUNC(int) { GN_ASSERT_EX(0, "your program should not reach here!"); }
+static inline void sSet_ALPHA_FUNC(int) { GN_ASSERT(false, "your program should not reach here!"); }
 
 //
 //
 // ----------------------------------------------------------------------------
-static inline void sSet_ALPHA_REF(int) { GN_ASSERT_EX(0, "your program should not reach here!"); }
+static inline void sSet_ALPHA_REF(int) { GN_ASSERT(false, "your program should not reach here!"); }
 
 //
 //
@@ -36,12 +36,12 @@ static inline void sSet_BLENDING(int val) {
 //
 //
 // ----------------------------------------------------------------------------
-static inline void sSet_BLEND_SRC(int) { GN_ASSERT_EX(0, "your program should not reach here!"); }
+static inline void sSet_BLEND_SRC(int) { GN_ASSERT(false, "your program should not reach here!"); }
 
 //
 //
 // ----------------------------------------------------------------------------
-static inline void sSet_BLEND_DST(int) { GN_ASSERT_EX(0, "your program should not reach here!"); }
+static inline void sSet_BLEND_DST(int) { GN_ASSERT(false, "your program should not reach here!"); }
 
 //
 //

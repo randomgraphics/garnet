@@ -1,0 +1,25 @@
+---
+description: On Windows, run .py scripts via python.exe; do not invoke the script directly
+alwaysApply: true
+---
+
+# Windows: run Python scripts via python.exe
+
+On **Windows**, do **not** invoke `.py` scripts directly (e.g. `build.py`, `env\bin\cit.py`). Run them as an argument to `python.exe`.
+
+**Correct (Windows):**
+```powershell
+python build.py d
+python env\bin\cit.py
+python env\bin\cit.py -l
+python env\bin\format-all-sources.py -d
+```
+
+**Incorrect (Windows):**
+```powershell
+build.py d
+.\env\bin\cit.py
+env\bin\cit.py -l
+```
+
+On Linux/WSL you may run scripts directly if they are executable and the shebang is set (e.g. `./build.py d`, `env/bin/cit.py`), but on Windows always use `python <script>.py`.

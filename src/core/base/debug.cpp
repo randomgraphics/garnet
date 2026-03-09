@@ -40,13 +40,18 @@ GN_API void GN::setAssertFailerUserRoutine(AssertFailuerUserRoutine newRoutine, 
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::internal::handleAssertFailure(const char * msg, const char * file, int line, const char * function, bool * ignoreForever) throw() {
+GN_API void GN::internal::handleAssertFailure(const char * file, int line, const char * function, bool * ignoreForever, const char * msg) throw() {
     if (RAB_CALL_USER_ROUTINE == sRuntimeAssertBehavior && NULL != sAssertFailureUserRoutine) {
         sAssertFailureUserRoutine(sAssertFailureUserContext, msg, file, line, ignoreForever);
         return;
     }
 
     if (RAB_SILENCE == sRuntimeAssertBehavior) return;
+
+    if (!msg || !*msg) msg = "Required condition is not met.";
+    if (!function || !*function) function = "<unknown function>";
+    if (!file || !*file) file = "<unknown file>";
+    if (!line) line = 0;
 
     ::fprintf(stderr,
               "\n"
@@ -58,7 +63,7 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
               "------------------------ [ call stack ] ------------------------\n"
               "%s\n"
               "================================================================\n",
-              file ? file : "<unknown file>", line, function ? function : "<unknown function>", msg ? msg : "<unknown message>", backtrace(4).c_str());
+              file, line, function, msg, backtrace(4).c_str());
 
     if (RAB_LOG_ONLY == sRuntimeAssertBehavior) return;
 
@@ -91,12 +96,12 @@ GN_API void GN::internal::handleAssertFailure(const char * msg, const char * fil
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::internal::handleAssertFailure(const wchar_t * msg, const char * file, int line, const char * function, bool * ignoreForever) throw() {
+GN_API void GN::internal::handleAssertFailure(const char * file, int line, const char * function, bool * ignoreForever, const wchar_t * msg) throw() {
     StrA s;
     try {
         s = wcs2mbs(StrW(msg));
     } catch (...) { s = "Exception thrown while converting assert message to narrow string."; }
-    handleAssertFailure(s.c_str(), file, line, function, ignoreForever);
+    handleAssertFailure(file, line, function, ignoreForever, s.c_str());
 }
 
 //

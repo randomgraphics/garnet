@@ -179,6 +179,11 @@ struct Guid {
     ///
     GN_API const char * toStr() const;
 
+    ///
+    /// Convert from string
+    ///
+    GN_API bool fromStr(const char * str);
+
     //@}
 
     /// \name operators

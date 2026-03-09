@@ -22,11 +22,13 @@ source env/garnet.rc
 build.py <variant> [options]
 ```
 
-**Windows (PowerShell):** Run the garnet script (sets up/activates venv), then use the build alias.
+**Windows (PowerShell):** Run the garnet script (sets up/activates venv), then use the build alias. On Windows you cannot run `.py` files directly; run them as an argument to `python.exe`.
 
 ```powershell
 . env\garnet.ps1
 b <variant>
+# Or without the env script:
+python build.py <variant>
 ```
 
 ## Variants

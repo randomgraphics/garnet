@@ -227,7 +227,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::createShader(ID3D11Device & dev, ShaderTyp
 
     case SHADER_TYPE_DS:
     case SHADER_TYPE_CS:
-        GN_ASSERT_EX(0, "Not implemented");
+        GN_ASSERT(false, "Not implemented");
         return nullptr;
 
     default:

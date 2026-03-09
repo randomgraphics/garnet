@@ -55,17 +55,15 @@ struct Artifact : public RefCounter, public RuntimeType {
     const StrA         name;
     const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
 
-    virtual ~Artifact() {}
+    virtual ~Artifact();
 
 protected:
     /// Constructor
     Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name);
 };
 
-template<class T>
-concept DerivedFromArtifact = std::derived_from<T, Artifact>;
-
 /// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
+/// The database is only holding weak references to all artifacts, so it is not responsible for the lifetime of the artifacts.
 struct ArtifactDatabase {
     struct CreateParameters {
         // TBD
@@ -82,7 +80,7 @@ struct ArtifactDatabase {
     ///       if 0 (duplicate type+name), delete the new instance and return null.
     virtual uint64_t admit(Artifact * artifact) = 0;
 
-    /// Erase an artifact instance by its sequence number.
+    /// Erase an artifact instance by its sequence number. Usually called by destructor of the artifact.
     virtual bool erase(uint64_t sequence) = 0;
 
     /// Search for an artifact instance by type and name.
@@ -97,6 +95,10 @@ protected:
 
 inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
     : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
+
+inline Artifact::~Artifact() {
+    if (sequence) database.erase(sequence);
+}
 
 /// A helper class to wrap anything as an artifact.
 /// \param T    Type of the value to wrap.
@@ -137,6 +139,9 @@ private:
     TypedArtifact(ArtifactDatabase & db, const StrA & name, const T & v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(v) {}
     TypedArtifact(ArtifactDatabase & db, const StrA & name, T && v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(std::move(v)) {}
 };
+
+template<class T>
+concept DerivedFromArtifact = std::derived_from<T, Artifact>;
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
@@ -209,18 +214,61 @@ public:
 
         AutoRef<T> value;
 
+        SingleArtifact(const AutoRef<T> & value_): value(value_) {}
+
+        SingleArtifact(AutoRef<T> && value_): value(std::move(value_)) {}
+
+        SingleArtifact & operator=(const AutoRef<T> & value_) {
+            value = value_;
+            return *this;
+        }
+
+        SingleArtifact & operator=(AutoRef<T> && value_) {
+            value = std::move(value_);
+            return *this;
+        }
+
+        bool empty() const { return value.empty(); }
+
+        void clear() { value.clear(); }
+
+        void set(const AutoRef<T> & value_) { value = value_; }
+
+        void set(AutoRef<T> && value_) { value = std::move(value_); }
+
+        auto get() const { return value.get(); }
+
+        auto addr() const { return value.addr(); }
+
+        void attach(T * value_) { value.attach(value_); }
+
+        auto detach() { return value.detach(); }
+
+        template<typename T2>
+        auto castTo() const {
+            return value.template castTo<T2>();
+        }
+
+        operator const AutoRef<T> &() const { return value; }
+
+        operator AutoRef<T> &() { return value; }
+
+        T * operator->() const { return value.get(); }
+
+        T & operator*() const { return *value; }
+
     private:
         mutable DynaArray<const Artifact *> mArtifacts;
     };
 
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
-    using ReadOnlyArtifact = SingleArtifact<T, UFlags + Usage::Reading>;
+    template<typename T, UsageBits UFlags = Usage::None>
+    using ReadOnlyArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Reading>;
 
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
-    using WriteOnlyArtifact = SingleArtifact<T, UFlags + Usage::Writing>;
+    template<typename T, UsageBits UFlags = Usage::None>
+    using WriteOnlyArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Writing>;
 
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
-    using ReadWriteArtifact = SingleArtifact<T, UFlags + Usage::Reading + Usage::Writing>;
+    template<typename T, UsageBits UFlags = Usage::None>
+    using ReadWriteArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Reading + Usage::Writing>;
 
     template<DerivedFromArtifact T, size_t Count, UsageBits UFlags = Usage::None>
     struct ArtifactArray : public ArtifactArgument {
@@ -229,6 +277,28 @@ public:
         SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), Count}; }
 
         AutoRef<T> values[Count];
+
+        auto begin() const { return &values[0]; }
+
+        auto end() const { return &values[Count - 1]; }
+
+        const auto & front() const { return values[0]; }
+
+        const auto & back() const { return values[Count - 1]; }
+
+        auto & front() { return values[0]; }
+
+        auto & back() { return values[Count - 1]; }
+
+        auto operator[](size_t index) const {
+            GN_REQUIRE(index < Count);
+            return values[index];
+        }
+
+        auto operator[](size_t index) {
+            GN_REQUIRE(index < Count);
+            return values[index];
+        }
     };
 
     template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
@@ -247,6 +317,36 @@ public:
         SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), values.size()}; }
 
         DynaArray<AutoRef<T>> values;
+
+        bool empty() const { return values.empty(); }
+
+        void clear() { values.clear(); }
+
+        auto size() const { return values.size(); }
+
+        auto data() const { return values.data(); }
+
+        auto data() { return values.data(); }
+
+        auto begin() const { return values.begin(); }
+
+        auto begin() { return values.begin(); }
+
+        auto end() const { return values.end(); }
+
+        auto end() { return values.end(); }
+
+        const auto & front() const { return values.front(); }
+
+        auto & front() { return values.front(); }
+
+        const auto & back() const { return values.back(); }
+
+        auto & back() { return values.back(); }
+
+        auto operator[](size_t index) const { return values[index]; }
+
+        auto operator[](size_t index) { return values[index]; }
     };
 
     template<typename T, UsageBits UFlags = Usage::None>
@@ -287,7 +387,7 @@ private:
     friend struct ArtifactArgument;
 };
 
-struct Submission;
+/// A opaque struct to store information of each task in a submission. Defined in submission.h.
 struct TaskInfo;
 
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).
@@ -296,22 +396,15 @@ struct Action : public Artifact {
         PASSED,  ///< the action executed successfully.
         WARNING, ///< the action executed successfully, but with warnings.
         FAILED,  ///< the action failed; dependents may be skipped.
-    };
-
-    /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
-    struct ExecutionContext : public RuntimeType {
-        virtual ~ExecutionContext() = default;
-
-    protected:
-        ExecutionContext(uint64_t typeId, const char * typeName): RuntimeType(typeId, typeName) {}
+        DROPPED, ///< the action is dropped; dependents are skipped.
     };
 
     /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
     /// \param submission The submission that is executing the action.
     /// \param taskInfo The information of the task that is executing the action.
     /// \param arguments The arguments for the action.
-    /// \return A pair of execution result and an optional execution context.
-    virtual std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
+    /// \return The execution result.
+    virtual ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments. The context is the same as the one returned from prepare().
     /// \param submission The submission that is executing the action.
@@ -319,7 +412,7 @@ struct Action : public Artifact {
     /// \param arguments Same as the one passed to prepare().
     /// \param context The context returned from prepare().
     /// \return The execution result.
-    virtual ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments, ExecutionContext * context) = 0;
+    virtual ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) = 0;
 
 protected:
     /// Inherit constructor from Artifact
@@ -391,13 +484,6 @@ struct Workflow {
     //     }
     //     return result;
     // }
-};
-
-struct TaskInfo {
-    Submission &   submission; ///< the submission that the task belongs to.
-    const StrA     workflow;   ///< name of the workflow that the task belongs to.
-    const StrA     task;       ///< name of the task.
-    const uint64_t index;      ///< index of the task within the entire submission. Can also be used as the unique identifier of the task within the submission.
 };
 
 struct Submission : RefCounter {

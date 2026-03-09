@@ -22,7 +22,8 @@
         array of raw pointers.
     - custom 2d/3d/4d vector class: do support custom lenght unit: like Vector3<MyWorldUnit>
 
-- fix Qt6 window build.
+- Misc.
+  - upgrade clang-format to 22.1.0 (the current available version on mac)
 
 - ripple effect sample is currently broken: report empty vertex layout error.
 

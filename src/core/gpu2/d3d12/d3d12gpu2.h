@@ -81,7 +81,7 @@ public:
         ThrowIfFailed(device.CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_q)));
         ThrowIfFailed(device.CreateFence(_fenceValue.value++, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_f)));
         _e.h = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        GN_VERIFY(!_e.empty());
+        GN_REQUIRE(!_e.empty());
     }
 
     ID3D12CommandQueue & q() { return *_q; }

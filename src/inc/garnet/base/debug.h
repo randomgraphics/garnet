@@ -6,14 +6,16 @@
 /// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
+#include <string>
+
 ///
 /// Assert failure
 ///
-#define GN_ASSERT_FAILURE(desc)                                                                                               \
-    if (true) {                                                                                                               \
-        static bool sIgnoredForever = false;                                                                                  \
-        if (!sIgnoredForever) { GN::internal::handleAssertFailure(desc, __FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever); } \
-    } else                                                                                                                    \
+#define GN_ASSERT_FAILURE(...)                                                                                                         \
+    if (true) {                                                                                                                        \
+        static bool sIgnoredForever = false;                                                                                           \
+        if (!sIgnoredForever) { GN::internal::handleAssertFailure(__FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever, ##__VA_ARGS__); } \
+    } else                                                                                                                             \
         void(0)
 
 ///
@@ -22,36 +24,21 @@
 /// This macro will perform assertion in all builds, in case you want assert in
 /// release build. Normally, you don't need this.
 ///
-#define GN_DO_ASSERT(exp, desc)  \
-    if (!(exp))                  \
-        GN_ASSERT_FAILURE(desc); \
-    else                         \
+#define GN_REQUIRE(exp, ...)                \
+    if (!(exp)) GN_UNLIKELY {               \
+            GN_ASSERT_FAILURE(__VA_ARGS__); \
+        }                                   \
+    else                                    \
         void(0)
 
 ///
-/// Assert macro with description
+/// Assert macro
 ///
 #if GN_ENABLE_ASSERT
-    #define GN_ASSERT_EX(exp, desc) GN_DO_ASSERT(exp, desc)
+    #define GN_ASSERT(exp, ...) GN_REQUIRE(exp, __VA_ARGS__)
 #else
-    #define GN_ASSERT_EX(exp, desc) void(0)
+    #define GN_ASSERT(...) void(0)
 #endif
-
-///
-/// Verification macro with description
-///
-#define GN_VERIFY_EX(exp, desc) GN_DO_ASSERT(exp, desc)
-
-///
-/// assert macro
-///
-#define GN_ASSERT(exp) GN_ASSERT_EX(exp, #exp)
-
-///
-/// verify macro (do check even in release build.).
-/// \todo: rename to GN_REQUIRE()
-///
-#define GN_VERIFY(exp) GN_VERIFY_EX(exp, #exp)
 
 ///
 /// Meet unexpected value
@@ -61,7 +48,7 @@
 ///
 /// Meet unexpected value
 ///
-#define GN_UNEXPECTED() GN_UNEXPECTED_EX("Unexpected value or behaviour")
+#define GN_UNEXPECTED() GN_UNEXPECTED_EX("Unexpected value or behaviour!")
 
 ///
 /// Assert for unimplemented functionality
@@ -273,12 +260,20 @@ namespace internal {
 ///
 /// Handle assert failure
 ///
-GN_API void handleAssertFailure(const char * msg, const char * file, int line, const char * func, bool * ignoreForever) throw();
+GN_API void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, const char * msg = "") throw();
 
 ///
 /// Handle assert failure
 ///
-GN_API void handleAssertFailure(const wchar_t * msg, const char * file, int line, const char * func, bool * ignoreForever) throw();
+GN_API void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, const wchar_t * msg) throw();
+
+inline void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, std::string && message) throw() {
+    return handleAssertFailure(file, line, func, ignoreForever, message.c_str());
+}
+
+inline void handleAssertFailure(const char * file, int line, const char * func, bool * ignoreForever, std::wstring && message) throw() {
+    return handleAssertFailure(file, line, func, ignoreForever, message.c_str());
+}
 
 } // namespace internal
 

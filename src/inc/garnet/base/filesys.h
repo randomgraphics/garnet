@@ -6,8 +6,6 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.1.29)
 // *****************************************************************************
 
-#include <memory> // std::unique_ptr
-
 namespace GN {
 ///
 /// sub namespace file system
@@ -75,7 +73,7 @@ struct FileSystem : public NoCopy {
     ///
     /// open file. Note that meaning of mode is identical with standard fopen().
     ///
-    virtual std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) = 0;
+    virtual AutoRef<File> openFile(const StrA & path, std::ios_base::openmode mode) = 0;
 };
 
 /// \name managing file system objects
@@ -136,7 +134,7 @@ inline bool isAbsPath(const StrA & path) {
     return getFileSystem(sys)->isAbsPath(child);
 }
 
-inline std::unique_ptr<File> openFile(const StrA & path, std::ios_base::openmode mode) {
+inline AutoRef<File> openFile(const StrA & path, std::ios_base::openmode mode) {
     StrA sys, child;
     splitPath(path, sys, child);
     return getFileSystem(sys)->openFile(child, mode);

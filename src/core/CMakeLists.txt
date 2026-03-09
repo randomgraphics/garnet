@@ -59,7 +59,13 @@ GN_add_source_folder(sources gpu2)
 GN_add_source_folder(sources input PCH_SOURCE input/pch.cpp)
 GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
-GN_add_source_folder(sources rdg PCH_SOURCE rdg/pch.cpp)
+
+# Build RDG
+
+GN_add_source_folder(rdg_sources rdg PCH_SOURCE rdg/pch.cpp EXTRA_SOURCES rdg/shaders/*.*)
+add_subdirectory(rdg)
+set_source_files_properties(${rdg_sources} PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg")
+list(APPEND sources ${rdg_sources})
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
@@ -92,6 +98,9 @@ if(GN_BUILD_IS_STATIC)
 else()
     add_library(GNcore SHARED ${sources} ${garnet_headers})
 endif()
+if(TARGET GNcore-rdg-shaders)
+    add_dependencies(GNcore GNcore-rdg-shaders)
+endif()
 
 # =======================
 # setup GNcore properties
@@ -119,7 +128,13 @@ target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_20)
 target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
 
-# Qt6 build is disabled for now.
+# Link to GLFW library if it is built
+if (TARGET glfw)
+    add_core_libs(glfw)
+    target_compile_definitions(GNcore PRIVATE HAS_GLFW=1)
+endif()
+
+# Qt6 window backend (deprecated; kept for reference, do not delete yet)
 # if(Qt6Widgets_FOUND)
 #     add_core_libs(Qt::Widgets)
 #     target_compile_definitions(GNcore PRIVATE HAS_QT=1)

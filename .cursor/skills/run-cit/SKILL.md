@@ -14,20 +14,26 @@ Use `cit.py` to run lint and/or unit tests. Run after builds when a task require
 **Full CI (lint + test):**
 
 ```bash
-source env/garnet.rc   # Linux: ensures PATH and env
+# Linux / WSL
+source env/garnet.rc
 env/bin/cit.py
+
+# Windows: run .py as argument to python.exe
+python env\bin\cit.py
 ```
 
 **Lint only (style check, no test run):**
 
 ```bash
-env/bin/cit.py -l
+env/bin/cit.py -l        # Linux
+python env\bin\cit.py -l  # Windows
 ```
 
 **Test only (skip lint):**
 
 ```bash
-env/bin/cit.py -t [test_args]
+env/bin/cit.py -t [test_args]        # Linux
+python env\bin\cit.py -t [test_args]  # Windows
 ```
 
 ## What runs

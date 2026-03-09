@@ -67,10 +67,10 @@ struct InitIntegerAction : public Action {
         WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
+    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     // Execute: set the output artifact's value
-    ExecutionResult execute(TaskInfo &, Arguments & args, ExecutionContext *) override {
+    ExecutionResult execute(TaskInfo &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
         auto * outputArtifact = a->output.value.get();
@@ -110,10 +110,10 @@ struct AddIntegersAction : public Action {
         WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
+    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     // Execute: input1.value + input2.value -> output.value
-    ExecutionResult execute(TaskInfo &, Arguments & args, ExecutionContext *) override {
+    ExecutionResult execute(TaskInfo &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
         auto * integerInput1 = a->input1.value.get() ? a->input1.value.get()->castTo<IntegerArtifact>() : nullptr;
@@ -156,10 +156,10 @@ struct MultiplyIntegersAction : public Action {
         WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
     };
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
+    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     // Execute: input1.value * input2.value -> output.value
-    ExecutionResult execute(TaskInfo &, Arguments & args, ExecutionContext *) override {
+    ExecutionResult execute(TaskInfo &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
         auto * integerInput1 = a->input1.value.get() ? a->input1.value.get()->castTo<IntegerArtifact>() : nullptr;
@@ -201,8 +201,8 @@ struct ReadIntegerAction : public Action {
         ReadOnlyArtifact<IntegerArtifact> input = {this, "input"};
     };
 
-    std::pair<ExecutionResult, ExecutionContext *> prepare(TaskInfo &, Arguments &) override { return std::make_pair(PASSED, nullptr); }
-    ExecutionResult                                execute(TaskInfo &, Arguments &, ExecutionContext *) override { return PASSED; }
+    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
+    ExecutionResult execute(TaskInfo &, Arguments &) override { return PASSED; }
 };
 
 } // namespace GN::rdg

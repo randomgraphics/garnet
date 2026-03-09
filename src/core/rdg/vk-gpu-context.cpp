@@ -1,6 +1,7 @@
 #include "pch.h"
 #define RAPID_VULKAN_IMPLEMENTATION
 #include "vk-gpu-context.h"
+#include "vk-pso-factory.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg.vk");
 
@@ -25,9 +26,15 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
         return;
     }
     rapid_vulkan::Device::ConstructParameters dp;
+#if GN_DARWIN
+    // Vulkan 1.3 spec says dynamic rendering part of the core feature that can be used w/o enable it explicitly.
+    // However, MoltenVK requires it to be enabled explicitly.
+    dp.addDeviceExtension("VK_KHR_dynamic_rendering");
+#endif
     dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
+    if (mDevice->handle()) mPsoFactory = std::make_unique<PsoFactoryVulkan>(*this);
 }
 
 GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name); }

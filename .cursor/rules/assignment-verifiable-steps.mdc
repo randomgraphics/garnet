@@ -1,0 +1,30 @@
+---
+description: Break assignments into verifiable tasks/steps; each step must be testable, ideally with new unit tests
+alwaysApply: true
+---
+
+# Assignment breakdown: verifiable tasks and steps
+
+When breaking down a **complex assignment** into smaller **tasks** and **steps**:
+
+1. **Each task and step must be verifiable.** “Done” means more than “it compiles.”
+2. **Verification includes:**
+   - **Build passes** (e.g. `python build.py d`, no compile/link errors).
+   - **Correct behavior** (the change does what the step intends).
+   - **Ideally, new or updated unit tests** that assert the new behavior so the step stays verified over time.
+
+3. **Define steps so they can be tested.** Prefer steps that add one clear behavior or contract (e.g. “Material::load returns an artifact when given a valid File”) and add a test that would fail if that behavior regresses.
+
+## In practice
+
+- **Good step:** “Add AffineTransform::matrix() and use it in PbrShading::build.” Verify: build + (optional) test that build(params) uses the correct matrix in push constants.
+- **Good step:** “Material::load() creates and returns a Material from a readable File.” Verify: build + unit test that calls Material::load with a MemFile and asserts non-null result and correct type.
+- **Weak step:** “Start implementing the backend.” Too large and not individually verifiable; split into smaller, testable steps.
+
+## When adding tests
+
+- Prefer **new or updated unit tests** in the same change as the step (or the immediate next step).
+- Tests should **fail before** the step and **pass after** it, so the step is clearly responsible for the behavior.
+- If the project has no test harness for a layer (e.g. RDG), still state how the step is verified (e.g. “manual run of GNsample-rdg-draw-mesh” or “integration test”) so “functioning correctly” is explicit.
+
+Keep task lists and assignment docs aligned: each listed step should have a clear, verifiable outcome and ideally a test.

@@ -148,7 +148,7 @@ int main() {
 
     // create a triangle
     DX12Triangle tri(g);
-    GN_VERIFY(tri.init());
+    GN_REQUIRE(tri.init());
 
     // main loop
     while (mainWindow->runUntilNoNewEvents()) {

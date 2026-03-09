@@ -96,7 +96,7 @@ void clipfrustum_c::clip_by_polygon(clipfrustum_c & result, const Vector3f * ver
             result.near_verts[i] = verts[i];
             dir                  = (verts[i] - eye_point);
             dir.normalize();
-            GN_VERIFY(intersection_plane_ray(result.far_verts[i], planes[FAR_PLANE], eye_point, dir));
+            GN_REQUIRE(intersection_plane_ray(result.far_verts[i], planes[FAR_PLANE], eye_point, dir));
         }
 
         // build near/far planes

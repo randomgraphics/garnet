@@ -6,14 +6,14 @@
 // \author  chenlee (2005.4.18)
 // *****************************************************************************
 
+#define _CRT_SECURE_NO_WARNINGS
+#define NOMINMAX
+
 #include "garnet/GNbase.h"
 
 #if GN_XBOX2
     #include <xtl.h>
 #elif defined(_WIN32)
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
     #include <windows.h>
 #elif GN_POSIX
     #include <unistd.h>

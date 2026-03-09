@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, pathlib, subprocess, importlib, argparse, platform, concurrent.futures, threading, os
+import sys, pathlib, subprocess, importlib, argparse, platform, concurrent.futures, threading, shutil
 utils = importlib.import_module("garnet-utils")
 
 ap = argparse.ArgumentParser()
@@ -32,8 +32,15 @@ our_sources = [x for x in all_files if is_our_source(x)]
 system = platform.system()
 if "Windows" == system:
      clang_format = str(root_dir / "env/bin/clang-format-14.exe")
+elif "Darwin" == system:
+     clang_format = "clang-format-mp-14"
 else:
      clang_format = "clang-format-14"
+
+# Check if $clang_format is valid executable on path.
+if not shutil.which(clang_format):
+     print(f"Error: {clang_format} not found")
+     sys.exit(1)
 
 # create a lock to serialize output
 lock = threading.Lock()

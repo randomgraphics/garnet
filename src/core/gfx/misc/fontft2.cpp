@@ -116,7 +116,7 @@ private:
     static void sCloseStream(FT_Stream stream) {
         GN_ASSERT(stream->descriptor.pointer);
         File * fp = (File *) stream->descriptor.pointer;
-        safeDelete(fp);
+        fp->decref();
         stream->descriptor.pointer = 0;
     }
 
@@ -162,7 +162,7 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     mStream.base               = 0;
     mStream.size               = (FT_ULong) fp->size();
     mStream.pos                = (FT_ULong) fp->input().tellg();
-    mStream.descriptor.pointer = fp.release();
+    mStream.descriptor.pointer = fp.detach();
     mStream.read               = sReadStream;
     mStream.close              = sCloseStream;
 

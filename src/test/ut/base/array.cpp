@@ -196,14 +196,14 @@ class DynaArrayTest : public CxxTest::TestSuite {
         }
 
         Element(const Element & o) {
-            GN_VERIFY(o.constructed);
+            GN_REQUIRE(o.constructed);
             i = o.i;
             ++cctor;
             ++count;
         }
 
         Element(Element && o) {
-            GN_VERIFY(o.constructed);
+            GN_REQUIRE(o.constructed);
             i   = o.i;
             o.i = 0;
             ++mctor;
@@ -211,7 +211,7 @@ class DynaArrayTest : public CxxTest::TestSuite {
         }
 
         ~Element() {
-            GN_VERIFY(constructed);
+            GN_REQUIRE(constructed);
             constructed = false;
             i           = 0;
             ++dtor;
@@ -219,7 +219,7 @@ class DynaArrayTest : public CxxTest::TestSuite {
         }
 
         Element & operator=(Element && o) {
-            GN_VERIFY(constructed && o.constructed);
+            GN_REQUIRE(constructed && o.constructed);
             i   = o.i;
             o.i = 0;
             ++mop;
@@ -227,7 +227,7 @@ class DynaArrayTest : public CxxTest::TestSuite {
         }
 
         Element & operator=(const Element & o) {
-            GN_VERIFY(constructed && o.constructed);
+            GN_REQUIRE(constructed && o.constructed);
             i = o.i;
             ++cop;
             return *this;

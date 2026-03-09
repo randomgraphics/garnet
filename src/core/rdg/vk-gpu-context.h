@@ -17,16 +17,37 @@
     #define NOMINMAX
 #endif
 #define RAPID_VULKAN_ENABLE_DEBUG_BUILD GN_BUILD_DEBUG_ENABLED
-// TODO: hook rapid_vulkan log with GN::Logger
+#define RAPID_VULKAN_LOG(severity, prefix, message)                                                                                     \
+    do {                                                                                                                                \
+        GN::Logger::LogLevel logLevel = GN::Logger::LogLevel::INFO;                                                                     \
+        if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::FATAL) {                                                                   \
+            logLevel = GN::Logger::LogLevel::FATAL;                                                                                     \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::ERROR_) {                                                           \
+            logLevel = GN::Logger::LogLevel::ERROR_;                                                                                    \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::WARNING) {                                                          \
+            logLevel = GN::Logger::LogLevel::WARN;                                                                                      \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::INFO) {                                                             \
+            logLevel = GN::Logger::LogLevel::INFO;                                                                                      \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::VERBOSE) {                                                          \
+            logLevel = GN::Logger::LogLevel::VERBOSE;                                                                                   \
+        } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::DEBUG) {                                                            \
+            logLevel = GN::Logger::LogLevel::INFO;                                                                                      \
+        }                                                                                                                               \
+        GN::Logger::LogHelper(GN::getLogger("GN.rdg.vk"), logLevel, __FUNCTION__, __FILE__, __LINE__).format("{} {}", prefix, message); \
+    } while (false)
 #include <rapid-vulkan/rapid-vulkan.h>
+#include <memory>
 #include <optional>
 
 namespace GN::rdg {
+
+class PsoFactoryVulkan;
 
 /// Vulkan-backed GpuContext (initialized via rapid-vulkan Instance + Device).
 class GpuContextVulkan : public GpuContextCommon {
     std::optional<rapid_vulkan::Instance> mInstance;
     std::optional<rapid_vulkan::Device>   mDevice;
+    std::unique_ptr<PsoFactoryVulkan>     mPsoFactory;
 
 public:
     GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
@@ -43,9 +64,16 @@ public:
         return mDevice.value();
     }
 
+    intptr_t getVulkanInstanceHandle() const override { return (intptr_t) (void *) instance().handle(); }
+
     const rapid_vulkan::GlobalInfo & globalInfo() const {
         GN_ASSERT(mDevice.has_value() && mDevice.value().gi());
         return *mDevice.value().gi();
+    }
+
+    PsoFactoryVulkan & psoFactory() const {
+        GN_ASSERT(mPsoFactory);
+        return *mPsoFactory;
     }
 };
 

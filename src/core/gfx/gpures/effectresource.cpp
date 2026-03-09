@@ -591,7 +591,7 @@ AutoRef<EffectResource> GN::gfx::EffectResource::loadFromFile(GpuResourceDatabas
          fp->name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return AutoRef<EffectResource>::NULLREF;
     }
-    fp.reset();
+    fp.clear();
     GN_ASSERT(xpr.root);
 
     // load descriptor from file

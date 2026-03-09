@@ -1,0 +1,368 @@
+# Assignment: PBR shading effect
+
+Goal: Implement the PBR shading effect as sketched in pipeline.h. The public header exposes minimal types and parameters; implementation lives in core/rdg and backend-specific code. When done, a user can create a PbrShading effect, pass BuildParameters (sharedShaderConstants, material, geometry, modelToWorld) and—if needed—RenderGraph (and optionally render target) so that build(params) can create workflow(s) and return a SubGraph; the caller submits those workflows to render a PBR object.
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Task 0.1–2.3, 3.1, 3.2, 4.1, 4.2, 5.1 (draw-mesh integrates PbrShading; GNsample-rdg-draw-mesh added). Unit tests added (src/test/ut/rdg/rdg-pbr-assignment.cpp): type IDs (0.2), create/build without graph (1.1), build with graph + workflow task (2.0/2.1), submit/drop (2.3; submit not run in ut—verified by sample), Material::load (4.1), SharedShaderConstants view round-trip (4.2). Build + cit -t pass.
+  Also completed (new work, build passes):
+  - GLM integration in transform.h (Task 6.0): AffineTransform and WorldToClipTransformChain fully
+    rewritten with glm::vec3/quat/mat4; all methods inlined in class body (no transform.cpp needed);
+    glm::value_ptr() in pbr-shading.cpp for push constants; glm::mat4 worldToClip in pipeline.h
+    ViewInformation and BuildParameters; draw-mesh.cpp updated to glm::vec3 / glm::radians().
+In progress: Phase 6 — Vulkan UBO SharedShaderConstants (PLANNED, not yet coded).
+  See PHASE 6 section below for full design.
+--- END PROGRESS ---
+
+--- HEADER REVIEW (pipeline.h) — UPDATED ---
+
+Current interface (pipeline.h) as of task-list refinement:
+
+- PbrShading and PbrShading::Material are GpuResources. CreateParameters { gpu }. build(params) returns SubGraph (builtResult + DynaArray<Workflow *> workflows). No separate EffectContext or workflow parameter.
+
+- BuildParameters: AutoRef<SharedShaderConstants> sharedShaderConstants; AutoRef<Material> material; GpuGeometry geometry; AffineTransform modelToWorld. So model transform is already present (modelToWorld). No RenderGraph* or RenderTarget in BuildParameters — build() must create workflows, so we need a way to obtain them (add RenderGraph* to BuildParameters in implementation phase if not added to header first).
+
+- SharedShaderConstants replaces the earlier "EffectContext" concept: frame/camera/lighting/environment are expected to be provided via this shared resource (pipeline.h has commented ViewInformation, EnvironmentInformation, etc.). SimpleLight (Point, Spot, Directional) is the light representation in pipeline.h.
+
+- SubGraph: struct SubGraph { Action::ExecutionResult builtResult; DynaArray<Workflow *> workflows; }. So build() returns a result and the list of workflows it created; the caller merges these into the submission (e.g. SubmitParameters.workflows).
+
+- Material::TYPE_NAME is "PbrMaterial". Material::load(db, name, LoadParameters): planned to accept GN::File * source (not fileName) so callers can load from disk, memory blob, or embedded resource. Use GN::File directly in pipeline.h; GNbase.h (where File is defined) is already included by GNrdg.h, so no extra includes or forward declarations are needed.
+
+- SkyBox has the same pattern: CreateParameters { gpu }, BuildParameters { sharedShaderConstants }, build() returns SubGraph.
+
+- EnvironmentalLighting / EnvironmentMap is commented out; IBL/irradiance can be follow-up. Shadow info out of scope.
+
+--- PLAN: SharedShaderConstants (public interface and behavior) ---
+
+SharedShaderConstants will eventually provide a set of uniform buffers and textures containing shared GPU resources that are referenced or updated by individual effects (e.g. PbrShading).
+
+Public interface (pipeline.h):
+- Must NOT expose any information about how data is organized on the GPU. Layout, binding slots, descriptor set structure, and buffer/texture allocation are entirely the responsibility of the API-specific implementation (e.g. Vulkan backend in core/rdg).
+- Must provide at least a set of setters so the caller can supply logical data. The caller passes high-level data (frame counter, view matrix, render target, lights, etc.); the implementation copies or references this data and decides how to pack it into uniform buffers and textures for the active graphics API.
+- Suggested logical data and setters (to be added or refined in implementation):
+  - FrameInformation: frameCounter, frameDuration (Microseconds). setFrameInformation(const FrameInformation &).
+  - ViewInformation: full world→view→clip transformation (e.g. worldToView, viewToClip matrices), camera position in world space (Location / WorldUnit) so implementation can translate model and light locations to float3 at runtime, optional RenderTarget reference. setViewInformation(const ViewInformation &).
+  - DirectLightingInformation: list of direct lights (type, position, direction, color, range, cone angles, etc.). setDirectLightingInformation(const DirectLightingInformation &).
+- CreateParameters: at least AutoRef<GpuContext> gpu. create(db, name, params) returns an implementation that satisfies the above.
+- No getters that return GPU layout, buffer pointers, or binding indices in the public header. Any such details live in the implementation and are used when building effect tasks (e.g. when PbrShading::build() fills GpuDraw::A from SharedShaderConstants).
+
+Implementation (core/rdg, backend-specific):
+- Backend implements the setters by storing the logical data and/or uploading to its own uniform buffers and textures. When an effect (e.g. PbrShading) builds a draw task, it obtains from SharedShaderConstants whatever is needed to fill GpuDraw::A (e.g. descriptor sets or resource refs), using backend-specific code paths only in core/rdg, not in the public API.
+
+--- PLAN: Embedded resources (CMake) ---
+
+To avoid runtime file loading, PBR assets (textures, material data, optionally mesh data) are embedded into the sample executable. Use CMake to drive platform-specific embedding:
+
+- **Windows:** Use a .rc (resource script) file. In the .rc file, add RCDATA (or custom resource type) entries that reference the binary asset files (e.g. .png, .jpg, .bin). Add the .rc file to the sample target in CMake (e.g. add it to the executable's sources so the MSVC resource compiler compiles it and the linker links the resource section). At runtime, the sample uses the appropriate Win32 API (e.g. FindResource / LoadResource / LockResource) to get a pointer and size to the embedded blob, then wraps it in a GN::MemFile or similar and passes it to Material::load(db, name, {.gpu = gpu, .source = &memFile}).
+
+- **Linux (and similar):** Use objcopy to turn each asset file into an object file that exposes symbols (e.g. _binary_foo_png_start, _binary_foo_png_end, _binary_foo_png_size). CMake: add_custom_command to run objcopy (e.g. objcopy --input-target=binary --output-target=elf64-x86-64 --rename-section .data=.rodata,contents,alloc,load,readonly,data foo.png foo.png.o). Add the generated .o files to the sample target so they are linked into the executable. At runtime, the sample uses the start/size symbols to wrap the data in GN::MemFile and pass to Material::load.
+
+- **CMake:** Keep platform logic in the sample's CMakeLists (or a shared .cmake include): if(WIN32) add .rc and list asset files in the .rc; else() add_custom_command + target_sources for objcopy-generated .o files. Optionally support both embedded (default) and "load from disk" for development (e.g. a CMake option or runtime path override).
+
+--- PLAN: SubGraph (self-contained workflows; submit and drop) ---
+
+SubGraph is a self-contained list of workflows, together with their tasks and task arguments, that describe an effect (e.g. PBR) and can be submitted to a RenderGraph to render that effect to the screen or to a render target texture.
+
+Behavior and contents:
+- SubGraph holds: builtResult (Action::ExecutionResult from the effect’s build step) and a list of Workflow * (the workflows created by the effect’s build()). Each workflow already contains its tasks and arguments; no separate “task list” is needed at SubGraph level beyond the workflows.
+- Typically produced by effect::build(params): the effect creates one or more workflows on a RenderGraph (from params), appends tasks (e.g. ClearRenderTarget, GpuDraw) with arguments, and returns SubGraph{PASSED, {workflow1, ...}}. The SubGraph thus fully describes what to execute.
+
+Utility methods (to be implemented):
+- submit(RenderGraph & graph, name): Submit this subgraph for execution. Implementation: call graph.submit(SubmitParameters{.workflows = this->workflows, .name = name}). After submit, the workflows are “in flight”; optionally clear the SubGraph’s workflow list to prevent double-submit. Return the Submission object from graph.submit(...).
+- drop(RenderGraph & graph): Drop this subgraph without executing. Implementation: for each workflow in this SubGraph, call graph.dropWorkflow(workflow); then clear this SubGraph’s workflow list so the SubGraph is empty and no longer references those workflows.
+
+Placement:
+- Declarations in pipeline.h (SubGraph is part of the pipeline API). Definitions can live in a .cpp that is part of the rdg core (e.g. pipeline.cpp or subgraph.cpp) and linked into the same module that implements RenderGraph::submit and dropWorkflow, so that submit/drop call into RenderGraph without circular dependency.
+
+Usage in assignment:
+- PbrShading::build(params) returns a SubGraph. The sample (or any caller) can then either subgraph.submit(renderGraph, "PBR") to run it, or subgraph.drop(renderGraph) to discard it. This keeps the assignment consistent with “SubGraph is self-contained and can be submitted or dropped.”
+
+--- REFERENCE ---
+
+- Pipeline / effect API: src/inc/garnet/rdg/pipeline.h (PbrShading, Material, SharedShaderConstants, BuildParameters, SubGraph, SkyBox; EnvironmentalLighting commented).
+- Actions: src/inc/garnet/rdg/actions.h (GpuDraw, GpuDraw::A with uniforms, textures, geometry; CreateParameters vs/ps; RenderTarget, GpuGeometry).
+- Dependency graph: src/inc/garnet/rdg/dependency-graph.h (Workflow, Task, RenderGraph::createWorkflow, SubmitParameters).
+- Transform: src/inc/garnet/rdg/transform.h (AffineTransform, WorldToClipTransformChain).
+- Artifacts: src/inc/garnet/rdg/artifacts.h (GpuResource, Texture, GpuContext).
+- Physical units / lights: pipeline.h SimpleLight (Point, Spot, Directional); physical.h if needed for units.
+- Existing effect/action impl: src/core/rdg/backbuffer-actions.cpp, src/core/rdg/vk-draw-actions.cpp, src/core/rdg/draw-actions.cpp (GpuDraw::create dispatch).
+- Sample: src/sample/rdg/draw-mesh.cpp (integration target; do not use simple-triangle). GN::File (and MemFile, DiskFile) is defined in GNbase.h, which is already included by GNrdg.h; use it directly for Material::load(LoadParameters { gpu, source }) with source = File *.
+- Type IDs: src/core/rdg/runtime-type.cpp (register PbrShading, Material, SharedShaderConstants when implemented).
+
+--- BUILD/CI ---
+
+- Build: Linux/WSL `source env/garnet.rc && build.py d`; Windows `python build.py d` (see .cursor/skills/use-build-py/SKILL.md).
+- Lint + tests: Linux `env/bin/cit.py`; Windows `python env\bin\cit.py` (see .cursor/skills/run-cit/SKILL.md).
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep the repo buildable after each task. Use stubs (e.g. build() no-op, load() return nullptr) where needed.
+- Public header (pipeline.h): only add what users need; no backend or internal types.
+- Prefer minimal code change; small, verifiable steps (see .cursor/skills/minimal-code-change/SKILL.md).
+- **Verifiable steps (per .cursor/rules/assignment-verifiable-steps.mdc):** Each task/step must be verifiable: (1) build passes, (2) behavior is correct (the step does what it says). Ideally add or update **unit tests** that would fail before the step and pass after it. If the layer has no test harness (e.g. RDG), state how verification is done (e.g. manual run of sample, or integration test). If a task is too large to verify in one go, split it into smaller, testable sub-steps.
+- **Commit per step (per .cursor/rules/assignment-commit-per-step.mdc):** After each task/step is **finished and verified**, commit with a message that describes that step (e.g. "Assignment PBR: Material::load from File (Task 4.1)"), then push to remote. Avoid combining multiple steps into one commit when possible.
+- Before coding implementation tasks: pause for user review of this task list (as requested).
+
+---
+PHASE 0: Setup and type registration
+---
+
+[ ] Task 0.1 — Add assignment branch and ensure build is green
+    - Create branch (e.g. wip/rdg/pbr-shading) if not already on a PBR branch. Run build and cit; fix any pre-existing breakage in touched areas.
+    - **Verification:** Build passes (`python build.py d` on Windows; `build.py d` after env on Linux). Lint + tests pass (`python env\bin\cit.py` on Windows; `env/bin/cit.py` on Linux). Then commit and push.
+
+[ ] Task 0.2 — Register PbrShading and PbrShading::Material TYPE_IDs
+    - Define PbrShading::TYPE_ID and PbrShading::Material::TYPE_ID in runtime-type.cpp (or equivalent) so create() and type casting work. Register SharedShaderConstants::TYPE_ID when that type is implemented.
+    - **Verification:** Build passes; no duplicate or missing type ID symbols. Ideally: existing or new unit test that instantiates/creates an artifact and confirms type ID is non-zero. Then commit and push.
+
+---
+PHASE 1: PbrShading factory and stub implementation
+---
+
+[ ] Task 1.1 — Implement PbrShading::create() and a Vulkan-specific stub implementation class
+    - Add a Vulkan-specific class (e.g. PbrShadingVulkan in core/rdg) that extends PbrShading and implements build(params) to return SubGraph{PASSED, {}} (no workflows yet). PbrShading::create() instantiates and returns this Vulkan implementation (no multi-backend dispatch required for this assignment).
+    - Follow pattern of PrepareBackbuffer::create / GpuDraw::create: create in core, register in db. No new public API in pipeline.h.
+    - **Verification:** Build passes. Behavior: PbrShading::create(db, name, params) returns non-null; build(params) returns SubGraph with builtResult == PASSED and workflows.empty(). Ideally: add unit test (e.g. in GNtest-rdg-smoke1 or new rdg test) that asserts create() non-null and build() returns PASSED with empty workflows. Then commit and push.
+
+[ ] Task 1.2 — Material::load() stub with GN::File-based API
+    - Implement Material::load() so it compiles and links; LoadParameters accepts GN::File * source (non-null readable stream). Implementation may return nullptr or a minimal artifact; no full loading required yet. This allows loading from disk (DiskFile), memory blob (MemFile), or embedded resource (wrapped pointer/size).
+    - **Verification:** Build passes. Behavior: callers can call Material::load(db, name, {gpu, source}) with a File* (e.g. MemFile). Ideally: unit test that Material::load with valid gpu and readable MemFile returns non-null (or nullptr if stub) and does not crash. Then commit and push.
+
+---
+PHASE 2: build() adds a real draw task
+---
+
+[ ] Task 2.0 — Add RenderGraph* (and optionally RenderTarget*) to BuildParameters if needed
+    - Current BuildParameters have no way to create workflows. Add RenderGraph * renderGraph to BuildParameters so build() can call renderGraph->createWorkflow(...) and return the workflow(s) in SubGraph. If the PBR workflow should set render target (ClearRenderTarget) before draw, add AutoRef<RenderTarget> renderTarget or obtain from SharedShaderConstants; document in header.
+    - **Verification:** Build passes. pipeline.h BuildParameters has renderGraph. Behavior: when build(params) is called with params.renderGraph non-null, the next step (2.1) will be able to create and return workflows. Then commit and push.
+
+[ ] Task 2.1 — build() creates a GpuDraw action and appends one task to a new workflow
+    - In build(): create one workflow via params.renderGraph->createWorkflow("Pbr"). Create or reuse a GpuDraw action (placeholder vs/ps OK). Build GpuDraw::A from BuildParameters (geometry; material and params.sharedShaderConstants → uniforms/textures). Optionally prepend ClearRenderTarget if render target is in params. Append one Workflow::Task with the GpuDraw action and arguments. Return SubGraph{PASSED, {workflow}}.
+    - Wire modelToWorld from BuildParameters into GpuDraw::A (e.g. uniforms) so the draw has the model transform.
+    - **Verification:** Build passes. Behavior: build(params) with renderGraph non-null returns SubGraph with builtResult == PASSED and workflows.size() >= 1, workflow has at least one task. Ideally: integration test or manual run that submit() runs without crash. Then commit and push.
+
+[ ] Task 2.2 — (Done) Model transform
+    - modelToWorld is already in BuildParameters (AffineTransform). No header change. Ensure it is wired in Task 2.1. **Verification:** Confirmed when 2.1 verification passes (build() uses modelToWorld in draw args).
+
+[ ] Task 2.3 — SubGraph utility methods: submit and drop (per plan above)
+    - Implement SubGraph::submit(RenderGraph & graph, name) and SubGraph::drop(RenderGraph & graph). submit: call graph.submit(SubmitParameters{.workflows = workflows, .name = name}); return submission; optionally clear workflows after submit to avoid double-submit. drop: for each workflow call graph.dropWorkflow(workflow); clear workflows. Declarations in pipeline.h; definitions in core/rdg (e.g. pipeline.cpp or subgraph.cpp).
+    - **Verification:** Build passes. Behavior: after build(), subgraph.submit(graph, "PBR") returns non-null Submission; subgraph.drop(graph) clears workflows. Ideally: unit or integration test that submit() returns non-null and drop() clears. Then commit and push.
+
+---
+PHASE 3: PBR shaders and Vulkan binding
+---
+
+[x] Task 3.1 — Add PBR vertex and fragment shaders (metal/roughness style) [DONE]
+    - Added core/rdg/shaders/pbr.vert (position, normal, UV; push constants model, viewProj), pbr.frag (placeholder diffuse + one directional light). compile_pbr_shaders.py compiles to pbr-vert.spv.h and pbr-frag.spv.h in core/rdg. PbrShadingVulkan::build() passes vs/ps to GpuDraw::CreateParameters. CMake: rdg include dir and optional target rdg-pbr-shaders.
+    - **Verification:** Build passes; shaders compile; vs/ps passed into GpuDraw::create. (One commit per step when doing similar work.)
+
+[x] Task 3.2 — Wire material and SharedShaderConstants to descriptor/uniform layout [DONE]
+    - Define how Material and SharedShaderConstants map to GpuDraw::A: which uniforms (e.g. viewProj, model, material params, light data) and which textures (base color, normal, metallic-roughness, env if any). Implement in PbrShading impl so build() fills GpuDraw::A correctly. Ensure Vulkan backend can bind these (descriptor sets / push constants as per existing pattern).
+    - **Verification:** Build passes; correct behavior: one frame with a single PBR object and simple lighting produces a plausible image (or draw runs without crash). Ideally: run sample to confirm; add test if harness exists. (One commit per step.)
+
+---
+PHASE 4: Material and SharedShaderConstants (minimal)
+---
+
+[x] Task 4.1 — Material artifact and load from GN::File (minimal) [DONE]
+    - Implement Material as a GpuResource (backend opaque: e.g. texture set + scalar params). Material::load(db, name, LoadParameters) accepts LoadParameters { gpu, source } where source is GN::File * (non-null). Use GN::File directly in pipeline.h; GNbase.h is already included by GNrdg.h. Reading from source supports loading from disk (DiskFile), memory blob (MemFile), or embedded resource (data wrapped as File). No fileName-based load; use File so sample can pass embedded blobs from .rc/objcopy.
+    - **Verification:** Build passes. Behavior: Material::load(db, name, {gpu, readable File}) returns non-null Material; sample can pass it in BuildParameters. Ideally: unit test that load with MemFile returns non-null and result is PbrShading::Material type. (One commit per step.)
+
+[x] Task 4.2 — SharedShaderConstants: public interface and implementation (per plan above) [DONE]
+    - Public header: expose only logical data structs (FrameInformation, ViewInformation, DirectLightingInformation or equivalent) and virtual setters. ViewInformation must include full world→view→clip transformation (e.g. worldToView, viewToClip) and camera position in world space (Location, WorldUnit) so the implementation can translate model and light positions to float3 at runtime. CreateParameters with gpu; create() factory. No GPU layout, binding indices, or buffer/texture internals in the public API.
+    - Implementation (core/rdg): create() returns backend-specific impl; setters store/upload data; GPU layout and uniform buffers/textures are entirely inside the implementation. When PbrShading (or other effects) build tasks, they use SharedShaderConstants via the public interface and the backend wires the stored data into GpuDraw::A as needed.
+    - **Verification:** Build passes. Behavior: create() returns non-null; setViewInformation/getViewInformation (and set/get frame, lighting) round-trip; build() uses shared view when set. Ideally: unit test that create + set + get returns same data. (One commit per step.)
+
+---
+PHASE 5: Integration and sample (required)
+---
+
+[x] Task 5.1 — PBR sample in draw-mesh; assets and embedding (required) [integration DONE]
+    - draw-mesh.cpp: PbrShading (Vulkan), SharedShaderConstants, BuildParameters, build(), PBR task merged into workflow; Material::load from MemFile (minimal blob); GNsample-rdg-draw-mesh target in CMake.
+    - One PBR draw runs each frame (empty geometry -> 3 vertices; identity model/viewProj). Embedding (.rc/objcopy) and royalty-free media folder are follow-up.
+    - **Verification:** Build passes. Behavior: run GNsample-rdg-draw-mesh; window appears; render loop runs without crash; closing window exits. (Explicit manual verification when no RDG test harness.) (One commit per step.)
+
+[ ] Task 5.2 — Final lint and cleanup
+    - Run `python env\bin\cit.py` (Windows) or `env/bin/cit.py` (Linux); fix lint. Update PROGRESS and summary of files.
+    - **Verification:** Lint passes; PROGRESS reflects completion. Commit with message "Assignment PBR: complete (Task 5.2)" and push.
+
+---
+PHASE 6: Vulkan UBO SharedShaderConstants (PLANNED — not yet implemented)
+---
+
+GOAL: SharedShaderConstantsVulkan maintains a fixed set of device-local uniform buffers (UBOs)
+organized by update frequency. On set*() the data is uploaded into ring-buffered GPU buffers.
+PbrShading exposes those buffers as named BufferViews in GpuDraw::A::uniforms. GpuDrawVulkan
+(newly) processes the uniforms map: creates descriptor sets and binds them at draw time.
+
+KEY DESIGN DECISIONS (reached after planning discussion):
+  1. No GpuContextVulkan changes. Descriptor set layouts live inside each class that needs them.
+     Vulkan pipeline layout compatibility is guaranteed by definition equality (same binding count,
+     types, stageFlags), not by sharing VkDescriptorSetLayout handles.
+  2. Reuse GpuDraw::A::uniforms (existing map<StrA,BufferView>). No new fields added to GpuDraw::A.
+     No type coupling between GpuDrawVulkan and SharedShaderConstants.
+  3. GPU async safety via ring buffering (kRingSize = 3). Both SSC and GpuDrawVulkan maintain 3
+     independent copies and advance their slot counter once per draw. They stay in sync because
+     both advance exactly once per execute() / getBufferViews() call.
+  4. UBOs are device-local (eDeviceLocal | eTransferDst). Uploads use
+     rapid_vulkan::Buffer::setContent() which handles staging internally.
+  5. Push constants for model + worldToClip remain unchanged (PBR shader reads them). The UBO
+     worldToClip is an addition for future shaders.
+
+GPU STRUCT LAYOUT (std140) — all in vk-shared-shader-constants.h:
+  constexpr uint32_t kRingSize  = 3;
+  constexpr uint32_t kMaxLights = 8;
+
+  struct GpuFrameData {                                   // 16 B
+      uint32_t frameCounter; float frameDuration; float _pad[2];
+  };
+  struct GpuViewData {                                    // 80 B
+      glm::mat4 worldToClip; glm::vec4 cameraPosition;
+  };
+  struct GpuDirectLightData {                             // 64 B
+      int32_t type; float _pad0[3];
+      glm::vec4 positionRange;  // xyz=pos, w=range (point/spot)
+      glm::vec4 direction;      // xyz=dir (directional/spot)
+      glm::vec4 intensity;      // rgb=value, w=magnitude
+      float cosInner; float cosOuter; float _pad1[2];
+  };
+  struct GpuLightingData {                                // 16 + 8*64 = 528 B
+      uint32_t lightCount; float _pad[3];
+      GpuDirectLightData lights[kMaxLights];
+  };
+
+DATA FLOW:
+  SharedShaderConstantsVulkan  --getBufferViews()--> PbrShading::build()
+    --> drawArgs->uniforms["b_frame"/"b_view"/"b_lighting"]
+    --> GpuDrawVulkan::execute() processes uniforms map
+    --> vkCmdBindDescriptorSets
+
+[ ] Task 6.1 — Create vk-shared-shader-constants.h and vk-shared-shader-constants.cpp
+    Files: src/core/rdg/vk-shared-shader-constants.h, src/core/rdg/vk-shared-shader-constants.cpp
+    - Declare / implement SharedShaderConstantsVulkan (extends SharedShaderConstants).
+    - Members: mFrameUbo[kRingSize], mViewUbo[kRingSize], mLightUbo[kRingSize] (rapid_vulkan::Buffer,
+      device-local eUniformBuffer|eTransferDst); mSlot = 0; CPU-side dirty flags.
+    - set*() overrides: store logical data into CPU struct, mark dirty.
+    - getBufferViews(): pack dirty CPU structs → GPU structs → Buffer::setContent() for current
+      slot; return std::array<{name, BufferView}, 3>; advance mSlot = (mSlot+1) % kRingSize.
+      Buffer::SetContentParameters: queueFamily = gi.graphicsQueueFamily, queueIndex = 0.
+    - Constructor: create all 9 UBOs.
+    - Destructor: UBOs destroyed via rapid_vulkan::Ref RAII.
+    - Also add factory: AutoRef<SharedShaderConstants> createVulkanSharedShaderConstants(...).
+    **Verification:** Build passes. Unit test: create SSC, call set*, getBufferViews() returns 3
+    entries with non-null buffer handles.
+    Commit: "Assignment PBR: SharedShaderConstantsVulkan with ring-buffered UBOs (Task 6.1)"
+
+[ ] Task 6.2 — shared-shader-constants.cpp: dispatch Vulkan branch to new class
+    File: src/core/rdg/shared-shader-constants.cpp
+    - Change Vulkan case in SharedShaderConstants::create() to call createVulkanSharedShaderConstants
+      instead of SharedShaderConstantsImpl.
+    **Verification:** Build passes. Existing unit test for SSC (set/get view info) still passes.
+    Commit: "Assignment PBR: dispatch SSC Vulkan to SharedShaderConstantsVulkan (Task 6.2)"
+
+[ ] Task 6.3 — GpuDrawVulkan: implement uniforms map → descriptor sets binding
+    File: src/core/rdg/vk-draw-actions.cpp
+    New members on GpuDrawVulkan:
+      vk::DescriptorSetLayout              mUniformLayout {};
+      vk::DescriptorPool                   mUniformPool   {};
+      std::array<vk::DescriptorSet,kRingSize> mUniformSets {};
+      uint32_t                             mUniformSlot   = 0;
+    New helper ensureUniformLayout(uint32_t bindingCount):
+      - Creates mUniformLayout with bindingCount UBO bindings (binding=0..N-1, eUniformBuffer,
+        eVertex|eFragment stage).
+      - Creates mUniformPool (kRingSize * bindingCount descriptors of type eUniformBuffer).
+      - Allocates kRingSize descriptor sets from pool using mUniformLayout.
+    Update ensurePipelineLayout():
+      - If mUniformLayout exists, include it as set 0 in the pipeline layout.
+      - mPipelineLayout = createPipelineLayout({setLayouts[0..n]}, {pushRange}).
+      - Note: mPipelineLayout must be recreated if mUniformLayout was not yet set at first call.
+        Simplest: always call ensureUniformLayout before ensurePipelineLayout, or rebuild layout
+        when mUniformLayout is first created. For prototype: rebuild if layout was already created
+        without descriptor sets (destroy old, create new).
+    In execute(), before draw, if !a->uniforms.empty():
+      - ensureUniformLayout((uint32_t)a->uniforms.size());
+      - For each {name, view} in a->uniforms (alphabetical order):
+          get VkBuffer from static_cast<BufferVulkan*>(view.buffer.get())->vkHandle();
+          fill vk::DescriptorBufferInfo {handle, view.offset, view.size};
+          fill vk::WriteDescriptorSet {mUniformSets[mUniformSlot], binding, 0, 1, eUniformBuffer,
+                                       {}, &bi};
+      - dev.updateDescriptorSets(writes);
+      - cb.bindDescriptorSets(eGraphics, mPipelineLayout, 0, mUniformSets[mUniformSlot], {});
+      - mUniformSlot = (mUniformSlot + 1) % kRingSize;
+    Destructor: destroy mUniformPool (implicitly frees sets), destroy mUniformLayout.
+    **Verification:** Build passes. Run draw-mesh sample — no validation errors, no crash.
+    Commit: "Assignment PBR: GpuDrawVulkan binds uniforms map as descriptor sets (Task 6.3)"
+
+[ ] Task 6.4 — PbrShading: populate drawArgs->uniforms from SSC
+    File: src/core/rdg/pbr-shading.cpp
+    In PbrShadingVulkan::build() before appendTask:
+      if (params.sharedShaderConstants) {
+          auto * ssc = static_cast<SharedShaderConstantsVulkan*>(
+                           params.sharedShaderConstants.get());
+          for (auto & uv : ssc->getBufferViews())
+              drawArgs->uniforms[uv.name] = uv.view;
+      }
+    Note: include vk-shared-shader-constants.h from pbr-shading.cpp (it's in the same core/rdg dir).
+    **Verification:** Build passes. Run draw-mesh sample; SSC UBOs visible to GPU pipeline.
+    Commit: "Assignment PBR: PbrShading forwards SSC UBOs to GpuDraw uniforms (Task 6.4)"
+
+[ ] Task 6.5 — Build + verify end-to-end (build.py d + cit.py + run sample)
+    - Full build, run cit.py, run GNsample-rdg-draw-mesh.
+    - Confirm no Vulkan validation errors (VK_LAYER_KHRONOS_validation output clean).
+    **Verification:** Build green, tests pass, sample runs without crash.
+    Commit: "Assignment PBR: Phase 6 complete — Vulkan UBO SSC (Task 6.5)"
+
+IMPLEMENTATION NOTES:
+  - vk-shared-shader-constants.cpp needs to #include "vk-buffer.h" (for BufferVulkan used in
+    getBufferViews()) and "vk-gpu-context.h" (for GpuContextVulkan / globalInfo()).
+  - BufferView is defined in actions.h (GpuShaderAction::BufferView with buffer, offset, size).
+    Check actual field names before coding; currently: BufferView { AutoRef<Buffer> buffer;
+    uint64_t offset = 0; uint64_t size = 0; } (see actions.h ~line 481+).
+  - rapid_vulkan::Buffer::SetContentParameters needs queueFamily from gi.graphicsQueueFamily
+    and queueIndex = 0. Use mGpu->globalInfo().graphicsQueueFamily.
+  - GpuDrawVulkan's pipeline layout currently has 0 descriptor sets. When uniforms are first seen
+    in execute(), ensureUniformLayout is called, which creates the layout. The pipeline layout
+    must then include the new layout. Since the pipeline and its layout are already created at
+    that point, the simplest fix: destroy and recreate mPipelineLayout (and mPipeline) after
+    mUniformLayout is newly created. This is acceptable for a prototype.
+  - kRingSize = 3 is defined in vk-shared-shader-constants.h; vk-draw-actions.cpp can either
+    include that header or define its own constexpr uint32_t kDescriptorRingSize = 3.
+
+---
+Summary of files to touch
+---
+
+ALREADY CHANGED (build passes on branch wip/rdg/pbr-shading):
+- src/inc/garnet/rdg/transform.h — REWRITTEN with GLM (glm::vec3/quat/mat4); AffineTransform
+  and WorldToClipTransformChain fully inlined; #includes glm/mat4x4.hpp, glm/vec3.hpp,
+  glm/gtc/quaternion.hpp, glm/gtc/matrix_transform.hpp, glm/ext/matrix_clip_space.hpp,
+  glm/ext/matrix_transform.hpp.
+- src/core/rdg/transform.cpp — Stub only (all logic moved to header).
+- src/inc/garnet/rdg/pipeline.h — worldToClip changed to glm::mat4 in ViewInformation and
+  BuildParameters; #include <glm/mat4x4.hpp> added.
+- src/core/rdg/pbr-shading.cpp — Uses glm::value_ptr() for push constants; #include
+  <glm/gtc/type_ptr.hpp> added.
+- src/sample/rdg/draw-mesh.cpp — Camera uses glm::vec3 brace-init and glm::radians().
+- src/test/ut/rdg/pbr-shading.cpp — worldToClip = glm::mat4(1.f) (was Matrix44f::sIdentity()).
+- src/core/rdg/vk-buffer.h/cpp — BufferVulkan implementation (vertex/index buffer backing).
+- src/core/rdg/buffer.cpp — Buffer::create() dispatch to createVulkanBuffer().
+- src/core/rdg/vk-draw-actions.cpp — vkCmdBindVertexBuffers implemented.
+- src/core/rdg/runtime-type.cpp — Buffer::TYPE_ID added.
+- src/core/rdg/TODO.md — Created with vk-buffer device-local optimization note.
+
+TO BE CHANGED (Phase 6):
+- src/core/rdg/vk-shared-shader-constants.h — NEW: GpuFrameData/GpuViewData/GpuLightingData
+  GPU structs; SharedShaderConstantsVulkan declaration.
+- src/core/rdg/vk-shared-shader-constants.cpp — NEW: ring-buffered UBOs, set*() upload,
+  getBufferViews() returning std::array<{name,BufferView},3>.
+- src/core/rdg/shared-shader-constants.cpp — Dispatch Vulkan to SharedShaderConstantsVulkan.
+- src/core/rdg/vk-draw-actions.cpp — GpuDrawVulkan: add uniforms-map → descriptor set binding
+  (descriptor pool + layout + kRingSize sets + update + bind in execute()).
+- src/core/rdg/pbr-shading.cpp — Populate drawArgs->uniforms from ssc->getBufferViews().
+
+ORIGINAL PLAN (completed):
+- src/inc/garnet/rdg/pipeline.h — Add RenderGraph*, Material::LoadParameters, SubGraph methods.
+- src/core/rdg/ — PbrShadingVulkan, type IDs, Material::load, SharedShaderConstants, SubGraph.
+- Shaders: src/core/rdg/shaders/pbr.vert + pbr.frag, compiled to spv headers.
+- Sample: src/sample/rdg/draw-mesh.cpp with PbrShading integration.
+
+--- END ASSIGNMENT ---

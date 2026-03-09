@@ -90,22 +90,18 @@ std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuImageVie
     return {image->getView(viewParams), vk::Extent2D(mipExtent.width, mipExtent.height)};
 }
 
-vk::Format getDepthViewFormat(vk::Format format) {
-    if (format == vk::Format::eD16Unorm) return vk::Format::eD16Unorm;
-    if (format == vk::Format::eD32Sfloat) return vk::Format::eD32Sfloat;
-    if (format == vk::Format::eD24UnormS8Uint) return vk::Format::eX8D24UnormPack32;
-    if (format == vk::Format::eD32SfloatS8Uint) return vk::Format::eD32Sfloat;
-    return vk::Format::eUndefined;
+/// True if the format supports depth/stencil attachment per device capabilities (optimal tiling).
+static bool formatSupportsDepthStencilAttachment(vk::PhysicalDevice physical, vk::Format format) {
+    vk::FormatProperties props = physical.getFormatProperties(format);
+    return (props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) != vk::FormatFeatureFlags();
 }
 
-vk::Format getStencilViewFormat(vk::Format format) {
-    if (format == vk::Format::eD16UnormS8Uint) return vk::Format::eS8Uint;
-    if (format == vk::Format::eD24UnormS8Uint) return vk::Format::eS8Uint;
-    if (format == vk::Format::eD32SfloatS8Uint) return vk::Format::eS8Uint;
-    return vk::Format::eUndefined;
+/// True if the format has a stencil component (combined depth-stencil). When true, use the same image view for both depth and stencil attachments.
+static bool formatHasStencil(vk::Format format) {
+    return format == vk::Format::eD16UnormS8Uint || format == vk::Format::eD24UnormS8Uint || format == vk::Format::eD32SfloatS8Uint;
 }
 
-vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
+vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const RenderTarget::DepthStencil & depthStencil) {
     auto depth = depthStencil.target.castTo<TextureVulkan>().get();
     if (!depth) GN_UNLIKELY return {};
 
@@ -115,57 +111,36 @@ vk::ImageView getDepthTargetImageView(const RenderTarget::DepthStencil & depthSt
             return {};
         }
 
-    auto depthFormat = getDepthViewFormat(image->desc().format);
-    if (depthFormat == vk::Format::eUndefined) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: supported depth texture format: {}.", (uint32_t) image->desc().format);
+    if (!formatSupportsDepthStencilAttachment(physical, image->desc().format)) GN_UNLIKELY {
+            GN_ERROR(sLogger)
+            ("RenderPassManagerVulkan::execute: format does not support depth/stencil attachment: {}.", rapid_vulkan::vkFormat2String(image->desc().format));
             return {};
         }
 
-    auto depthViewParams =
-        rapid_vulkan::Image::GetViewParameters()
-            .setType(vk::ImageViewType::e2D)
-            .setFormat(depthFormat)
-            .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, depthStencil.subresourceIndex.mip, 1, depthStencil.subresourceIndex.face, 1));
+    auto aspect =
+        formatHasStencil(image->desc().format) ? (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil) : vk::ImageAspectFlagBits::eDepth;
+    auto depthViewParams = rapid_vulkan::Image::GetViewParameters()
+                               .setType(vk::ImageViewType::e2D)
+                               .setFormat(image->desc().format)
+                               .setRange(vk::ImageSubresourceRange(aspect, depthStencil.subresourceIndex.mip, 1, depthStencil.subresourceIndex.face, 1));
     auto view = image->getView(depthViewParams);
     if (!view) GN_UNLIKELY {
             GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create depth view for depth target texture.");
             return {};
         }
 
-    // done
     return view;
 }
 
-vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil & depthStencil) {
+/// For combined depth-stencil formats returns the same view as depth (use one view for both attachments). Otherwise returns null.
+vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil & depthStencil, vk::ImageView depthView) {
+    if (!depthView) return {};
     auto depth = depthStencil.target.castTo<TextureVulkan>().get();
-    if (!depth) GN_UNLIKELY return {};
-
+    if (!depth) return {};
     auto image = depth->image();
-    if (!image) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the depth target texture is not properly initialized.");
-            return {};
-        }
-
-    auto stencilFormat = getStencilViewFormat(image->desc().format);
-    if (stencilFormat == vk::Format::eUndefined) {
-        // the depth texture's format does not have a stencil component. This is NOT an error.
-        return {};
-    }
-
-    // setup stencil attachment, only if the depth texture's format has a stencil component.
-    auto stencilViewParams = rapid_vulkan::Image::GetViewParameters()
-                                 .setType(vk::ImageViewType::e2D)
-                                 .setFormat(stencilFormat)
-                                 .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eStencil, depthStencil.subresourceIndex.mip, 1,
-                                                                     depthStencil.subresourceIndex.face, 1));
-    auto stencilView = image->getView(stencilViewParams);
-    if (!stencilView) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create stencil view for depth target texture.");
-            return {};
-        }
-
-    // done.
-    return stencilView;
+    if (!image) return {};
+    if (!formatHasStencil(image->desc().format)) return {};
+    return depthView; // same view for both depth and stencil
 }
 
 void trackRenderTargetState(const RenderTarget & renderTarget) {
@@ -199,56 +174,90 @@ void trackRenderTargetState(const RenderTarget & renderTarget) {
                                 vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
 }
 
-inline bool areSameRenderTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
-    if (a == b) return true;    // same object, or both empty.
+bool sameDrawTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
+    if (a == b) return true;    // same render target pointer.
     if (!a || !b) return false; // one is empty, the other is not.
     return *a == *b;
 }
 
 } // namespace
 
-bool RenderPassManagerVulkan::collectRenderTargetUsage(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
+bool RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
+    GN_ASSERT(mEntries.find(taskInfo.index) == mEntries.end());
 
-    // Check if this is the very first task.
-    if (mRenderPasses.empty()) {
-        mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
-        GN_VERBOSE(sLogger)("{} - starting the very first render pass {}", taskInfo, mRenderPasses.back().toString());
-        return true;
+    // validate the render target.
+    if (!renderTarget) {
+        // this means we are resuing the same render taget of the previous draw action.
+        if (mEntries.empty()) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - empty render target is not allowed on the first draw task.", taskInfo);
+                return false;
+            }
+        const auto & prev = mEntries.rbegin()->second;
+        if (!prev.draw) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - empty render target is not allowed, when the previous action is presenting backbuffer.", taskInfo);
+                return false;
+            }
+        renderTarget = prev.draw;
     }
-
-    // If it is not the first task, then get the current active render target from the end of the render pass list.
-    auto activeRenderTarget = mRenderPasses.back().renderTarget;
-
-    // Check if the render target has changed.
-    bool changed = !areSameRenderTarget(activeRenderTarget, renderTarget);
-
-    // update render pass information as needed.
-    if (changed) {
-        mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
-        GN_VERBOSE(sLogger)("{} - render target changed, end render pass {}", taskInfo, mRenderPasses.back().toString());
-        mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = std::move(renderTarget)});
-        GN_VERBOSE(sLogger)("{} - render target changed, started new render pass {}.", taskInfo, mRenderPasses.back().toString());
-    } else {
-        mRenderPasses.back().lastTaskIndex = taskInfo.index;
-        GN_VERBOSE(sLogger)("{} - updating render pass last task index: {}.", taskInfo, mRenderPasses.back().toString());
-    }
+    GN_ASSERT(renderTarget);
+    mEntries[taskInfo.index] = Entry {.draw = std::move(renderTarget)};
+    GN_ASSERT(mEntries[taskInfo.index].isDraw());
+    GN_ASSERT(!mEntries[taskInfo.index].isPresent());
     return true;
 }
 
-void RenderPassManagerVulkan::onPresentingBackbuffer(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
-    if (mRenderPasses.empty()) return;
-    const auto & rt = mRenderPasses.back().renderTarget;
-    if (!rt) return;
-    for (const auto & color : rt->colors) {
-        if (color.target.artifact() == backbuffer.castTo<Artifact>()) {
-            // this is the back buffer. we need to end the current render pass and create a new one with empty target.
-            mRenderPasses.back().lastTaskIndex = taskInfo.index - 1;
-            GN_VERBOSE(sLogger)("{} - presenting backbuffer {}, end last render pass {}.", taskInfo, backbuffer->name, mRenderPasses.back().toString());
-            mRenderPasses.push_back(RenderPass {.firstTaskIndex = taskInfo.index, .lastTaskIndex = taskInfo.index, .renderTarget = {}});
-            GN_VERBOSE(sLogger)("{} - create a new empty render pass {}.", taskInfo, mRenderPasses.back().toString());
-            return;
+bool RenderPassManagerVulkan::preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
+    if (!backbuffer) GN_UNLIKELY {
+            GN_ERROR(sLogger)("{} - can't present empty backbuffer", taskInfo);
+            return false;
+        }
+
+    // See if we are presenting the same backbuffer that was drawn to in the previous action.
+    // If not, we inherit the draw target from the previous action.
+    AutoRef<RenderTarget> drawTarget = mEntries.rbegin()->second.draw;
+    if (drawTarget) {
+        const auto & colors = drawTarget->colors;
+        for (size_t i = 0; i < colors.size(); i++) {
+            if (backbuffer == colors[i].target.backbuffer()) {
+                // we are presenting the backbuffer that was drawn to in the previous action.
+                drawTarget = {};
+                break;
+            }
         }
     }
+    mEntries[taskInfo.index] = Entry {.present = std::move(backbuffer), .draw = std::move(drawTarget)};
+    GN_ASSERT(!mEntries[taskInfo.index].isDraw());
+    GN_ASSERT(mEntries[taskInfo.index].isPresent());
+    return true;
+}
+
+auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) -> RenderPassExecutionResult {
+    // Find the entry that the task belongs to.
+    auto iter = mEntries.find(taskInfo.index);
+    if (iter == mEntries.end()) GN_UNLIKELY {
+            GN_ERROR(sLogger)("{} - entry not found", taskInfo);
+            return {};
+        }
+
+    auto & entry = iter->second;
+
+    // we need to start a new render pass if current task is a draw task, and one of the following is true:
+    // 1. this is the first task in the render pass.
+    // 2. the previous task is drawing to a different render target.
+    bool needtoBegin = entry.isDraw() && ((iter == mEntries.begin()) || (!sameDrawTarget(entry.draw, std::prev(iter)->second.draw)));
+    if (needtoBegin && !beginRenderPass(*entry.draw, commandBuffer)) return {};
+
+    /// We need to end the render pass if one of the following is true:
+    /// 1. this is the last draw/clear/present task in the render pass.
+    /// 2. the next task is drawing to different render target.
+    bool needToEnd = iter == std::prev(mEntries.end()) || !sameDrawTarget(entry.draw, std::next(iter)->second.draw);
+    return {Action::ExecutionResult::PASSED, needToEnd};
+}
+
+const RenderTarget * RenderPassManagerVulkan::getCurrentDrawTarget(uint64_t taskIndex) const {
+    auto it = mEntries.find(taskIndex);
+    if (it == mEntries.end()) GN_UNLIKELY return nullptr;
+    return it->second.draw.get();
 }
 
 bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer commandBuffer) {
@@ -285,28 +294,26 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     }
     renderInfo.setColorAttachments(colorAttachments);
 
-    // setup depth attachment
+    // setup depth attachment (and stencil when combined format: same view for both)
+    const auto &                depthStencil = renderTarget.depthStencil;
+    vk::PhysicalDevice          physical     = mGpu->globalInfo().physical;
     vk::RenderingAttachmentInfo depthAttachment, stencilAttachment;
-    auto                        depthView = getDepthTargetImageView(renderTarget.depthStencil);
-    if (depthView) {
+    auto                        depthView = getDepthTargetImageView(physical, depthStencil);
+    if (depthView && (depthStencil.depthState.testEnabled() || depthStencil.depthState.writeEnabled())) {
         depthAttachment.setImageView(depthView)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
             .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0))); // TODO: get clear value from ClearRenderTarget action.
+            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.depthStencil.clearDepth, (uint32_t) renderTarget.depthStencil.clearStencil)));
         renderInfo.setPDepthAttachment(&depthAttachment);
-        auto dim = renderTarget.depthStencil.target.castTo<TextureVulkan>().get()->dimensions(renderTarget.depthStencil.subresourceIndex.mip);
-        // .extent.width  = std::min(dim.width, renderArea.extent.width);
-        renderArea.extent.height = std::min(dim.height, renderArea.extent.height);
-    }
-
-    // setup stencil attachment
-    auto stencilView = getStencilTargetImageView(renderTarget.depthStencil);
-    if (stencilView) {
-        stencilAttachment.setImageView(stencilView)
-            .setLoadOp(vk::AttachmentLoadOp::eClear)
-            .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0))); // TODO: get clear value from ClearRenderTarget action.
-        renderInfo.setPStencilAttachment(&stencilAttachment);
+        auto stencilView = getStencilTargetImageView(renderTarget.depthStencil, depthView);
+        if (stencilView && depthStencil.stencilState.enabled()) {
+            stencilAttachment.setImageView(stencilView)
+                .setLoadOp(vk::AttachmentLoadOp::eClear)
+                .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+                .setClearValue(
+                    vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.depthStencil.clearDepth, (uint32_t) renderTarget.depthStencil.clearStencil)));
+            renderInfo.setPStencilAttachment(&stencilAttachment);
+        }
         auto dim                 = renderTarget.depthStencil.target.castTo<TextureVulkan>().get()->dimensions(renderTarget.depthStencil.subresourceIndex.mip);
         renderArea.extent.width  = std::min(dim.width, renderArea.extent.width);
         renderArea.extent.height = std::min(dim.height, renderArea.extent.height);
@@ -317,14 +324,12 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     renderInfo.setRenderArea(renderArea);
 
     // Add depth/stencil layout transition when present (color transitions added in getColorTargetImageView when needed).
-    if (depthView || stencilView) {
+    if (depthView) {
         auto depthTex = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
         auto depthImg = depthTex->image();
         GN_ASSERT(depthImg);
-
-        vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eNone;
-        if (depthView) aspect |= vk::ImageAspectFlagBits::eDepth;
-        if (stencilView) aspect |= vk::ImageAspectFlagBits::eStencil;
+        vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
+        if (formatHasStencil(depthImg->desc().format)) aspect |= vk::ImageAspectFlagBits::eStencil;
         vk::AccessFlags           access = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
         vk::ImageSubresourceRange range(aspect, renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1);
         layoutBarrier.i(depthImg->handle(), {}, access, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, range);
@@ -352,39 +357,6 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     commandBuffer.setScissor(0, 1, &scissor);
 
     return true;
-}
-
-const RenderPassManagerVulkan::RenderPass * RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) {
-    // Find the render pass that the task belongs to.
-    RenderPass * rp = nullptr;
-    for (size_t i = 0; i < mRenderPasses.size(); i++) {
-        if (mRenderPasses[i].firstTaskIndex <= taskInfo.index && mRenderPasses[i].lastTaskIndex >= taskInfo.index) { rp = &mRenderPasses[i]; }
-    }
-    if (!rp) {
-        auto printRenderPassList = [](const std::vector<RenderPass> & renderPasses) {
-            StrA renderPassList;
-            for (const auto & rp : renderPasses) {
-                renderPassList.append(fmt::format("  Render pass: firstTaskIndex={}, lastTaskIndex={}, renderTarget={}\n", rp.firstTaskIndex, rp.lastTaskIndex,
-                                                  rp.renderTarget ? rp.renderTarget->name : "null"_s));
-            }
-            return renderPassList;
-        };
-        GN_ERROR(sLogger)("{} - doesn't seem to be part of any render pass. Render pass list:\n{}", taskInfo, printRenderPassList(mRenderPasses));
-        return nullptr;
-    }
-
-    // If this is the first task of the render pass, start a new render pass.
-    if (rp->renderTarget) {
-        if (rp->firstTaskIndex == taskInfo.index) {
-            if (!beginRenderPass(*rp->renderTarget, commandBuffer)) return nullptr;
-        } else if (rp->lastTaskIndex == taskInfo.index) {
-            GN_VERBOSE(sLogger)("{} - end render pass for render target: {}.", taskInfo, rp->renderTarget->name);
-            commandBuffer.endRendering();
-        }
-    }
-
-    // done
-    return rp;
 }
 
 } // namespace GN::rdg

@@ -38,23 +38,28 @@ int main(int, const char **) {
     // auto mesh = Mesh::load(*db, Mesh::LoadParameters {.context = gpuContext, .filename = "media::cube/cube.fbx"});
     // if (!mesh) return -1;
 
-    // Create a main window of 1280x720
-    auto window = win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = 1280, .clientHeight = 720});
+    // Create a main window and surface of 1280x720
+    uint32_t windowWidth  = 1280;
+    uint32_t windowHeight = 720;
+    auto     window       = std::unique_ptr<win::Window>(
+        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight}));
     if (!window) return -1;
     window->show();
 
-    // Create backbuffer (window and size are part of Backbuffer descriptor)
-    auto backbuffer = Backbuffer::create(*db, "backbuffer", Backbuffer::CreateParameters {.context = gpuContext, .descriptor = {.win = window}});
+    // Window owns the surface; do not destroy it. Destroy backbuffer before window.
+    intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+    if (!surface) return -1;
+
+    auto backbuffer =
+        Backbuffer::create(*db, "backbuffer",
+                           Backbuffer::CreateParameters {.context    = gpuContext,
+                                                         .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(windowWidth, windowHeight)});
     if (!backbuffer) return -1;
 
     // Create a render target that references the backbuffer
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
-    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
-    renderTarget->colors[0].clearColor.f4[0] = 0.2f;
-    renderTarget->colors[0].clearColor.f4[1] = 0.3f;
-    renderTarget->colors[0].clearColor.f4[2] = 0.4f;
-    renderTarget->colors[0].clearColor.f4[3] = 1.0f;
+    renderTarget->colors.append(RenderTarget::ColorTarget {.target = GpuImageView {.image = backbuffer}}.setClearColor(0.2f, 0.3f, 0.4f, 1.0f));
 
     // Depth texture not used by current workflow (clear + draw triangle to backbuffer only); skip until Texture::create path is implemented.
     // auto depthTexture = Texture::create(*db, "depth_texture", ...);
@@ -98,33 +103,15 @@ int main(int, const char **) {
         auto renderWorkflow  = renderGraph->createWorkflow("Render");
         renderWorkflow->name = "Render";
 
-        // Task: Prepare backbufferg
-        auto prepareTask              = Workflow::Task("Prepare");
-        prepareTask.action            = prepareAction;
-        auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-        prepareArgs->backbuffer.value = backbuffer;
-        prepareTask.arguments         = prepareArgs;
-        renderWorkflow->tasks.append(prepareTask);
+        renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
+        renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
 
-        // Task: Clear render target (clear color is on the RenderTarget artifact)
-        auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-        clearArgs->renderTarget.value = renderTarget;
-        renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
+        // No vertex buffer; the vertex shader generates the triangle from gl_VertexIndex.
+        auto drawArgs                  = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawArgs->geometry.vertexCount = 3;
+        renderWorkflow->appendTask("DrawTriangle", drawAction, drawArgs);
 
-        // Task: Draw solid triangle (GpuDraw uses active render target set by Clear above).
-        auto drawTask      = Workflow::Task("DrawTriangle");
-        drawTask.action    = drawAction;
-        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        drawTask.arguments = drawArgs;
-        renderWorkflow->tasks.append(drawTask);
-
-        // Task: Present backbuffer
-        auto presentTask              = Workflow::Task("Present");
-        presentTask.action            = presentAction;
-        auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-        presentArgs->backbuffer.value = backbuffer;
-        presentTask.arguments         = presentArgs;
-        renderWorkflow->tasks.append(presentTask);
+        renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
 
         // Submit render graph for execution
         auto submission = renderGraph->submit({.workflows = {&renderWorkflow, 1}});
