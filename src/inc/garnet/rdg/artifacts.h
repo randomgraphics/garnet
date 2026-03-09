@@ -675,7 +675,6 @@ struct GpuResourceSet : public Artifact {
     };
 
     static GN_API AutoRef<GpuResourceSet> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
-
 };
 
 } // namespace GN::rdg
