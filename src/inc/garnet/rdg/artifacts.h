@@ -652,43 +652,48 @@ static_assert(GN::rdg::RenderTarget::StencilState {}.enabled() == false);
 static_assert(GN::rdg::RenderTarget::Viewport {}.fullScreen() == true);
 static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
 
-/// A 3-D table of GPU shader resources that can be bound to a shader.
-/// The resource is indexed by (set, slot, index).
-struct GpuResourceTable : public Artifact {
+enum class GpuShaderStageBits : uint32_t {
+    VERTEX = 1 << 0, HULL = 1 << 1, DOMAIN = 1 << 2, GEOMETRY = 1 << 3, PIXEL = 1 << 4, COMPUTE = 1 << 5,
+
+    friend GpuShaderStageBits operator|(GpuShaderStageBits a,
+                                        GpuShaderStageBits b) {return static_cast<GpuShaderStageBits>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));}
+
+friend GpuShaderStageBits operator&(GpuShaderStageBits a, GpuShaderStageBits b) {
+    return static_cast<GpuShaderStageBits>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
+}
+}; // namespace GN::rdg
+typedef BitFlags<GpuShaderStageBits> GpuShaderStageFlags;
+
+/// A group of bindable GPU shader resources.
+/// Conceptually, it matches Vulkan's descriptor set.
+struct GpuResourceGroup : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GpuResourceSet";
 
-    struct ViewBinding {
+    struct SlotDescription {
         enum Type {
-            TEXTURE,
-            BUFFER,
-            SAMPLER,
+            UNIFOM_BUFFER,
+            STORAGE_BUFFER,
             SAMPLED_TEXTURE,
+            STORAGE_TEXTURE,
+            SAMPLER,
         };
 
-        Type   type  = TEXTURE;
-        size_t size  = 1; // 1: single resource, >1: resource array.
-        bool   read  = true;
-        bool   write = false;
-    };
-
-    struct SlotLayout {
-        size_t resourceCount = 0;
-    };
-
-    struct SetLayout {
-        DynaArray<SlotLayout> slots;
-    };
-
-    struct Layout {
-        DynaArray<SetLayout> sets;
+        Type                type  = UNIFOM_BUFFER;
+        size_t              count = 1; ///< 1: single resource, >1: fixed sized resource array.
+        GpuShaderStageFlags stages;    ///< shader stages that can access this resource or resource array.
     };
 
     struct CreateParameters {
-        DynaArray<ViewBinding> bindings;
+        AutoRef<GpuContext>        context;
+        DynaArray<SlotDescription> slots;
     };
 
-    static GN_API AutoRef<GpuResourceSet> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    virtual void setResourceViews(size_t slot, size_t offset, SafeArrayAccessor<const GpuResourceView> views) = 0;
+
+    virtual void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const = 0;
+
+    static GN_API AutoRef<GpuResourceGroup> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 };
 
 } // namespace GN::rdg
