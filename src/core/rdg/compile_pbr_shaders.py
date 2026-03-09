@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Compile PBR GLSL (core/rdg/shaders/pbr.vert, pbr.frag) to SPIR-V and emit C++ headers
-into core/rdg/ (pbr-vert.spv.h, pbr-frag.spv.h). Uses glslc (Vulkan SDK or PATH).
-Run from repo root or from src/core/rdg. Headers can be committed so build does not require glslc.
+Compile PBR GLSL (core/rdg/shaders/pbr.vert, pbr.frag) to SPIR-V and emit C++ headers.
+Uses glslc (Vulkan SDK or PATH). When invoked from CMake, pass the build output directory
+as the first argument; headers are written there (pbr-vert.spv.h, pbr-frag.spv.h).
+Without an argument, writes to the script directory (for manual runs).
 """
 
+import argparse
 import os
 import pathlib
 import struct
@@ -46,9 +48,23 @@ def spv_to_header(spv_path: pathlib.Path, var_name: str, out_path: pathlib.Path)
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Compile PBR GLSL to SPIR-V and emit C++ headers.")
+    parser.add_argument(
+        "output_dir",
+        nargs="?",
+        default=None,
+        help="Build output directory for generated headers (default: script directory)",
+    )
+    args = parser.parse_args()
+
     script_dir = pathlib.Path(__file__).resolve().parent
     shader_dir = script_dir / "shaders"
-    out_dir = script_dir
+    if args.output_dir:
+        # Resolve relative to cwd when invoked from CMake (WORKING_DIRECTORY = build dir).
+        out_dir = pathlib.Path(args.output_dir).resolve().absolute()
+    else:
+        out_dir = script_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     glslc = find_glslc()
     vert_src = shader_dir / "pbr.vert"
@@ -60,7 +76,9 @@ def main():
 
     for src in (vert_src, frag_src):
         spv = out_dir / (src.stem + src.suffix + ".spv")
-        cmd = [glslc, str(src), "-o", str(spv), "-O"]
+        # -g keeps OpName in SPIR-V so rapid-vulkan reflection can get vertex input names; -O optimizes.
+        cmd = [glslc, str(src), "-o", str(spv), "-O", "-g"]
+        print(' '.join(cmd))
         r = subprocess.run(cmd)
         if r.returncode != 0:
             print(f"glslc failed: {' '.join(cmd)}", file=sys.stderr)
@@ -72,7 +90,7 @@ def main():
     vert_spv.unlink(missing_ok=True)
     spv_to_header(frag_spv, "kPbrFragSpv", out_dir / "pbr-frag.spv.h")
     frag_spv.unlink(missing_ok=True)
-    print("Generated pbr-vert.spv.h and pbr-frag.spv.h")
+    print("Generated pbr-vert.spv.h and pbr-frag.spv.h in", out_dir)
 
 
 if __name__ == "__main__":

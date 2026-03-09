@@ -1,4 +1,4 @@
-﻿#ifndef __GN_BASE_SMARTPTR_H__
+#ifndef __GN_BASE_SMARTPTR_H__
 #define __GN_BASE_SMARTPTR_H__
 // *****************************************************************************
 /// \file
@@ -6,6 +6,8 @@
 /// \author  chen@@chenli-homepc (2011.4.9)
 // *****************************************************************************
 
+#include <atomic>
+#include <mutex>
 #include <type_traits>
 
 namespace GN {
@@ -21,25 +23,14 @@ namespace GN {
 // -------------------------------------------------------------------------
 class RefCounter {
 public:
-    /// Utility class to support weak ref
+    /// Control block for weak refs. One per object, allocated on first weak ref. Lock-free: no mutex, no list.
     struct WeakObject {
-        void *         ptr; // pointer to RefCounter object
-        std::mutex     lock;
-        GN::DoubleLink references;
+        std::atomic<void *> ptr;       // RefCounter*; cleared when object is destroyed
+        std::atomic<size_t> weakCount; // 1 = RefCounter owns; +1 per WeakRef
 
         GN_NO_COPY(WeakObject);
 
-        WeakObject() {}
-
-        // return true, only when reference list is empty
-        bool deref(GN::DoubleLink & l, bool clearPtr = false) {
-            lock.lock();
-            l.detach();
-            bool timeToDelete = !references.prev && !references.next;
-            if (clearPtr) ptr = nullptr;
-            lock.unlock();
-            return timeToDelete;
-        }
+        WeakObject(void * object): ptr(object), weakCount(1) {}
     };
 
     // ********************************
@@ -92,23 +83,24 @@ public:
     }
 
     ///
-    /// Return the weak object associated with this reference counted object.
+    /// Return the weak control block. One allocation on first use; fast path is one atomic load.
     ///
     WeakObject * getWeakObj() const {
-        mWeakLock.lock();
-        if (!mWeakObj) {
-            mWeakObj      = new WeakObject();
-            mWeakObj->ptr = (void *) this;
-            mWeakLink.linkAfter(&mWeakObj->references);
+        WeakObject * wo = mWeakObj.load(std::memory_order_acquire);
+        if (wo) GN_LIKELY return wo;
+        std::lock_guard<std::mutex> g(mWeakLock);
+        wo = mWeakObj.load(std::memory_order_relaxed);
+        if (!wo) {
+            wo = new WeakObject((void *) this);
+            mWeakObj.store(wo, std::memory_order_release);
         }
-        mWeakLock.unlock();
-        return mWeakObj;
+        return wo;
     }
 
     ///
     /// For internal use. Do _NOT_ call.
     ///
-    WeakObject * __getWeakObjNoLock() const { return mWeakObj; }
+    WeakObject * __getWeakObjNoLock() const { return mWeakObj.load(std::memory_order_relaxed); }
 
     // ********************************
     /// \name protective ctor/dtor
@@ -119,7 +111,7 @@ protected:
     ///
     /// Constructor
     ///
-    RefCounter(): mRef(0), mWeakObj(NULL) {}
+    RefCounter(): mRef(0), mWeakObj(nullptr) {}
 
     ///
     /// Destructor
@@ -129,8 +121,11 @@ protected:
             GN_UNEXPECTED_EX("Destructing reference counted object with non-zero reference counter usually means memory corruption, thus is not allowed!");
         }
 
-        if (mWeakObj && mWeakObj->deref(mWeakLink, true)) { delete mWeakObj; }
-        mWeakObj = nullptr;
+        WeakObject * wo = mWeakObj.load(std::memory_order_acquire);
+        if (wo) {
+            wo->ptr.store(nullptr, std::memory_order_release);
+            if (wo->weakCount.fetch_sub(1, std::memory_order_acq_rel) == 1) delete wo;
+        }
     }
 
     //@}
@@ -142,10 +137,9 @@ private:
     ///
     /// reference counter
     ///
-    mutable std::atomic_int mRef;
-    mutable std::mutex      mWeakLock;
-    mutable WeakObject *    mWeakObj;
-    mutable GN::DoubleLink  mWeakLink;
+    mutable std::atomic_int           mRef;
+    mutable std::mutex                mWeakLock;
+    mutable std::atomic<WeakObject *> mWeakObj;
 };
 
 ///
@@ -406,143 +400,91 @@ inline AutoRef<T> referenceTo(T * ptr) {
 }
 
 ///
-/// Weak reference to a smart pointer object
+/// Weak reference to a RefCounter. Lock-free promote() and empty(); one atomic control block per object.
 // -------------------------------------------------------------------------
 template<typename X>
 class WeakRef {
     static_assert(std::is_base_of_v<RefCounter, X>, "WeakRef<X> requires X to inherit from RefCounter");
 
     typedef X * XPTR;
-    typedef X & XREF;
 
-    RefCounter::WeakObject * mObj;
-    GN::DoubleLink           mLink;
+    RefCounter::WeakObject * mBlock = nullptr;
 
-    typedef AutoRef<X> StrongRef;
+    void addRef() {
+        if (mBlock) mBlock->weakCount.fetch_add(1, std::memory_order_relaxed);
+    }
 
-    void moveFrom(WeakRef & ref) {
-        GN_ASSERT(nullptr == mObj);
-        GN_ASSERT(nullptr == mLink.prev);
-        GN_ASSERT(nullptr == mLink.next);
-        mObj     = ref.mObj;
-        mLink    = std::move(ref.mLink);
-        ref.mObj = nullptr;
-        GN_ASSERT(nullptr == ref.mLink.prev);
-        GN_ASSERT(nullptr == ref.mLink.next);
+    void releaseRef() {
+        if (!mBlock) return;
+        if (mBlock->weakCount.fetch_sub(1, std::memory_order_acq_rel) == 1) delete mBlock;
+        mBlock = nullptr;
     }
 
 public:
-    ///
-    /// constructor
-    ///
-    WeakRef(XPTR ptr = NULL): mObj(NULL) { set(ptr); }
+    WeakRef() = default;
 
-    ///
-    /// copy constructor
-    ///
-    WeakRef(const WeakRef & ref): mObj(NULL) { set(ref.promote()); }
+    explicit WeakRef(XPTR ptr): mBlock(nullptr) { set(ptr); }
 
-    ///
-    /// move constructor
-    ///
-    WeakRef(WeakRef && ref): mObj(nullptr) { moveFrom(ref); }
+    WeakRef(const WeakRef & ref): mBlock(ref.mBlock) { addRef(); }
 
-    ///
-    /// Destructor
-    ///
-    ~WeakRef() { clear(); }
+    WeakRef(WeakRef && ref) noexcept: mBlock(ref.mBlock) { ref.mBlock = nullptr; }
 
-    ///
-    /// clear the reference
-    ///
-    void clear() {
-        if (mObj && mObj->deref(mLink)) { delete mObj; }
-        mObj = NULL;
-    }
+    ~WeakRef() { releaseRef(); }
 
-    bool empty() const {
-        bool result = true;
-        if (mObj) {
-            mObj->lock.lock();
-            result = NULL == mObj->ptr;
-            mObj->lock.unlock();
-        }
-        return result;
-    }
+    void clear() { releaseRef(); }
 
-    ///
-    /// set/reset the pointer. Null pointer is allowed.
-    ///
+    /// Lock-free.
+    bool empty() const { return !mBlock || mBlock->ptr.load(std::memory_order_acquire) == nullptr; }
+
     void set(XPTR ptr) {
-        auto obj = ptr ? ptr->getWeakObj() : nullptr;
-        if (obj != mObj) {
+        if (!ptr) {
             clear();
-            obj->lock.lock();
-            mLink.linkAfter(&obj->references);
-            mLink.context = this;
-            obj->lock.unlock();
-            mObj = obj;
+            return;
         }
+        RefCounter::WeakObject * b = ptr->getWeakObj();
+        if (b == mBlock) return;
+        releaseRef();
+        mBlock = b;
+        addRef();
     }
 
-    ///
-    /// promote to strong reference
-    ///
+    /// Lock-free.
     AutoRef<X> promote() const {
         AutoRef<X> result;
-        if (mObj) {
-            mObj->lock.lock();
-            auto p = (XPTR) mObj->ptr;
-            if (p && p->increfIfNotZero() > 0) { result.attach(p); }
-            mObj->lock.unlock();
-        }
+        if (!mBlock) return result;
+        void * p = mBlock->ptr.load(std::memory_order_acquire);
+        if (p && static_cast<RefCounter *>(p)->increfIfNotZero() > 0) result.attach(static_cast<XPTR>(p));
         return result;
     }
 
-    ///
-    /// copy operator
-    ///
     WeakRef & operator=(const WeakRef & rhs) {
-        set(rhs.promote()); // TODO: we might be able to do it slightly faster.
+        if (this == &rhs) return *this;
+        if (rhs.mBlock == mBlock) return *this;
+        releaseRef();
+        mBlock = rhs.mBlock;
+        addRef();
         return *this;
     }
 
-    ///
-    /// move operator
-    ///
-    WeakRef & operator=(WeakRef && rhs) {
+    WeakRef & operator=(WeakRef && rhs) noexcept {
         if (this == &rhs) return *this;
-        clear();
-        moveFrom(rhs);
+        releaseRef();
+        mBlock     = rhs.mBlock;
+        rhs.mBlock = nullptr;
         return *this;
     }
 
     bool operator!() const { return empty(); }
 
-    ///
-    /// 比较操作
-    ///
-    bool operator==(const WeakRef & rhs) const throw() { return mObj == rhs.mObj; }
+    bool operator==(const WeakRef & rhs) const throw() { return mBlock == rhs.mBlock; }
 
-    ///
-    /// 比较操作
-    ///
-    bool operator==(XPTR ptr) const throw() { return mObj == (ptr ? ptr->__getWeakObjNoLock() : NULL); }
+    bool operator==(XPTR ptr) const throw() { return mBlock == (ptr ? ptr->__getWeakObjNoLock() : nullptr); }
 
-    ///
-    /// 比较操作
-    ///
-    friend inline bool operator==(XPTR ptr, const WeakRef & rhs) throw() { return rhs.mObj == (ptr ? ptr->__getWeakObjNoLock() : NULL); }
+    friend bool operator==(XPTR ptr, const WeakRef & rhs) throw() { return rhs.mBlock == (ptr ? ptr->__getWeakObjNoLock() : nullptr); }
 
-    ///
-    /// 比较操作
-    ///
-    bool operator!=(const WeakRef & rhs) const throw() { return mObj != rhs.mObj; }
+    bool operator!=(const WeakRef & rhs) const throw() { return mBlock != rhs.mBlock; }
 
-    ///
-    /// 比较操作
-    ///
-    bool operator<(const WeakRef & rhs) const throw() { return mObj < rhs.mObj; }
+    bool operator<(const WeakRef & rhs) const throw() { return mBlock < rhs.mBlock; }
 };
 } // namespace GN
 

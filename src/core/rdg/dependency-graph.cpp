@@ -16,7 +16,7 @@ namespace GN::rdg {
 // Key for lookup by type and name (artifact admits itself via admit(Artifact*))
 struct TypeNameKey {
     const uint64_t type;
-    const StrA &   name;
+    const StrA     name;
     bool           operator==(const TypeNameKey & o) const { return type == o.type && name == o.name; }
     bool           operator!=(const TypeNameKey & o) const { return !(*this == o); }
 };

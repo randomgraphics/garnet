@@ -61,8 +61,11 @@ GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
 # Build RDG
-GN_add_source_folder(sources rdg PCH_SOURCE rdg/pch.cpp)
+
+GN_add_source_folder(rdg_sources rdg PCH_SOURCE rdg/pch.cpp EXTRA_SOURCES rdg/shaders/*.*)
 add_subdirectory(rdg)
+set_source_files_properties(${rdg_sources} PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg")
+list(APPEND sources ${rdg_sources})
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
@@ -94,6 +97,9 @@ if(GN_BUILD_IS_STATIC)
     add_library(GNcore ${sources} ${garnet_headers})
 else()
     add_library(GNcore SHARED ${sources} ${garnet_headers})
+endif()
+if(TARGET GNcore-rdg-shaders)
+    add_dependencies(GNcore GNcore-rdg-shaders)
 endif()
 
 # =======================

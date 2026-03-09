@@ -109,6 +109,33 @@ struct Texture : public GpuResource {
         uint32_t              faces   = 1; ///< 1 = 2D, 6 = cubemap, >1 = array
         uint32_t              levels  = 0; ///< 0 = full mipmap chain, 1 = single level, >1 = mipmap chain with specified number of levels
         uint32_t              samples = 1; ///< 1 = no multisampling
+
+        Descriptor & setFormat(gfx::img::PixelFormat format_) {
+            format = format_;
+            return *this;
+        }
+
+        Descriptor & setDimensions(uint32_t width_, uint32_t height_, uint32_t depth_ = 1) {
+            width  = width_;
+            height = height_;
+            depth  = depth_;
+            return *this;
+        }
+
+        Descriptor & setFaces(uint32_t faces_) {
+            faces = faces_;
+            return *this;
+        }
+
+        Descriptor & setLevels(uint32_t levels_) {
+            levels = levels_;
+            return *this;
+        }
+
+        Descriptor & setSamples(uint32_t samples_) {
+            samples = samples_;
+            return *this;
+        }
     };
 
     struct CreateParameters {
@@ -434,9 +461,9 @@ struct RenderTarget : public Artifact {
         constexpr bool operator!=(const StencilState & other) const { return !operator==(other); }
     };
 
-    /// Viewport settings. Defines tranform of normalized device coordinates (NDC) to Window coordinates.
-    ///   - Left top is (-1, 1) in NDC space, map to Window space coordiante (0, 0).
-    ///   - Right bottom is (1, -1) in NDC space, map to Window space coordiante (width, height).
+    /// Viewport settings. Defines transform of normalized device coordinates (NDC) to Window coordinates.
+    ///   - Left top is (-1, 1) in NDC space, map to Window space coordinate (0, 0).
+    ///   - Right bottom is (1, -1) in NDC space, map to Window space coordinate (width, height).
     ///   - Set width and/or heigh to FLT_MAX indicating the current size of the render target.
     struct Viewport {
         float x        = 0.0f;
@@ -497,6 +524,41 @@ struct RenderTarget : public Artifact {
         StencilState                   stencilState = {};
         float                          clearDepth   = 1.0;
         uint32_t                       clearStencil = 0;
+
+        DepthStencil & setTarget(AutoRef<Texture> target_) {
+            target = std::move(target_);
+            return *this;
+        }
+
+        DepthStencil & setFormat(gfx::img::PixelFormat format_) {
+            format = format_;
+            return *this;
+        }
+
+        DepthStencil & setSubresourceIndex(GpuImageView::SubresourceIndex subresourceIndex_) {
+            subresourceIndex = subresourceIndex_;
+            return *this;
+        }
+
+        DepthStencil & setDepthState(DepthState depthState_) {
+            depthState = depthState_;
+            return *this;
+        }
+
+        DepthStencil & setStencilState(StencilState stencilState_) {
+            stencilState = stencilState_;
+            return *this;
+        }
+
+        DepthStencil & setClearDepth(float clearDepth_) {
+            clearDepth = clearDepth_;
+            return *this;
+        }
+
+        DepthStencil & setClearStencil(uint32_t clearStencil_) {
+            clearStencil = clearStencil_;
+            return *this;
+        }
 
         bool operator==(const DepthStencil & other) const {
             if (target != other.target) return false;

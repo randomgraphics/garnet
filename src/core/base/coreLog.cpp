@@ -233,13 +233,13 @@ struct ConsoleReceiver : public Logger::Receiver {
 
         ConsoleColor cc(desc.level);
         if (desc.level >= GN::Logger::INFO) {
-            ::fprintf(stdout, "%s\n", msg);
+            ::fprintf(stdout, "[%s] %s\n", logger.getName(), msg);
         } else {
             ::fprintf(stderr,
-                      "%s(%d)\n"
+                      "[%s] %s(%d)\n"
                       "\tname=%s, level=%s\n"
                       "\t%s\n\n",
-                      sFormatPath(desc.file).data(), desc.line, logger.getName(), sLevel2Str(desc.level).data(), msg);
+                      logger.getName(), sFormatPath(desc.file).data(), desc.line, logger.getName(), sLevel2Str(desc.level).data(), msg);
         }
     };
     virtual void onLog(Logger & logger, const Logger::LogLocation & desc, const wchar_t * msg) {
@@ -247,13 +247,13 @@ struct ConsoleReceiver : public Logger::Receiver {
 
         ConsoleColor cc(desc.level);
         if (desc.level >= GN::Logger::INFO) {
-            ::fprintf(stdout, "%S\n", msg);
+            ::fprintf(stdout, "[%s] %S\n", logger.getName(), msg);
         } else {
             ::fprintf(stderr,
-                      "%s(%d)\n"
+                      "[%s] %s(%d)\n"
                       "\tname=%s, level=%s\n"
                       "\t%S\n\n",
-                      sFormatPath(desc.file).data(), desc.line, logger.getName(), sLevel2Str(desc.level).data(), msg);
+                      logger.getName(), sFormatPath(desc.file).data(), desc.line, logger.getName(), sLevel2Str(desc.level).data(), msg);
         }
     };
 };
