@@ -294,7 +294,7 @@ protected:
 //     using GpuResource::GpuResource;
 // };
 
-// Represents a view to single GPU resource.
+/// Represents a view to single GPU resource: texture, backbuffer, buffer, sampler.
 struct GpuResourceView {
     struct SubresourceIndex {
         uint32_t mip  = 0; ///< index into mipmap chain
@@ -375,6 +375,7 @@ struct GpuResourceView {
     bool operator!=(const GpuResourceView & other) const { return !operator==(other); }
 };
 
+/// Render target represents a set of color and depth/stencil targets that GPU draws to.
 struct RenderTarget : public Artifact {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "RenderTarget";
@@ -651,8 +652,9 @@ static_assert(GN::rdg::RenderTarget::StencilState {}.enabled() == false);
 static_assert(GN::rdg::RenderTarget::Viewport {}.fullScreen() == true);
 static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
 
-// An set of GPU shader resources
-struct GpuResourceSet : public Artifact {
+/// A 3-D table of GPU shader resources that can be bound to a shader.
+/// The resource is indexed by (set, slot, index).
+struct GpuResourceTable : public Artifact {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GpuResourceSet";
 
@@ -668,6 +670,18 @@ struct GpuResourceSet : public Artifact {
         size_t size  = 1; // 1: single resource, >1: resource array.
         bool   read  = true;
         bool   write = false;
+    };
+
+    struct SlotLayout {
+        size_t resourceCount = 0;
+    };
+
+    struct SetLayout {
+        DynaArray<SlotLayout> slots;
+    };
+
+    struct Layout {
+        DynaArray<SetLayout> sets;
     };
 
     struct CreateParameters {
