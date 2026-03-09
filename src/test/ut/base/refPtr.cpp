@@ -85,7 +85,7 @@ public:
         std::vector<std::thread> threads;
 
         for (int t = 0; t < numThreads; ++t) {
-            threads.emplace_back([raw, &releaseStrong, &cleared, &exitedCount, &errs, loopsPerTh, numThreads]() {
+            threads.emplace_back([raw, &releaseStrong, &cleared, &exitedCount, &errs]() {
                 GN::WeakRef<Ref2> w(raw);
                 for (int i = 0; i < loopsPerTh; ++i) {
                     if (releaseStrong.load(std::memory_order_acquire)) break;
@@ -125,7 +125,7 @@ public:
 
         std::vector<std::thread> threads;
         for (int t = 0; t < numThreads; ++t) {
-            threads.emplace_back([raw, &errs, copies]() {
+            threads.emplace_back([raw, &errs]() {
                 for (int i = 0; i < copies; ++i) {
                     GN::AutoRef<Ref2> p(raw);
                     if (!p || p->getref() < 1) errs.fetch_add(1, std::memory_order_relaxed);

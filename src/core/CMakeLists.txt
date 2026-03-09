@@ -128,9 +128,11 @@ target_link_libraries(GNcore PUBLIC GNextern)
 target_compile_features(GNcore PUBLIC cxx_std_20)
 target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
 
-# GLFW window backend (preferred; cross-platform)
-add_core_libs(glfw)
-target_compile_definitions(GNcore PRIVATE HAS_GLFW=1)
+# Link to GLFW library if it is built
+if (TARGET glfw)
+    add_core_libs(glfw)
+    target_compile_definitions(GNcore PRIVATE HAS_GLFW=1)
+endif()
 
 # Qt6 window backend (deprecated; kept for reference, do not delete yet)
 # if(Qt6Widgets_FOUND)
