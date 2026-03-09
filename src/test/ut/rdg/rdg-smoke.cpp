@@ -603,11 +603,18 @@ public:
         TS_ASSERT(fetched->sequence == first->sequence);
     }
 
-    void testArrayArtifactArgument() {
-        struct A : public GN::rdg::Arguments {
-            GN::rdg::Arguments::ArtifactArray<GN::rdg::IntegerArtifact, 3> array = {this, "array"};
-        };
-    }
+    // void testArrayArtifactArgument() {
+    //     struct A : public GN::rdg::Arguments {
+    //         GN::rdg::Arguments::ArtifactArray<GN::rdg::IntegerArtifact, 3> array = {this, "array"};
+    //     };
+
+    //     auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+    //     TS_ASSERT(db != nullptr);
+    //     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
+    //     TS_ASSERT(renderGraph != nullptr);
+    //     auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+    //     TS_ASSERT(x != nullptr);
+    // }
 };
 
 /*

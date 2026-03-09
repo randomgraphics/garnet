@@ -5,6 +5,7 @@
 #include <concepts>
 #include <functional>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace GN::rdg {
 
@@ -146,6 +147,30 @@ concept DerivedFromArtifact = std::derived_from<T, Artifact>;
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 class Arguments : public RefCounter, public RuntimeType {
 public:
+    /// Base class of all parameters that references one or more artifacts.
+    /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
+    struct ArtifactArgument {
+        virtual ~ArtifactArgument() {}
+
+        auto name() const -> const char * { return mName; }
+        // auto usage() const -> UsageBits { return mUsage; }
+
+        // /// Linked-list iteration (no allocation). \c nullptr when no next/prev.
+        // const ArtifactArgument * next() const { return mLink.next ? static_cast<const ArtifactArgument *>(mLink.next->context) : nullptr; }
+        // const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
+
+    protected:
+        explicit ArtifactArgument(const char * name): mName(name) {
+            // mLink.context = this;
+            // owner->enlist(this);
+        }
+
+    private:
+        const char * mName;
+        // DoubleLink   mLink;
+        // friend class Arguments;
+    };
+
     struct UsageBits {
         bool optional : 1 = false;
         bool reading  : 1 = false;
@@ -176,41 +201,17 @@ public:
         inline static constexpr UsageBits RW             = ReadingWriting;
     };
 
-    /// Base class of all parameters that references one or more artifacts.
-    /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
-    struct ArtifactArgument {
-        virtual ~ArtifactArgument() {}
-
-        auto name() const -> const char * { return mName; }
-        auto usage() const -> UsageBits { return mUsage; }
-
-        /// Returns list of artifacts referenced by this argument.
-        virtual auto artifacts() const -> SafeArrayAccessor<const Artifact * const> = 0;
-
-        /// Linked-list iteration (no allocation). \c nullptr when no next/prev.
-        const ArtifactArgument * next() const { return mLink.next ? static_cast<const ArtifactArgument *>(mLink.next->context) : nullptr; }
-        const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
-
-    protected:
-        ArtifactArgument(Arguments * owner, const char * name, UsageBits usage): mName(name), mUsage(usage) {
-            mLink.context = this;
-            owner->enlist(this);
-        }
-
-    private:
-        const char * mName;
-        UsageBits    mUsage;
-        DoubleLink   mLink;
-        friend class Arguments;
-    };
-
     /// Represents a single artifact parameter of an action.
     /// T must be a subclass of Artifact.
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
+    template<DerivedFromArtifact T, UsageBits UFlags>
     struct SingleArtifact : public ArtifactArgument {
-        SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
+        explicit SingleArtifact(const char * name): ArtifactArgument(name) {}
 
-        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) value.addr(), 1}; }
+        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const {
+            if (!value) return;
+            if (UFlags.reading) readList.insert(value->typeId);
+            if (UFlags.writing) writeList.insert(value->typeId);
+        }
 
         AutoRef<T> value;
 
@@ -301,65 +302,67 @@ public:
         }
     };
 
-    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
-    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading>;
+    // template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
+    // using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading>;
 
-    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
-    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Writing>;
+    // template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
+    // using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Writing>;
 
-    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
-    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading + Usage::Writing>;
+    // template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
+    // using ReadWriteArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading + Usage::Writing>;
 
-    template<typename T, UsageBits UFlags = Usage::None>
-    struct ArtifactVector : public ArtifactArgument {
-        ArtifactVector(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
+    // template<typename T, UsageBits UFlags = Usage::None>
+    // struct ArtifactVector : public ArtifactArgument {
+    //     ArtifactVector(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), values.size()}; }
+    //     SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), values.size()}; }
 
-        DynaArray<AutoRef<T>> values;
+    //     DynaArray<AutoRef<T>> values;
 
-        bool empty() const { return values.empty(); }
+    //     bool empty() const { return values.empty(); }
 
-        void clear() { values.clear(); }
+    //     void clear() { values.clear(); }
 
-        auto size() const { return values.size(); }
+    //     auto size() const { return values.size(); }
 
-        auto data() const { return values.data(); }
+    //     auto data() const { return values.data(); }
 
-        auto data() { return values.data(); }
+    //     auto data() { return values.data(); }
 
-        auto begin() const { return values.begin(); }
+    //     auto begin() const { return values.begin(); }
 
-        auto begin() { return values.begin(); }
+    //     auto begin() { return values.begin(); }
 
-        auto end() const { return values.end(); }
+    //     auto end() const { return values.end(); }
 
-        auto end() { return values.end(); }
+    //     auto end() { return values.end(); }
 
-        const auto & front() const { return values.front(); }
+    //     const auto & front() const { return values.front(); }
 
-        auto & front() { return values.front(); }
+    //     auto & front() { return values.front(); }
 
-        const auto & back() const { return values.back(); }
+    //     const auto & back() const { return values.back(); }
 
-        auto & back() { return values.back(); }
+    //     auto & back() { return values.back(); }
 
-        auto operator[](size_t index) const { return values[index]; }
+    //     auto operator[](size_t index) const { return values[index]; }
 
-        auto operator[](size_t index) { return values[index]; }
-    };
+    //     auto operator[](size_t index) { return values[index]; }
+    // };
 
-    template<typename T, UsageBits UFlags = Usage::None>
-    using ReadOnlyVector = ArtifactVector<T, UFlags + Usage::Reading>;
+    // template<typename T, UsageBits UFlags = Usage::None>
+    // using ReadOnlyVector = ArtifactVector<T, UFlags + Usage::Reading>;
 
-    template<typename T, UsageBits UFlags = Usage::None>
-    using WriteOnlyVector = ArtifactVector<T, UFlags + Usage::Writing>;
+    // template<typename T, UsageBits UFlags = Usage::None>
+    // using WriteOnlyVector = ArtifactVector<T, UFlags + Usage::Writing>;
 
-    template<typename T, UsageBits UFlags = Usage::None>
-    using ReadWriteVector = ArtifactVector<T, UFlags + Usage::Reading + Usage::Writing>;
+    // template<typename T, UsageBits UFlags = Usage::None>
+    // using ReadWriteVector = ArtifactVector<T, UFlags + Usage::Reading + Usage::Writing>;
 
-    /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
-    const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
+    // /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
+    // const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
+
+    virtual void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const = 0;
 
 protected:
     using RuntimeType::RuntimeType;

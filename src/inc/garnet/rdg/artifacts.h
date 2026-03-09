@@ -223,17 +223,6 @@ protected:
     using GpuResource::GpuResource;
 };
 
-struct BufferView {
-    /// The buffer that contains the geometry data.
-    AutoRef<Buffer> buffer;
-
-    /// offset in bytes from beginning of the buffer to the first element.
-    uint64_t offset = 0;
-
-    /// size of the data in the buffer in bytes, starting from offset.
-    uint64_t size = 0;
-};
-
 // /// Allocate a block of memory for uploading dynamic data to GPU. The allocated slice will be released when the transient arena is deleted.
 // struct GpuTransientUploader : public TransientArena {
 
@@ -305,8 +294,8 @@ struct BufferView {
 //     using GpuResource::GpuResource;
 // };
 
-// Represents a view to a GPU image. Could be a texture or a backbuffer.
-struct GpuImageView {
+// Represents a view to single GPU resource.
+struct GpuResourceView {
     struct SubresourceIndex {
         uint32_t mip  = 0; ///< index into mipmap chain
         uint32_t face = 0; ///< index into array of faces
@@ -323,40 +312,67 @@ struct GpuImageView {
         bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
     };
 
-    std::variant<AutoRef<Texture>, AutoRef<Backbuffer>> image;
-    gfx::img::PixelFormat                               format           = gfx::img::PixelFormat::UNKNOWN();
-    SubresourceIndex                                    subresourceIndex = {}; // default to mip level 0, face 0
-    SubresourceRange                                    subresourceRange = {}; // default to all mip levels, all array layers
+    struct ImageView {
+        SubresourceIndex      subresourceIndex;
+        SubresourceRange      subresourceRange;
+        gfx::img::PixelFormat format;
 
-    bool empty() const { return 0 == image.index() ? std::get<0>(image) == nullptr : std::get<1>(image) == nullptr; }
-    bool isTexture() const { return image.index() == 0; }
-    bool isBackbuffer() const { return image.index() == 1; }
+        bool operator==(const ImageView & other) const {
+            return subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange && format == other.format;
+        }
+        bool operator!=(const ImageView & other) const { return !operator==(other); }
+    };
 
-    AutoRef<Artifact> artifact() const {
-        if (image.index() == 0)
-            return std::get<0>(image);
-        else
-            return std::get<1>(image);
+    struct BufferView {
+        enum BufferType {
+            UNIFORM,
+            STORAGE,
+        };
+
+        /// offset in bytes from beginning of the buffer to the first element.
+        uint64_t offset = 0;
+
+        /// size of the data in the buffer in bytes, starting from offset.
+        uint64_t size = 0;
+
+        bool operator==(const BufferView & other) const { return offset == other.offset && size == other.size; }
+        bool operator!=(const BufferView & other) const { return !operator==(other); }
+    };
+
+    /// The main artifact that is being viewed.
+    AutoRef<Artifact> artifact;
+
+    /// Optional sampler used for texture sampling. Only used when the main artifact is an image (texture or backbuffer).
+    AutoRef<Sampler> textureSampler;
+
+    union {
+        ImageView  imageView;
+        BufferView bufferView;
+    };
+
+    bool empty() const { return artifact.empty(); }
+    bool isTexture() const { return artifact && artifact->typeId() == Texture::TYPE_ID; }
+    bool isBackbuffer() const { return artifact && artifact->typeId() == Backbuffer::TYPE_ID; }
+    bool isImage() const { return isTexture() || isBackbuffer(); }
+    bool isBuffer() const { return artifact && artifact->typeId() == Buffer::TYPE_ID; }
+    bool isSampler() const { return artifact && artifact->typeId() == Sampler::TYPE_ID; }
+
+    AutoRef<Texture>    texture() const { return AutoRef<Texture>(artifact->template castTo<Texture>()); }
+    AutoRef<Backbuffer> backbuffer() const { return AutoRef<Backbuffer>(artifact->template castTo<Backbuffer>()); }
+    AutoRef<Buffer>     buffer() const { return AutoRef<Buffer>(artifact->template castTo<Buffer>()); }
+    AutoRef<Sampler>    sampler() const { return AutoRef<Sampler>(artifact->template castTo<Sampler>()); }
+
+    bool operator==(const GpuResourceView & other) const {
+        if (artifact != other.artifact) return false;
+        if (isImage()) {
+            if (imageView != other.imageView) return false;
+            if (isTexture() && textureSampler != other.textureSampler) return false;
+        } else if (isBuffer()) {
+            if (bufferView != other.bufferView) return false;
+        }
+        return true;
     }
-
-    AutoRef<Backbuffer> backbuffer() const {
-        if (isBackbuffer()) return std::get<1>(image);
-        return {};
-    }
-
-    AutoRef<Texture> texture() const {
-        if (isTexture()) return std::get<0>(image);
-        return {};
-    }
-
-    bool operator==(const GpuImageView & other) const {
-        return image == other.image && format == other.format && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange;
-    }
-    bool operator!=(const GpuImageView & other) const { return !operator==(other); }
-};
-
-struct TextureView : GpuImageView {
-    AutoRef<Sampler> sampler;
+    bool operator!=(const GpuResourceView & other) const { return !operator==(other); }
 };
 
 struct RenderTarget : public Artifact {
@@ -499,88 +515,122 @@ struct RenderTarget : public Artifact {
     };
 
     struct ColorTarget {
-        GpuImageView    target {};
-        BlendState      blendState = {};
-        uint8_t         writeMask  = 0xFF;                       // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
-        ClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to solid black.
-
-        ColorTarget & setClearColor(float r, float g, float b, float a = 1.0f) {
-            clearColor.f4[0] = r;
-            clearColor.f4[1] = g;
-            clearColor.f4[2] = b;
-            clearColor.f4[3] = a;
-            return *this;
-        }
+        GpuResourceView target     = {};   // could be texture or backbuffer
+        BlendState      blendState = {};   // blend state for the color target
+        uint8_t         writeMask  = 0xFF; // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
 
         bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
 
-    struct DepthStencil {
-        AutoRef<Texture>               target;
-        gfx::img::PixelFormat          format = gfx::img::PixelFormat::UNKNOWN();
-        GpuImageView::SubresourceIndex subresourceIndex {};
-        DepthState                     depthState   = {};
-        StencilState                   stencilState = {};
-        float                          clearDepth   = 1.0;
-        uint32_t                       clearStencil = 0;
-
-        DepthStencil & setTarget(AutoRef<Texture> target_) {
-            target = std::move(target_);
-            return *this;
-        }
-
-        DepthStencil & setFormat(gfx::img::PixelFormat format_) {
-            format = format_;
-            return *this;
-        }
-
-        DepthStencil & setSubresourceIndex(GpuImageView::SubresourceIndex subresourceIndex_) {
-            subresourceIndex = subresourceIndex_;
-            return *this;
-        }
-
-        DepthStencil & setDepthState(DepthState depthState_) {
-            depthState = depthState_;
-            return *this;
-        }
-
-        DepthStencil & setStencilState(StencilState stencilState_) {
-            stencilState = stencilState_;
-            return *this;
-        }
-
-        DepthStencil & setClearDepth(float clearDepth_) {
-            clearDepth = clearDepth_;
-            return *this;
-        }
-
-        DepthStencil & setClearStencil(uint32_t clearStencil_) {
-            clearStencil = clearStencil_;
-            return *this;
-        }
-
-        bool operator==(const DepthStencil & other) const {
-            if (target != other.target) return false;
-            if (target && subresourceIndex != other.subresourceIndex) return false; // only check subresource index for non-empty texture targets
-            if (depthState != other.depthState) return false;
-            if (stencilState != other.stencilState) return false;
-            return true;
-        }
-
-        bool operator!=(const DepthStencil & other) const { return !operator==(other); }
-    };
-
     StackArray<ColorTarget, 8> colors;
-    DepthStencil               depthStencil = {};
+    ClearColorValue            clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to solid black.
+    GpuResourceView            depthStencilTarget;                      // must be a texture
+    DepthState                 depthState   = {};
+    StencilState               stencilState = {};
+    float                      clearDepth   = 1.0;
+    uint32_t                   clearStencil = 0;
     Viewport                   viewport     = {};
     ScissorRect                scissorRect  = {};
+
+    RenderTarget & addColorTarget(AutoRef<Texture> texture_) {
+        colors.append({.target = texture_});
+        return *this;
+    }
+
+    RenderTarget & addColorTarget(AutoRef<Backbuffer> backbuffer_) {
+        colors.append({.target = backbuffer_});
+        return *this;
+    }
+
+    RenderTarget & setColorTarget(size_t index, AutoRef<Texture> texture_) {
+        GN_ASSERT(index < colors.size());
+        colors[index].target.artifact = texture_;
+        return *this;
+    }
+
+    RenderTarget & setColorTarget(size_t index, AutoRef<Backbuffer> backbuffer_) {
+        colors[index].target.artifact = backbuffer_;
+        return *this;
+    }
+
+    RenderTarget & setColorFormat(size_t index, gfx::img::PixelFormat format_) {
+        colors[index].target.imageView.format = format_;
+        return *this;
+    }
+
+    RenderTarget & setColorSubresourceIndex(size_t index, GpuResourceView::SubresourceIndex subresourceIndex_) {
+        colors[index].target.imageView.subresourceIndex = subresourceIndex_;
+        return *this;
+    }
+
+    RenderTarget & setClearColor(float r, float g, float b, float a = 1.0f) {
+        clearColor.f4[0] = r;
+        clearColor.f4[1] = g;
+        clearColor.f4[2] = b;
+        clearColor.f4[3] = a;
+        return *this;
+    }
+
+    RenderTarget & setDepthStencilTarget(AutoRef<Texture> target_) {
+        depthStencilTarget.artifact = target_;
+        return *this;
+    }
+
+    RenderTarget & setDepthStencilFormat(gfx::img::PixelFormat format_) {
+        depthStencilTarget.imageView.format = format_;
+        return *this;
+    }
+
+    RenderTarget & setDepthStencilSubresourceIndex(GpuResourceView::SubresourceIndex subresourceIndex_) {
+        depthStencilTarget.imageView.subresourceIndex = subresourceIndex_;
+        return *this;
+    }
+
+    RenderTarget & setDepthState(DepthState depthState_) {
+        depthState = depthState_;
+        return *this;
+    }
+
+    RenderTarget & setStencilState(StencilState stencilState_) {
+        stencilState = stencilState_;
+        return *this;
+    }
+
+    RenderTarget & setClearDepth(float clearDepth_) {
+        clearDepth = clearDepth_;
+        return *this;
+    }
+
+    RenderTarget & setClearStencil(uint32_t clearStencil_) {
+        clearStencil = clearStencil_;
+        return *this;
+    }
+
+    RenderTarget & setViewport(Viewport viewport_) {
+        viewport = viewport_;
+        return *this;
+    }
+
+    RenderTarget & setScissorRect(ScissorRect scissorRect_) {
+        scissorRect = scissorRect_;
+        return *this;
+    }
 
     /// Returns list of artifacts referenced by this render target.
     virtual SafeArrayAccessor<const Artifact * const> artifacts() const = 0;
 
     bool operator==(const RenderTarget & other) const {
-        return colors == other.colors && depthStencil == other.depthStencil && viewport == other.viewport && scissorRect == other.scissorRect;
+        // clang-format off
+        return colors == other.colors
+            && depthStencilTarget == other.depthStencilTarget
+            && depthState == other.depthState
+            && stencilState == other.stencilState
+            && clearDepth == other.clearDepth
+            && clearStencil == other.clearStencil
+            && viewport == other.viewport
+            && scissorRect == other.scissorRect;
+        // clang-format on
     }
     bool operator!=(const RenderTarget & other) const { return !operator==(other); }
 

@@ -16,24 +16,32 @@ struct ClearRenderTarget : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
 
-    struct RenderTargetArgument : public Arguments::SingleArtifact<RenderTarget, Arguments::Usage::ReadingWriting> {
-        RenderTargetArgument(Arguments * owner, const char * name): Arguments::SingleArtifact<RenderTarget, Arguments::Usage::ReadingWriting>(owner, name) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            if (value) return value->artifacts();
-            return {};
-        }
+    struct RenderTargetArgument : public Arguments::ArtifactArgument, public RenderTarget {
+        explicit RenderTargetArgument(const char * name): Arguments::ArtifactArgument(name) {}
     };
 
     struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        RenderTargetArgument renderTarget = {this, "renderTarget"};
+
+        ReadWriteArtifact<RenderTarget> renderTarget = {"renderTarget"};
+
+        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
+            if (!renderTarget.value) return;
+            auto & rt = *renderTarget.value;
+            for (const auto & color : rt.colors) {
+                if (color.target.artifact) { writeList.insert(color.target.artifact->sequence); }
+            }
+            if (rt.depthStencilTarget.artifact) {
+                if (rt.depthState.testEnabled() || rt.stencilState.enabled()) readList.insert(rt.depthStencilTarget.artifact->sequence);
+                if (rt.depthState.writeEnabled() || rt.stencilState.enabled()) writeList.insert(rt.depthStencilTarget.artifact->sequence);
+            }
+        }
 
         static AutoRef<A> make(AutoRef<RenderTarget> rt) {
-            auto a                = AutoRef<A>(new A());
-            a->renderTarget.value = std::move(rt);
+            auto a          = AutoRef<A>(new A());
+            a->renderTarget = std::move(rt);
             return a;
         }
     };
@@ -62,6 +70,13 @@ struct PrepareBackbuffer : public Action {
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         ReadWriteArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
+
+        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
+            if (!backbuffer.value) return;
+            auto & bb = *backbuffer.value;
+            readList.insert(bb.sequence);
+            writeList.insert(bb.sequence);
+        }
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {
             auto a        = AutoRef<A>(new A());
@@ -94,6 +109,13 @@ struct PresentBackbuffer : public Action {
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
         ReadOnlyArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
+
+        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
+            if (!backbuffer.value) return;
+            auto & bb = *backbuffer.value;
+            readList.insert(bb.sequence);
+            writeList.insert(bb.sequence);
+        }
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {
             auto a        = AutoRef<A>(new A());
@@ -148,6 +170,11 @@ struct SetupRenderStates : public Action {
         inline static constexpr const char * TYPE_NAME = "SetupRenderStates::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
         RenderStateDesc renderStates; ///< render state descriptor
+
+        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
+            (void) readList;
+            (void) writeList;
+        }
     };
 
     struct CreateParameters {
@@ -217,34 +244,24 @@ struct GpuGeometry {
         bool operator!=(const VertexFormat & other) const { return !operator==(other); }
     };
 
-    struct IndexBuffer {
-        AutoRef<Buffer> buffer;
-        uint64_t        offset;     ///< offset in bytes from the beginning of the buffer.
-        uint32_t        indexSize;  ///< size of the index in bytes. 2 or 4.
-        uint32_t        indexCount; ///< number of indices in the buffer.
-    };
-
     struct VertexBuffer {
         AutoRef<Buffer> buffer;
         uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
         uint32_t        stride; ///< size of the vertex in bytes.
     };
 
-    struct GeometryBuffer : BufferView {
-        /// For vertex buffers, this is the size of the vertex in bytes.
-        /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
-        /// For instanced buffers, this is the size of the instance in bytes.
-        uint32_t stride = 0;
-
-        /// Number of elements in the buffer.
-        size_t count() const { return size / stride; }
+    struct GeometryBuffer {
+        AutoRef<Buffer> buffer; // buffer containing the geometry data
+        uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
+        uint32_t        stride; ///< size of one element in bytes
+        uint32_t        count;  ///< number of elements in the buffer
     };
 
     VertexFormat              format;
     DynaArray<GeometryBuffer> instances;
     DynaArray<VertexBuffer>   vertices;
     uint32_t                  vertexCount = 0;
-    IndexBuffer               indices;
+    GeometryBuffer            indices;
 };
 
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
@@ -258,93 +275,89 @@ struct GpuShaderAction : public Action {
     //     bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
     // };
 
-    template<typename T>
-    struct MapArgument : public Arguments::ArtifactArgument {
-        MapArgument(Arguments * owner, const char * name, Arguments::UsageBits usage)
-            : Arguments::ArtifactArgument(owner, name, usage + Arguments::Usage::Optional) {}
+    // template<typename T>
+    // struct MapArgument : public Arguments::ArtifactArgument {
+    //     MapArgument(Arguments * owner, const char * name, Arguments::UsageBits usage)
+    //         : Arguments::ArtifactArgument(owner, name, usage + Arguments::Usage::Optional) {}
 
-        std::map<StrA, T> value;
+    //     std::map<StrA, T> value;
 
-        bool empty() const { return value.empty(); }
+    //     bool empty() const { return value.empty(); }
 
-        void clear() { value.clear(); }
+    //     void clear() { value.clear(); }
 
-        auto size() const { return value.size(); }
+    //     auto size() const { return value.size(); }
 
-        auto begin() const { return value.begin(); }
+    //     auto begin() const { return value.begin(); }
 
-        auto begin() { return value.begin(); }
+    //     auto begin() { return value.begin(); }
 
-        auto end() const { return value.end(); }
+    //     auto end() const { return value.end(); }
 
-        auto end() { return value.end(); }
+    //     auto end() { return value.end(); }
 
-        auto find(const StrA & name) const { return value.find(name); }
-    };
+    //     auto find(const StrA & name) const { return value.find(name); }
+    // };
 
-    template<Arguments::UsageBits UFlags>
-    struct BufferViewMap : public MapArgument<BufferView> {
-        BufferViewMap(Arguments * owner, const char * name): MapArgument<BufferView>(owner, name, UFlags) {}
+    // template<Arguments::UsageBits UFlags>
+    // struct BufferViewMap : public MapArgument<BufferView> {
+    //     BufferViewMap(Arguments * owner, const char * name): MapArgument<BufferView>(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.reserve(value.size());
-            mArtifacts.clear();
-            for (const auto & [name, view] : value) {
-                (void) name;
-                if (view.buffer) { mArtifacts.append(view.buffer.get()); }
-            }
-            return mArtifacts;
-        }
+    //     SafeArrayAccessor<const Artifact * const> artifacts() const override {
+    //         mArtifacts.reserve(value.size());
+    //         mArtifacts.clear();
+    //         for (const auto & [name, view] : value) {
+    //             (void) name;
+    //             if (view.buffer) { mArtifacts.append(view.buffer.get()); }
+    //         }
+    //         return mArtifacts;
+    //     }
 
-        auto & operator[](const StrA & name) { return value[name]; }
+    //     auto & operator[](const StrA & name) { return value[name]; }
 
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
-    };
+    // private:
+    //     mutable DynaArray<const Artifact *> mArtifacts;
+    // };
 
-    template<Arguments::UsageBits UFlags>
-    struct ImageViewMap : public MapArgument<GpuImageView> {
-        ImageViewMap(Arguments * owner, const char * name): MapArgument<GpuImageView>(owner, name, UFlags) {}
+    // template<Arguments::UsageBits UFlags>
+    // struct ImageViewMap : public MapArgument<GpuImageView> {
+    //     ImageViewMap(Arguments * owner, const char * name): MapArgument<GpuImageView>(owner, name, UFlags) {}
 
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.clear();
-            for (const auto & [name, view] : value) {
-                (void) name;
-                auto artifact = view.artifact();
-                if (artifact) { mArtifacts.append(artifact.get()); }
-            }
-            return mArtifacts;
-        }
+    //     SafeArrayAccessor<const Artifact * const> artifacts() const override {
+    //         mArtifacts.clear();
+    //         for (const auto & [name, view] : value) {
+    //             (void) name;
+    //             auto artifact = view.artifact();
+    //             if (artifact) { mArtifacts.append(artifact.get()); }
+    //         }
+    //         return mArtifacts;
+    //     }
 
-        auto & operator[](const StrA & name) { return value[name]; }
+    //     auto & operator[](const StrA & name) { return value[name]; }
 
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
-    };
+    // private:
+    //     mutable DynaArray<const Artifact *> mArtifacts;
+    // };
 
-    struct TextureViewMap : public MapArgument<TextureView> {
-        TextureViewMap(Arguments * owner, const char * name): MapArgument<TextureView>(owner, name, Arguments::Usage::Reading) {}
+    // struct TextureViewMap : public MapArgument<TextureView> {
+    //     TextureViewMap(Arguments * owner, const char * name): MapArgument<TextureView>(owner, name, Arguments::Usage::Reading) {}
 
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.clear();
-            for (const auto & [name, view] : value) {
-                (void) name;
-                auto artifact = view.artifact();
-                if (artifact) { mArtifacts.append(artifact.get()); }
-                if (view.sampler) { mArtifacts.append(view.sampler.get()); }
-            }
-            return mArtifacts;
-        }
+    //     SafeArrayAccessor<const Artifact * const> artifacts() const override {
+    //         mArtifacts.clear();
+    //         for (const auto & [name, view] : value) {
+    //             (void) name;
+    //             auto artifact = view.artifact();
+    //             if (artifact) { mArtifacts.append(artifact.get()); }
+    //             if (view.sampler) { mArtifacts.append(view.sampler.get()); }
+    //         }
+    //         return mArtifacts;
+    //     }
 
-        auto & operator[](const StrA & name) { return value[name]; }
+    //     auto & operator[](const StrA & name) { return value[name]; }
 
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
-    };
-
-    /// Represent small chunk of constants that can be passed to the shader as immediate data.
-    /// This is usually used for small constants (like model matrix, mesh color and etc) that changes on each draw call.
-    using InlineConstants = DynaArray<uint8_t>;
+    // private:
+    //     mutable DynaArray<const Artifact *> mArtifacts;
+    // };
 
     /// Shader binary that can be used to create the actual GPU shader program.
     struct ShaderBinary {
@@ -356,11 +369,25 @@ struct GpuShaderAction : public Action {
         bool valid() const { return binary != nullptr && size > 0 && entry != nullptr; }
     };
 
-    using UniformMap  = BufferViewMap<Arguments::Usage::Reading>;
-    using RwBufferMap = BufferViewMap<Arguments::Usage::RW>;
-    using RoBufferMap = BufferViewMap<Arguments::Usage::Reading>;
-    using RwImagesMap = ImageViewMap<Arguments::Usage::RW>;
-    using RoImagesMap = ImageViewMap<Arguments::Usage::Reading>;
+    struct ResourceBinding {
+        GpuResourceView view    = {};
+        bool            reading = true;
+        bool            writing = false;
+    };
+
+    /// A 3-D table of shader resources.
+    /// The first dimension is the set index.
+    /// The second dimension is the slot index.
+    /// The third dimension is the resource index in the resource array
+    struct ResourceTableArgument : public Arguments::ArtifactArgument {
+        explicit ResourceTableArgument(const char * name): Arguments::ArtifactArgument(name) {}
+
+        DynaArray<DynaArray<DynaArray<ResourceBinding>>> table;
+    };
+
+    /// Represent small chunk of constants that can be passed to the shader as immediate data.
+    /// This is usually used for small constants (like model matrix, mesh color and etc) that changes on each draw call.
+    using InlineConstants = DynaArray<uint8_t>;
 
 protected:
     using Action::Action;
@@ -375,19 +402,6 @@ struct GpuDraw : public GpuShaderAction {
     struct GeometryArgument : public Arguments::ArtifactArgument, public GpuGeometry {
         GeometryArgument(Arguments * owner, const char * name)
             : Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.reserve(instances.size() + vertices.size() + 1);
-            mArtifacts.clear();
-            for (const auto & vb : instances) {
-                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
-            }
-            for (const auto & vb : vertices) {
-                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
-            }
-            if (indices.buffer) { mArtifacts.append(indices.buffer.get()); }
-            return mArtifacts;
-        }
 
         auto operator=(const GpuGeometry & geometry) -> GpuGeometry & {
             *(GpuGeometry *) this = geometry;
@@ -408,14 +422,31 @@ struct GpuDraw : public GpuShaderAction {
         inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        InlineConstants  constants;                                ///< immediate constants. Backend copies to GPU when non-empty.
-        UniformMap       uniforms  = {this, "uniforms"};           ///< uniforms
-        TextureViewMap   textures  = {this, "textures"};           ///< textures
-        RwImagesMap      images    = {this, "read-write images"};  ///< read-write images
-        RoImagesMap      roImages  = {this, "read-only images"};   ///< read-only images
-        RwBufferMap      buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
-        RoBufferMap      roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
-        GeometryArgument geometry  = {this, "geometry"};           ///< geometry
+        GeometryArgument      geometry  = {"geometry"};  ///< geometry
+        ResourceTableArgument resources = {"resources"}; ///< shader resources
+        InlineConstants       constants;                 ///< immediate constants. Backend copies to GPU when non-empty.
+
+        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
+            // geometry
+            for (const auto & vb : geometry.instances) {
+                if (vb.buffer) { readList.insert(vb.buffer->typeId); }
+            }
+            for (const auto & vb : geometry.vertices) {
+                if (vb.buffer) { readList.insert(vb.buffer->typeId); }
+            }
+            if (geometry.indices.buffer) { readList.insert(geometry.indices.buffer->typeId); }
+            // resources
+            for (const auto & set : resources.table) {
+                for (const auto & slot : set) {
+                    for (const auto & binding : slot) {
+                        if (!binding.view.artifact) GN_UNLIKELY continue;
+                        auto sequence = binding.view.artifact->sequence;
+                        if (binding.reading) { readList.insert(sequence); }
+                        if (binding.writing) { writeList.insert(sequence); }
+                    }
+                }
+            }
+        }
     };
 
     struct CreateParameters {
