@@ -651,4 +651,31 @@ static_assert(GN::rdg::RenderTarget::StencilState {}.enabled() == false);
 static_assert(GN::rdg::RenderTarget::Viewport {}.fullScreen() == true);
 static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
 
+// An set of GPU shader resources
+struct GpuResourceSet : public Artifact {
+    GN_API static const uint64_t         TYPE_ID;
+    inline static constexpr const char * TYPE_NAME = "GpuResourceSet";
+
+    struct ViewBinding {
+        enum Type {
+            TEXTURE,
+            BUFFER,
+            SAMPLER,
+            SAMPLED_TEXTURE,
+        };
+
+        Type   type  = TEXTURE;
+        size_t size  = 1; // 1: single resource, >1: resource array.
+        bool   read  = true;
+        bool   write = false;
+    };
+
+    struct CreateParameters {
+        DynaArray<ViewBinding> bindings;
+    };
+
+    static GN_API AutoRef<GpuResourceSet> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
+};
+
 } // namespace GN::rdg
