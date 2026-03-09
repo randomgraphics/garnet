@@ -175,7 +175,7 @@ public:
 
         SharedShaderConstants::ViewInformation view;
         view.worldToClip    = glm::mat4(1.f);
-        view.cameraPosition = {};
+        view.cameraPosition = {0, 0, 0};
         shared->setViewInformation(view);
 
         const auto & got = shared->getViewInformation();

@@ -50,14 +50,14 @@ struct SharedShaderConstants : public GpuResource {
 
     /// Logical frame data. Implementation maps this to GPU resources as needed.
     struct FrameInformation {
-        uint32_t     frameCounter = 0;
-        Microseconds frameDuration {};
+        uint32_t     frameCounter  = 0;
+        Microseconds frameDuration = {};
     };
 
     /// Logical view/camera data. Implementation maps this to GPU resources as needed.
     struct ViewInformation {
         glm::mat4             worldToClip    = glm::mat4(1.f);
-        Location              cameraPosition = {}; ///< camera position in world space
+        Location              cameraPosition = {0, 0, 0}; ///< camera position in world space
         AutoRef<RenderTarget> renderTarget;
     };
 
@@ -67,24 +67,24 @@ struct SharedShaderConstants : public GpuResource {
 
         /// Point light: position, luminous intensity [cd], range in world units.
         struct Point {
-            Location     position  = {};
+            Location     position  = {0, 0, 0};
             IntensityRGB intensity = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range     = {};
+            WorldUnit    range     = {0};
         } point;
 
         /// Spot light: position, orientation, luminous intensity [cd], range, cone angles.
         struct Spot {
-            Location     position          = {};
-            Orientation  orientation       = {};
+            Location     position          = {0, 0, 0};
+            Orientation  orientation       = {0, 0, 0, 1.0f};
             IntensityRGB intensity         = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range             = {};
+            WorldUnit    range             = {0};
             float        cosInnerConeAngle = 1.0f;
             float        cosOuterConeAngle = 1.0f;
         } spot;
 
         /// Directional light: orientation, irradiance [lx].
         struct Directional {
-            Orientation   orientation = {};
+            Orientation   orientation = {0, 0, 0, 1.0f};
             IrradianceRGB irradiance  = {1.0f, 1.0f, 1.0f, {1.0f}};
         } directional;
     };

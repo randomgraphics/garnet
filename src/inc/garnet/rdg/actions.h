@@ -244,24 +244,19 @@ struct GpuGeometry {
         bool operator!=(const VertexFormat & other) const { return !operator==(other); }
     };
 
-    struct VertexBuffer {
-        AutoRef<Buffer> buffer;
-        uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
-        uint32_t        stride; ///< size of the vertex in bytes.
-    };
-
     struct GeometryBuffer {
         AutoRef<Buffer> buffer; // buffer containing the geometry data
         uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
         uint32_t        stride; ///< size of one element in bytes
-        uint32_t        count;  ///< number of elements in the buffer
     };
 
     VertexFormat              format;
     DynaArray<GeometryBuffer> instances;
+    uint32_t                  instanceCount = 0;
     DynaArray<VertexBuffer>   vertices;
     uint32_t                  vertexCount = 0;
     GeometryBuffer            indices;
+    uint32_t                  indexCount = 0;
 };
 
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
@@ -358,6 +353,10 @@ struct GpuShaderAction : public Action {
     // private:
     //     mutable DynaArray<const Artifact *> mArtifacts;
     // };
+
+    /// Represent small chunk of constants that can be passed to the shader as immediate data.
+    /// This is usually used for small constants (like model matrix, mesh color and etc) that changes on each draw call.
+    using InlineConstants = DynaArray<uint8_t>;
 
     /// Shader binary that can be used to create the actual GPU shader program.
     struct ShaderBinary {
