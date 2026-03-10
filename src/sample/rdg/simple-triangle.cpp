@@ -110,6 +110,7 @@ int main(int, const char **) {
         // No vertex buffer; the vertex shader generates the triangle from gl_VertexIndex.
         auto drawArgs                  = AutoRef<GpuDraw::A>(new GpuDraw::A());
         drawArgs->geometry.vertexCount = 3;
+        drawArgs->renderTarget         = renderTarget;
         renderWorkflow->appendTask("DrawTriangle", drawAction, drawArgs);
 
         renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));

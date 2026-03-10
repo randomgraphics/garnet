@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <algorithm> // for std::min
+#include <cmath>     // for std::ceil
 
 namespace GN::rdg {
 
@@ -66,10 +67,12 @@ static auto getGpuImageViewFormat(const GpuResourceView & view) {
     if (view.imageView.format != gfx::img::PixelFormat::UNKNOWN()) return view.imageView.format;
     if (auto tex = view.texture().get()) {
         const auto & desc = tex->descriptor();
+        GN_ASSERT(desc.format != gfx::img::PixelFormat::UNKNOWN());
         return desc.format;
     }
     if (auto bb = view.backbuffer().get()) {
         const auto & desc = bb->descriptor();
+        GN_ASSERT(desc.format != gfx::img::PixelFormat::UNKNOWN());
         return desc.format;
     }
     GN_ERROR(sLogger)("Can't get GpuResourceView effective format: no texture or backbuffer.");
@@ -248,10 +251,6 @@ static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
 
         colorFormats.push_back(static_cast<vk::Format>(pixelFormatToVkFormat(f)));
     }
-    if (cp.attachments.empty()) {
-        cp.attachments.push_back(vk::PipelineColorBlendAttachmentState().setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                                                                           vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA));
-    }
 
     // setup blend constants
     // TODO: warning, if each target has different blend constant. it is not supported by Vulkan yet.
@@ -260,33 +259,33 @@ static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
         cp.blendConstants = {v.x, v.y, v.z, v.w};
     }
 
-    // get depth target dimensions
+    // setup depth buffer size and format
     vk::Format depthFormat = vk::Format::eUndefined;
-    if (rt.depthStencilTarget.artifact && (rt.depthState.testEnabled() || rt.depthState.writeEnabled())) {
+    if (rt.depthStencilTarget.artifact) {
         auto [width, height] = getGpuImageViewDimension(rt.depthStencilTarget);
         renderTargetWidth    = std::min(renderTargetWidth, width);
         renderTargetHeight   = std::min(renderTargetHeight, height);
-        depthFormat          = pixelFormatToVkFormat(getGpuImageViewFormat(rt.depthStencilTarget));
+        depthFormat = pixelFormatToVkFormat(getGpuImageViewFormat(rt.depthStencilTarget));
     }
-
-    // setup color and depth format
     cp.setDynamicRendering(colorFormats, depthFormat);
 
     // setup depth stencil state
-    cp.depth.setDepthTestEnable(rt.depthState.testEnabled())
-        .setDepthWriteEnable(rt.depthState.writeEnabled())
+    cp.depth.setDepthTestEnable(rt.depthState.testEnabled() && rt.depthStencilTarget.artifact)
+        .setDepthWriteEnable(rt.depthState.writeEnabled() && rt.depthStencilTarget.artifact)
         .setDepthCompareOp(compareToVk(rt.depthState.func));
-    if (rt.stencilState.enabled()) {
-        cp.depth.setStencilTestEnable(true)
-            .setFront(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
-                                         compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref))
-            .setBack(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
-                                        compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref));
-    } else {
-        cp.depth.setStencilTestEnable(false);
+
+    bool stencilEnabled = rt.stencilState.enabled() && rt.depthStencilTarget.artifact;
+    cp.depth.setStencilTestEnable(stencilEnabled);
+    if (stencilEnabled) {
+        cp.depth.setFront(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
+                                     compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref))
+        .setBack(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
+                                    compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref));
     }
 
     // setup viewport
+    if (renderTargetWidth == (~0u)) renderTargetWidth = 1u;
+    if (renderTargetHeight == (~0u)) renderTargetHeight = 1u;
     auto viewWidth  = FLT_MAX == rt.viewport.width ? (float) renderTargetWidth : (float) rt.viewport.width;
     auto viewHeight = FLT_MAX == rt.viewport.height ? (float) renderTargetHeight : (float) rt.viewport.height;
     cp.viewports.push_back(vk::Viewport(rt.viewport.x, rt.viewport.y, viewWidth, viewHeight, rt.viewport.minDepth, rt.viewport.maxDepth));
