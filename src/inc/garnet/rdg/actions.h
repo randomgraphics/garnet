@@ -26,13 +26,12 @@ struct ClearRenderTarget : public Action {
         void addToReadWriteList(ArtifactReadWriteList & list) const override {
             if (!renderTarget) return;
             for (const auto & color : renderTarget->colors) {
-                if (color.target.artifact) { list.writeList.insert(color.target.artifact); }
+                if (color.target.artifact) { list.writeList.insert(color.target.artifact.get()); }
             }
             if (renderTarget->depthStencilTarget.artifact) {
-                if (renderTarget->depthState.testEnabled() || renderTarget->stencilState.enabled())
-                    list.readList.insert(renderTarget->depthStencilTarget.artifact);
-                if (renderTarget->depthState.writeEnabled() || renderTarget->stencilState.enabled())
-                    list.writeList.insert(renderTarget->depthStencilTarget.artifact);
+                const Artifact * ptr = renderTarget->depthStencilTarget.artifact.get();
+                if (renderTarget->depthState.testEnabled() || renderTarget->stencilState.enabled()) list.readList.insert(ptr);
+                if (renderTarget->depthState.writeEnabled() || renderTarget->stencilState.enabled()) list.writeList.insert(ptr);
             }
         }
 
@@ -70,8 +69,8 @@ struct PrepareBackbuffer : public Action {
 
         void addToReadWriteList(ArtifactReadWriteList & list) const override {
             if (!backbuffer) return;
-            list.readList.insert(backbuffer);
-            list.writeList.insert(backbuffer);
+            list.readList.insert(backbuffer.get());
+            list.writeList.insert(backbuffer.get());
         }
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {

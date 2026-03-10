@@ -371,10 +371,10 @@ struct GpuResourceView {
     bool isBuffer() const { return artifact && artifact->typeId == Buffer::TYPE_ID; }
     bool isSampler() const { return artifact && artifact->typeId == Sampler::TYPE_ID; }
 
-    AutoRef<Texture>    texture() const { return AutoRef<Texture>(artifact->template castTo<Texture>()); }
-    AutoRef<Backbuffer> backbuffer() const { return AutoRef<Backbuffer>(artifact->template castTo<Backbuffer>()); }
-    AutoRef<Buffer>     buffer() const { return AutoRef<Buffer>(artifact->template castTo<Buffer>()); }
-    AutoRef<Sampler>    sampler() const { return AutoRef<Sampler>(artifact->template castTo<Sampler>()); }
+    AutoRef<Texture>    texture() const { return AutoRef<Texture>(artifact.template castTo<Texture>()); }
+    AutoRef<Backbuffer> backbuffer() const { return AutoRef<Backbuffer>(artifact.template castTo<Backbuffer>()); }
+    AutoRef<Buffer>     buffer() const { return AutoRef<Buffer>(artifact.template castTo<Buffer>()); }
+    AutoRef<Sampler>    sampler() const { return AutoRef<Sampler>(artifact.template castTo<Sampler>()); }
 
     GpuResourceView & setArtifact(AutoRef<Artifact> artifact_) {
         artifact = std::move(artifact_);

@@ -138,7 +138,6 @@ vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const GpuReso
 
 /// For combined depth-stencil formats returns the same view as depth (use one view for both attachments). Otherwise returns null.
 vk::ImageView getStencilTargetImageView(const GpuResourceView & depthStencilTarget, vk::ImageView depthView) {
-    if (!depthView) return {};
     auto depth = depthStencilTarget.texture().castTo<TextureVulkan>().get();
     if (!depth) return {};
     auto image = depth->image();
