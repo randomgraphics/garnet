@@ -203,8 +203,8 @@ int main(int, const char **) {
 
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
-    auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
-    if (!clearAction) return -1;
+    // auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
+    // if (!clearAction) return -1;
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
@@ -232,7 +232,7 @@ int main(int, const char **) {
         if (!renderWorkflow) break;
 
         renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
-        renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
+        // renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
 
         PbrShading::BuildParameters pbrParams;
         pbrParams.renderGraph           = renderGraph.get();

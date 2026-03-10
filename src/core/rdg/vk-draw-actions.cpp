@@ -44,7 +44,7 @@ public:
         auto a = arguments.castTo<ClearRenderTarget::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
-        // stadnard execution
+        // standard execution
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
         GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
