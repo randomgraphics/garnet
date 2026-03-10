@@ -36,12 +36,9 @@ int main(int, const char **) {
     // Create render target that references the backbuffer
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
-    renderTarget->colors.append({.target = GpuImageView {.image = backbuffer}});
+    renderTarget->addColorTarget(backbuffer);
     // clear to solid red for easy verification of readback/save
-    renderTarget->colors[0].clearColor.f4[0] = 1.0f; // R
-    renderTarget->colors[0].clearColor.f4[1] = 0.0f; // G
-    renderTarget->colors[0].clearColor.f4[2] = 0.0f; // B
-    renderTarget->colors[0].clearColor.f4[3] = 1.0f; // A
+    renderTarget->setClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
     // Create actions
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
@@ -61,24 +58,24 @@ int main(int, const char **) {
     }
 
     // Task: Prepare backbuffer
-    auto prepareTask              = Workflow::Task("Prepare backbuffer");
-    prepareTask.action            = prepareAction;
-    auto prepareArgs              = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
-    prepareArgs->backbuffer.value = backbuffer;
-    prepareTask.arguments         = prepareArgs;
+    auto prepareTask        = Workflow::Task("Prepare backbuffer");
+    prepareTask.action      = prepareAction;
+    auto prepareArgs        = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+    prepareArgs->backbuffer = backbuffer;
+    prepareTask.arguments   = prepareArgs;
     renderWorkflow->tasks.append(prepareTask);
 
     // Task: Clear/Set render target (solid red for easy verification of readback/save)
-    auto clearArgs                = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
-    clearArgs->renderTarget.value = renderTarget;
+    auto clearArgs          = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
+    clearArgs->renderTarget = renderTarget;
     renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
 
     // Task: Present backbuffer
-    auto presentTask              = Workflow::Task("Present backbuffer");
-    presentTask.action            = presentAction;
-    auto presentArgs              = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
-    presentArgs->backbuffer.value = backbuffer;
-    presentTask.arguments         = presentArgs;
+    auto presentTask        = Workflow::Task("Present backbuffer");
+    presentTask.action      = presentAction;
+    auto presentArgs        = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+    presentArgs->backbuffer = backbuffer;
+    presentTask.arguments   = presentArgs;
     renderWorkflow->tasks.append(presentTask);
 
     // Submit render graph for execution

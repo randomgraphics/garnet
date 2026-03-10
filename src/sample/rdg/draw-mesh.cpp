@@ -85,12 +85,12 @@ static AutoRef<Buffer> createBoxVertexBuffer(ArtifactDatabase & db, AutoRef<GpuC
     return buf;
 }
 
-static GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
-    GpuGeometry geom;
-    geom.format.attributes.append(GpuGeometry::VertexAttribute {0, 0, GpuGeometry::AttributeFormat::F32_3});  // position
-    geom.format.attributes.append(GpuGeometry::VertexAttribute {1, 12, GpuGeometry::AttributeFormat::F32_3}); // normal
-    geom.format.attributes.append(GpuGeometry::VertexAttribute {2, 24, GpuGeometry::AttributeFormat::F32_2}); // texcoord
-    GpuGeometry::VertexBuffer vb;
+static GpuDraw::GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
+    GpuDraw::GpuGeometry geom;
+    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {0, 0, GpuDraw::GpuGeometry::AttributeFormat::F32_3});  // position
+    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {1, 12, GpuDraw::GpuGeometry::AttributeFormat::F32_3}); // normal
+    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {2, 24, GpuDraw::GpuGeometry::AttributeFormat::F32_2}); // texcoord
+    GpuDraw::GpuGeometry::GeometryBuffer vb;
     vb.buffer = std::move(vertexBuffer);
     vb.offset = 0;
     vb.stride = sizeof(Vertex);
@@ -196,8 +196,10 @@ int main(int, const char **) {
 
     auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
-    renderTarget->colors.append(RenderTarget::ColorTarget {.target = GpuImageView {.image = backbuffer}}.setClearColor(0.1f, 0.1f, 0.15f, 1.0f));
-    renderTarget->depthStencil.setTarget(depthTexture).setDepthState(RenderTarget::DepthState {.func = RenderTarget::Compare::LESS, .write = true});
+    renderTarget->addColorTarget(backbuffer);
+    renderTarget->setClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+    renderTarget->setDepthStencilTarget(depthTexture);
+    renderTarget->setDepthState(RenderTarget::DepthState {.func = RenderTarget::Compare::LESS, .write = true});
 
     auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;

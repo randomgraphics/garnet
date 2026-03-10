@@ -319,10 +319,12 @@ struct GpuResourceView {
             STORAGE,
         };
 
-        Type                  type             = Type::SAMPLED; ///< sampled or storage image
-        SubresourceIndex      subresourceIndex = {};
-        SubresourceRange      subresourceRange = {};
-        gfx::img::PixelFormat format           = gfx::img::PixelFormat::UNKNOWN();
+        Type             type             = Type::SAMPLED; ///< sampled or storage image
+        SubresourceIndex subresourceIndex = {};
+        SubresourceRange subresourceRange = {};
+
+        /// pixel format of the image view. Unknown means use the intrinsic format of the texture or backbuffer.
+        gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
 
         bool operator==(const ImageView & other) const {
             return type == other.type && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange && format == other.format;
@@ -752,6 +754,9 @@ struct GpuResourceGroup : public GpuResource {
     virtual void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const = 0;
 
     static GN_API AutoRef<GpuResourceGroup> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+
+protected:
+    using GpuResource::GpuResource;
 };
 
 } // namespace GN::rdg

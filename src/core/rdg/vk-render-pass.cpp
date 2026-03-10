@@ -16,12 +16,11 @@ GN::Logger * sLogger = GN::getLogger("GN.rdg");
 //     return vk::Format::eR8G8B8A8Unorm;
 // }
 
-std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const GpuImageView & color, [[maybe_unused]] size_t stage) {
+std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const GpuResourceView & color, [[maybe_unused]] size_t stage) {
     const rapid_vulkan::Image * image  = nullptr;
     vk::Extent2D                extent = {0, 0};
-    if (color.image.index() == 0) {
-        // this color target is a texture.
-        auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
+    if (color.isTexture()) {
+        auto tex = color.texture().castTo<TextureVulkan>().get();
         if (!tex) GN_UNLIKELY {
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: render target texture is not set for stage {}", stage);
                 return {};
@@ -31,12 +30,12 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const G
                 GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the render target texture for stage {} is not properly initialized.", stage);
                 return {};
             }
-        auto dim      = tex->dimensions(color.subresourceIndex.mip);
-        extent.width  = dim.width;
-        extent.height = dim.height;
-    } else {
-        // this color target is a backbuffer.
-        auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
+        const auto & si  = color.imageView.subresourceIndex;
+        auto         dim = tex->dimensions(si.mip);
+        extent.width     = dim.width;
+        extent.height    = dim.height;
+    } else if (color.isBackbuffer()) {
+        auto bb = color.backbuffer().castTo<BackbufferVulkan>().get();
         if (!bb) {
             GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: render target backbuffer is not set for stage {}", stage);
             return {};
@@ -48,6 +47,9 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const G
             }
         extent.width  = bb->descriptor().width;
         extent.height = bb->descriptor().height;
+    } else {
+        GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: color target is not a texture or backbuffer for stage {}", stage);
+        return {};
     }
     GN_ASSERT(image);
     return {image, extent};
@@ -60,22 +62,23 @@ constexpr TextureVulkan::ImageState COLOR_ATTACHMENT_STATE {
 };
 constexpr TextureVulkan::ImageStateTransitionFlags DISCARD_CONTENT {.discardContent = true};
 
-std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuImageView & color, size_t stage, rapid_vulkan::Barrier * barrier = nullptr) {
+std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuResourceView & color, size_t stage, rapid_vulkan::Barrier * barrier = nullptr) {
     auto [image, baseExtent] = getColorTargetImage(color, stage);
     if (!image) GN_UNLIKELY return {nullptr, {0, 0}};
 
-    if (color.image.index() == 0) {
-        auto * tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
-        if (tex && tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT)) {
-            const auto * st = tex->getImageState(color.subresourceIndex.mip, color.subresourceIndex.face);
-            if (st) {
-                vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1);
+    const auto & si = color.imageView.subresourceIndex;
+    if (color.isTexture()) {
+        auto * tex = color.texture().castTo<TextureVulkan>().get();
+        if (tex && tex->trackImageState(si.mip, 1, si.face, 1, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT)) {
+            const auto * st = tex->getImageState(si.mip, si.face);
+            if (st && barrier) {
+                vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, si.mip, 1, si.face, 1);
                 barrier->i(image->handle(), st->prev.access, st->curr.access, st->prev.layout, st->curr.layout, range);
             }
         }
-    } else {
-        auto * bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
-        if (bb && bb->trackImageState(COLOR_ATTACHMENT_STATE, DISCARD_CONTENT)) {
+    } else if (color.isBackbuffer()) {
+        auto * bb = color.backbuffer().castTo<BackbufferVulkan>().get();
+        if (bb && bb->trackImageState(COLOR_ATTACHMENT_STATE, DISCARD_CONTENT) && barrier) {
             const auto &              st = bb->getImageState();
             vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
             barrier->i(image->handle(), st.prev.access, st.curr.access, st.prev.layout, st.curr.layout, range);
@@ -85,8 +88,8 @@ std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuImageVie
     auto viewParams = rapid_vulkan::Image::GetViewParameters()
                           .setType(vk::ImageViewType::e2D)
                           .setFormat(image->desc().format)
-                          .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1));
-    auto mipExtent = rapid_vulkan::getMipLevelExtent(vk::Extent3D(baseExtent.width, baseExtent.height, 1), color.subresourceIndex.mip);
+                          .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, si.mip, 1, si.face, 1));
+    auto mipExtent = rapid_vulkan::getMipLevelExtent(vk::Extent3D(baseExtent.width, baseExtent.height, 1), si.mip);
     return {image->getView(viewParams), vk::Extent2D(mipExtent.width, mipExtent.height)};
 }
 
@@ -101,8 +104,8 @@ static bool formatHasStencil(vk::Format format) {
     return format == vk::Format::eD16UnormS8Uint || format == vk::Format::eD24UnormS8Uint || format == vk::Format::eD32SfloatS8Uint;
 }
 
-vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const RenderTarget::DepthStencil & depthStencil) {
-    auto depth = depthStencil.target.castTo<TextureVulkan>().get();
+vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const GpuResourceView & depthStencilTarget) {
+    auto depth = depthStencilTarget.texture().castTo<TextureVulkan>().get();
     if (!depth) GN_UNLIKELY return {};
 
     auto image = depth->image();
@@ -117,12 +120,13 @@ vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const RenderT
             return {};
         }
 
-    auto aspect =
+    const auto & si = depthStencilTarget.imageView.subresourceIndex;
+    auto         aspect =
         formatHasStencil(image->desc().format) ? (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil) : vk::ImageAspectFlagBits::eDepth;
     auto depthViewParams = rapid_vulkan::Image::GetViewParameters()
                                .setType(vk::ImageViewType::e2D)
                                .setFormat(image->desc().format)
-                               .setRange(vk::ImageSubresourceRange(aspect, depthStencil.subresourceIndex.mip, 1, depthStencil.subresourceIndex.face, 1));
+                               .setRange(vk::ImageSubresourceRange(aspect, si.mip, 1, si.face, 1));
     auto view = image->getView(depthViewParams);
     if (!view) GN_UNLIKELY {
             GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create depth view for depth target texture.");
@@ -133,9 +137,9 @@ vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const RenderT
 }
 
 /// For combined depth-stencil formats returns the same view as depth (use one view for both attachments). Otherwise returns null.
-vk::ImageView getStencilTargetImageView(const RenderTarget::DepthStencil & depthStencil, vk::ImageView depthView) {
+vk::ImageView getStencilTargetImageView(const GpuResourceView & depthStencilTarget, vk::ImageView depthView) {
     if (!depthView) return {};
-    auto depth = depthStencil.target.castTo<TextureVulkan>().get();
+    auto depth = depthStencilTarget.texture().castTo<TextureVulkan>().get();
     if (!depth) return {};
     auto image = depth->image();
     if (!image) return {};
@@ -147,17 +151,16 @@ void trackRenderTargetState(const RenderTarget & renderTarget) {
     // track the state of the color targets.
     for (size_t i = 0; i < renderTarget.colors.size(); i++) {
         const auto & color = renderTarget.colors[i].target;
-        if (0 == color.image.index()) {
-            // this color target is a texture.
-            auto tex = std::get<0>(color.image).castTo<TextureVulkan>().get();
+        const auto & si    = color.imageView.subresourceIndex;
+        if (color.isTexture()) {
+            auto tex = color.texture().castTo<TextureVulkan>().get();
             if (tex)
-                tex->trackImageState(color.subresourceIndex.mip, 1, color.subresourceIndex.face, 1,
+                tex->trackImageState(si.mip, 1, si.face, 1,
                                      {vk::ImageLayout::eColorAttachmentOptimal,
                                       vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
                                       vk::PipelineStageFlagBits::eColorAttachmentOutput});
-        } else {
-            // this color target is a backbuffer.
-            auto bb = std::get<1>(color.image).castTo<BackbufferVulkan>().get();
+        } else if (color.isBackbuffer()) {
+            auto bb = color.backbuffer().castTo<BackbufferVulkan>().get();
             if (bb)
                 bb->trackImageState({vk::ImageLayout::eColorAttachmentOptimal,
                                      vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite,
@@ -166,12 +169,16 @@ void trackRenderTargetState(const RenderTarget & renderTarget) {
     }
 
     // track the state of the depth stencil target.
-    auto depth = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
-    if (depth)
-        depth->trackImageState(renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1,
-                               {vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                                vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-                                vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
+    if (renderTarget.depthStencilTarget.artifact) {
+        auto depth = renderTarget.depthStencilTarget.texture().castTo<TextureVulkan>().get();
+        if (depth) {
+            const auto & si = renderTarget.depthStencilTarget.imageView.subresourceIndex;
+            depth->trackImageState(si.mip, 1, si.face, 1,
+                                   {vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                    vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                                    vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests});
+        }
+    }
 }
 
 bool sameDrawTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
@@ -281,7 +288,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
                 GN_ERROR(sLogger)("can't create view for render target texture for stage {}.", i);
                 return false;
             }
-        const auto & c          = color.clearColor;
+        const auto & c          = renderTarget.clearColor;
         auto         clearValue = vk::ClearColorValue(c.f4[0], c.f4[1], c.f4[2], c.f4[3]);
         colorAttachments.push_back(vk::RenderingAttachmentInfo()
                                        .setImageView(view)
@@ -295,28 +302,31 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     renderInfo.setColorAttachments(colorAttachments);
 
     // setup depth attachment (and stencil when combined format: same view for both)
-    const auto &                depthStencil = renderTarget.depthStencil;
-    vk::PhysicalDevice          physical     = mGpu->globalInfo().physical;
+    const auto &                depthStencilTarget = renderTarget.depthStencilTarget;
+    vk::PhysicalDevice          physical           = mGpu->globalInfo().physical;
     vk::RenderingAttachmentInfo depthAttachment, stencilAttachment;
-    auto                        depthView = getDepthTargetImageView(physical, depthStencil);
-    if (depthView && (depthStencil.depthState.testEnabled() || depthStencil.depthState.writeEnabled())) {
+    auto                        depthView = getDepthTargetImageView(physical, depthStencilTarget);
+    if (depthView && (renderTarget.depthState.testEnabled() || renderTarget.depthState.writeEnabled())) {
         depthAttachment.setImageView(depthView)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
             .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.depthStencil.clearDepth, (uint32_t) renderTarget.depthStencil.clearStencil)));
+            .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.clearDepth, (uint32_t) renderTarget.clearStencil)));
         renderInfo.setPDepthAttachment(&depthAttachment);
-        auto stencilView = getStencilTargetImageView(renderTarget.depthStencil, depthView);
-        if (stencilView && depthStencil.stencilState.enabled()) {
+        auto stencilView = getStencilTargetImageView(depthStencilTarget, depthView);
+        if (stencilView && renderTarget.stencilState.enabled()) {
             stencilAttachment.setImageView(stencilView)
                 .setLoadOp(vk::AttachmentLoadOp::eClear)
                 .setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-                .setClearValue(
-                    vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.depthStencil.clearDepth, (uint32_t) renderTarget.depthStencil.clearStencil)));
+                .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(renderTarget.clearDepth, (uint32_t) renderTarget.clearStencil)));
             renderInfo.setPStencilAttachment(&stencilAttachment);
         }
-        auto dim                 = renderTarget.depthStencil.target.castTo<TextureVulkan>().get()->dimensions(renderTarget.depthStencil.subresourceIndex.mip);
-        renderArea.extent.width  = std::min(dim.width, renderArea.extent.width);
-        renderArea.extent.height = std::min(dim.height, renderArea.extent.height);
+        auto depthTex = depthStencilTarget.texture().castTo<TextureVulkan>().get();
+        if (depthTex) {
+            const auto & si          = depthStencilTarget.imageView.subresourceIndex;
+            auto         dim         = depthTex->dimensions(si.mip);
+            renderArea.extent.width  = std::min(dim.width, renderArea.extent.width);
+            renderArea.extent.height = std::min(dim.height, renderArea.extent.height);
+        }
     }
 
     // setup render area.
@@ -324,15 +334,18 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     renderInfo.setRenderArea(renderArea);
 
     // Add depth/stencil layout transition when present (color transitions added in getColorTargetImageView when needed).
-    if (depthView) {
-        auto depthTex = renderTarget.depthStencil.target.castTo<TextureVulkan>().get();
-        auto depthImg = depthTex->image();
-        GN_ASSERT(depthImg);
-        vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
-        if (formatHasStencil(depthImg->desc().format)) aspect |= vk::ImageAspectFlagBits::eStencil;
-        vk::AccessFlags           access = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-        vk::ImageSubresourceRange range(aspect, renderTarget.depthStencil.subresourceIndex.mip, 1, renderTarget.depthStencil.subresourceIndex.face, 1);
-        layoutBarrier.i(depthImg->handle(), {}, access, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, range);
+    if (depthView && depthStencilTarget.artifact) {
+        auto depthTex = depthStencilTarget.texture().castTo<TextureVulkan>().get();
+        if (depthTex) {
+            auto depthImg = depthTex->image();
+            GN_ASSERT(depthImg);
+            vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
+            if (formatHasStencil(depthImg->desc().format)) aspect |= vk::ImageAspectFlagBits::eStencil;
+            const auto &              si     = depthStencilTarget.imageView.subresourceIndex;
+            vk::AccessFlags           access = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            vk::ImageSubresourceRange range(aspect, si.mip, 1, si.face, 1);
+            layoutBarrier.i(depthImg->handle(), {}, access, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, range);
+        }
     }
 
     // transfer image layout via barrier.

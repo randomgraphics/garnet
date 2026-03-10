@@ -61,20 +61,38 @@ static uint64_t hashStencilState(const RenderTarget::StencilState & s) {
     return h;
 }
 
+/// Resolve effective format: ImageView::format UNKNOWN means use the intrinsic format of the texture or backbuffer.
+static auto getGpuImageViewFormat(const GpuResourceView & view) {
+    if (view.imageView.format != gfx::img::PixelFormat::UNKNOWN()) return view.imageView.format;
+    if (auto tex = view.texture().get()) {
+        const auto & desc = tex->descriptor();
+        return desc.format;
+    }
+    if (auto bb = view.backbuffer().get()) {
+        const auto & desc = bb->descriptor();
+        return desc.format;
+    }
+    GN_ERROR(sLogger)("Can't get GpuResourceView effective format: no texture or backbuffer.");
+    return gfx::img::PixelFormat::UNKNOWN();
+}
+
 RenderTargetKey RenderTargetKey::make(const RenderTarget & renderTarget) {
     RenderTargetKey k;
     k.colorCount    = static_cast<uint8_t>(renderTarget.colors.size());
     uint64_t stateH = 0;
     for (size_t i = 0; i < renderTarget.colors.size() && k.colorCount < kMaxColorTargets; ++i) {
-        const auto & c = renderTarget.colors[i];
-        if (c.target.imageView.format == gfx::img::PixelFormat::UNKNOWN()) continue;
-        k.colorFormats[k.colorCount++] = static_cast<uint32_t>(pixelFormatToVkFormat(c.target.imageView.format));
+        const auto & c   = renderTarget.colors[i];
+        auto         fmt = getGpuImageViewFormat(c.target);
+        if (fmt == gfx::img::PixelFormat::UNKNOWN()) continue;
+        k.colorFormats[k.colorCount++] = static_cast<uint32_t>(pixelFormatToVkFormat(fmt));
         stateH ^= hashBlendState(c.blendState) + (static_cast<uint64_t>(c.writeMask) << 32) + (i * 0x9e3779b9);
     }
-    if (renderTarget.depthStencil.target && renderTarget.depthStencil.imageView.format != gfx::img::PixelFormat::UNKNOWN())
-        k.depthFormat = static_cast<uint32_t>(pixelFormatToVkFormat(renderTarget.depthStencil.imageView.format));
-    stateH ^= hashDepthState(renderTarget.depthStencil.depthState) * 31;
-    stateH ^= hashStencilState(renderTarget.depthStencil.stencilState) * 31;
+    if (renderTarget.depthStencilTarget.artifact) {
+        auto depthFmt = getGpuImageViewFormat(renderTarget.depthStencilTarget);
+        if (depthFmt != gfx::img::PixelFormat::UNKNOWN()) k.depthFormat = static_cast<uint32_t>(pixelFormatToVkFormat(depthFmt));
+    }
+    stateH ^= hashDepthState(renderTarget.depthState) * 31;
+    stateH ^= hashStencilState(renderTarget.stencilState) * 31;
     k.stateHash = stateH;
     return k;
 }
@@ -178,7 +196,7 @@ static vk::ColorComponentFlags writeMaskToVk(uint8_t w) {
     return f ? f : (vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
 }
 
-static std::pair<uint32_t, uint32_t> getGpuImageViewDimension(const GpuImageView & view) {
+static std::pair<uint32_t, uint32_t> getGpuImageViewDimension(const GpuResourceView & view) {
     uint32_t baseWidth  = 0;
     uint32_t baseHeight = 0;
     if (auto tex = view.texture().get()) {
@@ -192,23 +210,10 @@ static std::pair<uint32_t, uint32_t> getGpuImageViewDimension(const GpuImageView
     } else {
         return {0, 0};
     }
-    uint32_t width  = std::max(1u, baseWidth >> view.subresourceIndex.mip);
-    uint32_t height = std::max(1u, baseHeight >> view.subresourceIndex.mip);
+    const auto & si     = view.imageView.subresourceIndex;
+    uint32_t     width  = std::max(1u, baseWidth >> si.mip);
+    uint32_t     height = std::max(1u, baseHeight >> si.mip);
     return {width, height};
-}
-
-static auto getGpuImageViewFormat(const GpuImageView & view) {
-    if (view.format != gfx::img::PixelFormat::UNKNOWN()) return view.format;
-    if (auto tex = view.texture().get()) {
-        const auto & desc = tex->descriptor();
-        return desc.format;
-    } else if (auto bb = view.backbuffer().get()) {
-        const auto & desc = bb->descriptor();
-        return desc.format;
-    } else {
-        GN_ERROR(sLogger)("Can't get GpuImageView default format: no texture or backbuffer.");
-        return gfx::img::PixelFormat::UNKNOWN();
-    }
 }
 
 static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::ConstructParameters & cp, const RenderTarget & rt) {
@@ -257,30 +262,26 @@ static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
 
     // get depth target dimensions
     vk::Format depthFormat = vk::Format::eUndefined;
-    if (rt.depthStencil.target && (rt.depthStencil.depthState.testEnabled() || rt.depthStencil.depthState.writeEnabled())) {
-        GpuImageView depthView;
-        depthView.image            = rt.depthStencil.target;
-        depthView.subresourceIndex = rt.depthStencil.subresourceIndex;
-        auto [width, height]       = getGpuImageViewDimension(depthView);
-        renderTargetWidth          = std::min(renderTargetWidth, width);
-        renderTargetHeight         = std::min(renderTargetHeight, height);
-        depthFormat                = pixelFormatToVkFormat(getGpuImageViewFormat(depthView));
+    if (rt.depthStencilTarget.artifact && (rt.depthState.testEnabled() || rt.depthState.writeEnabled())) {
+        auto [width, height] = getGpuImageViewDimension(rt.depthStencilTarget);
+        renderTargetWidth    = std::min(renderTargetWidth, width);
+        renderTargetHeight   = std::min(renderTargetHeight, height);
+        depthFormat          = pixelFormatToVkFormat(getGpuImageViewFormat(rt.depthStencilTarget));
     }
 
     // setup color and depth format
     cp.setDynamicRendering(colorFormats, depthFormat);
 
     // setup depth stencil state
-    const auto & ds = rt.depthStencil;
-    cp.depth.setDepthTestEnable(ds.depthState.testEnabled())
-        .setDepthWriteEnable(ds.depthState.writeEnabled())
-        .setDepthCompareOp(compareToVk(ds.depthState.func));
-    if (ds.stencilState.enabled()) {
+    cp.depth.setDepthTestEnable(rt.depthState.testEnabled())
+        .setDepthWriteEnable(rt.depthState.writeEnabled())
+        .setDepthCompareOp(compareToVk(rt.depthState.func));
+    if (rt.stencilState.enabled()) {
         cp.depth.setStencilTestEnable(true)
-            .setFront(vk::StencilOpState(stencilOpToVk(ds.stencilState.fail), stencilOpToVk(ds.stencilState.pass), stencilOpToVk(ds.stencilState.zFail),
-                                         compareToVk(ds.stencilState.compare), ds.stencilState.readMask, ds.stencilState.writeMask, ds.stencilState.ref))
-            .setBack(vk::StencilOpState(stencilOpToVk(ds.stencilState.fail), stencilOpToVk(ds.stencilState.pass), stencilOpToVk(ds.stencilState.zFail),
-                                        compareToVk(ds.stencilState.compare), ds.stencilState.readMask, ds.stencilState.writeMask, ds.stencilState.ref));
+            .setFront(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
+                                         compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref))
+            .setBack(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
+                                        compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref));
     } else {
         cp.depth.setStencilTestEnable(false);
     }
@@ -300,13 +301,13 @@ static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
 }
 
 // --- GpuGeometryKey ---
-static uint64_t hashVertexFormat(const GpuGeometry::VertexFormat & fmt) {
+static uint64_t hashVertexFormat(const GpuDraw::GpuGeometry::VertexFormat & fmt) {
     uint64_t h = 0;
     for (const auto & a : fmt.attributes) h = h * 31 + (uint64_t) a.location + ((uint64_t) a.offset << 8) + ((uint64_t) static_cast<uint8_t>(a.format) << 16);
     return h & ((1ULL << 27) - 1);
 }
 
-GpuGeometryKey GpuGeometryKey::make(const GpuGeometry & geometry) {
+GpuGeometryKey GpuGeometryKey::make(const GpuDraw::GpuGeometry & geometry) {
     GpuGeometryKey k;
     const bool     hasGeometry = !geometry.format.empty() && !geometry.vertices.empty() && geometry.vertices[0].stride > 0;
     k.noVertexInput            = hasGeometry ? 0 : 1;

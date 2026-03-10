@@ -266,7 +266,7 @@ struct GpuDraw : public GpuShaderAction {
         };
 
         struct GeometryBuffer {
-            AutoRef<Buffer> buffer; // buffer containing the geometry data
+            AutoRef<Buffer> buffer; ///< buffer containing the geometry data
             uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
             uint32_t        stride; ///< size of one element in bytes
         };
@@ -280,7 +280,7 @@ struct GpuDraw : public GpuShaderAction {
         uint32_t                  indexCount = 0;
     };
 
-    struct A : public Arguments {
+    struct GN_API A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
@@ -324,7 +324,7 @@ struct GpuCompute : public GpuShaderAction {
         uint32_t z = 1;
     };
 
-    struct A : public Arguments {
+    struct GN_API A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}

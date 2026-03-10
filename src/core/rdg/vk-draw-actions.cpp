@@ -92,7 +92,7 @@ public:
         // standard preparation.
         auto & submissionContext = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, {}));
+        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         return PASSED;
     }
@@ -123,7 +123,7 @@ public:
         });
 
         const GpuGeometry & geom = a->geometry;
-        if (0 == geom.vertexCount && 0 == geom.indices.indexCount) GN_UNLIKELY {
+        if (0 == geom.vertexCount && 0 == geom.indexCount) GN_UNLIKELY {
                 GN_VERBOSE(sLogger)("{} - vertex and index count are zero. nothing to draw", taskInfo);
                 return PASSED;
             }

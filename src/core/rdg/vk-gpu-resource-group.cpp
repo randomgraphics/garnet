@@ -43,7 +43,7 @@ static vk::ShaderStageFlags stagesToVk(GpuShaderStageFlags stages) {
 }
 
 /// Get VkImageView for a GpuResourceView that is a texture or backbuffer. Returns VK_NULL_HANDLE on failure.
-static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulkan::GlobalInfo & gi) {
+static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulkan::GlobalInfo &) {
     if (!view.isImage()) return {};
     const auto & iv        = view.imageView;
     uint32_t     mipLevels = iv.subresourceRange.numMipLevels;
@@ -123,7 +123,7 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
     if (!mPool) GN_UNLIKELY {
             GN_ERROR(sLogger)("GpuResourceGroupVulkan: failed to create descriptor pool, name='{}'", name);
             dev.destroy(mLayout, gi.allocator);
-            mLayout = {};
+            mLayout = nullptr;
             return;
         }
 
@@ -134,15 +134,16 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
             GN_ERROR(sLogger)("GpuResourceGroupVulkan: failed to allocate descriptor set, name='{}'", name);
             dev.destroy(mPool, gi.allocator);
             dev.destroy(mLayout, gi.allocator);
-            mPool   = {};
-            mLayout = {};
+            mPool   = nullptr;
+            mLayout = nullptr;
             return;
         }
     mSet = sets[0];
 }
 
-GpuResourceGroupVulkan::GpuResourceGroupVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const CreateParameters & params)
-    : GpuResourceGroup(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)), mSlots(params.slots) {
+GpuResourceGroupVulkan::GpuResourceGroupVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu,
+                                               const GpuResourceGroup::CreateParameters & params)
+    : GpuResourceGroup(db, GpuResourceGroup::TYPE_ID, GpuResourceGroup::TYPE_NAME, name), mGpu(std::move(gpu)), mSlots(params.slots) {
     mBoundViews.resize(params.slots.size());
     buildLayoutAndPool();
 }
@@ -152,9 +153,9 @@ GpuResourceGroupVulkan::~GpuResourceGroupVulkan() {
     const auto & gi = mGpu->globalInfo();
     if (mPool) gi.safeDestroy(mPool);
     if (mLayout) gi.safeDestroy(mLayout);
-    mSet    = {};
-    mPool   = {};
-    mLayout = {};
+    mSet    = nullptr;
+    mPool   = nullptr;
+    mLayout = nullptr;
     mGpu    = {};
 }
 
