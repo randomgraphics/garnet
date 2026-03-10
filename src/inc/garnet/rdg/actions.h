@@ -279,8 +279,8 @@ struct GpuDraw : public GpuShaderAction {
         uint32_t                  indexCount = 0;
     };
 
-    struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
+    struct GN_API A : public Arguments {
+        static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
@@ -293,7 +293,7 @@ struct GpuDraw : public GpuShaderAction {
         /// So that the backend can determine this action's full read and write list.
         AutoRef<RenderTarget> renderTarget;
 
-        GN_API void addToReadWriteList(ArtifactReadWriteList & list) const override;
+        void addToReadWriteList(ArtifactReadWriteList & list) const override;
     };
 
     struct CreateParameters {
@@ -323,8 +323,8 @@ struct GpuCompute : public GpuShaderAction {
         uint32_t z = 1;
     };
 
-    struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
+    struct GN_API A : public Arguments {
+        static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
@@ -332,7 +332,7 @@ struct GpuCompute : public GpuShaderAction {
         DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
         DispatchSize       groups;     ///< thread group counts
 
-        GN_API void addToReadWriteList(ArtifactReadWriteList & list) const override;
+        void addToReadWriteList(ArtifactReadWriteList & list) const override;
     };
 
     struct CreateParameters {
