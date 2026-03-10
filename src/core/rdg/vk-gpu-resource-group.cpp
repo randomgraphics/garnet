@@ -35,7 +35,7 @@ static vk::ShaderStageFlags stagesToVk(GpuShaderStageFlags stages) {
     vk::ShaderStageFlags f {};
     if (m & static_cast<uint32_t>(GpuShaderStageBits::VERTEX)) f |= vk::ShaderStageFlagBits::eVertex;
     if (m & static_cast<uint32_t>(GpuShaderStageBits::HULL)) f |= vk::ShaderStageFlagBits::eTessellationControl;
-    if (m & static_cast<uint32_t>(GpuShaderStageBits::DOMAIN)) f |= vk::ShaderStageFlagBits::eTessellationEvaluation;
+    if (m & static_cast<uint32_t>(GpuShaderStageBits::DOMAIN_)) f |= vk::ShaderStageFlagBits::eTessellationEvaluation;
     if (m & static_cast<uint32_t>(GpuShaderStageBits::GEOMETRY)) f |= vk::ShaderStageFlagBits::eGeometry;
     if (m & static_cast<uint32_t>(GpuShaderStageBits::PIXEL)) f |= vk::ShaderStageFlagBits::eFragment;
     if (m & static_cast<uint32_t>(GpuShaderStageBits::COMPUTE)) f |= vk::ShaderStageFlagBits::eCompute;

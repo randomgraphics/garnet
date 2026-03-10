@@ -279,7 +279,7 @@ struct GpuDraw : public GpuShaderAction {
         uint32_t                  indexCount = 0;
     };
 
-    struct GN_API A : public Arguments {
+    struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
@@ -323,7 +323,7 @@ struct GpuCompute : public GpuShaderAction {
         uint32_t z = 1;
     };
 
-    struct GN_API A : public Arguments {
+    struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}

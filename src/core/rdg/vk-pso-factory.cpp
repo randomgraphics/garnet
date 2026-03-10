@@ -265,7 +265,7 @@ static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
         auto [width, height] = getGpuImageViewDimension(rt.depthStencilTarget);
         renderTargetWidth    = std::min(renderTargetWidth, width);
         renderTargetHeight   = std::min(renderTargetHeight, height);
-        depthFormat = pixelFormatToVkFormat(getGpuImageViewFormat(rt.depthStencilTarget));
+        depthFormat          = pixelFormatToVkFormat(getGpuImageViewFormat(rt.depthStencilTarget));
     }
     cp.setDynamicRendering(colorFormats, depthFormat);
 
@@ -277,10 +277,11 @@ static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
     bool stencilEnabled = rt.stencilState.enabled() && rt.depthStencilTarget.artifact;
     cp.depth.setStencilTestEnable(stencilEnabled);
     if (stencilEnabled) {
-        cp.depth.setFront(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
-                                     compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref))
-        .setBack(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
-                                    compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref));
+        cp.depth
+            .setFront(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
+                                         compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref))
+            .setBack(vk::StencilOpState(stencilOpToVk(rt.stencilState.fail), stencilOpToVk(rt.stencilState.pass), stencilOpToVk(rt.stencilState.zFail),
+                                        compareToVk(rt.stencilState.compare), rt.stencilState.readMask, rt.stencilState.writeMask, rt.stencilState.ref));
     }
 
     // setup viewport

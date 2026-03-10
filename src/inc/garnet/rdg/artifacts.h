@@ -371,10 +371,10 @@ struct GpuResourceView {
     bool isBuffer() const { return artifact && artifact->typeId == Buffer::TYPE_ID; }
     bool isSampler() const { return artifact && artifact->typeId == Sampler::TYPE_ID; }
 
-    AutoRef<Texture>    texture() const { return AutoRef<Texture>(artifact.template castTo<Texture>()); }
-    AutoRef<Backbuffer> backbuffer() const { return AutoRef<Backbuffer>(artifact.template castTo<Backbuffer>()); }
-    AutoRef<Buffer>     buffer() const { return AutoRef<Buffer>(artifact.template castTo<Buffer>()); }
-    AutoRef<Sampler>    sampler() const { return AutoRef<Sampler>(artifact.template castTo<Sampler>()); }
+    AutoRef<Texture>    texture() const { return AutoRef<Texture>(artifact ? artifact->template castTo<Texture>() : nullptr); }
+    AutoRef<Backbuffer> backbuffer() const { return AutoRef<Backbuffer>(artifact ? artifact->template castTo<Backbuffer>() : nullptr); }
+    AutoRef<Buffer>     buffer() const { return AutoRef<Buffer>(artifact ? artifact->template castTo<Buffer>() : nullptr); }
+    AutoRef<Sampler>    sampler() const { return AutoRef<Sampler>(artifact ? artifact->template castTo<Sampler>() : nullptr); }
 
     GpuResourceView & setArtifact(AutoRef<Artifact> artifact_) {
         artifact = std::move(artifact_);
@@ -716,7 +716,7 @@ static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
 enum class GpuShaderStageBits : uint32_t {
     VERTEX   = 1 << 0,
     HULL     = 1 << 1,
-    DOMAIN   = 1 << 2,
+    DOMAIN_  = 1 << 2,
     GEOMETRY = 1 << 3,
     PIXEL    = 1 << 4,
     COMPUTE  = 1 << 5,
