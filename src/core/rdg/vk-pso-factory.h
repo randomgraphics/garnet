@@ -53,7 +53,7 @@ struct GpuGeometryKey {
     }
     bool operator!=(const GpuGeometryKey & o) const { return !(*this == o); }
 
-    static GpuGeometryKey make(const GpuGeometry & geometry);
+    static GpuGeometryKey make(const GpuDraw::GpuGeometry & geometry);
 };
 
 /// Descriptor/push-constant layout for PSO.
@@ -82,7 +82,7 @@ struct GraphicsPsoCreateParams {
     GpuShaderAction::ShaderBinary vs;
     GpuShaderAction::ShaderBinary ps;
     const RenderTarget &          renderTarget;
-    const GpuGeometry &           geometry;
+    const GpuDraw::GpuGeometry &  geometry;
     uint32_t                      pushConstantSize = 0;
 };
 

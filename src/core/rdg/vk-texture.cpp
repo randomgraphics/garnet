@@ -95,23 +95,6 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
 
 namespace {
 
-gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt) {
-    switch (vkFmt) {
-    case vk::Format::eR8G8B8A8Unorm:
-        return gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM();
-    case vk::Format::eR8G8B8A8Srgb:
-        return gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB();
-    case vk::Format::eB8G8R8A8Unorm:
-        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM();
-    case vk::Format::eB8G8R8A8Srgb:
-        return gfx::img::PixelFormat::BGRA_8_8_8_8_UNORM();
-    case vk::Format::eR8G8B8Unorm:
-        return gfx::img::PixelFormat::RGB_8_8_8_UNORM();
-    default:
-        return gfx::img::PixelFormat::UNKNOWN();
-    }
-}
-
 gfx::img::Image contentToImage(const rapid_vulkan::Image::Content & content) {
     if (content.subresources.empty() || content.storage.empty()) return gfx::img::Image();
     gfx::img::PixelFormat pf = vkFormatToPixelFormat(content.format);

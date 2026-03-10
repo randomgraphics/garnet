@@ -16,24 +16,28 @@ struct ClearRenderTarget : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
 
-    struct RenderTargetArgument : public Arguments::SingleArtifact<RenderTarget, Arguments::Usage::ReadingWriting> {
-        RenderTargetArgument(Arguments * owner, const char * name): Arguments::SingleArtifact<RenderTarget, Arguments::Usage::ReadingWriting>(owner, name) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            if (value) return value->artifacts();
-            return {};
-        }
-    };
-
     struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        RenderTargetArgument renderTarget = {this, "renderTarget"};
+
+        AutoRef<RenderTarget> renderTarget;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (!renderTarget) return;
+            for (const auto & color : renderTarget->colors) {
+                if (color.target.artifact) { list.writeList.insert(color.target.artifact.get()); }
+            }
+            if (renderTarget->depthStencilTarget.artifact) {
+                const Artifact * ptr = renderTarget->depthStencilTarget.artifact.get();
+                if (renderTarget->depthState.testEnabled() || renderTarget->stencilState.enabled()) list.readList.insert(ptr);
+                if (renderTarget->depthState.writeEnabled() || renderTarget->stencilState.enabled()) list.writeList.insert(ptr);
+            }
+        }
 
         static AutoRef<A> make(AutoRef<RenderTarget> rt) {
-            auto a                = AutoRef<A>(new A());
-            a->renderTarget.value = std::move(rt);
+            auto a          = AutoRef<A>(new A());
+            a->renderTarget = std::move(rt);
             return a;
         }
     };
@@ -61,7 +65,13 @@ struct PrepareBackbuffer : public Action {
         inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ReadWriteArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to prepare
+        AutoRef<Backbuffer> backbuffer;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (!backbuffer) return;
+            list.readList.insert(backbuffer.get());
+            list.writeList.insert(backbuffer.get());
+        }
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {
             auto a        = AutoRef<A>(new A());
@@ -93,7 +103,13 @@ struct PresentBackbuffer : public Action {
         inline static constexpr const char * TYPE_NAME = "PresentBackbuffer::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ReadOnlyArtifact<Backbuffer> backbuffer = {this, "backbuffer"}; // Backbuffer to present
+        AutoRef<Backbuffer> backbuffer;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (!backbuffer) return;
+            list.readList.insert(backbuffer.get());
+            list.writeList.insert(backbuffer.get());
+        }
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {
             auto a        = AutoRef<A>(new A());
@@ -147,7 +163,10 @@ struct SetupRenderStates : public Action {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "SetupRenderStates::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
+
         RenderStateDesc renderStates; ///< render state descriptor
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override { (void) list; }
     };
 
     struct CreateParameters {
@@ -160,192 +179,8 @@ protected:
     using Action::Action;
 };
 
-/// Represent a GPU renderable geometry.
-struct GpuGeometry {
-    /// API-agnostic vertex attribute format; backend maps to native (e.g. VkFormat).
-    enum class AttributeFormat : uint8_t {
-        F32_1,
-        F32_2,
-        F32_3,
-        F32_4,
-        F16_1,
-        F16_2,
-        F16_3,
-        F16_4,
-        U32_1,
-        U32_2,
-        U32_3,
-        U32_4,
-        U16_1,
-        U16_2,
-        U16_3,
-        U16_4,
-        U8_1,
-        U8_2,
-        U8_3,
-        U8_4,
-        I32_1,
-        I32_2,
-        I32_3,
-        I32_4,
-        I16_1,
-        I16_2,
-        I16_3,
-        I16_4,
-        I8_1,
-        I8_2,
-        I8_3,
-        I8_4,
-    };
-
-    /// Describes one vertex attribute (shader location, format, byte offset in vertex).
-    struct VertexAttribute {
-        uint32_t        location = 0; ///< index into the vertex buffer array.
-        uint32_t        offset   = 0; ///< byte offset from the beginning of a vertex.
-        AttributeFormat format   = AttributeFormat::F32_3;
-
-        bool operator==(const VertexAttribute & other) const { return location == other.location && format == other.format && offset == other.offset; }
-        bool operator!=(const VertexAttribute & other) const { return !operator==(other); }
-    };
-
-    /// Vertex layout description. Geometry loader and sample code must populate this to match vertex buffer layout.
-    struct VertexFormat {
-        DynaArray<VertexAttribute> attributes;
-
-        bool empty() const { return attributes.empty(); }
-        bool operator==(const VertexFormat & other) const { return attributes == other.attributes; }
-        bool operator!=(const VertexFormat & other) const { return !operator==(other); }
-    };
-
-    struct IndexBuffer {
-        AutoRef<Buffer> buffer;
-        uint64_t        offset;     ///< offset in bytes from the beginning of the buffer.
-        uint32_t        indexSize;  ///< size of the index in bytes. 2 or 4.
-        uint32_t        indexCount; ///< number of indices in the buffer.
-    };
-
-    struct VertexBuffer {
-        AutoRef<Buffer> buffer;
-        uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
-        uint32_t        stride; ///< size of the vertex in bytes.
-    };
-
-    struct GeometryBuffer : BufferView {
-        /// For vertex buffers, this is the size of the vertex in bytes.
-        /// For index buffers, this is the size of the index in bytes. Must be 2 or 4.
-        /// For instanced buffers, this is the size of the instance in bytes.
-        uint32_t stride = 0;
-
-        /// Number of elements in the buffer.
-        size_t count() const { return size / stride; }
-    };
-
-    VertexFormat              format;
-    DynaArray<GeometryBuffer> instances;
-    DynaArray<VertexBuffer>   vertices;
-    uint32_t                  vertexCount = 0;
-    IndexBuffer               indices;
-};
-
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
 struct GpuShaderAction : public Action {
-    // struct ShaderResourceBinding {
-    //     uint32_t set  = 0;
-    //     uint32_t slot = 0;
-
-    //     bool operator==(const ShaderResourceBinding & other) const { return set == other.set && slot == other.slot; }
-    //     bool operator!=(const ShaderResourceBinding & other) const { return !operator==(other); }
-    //     bool operator<(const ShaderResourceBinding & other) const { return (set < other.set) || (set == other.set && slot < other.slot); }
-    // };
-
-    template<typename T>
-    struct MapArgument : public Arguments::ArtifactArgument {
-        MapArgument(Arguments * owner, const char * name, Arguments::UsageBits usage)
-            : Arguments::ArtifactArgument(owner, name, usage + Arguments::Usage::Optional) {}
-
-        std::map<StrA, T> value;
-
-        bool empty() const { return value.empty(); }
-
-        void clear() { value.clear(); }
-
-        auto size() const { return value.size(); }
-
-        auto begin() const { return value.begin(); }
-
-        auto begin() { return value.begin(); }
-
-        auto end() const { return value.end(); }
-
-        auto end() { return value.end(); }
-
-        auto find(const StrA & name) const { return value.find(name); }
-    };
-
-    template<Arguments::UsageBits UFlags>
-    struct BufferViewMap : public MapArgument<BufferView> {
-        BufferViewMap(Arguments * owner, const char * name): MapArgument<BufferView>(owner, name, UFlags) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.reserve(value.size());
-            mArtifacts.clear();
-            for (const auto & [name, view] : value) {
-                (void) name;
-                if (view.buffer) { mArtifacts.append(view.buffer.get()); }
-            }
-            return mArtifacts;
-        }
-
-        auto & operator[](const StrA & name) { return value[name]; }
-
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
-    };
-
-    template<Arguments::UsageBits UFlags>
-    struct ImageViewMap : public MapArgument<GpuImageView> {
-        ImageViewMap(Arguments * owner, const char * name): MapArgument<GpuImageView>(owner, name, UFlags) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.clear();
-            for (const auto & [name, view] : value) {
-                (void) name;
-                auto artifact = view.artifact();
-                if (artifact) { mArtifacts.append(artifact.get()); }
-            }
-            return mArtifacts;
-        }
-
-        auto & operator[](const StrA & name) { return value[name]; }
-
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
-    };
-
-    struct TextureViewMap : public MapArgument<TextureView> {
-        TextureViewMap(Arguments * owner, const char * name): MapArgument<TextureView>(owner, name, Arguments::Usage::Reading) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.clear();
-            for (const auto & [name, view] : value) {
-                (void) name;
-                auto artifact = view.artifact();
-                if (artifact) { mArtifacts.append(artifact.get()); }
-                if (view.sampler) { mArtifacts.append(view.sampler.get()); }
-            }
-            return mArtifacts;
-        }
-
-        auto & operator[](const StrA & name) { return value[name]; }
-
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
-    };
-
-    /// Represent small chunk of constants that can be passed to the shader as immediate data.
-    /// This is usually used for small constants (like model matrix, mesh color and etc) that changes on each draw call.
-    using InlineConstants = DynaArray<uint8_t>;
-
     /// Shader binary that can be used to create the actual GPU shader program.
     struct ShaderBinary {
         void *       binary = nullptr; ///< pointer to the shader binary code.
@@ -356,11 +191,11 @@ struct GpuShaderAction : public Action {
         bool valid() const { return binary != nullptr && size > 0 && entry != nullptr; }
     };
 
-    using UniformMap  = BufferViewMap<Arguments::Usage::Reading>;
-    using RwBufferMap = BufferViewMap<Arguments::Usage::RW>;
-    using RoBufferMap = BufferViewMap<Arguments::Usage::Reading>;
-    using RwImagesMap = ImageViewMap<Arguments::Usage::RW>;
-    using RoImagesMap = ImageViewMap<Arguments::Usage::Reading>;
+    /// A 3-D table of shader resources.
+    /// The first dimension is the resource set index
+    /// The second dimension is the binding slot inside a resource set
+    /// The third dimension is the resource view index inside a binding slot.
+    using GpuResourceTable = DynaArray<DynaArray<DynaArray<GpuResourceView>>>;
 
 protected:
     using Action::Action;
@@ -372,50 +207,93 @@ struct GpuDraw : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "GpuDraw";
 
-    struct GeometryArgument : public Arguments::ArtifactArgument, public GpuGeometry {
-        GeometryArgument(Arguments * owner, const char * name)
-            : Arguments::ArtifactArgument(owner, name, Arguments::Usage::Reading + Arguments::Usage::Optional) {}
+    /// Represent a GPU renderable geometry.
+    struct GpuGeometry {
+        /// API-agnostic vertex attribute format; backend maps to native (e.g. VkFormat).
+        enum class AttributeFormat : uint8_t {
+            F32_1,
+            F32_2,
+            F32_3,
+            F32_4,
+            F16_1,
+            F16_2,
+            F16_3,
+            F16_4,
+            U32_1,
+            U32_2,
+            U32_3,
+            U32_4,
+            U16_1,
+            U16_2,
+            U16_3,
+            U16_4,
+            U8_1,
+            U8_2,
+            U8_3,
+            U8_4,
+            I32_1,
+            I32_2,
+            I32_3,
+            I32_4,
+            I16_1,
+            I16_2,
+            I16_3,
+            I16_4,
+            I8_1,
+            I8_2,
+            I8_3,
+            I8_4,
+        };
 
-        SafeArrayAccessor<const Artifact * const> artifacts() const override {
-            mArtifacts.reserve(instances.size() + vertices.size() + 1);
-            mArtifacts.clear();
-            for (const auto & vb : instances) {
-                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
-            }
-            for (const auto & vb : vertices) {
-                if (vb.buffer) { mArtifacts.append(vb.buffer.get()); }
-            }
-            if (indices.buffer) { mArtifacts.append(indices.buffer.get()); }
-            return mArtifacts;
-        }
+        /// Describes one vertex attribute (shader location, format, byte offset in vertex).
+        struct VertexAttribute {
+            uint32_t        location = 0; ///< index into the vertex buffer array.
+            uint32_t        offset   = 0; ///< byte offset from the beginning of a vertex.
+            AttributeFormat format   = AttributeFormat::F32_3;
 
-        auto operator=(const GpuGeometry & geometry) -> GpuGeometry & {
-            *(GpuGeometry *) this = geometry;
-            return *this;
-        }
+            bool operator==(const VertexAttribute & other) const { return location == other.location && format == other.format && offset == other.offset; }
+            bool operator!=(const VertexAttribute & other) const { return !operator==(other); }
+        };
 
-        auto operator=(GpuGeometry && geometry) -> GpuGeometry & {
-            *(GpuGeometry *) this = std::move(geometry);
-            return *this;
-        }
+        /// Vertex layout description. Geometry loader and sample code must populate this to match vertex buffer layout.
+        struct VertexFormat {
+            DynaArray<VertexAttribute> attributes;
 
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
+            bool empty() const { return attributes.empty(); }
+            bool operator==(const VertexFormat & other) const { return attributes == other.attributes; }
+            bool operator!=(const VertexFormat & other) const { return !operator==(other); }
+        };
+
+        struct GeometryBuffer {
+            AutoRef<Buffer> buffer; ///< buffer containing the geometry data
+            uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
+            uint32_t        stride; ///< size of one element in bytes
+        };
+
+        VertexFormat              format;
+        DynaArray<GeometryBuffer> instances;
+        uint32_t                  instanceCount = 0;
+        DynaArray<GeometryBuffer> vertices;
+        uint32_t                  vertexCount = 0;
+        GeometryBuffer            indices;
+        uint32_t                  indexCount = 0;
     };
 
-    struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
+    struct GN_API A : public Arguments {
+        static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        InlineConstants  constants;                                ///< immediate constants. Backend copies to GPU when non-empty.
-        UniformMap       uniforms  = {this, "uniforms"};           ///< uniforms
-        TextureViewMap   textures  = {this, "textures"};           ///< textures
-        RwImagesMap      images    = {this, "read-write images"};  ///< read-write images
-        RoImagesMap      roImages  = {this, "read-only images"};   ///< read-only images
-        RwBufferMap      buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
-        RoBufferMap      roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
-        GeometryArgument geometry  = {this, "geometry"};           ///< geometry
+        GpuGeometry        geometry;   ///< geometry
+        GpuResourceTable   resources;  ///< shader resources
+        DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
+
+        /// Render target.
+        /// \note Must specify render target as argument for each draw action.
+        /// So that the backend can determine this action's full read and write list.
+        AutoRef<RenderTarget> renderTarget;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override;
     };
 
     struct CreateParameters {
@@ -445,19 +323,16 @@ struct GpuCompute : public GpuShaderAction {
         uint32_t z = 1;
     };
 
-    struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
+    struct GN_API A : public Arguments {
+        static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        InlineConstants constants;                                ///< inline constants. Backend copies to GPU when non-empty.
-        UniformMap      uniforms  = {this, "uniforms"};           ///< uniform buffers
-        TextureViewMap  textures  = {this, "textures"};           ///< textures
-        RwBufferMap     buffers   = {this, "read-write buffers"}; ///< read-write random access buffers
-        RoBufferMap     roBuffers = {this, "read-only buffers"};  ///< read-only random access buffers
-        RwImagesMap     images    = {this, "read-write images"};  ///< read-write images
-        RoImagesMap     roImages  = {this, "read-only images"};   ///< read-only images
-        DispatchSize    groups;                                   ///< thread group counts
+        GpuResourceTable   resources;  ///< shader resources
+        DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
+        DispatchSize       groups;     ///< thread group counts
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override;
     };
 
     struct CreateParameters {

@@ -797,6 +797,12 @@ public:
         return mPtr + index;
     }
 
+    T & at(size_t index) const {
+        GN_ASSERT(mBegin <= (mPtr + index));
+        GN_ASSERT((mPtr + index) < mEnd);
+        return mPtr[index];
+    }
+
     template<typename T2>
     void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t lengthInUnitOfT) {
         const T * src = subrange(srcOffset, lengthInUnitOfT);
@@ -809,10 +815,14 @@ public:
         }
     }
 
-    T & at(size_t index) const {
-        GN_ASSERT(mBegin <= (mPtr + index));
-        GN_ASSERT((mPtr + index) < mEnd);
-        return mPtr[index];
+    template<typename F>
+    void forEach(F f) const {
+        for (size_t i = 0; i < size(); ++i) { f(mPtr[i]); }
+    }
+
+    template<typename F>
+    void forEachWithIndex(F f) const {
+        for (size_t i = 0; i < size(); ++i) { f(i, mPtr[i]); }
     }
 
     T * operator->() const {

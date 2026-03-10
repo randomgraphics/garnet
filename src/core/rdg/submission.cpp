@@ -77,18 +77,8 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
         for (const Workflow::Task & task : w->tasks) {
             Arguments * args = task.arguments.get();
             if (!args) continue;
-            for (const Arguments::ArtifactArgument * p = args->firstArtifactArgument(); p; p = p->next()) {
-                const auto usage = p->usage();
-                const bool read  = usage.reading;
-                const bool write = usage.writing;
-                const auto arts  = p->artifacts();
-                for (size_t k = 0; k < arts.size(); ++k) {
-                    const Artifact * a = arts[k];
-                    if (!a) continue;
-                    if (read) workflowReads[i].insert(a);
-                    if (write) workflowWrites[i].insert(a);
-                }
-            }
+            Arguments::ArtifactReadWriteList list {workflowReads[i], workflowWrites[i]};
+            args->addToReadWriteList(list);
         }
     }
 
@@ -175,17 +165,17 @@ static const char * executionResultStr(Action::ExecutionResult r) {
     }
 }
 
-static StrA usageFlagStr(Arguments::UsageBits u) {
-    StrA s;
-    if (u.optional) s += "Optional|";
-    if (u.reading) s += "Reading|";
-    if (u.writing) s += "Writing|";
-    if (s.empty())
-        s = "None";
-    else
-        s.popback(); // trailing |
-    return s;
-}
+// static StrA usageFlagStr(Arguments::UsageBits u) {
+//     StrA s;
+//     if (u.optional) s += "Optional|";
+//     if (u.reading) s += "Reading|";
+//     if (u.writing) s += "Writing|";
+//     if (s.empty())
+//         s = "None";
+//     else
+//         s.popback(); // trailing |
+//     return s;
+// }
 
 Submission::State SubmissionImpl::dumpState() const {
     std::lock_guard<std::mutex> lock(mStateMutex);
@@ -257,24 +247,23 @@ Submission::State SubmissionImpl::dumpState() const {
 
             // Artifact arguments: arg name, usage; per-artifact: type (id & name), artifact name, sequence
             if (task.arguments) {
-                const Arguments * args = task.arguments.get();
-                out += "      artifact arguments:\n";
-                for (const Arguments::ArtifactArgument * p = args->firstArtifactArgument(); p; p = p->next()) {
-                    const char * argName  = p->name() ? p->name() : "[unnamed]";
-                    StrA         usageStr = usageFlagStr(p->usage());
-                    const auto   arts     = p->artifacts();
-                    if (arts.size() == 0) {
-                        out += StrA::format("        - \"{}\"  usage={}  (no artifact bound)\n", argName, usageStr.c_str());
-                    } else {
-                        out += StrA::format("        - \"{}\"  usage={}\n", argName, usageStr.c_str());
-                        for (size_t k = 0; k < arts.size(); ++k) {
-                            const Artifact * a = arts[k];
-                            if (!a) continue;
-                            const char * typeName = a->typeName ? a->typeName : "(unknown)";
-                            out += StrA::format("            artifact: type=0x{:x} ({}), name=\"{}\", sequence={}\n", (unsigned long) a->typeId, typeName,
-                                                a->name.c_str(), (unsigned long) a->sequence);
-                        }
-                    }
+                const Arguments &                    args = *task.arguments;
+                std::unordered_set<const Artifact *> r, w;
+                Arguments::ArtifactReadWriteList     list {r, w};
+                args.addToReadWriteList(list);
+                // Print all resources read by this task
+                out += "      read artifacts:\n";
+                for (const Artifact * a : r) {
+                    const char * typeName = a->typeName ? a->typeName : "[unknown type]";
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId, a->name.c_str(),
+                                        (unsigned long long) a->sequence);
+                }
+                // Print all resources written by this task
+                out += "      write artifacts:\n";
+                for (const Artifact * a : w) {
+                    const char * typeName = a->typeName ? a->typeName : "[unknown type]";
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId, a->name.c_str(),
+                                        (unsigned long long) a->sequence);
                 }
             }
         }

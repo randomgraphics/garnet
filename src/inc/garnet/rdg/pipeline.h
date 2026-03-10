@@ -287,9 +287,10 @@ struct PbrShading : public GpuResource {
 
     struct BuildParameters {
         RenderGraph *                  renderGraph = {};
+        AutoRef<RenderTarget>          renderTarget;
         AutoRef<SharedShaderConstants> sharedShaderConstants;
         AutoRef<Material>              material;
-        GpuGeometry                    geometry;
+        GpuDraw::GpuGeometry           geometry;
         AffineTransform                modelToWorld;
         /// World-to-clip (view-projection) matrix. Used for push constants when SharedShaderConstants view is not yet available.
         glm::mat4 worldToClip = glm::mat4(1.f);
