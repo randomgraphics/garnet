@@ -65,8 +65,9 @@ public:
                 return sg;
             }
         // Build arguments from params; the action is reused.
-        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        drawArgs->geometry = params.geometry;
+        auto drawArgs          = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawArgs->geometry     = params.geometry;
+        drawArgs->renderTarget = params.renderTarget;
         // Push constants: model (64 bytes) + viewProj (64 bytes).
         // GLM stores mat4 in column-major order, matching GLSL layout, so memcpy directly.
         const glm::mat4 & model    = params.modelToWorld.matrix();

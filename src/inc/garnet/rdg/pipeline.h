@@ -287,6 +287,7 @@ struct PbrShading : public GpuResource {
 
     struct BuildParameters {
         RenderGraph *                  renderGraph = {};
+        AutoRef<RenderTarget>          renderTarget;
         AutoRef<SharedShaderConstants> sharedShaderConstants;
         AutoRef<Material>              material;
         GpuDraw::GpuGeometry           geometry;

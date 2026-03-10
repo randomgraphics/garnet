@@ -236,6 +236,7 @@ int main(int, const char **) {
 
         PbrShading::BuildParameters pbrParams;
         pbrParams.renderGraph           = renderGraph.get();
+        pbrParams.renderTarget          = renderTarget;
         pbrParams.sharedShaderConstants = sharedConstants;
         pbrParams.material              = material;
         pbrParams.geometry              = boxGeometry;
