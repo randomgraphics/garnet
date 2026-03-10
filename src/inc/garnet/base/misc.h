@@ -1,4 +1,4 @@
-﻿#ifndef __GN_BASE_MISC_H__
+#ifndef __GN_BASE_MISC_H__
 #define __GN_BASE_MISC_H__
 // *****************************************************************************
 /// \file
@@ -315,6 +315,37 @@ public:
     /// Tell finalizer to _NOT_ run the function by the end of life scope.
     ///
     void dismiss() { mDismissed = true; }
+};
+
+/// Helper class to use with enum bit flags.
+template<typename T>
+struct BitFlags {
+    using BitsType = T;
+    using MaskType = typename std::underlying_type<T>::type;
+
+    MaskType mask = 0;
+
+    constexpr BitFlags(MaskType mask): mask(mask) {}
+
+    constexpr operator MaskType() const { return mask; }
+
+    // relational operators
+    constexpr BitFlags operator==(const BitFlags & other) const { return mask == other.mask; }
+    constexpr BitFlags operator!=(const BitFlags & other) const { return mask != other.mask; }
+    constexpr bool     operator<(const BitFlags & other) const { return mask < other.mask; }
+    constexpr bool     operator>(const BitFlags & other) const { return mask > other.mask; }
+    constexpr bool     operator<=(const BitFlags & other) const { return mask <= other.mask; }
+    constexpr bool     operator>=(const BitFlags & other) const { return mask >= other.mask; }
+
+    // bitwise operators
+    constexpr BitFlags operator|(const BitFlags & other) const { return BitFlags(mask | other.mask); }
+    constexpr BitFlags operator&(const BitFlags & other) const { return BitFlags(mask & other.mask); }
+    constexpr BitFlags operator^(const BitFlags & other) const { return BitFlags(mask ^ other.mask); }
+    constexpr BitFlags operator~() const { return BitFlags(~mask); }
+    constexpr BitFlags operator<<(const BitFlags & other) const { return BitFlags(mask << other.mask); }
+    constexpr BitFlags operator>>(const BitFlags & other) const { return BitFlags(mask >> other.mask); }
+    constexpr BitFlags operator<<=(const BitFlags & other) const { return BitFlags(mask <<= other.mask); }
+    constexpr BitFlags operator>>=(const BitFlags & other) const { return BitFlags(mask >>= other.mask); }
 };
 
 namespace detail {

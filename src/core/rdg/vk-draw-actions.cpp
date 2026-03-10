@@ -30,7 +30,7 @@ public:
         // standard preparation.
         auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget.value));
+        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         // done
         return Action::PASSED;
@@ -44,7 +44,7 @@ public:
         auto a = arguments.castTo<ClearRenderTarget::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
-        // stadnard execution
+        // standard execution
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
         GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
@@ -92,7 +92,7 @@ public:
         // standard preparation.
         auto & submissionContext = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, {}));
+        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         return PASSED;
     }
@@ -103,7 +103,7 @@ public:
         auto a = arguments.castTo<GpuDraw::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
-        const auto size = static_cast<uint32_t>(a->constants.size());
+        const auto size = static_cast<uint32_t>(a->immediates.size());
         if (size > 128) GN_UNLIKELY {
                 GN_ERROR(sLogger)("{} - inline constants size is too large (max = 128 bytes), size={}", taskInfo, size);
                 return FAILED;
@@ -123,7 +123,7 @@ public:
         });
 
         const GpuGeometry & geom = a->geometry;
-        if (0 == geom.vertexCount && 0 == geom.indices.indexCount) GN_UNLIKELY {
+        if (0 == geom.vertexCount && 0 == geom.indexCount) GN_UNLIKELY {
                 GN_VERBOSE(sLogger)("{} - vertex and index count are zero. nothing to draw", taskInfo);
                 return PASSED;
             }
@@ -157,7 +157,7 @@ public:
         dcp.setPipeline(pipeline);
         rapid_vulkan::Drawable drawable(dcp);
 
-        if (!a->constants.empty()) drawable.c(0, a->constants.size(), a->constants.data(), vk::ShaderStageFlagBits::eVertex);
+        if (!a->immediates.empty()) drawable.c(0, a->immediates.size(), a->immediates.data(), vk::ShaderStageFlagBits::eVertex);
 
         if (!geom.vertices.empty() && geom.vertices[0].buffer) {
             auto *                                  bv  = static_cast<BufferVulkan *>(geom.vertices[0].buffer.get());

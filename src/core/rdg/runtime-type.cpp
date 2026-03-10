@@ -12,6 +12,8 @@ GN_API const uint64_t Backbuffer::TYPE_ID            = getNextUniqueTypeId();
 GN_API const uint64_t RenderTarget::TYPE_ID          = getNextUniqueTypeId();
 GN_API const uint64_t GpuDraw::TYPE_ID               = getNextUniqueTypeId();
 GN_API const uint64_t GpuDraw::A::TYPE_ID            = getNextUniqueTypeId();
+GN_API const uint64_t GpuCompute::TYPE_ID            = getNextUniqueTypeId();
+GN_API const uint64_t GpuCompute::A::TYPE_ID         = getNextUniqueTypeId();
 GN_API const uint64_t ClearRenderTarget::A::TYPE_ID  = getNextUniqueTypeId();
 GN_API const uint64_t ClearRenderTarget::TYPE_ID     = getNextUniqueTypeId();
 GN_API const uint64_t PrepareBackbuffer::A::TYPE_ID  = getNextUniqueTypeId();
@@ -22,5 +24,6 @@ GN_API const uint64_t SharedShaderConstants::TYPE_ID = getNextUniqueTypeId();
 GN_API const uint64_t PbrShading::TYPE_ID            = getNextUniqueTypeId();
 GN_API const uint64_t PbrShading::Material::TYPE_ID  = getNextUniqueTypeId();
 GN_API const uint64_t Buffer::TYPE_ID                = getNextUniqueTypeId();
+GN_API const uint64_t GpuResourceGroup::TYPE_ID      = getNextUniqueTypeId();
 
 } // namespace GN::rdg

@@ -8,6 +8,6 @@ vk::Format pixelFormatToVkFormat(gfx::img::PixelFormat pf);
 
 gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt);
 
-vk::Format vertexAttributeFormatToVk(GpuGeometry::AttributeFormat f);
+vk::Format vertexAttributeFormatToVk(GpuDraw::GpuGeometry::AttributeFormat f);
 
 } // namespace GN::rdg

@@ -64,7 +64,11 @@ struct InitIntegerAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "InitIntegerAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
+        AutoRef<IntegerArtifact> output;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (output) list.writeList.insert(output.get());
+        }
     };
 
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
@@ -73,10 +77,7 @@ struct InitIntegerAction : public Action {
     ExecutionResult execute(TaskInfo &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
-        auto * outputArtifact = a->output.value.get();
-        TS_ASSERT(outputArtifact != nullptr);
-
-        auto integerArtifact = outputArtifact->castTo<IntegerArtifact>();
+        auto * integerArtifact = a->output.get();
         TS_ASSERT(integerArtifact != nullptr);
 
         GN_INFO(GN::getLogger("GN.rdg.test"))("InitIntegerAction: initializing integer output to {}", initValue);
@@ -105,9 +106,15 @@ struct AddIntegersAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "AddIntegersAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        ReadOnlyArtifact<IntegerArtifact>  input1 = {this, "input1"};
-        ReadOnlyArtifact<IntegerArtifact>  input2 = {this, "input2"};
-        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
+        AutoRef<IntegerArtifact> input1;
+        AutoRef<IntegerArtifact> input2;
+        AutoRef<IntegerArtifact> output;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (input1) list.readList.insert(input1.get());
+            if (input2) list.readList.insert(input2.get());
+            if (output) list.writeList.insert(output.get());
+        }
     };
 
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
@@ -116,9 +123,9 @@ struct AddIntegersAction : public Action {
     ExecutionResult execute(TaskInfo &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
-        auto * integerInput1 = a->input1.value.get() ? a->input1.value.get()->castTo<IntegerArtifact>() : nullptr;
-        auto * integerInput2 = a->input2.value.get() ? a->input2.value.get()->castTo<IntegerArtifact>() : nullptr;
-        auto * integerOutput = a->output.value.get() ? a->output.value.get()->castTo<IntegerArtifact>() : nullptr;
+        auto * integerInput1 = a->input1.get();
+        auto * integerInput2 = a->input2.get();
+        auto * integerOutput = a->output.get();
 
         TS_ASSERT(integerInput1 != nullptr);
         TS_ASSERT(integerInput2 != nullptr);
@@ -151,9 +158,15 @@ struct MultiplyIntegersAction : public Action {
         inline static const uint64_t         TYPE_ID   = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "MultiplyIntegersAction::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
-        ReadOnlyArtifact<IntegerArtifact>  input1 = {this, "input1"};
-        ReadOnlyArtifact<IntegerArtifact>  input2 = {this, "input2"};
-        WriteOnlyArtifact<IntegerArtifact> output = {this, "output"};
+        AutoRef<IntegerArtifact> input1;
+        AutoRef<IntegerArtifact> input2;
+        AutoRef<IntegerArtifact> output;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (input1) list.readList.insert(input1.get());
+            if (input2) list.readList.insert(input2.get());
+            if (output) list.writeList.insert(output.get());
+        }
     };
 
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
@@ -162,9 +175,9 @@ struct MultiplyIntegersAction : public Action {
     ExecutionResult execute(TaskInfo &, Arguments & args) override {
         auto * a = args.castTo<A>();
         TS_ASSERT(a != nullptr); // null means wrong type
-        auto * integerInput1 = a->input1.value.get() ? a->input1.value.get()->castTo<IntegerArtifact>() : nullptr;
-        auto * integerInput2 = a->input2.value.get() ? a->input2.value.get()->castTo<IntegerArtifact>() : nullptr;
-        auto * integerOutput = a->output.value.get() ? a->output.value.get()->castTo<IntegerArtifact>() : nullptr;
+        auto * integerInput1 = a->input1.get();
+        auto * integerInput2 = a->input2.get();
+        auto * integerOutput = a->output.get();
 
         TS_ASSERT(integerInput1 != nullptr);
         TS_ASSERT(integerInput2 != nullptr);
@@ -198,7 +211,11 @@ struct ReadIntegerAction : public Action {
         inline static const uint64_t         TYPE      = getTestTypeId();
         inline static constexpr const char * TYPE_NAME = "ReadIntegerAction::A";
         A(): Arguments(TYPE, TYPE_NAME) {}
-        ReadOnlyArtifact<IntegerArtifact> input = {this, "input"};
+        AutoRef<IntegerArtifact> input;
+
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (input) list.readList.insert(input.get());
+        }
     };
 
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
@@ -259,7 +276,7 @@ public:
 
                 auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
-                initArgs->output.value = one;
+                initArgs->output = one;
 
                 GN::rdg::Workflow::Task task("init_one");
                 task.action    = initAction;
@@ -275,7 +292,7 @@ public:
 
                 auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
-                initArgs->output.value = two;
+                initArgs->output = two;
 
                 GN::rdg::Workflow::Task task("init_two");
                 task.action    = initAction;
@@ -291,7 +308,7 @@ public:
 
                 auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
                 TS_ASSERT(initArgs != nullptr);
-                initArgs->output.value = three;
+                initArgs->output = three;
 
                 GN::rdg::Workflow::Task task("init_three");
                 task.action    = initAction;
@@ -312,9 +329,9 @@ public:
 
             auto addArgs = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
             TS_ASSERT(addArgs != nullptr);
-            addArgs->input1.value = one;
-            addArgs->input2.value = two;
-            addArgs->output.value = sum;
+            addArgs->input1 = one;
+            addArgs->input2 = two;
+            addArgs->output = sum;
 
             GN::rdg::Workflow::Task task("add_1_2");
             task.action    = addAction;
@@ -334,9 +351,9 @@ public:
 
             auto multiplyArgs = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
             TS_ASSERT(multiplyArgs != nullptr);
-            multiplyArgs->input1.value = three;
-            multiplyArgs->input2.value = sum;
-            multiplyArgs->output.value = result;
+            multiplyArgs->input1 = three;
+            multiplyArgs->input2 = sum;
+            multiplyArgs->output = result;
 
             GN::rdg::Workflow::Task task("multiply_3_sum");
             task.action    = multiplyAction;
@@ -387,34 +404,54 @@ public:
     void testArgumentsArtifactArgumentsDiscovery() {
         auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
         TS_ASSERT(db != nullptr);
+        auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+        TS_ASSERT(x != nullptr);
         auto initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
         TS_ASSERT(initArgs != nullptr);
+        initArgs->output = x;
 
-        const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument();
-        TS_ASSERT(p != nullptr);
-        TS_ASSERT_EQUALS(p->name(), "output");
-        TS_ASSERT(p->usage().writing);
-        TS_ASSERT(p->next() == nullptr);
+        std::unordered_set<const GN::rdg::Artifact *> readList, writeList;
+        GN::rdg::Arguments::ArtifactReadWriteList     list {readList, writeList};
+        initArgs->addToReadWriteList(list);
+        TS_ASSERT_EQUALS(readList.size(), 0u);
+        TS_ASSERT_EQUALS(writeList.size(), 1u);
+        TS_ASSERT(writeList.find(x.get()) != writeList.end());
     }
 
     void testArgumentDiscoveryCounts() {
         auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
         TS_ASSERT(db != nullptr);
+        auto a1 = GN::rdg::IntegerArtifact::create(*db, "a1");
+        auto a2 = GN::rdg::IntegerArtifact::create(*db, "a2");
+        auto a3 = GN::rdg::IntegerArtifact::create(*db, "a3");
+        TS_ASSERT(a1 && a2 && a3);
 
-        auto   initArgs = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        size_t n        = 0;
-        for (const GN::rdg::Arguments::ArtifactArgument * p = initArgs->firstArtifactArgument(); p; p = p->next()) ++n;
-        TS_ASSERT_EQUALS(n, 1u);
+        auto initArgs    = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        initArgs->output = a1;
+        std::unordered_set<const GN::rdg::Artifact *> readList, writeList;
+        GN::rdg::Arguments::ArtifactReadWriteList     list {readList, writeList};
+        initArgs->addToReadWriteList(list);
+        TS_ASSERT_EQUALS(readList.size() + writeList.size(), 1u);
 
-        auto addArgs = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
-        n            = 0;
-        for (const GN::rdg::Arguments::ArtifactArgument * p = addArgs->firstArtifactArgument(); p; p = p->next()) ++n;
-        TS_ASSERT_EQUALS(n, 3u);
+        auto addArgs    = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
+        addArgs->input1 = a1;
+        addArgs->input2 = a2;
+        addArgs->output = a3;
+        readList.clear();
+        writeList.clear();
+        addArgs->addToReadWriteList(list);
+        TS_ASSERT_EQUALS(readList.size(), 2u);
+        TS_ASSERT_EQUALS(writeList.size(), 1u);
 
-        auto multiplyArgs = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
-        n                 = 0;
-        for (const GN::rdg::Arguments::ArtifactArgument * p = multiplyArgs->firstArtifactArgument(); p; p = p->next()) ++n;
-        TS_ASSERT_EQUALS(n, 3u);
+        auto multiplyArgs    = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
+        multiplyArgs->input1 = a1;
+        multiplyArgs->input2 = a2;
+        multiplyArgs->output = a3;
+        readList.clear();
+        writeList.clear();
+        multiplyArgs->addToReadWriteList(list);
+        TS_ASSERT_EQUALS(readList.size(), 2u);
+        TS_ASSERT_EQUALS(writeList.size(), 1u);
     }
 
     // Dependency tests: verify dumpState().workflowDependencies matches dependency-graph.h rules
@@ -430,20 +467,20 @@ public:
 
         auto * w0 = renderGraph->createWorkflow("writer_first");
         TS_ASSERT(w0 != nullptr);
-        auto init0          = GN::rdg::InitIntegerAction::create(*db, "init0");
-        init0->initValue    = 1;
-        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        args0->output.value = x;
+        auto init0       = GN::rdg::InitIntegerAction::create(*db, "init0");
+        init0->initValue = 1;
+        auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output    = x;
         w0->tasks.append(GN::rdg::Workflow::Task("init0"));
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
         auto * w1 = renderGraph->createWorkflow("writer_second");
         TS_ASSERT(w1 != nullptr);
-        auto init1          = GN::rdg::InitIntegerAction::create(*db, "init1");
-        init1->initValue    = 2;
-        auto args1          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        args1->output.value = x;
+        auto init1       = GN::rdg::InitIntegerAction::create(*db, "init1");
+        init1->initValue = 2;
+        auto args1       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args1->output    = x;
         w1->tasks.append(GN::rdg::Workflow::Task("init1"));
         w1->tasks.back().action    = init1;
         w1->tasks.back().arguments = args1;
@@ -468,21 +505,21 @@ public:
 
         auto w0 = renderGraph->createWorkflow("writer");
         TS_ASSERT(w0 != nullptr);
-        auto init0          = GN::rdg::InitIntegerAction::create(*db, "init_x");
-        init0->initValue    = 10;
-        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        args0->output.value = x;
+        auto init0       = GN::rdg::InitIntegerAction::create(*db, "init_x");
+        init0->initValue = 10;
+        auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output    = x;
         w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
         auto w1 = renderGraph->createWorkflow("reader");
         TS_ASSERT(w1 != nullptr);
-        auto add1           = GN::rdg::AddIntegersAction::create(*db, "add");
-        auto args1          = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
-        args1->input1.value = x;
-        args1->input2.value = x;
-        args1->output.value = y;
+        auto add1     = GN::rdg::AddIntegersAction::create(*db, "add");
+        auto args1    = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
+        args1->input1 = x;
+        args1->input2 = x;
+        args1->output = y;
         w1->tasks.append(GN::rdg::Workflow::Task("add"));
         w1->tasks.back().action    = add1;
         w1->tasks.back().arguments = args1;
@@ -507,28 +544,28 @@ public:
         TS_ASSERT(x != nullptr);
         TS_ASSERT(y != nullptr);
 
-        auto * w0           = renderGraph->createWorkflow("writer");
-        auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
-        init0->initValue    = 1;
-        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        args0->output.value = x;
+        auto * w0        = renderGraph->createWorkflow("writer");
+        auto   init0     = GN::rdg::InitIntegerAction::create(*db, "init_x");
+        init0->initValue = 1;
+        auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output    = x;
         w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1          = renderGraph->createWorkflow("reader");
-        auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read_x");
-        auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
-        args1->input.value = x;
+        auto * w1    = renderGraph->createWorkflow("reader");
+        auto   read1 = GN::rdg::ReadIntegerAction::create(*db, "read_x");
+        auto   args1 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+        args1->input = x;
         w1->tasks.append(GN::rdg::Workflow::Task("read_x"));
         w1->tasks.back().action    = read1;
         w1->tasks.back().arguments = args1;
 
-        auto * w2           = renderGraph->createWorkflow("writer_second");
-        auto   init2        = GN::rdg::InitIntegerAction::create(*db, "overwrite_x");
-        init2->initValue    = 2;
-        auto args2          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        args2->output.value = x;
+        auto * w2        = renderGraph->createWorkflow("writer_second");
+        auto   init2     = GN::rdg::InitIntegerAction::create(*db, "overwrite_x");
+        init2->initValue = 2;
+        auto args2       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args2->output    = x;
         w2->tasks.append(GN::rdg::Workflow::Task("overwrite_x"));
         w2->tasks.back().action    = init2;
         w2->tasks.back().arguments = args2;
@@ -550,27 +587,27 @@ public:
         auto x = GN::rdg::IntegerArtifact::create(*db, "x");
         TS_ASSERT(x != nullptr);
 
-        auto * w0           = renderGraph->createWorkflow("writer");
-        auto   init0        = GN::rdg::InitIntegerAction::create(*db, "init_x");
-        init0->initValue    = 5;
-        auto args0          = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
-        args0->output.value = x;
+        auto * w0        = renderGraph->createWorkflow("writer");
+        auto   init0     = GN::rdg::InitIntegerAction::create(*db, "init_x");
+        init0->initValue = 5;
+        auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
+        args0->output    = x;
         w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
         w0->tasks.back().action    = init0;
         w0->tasks.back().arguments = args0;
 
-        auto * w1          = renderGraph->createWorkflow("reader1");
-        auto   read1       = GN::rdg::ReadIntegerAction::create(*db, "read1");
-        auto   args1       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
-        args1->input.value = x;
+        auto * w1    = renderGraph->createWorkflow("reader1");
+        auto   read1 = GN::rdg::ReadIntegerAction::create(*db, "read1");
+        auto   args1 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+        args1->input = x;
         w1->tasks.append(GN::rdg::Workflow::Task("read1"));
         w1->tasks.back().action    = read1;
         w1->tasks.back().arguments = args1;
 
-        auto * w2          = renderGraph->createWorkflow("reader2");
-        auto   read2       = GN::rdg::ReadIntegerAction::create(*db, "read2");
-        auto   args2       = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
-        args2->input.value = x;
+        auto * w2    = renderGraph->createWorkflow("reader2");
+        auto   read2 = GN::rdg::ReadIntegerAction::create(*db, "read2");
+        auto   args2 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+        args2->input = x;
         w2->tasks.append(GN::rdg::Workflow::Task("read2"));
         w2->tasks.back().action    = read2;
         w2->tasks.back().arguments = args2;
@@ -603,11 +640,18 @@ public:
         TS_ASSERT(fetched->sequence == first->sequence);
     }
 
-    void testArrayArtifactArgument() {
-        struct A : public GN::rdg::Arguments {
-            GN::rdg::Arguments::ArtifactArray<GN::rdg::IntegerArtifact, 3> array = {this, "array"};
-        };
-    }
+    // void testArrayArtifactArgument() {
+    //     struct A : public GN::rdg::Arguments {
+    //         GN::rdg::Arguments::ArtifactArray<GN::rdg::IntegerArtifact, 3> array = {this, "array"};
+    //     };
+
+    //     auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
+    //     TS_ASSERT(db != nullptr);
+    //     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
+    //     TS_ASSERT(renderGraph != nullptr);
+    //     auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+    //     TS_ASSERT(x != nullptr);
+    // }
 };
 
 /*

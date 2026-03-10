@@ -65,14 +65,15 @@ public:
                 return sg;
             }
         // Build arguments from params; the action is reused.
-        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        drawArgs->geometry = params.geometry;
+        auto drawArgs          = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawArgs->geometry     = params.geometry;
+        drawArgs->renderTarget = params.renderTarget;
         // Push constants: model (64 bytes) + viewProj (64 bytes).
         // GLM stores mat4 in column-major order, matching GLSL layout, so memcpy directly.
         const glm::mat4 & model    = params.modelToWorld.matrix();
         const glm::mat4 & viewProj = params.sharedShaderConstants ? params.sharedShaderConstants->getViewInformation().worldToClip : params.worldToClip;
-        drawArgs->constants.resize(128);
-        float * pc = reinterpret_cast<float *>(drawArgs->constants.data());
+        drawArgs->immediates.resize(128);
+        float * pc = reinterpret_cast<float *>(drawArgs->immediates.data());
         memcpy(pc, glm::value_ptr(model), 64);
         memcpy(pc + 16, glm::value_ptr(viewProj), 64);
         workflow->appendTask("PBR draw", AutoRef<Action>(mDrawAction), std::move(drawArgs));

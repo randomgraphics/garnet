@@ -275,8 +275,8 @@ gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt) {
     return PF::UNKNOWN();
 }
 
-vk::Format vertexAttributeFormatToVk(GpuGeometry::AttributeFormat f) {
-    using F = GpuGeometry::AttributeFormat;
+vk::Format vertexAttributeFormatToVk(GpuDraw::GpuGeometry::AttributeFormat f) {
+    using F = GpuDraw::GpuGeometry::AttributeFormat;
     switch (f) {
     case F::F32_1:
         return vk::Format::eR32Sfloat;

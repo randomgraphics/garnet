@@ -5,6 +5,7 @@
 #include <concepts>
 #include <functional>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace GN::rdg {
 
@@ -144,247 +145,41 @@ template<class T>
 concept DerivedFromArtifact = std::derived_from<T, Artifact>;
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
-class Arguments : public RefCounter, public RuntimeType {
-public:
-    struct UsageBits {
-        bool optional : 1 = false;
-        bool reading  : 1 = false;
-        bool writing  : 1 = false;
+struct Arguments : public RefCounter, public RuntimeType {
 
-        constexpr bool operator==(const UsageBits & other) const { return optional == other.optional && reading == other.reading && writing == other.writing; }
-        constexpr bool operator!=(const UsageBits & other) const { return optional != other.optional || reading != other.reading || writing != other.writing; }
-
-        constexpr UsageBits & operator+=(const UsageBits & other) {
-            optional &= other.optional;
-            reading |= other.reading;
-            writing |= other.writing;
-            return *this;
-        }
-
-        friend constexpr UsageBits operator+(UsageBits a, const UsageBits & b) { return a += b; }
+    struct ArtifactReadWriteList {
+        std::unordered_set<const Artifact *> & readList;
+        std::unordered_set<const Artifact *> & writeList;
     };
 
-    struct Usage {
-        inline static constexpr UsageBits None           = {false, false, false};
-        inline static constexpr UsageBits Optional       = {true, false, false};
-        inline static constexpr UsageBits Reading        = {false, true, false};
-        inline static constexpr UsageBits Writing        = {false, false, true};
-        inline static constexpr UsageBits ReadingWriting = {false, true, true};
-        inline static constexpr UsageBits O              = Optional;
-        inline static constexpr UsageBits R              = Reading;
-        inline static constexpr UsageBits W              = Writing;
-        inline static constexpr UsageBits RW             = ReadingWriting;
-    };
-
-    /// Base class of all parameters that references one or more artifacts.
-    /// Enlisted into a doubly linked list via DoubleLink member for zero-allocation iteration; no vector.
-    struct ArtifactArgument {
-        virtual ~ArtifactArgument() {}
-
-        auto name() const -> const char * { return mName; }
-        auto usage() const -> UsageBits { return mUsage; }
-
-        /// Returns list of artifacts referenced by this argument.
-        virtual auto artifacts() const -> SafeArrayAccessor<const Artifact * const> = 0;
-
-        /// Linked-list iteration (no allocation). \c nullptr when no next/prev.
-        const ArtifactArgument * next() const { return mLink.next ? static_cast<const ArtifactArgument *>(mLink.next->context) : nullptr; }
-        const ArtifactArgument * prev() const { return mLink.prev ? static_cast<const ArtifactArgument *>(mLink.prev->context) : nullptr; }
-
-    protected:
-        ArtifactArgument(Arguments * owner, const char * name, UsageBits usage): mName(name), mUsage(usage) {
-            mLink.context = this;
-            owner->enlist(this);
-        }
-
-    private:
-        const char * mName;
-        UsageBits    mUsage;
-        DoubleLink   mLink;
-        friend class Arguments;
-    };
-
-    /// Represents a single artifact parameter of an action.
-    /// T must be a subclass of Artifact.
-    template<DerivedFromArtifact T, UsageBits UFlags = Usage::None>
-    struct SingleArtifact : public ArtifactArgument {
-        SingleArtifact(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) value.addr(), 1}; }
-
-        AutoRef<T> value;
-
-        SingleArtifact(const AutoRef<T> & value_): value(value_) {}
-
-        SingleArtifact(AutoRef<T> && value_): value(std::move(value_)) {}
-
-        SingleArtifact & operator=(const AutoRef<T> & value_) {
-            value = value_;
-            return *this;
-        }
-
-        SingleArtifact & operator=(AutoRef<T> && value_) {
-            value = std::move(value_);
-            return *this;
-        }
-
-        bool empty() const { return value.empty(); }
-
-        void clear() { value.clear(); }
-
-        void set(const AutoRef<T> & value_) { value = value_; }
-
-        void set(AutoRef<T> && value_) { value = std::move(value_); }
-
-        auto get() const { return value.get(); }
-
-        auto addr() const { return value.addr(); }
-
-        void attach(T * value_) { value.attach(value_); }
-
-        auto detach() { return value.detach(); }
-
-        template<typename T2>
-        auto castTo() const {
-            return value.template castTo<T2>();
-        }
-
-        operator const AutoRef<T> &() const { return value; }
-
-        operator AutoRef<T> &() { return value; }
-
-        T * operator->() const { return value.get(); }
-
-        T & operator*() const { return *value; }
-
-    private:
-        mutable DynaArray<const Artifact *> mArtifacts;
-    };
-
-    template<typename T, UsageBits UFlags = Usage::None>
-    using ReadOnlyArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Reading>;
-
-    template<typename T, UsageBits UFlags = Usage::None>
-    using WriteOnlyArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Writing>;
-
-    template<typename T, UsageBits UFlags = Usage::None>
-    using ReadWriteArtifact = SingleArtifact<typename std::remove_cvref_t<T>, UFlags + Usage::Reading + Usage::Writing>;
-
-    template<DerivedFromArtifact T, size_t Count, UsageBits UFlags = Usage::None>
-    struct ArtifactArray : public ArtifactArgument {
-        ArtifactArray(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), Count}; }
-
-        AutoRef<T> values[Count];
-
-        auto begin() const { return &values[0]; }
-
-        auto end() const { return &values[Count - 1]; }
-
-        const auto & front() const { return values[0]; }
-
-        const auto & back() const { return values[Count - 1]; }
-
-        auto & front() { return values[0]; }
-
-        auto & back() { return values[Count - 1]; }
-
-        auto operator[](size_t index) const {
-            GN_REQUIRE(index < Count);
-            return values[index];
-        }
-
-        auto operator[](size_t index) {
-            GN_REQUIRE(index < Count);
-            return values[index];
-        }
-    };
-
-    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
-    using ReadOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading>;
-
-    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
-    using WriteOnlyArray = ArtifactArray<T, COUNT, UFlags + Usage::Writing>;
-
-    template<typename T, size_t COUNT, UsageBits UFlags = Usage::None>
-    using ReadWriteArray = ArtifactArray<T, COUNT, UFlags + Usage::Reading + Usage::Writing>;
-
-    template<typename T, UsageBits UFlags = Usage::None>
-    struct ArtifactVector : public ArtifactArgument {
-        ArtifactVector(Arguments * owner, const char * name): ArtifactArgument(owner, name, UFlags) {}
-
-        SafeArrayAccessor<const Artifact * const> artifacts() const override { return {(const Artifact * const *) values[0].addr(), values.size()}; }
-
-        DynaArray<AutoRef<T>> values;
-
-        bool empty() const { return values.empty(); }
-
-        void clear() { values.clear(); }
-
-        auto size() const { return values.size(); }
-
-        auto data() const { return values.data(); }
-
-        auto data() { return values.data(); }
-
-        auto begin() const { return values.begin(); }
-
-        auto begin() { return values.begin(); }
-
-        auto end() const { return values.end(); }
-
-        auto end() { return values.end(); }
-
-        const auto & front() const { return values.front(); }
-
-        auto & front() { return values.front(); }
-
-        const auto & back() const { return values.back(); }
-
-        auto & back() { return values.back(); }
-
-        auto operator[](size_t index) const { return values[index]; }
-
-        auto operator[](size_t index) { return values[index]; }
-    };
-
-    template<typename T, UsageBits UFlags = Usage::None>
-    using ReadOnlyVector = ArtifactVector<T, UFlags + Usage::Reading>;
-
-    template<typename T, UsageBits UFlags = Usage::None>
-    using WriteOnlyVector = ArtifactVector<T, UFlags + Usage::Writing>;
-
-    template<typename T, UsageBits UFlags = Usage::None>
-    using ReadWriteVector = ArtifactVector<T, UFlags + Usage::Reading + Usage::Writing>;
-
-    /// Returns the first artifact argument in the enlistment list. Iterate with \c p->next() until \c nullptr. No allocation.
-    const ArtifactArgument * firstArtifactArgument() const { return mHead ? static_cast<const ArtifactArgument *>(mHead->context) : nullptr; }
+    /// Called by Submission class to collect artifact usage information.
+    /// \param list The list of artifact IDs that are read by the action.
+    /// The subclass is supposed to add/append data to the lists. Do not clear or modify the existing content of the lists.
+    virtual void addToReadWriteList(ArtifactReadWriteList & list) const = 0;
 
 protected:
     using RuntimeType::RuntimeType;
+    // private:
+    //     DoubleLink * mHead = nullptr;
 
-private:
-    DoubleLink * mHead = nullptr;
+    //     /// Only called by ArtifactArgument constructor to enlist the argument into the list.
+    //     void enlist(ArtifactArgument * arg) {
+    //         GN_ASSERT(arg);
+    //         GN_ASSERT(arg->name() != nullptr);
+    //         GN_ASSERT(arg->usage() != Usage::None);
+    //         DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
+    //         GN_ASSERT(link->prev == nullptr && link->next == nullptr);
 
-    /// Only called by ArtifactArgument constructor to enlist the argument into the list.
-    void enlist(ArtifactArgument * arg) {
-        GN_ASSERT(arg);
-        GN_ASSERT(arg->name() != nullptr);
-        GN_ASSERT(arg->usage() != Usage::None);
-        DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
-        GN_ASSERT(link->prev == nullptr && link->next == nullptr);
+    //         if (!mHead)
+    //             mHead = link;
+    //         else {
+    //             GN_ASSERT(mHead->prev == nullptr);
+    //             link->linkBefore(mHead);
+    //             mHead = link;
+    //         }
+    //     }
 
-        if (!mHead)
-            mHead = link;
-        else {
-            GN_ASSERT(mHead->prev == nullptr);
-            link->linkBefore(mHead);
-            mHead = link;
-        }
-    }
-
-    friend struct ArtifactArgument;
+    //     friend struct ArtifactArgument;
 };
 
 /// A opaque struct to store information of each task in a submission. Defined in submission.h.
