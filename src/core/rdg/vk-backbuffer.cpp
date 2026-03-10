@@ -222,8 +222,8 @@ public:
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         auto a = arguments.castTo<PrepareBackbuffer::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PrepareBackbuffer::A", taskInfo);
-        GN_RDG_FAIL_ON_FALSE(a->backbuffer.value, "{} - backbuffer not set", taskInfo);
-        auto bb = a->backbuffer.value->castTo<BackbufferVulkan>();
+        GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
+        auto bb = a->backbuffer->castTo<BackbufferVulkan>();
         GN_RDG_FAIL_ON_FALSE(bb, "{} - backbuffer is not BackbufferVulkan", taskInfo);
         return bb->beginFrame(taskInfo);
     }
@@ -252,12 +252,11 @@ public:
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto a = arguments.castTo<PresentBackbuffer::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
-        auto & backbuffer = a->backbuffer.value;
-        GN_RDG_FAIL_ON_FALSE(backbuffer, "{} - backbuffer not set", taskInfo);
+        GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
 
         // standard preparation.
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FALSE(sc.renderPassManager.preparePresent(taskInfo, backbuffer));
+        GN_RDG_FAIL_ON_FALSE(sc.renderPassManager.preparePresent(taskInfo, a->backbuffer));
 
         // done
         return PASSED;
@@ -266,7 +265,7 @@ public:
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         auto a = arguments.castTo<PresentBackbuffer::A>();
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
-        auto bb = a->backbuffer.value->castTo<BackbufferVulkan>();
+        auto bb = a->backbuffer->castTo<BackbufferVulkan>();
         GN_RDG_FAIL_ON_FALSE(bb, "{} - backbuffer is not BackbufferVulkan", taskInfo);
 
         // standard execution.

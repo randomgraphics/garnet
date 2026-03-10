@@ -16,26 +16,23 @@ struct ClearRenderTarget : public Action {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
 
-    struct RenderTargetArgument : public Arguments::ArtifactArgument, public RenderTarget {
-        explicit RenderTargetArgument(const char * name): Arguments::ArtifactArgument(name) {}
-    };
-
     struct A : public Arguments {
         GN_API static const uint64_t         TYPE_ID;
         inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
         A(): Arguments(TYPE_ID, TYPE_NAME) {}
 
-        ReadWriteArtifact<RenderTarget> renderTarget = {"renderTarget"};
+        AutoRef<RenderTarget> renderTarget;
 
-        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
-            if (!renderTarget.value) return;
-            auto & rt = *renderTarget.value;
-            for (const auto & color : rt.colors) {
-                if (color.target.artifact) { writeList.insert(color.target.artifact->sequence); }
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (!renderTarget) return;
+            for (const auto & color : renderTarget->colors) {
+                if (color.target.artifact) { list.writeList.insert(color.target.artifact); }
             }
-            if (rt.depthStencilTarget.artifact) {
-                if (rt.depthState.testEnabled() || rt.stencilState.enabled()) readList.insert(rt.depthStencilTarget.artifact->sequence);
-                if (rt.depthState.writeEnabled() || rt.stencilState.enabled()) writeList.insert(rt.depthStencilTarget.artifact->sequence);
+            if (renderTarget->depthStencilTarget.artifact) {
+                if (renderTarget->depthState.testEnabled() || renderTarget->stencilState.enabled())
+                    list.readList.insert(renderTarget->depthStencilTarget.artifact);
+                if (renderTarget->depthState.writeEnabled() || renderTarget->stencilState.enabled())
+                    list.writeList.insert(renderTarget->depthStencilTarget.artifact);
             }
         }
 
@@ -71,10 +68,10 @@ struct PrepareBackbuffer : public Action {
 
         AutoRef<Backbuffer> backbuffer;
 
-        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
             if (!backbuffer) return;
-            readList.insert(bb->sequence);
-            writeList.insert(bb->sequence);
+            list.readList.insert(backbuffer);
+            list.writeList.insert(backbuffer);
         }
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {
@@ -109,10 +106,10 @@ struct PresentBackbuffer : public Action {
 
         AutoRef<Backbuffer> backbuffer;
 
-        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
             if (!backbuffer) return;
-            readList.insert(backbuffer->sequence);
-            writeList.insert(backbuffer->sequence);
+            list.readList.insert(backbuffer.get());
+            list.writeList.insert(backbuffer.get());
         }
 
         static AutoRef<A> make(AutoRef<Backbuffer> bb) {
@@ -170,10 +167,7 @@ struct SetupRenderStates : public Action {
 
         RenderStateDesc renderStates; ///< render state descriptor
 
-        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
-            (void) readList;
-            (void) writeList;
-        }
+        void addToReadWriteList(ArtifactReadWriteList & list) const override { (void) list; }
     };
 
     struct CreateParameters {
@@ -199,10 +193,10 @@ struct GpuShaderAction : public Action {
     };
 
     /// A 3-D table of shader resources.
-    /// The first dimension is the group/set index
-    /// The second dimension is the binding slot inside a group
-    /// The third dimension is the resource index inside a binding slot.
-    using GpuResourceTable = DynaArray<AutoRef<GpuResourceGroup>>;
+    /// The first dimension is the resource set index
+    /// The second dimension is the binding slot inside a resource set
+    /// The third dimension is the resource view index inside a binding slot.
+    using GpuResourceTable = DynaArray<DynaArray<DynaArray<GpuResourceView>>>;
 
 protected:
     using Action::Action;
@@ -212,10 +206,10 @@ protected:
 /// It depends on ClearRenderTarget action to set the render target. Without it, this action will simply fail.
 struct GpuDraw : public GpuShaderAction {
     GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_N
+    inline static constexpr const char * TYPE_NAME = "GpuDraw";
 
-        /// Represent a GPU renderable geometry.
-        struct GpuGeometry {
+    /// Represent a GPU renderable geometry.
+    struct GpuGeometry {
         /// API-agnostic vertex attribute format; backend maps to native (e.g. VkFormat).
         enum class AttributeFormat : uint8_t {
             F32_1,
@@ -280,7 +274,7 @@ struct GpuDraw : public GpuShaderAction {
         VertexFormat              format;
         DynaArray<GeometryBuffer> instances;
         uint32_t                  instanceCount = 0;
-        DynaArray<VertexBuffer>   vertices;
+        DynaArray<GeometryBuffer> vertices;
         uint32_t                  vertexCount = 0;
         GeometryBuffer            indices;
         uint32_t                  indexCount = 0;
@@ -295,20 +289,12 @@ struct GpuDraw : public GpuShaderAction {
         GpuResourceTable   resources;  ///< shader resources
         DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
 
-        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
-            // geometry
-            for (const auto & b : geometry.instances) {
-                if (b.buffer) { readList.insert(b.buffer->sequence); }
-            }
-            for (const auto & b : geometry.vertices) {
-                if (b.buffer) { readList.insert(b.buffer->sequence); }
-            }
-            if (geometry.indices.buffer) { readList.insert(geometry.indices.buffer->sequence); }
-            // resources
-            for (const auto & group : resources) {
-                if (group) group->addToReadWriteList(readList, writeList);
-            }
-        }
+        /// Render target.
+        /// \note Must specify render target as argument for each draw action.
+        /// So that the backend can determine this action's full read and write list.
+        AutoRef<RenderTarget> renderTarget;
+
+        GN_API void addToReadWriteList(ArtifactReadWriteList & list) const override;
     };
 
     struct CreateParameters {
@@ -347,12 +333,7 @@ struct GpuCompute : public GpuShaderAction {
         DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
         DispatchSize       groups;     ///< thread group counts
 
-        void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override {
-            // resources
-            for (const auto & group : resources) {
-                if (group) group->addToReadWriteList(readList, writeList);
-            }
-        }
+        GN_API void addToReadWriteList(ArtifactReadWriteList & list) const override;
     };
 
     struct CreateParameters {

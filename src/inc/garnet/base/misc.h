@@ -1,4 +1,4 @@
-﻿#ifndef __GN_BASE_MISC_H__
+#ifndef __GN_BASE_MISC_H__
 #define __GN_BASE_MISC_H__
 // *****************************************************************************
 /// \file
@@ -341,7 +341,7 @@ struct BitFlags {
     constexpr BitFlags operator|(const BitFlags & other) const { return BitFlags(mask | other.mask); }
     constexpr BitFlags operator&(const BitFlags & other) const { return BitFlags(mask & other.mask); }
     constexpr BitFlags operator^(const BitFlags & other) const { return BitFlags(mask ^ other.mask); }
-    constexpr BitFlags operator~() const { return BitFlags(~value); }
+    constexpr BitFlags operator~() const { return BitFlags(~mask); }
     constexpr BitFlags operator<<(const BitFlags & other) const { return BitFlags(mask << other.mask); }
     constexpr BitFlags operator>>(const BitFlags & other) const { return BitFlags(mask >> other.mask); }
     constexpr BitFlags operator<<=(const BitFlags & other) const { return BitFlags(mask <<= other.mask); }

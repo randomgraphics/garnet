@@ -67,12 +67,12 @@ RenderTargetKey RenderTargetKey::make(const RenderTarget & renderTarget) {
     uint64_t stateH = 0;
     for (size_t i = 0; i < renderTarget.colors.size() && k.colorCount < kMaxColorTargets; ++i) {
         const auto & c = renderTarget.colors[i];
-        if (c.target.format == gfx::img::PixelFormat::UNKNOWN()) continue;
-        k.colorFormats[k.colorCount++] = static_cast<uint32_t>(pixelFormatToVkFormat(c.target.format));
+        if (c.target.imageView.format == gfx::img::PixelFormat::UNKNOWN()) continue;
+        k.colorFormats[k.colorCount++] = static_cast<uint32_t>(pixelFormatToVkFormat(c.target.imageView.format));
         stateH ^= hashBlendState(c.blendState) + (static_cast<uint64_t>(c.writeMask) << 32) + (i * 0x9e3779b9);
     }
-    if (renderTarget.depthStencil.target && renderTarget.depthStencil.format != gfx::img::PixelFormat::UNKNOWN())
-        k.depthFormat = static_cast<uint32_t>(pixelFormatToVkFormat(renderTarget.depthStencil.format));
+    if (renderTarget.depthStencil.target && renderTarget.depthStencil.imageView.format != gfx::img::PixelFormat::UNKNOWN())
+        k.depthFormat = static_cast<uint32_t>(pixelFormatToVkFormat(renderTarget.depthStencil.imageView.format));
     stateH ^= hashDepthState(renderTarget.depthStencil.depthState) * 31;
     stateH ^= hashStencilState(renderTarget.depthStencil.stencilState) * 31;
     k.stateHash = stateH;

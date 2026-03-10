@@ -312,22 +312,33 @@ struct GpuResourceView {
         bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
     };
 
+    // TODO: compress type, subresourceIndex, subresourceRange into 32 bits. So the whole view is 64 bits
     struct ImageView {
-        SubresourceIndex      subresourceIndex;
-        SubresourceRange      subresourceRange;
-        gfx::img::PixelFormat format;
+        enum Type {
+            SAMPLED,
+            STORAGE,
+        };
+
+        Type                  type             = Type::SAMPLED; ///< sampled or storage image
+        SubresourceIndex      subresourceIndex = {};
+        SubresourceRange      subresourceRange = {};
+        gfx::img::PixelFormat format           = gfx::img::PixelFormat::UNKNOWN();
 
         bool operator==(const ImageView & other) const {
-            return subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange && format == other.format;
+            return type == other.type && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange && format == other.format;
         }
         bool operator!=(const ImageView & other) const { return !operator==(other); }
     };
 
+    // TODO: compress whole buffer view into 128 bits.
     struct BufferView {
-        enum BufferType {
+        enum Type {
             UNIFORM,
             STORAGE,
         };
+
+        /// uniform or storage buffer
+        Type type = Type::UNIFORM; ///< uniform or storage buffer
 
         /// offset in bytes from beginning of the buffer to the first element.
         uint64_t offset = 0;
@@ -335,38 +346,94 @@ struct GpuResourceView {
         /// size of the data in the buffer in bytes, starting from offset.
         uint64_t size = 0;
 
-        bool operator==(const BufferView & other) const { return offset == other.offset && size == other.size; }
+        bool operator==(const BufferView & other) const { return type == other.type && offset == other.offset && size == other.size; }
         bool operator!=(const BufferView & other) const { return !operator==(other); }
     };
 
     /// The main artifact that is being viewed.
-    AutoRef<Artifact> artifact;
+    AutoRef<Artifact> artifact = {};
 
-    /// Optional sampler used for texture sampling. Only used when the main artifact is an image (texture or backbuffer).
-    AutoRef<Sampler> textureSampler;
+    /// Optional sampler. Only used when the main artifact is an sampled texture
+    AutoRef<Sampler> combinedTextureSampler = {};
 
-    union {
-        ImageView  imageView;
-        BufferView bufferView;
-    };
+    /// Image view parameters. Only used when the main artifact is an image (texture or backbuffer).
+    ImageView imageView = {};
+
+    /// Buffer view parameters. Only used when the main artifact is a buffer.
+    BufferView bufferView = {};
 
     bool empty() const { return artifact.empty(); }
-    bool isTexture() const { return artifact && artifact->typeId() == Texture::TYPE_ID; }
-    bool isBackbuffer() const { return artifact && artifact->typeId() == Backbuffer::TYPE_ID; }
+    bool isTexture() const { return artifact && artifact->typeId == Texture::TYPE_ID; }
+    bool isBackbuffer() const { return artifact && artifact->typeId == Backbuffer::TYPE_ID; }
     bool isImage() const { return isTexture() || isBackbuffer(); }
-    bool isBuffer() const { return artifact && artifact->typeId() == Buffer::TYPE_ID; }
-    bool isSampler() const { return artifact && artifact->typeId() == Sampler::TYPE_ID; }
+    bool isBuffer() const { return artifact && artifact->typeId == Buffer::TYPE_ID; }
+    bool isSampler() const { return artifact && artifact->typeId == Sampler::TYPE_ID; }
 
     AutoRef<Texture>    texture() const { return AutoRef<Texture>(artifact->template castTo<Texture>()); }
     AutoRef<Backbuffer> backbuffer() const { return AutoRef<Backbuffer>(artifact->template castTo<Backbuffer>()); }
     AutoRef<Buffer>     buffer() const { return AutoRef<Buffer>(artifact->template castTo<Buffer>()); }
     AutoRef<Sampler>    sampler() const { return AutoRef<Sampler>(artifact->template castTo<Sampler>()); }
 
+    GpuResourceView & setArtifact(AutoRef<Artifact> artifact_) {
+        artifact = std::move(artifact_);
+        return *this;
+    }
+
+    GpuResourceView & setCombinedTextureSampler(AutoRef<Sampler> sampler_) {
+        combinedTextureSampler = std::move(sampler_);
+        return *this;
+    }
+
+    GpuResourceView & setImageView(ImageView imageView_) {
+        imageView = imageView_;
+        return *this;
+    }
+
+    GpuResourceView & setImageViewType(ImageView::Type type) {
+        imageView.type = type;
+        return *this;
+    }
+
+    GpuResourceView & setSubresourceIndex(SubresourceIndex subresourceIndex) {
+        imageView.subresourceIndex = subresourceIndex;
+        return *this;
+    }
+
+    GpuResourceView & setSubresourceRange(SubresourceRange subresourceRange) {
+        imageView.subresourceRange = subresourceRange;
+        return *this;
+    }
+
+    GpuResourceView & setImageViewFormat(gfx::img::PixelFormat format) {
+        imageView.format = format;
+        return *this;
+    }
+
+    GpuResourceView & setBufferView(BufferView bufferView_) {
+        bufferView = bufferView_;
+        return *this;
+    }
+
+    GpuResourceView & setBufferViewType(BufferView::Type type) {
+        bufferView.type = type;
+        return *this;
+    }
+
+    GpuResourceView & setBufferViewOffset(uint64_t offset) {
+        bufferView.offset = offset;
+        return *this;
+    }
+
+    GpuResourceView & setBufferViewSize(uint64_t size) {
+        bufferView.size = size;
+        return *this;
+    }
+
     bool operator==(const GpuResourceView & other) const {
         if (artifact != other.artifact) return false;
         if (isImage()) {
             if (imageView != other.imageView) return false;
-            if (isTexture() && textureSampler != other.textureSampler) return false;
+            if (imageView.type == ImageView::Type::SAMPLED && combinedTextureSampler != other.combinedTextureSampler) return false;
         } else if (isBuffer()) {
             if (bufferView != other.bufferView) return false;
         }
@@ -534,34 +601,29 @@ struct RenderTarget : public Artifact {
     Viewport                   viewport     = {};
     ScissorRect                scissorRect  = {};
 
-    RenderTarget & addColorTarget(AutoRef<Texture> texture_) {
-        colors.append({.target = texture_});
+    RenderTarget & addColorTarget(AutoRef<Texture> texture, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) {
+        colors.append(ColorTarget {.target = GpuResourceView {}.setArtifact(texture).setSubresourceRange({1, 1}).setSubresourceIndex({mipLevel, arrayLayer})});
         return *this;
     }
 
-    RenderTarget & addColorTarget(AutoRef<Backbuffer> backbuffer_) {
-        colors.append({.target = backbuffer_});
+    RenderTarget & addColorTarget(AutoRef<Backbuffer> backbuffer) {
+        colors.append(ColorTarget {.target = GpuResourceView {}.setArtifact(backbuffer).setSubresourceRange({1, 1}).setSubresourceIndex({0, 0})});
         return *this;
     }
 
-    RenderTarget & setColorTarget(size_t index, AutoRef<Texture> texture_) {
+    RenderTarget & setColorTarget(size_t index, AutoRef<Texture> texture, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) {
         GN_ASSERT(index < colors.size());
-        colors[index].target.artifact = texture_;
+        colors[index].target.setArtifact(texture).setSubresourceRange({1, 1}).setSubresourceIndex({mipLevel, arrayLayer});
         return *this;
     }
 
-    RenderTarget & setColorTarget(size_t index, AutoRef<Backbuffer> backbuffer_) {
-        colors[index].target.artifact = backbuffer_;
+    RenderTarget & setColorTarget(size_t index, AutoRef<Backbuffer> backbuffer) {
+        colors[index].target.setArtifact(backbuffer).setSubresourceRange({1, 1}).setSubresourceIndex({0, 0});
         return *this;
     }
 
-    RenderTarget & setColorFormat(size_t index, gfx::img::PixelFormat format_) {
-        colors[index].target.imageView.format = format_;
-        return *this;
-    }
-
-    RenderTarget & setColorSubresourceIndex(size_t index, GpuResourceView::SubresourceIndex subresourceIndex_) {
-        colors[index].target.imageView.subresourceIndex = subresourceIndex_;
+    RenderTarget & setColorFormat(size_t index, gfx::img::PixelFormat format) {
+        colors[index].target.setImageViewFormat(format);
         return *this;
     }
 
@@ -573,18 +635,18 @@ struct RenderTarget : public Artifact {
         return *this;
     }
 
-    RenderTarget & setDepthStencilTarget(AutoRef<Texture> target_) {
-        depthStencilTarget.artifact = target_;
+    RenderTarget & setDepthStencilTarget(AutoRef<Texture> target) {
+        depthStencilTarget.setArtifact(target);
         return *this;
     }
 
-    RenderTarget & setDepthStencilFormat(gfx::img::PixelFormat format_) {
-        depthStencilTarget.imageView.format = format_;
+    RenderTarget & setDepthStencilFormat(gfx::img::PixelFormat format) {
+        depthStencilTarget.imageView.format = format;
         return *this;
     }
 
-    RenderTarget & setDepthStencilSubresourceIndex(GpuResourceView::SubresourceIndex subresourceIndex_) {
-        depthStencilTarget.imageView.subresourceIndex = subresourceIndex_;
+    RenderTarget & setDepthStencilSubresourceIndex(GpuResourceView::SubresourceIndex subresourceIndex) {
+        depthStencilTarget.imageView.subresourceIndex = subresourceIndex;
         return *this;
     }
 
@@ -618,9 +680,6 @@ struct RenderTarget : public Artifact {
         return *this;
     }
 
-    /// Returns list of artifacts referenced by this render target.
-    virtual SafeArrayAccessor<const Artifact * const> artifacts() const = 0;
-
     bool operator==(const RenderTarget & other) const {
         // clang-format off
         return colors == other.colors
@@ -653,15 +712,14 @@ static_assert(GN::rdg::RenderTarget::Viewport {}.fullScreen() == true);
 static_assert(GN::rdg::RenderTarget::ScissorRect {}.disabled() == true);
 
 enum class GpuShaderStageBits : uint32_t {
-    VERTEX = 1 << 0, HULL = 1 << 1, DOMAIN = 1 << 2, GEOMETRY = 1 << 3, PIXEL = 1 << 4, COMPUTE = 1 << 5,
-
-    friend GpuShaderStageBits operator|(GpuShaderStageBits a,
-                                        GpuShaderStageBits b) {return static_cast<GpuShaderStageBits>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));}
-
-friend GpuShaderStageBits operator&(GpuShaderStageBits a, GpuShaderStageBits b) {
-    return static_cast<GpuShaderStageBits>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
-}
+    VERTEX   = 1 << 0,
+    HULL     = 1 << 1,
+    DOMAIN   = 1 << 2,
+    GEOMETRY = 1 << 3,
+    PIXEL    = 1 << 4,
+    COMPUTE  = 1 << 5,
 }; // namespace GN::rdg
+
 typedef BitFlags<GpuShaderStageBits> GpuShaderStageFlags;
 
 /// A group of bindable GPU shader resources.
@@ -672,14 +730,14 @@ struct GpuResourceGroup : public GpuResource {
 
     struct SlotDescription {
         enum Type {
-            UNIFOM_BUFFER,
+            UNIFORM_BUFFER,
             STORAGE_BUFFER,
             SAMPLED_TEXTURE,
             STORAGE_TEXTURE,
             SAMPLER,
         };
 
-        Type                type  = UNIFOM_BUFFER;
+        Type                type  = UNIFORM_BUFFER;
         size_t              count = 1; ///< 1: single resource, >1: fixed sized resource array.
         GpuShaderStageFlags stages;    ///< shader stages that can access this resource or resource array.
     };
