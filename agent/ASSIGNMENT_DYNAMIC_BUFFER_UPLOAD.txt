@@ -1,174 +1,243 @@
 # Assignment: Dynamic GPU Buffer Upload — Frame-in-Flight Ring Buffering
 
-## Goal
+---
 
-Add an `UploadBuffer` **action** to the RDG that lets app code upload per-frame dynamic
-data (UBOs, per-frame constants, etc.) to the GPU efficiently and safely, without ever
-calling `Buffer::setContent()` directly, and without stalling the CPU waiting for the GPU
-to finish the previous frame.
+## Goals
 
-"Done" means:
-  - Two upload strategies are available (selectable at creation time):
-      HOST_VISIBLE_RING   — N ring-buffered host-coherent VkBuffers; single memcpy per frame.
-      DEVICE_LOCAL_STAGED — one GPU-local VkBuffer + N host-visible staging slots; two copies
-                            but faster GPU reads and compatible with non-coherent GPU memory.
-  - User-passed data is ALWAYS copied immediately (inside execute()) — the caller's pointer
-    is never held past the call.  The resulting data blob is kept alive for the full GPU
-    lifetime of that slot via a per-slot deferred-release list.
-  - Per-slot SubmissionID tracking ensures the CPU never overwrites a slot the GPU is
-    still reading.  The wait fires only when all N slots are still in-flight (rare).
-  - After GPU submit, SubmissionIDs are distributed back to all UploadBuffer actions used
-    in that submission.  Slot release (keepAlive list drop + recycling) happens lazily the
-    next time that slot is reused.
-  - `SharedShaderConstants` is refactored to use `UploadBuffer` actions internally
-    (camera UBO + lighting UBO), so app code still just calls `setViewInformation()`.
-  - The per-frame `waitForIdle()` full GPU drain is removed; CPU and GPU pipeline N frames
-    simultaneously.
+### 1. Efficiency
+
+  1.a  No CPU-GPU sync point unless absolutely necessary.
+       The ring-slot / SubmissionID model enforces this: the CPU only waits when it is
+       about to overwrite a slot the GPU is still reading — an event that should be
+       extremely rare with N=2 slots and typical GPU/CPU cadence.  waitForIdle() is
+       removed from the hot path entirely.
+
+  1.b  Minimize memory copies — both CPU-side and GPU-side.
+       Copies are expensive.  Every extra copy is counted and justified:
+
+         HOST_VISIBLE_RING strategy (target: 1 copy or 0):
+           Raw-pointer path  →  1 copy: user data → VkBuffer mapped memory (memcpy).
+           Write-callback path → 0 copies: user constructs data directly in mapped memory.
+           NO intermediate "blob" copy is allowed.  The A object must NOT contain a blob.
+
+         DEVICE_LOCAL_STAGED strategy (target: 2 copies — unavoidable):
+           Copy 1:  user data → host-visible staging VkBuffer (CPU side).
+           Copy 2:  vkCmdCopyBuffer: staging → GPU-local VkBuffer (GPU side).
+           The GPU-local buffer is in VRAM; GPU reads are fast.  The 2-copy cost is paid
+           once per upload, not once per shader invocation — worthwhile for large or
+           infrequently-changed data.
+
+         Write-callback eliminates Copy 1 even in the staged case when the user can write
+         structured data directly (e.g., filling a struct in-place in mapped staging mem).
+
+### 2. Intuitive / Easy to use
+
+  App code should never deal with VkBuffers, descriptor sets, ring indices, SubmissionIDs,
+  or keepAlive lists directly.  The public RDG API hides all of that.
+
+  Usage pattern for shared constants:
+
+    // One-time setup (application init):
+    auto sharedConsts = SharedShaderConstants::create(db, "scene", {.gpu = gpu});
+
+    // Per frame:
+    sharedConsts->setViewInformation(camera);
+    sharedConsts->setDirectLightingInformation(lights);
+    sharedConsts->prepareSubmission(submission);     // adds upload actions; updates descriptors
+
+    submission.add(draw, drawArgs);                 // drawArgs use sharedConsts->getSet0Group()
+
+  For direct use of UploadBuffer:
+
+    // Setup:
+    auto upload = UploadBuffer::create(db, "my-ubo",
+                      {.gpu = gpu, .size = sizeof(MyUBO), .strategy = Strategy::HOST_VISIBLE_RING});
+
+    // Per frame (raw pointer — 1 copy):
+    submission.add(upload, UploadBuffer::A::make(&myUbo, sizeof(myUbo)));
+    drawArgs.resources[0][0][0] = upload->currentBufferView();
+
+    // Per frame (write callback — 0 copies):
+    submission.add(upload, UploadBuffer::A::make([&](void * dst, uint64_t cap) {
+        new(dst) MyUBO(myUbo);   // in-place construct directly into mapped GPU memory
+    }));
+
+### 3. Extensibility
+
+  The ring-slot / SubmissionID / keepAlive model must support the following future
+  extensions without a redesign:
+
+  3.a  Per-draw dynamic-offset UBO (Vulkan dynamic buffer offset):
+       Instead of one UBO per draw call (too many descriptor bind calls), all per-draw
+       payloads for a frame are sub-allocated from a single large ring-slot buffer.
+       Each draw call uses a different dynamic offset into that buffer.
+       This maps to a "suballocating upload pool" that shares one VkBuffer across many
+       draws with increasing offsets.  The ring-slot lifecycle and submissionId tracking
+       are identical; only the allocation scheme differs.
+       → Plan: introduce a UploadPool artifact/action in a follow-up assignment.
+         UploadBuffer can serve as the single-allocation degenerate case.
+
+  3.b  Streaming texture uploads (video playback etc.):
+       Per-frame texture uploads need the same two-phase (CPU → staging → GPU image) model
+       as DEVICE_LOCAL_STAGED, plus VkImage layout transitions instead of buffer barriers.
+       The slot / submissionId / keepAlive model applies directly.
+       → Plan: introduce UploadTexture action in a follow-up assignment.
+         Its Slot struct is identical except vkBuffer → vkImage + layout tracking.
+
+  Design rule: isolate the ring-slot lifecycle (wait → release keepAlive → write → record
+  keepAlive → advance → notifySubmission) into a reusable helper so UploadBuffer,
+  UploadPool, and UploadTexture all share the same machinery without duplicating it.
 
 ---
 
-## Design Deep Dive
+## Design
 
-### 1. Why two strategies?
+### A. Core abstraction: GpuUploadSlot (shared helper, not a public API)
 
-Map/unmap (HOST_VISIBLE_RING):
-  + One copy only (CPU → host-visible GPU memory via memcpy).
-  + Simple: no command buffer needed for the copy; no pipeline barrier.
-  − Host-visible memory is typically in the PCI-E aperture or uncached; GPU reads may be
-    slower than from device-local (VRAM) memory, especially for large buffers.
-  − Each slot needs its own VkBuffer because GPU reads the buffer while CPU might write
-    the next slot — ring-buffering isolates the two.
+Used internally by UploadBufferVulkan (and later UploadPoolVulkan, UploadTextureVulkan).
 
-  Best for: small, frequently-updated constants like UBOs (camera, lights).
-            sizeof ≤ a few KB; updated every frame; GPU access overhead is negligible.
-
-Transfer via staging (DEVICE_LOCAL_STAGED):
-  + Destination buffer is device-local (VRAM); fastest GPU reads.
-  + Works on platforms without coherent host-visible memory (mobile, some discrete GPUs).
-  − Two copies: CPU → host-visible staging slot → GPU-local buffer via vkCmdCopyBuffer.
-  − Requires a pipeline barrier in the command buffer (TRANSFER_WRITE → SHADER_READ).
-  − Staging slots need lifetime tracking; GPU-local buffer is shared (not ring-buffered
-    per se, but the copy command provides the write-after-write fence automatically).
-
-  Best for: large buffers (mesh data, texture uploads) that change occasionally;
-            device-local performance matters more than upload simplicity.
-
-### 2. User-data lifetime rule
-
-The rule: the UploadBuffer action always owns the data once execute() is called.
-  - execute(args) → immediately copies args->data into the slot (for HOST_VISIBLE_RING)
-    or into the staging slot (for DEVICE_LOCAL_STAGED).  The raw pointer in args is NOT
-    retained past execute().
-  - UploadBuffer::A carries data as a self-contained blob (DynaArray<uint8_t>).
-  - A::make(const void* data, uint64_t size) copies into the blob immediately.
-  - A::make(DynaArray<uint8_t> && data) moves an existing blob into A (zero-copy).
-  - The A object itself is held in the slot's keepAlive list until the slot's SubmissionID
-    is complete.  This guarantees the data outlives GPU access even if the caller discards
-    the A object right after adding to the submission.
-
-### 3. Per-slot deferred-release model
-
-Every ring slot carries:
-
-  struct Slot {
-      // Strategy-specific GPU memory:
-      rapid_vulkan::Ref<rapid_vulkan::Buffer> vkBuffer;    // host-visible (HOST_VISIBLE_RING)
-                                                            // or staging (DEVICE_LOCAL_STAGED)
-      // Sync:
+  struct GpuUploadSlot {
       rapid_vulkan::CommandQueue::SubmissionID submissionId;
+      DynaArray<AutoRef<RefCounted>>           keepAlive;
 
-      // Deferred release: things to keep alive until GPU is done with this slot.
-      // Released (in order) at the BEGINNING of the next use of this slot,
-      // after submissionId is confirmed done.
-      DynaArray<AutoRef<RefCounted>> keepAlive;
+      // Returns true if slot is available (GPU done or never used).
+      bool isReady(/* CommandQueue & q */) const;
+
+      // Wait until slot is ready (blocks only if submissionId not yet done).
+      void waitUntilReady(rapid_vulkan::CommandQueue & q);
+
+      // Release keepAlive, reset submissionId.  Must be called after waitUntilReady().
+      void recycle();
+
+      // Record a resource to keep alive until this slot's GPU work is done.
+      void addKeepAlive(AutoRef<RefCounted> ref);
+
+      // Called after GPU submit.
+      void notifySubmission(rapid_vulkan::CommandQueue::SubmissionID id);
   };
 
-Slot lifecycle per use:
-  1. Before writing:
-       if submissionId is non-empty:
-           wait(submissionId)  ← only if truly needed (slot still in-flight)
-       drop keepAlive list     ← safe now that GPU is done
-       reset submissionId      ← slot is now free
-  2. Write data into slot (memcpy or staging copy).
-  3. Add A object (and any other transient resources) to keepAlive.
-  4. mCurrentSlot = this slot.
-  5. After GPU submit: submissionId = <SubmissionID from this frame>.
+UploadBufferVulkan owns N GpuUploadSlots.  Each slot also owns its backing VkBuffer(s).
 
-For DEVICE_LOCAL_STAGED, the staging slot recycles exactly as above.
-The GPU-local destination buffer is a single VkBuffer (no ring needed).
+### B. UploadBuffer::A — no blob, write directly to GPU memory
 
-### 4. Submission plumbing for SubmissionID distribution
+  struct A : public Arguments {
+      // --- Set exactly one of the following ---
 
-After CommandQueue::submit() returns a SubmissionID, the submission context calls
-notifySubmission(id) on every UploadBufferVulkan that participated in this submission.
-Each one stores the id in its current slot's submissionId field (step 5 above).
+      // Raw-pointer path: backend calls memcpy(dst, data, dataSize).  1 copy.
+      // Pointer NOT retained past execute().
+      const void * data     = nullptr;
+      uint64_t     dataSize = 0;
 
-This requires:
-  - SubmissionContextVulkan to maintain a list of participating UploadBufferVulkan* objects.
-  - UploadBufferVulkan::execute() registers itself into this list.
-  - The post-submit hook in CommandBufferManagerVulkan (or SubmissionImpl) iterates the
-    list and calls notifySubmission.
+      // Write-callback path: backend calls writeFn(mappedPtr, slotCapacity).  0+ copies.
+      // writeFn is called synchronously inside execute(); it need not outlive execute().
+      std::function<void(void * dst, uint64_t capacity)> writeFn;
 
-### 5. HOST_VISIBLE_RING slot selection and ring-buffer contract
+      static AutoRef<A> make(const void * data, uint64_t size);
+      static AutoRef<A> make(std::function<void(void*, uint64_t)> fn);
 
-  N = MAX_UPLOAD_SLOTS (start with 2)
-  next_slot = (mCurrentSlot + 1) % N
+      void addToReadWriteList(ArtifactReadWriteList&) const override;
+  };
 
-  execute():
-    1. Determine next_slot.
-    2. If mSlots[next_slot].submissionId non-empty → wait (log warning; should be rare).
-    3. Drop mSlots[next_slot].keepAlive.
-    4. Map mSlots[next_slot].vkBuffer; memcpy args->blob.data, args->blob.size.
-    5. Add args (A object) to mSlots[next_slot].keepAlive.
-    6. mCurrentSlot = next_slot.
+Note: there is NO blob field.  Data is written directly into mapped VkBuffer memory
+during execute().  This keeps HOST_VISIBLE_RING at 1 copy (raw) or 0 copies (callback).
 
-  currentBufferView() → GpuResourceView pointing to mSlots[mCurrentSlot].vkBuffer,
-                         type=UNIFORM, offset=0, size=mSize.
+### C. HOST_VISIBLE_RING — execute() flow
 
-### 6. DEVICE_LOCAL_STAGED slot selection (future phase)
+  struct Slot : GpuUploadSlot {
+      rapid_vulkan::Ref<rapid_vulkan::Buffer> vkBuffer;  // host-coherent, preallocated
+  };
 
-  Staging ring: N host-visible slots (same lifecycle as HOST_VISIBLE_RING above).
-  GPU-local buffer: single VkBuffer, device-local, size=mSize, usage=UNIFORM|TRANSFER_DST.
+  execute(args):
+    uint32_t next = (mCurrentSlot + 1) % MAX_UPLOAD_SLOTS;
+    mSlots[next].waitUntilReady(queue);   // wait only if GPU still reading slot
+    mSlots[next].recycle();               // drop old keepAlive; no user data to drop
+    {
+        Buffer::Map<uint8_t> m(*mSlots[next].vkBuffer);
+        if (args->writeFn)  args->writeFn(m.data, mSize);
+        else                memcpy(m.data, args->data, args->dataSize);
+    }
+    // No user data to add to keepAlive — data lives in vkBuffer which owns itself.
+    mCurrentSlot = next;
 
-  execute():
-    1. Pick next staging slot (same wait/drop logic as above).
-    2. Map staging[next]; memcpy.
-    3. Record vkCmdCopyBuffer(staging[next] → gpuBuffer).
-    4. Record pipeline barrier: TRANSFER_WRITE → (VERTEX|FRAGMENT)_SHADER_READ.
-    5. Add staging buffer ref + A object to staging[next].keepAlive.
-    6. mCurrentStagingSlot = next.
+  keepAlive note: for HOST_VISIBLE_RING the slot's vkBuffer is preallocated and always
+  owned by the Slot — no transient resource to track.  keepAlive is empty per-slot.
 
-  currentBufferView() → GpuResourceView pointing to gpuBuffer (the single GPU-local one).
+### D. DEVICE_LOCAL_STAGED — execute() flow (future Phase 2.5)
 
-### 7. SharedShaderConstants integration
+  struct StagingSlot : GpuUploadSlot {
+      rapid_vulkan::Ref<rapid_vulkan::Buffer> stagingVkBuffer;  // host-visible, preallocated
+  };
 
-SharedShaderConstants camera + lighting UBOs are small (240 + 784 bytes) and updated
-every frame → HOST_VISIBLE_RING is the right strategy.
+  Members:
+      rapid_vulkan::Ref<rapid_vulkan::Buffer> mGpuBuffer;  // device-local, single buffer
+      StagingSlot mStagingSlots[MAX_UPLOAD_SLOTS];
+      uint32_t    mCurrentStaging = MAX_UPLOAD_SLOTS - 1;
 
-SharedShaderConstantsVulkan owns:
-  - AutoRef<UploadBuffer> mCameraUpload    (HOST_VISIBLE_RING, 240 bytes)
-  - AutoRef<UploadBuffer> mLightingUpload  (HOST_VISIBLE_RING, 784 bytes)
-  - GlobalCameraUBO    mPendingCamera    (CPU-side, packed on setViewInformation())
-  - DirectLightingUBO  mPendingLighting  (CPU-side, packed on setDirectLighting...)
+  execute(args):
+    uint32_t next = (mCurrentStaging + 1) % MAX_UPLOAD_SLOTS;
+    mStagingSlots[next].waitUntilReady(queue);
+    mStagingSlots[next].recycle();
+    {
+        Buffer::Map<uint8_t> m(*mStagingSlots[next].stagingVkBuffer);
+        if (args->writeFn)  args->writeFn(m.data, mSize);
+        else                memcpy(m.data, args->data, args->dataSize);
+    }
+    // Record GPU-side copy and barrier into current command buffer:
+    vkCmdCopyBuffer(cmdBuf, stagingVkBuffer, mGpuBuffer, ...);
+    vkCmdPipelineBarrier(cmdBuf, TRANSFER_WRITE → UNIFORM_READ, ...);
+    // stagingVkBuffer must live until GPU copy completes:
+    mStagingSlots[next].addKeepAlive(wrap(mStagingSlots[next].stagingVkBuffer));
+    mCurrentStaging = next;
 
-New method: prepareSubmission(Submission & s):
-  - submission.add(mCameraUpload,   UploadBuffer::A::make(&mPendingCamera,   sizeof(mPendingCamera)));
-  - submission.add(mLightingUpload, UploadBuffer::A::make(&mPendingLighting, sizeof(mPendingLighting)));
-  - mSet0Group->setResourceViews(0, 0, {mCameraUpload->currentBufferView()});
-  - mSet0Group->setResourceViews(1, 0, {mLightingUpload->currentBufferView()});
+  currentBufferView() → mGpuBuffer (the single GPU-local buffer, not the staging slot).
 
-App calls prepareSubmission() once at the top of each frame before any draw actions.
+### E. SubmissionID plumbing
 
-### 8. Removing waitForIdle
+  SubmissionContextVulkan holds:
+      DynaArray<UploadBufferVulkan*> activeUploads;  // reset each submission
 
-Currently CommandBufferManagerVulkan drains all queues after every submission → CPU/GPU
-serial.  Once every critical resource (uploaded buffer, command buffer) has per-slot
-SubmissionID tracking, waitForIdle in the hot path is replaced by:
+  UploadBufferVulkan::execute() registers this into activeUploads.
 
-  "If all N upload slots are still in-flight, wait for the oldest one."
+  After CommandQueue::submit() returns SubmissionID:
+      for (auto * ub : ctx.activeUploads) ub->notifySubmission(id);
 
-This is almost always a no-op for N=2 because by the time the CPU finishes recording
-frame i+1, the GPU has usually finished frame i.
+  UploadBufferVulkan::notifySubmission(id):
+      mSlots[mCurrentSlot].notifySubmission(id);   // delegates to GpuUploadSlot
+
+### F. currentBufferView()
+
+  HOST_VISIBLE_RING: → GpuResourceView of mSlots[mCurrentSlot].vkBuffer
+                        type=UNIFORM, offset=0, size=mSize.
+  DEVICE_LOCAL_STAGED: → GpuResourceView of mGpuBuffer (single device-local buffer).
+
+  Called by app AFTER execute() runs (i.e., after adding upload action to submission,
+  and before adding draw action).
+
+### G. SharedShaderConstants integration
+
+  Camera + lighting UBOs are small (240 + 784 bytes), updated every frame.
+  → HOST_VISIBLE_RING is the right strategy.
+
+  Members:
+      AutoRef<UploadBuffer> mCameraUpload    (HOST_VISIBLE_RING, 240 B)
+      AutoRef<UploadBuffer> mLightingUpload  (HOST_VISIBLE_RING, 784 B)
+      GlobalCameraUBO       mPendingCamera   (CPU-side, updated on set*Information())
+      DirectLightingUBO     mPendingLighting (CPU-side, updated on set*Information())
+
+  prepareSubmission(Submission & s):
+      s.add(mCameraUpload,   A::make(&mPendingCamera,   sizeof(mPendingCamera)));
+      s.add(mLightingUpload, A::make(&mPendingLighting, sizeof(mPendingLighting)));
+      mSet0Group->setResourceViews(0, 0, {mCameraUpload->currentBufferView()});
+      mSet0Group->setResourceViews(1, 0, {mLightingUpload->currentBufferView()});
+
+  This is the only call the app needs to make per frame for shared constants.
+
+### H. waitForIdle removal
+
+  After Phase 2 is done, every upload slot is guarded by its own SubmissionID.
+  Command buffers will be tagged with SubmissionIDs too (Phase 6).
+  The only wait left in the hot path is inside GpuUploadSlot::waitUntilReady(),
+  which fires only when N frames pile up — a rare event in normal operation.
 
 ---
 
@@ -189,7 +258,7 @@ Key source files:
   src/inc/garnet/rdg/artifacts.h               — Buffer, GpuResourceView, GpuResourceGroup
   src/inc/garnet/rdg/pipeline.h                — SharedShaderConstants public API
   src/core/rdg/vk-buffer.h/.cpp               — BufferVulkan (setContent bugs to fix)
-  src/core/rdg/vk-submission-context.h        — SubmissionContextVulkan (add notification list)
+  src/core/rdg/vk-submission-context.h        — SubmissionContextVulkan (add activeUploads list)
   src/core/rdg/vk-command-buffer.h/.cpp       — CommandBufferManagerVulkan, SubmissionID tracking
   src/core/rdg/shared-shader-constants.cpp    — SharedShaderConstantsVulkan (to refactor)
   src/core/rdg/vk-gpu-resource-group.h/.cpp   — GpuResourceGroupVulkan (descriptor set)
@@ -198,7 +267,8 @@ Key source files:
   src/core/rdg/vk-shaders/direct-lighting-ubo.h — DirectLightingUBO (784 bytes)
 
 New files to create:
-  src/core/rdg/vk-upload-buffer.h/.cpp        — UploadBufferVulkan implementation
+  src/core/rdg/gpu-upload-slot.h              — NEW: GpuUploadSlot helper (shared by all upload types)
+  src/core/rdg/vk-upload-buffer.h/.cpp        — NEW: UploadBufferVulkan
 
 Tests:
   src/test/ut/rdg/rdg-test.cpp                — add UploadBuffer unit tests here
@@ -223,9 +293,8 @@ Key rapid_vulkan types:
   - After each phase: unit tests must pass (env/bin/cit.py -t).
   - Do not break existing SharedShaderConstants tests.
   - Prefer adding new unit tests over relying on manual runs.
-  - N = MAX_UPLOAD_SLOTS = 2 (named constant, not a magic number).
-  - DEVICE_LOCAL_STAGED strategy is implemented in Phase 2.5 but can be skipped and done
-    as a follow-up assignment if scope gets large.
+  - MAX_UPLOAD_SLOTS = 2 (named constant; never a magic number).
+  - DEVICE_LOCAL_STAGED (Phase 2.5) may be deferred as a follow-up if scope grows.
   - Stop and ask if a task's scope is unclear.
 
 --- TASK BREAKDOWN ---
@@ -233,162 +302,172 @@ Key rapid_vulkan types:
 Phase 0: Fix BufferVulkan bugs (prerequisite — correctness before ring-buffering)
 ─────────────────────────────────────────────────────────────────────────────────────────
   Task 0.1: Add BufferUsage flags to Buffer::CreateParameters
-    - Add `BufferUsage` bit enum to artifacts.h:
-        VERTEX = 1, INDEX = 2, UNIFORM = 4, STORAGE = 8, TRANSFER_SRC = 16, TRANSFER_DST = 32
-    - Add `BufferUsage usage` field to `Buffer::CreateParameters` (default = VERTEX|INDEX).
-    - Map flags to vk::BufferUsageFlagBits in BufferVulkan.
+    - Add BufferUsage bit enum to artifacts.h:
+        VERTEX = 1, INDEX = 2, UNIFORM = 4, STORAGE = 8,
+        TRANSFER_SRC = 16, TRANSFER_DST = 32
+    - Add `BufferUsage usage` to Buffer::CreateParameters (default = VERTEX|INDEX).
+    - Map to vk::BufferUsageFlagBits in BufferVulkan.
     Verify: build passes; existing tests pass.
     Commit: "rdg(upload): add BufferUsage flags to Buffer (Phase 0.1)"
 
   Task 0.2: Fix BufferVulkan allocation strategy
-    - Allocate VkBuffer once at construction time (size and usage from CreateParameters).
-    - setContent(): if size <= allocated size, re-map-and-copy without reallocating.
+    - Allocate VkBuffer once at construction (size+usage from CreateParameters).
+    - setContent(): if size <= allocated size, re-map-and-copy; else fail with error log.
     - Remove the "recreate VkBuffer on every setContent() call" pattern.
     Verify: build passes; SharedShaderConstants unit tests still pass.
-    Commit: "rdg(upload): fix BufferVulkan allocation (Phase 0.2)"
+    Commit: "rdg(upload): fix BufferVulkan one-time allocation (Phase 0.2)"
 
-Phase 1: UploadBuffer public API
+Phase 1: GpuUploadSlot helper + UploadBuffer public API
 ─────────────────────────────────────────────────────────────────────────────────────────
-  Task 1.1: Declare UploadBuffer in actions.h
-    - New struct `UploadBuffer : public Action`.
-    - Strategy enum:
-        enum class Strategy { HOST_VISIBLE_RING, DEVICE_LOCAL_STAGED };
-    - CreateParameters:
+  Task 1.1: Implement GpuUploadSlot in src/core/rdg/gpu-upload-slot.h
+    Fields:
+        rapid_vulkan::CommandQueue::SubmissionID submissionId;
+        DynaArray<AutoRef<RefCounted>>           keepAlive;
+    Methods:
+        bool  isReady() const;                                // submissionId empty or done
+        void  waitUntilReady(rapid_vulkan::CommandQueue &);   // wait+log if truly needed
+        void  recycle();                                      // clear keepAlive, reset id
+        void  addKeepAlive(AutoRef<RefCounted>);
+        void  notifySubmission(rapid_vulkan::CommandQueue::SubmissionID);
+    Note: header-only or a small .cpp; no Vulkan device dependency — uses CommandQueue only.
+    Verify: unit test — isReady() returns true when empty; recycle() clears keepAlive.
+    Commit: "rdg(upload): add GpuUploadSlot shared helper (Phase 1.1)"
+
+  Task 1.2: Declare UploadBuffer in actions.h
+    Strategy enum:
+        enum class UploadStrategy { HOST_VISIBLE_RING, DEVICE_LOCAL_STAGED };
+    CreateParameters:
         struct CreateParameters {
             AutoRef<GpuContext> gpu;
             uint64_t            size;
-            Strategy            strategy = Strategy::HOST_VISIBLE_RING;
+            UploadStrategy      strategy = UploadStrategy::HOST_VISIBLE_RING;
         };
-    - Arguments A:
+    Arguments A (NO blob field — write directly to GPU memory):
         struct A : public Arguments {
-            DynaArray<uint8_t> blob;   // data copied here; raw pointer is NOT retained.
-            static AutoRef<A> make(const void * data, uint64_t size); // copies immediately
-            static AutoRef<A> make(DynaArray<uint8_t> && data);       // move, zero-copy
+            const void * data     = nullptr;     // raw-pointer path: 1 copy
+            uint64_t     dataSize = 0;
+            std::function<void(void*, uint64_t)> writeFn;  // callback path: 0 copies
+            static AutoRef<A> make(const void * data, uint64_t size);
+            static AutoRef<A> make(std::function<void(void*, uint64_t)> fn);
             void addToReadWriteList(ArtifactReadWriteList&) const override;
         };
-    - Virtual API:
+    Virtual API:
         virtual GpuResourceView currentBufferView() const = 0;
         static GN_API AutoRef<UploadBuffer> create(ArtifactDatabase&, const StrA&,
                                                     const CreateParameters&);
     Verify: header compiles clean.
-    Commit: "rdg(upload): declare UploadBuffer action API (Phase 1.1)"
+    Commit: "rdg(upload): declare UploadBuffer action API (Phase 1.2)"
 
-  Task 1.2: Stub Vulkan factory
+  Task 1.3: Stub UploadBufferVulkan (compile + no-op)
     - Create vk-upload-buffer.h / vk-upload-buffer.cpp.
-    - UploadBufferVulkan: empty execute() + currentBufferView() returns empty view.
-    - Wire into UploadBuffer::create() dispatch (same pattern as other Vulkan actions).
-    Verify: build passes end-to-end; no crashes.
-    Commit: "rdg(upload): stub UploadBufferVulkan (Phase 1.2)"
+    - execute() logs a warning "stub — not implemented".
+    - currentBufferView() returns empty GpuResourceView.
+    - Wire into UploadBuffer::create() dispatch.
+    Verify: build passes end-to-end.
+    Commit: "rdg(upload): stub UploadBufferVulkan factory (Phase 1.3)"
 
 Phase 2: UploadBufferVulkan — HOST_VISIBLE_RING implementation
 ─────────────────────────────────────────────────────────────────────────────────────────
-  Task 2.1: Ring-buffer slot storage
-    - constexpr uint32_t MAX_UPLOAD_SLOTS = 2;
-    - Slot struct:
-        struct Slot {
-            rapid_vulkan::Ref<rapid_vulkan::Buffer>  vkBuffer;
-            rapid_vulkan::CommandQueue::SubmissionID submissionId;
-            DynaArray<AutoRef<RefCounted>>           keepAlive;
+  Task 2.1: Ring-buffer slot storage + construction
+    constexpr uint32_t MAX_UPLOAD_SLOTS = 2;
+    Slot struct (extending GpuUploadSlot):
+        struct Slot : GpuUploadSlot {
+            rapid_vulkan::Ref<rapid_vulkan::Buffer> vkBuffer;
         };
         Slot     mSlots[MAX_UPLOAD_SLOTS];
-        uint32_t mCurrentSlot = MAX_UPLOAD_SLOTS - 1;  // so first execute() picks slot 0
+        uint32_t mCurrentSlot = MAX_UPLOAD_SLOTS - 1;
         uint64_t mSize = 0;
-    - Constructor (HOST_VISIBLE_RING): allocate both VkBuffers
-        (eHostVisible|eHostCoherent, eUniformBuffer|eTransferDst, size=mSize).
-    Verify: build passes; constructor creates 2 VkBuffers (assert in unit test).
-    Commit: "rdg(upload): add ring-buffer slot storage (Phase 2.1)"
+    Constructor (HOST_VISIBLE_RING):
+        Allocate mSlots[i].vkBuffer for each i:
+            usage  = eUniformBuffer | eTransferDst
+            memory = eHostVisible | eHostCoherent
+            size   = mSize
+    Verify: build; unit test — constructor creates 2 VkBuffers.
+    Commit: "rdg(upload): ring-buffer slot storage for HOST_VISIBLE_RING (Phase 2.1)"
 
-  Task 2.2: execute() — wait-if-needed, drop keepAlive, copy, record new keepAlive
+  Task 2.2: execute() — wait, write directly to mapped GPU memory, no blob
     Flow:
-      uint32_t next = (mCurrentSlot + 1) % MAX_UPLOAD_SLOTS;
-      auto & slot = mSlots[next];
-      if (!slot.submissionId.empty()):
-          GN_WARN(...) ("UploadBuffer '{}': waiting for GPU slot {} — consider MAX_UPLOAD_SLOTS > 2", name, next)
-          queue.wait(slot.submissionId)
-      slot.submissionId = {};
-      slot.keepAlive.clear();                        // drop old data; GPU is done
-      {
-          Buffer::Map<uint8_t> m(*slot.vkBuffer);
-          memcpy(m.data, args->blob.data(), args->blob.size());
-      }
-      slot.keepAlive.push_back(args);               // keep A alive for GPU lifetime
-      mCurrentSlot = next;
-    Verify: unit test — execute() twice without submit; second call picks slot 1,
-            keepAlive for slot 0 was cleared, slot 1 has 1 keepAlive entry.
-    Commit: "rdg(upload): implement execute() with keepAlive deferred release (Phase 2.2)"
+        uint32_t next = (mCurrentSlot + 1) % MAX_UPLOAD_SLOTS;
+        mSlots[next].waitUntilReady(queue);   // logs warning if it actually waits
+        mSlots[next].recycle();               // keepAlive always empty for this strategy
+        {
+            rapid_vulkan::Buffer::Map<uint8_t> m(*mSlots[next].vkBuffer);
+            if (args->writeFn) args->writeFn(m.data, mSize);
+            else               memcpy(m.data, args->data, args->dataSize);
+        }
+        mCurrentSlot = next;
+    Copy count: 1 (raw) or 0 (callback). No blob. User pointer not retained.
+    Verify: unit test — call execute() twice; slot advances; data is in correct VkBuffer;
+            no wait occurs (submissionId still empty).
+    Commit: "rdg(upload): implement execute() — direct write, no blob (Phase 2.2)"
 
-  Task 2.3: notifySubmission() — record SubmissionID for current slot
-    void notifySubmission(rapid_vulkan::CommandQueue::SubmissionID id):
-        mSlots[mCurrentSlot].submissionId = id;
-    Verify: unit test — after notifySubmission(), slot has the stored id.
-    Commit: "rdg(upload): implement notifySubmission() (Phase 2.3)"
+  Task 2.3: notifySubmission() + currentBufferView()
+    notifySubmission(id): mSlots[mCurrentSlot].notifySubmission(id);
+    currentBufferView(): GpuResourceView of mSlots[mCurrentSlot].vkBuffer,
+                         type=UNIFORM, offset=0, size=mSize.
+    Verify: unit test — after execute() + notifySubmission(), currentBufferView() returns
+            a view with the correct vkBuffer; after advancing past N frames, old slot's
+            submissionId is checked before reuse.
+    Commit: "rdg(upload): notifySubmission + currentBufferView (Phase 2.3)"
 
-  Task 2.4: currentBufferView()
-    - Returns GpuResourceView:
-        artifact = mSlots[mCurrentSlot].vkBuffer wrapped as a Buffer artifact
-        bufferView = { UNIFORM, offset=0, size=mSize }
-    Verify: unit test — after execute(), currentBufferView().bufferView.size == mSize.
-    Commit: "rdg(upload): implement currentBufferView() (Phase 2.4)"
-
-  Task 2.5: DEVICE_LOCAL_STAGED strategy (can be deferred to follow-up)
-    - Constructor (DEVICE_LOCAL_STAGED):
-        gpuBuffer = device-local VkBuffer (eDeviceLocal, eUniformBuffer|eTransferDst, mSize).
-        mSlots[i].vkBuffer = host-visible staging VkBuffer (eHostVisible, eTransferSrc, mSize).
-    - execute():
-        same wait/drop/copy as HOST_VISIBLE_RING into staging slot.
-        record vkCmdCopyBuffer(staging[next] → gpuBuffer) into current command buffer.
-        record pipeline barrier: TRANSFER_WRITE → UNIFORM_READ.
-    - currentBufferView() → view of gpuBuffer (not the staging slot).
-    Verify: unit test — strategy selects correct VkBuffer for binding.
-    Commit: "rdg(upload): implement DEVICE_LOCAL_STAGED strategy (Phase 2.5)"
+  Task 2.4: DEVICE_LOCAL_STAGED strategy (may be deferred)
+    Add per-strategy branch in constructor:
+        HOST_VISIBLE_RING → Task 2.1 allocation.
+        DEVICE_LOCAL_STAGED:
+            mGpuBuffer = device-local VkBuffer (eDeviceLocal, UNIFORM|TRANSFER_DST, mSize).
+            mSlots[i].vkBuffer = host-visible staging VkBuffer (eHostVisible, TRANSFER_SRC, mSize).
+    Update execute() for DEVICE_LOCAL_STAGED:
+        Same wait/recycle/write-to-staging as HOST_VISIBLE_RING.
+        Additionally: record vkCmdCopyBuffer + pipeline barrier into command buffer.
+        keepAlive: staging buffer is already owned by the slot; no extra tracking needed.
+    currentBufferView() for DEVICE_LOCAL_STAGED: → mGpuBuffer (not the staging slot).
+    Verify: unit test — DEVICE_LOCAL_STAGED: currentBufferView() points to mGpuBuffer;
+            vkCmdCopyBuffer was recorded.
+    Commit: "rdg(upload): DEVICE_LOCAL_STAGED strategy (Phase 2.4)"
 
 Phase 3: Submission context — SubmissionID plumbing
 ─────────────────────────────────────────────────────────────────────────────────────────
-  Task 3.1: Track UploadBuffer actions in SubmissionContextVulkan
-    - Add DynaArray<UploadBufferVulkan*> uploadBuffers to SubmissionContextVulkan.
-      Reset to empty at the start of each submission.
-    - UploadBufferVulkan::execute() registers this into the context's list (de-duplicated).
-    Verify: build passes; uploadBuffers list grows when execute() is called.
-    Commit: "rdg(upload): track upload actions in submission context (Phase 3.1)"
+  Task 3.1: Track active upload actions in SubmissionContextVulkan
+    - Add DynaArray<UploadBufferVulkan*> activeUploads to SubmissionContextVulkan.
+      Cleared at the start of each submission.
+    - UploadBufferVulkan::execute() registers this (de-duplicated; set semantics).
+    Verify: build; list grows when execute() is called.
+    Commit: "rdg(upload): track active upload actions per submission (Phase 3.1)"
 
   Task 3.2: Distribute SubmissionID after GPU submit
-    - In the post-submit hook in CommandBufferManagerVulkan or SubmissionImpl:
-        after CommandQueue::submit() returns submissionId,
-        call ctx.notifyUploadBuffers(submissionId):
-            for (auto * ub : ctx.uploadBuffers) ub->notifySubmission(submissionId);
-    Verify: unit test — after execute() + submission + notify,
-            slot's submissionId is non-empty.
+    Post-submit hook (in CommandBufferManagerVulkan or SubmissionImpl):
+        for (auto * ub : ctx.activeUploads) ub->notifySubmission(submissionId);
+    Verify: unit test — after execute() + full submission round-trip,
+            the slot's submissionId is non-empty.
     Commit: "rdg(upload): distribute SubmissionID to upload actions after submit (Phase 3.2)"
 
   Task 3.3: addToReadWriteList for UploadBuffer::A
-    - UploadBuffer::A::addToReadWriteList() declares the current slot's Buffer as written.
-      (Mirrors what GpuDraw::A does for reads.)
-    Verify: build passes.
+    - Declare the current slot's Buffer artifact as written in the RDG dependency graph.
+    Verify: build.
     Commit: "rdg(upload): declare write dependency in UploadBuffer::A (Phase 3.3)"
 
 Phase 4: SharedShaderConstants — use UploadBuffer internally
 ─────────────────────────────────────────────────────────────────────────────────────────
   Task 4.1: Replace raw Buffers with UploadBuffer actions
-    Replace in SharedShaderConstantsVulkan:
+    In SharedShaderConstantsVulkan:
         AutoRef<Buffer> mCameraBuffer   →  AutoRef<UploadBuffer> mCameraUpload
         AutoRef<Buffer> mLightingBuffer →  AutoRef<UploadBuffer> mLightingUpload
-    Constructor creates both UploadBuffer actions (HOST_VISIBLE_RING).
-    Add CPU-side staging structs:
-        GlobalCameraUBO    mPendingCamera   = {};
-        DirectLightingUBO  mPendingLighting = {};
-    Verify: build passes.
+    Add:
+        GlobalCameraUBO   mPendingCamera   = {}
+        DirectLightingUBO mPendingLighting = {}
+    Constructor: create UploadBuffer actions (HOST_VISIBLE_RING).
+    Verify: build.
     Commit: "rdg(upload): replace raw Buffers with UploadBuffer in SharedShaderConstants (Phase 4.1)"
 
   Task 4.2: set*Information() packs CPU structs; prepareSubmission() uploads
-    - setViewInformation() / setFrameInformation(): pack into mPendingCamera only (CPU side).
-    - setDirectLightingInformation(): pack into mPendingLighting only.
-    - New public method void prepareSubmission(Submission & s):
+    set*Information(): pack into mPending* (CPU side only — no GPU touch).
+    prepareSubmission(Submission & s):
         s.add(mCameraUpload,   A::make(&mPendingCamera,   sizeof(mPendingCamera)));
         s.add(mLightingUpload, A::make(&mPendingLighting, sizeof(mPendingLighting)));
         mSet0Group->setResourceViews(0, 0, {mCameraUpload->currentBufferView()});
         mSet0Group->setResourceViews(1, 0, {mLightingUpload->currentBufferView()});
     Verify: existing SharedShaderConstants unit tests pass.
-    Commit: "rdg(upload): SharedShaderConstants packs data into UploadBuffer (Phase 4.2)"
+    Commit: "rdg(upload): SharedShaderConstants packs data + prepareSubmission (Phase 4.2)"
 
 Phase 5: Wire Set 0 into GpuDraw pipeline (from ASSIGNMENT_GPU_RESOURCE_BINDING Phase 3)
 ─────────────────────────────────────────────────────────────────────────────────────────
@@ -398,70 +477,65 @@ Phase 5: Wire Set 0 into GpuDraw pipeline (from ASSIGNMENT_GPU_RESOURCE_BINDING 
     See ASSIGNMENT_GPU_RESOURCE_BINDING Task 3.2.
   Task 5.3: GpuDrawVulkan::execute() binds Set 0 descriptor set
     See ASSIGNMENT_GPU_RESOURCE_BINDING Task 3.3.
-  Task 5.4: pbr.vert / pbr.frag use layout(set=0,binding=0/1) UBO headers
+  Task 5.4: pbr.vert / pbr.frag use layout(set=0, binding=0/1) UBO headers
     See ASSIGNMENT_GPU_RESOURCE_BINDING Task 3.4 / 3.5.
   Task 5.5: PbrShadingVulkan::build() wires SharedShaderConstants::getSet0Group()
     See ASSIGNMENT_GPU_RESOURCE_BINDING Task 3.6.
-  Verify: draw-mesh sample renders correctly with camera and lighting data from UBOs.
+  Verify: draw-mesh sample renders with correct camera and lighting from UBOs.
   Commit per sub-task: "rdg(upload): wire Set0 into GpuDraw — <sub> (Phase 5.x)"
 
 Phase 6: Remove waitForIdle from per-frame hot path
 ─────────────────────────────────────────────────────────────────────────────────────────
-  Task 6.1: Audit all waitForIdle() call sites
-    - Find every call to CommandBufferManagerVulkan::waitForIdle().
-    - Document WHY each exists (teardown, command buffer recycling, sync, etc.).
-    - Identify which are in the per-frame hot path vs. shutdown/teardown paths.
-    Verify: no code change; just an updated comment in this file.
+  Task 6.1: Audit waitForIdle() call sites
+    - Document every call: is it in hot path or teardown?
+    Verify: no code change; add comment block to vk-command-buffer.cpp.
     Commit: "rdg(upload): document waitForIdle call sites (Phase 6.1)"
 
   Task 6.2: Per-slot command buffer recycling
-    - Instead of recycling ALL command buffers on waitForIdle, tag each command buffer
-      with the SubmissionID of the frame it was recorded for.
-    - Recycle a command buffer only when its SubmissionID is confirmed complete.
-    Verify: build passes; no Vulkan validation errors.
+    - Tag each allocated command buffer with the SubmissionID of its frame.
+    - Recycle a command buffer only when its SubmissionID is confirmed done
+      (mirrors GpuUploadSlot.isReady() logic).
+    Verify: no Vulkan validation errors; command buffers are recycled correctly.
     Commit: "rdg(upload): per-slot command buffer recycling (Phase 6.2)"
 
-  Task 6.3: Replace hot-path waitForIdle with slot-aware check
-    - Remove (or conditionalize for teardown only) waitForIdle in SubmissionImpl hot path.
-    - Before acquiring a new upload slot, the UploadBuffer ring-buffer already does the
-      right thing (see Phase 2.2).  Command buffer recycling now also works per-slot.
-    Verify: draw-mesh sample runs without hang, no Vulkan validation errors.
-            CPU and GPU pipeline overlap confirmed (frame time < GPU + CPU time serial).
-    Commit: "rdg(upload): remove per-frame waitForIdle, slot-aware recycling (Phase 6.3)"
+  Task 6.3: Remove hot-path waitForIdle
+    - Conditionalize waitForIdle to teardown paths only.
+    - Hot-path protection is now: GpuUploadSlot::waitUntilReady() + per-slot cmd buffer.
+    Verify: draw-mesh sample runs cleanly; CPU/GPU overlap visible in timing.
+    Commit: "rdg(upload): remove per-frame waitForIdle — slot-aware recycling (Phase 6.3)"
 
 --- SUMMARY OF FILES TO TOUCH ---
 
 Phase 0 (fix bugs):
-  src/inc/garnet/rdg/artifacts.h          — BufferUsage enum + field in CreateParameters
-  src/core/rdg/vk-buffer.h/.cpp           — fix allocation strategy and usage flags
+  src/inc/garnet/rdg/artifacts.h           — BufferUsage enum + field
+  src/core/rdg/vk-buffer.h/.cpp            — fix one-time allocation, usage flags
 
-Phase 1 (API):
-  src/inc/garnet/rdg/actions.h            — declare UploadBuffer (Strategy, A, factory)
-  src/core/rdg/vk-upload-buffer.h         — NEW: UploadBufferVulkan header
-  src/core/rdg/vk-upload-buffer.cpp       — NEW: UploadBufferVulkan implementation
+Phase 1 (helper + API):
+  src/core/rdg/gpu-upload-slot.h           — NEW: GpuUploadSlot
+  src/inc/garnet/rdg/actions.h             — declare UploadBuffer (Strategy, A, factory)
+  src/core/rdg/vk-upload-buffer.h/.cpp    — NEW: UploadBufferVulkan stub → full impl
   src/core/rdg/CMakeLists.txt             — add new source files
 
-Phase 2 (ring buffer + keepAlive):
-  src/core/rdg/vk-upload-buffer.h/.cpp   — Slot, execute(), notifySubmission(), currentBufferView()
+Phase 2 (ring buffer):
+  src/core/rdg/vk-upload-buffer.h/.cpp    — Slot, execute(), notifySubmission(), currentBufferView()
 
 Phase 3 (SubmissionID plumbing):
-  src/core/rdg/vk-submission-context.h   — add uploadBuffers list
-  src/core/rdg/vk-command-buffer.h/.cpp  — post-submit SubmissionID distribution
+  src/core/rdg/vk-submission-context.h    — add activeUploads list
+  src/core/rdg/vk-command-buffer.h/.cpp   — post-submit SubmissionID distribution
 
 Phase 4 (SharedShaderConstants):
-  src/core/rdg/shared-shader-constants.cpp — replace buffers with UploadBuffer; prepareSubmission()
+  src/core/rdg/shared-shader-constants.cpp — replace buffers; add prepareSubmission()
   src/inc/garnet/rdg/pipeline.h            — add prepareSubmission() to public API
 
-Phase 5 (wire Set 0 — see ASSIGNMENT_GPU_RESOURCE_BINDING for detail):
+Phase 5 (wire Set 0):
   src/core/rdg/vk-pso-factory.h/.cpp
   src/core/rdg/vk-draw-actions.cpp
-  src/core/rdg/vk-shaders/pbr.vert
-  src/core/rdg/vk-shaders/pbr.frag
+  src/core/rdg/vk-shaders/pbr.vert / pbr.frag
   src/core/rdg/pbr-shading.cpp
 
 Phase 6 (remove waitForIdle):
-  src/core/rdg/vk-command-buffer.h/.cpp  — per-slot recycling
-  src/core/rdg/submission.cpp (if exists) — remove hot-path waitForIdle
+  src/core/rdg/vk-command-buffer.h/.cpp
+  src/core/rdg/submission.cpp (if exists)
 
 Tests:
-  src/test/ut/rdg/rdg-test.cpp            — UploadBuffer unit tests (Phases 2, 3)
+  src/test/ut/rdg/rdg-test.cpp            — GpuUploadSlot + UploadBuffer unit tests
