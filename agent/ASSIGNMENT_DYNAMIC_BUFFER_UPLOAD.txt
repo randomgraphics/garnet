@@ -13,52 +13,68 @@
        removed from the hot path entirely.
 
   1.b  Minimize memory copies — both CPU-side and GPU-side.
-       Copies are expensive.  Every extra copy is counted and justified:
+       Copies are expensive.  Every extra copy is counted and justified.
+       The three Level 2 upload mechanisms have different copy counts:
 
-         STREAM frequency (target: 1 copy or 0):
-           Raw-pointer path  →  1 copy: user data → CPU-writable GPU memory (memcpy).
-           Write-callback path → 0 copies: user constructs data directly in mapped memory.
-           NO intermediate "blob" copy is allowed.  The A object must NOT contain a blob.
+         BLOB mechanism (2 copies total):
+           Copy 1: user data → owned blob (at argument-build time).
+           Copy 2: blob → GPU buffer (at execute time).
+           Simplest lifetime; acceptable for small, infrequent data.
 
-         GPU_OPTIMAL frequency (target: 2 copies — unavoidable):
-           Copy 1:  user data → CPU-visible staging memory.
-           Copy 2:  GPU blit: staging → GPU-local memory.
-           GPU-local memory gives fastest GPU reads.  The 2-copy cost is paid once per
-           upload, not once per shader invocation — worthwhile for large or infrequent data.
+         HOST_MAP mechanism (1 copy, or 0 with write-callback):
+           Raw-pointer path  → 1 copy: user data → host-visible GPU memory (memcpy).
+           Write-callback path → 0 copies: user writes directly into mapped memory.
+           No intermediate blob.  Best for small, frequently-updated data (UBOs).
 
-         Write-callback eliminates Copy 1 even in the GPU_OPTIMAL case when the user can
-         write structured data directly into mapped staging memory.
+         STAGED mechanism (2 copies — unavoidable, but the second is a GPU copy):
+           Copy 1: user data → host-visible staging slot (CPU; 1 or 0 with callback).
+           Copy 2: GPU blit: staging → device-local GPU buffer.
+           Device-local memory gives fastest GPU reads.  Best for large data.
+
+       Level 3 chooses which mechanism to use based on actual usage and scenario.
+       Level 2 exposes all three without prescribing when to use each.
 
 ### 2. Intuitive / Easy to use
 
-  App code should never deal with any backend-specific types (VkBuffer, ID3D12Resource,
-  MTLBuffer), ring indices, backend completion tokens, or keepAlive lists directly.
-  The public RDG API hides all of that behind API-agnostic concepts.
+  App code (Level 3 and above) should never deal with backend-specific types
+  (VkBuffer, ID3D12Resource, MTLBuffer), ring indices, backend completion tokens,
+  keepAlive lists, or upload mechanism details directly.
 
-  Usage pattern for shared constants:
+  Level 3 effects are subgraph builders: setters update CPU state; build() creates
+  and returns Workflow objects ready to submit to RenderGraph.
 
-    // One-time setup (application init):
+  Usage pattern — Level 3 (SharedShaderConstants as subgraph builder):
+
+    // One-time setup:
     auto sharedConsts = SharedShaderConstants::create(db, "scene", {.gpu = gpu});
 
-    // Per frame:
+    // Per frame (CPU state updates — no GPU touch):
     sharedConsts->setViewInformation(camera);
     sharedConsts->setDirectLightingInformation(lights);
-    sharedConsts->prepareSubmission(submission);     // adds upload actions; updates descriptors
 
-    submission.add(draw, drawArgs);                 // drawArgs use sharedConsts->getSet0Group()
+    // build() snapshots state, creates upload workflow(s), returns them:
+    auto uploadWf = sharedConsts->build(rg);         // internally uses HOST_MAP+ring(2)
+    auto drawWf   = myEffect->build(rg, drawParams); // uses sharedConsts->getSet0Group()
 
-  For direct use of UploadBuffer:
+    // submit both — RenderGraph orders them by artifact dependency:
+    rg->submit({.workflows = {uploadWf, drawWf}});
 
-    // Setup:
-    auto upload = UploadBuffer::create(db, "my-ubo",
-                      {.gpu = gpu, .size = sizeof(MyUBO), .frequency = GpuDataFrequency::STREAM});
+  Usage pattern — Level 2 (direct use of GpuBufferUpload):
+
+    // Setup (mechanism choice is explicit at Level 2):
+    auto upload = GpuBufferUpload::create(db, "my-ubo", {
+        .gpu       = gpu,
+        .size      = sizeof(MyUBO),
+        .mechanism = GpuBufferUpload::Mechanism::HOST_MAP,
+        .ringSlots = 2,
+    });
 
     // Per frame (raw pointer — 1 copy):
-    submission.add(upload, UploadBuffer::A::make(&myUbo, sizeof(myUbo)));
+    wf->appendTask("upload-ubo", upload, GpuBufferUpload::A::make(&myUbo, sizeof(myUbo)));
     drawArgs.resources[0][0][0] = upload->currentBufferView();
 
     // Per frame (write callback — 0 copies):
-    submission.add(upload, UploadBuffer::A::make([&](void * dst, uint64_t cap) {
+    wf->appendTask("upload-ubo", upload, GpuBufferUpload::A::make([&](void* dst, uint64_t cap) {
         new(dst) MyUBO(myUbo);   // in-place construct directly into mapped GPU memory
     }));
 
@@ -89,57 +105,36 @@
   keepAlive → advance → notifyCompletion) into a reusable helper so UploadBuffer,
   UploadPool, and UploadTexture all share the same machinery without duplicating it.
 
-### 4. No API-specific concepts in the public interface
+### 4. No API-specific concepts in the public interface; respect the four levels
 
-  The public RDG API (headers under src/inc/) must be implementable by any GPU backend:
-  Vulkan today, D3D12 and Metal in the future.  API-specific types and concepts must
-  never appear in public headers.
+  The public RDG API (headers under src/inc/) must be implementable by any GPU
+  backend.  API-specific types must never appear in public headers at any level.
 
   Prohibited in public API:
     VkBuffer, VkImage, VkFence, VkSemaphore, VkDescriptorSet, rapid_vulkan::*, vk::*
     ID3D12Resource, IDXGISwapChain, MTLBuffer, MTLTexture, Metal::*, D3D12::*
     SubmissionID, eHostVisible, eDeviceLocal, vkCmd*, DXGI_*, MTL_*
 
-  The public API expresses WHAT the app needs (semantics), not HOW the backend does it.
+  Level boundary rules (see also rdg/README.md):
+    Level 2 (actions.h, artifacts.h): expresses MECHANISM, not policy or frequency.
+      → GpuBufferUpload exposes BLOB / HOST_MAP / STAGED + ringSlots.
+      → No "STREAM" / "DYNAMIC" / "GPU_OPTIMAL" frequency concepts here.
+    Level 3 (pipeline.h, ...): expresses POLICY.
+      → SharedShaderConstants internally chooses HOST_MAP+ring(2) for UBOs.
+      → The app never sees the mechanism choice.
 
-  Key public-API design rule — use the GpuDataFrequency enum to express upload semantics:
+  Backend-to-mechanism mapping (internal; for implementers only):
 
-    enum class GpuDataFrequency {
-        STREAM,       // Updated every frame or multiple times per frame.
-                      // Prioritize CPU-write bandwidth; GPU reads from shared memory.
-                      // Backends: host-coherent ring (Vulkan), UPLOAD heap ring (D3D12),
-                      //           shared ring (Metal).
+    Mechanism  │ Vulkan                      │ D3D12                  │ Metal
+    ───────────┼─────────────────────────────┼────────────────────────┼──────────────────
+    BLOB       │ host-coherent VkBuffer      │ UPLOAD heap buffer     │ shared MTLBuffer
+    HOST_MAP   │ ring of host-coherent       │ ring of UPLOAD heap    │ ring of shared
+               │ VkBuffers; map/unmap        │ buffers; Map/Unmap     │ MTLBuffers; contents
+    STAGED     │ device-local VkBuffer +     │ DEFAULT heap buffer +  │ private MTLBuffer +
+               │ host-visible staging ring   │ UPLOAD heap staging    │ shared staging + blit
 
-        DYNAMIC,      // Updated occasionally (not every frame, more than once).
-                      // Backend chooses best trade-off between CPU and GPU access cost.
-
-        GPU_OPTIMAL,  // Uploaded rarely (once or near-once); GPU reads must be fastest.
-                      // CPU uploads via staging copy; GPU data lives in fast local memory.
-                      // Backends: device-local + staging (Vulkan), DEFAULT heap (D3D12),
-                      //           private + blit (Metal).
-    };
-
-  This replaces the old HOST_VISIBLE_RING / DEVICE_LOCAL_STAGED naming, which was
-  Vulkan-specific and meaningless on other backends.
-
-  Backend-to-public mapping:
-
-    GpuDataFrequency  │ Vulkan                     │ D3D12                │ Metal
-    ──────────────────┼────────────────────────────┼──────────────────────┼───────────────────
-    STREAM            │ Ring of host-coherent       │ Ring of UPLOAD heap  │ Ring of shared
-                      │ VkBuffers                  │ ID3D12Resources      │ MTLBuffers
-    ──────────────────┼────────────────────────────┼──────────────────────┼───────────────────
-    DYNAMIC           │ Host-visible or staged      │ UPLOAD or DEFAULT    │ managed or shared
-                      │ (implementation decides)   │ (implementation)     │ (implementation)
-    ──────────────────┼────────────────────────────┼──────────────────────┼───────────────────
-    GPU_OPTIMAL       │ Device-local + staging      │ DEFAULT + UPLOAD     │ private + blit
-                      │ VkBuffer ring              │ staging ring         │ staging ring
-
-    GPU completion    │ rapid_vulkan::SubmissionID  │ ID3D12Fence          │ MTLSharedEvent
-    token (internal)  │ (never public)             │ (never public)       │ (never public)
-
-    keepAlive         │ DynaArray<AutoRef<>>        │ same (backend impl)  │ same (backend impl)
-    (internal)        │ held until fence done       │ held until fence     │ held until event
+    GPU token  │ rapid_vulkan::SubmissionID  │ ID3D12Fence + value    │ MTLSharedEvent + val
+    (internal) │ (never public)             │ (never public)         │ (never public)
 
 ---
 
@@ -169,88 +164,109 @@ types freely.  It must never appear in src/inc/ (public headers).
 
 UploadBufferVulkan owns N GpuUploadSlots.  Each slot also owns its backend buffer(s).
 
-### B. UploadBuffer::A — no blob, write directly to GPU-accessible memory (PUBLIC API)
+### B. GpuBufferUpload — Level 2 public API (actions.h)
 
-  struct A : public Arguments {
-      // --- Set exactly one of the following ---
+  // Level 2: mechanism is explicit; frequency/usage policy belongs in Level 3.
+  struct GpuBufferUpload : public Action {
 
-      // Raw-pointer path: backend calls memcpy(dst, data, dataSize).  1 copy.
-      // Pointer NOT retained past execute().  API-agnostic.
-      const void * data     = nullptr;
-      uint64_t     dataSize = 0;
+      // Upload mechanism — choose at creation time.
+      // See rdg/README.md §"Dynamic Data Upload" for full pros/cons.
+      enum class Mechanism {
+          BLOB,       // 2 copies: user data → blob → GPU buffer.
+                      // Simplest lifetime. Acceptable for small/infrequent data.
+          HOST_MAP,   // 1 copy (or 0 with callback): write directly to mapped
+                      // host-visible GPU memory.  Best for small per-frame UBOs.
+          STAGED,     // 2 copies: CPU → staging → device-local GPU buffer.
+                      // Best GPU read bandwidth; good for large/less-frequent data.
+      };
 
-      // Write-callback path: backend calls writeFn(mappedPtr, capacity).  0+ copies.
-      // writeFn is called synchronously inside execute(); need not outlive execute().
-      // Callback receives a plain void*; no backend-specific types are exposed.
-      std::function<void(void * dst, uint64_t capacity)> writeFn;
+      struct CreateParameters {
+          AutoRef<GpuContext> gpu;
+          uint64_t            size;
+          Mechanism           mechanism  = Mechanism::HOST_MAP;
+          uint32_t            ringSlots  = 2;   // 1 = no ring-buffering
+      };
 
-      static AutoRef<A> make(const void * data, uint64_t size);
-      static AutoRef<A> make(std::function<void(void*, uint64_t)> fn);
+      struct A : public Arguments {
+          // Set exactly one of data/dataSize or writeFn.
 
-      void addToReadWriteList(ArtifactReadWriteList&) const override;
+          // Raw-pointer path: backend memcpy(dst, data, dataSize).  1 copy.
+          // Pointer NOT retained past execute().
+          const void * data     = nullptr;
+          uint64_t     dataSize = 0;
+
+          // Write-callback path: writeFn(mappedPtr, capacity) called synchronously.
+          // 0 copies when user writes directly. Need not outlive execute().
+          std::function<void(void * dst, uint64_t capacity)> writeFn;
+
+          static AutoRef<A> make(const void * data, uint64_t size);
+          static AutoRef<A> make(std::function<void(void*, uint64_t)> fn);
+
+          void addToReadWriteList(ArtifactReadWriteList&) const override;
+      };
+
+      virtual GpuResourceView currentBufferView() const = 0;
+
+      static GN_API AutoRef<GpuBufferUpload> create(ArtifactDatabase&, const StrA&,
+                                                     const CreateParameters&);
   };
 
-The callback signature (void*, uint64_t) is fully API-agnostic: the backend maps
-whatever memory is appropriate (VkBuffer, D3D12 UPLOAD resource, MTLBuffer) and passes
-the CPU pointer.  The app never knows or cares which.
+Note: the action was previously named `UploadBuffer`; renamed `GpuBufferUpload` to
+match the Level 2 naming convention (`Gpu` prefix, verb-noun order).
 
-There is NO blob field.  Data goes directly into backend-mapped memory during execute().
-This keeps STREAM frequency at 1 copy (raw) or 0 copies (callback).
+### C. HOST_MAP mechanism — Vulkan backend execute() flow (internal)
 
-### C. STREAM frequency — Vulkan backend execute() flow (internal)
-
-  // Internal to UploadBufferVulkan; never visible to app code.
+  // Internal to GpuBufferUploadVulkan; never visible to app code.
   struct Slot : GpuUploadSlot {
-      rapid_vulkan::Ref<rapid_vulkan::Buffer> vkBuffer;  // host-coherent ring slot
+      rapid_vulkan::Ref<rapid_vulkan::Buffer> vkBuffer;  // host-coherent, preallocated
   };
 
   execute(args):
-    uint32_t next = (mCurrentSlot + 1) % MAX_UPLOAD_SLOTS;
-    mSlots[next].waitUntilReady(queue);   // wait only if GPU still reading slot
-    mSlots[next].recycle();               // keepAlive always empty for STREAM
+    uint32_t next = (mCurrentSlot + 1) % mRingSlots;
+    mSlots[next].waitUntilReady(queue);   // wait only if GPU still reading slot (rare)
+    mSlots[next].recycle();               // keepAlive empty for HOST_MAP
     {
         rapid_vulkan::Buffer::Map<uint8_t> m(*mSlots[next].vkBuffer);
         if (args->writeFn)  args->writeFn(m.data, mSize);
         else                memcpy(m.data, args->data, args->dataSize);
     }
     mCurrentSlot = next;
-    // No keepAlive needed: vkBuffer is preallocated and ring-managed by the Slot itself.
+    // No keepAlive entry needed: vkBuffer is preallocated and owned by the Slot.
 
-  D3D12 equivalent: Ring of UPLOAD heap ID3D12Resources; Map/Unmap instead of
-                    rapid_vulkan::Buffer::Map.  Lifecycle identical.
-  Metal equivalent: Ring of shared MTLBuffers; contents pointer instead of Map.
+  D3D12: Ring of UPLOAD heap ID3D12Resources; Map/Unmap instead of Buffer::Map.
+  Metal: Ring of shared MTLBuffers; contents pointer instead of Map.
 
-### D. GPU_OPTIMAL frequency — Vulkan backend execute() flow (future Phase 2.4, internal)
+### D. STAGED mechanism — Vulkan backend execute() flow (future Phase 2.4, internal)
 
-  // Internal to UploadBufferVulkan; never visible to app code.
+  // Internal to GpuBufferUploadVulkan; never visible to app code.
   struct StagingSlot : GpuUploadSlot {
       rapid_vulkan::Ref<rapid_vulkan::Buffer> stagingBuffer;  // host-visible, preallocated
   };
 
   Members (internal):
-      rapid_vulkan::Ref<rapid_vulkan::Buffer> mGpuBuffer;   // device-local, single buffer
-      StagingSlot mStagingSlots[MAX_UPLOAD_SLOTS];
-      uint32_t    mCurrentStaging = MAX_UPLOAD_SLOTS - 1;
+      rapid_vulkan::Ref<rapid_vulkan::Buffer> mGpuBuffer;       // device-local, single
+      StagingSlot                             mSlots[mRingSlots];
+      uint32_t                                mCurrentSlot = mRingSlots - 1;
 
   execute(args):
-    uint32_t next = (mCurrentStaging + 1) % MAX_UPLOAD_SLOTS;
-    mStagingSlots[next].waitUntilReady(queue);
-    mStagingSlots[next].recycle();
+    uint32_t next = (mCurrentSlot + 1) % mRingSlots;
+    mSlots[next].waitUntilReady(queue);
+    mSlots[next].recycle();
     {
-        rapid_vulkan::Buffer::Map<uint8_t> m(*mStagingSlots[next].stagingBuffer);
+        rapid_vulkan::Buffer::Map<uint8_t> m(*mSlots[next].stagingBuffer);
         if (args->writeFn)  args->writeFn(m.data, mSize);
         else                memcpy(m.data, args->data, args->dataSize);
     }
-    // Record GPU-side copy + barrier into current command buffer (Vulkan-specific):
+    // GPU-side copy + barrier (Vulkan-specific command recording):
     vkCmdCopyBuffer(cmdBuf, stagingBuffer, mGpuBuffer, ...);
     vkCmdPipelineBarrier(cmdBuf, TRANSFER_WRITE → UNIFORM_READ, ...);
-    mStagingSlots[next].addKeepAlive(wrap(mStagingSlots[next].stagingBuffer));
-    mCurrentStaging = next;
+    // stagingBuffer owned by Slot; no extra keepAlive entry needed.
+    mCurrentSlot = next;
 
-  currentBufferView() → mGpuBuffer (the single GPU-local buffer, not the staging slot).
+  currentBufferView() → mGpuBuffer (single device-local buffer, not the staging slot).
 
-  D3D12 equivalent: Map UPLOAD heap resource → CopyBufferRegion to DEFAULT heap → barrier.
-  Metal equivalent: Fill shared MTLBuffer → blitEncoder.copy() to private MTLBuffer.
+  D3D12: Map UPLOAD heap → CopyBufferRegion to DEFAULT heap → resource barrier.
+  Metal: Fill shared MTLBuffer → blitEncoder.copy() to private MTLBuffer.
 
 ### E. GPU completion notification (internal plumbing, backend-specific)
 
@@ -275,31 +291,49 @@ This keeps STREAM frequency at 1 copy (raw) or 0 copies (callback).
 
 ### F. currentBufferView()
 
-  HOST_VISIBLE_RING: → GpuResourceView of mSlots[mCurrentSlot].vkBuffer
-                        type=UNIFORM, offset=0, size=mSize.
-  DEVICE_LOCAL_STAGED: → GpuResourceView of mGpuBuffer (single device-local buffer).
+  HOST_MAP:  → GpuResourceView of mSlots[mCurrentSlot].vkBuffer,
+               type=UNIFORM, offset=0, size=mSize.
+  STAGED:    → GpuResourceView of mGpuBuffer (single device-local buffer).
+  BLOB:      → GpuResourceView of the buffer the blob was uploaded to.
 
-  Called by app AFTER execute() runs (i.e., after adding upload action to submission,
-  and before adding draw action).
+  Called by the workflow-builder AFTER execute() runs for the upload task
+  (i.e., from within build() of a Level 3 subgraph builder, or explicitly
+  at Level 2 after adding the upload task to the workflow).
 
-### G. SharedShaderConstants integration
+### G. SharedShaderConstants — Level 3 subgraph builder
 
-  Camera + lighting UBOs are small (240 + 784 bytes), updated every frame.
-  → HOST_VISIBLE_RING is the right strategy.
+  SharedShaderConstants is a Level 3 object.  It follows the subgraph builder pattern:
+  setters update CPU state only; build() snapshots state and returns upload workflow(s).
 
-  Members:
-      AutoRef<UploadBuffer> mCameraUpload    (HOST_VISIBLE_RING, 240 B)
-      AutoRef<UploadBuffer> mLightingUpload  (HOST_VISIBLE_RING, 784 B)
-      GlobalCameraUBO       mPendingCamera   (CPU-side, updated on set*Information())
-      DirectLightingUBO     mPendingLighting (CPU-side, updated on set*Information())
+  Level 3 policy decision (hidden from app):
+      Camera + lighting UBOs are small (240 + 784 bytes) and updated every frame.
+      → HOST_MAP mechanism with ringSlots=2 is used internally.
+      The app never sees this choice.
 
-  prepareSubmission(Submission & s):
-      s.add(mCameraUpload,   A::make(&mPendingCamera,   sizeof(mPendingCamera)));
-      s.add(mLightingUpload, A::make(&mPendingLighting, sizeof(mPendingLighting)));
+  Members (internal to SharedShaderConstantsVulkan):
+      AutoRef<GpuBufferUpload> mCameraUpload    (HOST_MAP, ringSlots=2, 240 B)
+      AutoRef<GpuBufferUpload> mLightingUpload  (HOST_MAP, ringSlots=2, 784 B)
+      GlobalCameraUBO          mPendingCamera   (CPU-side, updated by set*())
+      DirectLightingUBO        mPendingLighting (CPU-side, updated by set*())
+
+  Public API change (Level 3):
+      // Old: prepareSubmission(Submission&)  ← removed
+      // New: build() — returns upload workflow; fits Level 1 RenderGraph model.
+      Workflow * build(RenderGraph & rg);
+
+  build() implementation:
+      auto wf = rg->createWorkflow("shared-constants-upload");
+      wf->appendTask("camera",   mCameraUpload,   A::make(&mPendingCamera,   sizeof(...)));
+      wf->appendTask("lighting", mLightingUpload, A::make(&mPendingLighting, sizeof(...)));
       mSet0Group->setResourceViews(0, 0, {mCameraUpload->currentBufferView()});
       mSet0Group->setResourceViews(1, 0, {mLightingUpload->currentBufferView()});
+      return wf;
 
-  This is the only call the app needs to make per frame for shared constants.
+  App usage:
+      sharedConsts->setViewInformation(camera);
+      auto uploadWf = sharedConsts->build(rg);   // one line; mechanism is hidden
+      auto drawWf   = pbrEffect->build(rg, ...); // reads Set 0 from sharedConsts
+      rg->submit({.workflows = {uploadWf, drawWf}});
 
 ### H. waitForIdle removal
 
@@ -311,8 +345,8 @@ This keeps STREAM frequency at 1 copy (raw) or 0 copies (callback).
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: none
-In progress: none — design finalized, ready to start Phase 0
+Last completed: Architecture doc (README.md + GNrdg.h level comments)
+In progress: none — ready to start Phase 0
 --- END PROGRESS ---
 
 --- RELATIONSHIP TO PREVIOUS ASSIGNMENT ---
@@ -386,82 +420,77 @@ Phase 0: Fix BufferVulkan bugs (prerequisite — correctness before ring-bufferi
     Verify: build passes; SharedShaderConstants unit tests still pass.
     Commit: "rdg(upload): fix BufferVulkan one-time allocation (Phase 0.2)"
 
-Phase 1: GpuUploadSlot backend helper + UploadBuffer public API
+Phase 1: GpuUploadSlot backend helper + GpuBufferUpload public API
 ─────────────────────────────────────────────────────────────────────────────────────────
   Task 1.1: Implement GpuUploadSlot in src/core/rdg/vk-upload-slot.h  (backend only)
-    This is a Vulkan-backend-internal helper.  It MUST NOT be included from any public
-    header in src/inc/.
+    Vulkan-backend-internal helper.  MUST NOT be included from src/inc/ headers.
 
     Fields:
-        rapid_vulkan::CommandQueue::SubmissionID submissionId;  // backend-specific; internal
+        rapid_vulkan::CommandQueue::SubmissionID submissionId;
         DynaArray<AutoRef<RefCounted>>           keepAlive;
     Methods:
         bool  isReady() const;
-        void  waitUntilReady(rapid_vulkan::CommandQueue &);   // wait + warning log
+        void  waitUntilReady(rapid_vulkan::CommandQueue &);   // wait + log warning
         void  recycle();                                      // clear keepAlive, reset token
         void  addKeepAlive(AutoRef<RefCounted>);
         void  notifyCompletion(rapid_vulkan::CommandQueue::SubmissionID);
     Verify: unit test — isReady() true when empty; recycle() clears keepAlive.
     Commit: "rdg(upload): add GpuUploadSlot Vulkan backend helper (Phase 1.1)"
 
-  Task 1.2: Declare UploadBuffer in actions.h  (PUBLIC — no backend types allowed)
-    GpuDataFrequency enum (API-agnostic; replaces HOST_VISIBLE_RING / DEVICE_LOCAL_STAGED):
-        enum class GpuDataFrequency {
-            STREAM,       // Updated every frame. Low CPU-write cost, shared memory.
-            DYNAMIC,      // Updated occasionally. Backend picks best trade-off.
-            GPU_OPTIMAL,  // Uploaded rarely. GPU reads from fast local memory.
-        };
+  Task 1.2: Declare GpuBufferUpload in actions.h  (PUBLIC — Level 2; no backend types)
+    Mechanism enum (Level 2: mechanism, NOT usage-frequency policy):
+        enum class Mechanism { BLOB, HOST_MAP, STAGED };
     CreateParameters (public, API-agnostic):
         struct CreateParameters {
             AutoRef<GpuContext> gpu;
             uint64_t            size;
-            GpuDataFrequency    frequency = GpuDataFrequency::STREAM;
+            Mechanism           mechanism = Mechanism::HOST_MAP;
+            uint32_t            ringSlots = 2;
         };
-    Arguments A (public, NO blob field — write directly to backend-mapped memory):
+    Arguments A (public; raw-pointer path does NOT retain pointer past execute()):
         struct A : public Arguments {
-            const void * data     = nullptr;     // raw-pointer path: 1 copy
+            const void * data     = nullptr;     // raw-pointer: 1 copy
             uint64_t     dataSize = 0;
-            std::function<void(void*, uint64_t)> writeFn;  // callback path: 0 copies
+            std::function<void(void*, uint64_t)> writeFn;  // callback: 0 copies
             static AutoRef<A> make(const void * data, uint64_t size);
             static AutoRef<A> make(std::function<void(void*, uint64_t)> fn);
             void addToReadWriteList(ArtifactReadWriteList&) const override;
         };
-    Virtual API (public):
+    Virtual API:
         virtual GpuResourceView currentBufferView() const = 0;
-        static GN_API AutoRef<UploadBuffer> create(ArtifactDatabase&, const StrA&,
-                                                    const CreateParameters&);
-    Verify: header compiles clean; no backend types included.
-    Commit: "rdg(upload): declare UploadBuffer public API with GpuDataFrequency (Phase 1.2)"
+        static GN_API AutoRef<GpuBufferUpload> create(ArtifactDatabase&, const StrA&,
+                                                       const CreateParameters&);
+    Verify: header compiles clean; no backend types.
+    Commit: "rdg(upload): declare GpuBufferUpload Level-2 public API (Phase 1.2)"
 
-  Task 1.3: Stub UploadBufferVulkan (backend; compile + no-op)
-    - Create vk-upload-buffer.h / vk-upload-buffer.cpp (in src/core/rdg/ — NOT public).
+  Task 1.3: Stub GpuBufferUploadVulkan (backend; compile + no-op)
+    - Create vk-buffer-upload.h / vk-buffer-upload.cpp (in src/core/rdg/ — NOT public).
     - execute() logs a warning "stub — not implemented".
     - currentBufferView() returns empty GpuResourceView.
-    - Wire into UploadBuffer::create() dispatch.
+    - Wire into GpuBufferUpload::create() dispatch.
     Verify: build passes end-to-end.
-    Commit: "rdg(upload): stub UploadBufferVulkan factory (Phase 1.3)"
+    Commit: "rdg(upload): stub GpuBufferUploadVulkan factory (Phase 1.3)"
 
-Phase 2: UploadBufferVulkan — STREAM frequency implementation (backend, not public)
+Phase 2: GpuBufferUploadVulkan — HOST_MAP + STAGED implementation (backend, not public)
 ─────────────────────────────────────────────────────────────────────────────────────────
-  Task 2.1: Ring-buffer slot storage + construction
-    constexpr uint32_t MAX_UPLOAD_SLOTS = 2;
-    Slot struct (internal to vk-upload-buffer.h):
+  Task 2.1: Ring-buffer slot storage + HOST_MAP construction
+    Slot struct (internal to vk-buffer-upload.h):
         struct Slot : GpuUploadSlot {
-            rapid_vulkan::Ref<rapid_vulkan::Buffer> vkBuffer;  // host-coherent
+            rapid_vulkan::Ref<rapid_vulkan::Buffer> vkBuffer;
         };
-        Slot     mSlots[MAX_UPLOAD_SLOTS];
-        uint32_t mCurrentSlot = MAX_UPLOAD_SLOTS - 1;
-        uint64_t mSize = 0;
-    Constructor (GpuDataFrequency::STREAM):
+        DynaArray<Slot> mSlots;      // size = CreateParameters.ringSlots
+        uint32_t        mCurrentSlot;
+        uint64_t        mSize;
+    Constructor (Mechanism::HOST_MAP):
         For each slot: allocate vkBuffer (eHostVisible|eHostCoherent, eUniformBuffer|eTransferDst).
-    Verify: build; unit test — constructor creates 2 VkBuffers.
-    Commit: "rdg(upload): STREAM ring-buffer slot storage (Phase 2.1)"
+    Verify: build; unit test — constructor with ringSlots=2 creates 2 VkBuffers.
+    Commit: "rdg(upload): HOST_MAP ring-buffer slot storage (Phase 2.1)"
 
-  Task 2.2: execute() — wait, write directly to mapped GPU memory, no blob
+  Task 2.2: execute() for HOST_MAP — wait, write to mapped GPU memory, no blob
     Flow:
-        uint32_t next = (mCurrentSlot + 1) % MAX_UPLOAD_SLOTS;
-        mSlots[next].waitUntilReady(queue);   // logs warning if GPU not done yet
-        mSlots[next].recycle();               // keepAlive empty for STREAM
+        uint32_t next = (mCurrentSlot + 1) % mSlots.size();
+        mSlots[next].waitUntilReady(queue);   // logs warning if GPU not done
+        mSlots[next].recycle();               // keepAlive empty for HOST_MAP
         {
             rapid_vulkan::Buffer::Map<uint8_t> m(*mSlots[next].vkBuffer);
             if (args->writeFn) args->writeFn(m.data, mSize);
@@ -469,37 +498,35 @@ Phase 2: UploadBufferVulkan — STREAM frequency implementation (backend, not pu
         }
         mCurrentSlot = next;
     Copy count: 1 (raw) or 0 (callback). No blob. User pointer not retained past execute().
-    Verify: unit test — execute() twice; slot advances; data in correct VkBuffer;
-            no wait occurs (submissionId still empty first two calls).
-    Commit: "rdg(upload): execute() — direct write to mapped memory, no blob (Phase 2.2)"
+    Verify: unit test — execute() twice; slot advances; data in correct VkBuffer; no wait.
+    Commit: "rdg(upload): HOST_MAP execute() — direct write to mapped memory (Phase 2.2)"
 
   Task 2.3: notifyCompletion() + currentBufferView()
     notifyCompletion(id): mSlots[mCurrentSlot].notifyCompletion(id);
     currentBufferView(): GpuResourceView of mSlots[mCurrentSlot].vkBuffer,
                          type=UNIFORM, offset=0, size=mSize.
     Verify: unit test — after execute() + notifyCompletion(), currentBufferView() is
-            non-empty; after N+1 calls without submit, wait path is triggered.
+            non-empty; after ringSlots+1 calls without submit, wait path triggers once.
     Commit: "rdg(upload): notifyCompletion + currentBufferView (Phase 2.3)"
 
-  Task 2.4: GPU_OPTIMAL frequency — Vulkan backend (may be deferred to follow-up)
-    Constructor (GpuDataFrequency::GPU_OPTIMAL):
+  Task 2.4: STAGED mechanism — Vulkan backend (may be deferred to follow-up)
+    Constructor (Mechanism::STAGED):
         mGpuBuffer = device-local VkBuffer (eDeviceLocal, UNIFORM|TRANSFER_DST, mSize).
-        mSlots[i].vkBuffer = host-visible staging VkBuffer (eHostVisible, eTransferSrc, mSize).
+        Each slot: stagingBuffer = host-visible VkBuffer (eHostVisible, eTransferSrc, mSize).
     execute():
-        Same wait/recycle/write-to-staging as STREAM.
+        Same wait/recycle/write-to-staging as HOST_MAP.
         Record vkCmdCopyBuffer(staging → mGpuBuffer) + pipeline barrier.
-        keepAlive: staging buffer already owned by slot; no extra tracking needed.
     currentBufferView(): → mGpuBuffer (not the staging slot).
-    Verify: unit test — GPU_OPTIMAL: currentBufferView() points to mGpuBuffer;
-            CopyBuffer command was recorded.
-    Commit: "rdg(upload): GPU_OPTIMAL frequency — Vulkan staged upload (Phase 2.4)"
+    Verify: unit test — STAGED: currentBufferView() points to mGpuBuffer;
+            copy command recorded.
+    Commit: "rdg(upload): STAGED mechanism — Vulkan staged upload (Phase 2.4)"
 
 Phase 3: Submission context — GPU completion notification plumbing (backend, not public)
 ─────────────────────────────────────────────────────────────────────────────────────────
   Task 3.1: Track active upload actions in SubmissionContextVulkan (Vulkan backend only)
-    - Add DynaArray<UploadBufferVulkan*> activeUploads to SubmissionContextVulkan.
+    - Add DynaArray<GpuBufferUploadVulkan*> activeUploads to SubmissionContextVulkan.
       Cleared at the start of each submission.
-    - UploadBufferVulkan::execute() registers this (de-duplicated; set semantics).
+    - GpuBufferUploadVulkan::execute() registers this (de-duplicated; set semantics).
     Verify: build; list grows when execute() is called.
     Commit: "rdg(upload): track active upload actions per submission (Phase 3.1)"
 
@@ -517,29 +544,33 @@ Phase 3: Submission context — GPU completion notification plumbing (backend, n
     Verify: build.
     Commit: "rdg(upload): declare write dependency in UploadBuffer::A (Phase 3.3)"
 
-Phase 4: SharedShaderConstants — use UploadBuffer internally
+Phase 4: SharedShaderConstants — Level 3 subgraph builder refactor
 ─────────────────────────────────────────────────────────────────────────────────────────
-  Task 4.1: Replace raw Buffers with UploadBuffer actions
+  Task 4.1: Replace raw Buffers with GpuBufferUpload actions (Level 3 policy choice)
     In SharedShaderConstantsVulkan:
-        AutoRef<Buffer> mCameraBuffer   →  AutoRef<UploadBuffer> mCameraUpload
-        AutoRef<Buffer> mLightingBuffer →  AutoRef<UploadBuffer> mLightingUpload
-    Add:
+        AutoRef<Buffer> mCameraBuffer   →  AutoRef<GpuBufferUpload> mCameraUpload
+        AutoRef<Buffer> mLightingBuffer →  AutoRef<GpuBufferUpload> mLightingUpload
+    Add CPU-side staging:
         GlobalCameraUBO   mPendingCamera   = {}
         DirectLightingUBO mPendingLighting = {}
-    Constructor: create UploadBuffer actions with GpuDataFrequency::STREAM
-                 (camera + lighting UBOs are small and updated every frame).
+    Constructor: create GpuBufferUpload actions with Mechanism::HOST_MAP, ringSlots=2.
+                 (Level 3 policy: small per-frame UBOs → HOST_MAP is the right choice.)
     Verify: build.
-    Commit: "rdg(upload): replace raw Buffers with UploadBuffer in SharedShaderConstants (Phase 4.1)"
+    Commit: "rdg(upload): replace raw Buffers with GpuBufferUpload in SharedShaderConstants (Phase 4.1)"
 
-  Task 4.2: set*Information() packs CPU structs; prepareSubmission() uploads
+  Task 4.2: set*Information() packs CPU structs; replace prepareSubmission() with build()
     set*Information(): pack into mPending* (CPU side only — no GPU touch).
-    prepareSubmission(Submission & s):
-        s.add(mCameraUpload,   A::make(&mPendingCamera,   sizeof(mPendingCamera)));
-        s.add(mLightingUpload, A::make(&mPendingLighting, sizeof(mPendingLighting)));
-        mSet0Group->setResourceViews(0, 0, {mCameraUpload->currentBufferView()});
-        mSet0Group->setResourceViews(1, 0, {mLightingUpload->currentBufferView()});
-    Verify: existing SharedShaderConstants unit tests pass.
-    Commit: "rdg(upload): SharedShaderConstants packs data + prepareSubmission (Phase 4.2)"
+    Remove prepareSubmission(); add:
+        Workflow * build(RenderGraph & rg):
+            auto wf = rg->createWorkflow("shared-constants-upload");
+            wf->appendTask("camera",   mCameraUpload,   A::make(&mPendingCamera,   sizeof(...)));
+            wf->appendTask("lighting", mLightingUpload, A::make(&mPendingLighting, sizeof(...)));
+            mSet0Group->setResourceViews(0, 0, {mCameraUpload->currentBufferView()});
+            mSet0Group->setResourceViews(1, 0, {mLightingUpload->currentBufferView()});
+            return wf;
+    Update public pipeline.h: replace prepareSubmission(Submission&) with build(RenderGraph&).
+    Verify: existing SharedShaderConstants unit tests updated and passing.
+    Commit: "rdg(upload): SharedShaderConstants subgraph builder with build() (Phase 4.2)"
 
 Phase 5: Wire Set 0 into GpuDraw pipeline (from ASSIGNMENT_GPU_RESOURCE_BINDING Phase 3)
 ─────────────────────────────────────────────────────────────────────────────────────────
@@ -583,21 +614,21 @@ Phase 0 (fix bugs):
   src/core/rdg/vk-buffer.h/.cpp            — fix one-time allocation, usage flags
 
 Phase 1 (helper + API):
-  src/core/rdg/vk-upload-slot.h           — NEW: GpuUploadSlot (Vulkan backend; NOT public)
-  src/inc/garnet/rdg/actions.h            — declare UploadBuffer + GpuDataFrequency (public; NO backend types)
-  src/core/rdg/vk-upload-buffer.h/.cpp   — NEW: UploadBufferVulkan stub → full impl (backend)
-  src/core/rdg/CMakeLists.txt            — add new source files
+  src/core/rdg/vk-upload-slot.h            — NEW: GpuUploadSlot (Vulkan backend; NOT public)
+  src/inc/garnet/rdg/actions.h             — add GpuBufferUpload + Mechanism enum (public; Level 2; NO backend types)
+  src/core/rdg/vk-buffer-upload.h/.cpp    — NEW: GpuBufferUploadVulkan stub → full impl (backend)
+  src/core/rdg/CMakeLists.txt             — add new source files
 
 Phase 2 (ring buffer — Vulkan backend):
-  src/core/rdg/vk-upload-buffer.h/.cpp   — Slot, execute(), notifyCompletion(), currentBufferView()
+  src/core/rdg/vk-buffer-upload.h/.cpp   — Slot, execute(), notifyCompletion(), currentBufferView()
 
 Phase 3 (GPU completion plumbing — Vulkan backend):
   src/core/rdg/vk-submission-context.h   — add activeUploads list
   src/core/rdg/vk-command-buffer.h/.cpp  — post-submit completion token distribution
 
-Phase 4 (SharedShaderConstants):
-  src/core/rdg/shared-shader-constants.cpp — replace buffers; add prepareSubmission()
-  src/inc/garnet/rdg/pipeline.h            — add prepareSubmission() to public API
+Phase 4 (SharedShaderConstants — Level 3 refactor):
+  src/core/rdg/shared-shader-constants.cpp — replace buffers; add build(RenderGraph&)
+  src/inc/garnet/rdg/pipeline.h            — replace prepareSubmission() with build(RenderGraph&)
 
 Phase 5 (wire Set 0):
   src/core/rdg/vk-pso-factory.h/.cpp
