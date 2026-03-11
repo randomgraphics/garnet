@@ -230,27 +230,60 @@ material or per-draw data.
 
 ### Subgraph Builders
 
-Level 3 objects are **subgraph builders**: they manage internal CPU-side state,
-and expose a `build()` method that takes a snapshot of that state and produces
-one or more `Workflow`s ready to be submitted via `RenderGraph`.
+Level 3 objects are **subgraph builders**: they expose a `build()` method that
+produces one or more `Workflow`s ready to be submitted via `RenderGraph`.
+Choose one of two patterns based on the builder's purpose:
+
+#### Pattern A — Stateless builder
+
+All data is passed directly to `build()` as parameters. The builder itself holds
+no mutable frame state. This makes it inherently thread-safe and easy to reason
+about: calling `build()` twice with the same parameters produces the same result.
 
 ```cpp
-// Pattern — every Level 3 effect follows this:
-class SomeEffect {
+// Good for effects whose per-frame data arrives naturally as build() arguments.
+class PbrShadingEffect {
 public:
-    // Setters update CPU-side state only; no GPU touch.
-    void setCamera(const CameraParams &);
-    void setMesh(AutoRef<Buffer> vertices, AutoRef<Buffer> indices);
+    struct BuildParams {
+        AutoRef<Buffer>      vertexBuffer;
+        AutoRef<Buffer>      indexBuffer;
+        AutoRef<RenderTarget> renderTarget;
+        // ... material, transform, etc.
+    };
 
-    // build() snapshots state, creates workflows, returns them.
-    // Caller submits the returned workflows to RenderGraph.
-    DynaArray<Workflow *> build(RenderGraph & rg, const BuildParams &);
+    // No setters. All data is in BuildParams. Thread-safe.
+    Workflow * build(RenderGraph & rg, const BuildParams & p);
 };
 ```
 
-`SharedShaderConstants` follows this pattern: `set*Information()` updates CPU
-state; `build()` creates upload workflows (using Level 2 `GpuBufferUpload` with
-an appropriate mechanism chosen by the Level 3 implementation).
+Use Pattern A when the builder is purely structural — it wires together data
+that the caller already owns — and carries no persistent logical identity between
+frames.
+
+#### Pattern B — Stateful builder
+
+The builder is also a state container. `set*()` methods update internal CPU-side
+state (no GPU touch). `build()` snapshots the current state and produces the
+corresponding workflows.
+
+```cpp
+// Good for builders that accumulate state across multiple set() calls,
+// or whose state persists and changes incrementally between frames.
+class SharedShaderConstants {
+public:
+    // Setters update CPU state only; may be called in any order before build().
+    void setFrameInformation(const FrameInformation &);
+    void setViewInformation(const ViewInformation &);
+    void setDirectLightingInformation(const DirectLightingInformation &);
+
+    // Snapshots current state; creates upload workflow(s).
+    Workflow * build(RenderGraph & rg);
+};
+```
+
+Use Pattern B when the builder owns logical state that accumulates over time or
+is naturally separated from the build step (e.g., camera state set once per
+frame, lighting state set at scene load, etc.).
 
 The choice of upload mechanism (BLOB / HOST_MAP / STAGED), ring-slot count, and
 any other Level 2 configuration detail is made **inside `build()`**, hidden from
