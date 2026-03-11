@@ -30,15 +30,13 @@ public:
         // standard preparation.
         auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         // done
         return Action::PASSED;
     }
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
-        bool hasWarning = false;
-
         auto & submission = taskInfo.submission;
 
         auto a = arguments.castTo<ClearRenderTarget::A>();
@@ -47,18 +45,12 @@ public:
         // standard execution
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
-        GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
-
-        // acquire render pass. End if if needed.
-        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
-        GN_RDG_FAIL_ON_FAIL(rp.result);
-        if (rp.needToEnd) cb.commandBuffer.handle().endRendering();
-
-        // submit command buffer, if asked to do so.
-        if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
+        GN_RDG_FAIL_ON_FAIL(cb);
+        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer().handle());
+        GN_RDG_FAIL_ON_FAIL(rp);
 
         // done
-        return hasWarning ? WARNING : PASSED;
+        return PASSED;
     }
 };
 
@@ -92,7 +84,7 @@ public:
         // standard preparation.
         auto & submissionContext = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         return PASSED;
     }
@@ -111,16 +103,9 @@ public:
 
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
-        GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
-        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
-        GN_RDG_FAIL_ON_FAIL(rp.result);
-        auto onExit = AutoFinalizer([&]() {
-            if (rp.needToEnd) {
-                GN_VERBOSE(sLogger)("{} - ending render pass", taskInfo);
-                cb.commandBuffer.handle().endRendering();
-            }
-            if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
-        });
+        GN_RDG_FAIL_ON_FAIL(cb);
+        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer().handle());
+        GN_RDG_FAIL_ON_FAIL(rp);
 
         const GpuGeometry & geom = a->geometry;
         if (0 == geom.vertexCount && 0 == geom.indexCount) GN_UNLIKELY {
@@ -179,8 +164,9 @@ public:
                 return FAILED;
             }
 
-        cb.commandBuffer.render(drawPack);
+        cb.commandBuffer().render(drawPack);
 
+        // done
         return PASSED;
     }
 };

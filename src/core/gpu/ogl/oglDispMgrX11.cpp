@@ -25,7 +25,10 @@ bool GN::gfx::OGLGpu::dispInit() {
     auto & rw   = getRenderWindow();
     auto   disp = (Display *) rw.getDisplayHandle();
     auto   win  = (::Window) rw.getWindowHandle();
-    GN_ASSERT(disp && win);
+    if (!disp || !win) {
+        GN_ERROR(sLogger)("Invalid display or window handle!");
+        return false;
+    }
 
     // get window attributes
     XWindowAttributes wa;

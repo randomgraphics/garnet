@@ -8,31 +8,6 @@ namespace GN::rdg {
 using Nanoseconds  = std::chrono::nanoseconds;
 using Microseconds = std::chrono::microseconds;
 
-/// Spatial units
-struct WorldUnit {
-    int64_t _value = 0; ///< Distance in micrometers.
-
-public:
-    constexpr WorldUnit(): _value(0) {}
-    constexpr WorldUnit(int64_t value): _value(value) {}
-
-    constexpr WorldUnit operator+(const WorldUnit & other) const { return WorldUnit(_value + other._value); }
-    constexpr WorldUnit operator-(const WorldUnit & other) const { return WorldUnit(_value - other._value); }
-    constexpr WorldUnit operator*(const WorldUnit & other) const { return WorldUnit(_value * other._value); }
-    constexpr WorldUnit operator/(const WorldUnit & other) const { return WorldUnit(_value / other._value); }
-}; ///< Distance in world units.
-
-inline static constexpr WorldUnit operator""_um(unsigned long long value) { return WorldUnit(value); }
-inline static constexpr WorldUnit operator""_mm(unsigned long long value) { return WorldUnit(value * 1000); }
-inline static constexpr WorldUnit operator""_cm(unsigned long long value) { return WorldUnit(value * 10000); }
-inline static constexpr WorldUnit operator""_meter(unsigned long long value) { return WorldUnit(value * 1000000); }
-inline static constexpr WorldUnit operator""_km(unsigned long long value) { return WorldUnit(value * 1000000000); }
-
-inline static constexpr WorldUnit operator""_inch(unsigned long long value) { return WorldUnit(value * 25400); }
-inline static constexpr WorldUnit operator""_foot(unsigned long long value) { return WorldUnit(value * 304800); }
-inline static constexpr WorldUnit operator""_mile(unsigned long long value) { return WorldUnit(value * 1609344000); }
-inline static constexpr WorldUnit operator""_yard(unsigned long long value) { return WorldUnit(value * 914400); }
-
 struct Candela {
     float value;
 }; ///< Intensity unit [cd].

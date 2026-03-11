@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compile PBR GLSL (core/rdg/shaders/pbr.vert, pbr.frag) to SPIR-V and emit C++ headers.
+Compile PBR GLSL (core/rdg/vk-shaders/pbr.vert, pbr.frag) to SPIR-V and emit C++ headers.
 Uses glslc (Vulkan SDK or PATH). When invoked from CMake, pass the build output directory
 as the first argument; headers are written there (pbr-vert.spv.h, pbr-frag.spv.h).
 Without an argument, writes to the script directory (for manual runs).
@@ -58,7 +58,7 @@ def main():
     args = parser.parse_args()
 
     script_dir = pathlib.Path(__file__).resolve().parent
-    shader_dir = script_dir / "shaders"
+    shader_dir = script_dir / "vk-shaders"
     if args.output_dir:
         # Resolve relative to cwd when invoked from CMake (WORKING_DIRECTORY = build dir).
         out_dir = pathlib.Path(args.output_dir).resolve().absolute()

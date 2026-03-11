@@ -188,7 +188,7 @@ bool sameDrawTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget>
 
 } // namespace
 
-bool RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
+Action::ExecutionResult RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget) {
     GN_ASSERT(mEntries.find(taskInfo.index) == mEntries.end());
 
     // validate the render target.
@@ -196,12 +196,12 @@ bool RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTar
         // this means we are resuing the same render taget of the previous draw action.
         if (mEntries.empty()) GN_UNLIKELY {
                 GN_ERROR(sLogger)("{} - empty render target is not allowed on the first draw task.", taskInfo);
-                return false;
+                return Action::FAILED;
             }
         const auto & prev = mEntries.rbegin()->second;
         if (!prev.draw) GN_UNLIKELY {
                 GN_ERROR(sLogger)("{} - empty render target is not allowed, when the previous action is presenting backbuffer.", taskInfo);
-                return false;
+                return Action::FAILED;
             }
         renderTarget = prev.draw;
     }
@@ -209,13 +209,13 @@ bool RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTar
     mEntries[taskInfo.index] = Entry {.draw = std::move(renderTarget)};
     GN_ASSERT(mEntries[taskInfo.index].isDraw());
     GN_ASSERT(!mEntries[taskInfo.index].isPresent());
-    return true;
+    return Action::PASSED;
 }
 
-bool RenderPassManagerVulkan::preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
+Action::ExecutionResult RenderPassManagerVulkan::preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
     if (!backbuffer) GN_UNLIKELY {
             GN_ERROR(sLogger)("{} - can't present empty backbuffer", taskInfo);
-            return false;
+            return Action::FAILED;
         }
 
     // See if we are presenting the same backbuffer that was drawn to in the previous action.
@@ -234,15 +234,15 @@ bool RenderPassManagerVulkan::preparePresent(TaskInfo & taskInfo, AutoRef<Backbu
     mEntries[taskInfo.index] = Entry {.present = std::move(backbuffer), .draw = std::move(drawTarget)};
     GN_ASSERT(!mEntries[taskInfo.index].isDraw());
     GN_ASSERT(mEntries[taskInfo.index].isPresent());
-    return true;
+    return Action::PASSED;
 }
 
-auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) -> RenderPassExecutionResult {
+auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer) -> RenderPass {
     // Find the entry that the task belongs to.
     auto iter = mEntries.find(taskInfo.index);
     if (iter == mEntries.end()) GN_UNLIKELY {
             GN_ERROR(sLogger)("{} - entry not found", taskInfo);
-            return {};
+            return {taskInfo};
         }
 
     auto & entry = iter->second;
@@ -251,13 +251,13 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, vk::CommandBuffer com
     // 1. this is the first task in the render pass.
     // 2. the previous task is drawing to a different render target.
     bool needtoBegin = entry.isDraw() && ((iter == mEntries.begin()) || (!sameDrawTarget(entry.draw, std::prev(iter)->second.draw)));
-    if (needtoBegin && !beginRenderPass(*entry.draw, commandBuffer)) return {};
+    if (needtoBegin && !beginRenderPass(*entry.draw, commandBuffer)) return {taskInfo};
 
     /// We need to end the render pass if one of the following is true:
     /// 1. this is the last draw/clear/present task in the render pass.
     /// 2. the next task is drawing to different render target.
     bool needToEnd = iter == std::prev(mEntries.end()) || !sameDrawTarget(entry.draw, std::next(iter)->second.draw);
-    return {Action::ExecutionResult::PASSED, needToEnd};
+    return {taskInfo, Action::ExecutionResult::PASSED, needToEnd ? commandBuffer : vk::CommandBuffer {}};
 }
 
 const RenderTarget * RenderPassManagerVulkan::getCurrentDrawTarget(uint64_t taskIndex) const {

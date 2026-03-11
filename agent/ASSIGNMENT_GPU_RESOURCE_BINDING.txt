@@ -1,0 +1,145 @@
+# Assignment: GPU Resource Binding Policy
+
+Goal: Establish a clear, 3-set GPU resource binding policy for the RDG shader pipeline, and
+implement SharedShaderConstants as the first artifact that manages real GPU uniform buffers
+for Set 0. Shared C++/GLSL headers ensure layout consistency between CPU and GPU.
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 0 (build fix) + Phase 1 (UBO headers) + Phase 2 (GPU UBO backend)
+In progress: none — waiting for Phase 3 (bind Set 0 in GpuDraw Vulkan pipeline)
+--- END PROGRESS ---
+
+---  BINDING LAYOUT POLICY ---
+
+  Set 0 — SharedShaderConstants (global frame, camera, direct lighting)
+    Binding 0: GlobalCameraUBO  (layout std140, vertex+fragment)
+    Binding 1: DirectLightingUBO (layout std140, vertex+fragment)
+    → Managed by SharedShaderConstants; one descriptor set shared by all effects in a frame.
+
+  Set 1 — Per-material data (textures, per-material parameters)
+    → Managed by each effect builder (e.g. PbrShading, SkyBox).
+    → Content is effect-specific; layout is defined by the effect.
+
+  Set 2 — Per-draw-call data (model matrix, etc.) via dynamic-offset UBO
+    → Backend manages a ring-buffer of large UBOs, each draw call uses a dynamic offset.
+    → Recycles slots when the GPU signals the fence for the associated frame.
+    → NOT YET IMPLEMENTED.
+
+  Push constants: Reserved for small, hot-path immediates (≤128 bytes).
+    Currently: still used for model+viewProj while Set 0 is being wired in.
+
+--- REFERENCE ---
+
+Public API:
+  src/inc/garnet/rdg/pipeline.h         — SharedShaderConstants, PbrShading, ViewInformation
+  src/inc/garnet/rdg/artifacts.h        — GpuResourceGroup, Buffer, GpuResourceTable
+  src/inc/garnet/rdg/actions.h          — GpuShaderAction, GpuDraw::A, GpuResourceTable typedef
+
+Shared UBO headers (C++ and GLSL):
+  src/core/rdg/vk-shaders/global-camera-ubo.h    — GlobalCameraUBO struct
+  src/core/rdg/vk-shaders/direct-lighting-ubo.h  — DirectLightingUBO / DirectLightData structs
+
+Backend:
+  src/core/rdg/shared-shader-constants.cpp    — Vulkan impl, GPU buffer creation + upload
+  src/core/rdg/vk-gpu-resource-group.h/.cpp   — Vulkan GpuResourceGroup (descriptor set)
+  src/core/rdg/vk-draw-actions.cpp            — GpuDrawVulkan (execute, pipeline binding)
+  src/core/rdg/vk-pso-factory.h               — GraphicsPsoCreateParams, DescriptorLayoutKey
+  src/core/rdg/pbr-shading.cpp                — PbrShadingVulkan
+  src/core/rdg/vk-shaders/pbr.vert / pbr.frag    — GLSL shaders
+
+Tests:
+  src/test/ut/rdg/pbr-shading.cpp    — unit tests for PbrShading + SharedShaderConstants
+
+--- BUILD / CI ---
+
+  cd /home/chenli/dev/god/garnet
+  ./build.py d                       # debug build (Linux)
+  env/bin/cit.py -t                  # run unit tests
+
+--- WORKFLOW / CONVENTIONS ---
+
+  - One verifiable step per commit. Commit after each phase.
+  - Commit message format: "rdg(binding): <description> (Phase X.Y)"
+  - Keep build green at each step. If a step breaks the build, fix before moving on.
+  - Shared UBO headers: must compile as both GLSL 4.5+ and C++17.
+  - CPU/GPU sync: for now, UBO buffers use host-coherent memory and are updated synchronously
+    before draw submission. Proper frame-in-flight ring buffering is a future task (Phase 5).
+
+--- TASK BREAKDOWN ---
+
+Phase 0: Repair WIP broken build (no new features; restore compilability)
+  Task 0.1: Add aspectRatio, nearPlane, farPlane to SharedShaderConstants::ViewInformation.
+    Verify: pipeline.h compiles.
+  Task 0.2: Fix pbr-shading.cpp — compute model matrix from locationInWorldSpace +
+    orientationInWorldSpace; compute viewProj from SharedShaderConstants camera params;
+    get renderTarget from SharedShaderConstants.ViewInformation.renderTarget.
+    Verify: pbr-shading.cpp compiles.
+  Task 0.3: Fix unit test — remove worldToClip reference; verify new ViewInformation API.
+    Verify: build.py d + cit -t pass.
+
+Phase 1: Shared C++/GLSL UBO headers
+  Task 1.1: Create src/core/rdg/shaders/global-camera-ubo.h
+    — GlobalCameraUBO (viewMatrix, projMatrix, viewProjMatrix, cameraPosition,
+       renderTargetSize, nearPlane, farPlane, frameCounter, frameDurationMs).
+    — Usable from C++ (glm types) and GLSL 4.5 (native types) via macros.
+    — Add static_assert checks for layout offsets in C++.
+    Verify: include in a C++ TU → compiles; include in GLSL → glslc compiles.
+  Task 1.2: Create src/core/rdg/shaders/direct-lighting-ubo.h
+    — MAX_DIRECT_LIGHTS = 16.
+    — DirectLightData (positionOrDir, colorAndRange, coneAngles — 3×vec4 = 48 bytes).
+    — DirectLightingUBO (numLights uint, _pad[3], lights[MAX_DIRECT_LIGHTS]).
+    Verify: same as 1.1.
+
+Phase 2: SharedShaderConstants Vulkan backend — GPU UBO allocation + upload
+  Task 2.1: Create/rename SharedShaderConstantsImpl → SharedShaderConstantsVulkan (internal).
+    Add: mCameraBuffer (AutoRef<Buffer>), mLightingBuffer (AutoRef<Buffer>),
+         mSet0Group (AutoRef<GpuResourceGroup>).
+    Constructor: create buffers + resource group.
+    Verify: build passes; SharedShaderConstants::create() returns non-null.
+  Task 2.2: On setFrameInformation / setViewInformation / setDirectLightingInformation,
+    pack into GlobalCameraUBO / DirectLightingUBO and call Buffer::setContent().
+    Expose getSet0Group() → GpuResourceGroup * (internal, used by PbrShadingVulkan).
+    Verify: build passes; unit tests still pass.
+
+Phase 3: Wire Set 0 into GpuDraw pipeline (FUTURE)
+  Task 3.1: Update DescriptorLayoutKey to include descriptor set layout handle(s).
+  Task 3.2: Update PsoFactoryVulkan to create VkPipelineLayout with Set 0 layout.
+  Task 3.3: Update GpuDrawVulkan::execute() to vkCmdBindDescriptorSets for Set 0.
+  Task 3.4: Update pbr.vert / pbr.frag to use layout(set=0,binding=0) GlobalCameraUBO
+    and layout(set=0,binding=1) DirectLightingUBO (include shared headers via glslc -I).
+  Task 3.5: Update compile_pbr_shaders.py to add -I flag pointing to shader source dir.
+  Task 3.6: Update PbrShadingVulkan::build() to set resources[0] from SharedShaderConstants
+    descriptor set and remove the viewProj push constant.
+  Verify: draw-mesh sample renders with correct lighting.
+
+Phase 4: Per-material descriptor set (Set 1) — FUTURE
+  Task 4.1: Design PbrMaterial::getSet1Group() Vulkan API.
+  Task 4.2: Wire Set 1 into pipeline layout and bind in GpuDrawVulkan.
+  Task 4.3: Update pbr.frag to sample textures from Set 1.
+
+Phase 5: Per-draw dynamic-offset UBO (Set 2) — FUTURE
+  Task 5.1: Design ring-buffer allocation for per-draw UBOs.
+  Task 5.2: Integrate dynamic offset into GpuDraw::A and pipeline binding.
+  Task 5.3: Implement CPU/GPU frame-in-flight sync for UBO recycling.
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 0:
+  src/inc/garnet/rdg/pipeline.h          (ViewInformation: add aspectRatio/nearPlane/farPlane)
+  src/core/rdg/pbr-shading.cpp           (fix model+viewProj computation)
+  src/test/ut/rdg/pbr-shading.cpp        (remove worldToClip reference)
+
+Phase 1 (new files):
+  src/core/rdg/shaders/global-camera-ubo.h
+  src/core/rdg/shaders/direct-lighting-ubo.h
+
+Phase 2:
+  src/core/rdg/shared-shader-constants.cpp  (add GPU buffers + resource group)
+
+Phase 3 (future):
+  src/core/rdg/vk-pso-factory.h/.cpp
+  src/core/rdg/vk-draw-actions.cpp
+  src/core/rdg/vk-shaders/pbr.vert
+  src/core/rdg/vk-shaders/pbr.frag
+  src/core/rdg/compile_pbr_shaders.py
+  src/core/rdg/pbr-shading.cpp

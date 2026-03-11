@@ -174,14 +174,19 @@ public:
         TS_ASSERT(shared != nullptr);
 
         SharedShaderConstants::ViewInformation view;
-        view.worldToClip    = glm::mat4(1.f);
-        view.cameraPosition = {0, 0, 0};
+        view.cameraPosition    = Location {1.f, 2.f, 3.f}; // meters
+        view.cameraOrientation = glm::quat(1.f, 0.f, 0.f, 0.f);
+        view.cameraFov         = Degree(60.f);
+        view.aspectRatio       = 16.f / 9.f;
+        view.nearPlane         = 0.1f;
+        view.farPlane          = 500.f;
         shared->setViewInformation(view);
 
         const auto & got = shared->getViewInformation();
-        TS_ASSERT(got.worldToClip[0][0] == 1.0f); // identity
-        TS_ASSERT(got.worldToClip[1][1] == 1.0f);
-        TS_ASSERT(got.worldToClip[2][2] == 1.0f);
-        TS_ASSERT(got.worldToClip[3][3] == 1.0f);
+        TS_ASSERT_DELTA(got.cameraPosition.x, 1.f, 1e-5f);
+        TS_ASSERT_DELTA(got.cameraPosition.y, 2.f, 1e-5f);
+        TS_ASSERT_DELTA(got.cameraPosition.z, 3.f, 1e-5f);
+        TS_ASSERT_DELTA(got.cameraFov.value, Radian(Degree(60.f)).value, 1e-5f);
+        TS_ASSERT_DELTA(got.aspectRatio, 16.f / 9.f, 1e-5f);
     }
 };

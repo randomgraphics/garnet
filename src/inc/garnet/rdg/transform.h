@@ -9,88 +9,92 @@
 
 namespace GN::rdg {
 
-using Location    = Vector3<WorldUnit>;
-using Orientation = Quaternionf;
+/// Strongly-typed distance in micrometers (integer).  Defined here for future
+/// use; current aliases (Location, Distance) use plain float meters for simplicity.
+struct WorldUnit {
+    int64_t _value = 0; ///< micrometers
 
-/// General affine transform: translation, rotation and non-uniform scaling.
-/// Uses GLM internally for SIMD-friendly TRS matrix construction.
-/// All methods are defined in the class body and are implicitly inline.
-struct AffineTransform {
-    void reset() {
-        mPosition = glm::vec3(0.f);
-        mRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
-        mScale    = glm::vec3(1.f);
-        mMatrix   = glm::mat4(1.f);
-        mDirty    = false;
-    }
+    constexpr WorldUnit() = default;
+    explicit constexpr WorldUnit(int64_t value): _value(value) {}
 
-    void setLocation(glm::vec3 position) {
-        mPosition = position;
-        mDirty    = true;
-    }
-    void setRotation(glm::quat rotation) {
-        mRotation = rotation;
-        mDirty    = true;
-    }
-    void setRotation(float angle, glm::vec3 axis) {
-        mRotation = glm::angleAxis(angle, glm::normalize(axis));
-        mDirty    = true;
-    }
-    void setUniformScale(float scale) {
-        mScale = glm::vec3(scale);
-        mDirty = true;
-    }
-    void setNonUniformScale(glm::vec3 scale) {
-        mScale = scale;
-        mDirty = true;
-    }
-
-    /// Returns the TRS matrix (Translate * Rotate * Scale), rebuilt lazily.
-    const glm::mat4 & matrix() const {
-        if (!mDirty) return mMatrix;
-        mDirty  = false;
-        mMatrix = glm::translate(glm::mat4(1.f), mPosition) * glm::mat4_cast(mRotation) * glm::scale(glm::mat4(1.f), mScale);
-        return mMatrix;
-    }
-
-private:
-    glm::vec3         mPosition = glm::vec3(0.f);
-    glm::quat         mRotation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    glm::vec3         mScale    = glm::vec3(1.f);
-    mutable glm::mat4 mMatrix   = glm::mat4(1.f);
-    mutable bool      mDirty    = false;
+    constexpr WorldUnit operator+(WorldUnit o) const { return WorldUnit(_value + o._value); }
+    constexpr WorldUnit operator-(WorldUnit o) const { return WorldUnit(_value - o._value); }
+    constexpr WorldUnit operator*(WorldUnit o) const { return WorldUnit(_value * o._value); }
+    constexpr WorldUnit operator/(WorldUnit o) const { return WorldUnit(_value / o._value); }
 };
 
-/// World → view → clip transform chain for a perspective camera.
-/// Uses GLM throughout; all methods implicitly inline.
-struct WorldToClipTransformChain {
-    glm::vec3 eye    = {0.f, 0.f, 5.f};
-    glm::vec3 target = {0.f, 0.f, 0.f};
-    glm::vec3 up     = {0.f, 1.f, 0.f};
-    float     fovy   = glm::radians(60.f); ///< vertical FOV in radians
-    float     aspect = 16.f / 9.f;
-    float     znear  = 0.1f;
-    float     zfar   = 100.f;
+inline static constexpr WorldUnit operator""_um(unsigned long long v) { return WorldUnit(v); }
+inline static constexpr WorldUnit operator""_mm(unsigned long long v) { return WorldUnit(v * 1'000); }
+inline static constexpr WorldUnit operator""_cm(unsigned long long v) { return WorldUnit(v * 10'000); }
+inline static constexpr WorldUnit operator""_meter(unsigned long long v) { return WorldUnit(v * 1'000'000); }
+inline static constexpr WorldUnit operator""_km(unsigned long long v) { return WorldUnit(v * 1'000'000'000); }
+inline static constexpr WorldUnit operator""_inch(unsigned long long v) { return WorldUnit(v * 25'400); }
+inline static constexpr WorldUnit operator""_foot(unsigned long long v) { return WorldUnit(v * 304'800); }
+inline static constexpr WorldUnit operator""_yard(unsigned long long v) { return WorldUnit(v * 914'400); }
+inline static constexpr WorldUnit operator""_mile(unsigned long long v) { return WorldUnit(v * 1'609'344'000); }
 
-    void setCamera(glm::vec3 e, glm::vec3 t, glm::vec3 u) {
-        eye    = e;
-        target = t;
-        up     = u;
-    }
-    void setPerspective(float f, float a, float n, float r) {
-        fovy   = f;
-        aspect = a;
-        znear  = n;
-        zfar   = r;
+using Location    = glm::vec3; ///< x, y, z in meters (float)
+using Orientation = glm::quat;
+using Distance    = float; ///< distance in meters (float)
+
+inline static constexpr Orientation ZERO_ROTATION = Orientation(1.f, 0.f, 0.f, 0.f); // identity quaternion (w, x, y, z)
+
+struct Degree;
+
+struct Radian {
+    float value;
+
+    explicit constexpr Radian(float value_in_radians): value(value_in_radians) {}
+
+    constexpr Radian(Degree degree);
+
+    constexpr Radian & operator=(const Radian & other) {
+        value = other.value;
+        return *this;
     }
 
-    /// Returns view-projection matrix. Uses RH coordinates and [0,1] depth (Vulkan).
-    /// Row 1 of the projection is negated to flip Y for Vulkan's Y-down NDC.
-    glm::mat4 matrix() const {
-        glm::mat4 proj = glm::perspectiveRH_ZO(fovy, aspect, znear, zfar);
-        proj[1][1] *= -1.f; // Vulkan NDC has Y pointing down
-        return proj * glm::lookAtRH(eye, target, up);
+    // conversion operators
+    constexpr operator float() const { return value; }
+
+    // relationship operators
+    constexpr bool operator==(const Radian & other) const { return value == other.value; }
+    constexpr bool operator!=(const Radian & other) const { return value != other.value; }
+    constexpr bool operator<(const Radian & other) const { return value < other.value; }
+    constexpr bool operator>(const Radian & other) const { return value > other.value; }
+    constexpr bool operator<=(const Radian & other) const { return value <= other.value; }
+    constexpr bool operator>=(const Radian & other) const { return value >= other.value; }
+
+    // math method operators
+    constexpr Radian & operator+=(const Radian & other) {
+        value += other.value;
+        return *this;
     }
+    constexpr Radian & operator-=(const Radian & other) {
+        value -= other.value;
+        return *this;
+    }
+    constexpr Radian & operator*=(const Radian & other) {
+        value *= other.value;
+        return *this;
+    }
+    constexpr Radian & operator/=(const Radian & other) {
+        value /= other.value;
+        return *this;
+    }
+    constexpr Radian operator+(const Radian & other) const { return Radian(value + other.value); }
+    constexpr Radian operator-(const Radian & other) const { return Radian(value - other.value); }
+    constexpr Radian operator*(const Radian & other) const { return Radian(value * other.value); }
+    constexpr Radian operator/(const Radian & other) const { return Radian(value / other.value); }
 };
+
+struct Degree {
+    float value;
+
+    explicit constexpr Degree(float value_in_degrees): value(value_in_degrees) {}
+
+    constexpr Degree(Radian radian): value(radian.value * 180.0f / GN_PI) {}
+};
+
+inline constexpr Radian::Radian(Degree degree): value(degree.value * GN_PI / 180.0f) {}
 
 } // namespace GN::rdg

@@ -9,7 +9,11 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 
-int main(int, const char **) {
+int main(int argc, const char ** argv) {
+
+    bool testMode = (argc > 1) && (argv[1][0] == 't');
+    if (testMode) { GN_INFO(sLogger)("Running in test mode"); }
+
     enableCRTMemoryCheck();
 
     // Create artifact database with auto-registration of built-in artifacts
@@ -39,16 +43,20 @@ int main(int, const char **) {
     // if (!mesh) return -1;
 
     // Create a main window and surface of 1280x720
-    uint32_t windowWidth  = 1280;
-    uint32_t windowHeight = 720;
-    auto     window       = std::unique_ptr<win::Window>(
-        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight}));
-    if (!window) return -1;
-    window->show();
+    uint32_t                     windowWidth  = 1280;
+    uint32_t                     windowHeight = 720;
+    std::unique_ptr<win::Window> window;
+    intptr_t                     surface = 0;
+    if (!testMode) {
+        window = std::unique_ptr<win::Window>(
+            win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight}));
+        if (!window) return -1;
+        window->show();
 
-    // Window owns the surface; do not destroy it. Destroy backbuffer before window.
-    intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
-    if (!surface) return -1;
+        // Window owns the surface; no need to destroy it explicitly. Must destroy backbuffer before window.
+        surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+        if (!surface) return -1;
+    }
 
     auto backbuffer =
         Backbuffer::create(*db, "backbuffer",
@@ -99,7 +107,12 @@ int main(int, const char **) {
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, compose, present until prepare fails
-    while (window->runUntilNoNewEvents()) {
+    int totalFrames  = testMode ? 10 : 0;
+    int frameCounter = 1;
+    while (totalFrames == 0 || frameCounter++ <= totalFrames) {
+        // process window events
+        if (window && !window->runUntilNoNewEvents()) break;
+
         // Schedule render workflow
         auto renderWorkflow  = renderGraph->createWorkflow("Render");
         renderWorkflow->name = "Render";

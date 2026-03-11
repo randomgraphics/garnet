@@ -8,8 +8,8 @@ if(VULKAN_FOUND)
         OUTPUT "${_pbr_vert_h}" "${_pbr_frag_h}"
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compile_pbr_shaders.py "."
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/compile_pbr_shaders.py
-                ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pbr.vert
-                ${CMAKE_CURRENT_SOURCE_DIR}/shaders/pbr.frag
+                ${CMAKE_CURRENT_SOURCE_DIR}/vk-shaders/pbr.vert
+                ${CMAKE_CURRENT_SOURCE_DIR}/vk-shaders/pbr.frag
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling PBR GLSL to SPIR-V headers"
     )

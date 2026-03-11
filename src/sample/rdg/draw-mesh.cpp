@@ -117,34 +117,12 @@ static AutoRef<PbrShading::Material> loadPbrMaterial(ArtifactDatabase & db, Auto
     return PbrShading::Material::load(db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpu, .source = memFile});
 }
 
-static WorldToClipTransformChain buildCamera(uint32_t width, uint32_t height) {
-    WorldToClipTransformChain camera;
-    camera.setCamera({1.8f, 1.4f, 2.4f}, // eye: slightly off-axis to show 3 faces
-                     {0.0f, 0.0f, 0.0f}, // look at box center
-                     {0.0f, 1.0f, 0.0f}  // world up
-    );
-    camera.setPerspective(glm::radians(60.f),             // 60 degree vertical FOV
-                          (float) width / (float) height, // aspect ratio
-                          0.1f,                           // near plane
-                          100.0f                          // far plane
-    );
-    return camera;
-}
-
-static AffineTransform buildModelTransform() {
-    AffineTransform model;
-    model.reset();
-    // Rotate box 30 degrees around Y so we see a corner
-    model.setRotation(glm::radians(30.f), glm::vec3(0.f, 1.f, 0.f));
-    return model;
-}
-
 static SharedShaderConstants::DirectLightingInformation buildLighting() {
     SharedShaderConstants::DirectLightingInformation lighting;
     SharedShaderConstants::DirectLight               light;
     light.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
-    light.directional.orientation = Quaternionf::sIdentity();
-    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {3000.0f}}; // warm white, 3000 lux
+    light.directional.orientation = Orientation(1.f, 0.f, 0.f, 0.f); // identity → light faces -Z
+    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {3000.0f}};  // warm white, 3000 lux
     lighting.lights.append(light);
     return lighting;
 }
@@ -208,19 +186,25 @@ int main(int, const char **) {
     auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
-    // Build scene transforms once (static scene, no animation)
-    auto camera      = buildCamera(bbDesc.width, bbDesc.height);
-    auto modelXform  = buildModelTransform();
     auto boxGeometry = buildBoxGeometry(vertexBuffer);
     auto lighting    = buildLighting();
 
-    // SharedShaderConstants: set view and lighting
+    // SharedShaderConstants: camera at (1.8, 1.4, 2.4) m looking at origin, 60° FOV.
     auto sharedConstants = SharedShaderConstants::create(*db, "shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
     if (sharedConstants) {
+        // Derive camera orientation from a lookAt.
+        const glm::vec3   eye(1.8f, 1.4f, 2.4f), target(0.f, 0.f, 0.f), up(0.f, 1.f, 0.f);
+        const glm::mat4   camToWorld = glm::inverse(glm::lookAtRH(eye, target, up));
+        const Orientation camOrient  = glm::quat_cast(glm::mat3(camToWorld));
+
         SharedShaderConstants::ViewInformation view;
-        view.worldToClip    = camera.matrix();
-        view.cameraPosition = Location {WorldUnit((int64_t) (1.8f * 1e6f)), WorldUnit((int64_t) (1.4f * 1e6f)), WorldUnit((int64_t) (2.4f * 1e6f))};
-        view.renderTarget   = renderTarget;
+        view.cameraPosition    = Location {1.8f, 1.4f, 2.4f};
+        view.cameraOrientation = camOrient;
+        view.cameraFov         = Degree(60.f);
+        view.aspectRatio       = (float) bbDesc.width / (float) bbDesc.height;
+        view.nearPlane         = 0.1f;
+        view.farPlane          = 100.f;
+        view.renderTarget      = renderTarget;
         sharedConstants->setViewInformation(view);
         sharedConstants->setDirectLightingInformation(lighting);
     }
@@ -235,14 +219,13 @@ int main(int, const char **) {
         // renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
 
         PbrShading::BuildParameters pbrParams;
-        pbrParams.renderGraph           = renderGraph.get();
-        pbrParams.renderTarget          = renderTarget;
-        pbrParams.sharedShaderConstants = sharedConstants;
-        pbrParams.material              = material;
-        pbrParams.geometry              = boxGeometry;
-        pbrParams.modelToWorld          = modelXform;
-        pbrParams.worldToClip           = camera.matrix();
-        auto pbrSubGraph                = pbrShading->build(pbrParams);
+        pbrParams.renderGraph             = renderGraph.get();
+        pbrParams.sharedShaderConstants   = sharedConstants;
+        pbrParams.material                = material;
+        pbrParams.geometry                = boxGeometry;
+        pbrParams.locationInWorldSpace    = {0, 0, 0}; // box at world origin
+        pbrParams.orientationInWorldSpace = glm::angleAxis(glm::radians(30.f), glm::vec3(0.f, 1.f, 0.f));
+        auto pbrSubGraph                  = pbrShading->build(pbrParams);
         if (pbrSubGraph.builtResult == Action::ExecutionResult::PASSED && !pbrSubGraph.workflows.empty()) {
             for (auto & task : pbrSubGraph.workflows[0]->tasks) renderWorkflow->appendTask(task.name, task.action, task.arguments);
         }

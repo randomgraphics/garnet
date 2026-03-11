@@ -27,6 +27,9 @@ CommandBufferManagerVulkan::CommandBufferManagerVulkan(const ConstructParameters
     } else {
         mTransferQueue = mGraphicsQueue;
     }
+
+    // connect to submission's allTasksExecuted signal.
+    connectToSignal<&CommandBufferManagerVulkan::waitForIdle>(params.submission.allTasksExecuted);
 }
 
 CommandBufferManagerVulkan::~CommandBufferManagerVulkan() {}
@@ -84,7 +87,16 @@ CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(Ta
     bool needToSubmit = (iter == std::prev(mEntries.end())) || (iter->second.type != std::next(iter)->second.type);
 
     // done
-    return CommandBuffer {e.queue, e.commandBuffer, needToSubmit};
+    return CommandBuffer(*this, taskInfo, std::move(e.commandBuffer), needToSubmit ? e.queue.get() : nullptr);
+}
+
+void CommandBufferManagerVulkan::submit(CommandBuffer & commandBuffer) {
+    GN_ASSERT(commandBuffer.mManager == this && commandBuffer.mTaskInfo && commandBuffer.mCommandBuffer && commandBuffer.mQueue);
+    GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", *commandBuffer.mTaskInfo);
+    auto   submissionID = commandBuffer.mQueue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {commandBuffer.mCommandBuffer}});
+    auto   q            = commandBuffer.mQueue;
+    auto & ids          = mSubmissionIDs[q];
+    ids.append(submissionID);
 }
 
 } // namespace GN::rdg

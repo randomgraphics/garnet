@@ -27,4 +27,5 @@ if not args.l:
     # look for the root folder of the repository, then run the test app from that folder
     root_folder = utils.get_root_folder()
     utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args, check=True, cwd=root_folder)
-    utils.run_the_latest_binary("build/{variant}/bin/GNtest-rdg-smoke1", args.test_args, check=True, cwd=root_folder)
+    utils.run_the_latest_binary("build/{variant}/bin/GNtest-rdg-smoke1", [], check=True, cwd=root_folder)
+    utils.run_the_latest_binary("build/{variant}/bin/GNsample-rdg-simple-triangle", ["t"], check=True, cwd=root_folder)

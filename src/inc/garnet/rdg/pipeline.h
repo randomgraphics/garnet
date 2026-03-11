@@ -42,8 +42,8 @@ namespace GN::rdg {
 
 /// A container for shader constants that are shared by other effects.
 /// Holds logical data (frame, view, lights, etc.); the API-specific implementation
-/// organizes and uploads this data to uniform buffers and textures. The public
-/// interface does not expose GPU layout.
+/// organises and uploads this data to GPU resources. The public interface does not
+/// expose any information about how the backend organises or binds these resources.
 struct SharedShaderConstants : public GpuResource {
     GN_API static const uint64_t         TYPE_ID;
     inline static constexpr const char * TYPE_NAME = "SharedShaderConstants";
@@ -56,20 +56,24 @@ struct SharedShaderConstants : public GpuResource {
 
     /// Logical view/camera data. Implementation maps this to GPU resources as needed.
     struct ViewInformation {
-        glm::mat4             worldToClip    = glm::mat4(1.f);
-        Location              cameraPosition = {0, 0, 0}; ///< camera position in world space
-        AutoRef<RenderTarget> renderTarget;
+        Location              cameraPosition    = {0, 0, 0};            ///< camera position in world space
+        Orientation           cameraOrientation = {1.f, 0.f, 0.f, 0.f}; ///< camera orientation (world space)
+        Radian                cameraFov         = Degree(60.f);         ///< vertical field of view
+        float                 aspectRatio       = 16.f / 9.f;           ///< viewport width / height
+        float                 nearPlane         = 0.01f;                ///< near clip plane in meters
+        float                 farPlane          = 10000.f;              ///< far clip plane in meters
+        AutoRef<RenderTarget> renderTarget;                             ///< current render target; render target size is deduced from it
     };
 
     /// One direct light with physically correct photometric terms (see physical.h).
     struct DirectLight {
         enum Type : int { POINT, SPOT, DIRECTIONAL } type = POINT;
 
-        /// Point light: position, luminous intensity [cd], range in world units.
+        /// Point light: position, luminous intensity [cd], range in meters.
         struct Point {
             Location     position  = {0, 0, 0};
             IntensityRGB intensity = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range     = {0};
+            Distance     range     = 0;
         } point;
 
         /// Spot light: position, orientation, luminous intensity [cd], range, cone angles.
@@ -77,7 +81,7 @@ struct SharedShaderConstants : public GpuResource {
             Location     position          = {0, 0, 0};
             Orientation  orientation       = {0, 0, 0, 1.0f};
             IntensityRGB intensity         = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range             = {0};
+            Distance     range             = 0;
             float        cosInnerConeAngle = 1.0f;
             float        cosOuterConeAngle = 1.0f;
         } spot;
@@ -287,13 +291,11 @@ struct PbrShading : public GpuResource {
 
     struct BuildParameters {
         RenderGraph *                  renderGraph = {};
-        AutoRef<RenderTarget>          renderTarget;
         AutoRef<SharedShaderConstants> sharedShaderConstants;
         AutoRef<Material>              material;
         GpuDraw::GpuGeometry           geometry;
-        AffineTransform                modelToWorld;
-        /// World-to-clip (view-projection) matrix. Used for push constants when SharedShaderConstants view is not yet available.
-        glm::mat4 worldToClip = glm::mat4(1.f);
+        Location                       locationInWorldSpace    = {0, 0, 0};
+        Orientation                    orientationInWorldSpace = ZERO_ROTATION;
     };
 
     struct CreateParameters {

@@ -1,4 +1,4 @@
-﻿/*
+/*
     Derived from the work by Sergey A Kryukov: "The Impossibly Fast C++ Delegates, Fixed", 2017
     https://www.codeproject.com/articles/The-Impossibly-Fast-Cplusplus-Delegates-Fixed,
 
@@ -51,6 +51,8 @@ protected:
 template<typename T>
 class delegate;
 
+/// \important This delegate class, to minimize runtime overhead, only stores a pointer to the delegated function or lambda.
+/// So the lifetime of the delegate must be managed by the caller.
 template<typename RET, typename... PARAMS>
 class delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
 public:
@@ -314,6 +316,12 @@ public:
         }
     }
 
+    // template<typename SIGNAL, typename F>
+    // void connectToSignal(const SIGNAL & signal, const F & func) {
+    //     auto lock = std::lock_guard(mLock);
+    //     mTethers.push_back(signal.connect(func));
+    // }
+
     /// Explicitly disconnect the slot from specified signal.
     void disconnectFromSignal(const internal::SignalBase & signal) const {
         auto lock = std::lock_guard(mLock);
@@ -352,6 +360,9 @@ struct SignalResults {
 template<>
 struct SignalResults<void> {};
 
+/// This signal class is more efficient than normal implementation, since it only stores a pointer/reference
+/// to the slot functions. It is callers responsibility to ensure the lifetime of the slot functions is equal to
+/// or longer than the returned Tether object.
 template<typename RET, typename... PARAMS>
 class Signal<RET(PARAMS...)> : public internal::SignalBase {
     typedef internal::delegate<RET(PARAMS...)> DelegateType;
@@ -359,6 +370,15 @@ class Signal<RET(PARAMS...)> : public internal::SignalBase {
 public:
     Signal(): mControlBlock(std::make_shared<ControlBlock>()) {}
     ~Signal() { mControlBlock.reset(); }
+
+    /// Connect a lambda or lambda-like object to the signal.
+    /// The signal will only keep a ponter to the lambda object. It is the caller's responsibility to ensure
+    /// the lifetime of the lambda or lambda-like object is equal to or longer than the returned Tether object.
+    template<typename F>
+    [[nodiscard]] Tether connect(const F & func) const {
+        auto lock = std::lock_guard(mControlBlock->mutex);
+        return addDelegate(DelegateType::template createLambda(func));
+    }
 
     template<RET (*STATIC_FUNCTION)(PARAMS...)>
     [[nodiscard]] Tether connect() const {

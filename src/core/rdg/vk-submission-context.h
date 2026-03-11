@@ -10,12 +10,13 @@ namespace GN::rdg {
 /// The life time of this context is within one submission. It is created
 /// on demand when being asked for by a vulkan specific action, and
 /// destroyed when the submission is finished.
-struct SubmissionContextVulkan : public SubmissionImpl::Context {
+struct SubmissionContextVulkan : public SubmissionImpl::Context, public SlotBase {
     inline static const uint64_t         TYPE_ID   = getNextUniqueTypeId();
     inline static constexpr const char * TYPE_NAME = "SubmissionContextVulkan";
 
     SubmissionContextVulkan(SubmissionImpl & submission_, AutoRef<GpuContextVulkan> gpu_)
-        : SubmissionImpl::Context(TYPE_ID, TYPE_NAME), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_}) {}
+        : SubmissionImpl::Context(TYPE_ID, TYPE_NAME), submission(submission_), gpu(gpu_), renderPassManager({gpu_}),
+          commandBufferManager({gpu_, submission_}) {}
 
     SubmissionImpl &           submission;
     AutoRef<GpuContextVulkan>  gpu;

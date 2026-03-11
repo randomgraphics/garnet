@@ -62,7 +62,7 @@ GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
 # Build RDG
 
-GN_add_source_folder(rdg_sources rdg PCH_SOURCE rdg/pch.cpp EXTRA_SOURCES rdg/shaders/*.*)
+GN_add_source_folder(rdg_sources rdg PCH_SOURCE rdg/pch.cpp EXTRA_SOURCES rdg/vk-shaders/*.*)
 add_subdirectory(rdg)
 set_source_files_properties(${rdg_sources} PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg")
 list(APPEND sources ${rdg_sources})

@@ -5,6 +5,9 @@
 #include <sstream>
 #include <string>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>  // glm::translate, glm::inverse
+#include <glm/gtc/quaternion.hpp>        // glm::mat4_cast
+#include <glm/ext/matrix_clip_space.hpp> // glm::perspectiveRH_ZO
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
@@ -65,13 +68,30 @@ public:
                 return sg;
             }
         // Build arguments from params; the action is reused.
-        auto drawArgs          = AutoRef<GpuDraw::A>(new GpuDraw::A());
-        drawArgs->geometry     = params.geometry;
-        drawArgs->renderTarget = params.renderTarget;
+        auto drawArgs      = AutoRef<GpuDraw::A>(new GpuDraw::A());
+        drawArgs->geometry = params.geometry;
+
+        // Render target comes from SharedShaderConstants.ViewInformation.
+        if (params.sharedShaderConstants) drawArgs->renderTarget = params.sharedShaderConstants->getViewInformation().renderTarget;
+
         // Push constants: model (64 bytes) + viewProj (64 bytes).
         // GLM stores mat4 in column-major order, matching GLSL layout, so memcpy directly.
-        const glm::mat4 & model    = params.modelToWorld.matrix();
-        const glm::mat4 & viewProj = params.sharedShaderConstants ? params.sharedShaderConstants->getViewInformation().worldToClip : params.worldToClip;
+        // TODO (Phase 3): replace push constants with Set 0 UBO bindings.
+
+        // Model matrix: translation + rotation; Location is glm::vec3 in meters.
+        const glm::mat4 model = glm::translate(glm::mat4(1.f), params.locationInWorldSpace) * glm::mat4_cast(params.orientationInWorldSpace);
+
+        // ViewProj matrix derived from SharedShaderConstants camera params.
+        glm::mat4 viewProj(1.f);
+        if (params.sharedShaderConstants) {
+            const auto &    vi         = params.sharedShaderConstants->getViewInformation();
+            const glm::mat4 camToWorld = glm::translate(glm::mat4(1.f), vi.cameraPosition) * glm::mat4_cast(vi.cameraOrientation);
+            const glm::mat4 view       = glm::inverse(camToWorld);
+            glm::mat4       proj       = glm::perspectiveRH_ZO(vi.cameraFov.value, vi.aspectRatio, vi.nearPlane, vi.farPlane);
+            proj[1][1] *= -1.f; // Vulkan NDC Y-down
+            viewProj = proj * view;
+        }
+
         drawArgs->immediates.resize(128);
         float * pc = reinterpret_cast<float *>(drawArgs->immediates.data());
         memcpy(pc, glm::value_ptr(model), 64);

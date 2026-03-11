@@ -14,9 +14,39 @@ public:
         AutoRef<GpuContextVulkan> gpu;
     };
 
-    struct RenderPassExecutionResult {
-        Action::ExecutionResult result    = Action::ExecutionResult::FAILED;
-        bool                    needToEnd = false;
+    struct RenderPass : public NoCopy {
+
+        RenderPass(const TaskInfo & taskInfo, Action::ExecutionResult result = Action::ExecutionResult::FAILED, vk::CommandBuffer commandBuffer = {})
+            : mTaskInfo(taskInfo), mResult(result), mCommandBuffer(commandBuffer) {}
+
+        RenderPass(RenderPass && o): mTaskInfo(o.mTaskInfo), mResult(o.mResult), mCommandBuffer(std::move(o.mCommandBuffer)) {
+            o.mResult = Action::ExecutionResult::FAILED;
+            GN_ASSERT(!o.mCommandBuffer);
+        }
+
+        ~RenderPass() {
+            if (mResult == Action::ExecutionResult::PASSED && mCommandBuffer) {
+                static auto sLogger = getLogger("GN.rdg.vk");
+                GN_VERBOSE(sLogger)("{} - ending render pass", mTaskInfo);
+                mCommandBuffer.endRendering();
+            }
+        }
+
+        RenderPass & operator=(RenderPass && o) {
+            if (this == &o) return *this;
+            mResult        = o.mResult;
+            mCommandBuffer = std::move(o.mCommandBuffer);
+            o.mResult      = Action::ExecutionResult::FAILED;
+            GN_ASSERT(!o.mCommandBuffer);
+            return *this;
+        }
+
+        operator Action::ExecutionResult() const { return mResult; }
+
+    private:
+        const TaskInfo &        mTaskInfo;
+        Action::ExecutionResult mResult        = Action::ExecutionResult::FAILED;
+        vk::CommandBuffer       mCommandBuffer = {};
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params): mGpu(params.gpu) {}
@@ -26,14 +56,14 @@ public:
     /// Called by tasks in prepare pass to collect render target information.
     /// \param taskInfo The task information.
     /// \param renderTarget The render target. Or null, if the resuing current render target.
-    bool prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget);
+    Action::ExecutionResult prepareDraw(TaskInfo & taskInfo, AutoRef<RenderTarget> renderTarget);
 
     /// Called by present backbuffer task to end rendering to backbuffer.
     /// If current render target is not this backbufer, then do nothing.
-    bool preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
+    Action::ExecutionResult preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
 
     /// Called by task in execution pass to begin render pass.
-    RenderPassExecutionResult execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer);
+    RenderPass execute(TaskInfo & taskInfo, vk::CommandBuffer commandBuffer);
 
     /// Current render target for the given task (set by prepareDraw). Null if task has no draw target.
     const RenderTarget * getCurrentDrawTarget(uint64_t taskIndex) const;

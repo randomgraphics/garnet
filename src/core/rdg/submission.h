@@ -8,7 +8,7 @@
 
 #define GN_RDG_FAIL_ON_FAIL(expr, ...)                                                                            \
     do {                                                                                                          \
-        auto result___ = (expr);                                                                                  \
+        Action::ExecutionResult result___ = (expr);                                                               \
         if (result___ != Action::PASSED && result___ != Action::WARNING) GN_UNLIKELY {                            \
                 if constexpr (GN_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
                 return result___;                                                                                 \

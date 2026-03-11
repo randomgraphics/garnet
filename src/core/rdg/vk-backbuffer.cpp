@@ -256,7 +256,7 @@ public:
 
         // standard preparation.
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FALSE(sc.renderPassManager.preparePresent(taskInfo, a->backbuffer));
+        GN_RDG_FAIL_ON_FAIL(sc.renderPassManager.preparePresent(taskInfo, a->backbuffer));
 
         // done
         return PASSED;
@@ -270,7 +270,7 @@ public:
 
         // standard execution.
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(sc.renderPassManager.execute(taskInfo, {}).result);
+        GN_RDG_FAIL_ON_FAIL(sc.renderPassManager.execute(taskInfo, {}));
 
         // done
         return bb->present(taskInfo);
