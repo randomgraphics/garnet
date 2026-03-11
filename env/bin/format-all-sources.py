@@ -31,9 +31,9 @@ our_sources = [x for x in all_files if is_our_source(x)]
 # Determine clang-format binary
 system = platform.system()
 if "Windows" == system:
-     clang_format = str(root_dir / "env/bin/clang-format-14.exe")
+     clang_format = str(root_dir / "env/bin/clang-format/clang-format-22.1.0.exe")
 elif "Darwin" == system:
-     clang_format = "clang-format-mp-14"
+     clang_format = str(root_dir / "env/bin/clang-format/clang-format-22.1.0-apple")
 else:
      clang_format = "clang-format-14"
 
