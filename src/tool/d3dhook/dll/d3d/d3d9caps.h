@@ -288,14 +288,14 @@ typedef struct _D3DCAPS9 {
         #define D3DDEVCAPS_DRAWPRIMITIVES2         0x00002000L /* Device can support DrawPrimitives2 */
         #define D3DDEVCAPS_SEPARATETEXTUREMEMORIES 0x00004000L /* Device is texturing from separate memory pools */
         #define D3DDEVCAPS_DRAWPRIMITIVES2EX       0x00008000L /* Device can support Extended DrawPrimitives2 i.e. DX7 compliant driver*/
-        #define D3DDEVCAPS_HWTRANSFORMANDLIGHT     0x00010000L /* Device can support transformation and lighting in hardware and DRAWPRIMITIVES2EX must be also */
-        #define D3DDEVCAPS_CANBLTSYSTONONLOCAL     0x00020000L /* Device supports a Tex Blt from system memory to non-local vidmem */
-        #define D3DDEVCAPS_HWRASTERIZATION         0x00080000L /* Device has HW acceleration for rasterization */
-        #define D3DDEVCAPS_PUREDEVICE              0x00100000L /* Device supports D3DCREATE_PUREDEVICE */
-        #define D3DDEVCAPS_QUINTICRTPATCHES        0x00200000L /* Device supports quintic Beziers and BSplines */
-        #define D3DDEVCAPS_RTPATCHES               0x00400000L /* Device supports Rect and Tri patches */
-        #define D3DDEVCAPS_RTPATCHHANDLEZERO       0x00800000L /* Indicates that RT Patches may be drawn efficiently using handle 0 */
-        #define D3DDEVCAPS_NPATCHES                0x01000000L /* Device supports N-Patches */
+        #define D3DDEVCAPS_HWTRANSFORMANDLIGHT 0x00010000L /* Device can support transformation and lighting in hardware and DRAWPRIMITIVES2EX must be also */
+        #define D3DDEVCAPS_CANBLTSYSTONONLOCAL 0x00020000L /* Device supports a Tex Blt from system memory to non-local vidmem */
+        #define D3DDEVCAPS_HWRASTERIZATION     0x00080000L /* Device has HW acceleration for rasterization */
+        #define D3DDEVCAPS_PUREDEVICE          0x00100000L /* Device supports D3DCREATE_PUREDEVICE */
+        #define D3DDEVCAPS_QUINTICRTPATCHES    0x00200000L /* Device supports quintic Beziers and BSplines */
+        #define D3DDEVCAPS_RTPATCHES           0x00400000L /* Device supports Rect and Tri patches */
+        #define D3DDEVCAPS_RTPATCHHANDLEZERO   0x00800000L /* Indicates that RT Patches may be drawn efficiently using handle 0 */
+        #define D3DDEVCAPS_NPATCHES            0x01000000L /* Device supports N-Patches */
 
         //
         // PrimitiveMiscCaps
@@ -408,10 +408,10 @@ typedef struct _D3DCAPS9 {
         //
         // TextureCaps
         //
-        #define D3DPTEXTURECAPS_PERSPECTIVE              0x00000001L /* Perspective-correct texturing is supported */
-        #define D3DPTEXTURECAPS_POW2                     0x00000002L /* Power-of-2 texture dimensions are required - applies to non-Cube/Volume textures only. */
-        #define D3DPTEXTURECAPS_ALPHA                    0x00000004L /* Alpha in texture pixels is supported */
-        #define D3DPTEXTURECAPS_SQUAREONLY               0x00000020L /* Only square textures are supported */
+        #define D3DPTEXTURECAPS_PERSPECTIVE 0x00000001L /* Perspective-correct texturing is supported */
+        #define D3DPTEXTURECAPS_POW2        0x00000002L /* Power-of-2 texture dimensions are required - applies to non-Cube/Volume textures only. */
+        #define D3DPTEXTURECAPS_ALPHA       0x00000004L /* Alpha in texture pixels is supported */
+        #define D3DPTEXTURECAPS_SQUAREONLY  0x00000020L /* Only square textures are supported */
         #define D3DPTEXTURECAPS_TEXREPEATNOTSCALEDBYSIZE 0x00000040L /* Texture indices are not scaled by the texture size prior to interpolation */
         #define D3DPTEXTURECAPS_ALPHAPALETTE             0x00000080L /* Device can draw alpha from texture palettes */
         // Device can use non-POW2 textures if:

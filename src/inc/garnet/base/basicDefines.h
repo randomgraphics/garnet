@@ -286,8 +286,8 @@ public:                                                                     \
     int               toInt() const { return (int) mValue; }                \
                       operator const ENUM_TYPE &() const { return mValue; } \
     ENUM_CLASS &      operator++() {                                        \
-             mValue = (ENUM_TYPE) (mValue + 1);                             \
-             return *this;                                                  \
+        mValue = (ENUM_TYPE) (mValue + 1);                                  \
+        return *this;                                                       \
     }                                                                       \
     ENUM_CLASS & operator--() {                                             \
         mValue = (ENUM_TYPE) (mValue - 1);                                  \

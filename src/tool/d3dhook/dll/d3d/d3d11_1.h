@@ -244,9 +244,7 @@ typedef struct ID3D11BlendState1Vtbl {
     END_INTERFACE
 } ID3D11BlendState1Vtbl;
 
-interface ID3D11BlendState1 {
-    CONST_VTBL struct ID3D11BlendState1Vtbl * lpVtbl;
-};
+interface ID3D11BlendState1 { CONST_VTBL struct ID3D11BlendState1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -406,9 +404,7 @@ typedef struct ID3D11RasterizerState1Vtbl {
     END_INTERFACE
 } ID3D11RasterizerState1Vtbl;
 
-interface ID3D11RasterizerState1 {
-    CONST_VTBL struct ID3D11RasterizerState1Vtbl * lpVtbl;
-};
+interface ID3D11RasterizerState1 { CONST_VTBL struct ID3D11RasterizerState1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -504,9 +500,7 @@ typedef struct ID3DDeviceContextStateVtbl {
     END_INTERFACE
 } ID3DDeviceContextStateVtbl;
 
-interface ID3DDeviceContextState {
-    CONST_VTBL struct ID3DDeviceContextStateVtbl * lpVtbl;
-};
+interface ID3DDeviceContextState { CONST_VTBL struct ID3DDeviceContextStateVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1803,9 +1797,7 @@ typedef struct ID3D11DeviceContext1Vtbl {
     END_INTERFACE
 } ID3D11DeviceContext1Vtbl;
 
-interface ID3D11DeviceContext1 {
-    CONST_VTBL struct ID3D11DeviceContext1Vtbl * lpVtbl;
-};
+interface ID3D11DeviceContext1 { CONST_VTBL struct ID3D11DeviceContext1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2724,9 +2716,7 @@ typedef struct ID3D11Device1Vtbl {
     END_INTERFACE
 } ID3D11Device1Vtbl;
 
-interface ID3D11Device1 {
-    CONST_VTBL struct ID3D11Device1Vtbl * lpVtbl;
-};
+interface ID3D11Device1 { CONST_VTBL struct ID3D11Device1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2914,10 +2904,9 @@ typedef struct ID3DUserDefinedAnnotationVtbl {
 
     ULONG(STDMETHODCALLTYPE * Release)(ID3DUserDefinedAnnotation * This);
 
-    INT(STDMETHODCALLTYPE * BeginEvent)
-    (ID3DUserDefinedAnnotation * This,
-     /* [annotation] */
-     _In_ LPCWSTR Name);
+    INT(STDMETHODCALLTYPE * BeginEvent)(ID3DUserDefinedAnnotation * This,
+                                        /* [annotation] */
+                                        _In_ LPCWSTR Name);
 
     INT(STDMETHODCALLTYPE * EndEvent)(ID3DUserDefinedAnnotation * This);
 
@@ -2930,9 +2919,7 @@ typedef struct ID3DUserDefinedAnnotationVtbl {
     END_INTERFACE
 } ID3DUserDefinedAnnotationVtbl;
 
-interface ID3DUserDefinedAnnotation {
-    CONST_VTBL struct ID3DUserDefinedAnnotationVtbl * lpVtbl;
-};
+interface ID3DUserDefinedAnnotation { CONST_VTBL struct ID3DUserDefinedAnnotationVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 

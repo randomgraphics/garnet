@@ -29,8 +29,8 @@ int main(int, const char **) {
     // Create backbuffer (headless: handle=0; caller sets dimensions)
     const uint32_t displayWidth = 1280, displayHeight = 720;
     auto           backbuffer = Backbuffer::create(
-                  *db, "backbuffer",
-                  Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {}.setDimensions(displayWidth, displayHeight)});
+        *db, "backbuffer",
+        Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {}.setDimensions(displayWidth, displayHeight)});
     if (!backbuffer) return -1;
 
     // Create render target that references the backbuffer

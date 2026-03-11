@@ -35,7 +35,7 @@ GN_API void * HeapMemory::alignedAlloc(size_t sizeInBytes, size_t alignment) {
     // while still having enough space in front of user visible memory to store the header.
     size_t additional = sizeof(MemoryHeader) + alignment - 1;
     size_t totalSize  = additional + sizeInBytes;
-    auto   p          = (uintptr_t)::malloc(totalSize);
+    auto   p          = (uintptr_t) ::malloc(totalSize);
     if (!p) {
         GN_ERROR(sHeapLogger())("out of memory!");
         return nullptr;
@@ -89,7 +89,7 @@ GN_API void * HeapMemory::realloc(void * ptr, size_t sizeInBytes) {
 
     // reallocate the memory block.
     auto newTotalSize = sizeof(MemoryHeader) + alignment - 1 + sizeInBytes;
-    auto newPtr       = (uintptr_t)::realloc((void *) oldPtr, newTotalSize);
+    auto newPtr       = (uintptr_t) ::realloc((void *) oldPtr, newTotalSize);
     if (!newPtr) {
         GN_ERROR(sHeapLogger())("out of memory!");
         return nullptr;

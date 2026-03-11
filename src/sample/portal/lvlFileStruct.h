@@ -17,7 +17,7 @@
 #define LVL_FILE_DEFAULT_RESERVE 1
 
 #define LVL_FILE_SAFE_DELETE_ARRAY(x) \
-    if (x) delete[](x), (x) = 0
+    if (x) delete[] (x), (x) = 0
 
 //
 // lvlTypeArray
@@ -122,8 +122,8 @@ struct lvlName {
 // lvl文件头
 //----------------------------------------------------------------------------------
 struct lvlHdr {
-    int  version;         //文件版本
-    char textureLib[128]; //材质库文件名
+    int  version;         // 文件版本
+    char textureLib[128]; // 材质库文件名
 
     //    int                    num_sector;            //sector数量
     //    int                    num_portal;            //portal数量
@@ -158,13 +158,13 @@ struct lvlHdr {
 // lvl文件portal结构
 //----------------------------------------------------------------------------------
 struct lvlPortal {
-    char       name[64];       //关卡编辑器中的名字，用来与脚本连接
+    char       name[64];       // 关卡编辑器中的名字，用来与脚本连接
     uint       frontSectorID;  // portal面对连接的sector
     uint       backSectorID;   // portal背对连接的sector
-    Plane3f    plane;          //所在平面
-    uint       numVert;        //多边形顶点数量
-    Vector3f * vList;          //多边形顶点列表
-    char       scriptName[64]; //脚本文件名
+    Plane3f    plane;          // 所在平面
+    uint       numVert;        // 多边形顶点数量
+    Vector3f * vList;          // 多边形顶点列表
+    char       scriptName[64]; // 脚本文件名
     char       reserve[LVL_FILE_DEFAULT_RESERVE];
 
     bool Write(FILE * fp) {
@@ -219,15 +219,15 @@ struct lvlFace {
 
     unsigned int texId; // face的贴图在材质库中的索引，前16位表示class，后16位表示id
 
-    int lightmapId; //此面对应的lightmap id
+    int lightmapId; // 此面对应的lightmap id
 
-    float lightmapSize; //此面的lightmap比例
+    float lightmapSize; // 此面的lightmap比例
 
-    unsigned int property; //面属性
+    unsigned int property; // 面属性
 
-    Vector3f faceClr; //面光源的颜色
+    Vector3f faceClr; // 面光源的颜色
 
-    char scriptName[64]; //脚本文件名
+    char scriptName[64]; // 脚本文件名
 
     char reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -260,15 +260,15 @@ struct lvlFace {
 #define LVLDRAWFACE_LAVA    1 << 3
 
 struct lvlDrawFace {
-    uint faceId; //所属的lvlFace的列表id
+    uint faceId; // 所属的lvlFace的列表id
 
     uint num_vert; // polygon的顶点数
 
-    Vector3f * vList; //顶点列表
+    Vector3f * vList; // 顶点列表
 
-    vec2_c * uvList; //对应的uv列表
+    vec2_c * uvList; // 对应的uv列表
 
-    vec2_c * luvList; //对应的lightmap的uv列表
+    vec2_c * luvList; // 对应的lightmap的uv列表
 
     char reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -316,13 +316,13 @@ struct lvlDrawFace {
 // 碰撞监测表面
 //----------------------------------------------------------------------------------
 struct lvlCollideFace {
-    int faceId; //所属的lvlFace的列表id
+    int faceId; // 所属的lvlFace的列表id
 
-    uint portalId; //如果faceId为-1，表示此表面源于portal，portalId表示portal id
+    uint portalId; // 如果faceId为-1，表示此表面源于portal，portalId表示portal id
 
     uint num_vert; // polygon的顶点数
 
-    Vector3f * vList; //顶点列表
+    Vector3f * vList; // 顶点列表
 
     char reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -368,7 +368,7 @@ struct lvlNonStructFace {
 
     uint num_vert; // polygon的顶点数
 
-    Vector3f * vList; //顶点列表
+    Vector3f * vList; // 顶点列表
 
     char reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -414,9 +414,9 @@ struct lvlBspNode {
 
     uint * faceId; // lvlCollideFace的id
 
-    int parent; //父节点索引，-1表示根节点
+    int parent; // 父节点索引，-1表示根节点
 
-    int child[2]; //前后子节点索引，-1表示空
+    int child[2]; // 前后子节点索引，-1表示空
 
     bool Write(FILE * fp) {
         GN_GUARD;
@@ -459,19 +459,19 @@ struct lvlBspNode {
 #define LVLCURVE_LIGHT   1 << 0
 
 struct lvlCurve {
-    char name[64]; //关卡编辑器中的名字，用来与脚本连接
+    char name[64]; // 关卡编辑器中的名字，用来与脚本连接
 
     unsigned int texId; // face的贴图在材质库中的索引
 
-    uint numCtrlPtW, numCtrlPtH; //控制点数量
+    uint numCtrlPtW, numCtrlPtH; // 控制点数量
 
-    Vector3f * ctrlPtList; //控制点列表，按行排列
+    Vector3f * ctrlPtList; // 控制点列表，按行排列
 
-    uint numSampleW, numSampleH; //采样点数量，不是采样率
+    uint numSampleW, numSampleH; // 采样点数量，不是采样率
 
-    Vector3f * sampleClrList; //采样点颜色列表，按行排列
+    Vector3f * sampleClrList; // 采样点颜色列表，按行排列
 
-    vec2_c * sampleUVList; //采样点uv列表，按行排列
+    vec2_c * sampleUVList; // 采样点uv列表，按行排列
 
     unsigned int property; // face light....
 
@@ -544,19 +544,19 @@ struct lvlCurve {
 // 模型
 //----------------------------------------------------------------------------------
 struct lvlModel {
-    char name[64]; //关卡编辑器中的名字，用来与脚本连接
+    char name[64]; // 关卡编辑器中的名字，用来与脚本连接
 
-    uint modelNameId; //模型文件名列表的id
+    uint modelNameId; // 模型文件名列表的id
 
-    Vector3f trans; //平移
+    Vector3f trans; // 平移
 
-    Vector3f rotate; //旋转
+    Vector3f rotate; // 旋转
 
-    uint num_vert; //模型的顶点数
+    uint num_vert; // 模型的顶点数
 
-    Vector3f * vClrList; //顶点颜色列表
+    Vector3f * vClrList; // 顶点颜色列表
 
-    char scriptName[64]; //脚本文件名
+    char scriptName[64]; // 脚本文件名
 
     char reserve[LVL_FILE_DEFAULT_RESERVE];
 
@@ -725,7 +725,7 @@ struct lvlSpace {
 
     Plane3f * planeList;
 
-    char scriptName[64]; //脚本文件名
+    char scriptName[64]; // 脚本文件名
 
     char reserve[LVL_FILE_DEFAULT_RESERVE];
 

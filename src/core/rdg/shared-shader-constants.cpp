@@ -68,8 +68,8 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
         GpuResourceGroup::CreateParameters grpParams;
         grpParams.context = mGpu;
         grpParams.slots   = {
-              GpuResourceGroup::SlotDescription {.type = GpuResourceGroup::SlotDescription::UNIFORM_BUFFER, .count = 1, .stages = vsAndPs},
-              GpuResourceGroup::SlotDescription {.type = GpuResourceGroup::SlotDescription::UNIFORM_BUFFER, .count = 1, .stages = vsAndPs},
+            GpuResourceGroup::SlotDescription {.type = GpuResourceGroup::SlotDescription::UNIFORM_BUFFER, .count = 1, .stages = vsAndPs},
+            GpuResourceGroup::SlotDescription {.type = GpuResourceGroup::SlotDescription::UNIFORM_BUFFER, .count = 1, .stages = vsAndPs},
         };
         mSet0Group = GpuResourceGroup::create(database, StrA::format("{}.set0", name), grpParams);
         if (!mSet0Group) GN_UNLIKELY {

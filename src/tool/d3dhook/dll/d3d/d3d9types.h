@@ -39,7 +39,7 @@ typedef DWORD D3DCOLOR;
         #endif
 
         // maps unsigned 8 bits/channel to D3DCOLOR
-        #define D3DCOLOR_ARGB(a, r, g, b) ((D3DCOLOR) ((((a) &0xff) << 24) | (((r) &0xff) << 16) | (((g) &0xff) << 8) | ((b) &0xff)))
+        #define D3DCOLOR_ARGB(a, r, g, b) ((D3DCOLOR) ((((a) & 0xff) << 24) | (((r) & 0xff) << 16) | (((g) & 0xff) << 8) | ((b) & 0xff)))
         #define D3DCOLOR_RGBA(r, g, b, a) D3DCOLOR_ARGB(a, r, g, b)
         #define D3DCOLOR_XRGB(r, g, b)    D3DCOLOR_ARGB(0xff, r, g, b)
 
@@ -47,7 +47,7 @@ typedef DWORD D3DCOLOR;
         #define D3DCOLOR_AYUV(a, y, u, v) D3DCOLOR_ARGB(a, y, u, v)
 
         // maps floating point channels (0.f to 1.f range) to D3DCOLOR
-        #define D3DCOLOR_COLORVALUE(r, g, b, a) D3DCOLOR_RGBA((DWORD) ((r) *255.f), (DWORD) ((g) *255.f), (DWORD) ((b) *255.f), (DWORD) ((a) *255.f))
+        #define D3DCOLOR_COLORVALUE(r, g, b, a) D3DCOLOR_RGBA((DWORD) ((r) * 255.f), (DWORD) ((g) * 255.f), (DWORD) ((b) * 255.f), (DWORD) ((a) * 255.f))
 
         #ifndef D3DVECTOR_DEFINED
 typedef struct _D3DVECTOR {
@@ -763,8 +763,7 @@ typedef struct _D3DVERTEXELEMENT9 {
         // This is used to initialize the last vertex element in a vertex declaration
         // array
         //
-        #define D3DDECL_END() \
-            { 0xFF, 0, D3DDECLTYPE_UNUSED, 0, 0, 0 }
+        #define D3DDECL_END() {0xFF, 0, D3DDECLTYPE_UNUSED, 0, 0, 0}
 
         // Maximum supported number of texture coordinate sets
         #define D3DDP_MAXTEXCOORD 8
@@ -1441,7 +1440,7 @@ typedef enum _D3DSWAPEFFECT {
     D3DSWAPEFFECT_OVERLAY = 4,
     D3DSWAPEFFECT_FLIPEX  = 5,
         #endif // !D3D_DISABLE_9EX
-                /* -- D3D9Ex only */
+               /* -- D3D9Ex only */
 
     D3DSWAPEFFECT_FORCE_DWORD = 0x7fffffff
 } D3DSWAPEFFECT;
@@ -1704,8 +1703,8 @@ typedef struct _D3DADAPTER_IDENTIFIER9 {
         #ifdef _WIN32
     LARGE_INTEGER DriverVersion; /* Defined for 32 bit components */
         #else
-    DWORD            DriverVersionLowPart; /* Defined for 16 bit driver components */
-    DWORD            DriverVersionHighPart;
+    DWORD DriverVersionLowPart; /* Defined for 16 bit driver components */
+    DWORD DriverVersionHighPart;
         #endif
 
     DWORD VendorId;

@@ -17,7 +17,7 @@
 ///
 /// Get byte offset of class member or struct field
 ///
-#define GN_FIELD_OFFSET(class_, field) ((size_t) (intptr_t) & (((class_ *) (void *) (8))->field) - 8)
+#define GN_FIELD_OFFSET(class_, field) ((size_t) (intptr_t) &(((class_ *) (void *) (8))->field) - 8)
 
 ///
 /// Execute only limited times during the entir life of the
@@ -52,12 +52,14 @@
 ///
 /// compose RGBA8 color constant
 ///
-#define GN_RGBA8(r, g, b, a) ((((uint32_t) (r) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (b) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
+#define GN_RGBA8(r, g, b, a) \
+    ((((uint32_t) (r) & 0xFF) << 0) | (((uint32_t) (g) & 0xFF) << 8) | (((uint32_t) (b) & 0xFF) << 16) | (((uint32_t) (a) & 0xFF) << 24))
 
 ///
 /// compose BGRA8 color constant
 ///
-#define GN_BGRA8(r, g, b, a) ((((uint32_t) (b) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (r) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
+#define GN_BGRA8(r, g, b, a) \
+    ((((uint32_t) (b) & 0xFF) << 0) | (((uint32_t) (g) & 0xFF) << 8) | (((uint32_t) (r) & 0xFF) << 16) | (((uint32_t) (a) & 0xFF) << 24))
 
 namespace GN {
 

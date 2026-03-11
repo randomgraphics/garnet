@@ -22,10 +22,8 @@ struct RValue {
     UINT         m_Value;
 };
 
-#define RVALUE_END() \
-    { NULL, 0U }
-#define RVALUE_ENTRY(prefix, x) \
-    { #x, (UINT) prefix##x }
+#define RVALUE_END()            {NULL, 0U}
+#define RVALUE_ENTRY(prefix, x) {#x, (UINT) prefix##x}
 
 enum ELhsType;
 
@@ -42,8 +40,7 @@ struct LValue {
     UINT                       m_Stride;       // for vectors, byte stride between two consecutive values. if 0, m_Type's size is used
 };
 
-#define LVALUE_END() \
-    { NULL, D3D10_SVT_UINT, 0, 0, 0, NULL }
+#define LVALUE_END() {NULL, D3D10_SVT_UINT, 0, 0, 0, NULL}
 
 extern CONST LValue g_lvGeneral[];
 extern CONST UINT   g_lvGeneralCount;

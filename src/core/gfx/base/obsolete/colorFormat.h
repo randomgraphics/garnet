@@ -30,7 +30,7 @@
 /// compose color format from various properties
 ///
 #define GN_MAKE_COLOR_FORMAT_EX(layout, sign012, sign3, sw0, sw1, sw2, sw3)                                                                                  \
-    (((layout) &GN_COLOR_FORMAT_MASK_LAYOUT) | (((sign012) << GN_COLOR_FORMAT_SHIFT_SIGN012) & GN_COLOR_FORMAT_MASK_SIGN012) |                               \
+    (((layout) & GN_COLOR_FORMAT_MASK_LAYOUT) | (((sign012) << GN_COLOR_FORMAT_SHIFT_SIGN012) & GN_COLOR_FORMAT_MASK_SIGN012) |                              \
      (((sign3) << GN_COLOR_FORMAT_SHIFT_SIGN3) & GN_COLOR_FORMAT_MASK_SIGN3) | (((sw0) << GN_COLOR_FORMAT_SHIFT_SWIZZLE0) & GN_COLOR_FORMAT_MASK_SWIZZLE0) | \
      (((sw1) << GN_COLOR_FORMAT_SHIFT_SWIZZLE1) & GN_COLOR_FORMAT_MASK_SWIZZLE1) |                                                                           \
      (((sw2) << GN_COLOR_FORMAT_SHIFT_SWIZZLE2) & GN_COLOR_FORMAT_MASK_SWIZZLE2) |                                                                           \
@@ -53,12 +53,14 @@
 ///
 /// compose RGBA8 color constant
 ///
-#define GN_RGBA8(r, g, b, a) ((((uint32_t) (r) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (b) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
+#define GN_RGBA8(r, g, b, a) \
+    ((((uint32_t) (r) & 0xFF) << 0) | (((uint32_t) (g) & 0xFF) << 8) | (((uint32_t) (b) & 0xFF) << 16) | (((uint32_t) (a) & 0xFF) << 24))
 
 ///
 /// compose BGRA8 color constant
 ///
-#define GN_BGRA8(r, g, b, a) ((((uint32_t) (b) &0xFF) << 0) | (((uint32_t) (g) &0xFF) << 8) | (((uint32_t) (r) &0xFF) << 16) | (((uint32_t) (a) &0xFF) << 24))
+#define GN_BGRA8(r, g, b, a) \
+    ((((uint32_t) (b) & 0xFF) << 0) | (((uint32_t) (g) & 0xFF) << 8) | (((uint32_t) (r) & 0xFF) << 16) | (((uint32_t) (a) & 0xFF) << 24))
 
 namespace GN {
 namespace gfx {

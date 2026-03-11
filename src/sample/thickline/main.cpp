@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "garnet/GNgfx.h"
 #include "garnet/util/sampleApp.h"
-//#include "orientationBox.h"
-//#include "viewfrustum.h"
+// #include "orientationBox.h"
+// #include "viewfrustum.h"
 
 using namespace GN;
 using namespace GN::gfx;
