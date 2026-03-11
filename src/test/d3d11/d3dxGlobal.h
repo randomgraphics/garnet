@@ -31,7 +31,7 @@ using namespace D3DX11Debug;
 
 #define SAFE_DELETE_ARRAY(p) \
     {                        \
-        delete[](p);         \
+        delete[] (p);        \
         p = NULL;            \
     }
 #define SAFE_DELETE(p) \
@@ -84,19 +84,13 @@ using namespace D3DX11Debug;
         }                    \
     }
 
-#define V(x) \
-    { VA(x, 0) }
-#define VN(x) \
-    { VNA(x, 0) }
-#define VB(x) \
-    { VBA(x, 0) }
-#define VH(x) \
-    { VHA(x, 0) }
+#define V(x)  {VA(x, 0)}
+#define VN(x) {VNA(x, 0)}
+#define VB(x) {VBA(x, 0)}
+#define VH(x) {VHA(x, 0)}
 
-#define VBD(x, str) \
-    { VBA(x, DPF(1, str)) }
-#define VHD(x, str) \
-    { VHA(x, DPF(1, str)) }
+#define VBD(x, str) {VBA(x, DPF(1, str))}
+#define VHD(x, str) {VHA(x, DPF(1, str))}
 
 #define VEASSERT(x)          \
     {                        \

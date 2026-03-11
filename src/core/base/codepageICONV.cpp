@@ -24,7 +24,7 @@ static const char * sEncodingToLocale(CharacterEncodingConverter::Encoding e) {
     #if GN_LITTLE_ENDIAN
         "UTF-16LE", // UTF16
     #else
-        "UTF-16BE",            // UTF16
+        "UTF-16BE", // UTF16
     #endif
 
         "UTF-32LE", // UTF32_LE
@@ -33,7 +33,7 @@ static const char * sEncodingToLocale(CharacterEncodingConverter::Encoding e) {
     #if GN_LITTLE_ENDIAN
         "UTF-32LE", // UTF32
     #else
-        "UTF-32BE",            // UTF32
+        "UTF-32BE", // UTF32
     #endif
 
     #if GN_LITTLE_ENDIAN

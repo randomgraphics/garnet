@@ -101,8 +101,8 @@ public:
         Node *parent = nullptr, *left = nullptr, *right = nullptr;
         int   primitive = -1;
         bool  IsLeaf() const {
-             GN_ASSERT((left && right) || (!left && !right));
-             return nullptr == left;
+            GN_ASSERT((left && right) || (!left && !right));
+            return nullptr == left;
         }
     };
     typedef Node * NodePtr;

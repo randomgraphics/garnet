@@ -149,9 +149,7 @@ typedef struct IDXGIDisplayControlVtbl {
     END_INTERFACE
 } IDXGIDisplayControlVtbl;
 
-interface IDXGIDisplayControl {
-    CONST_VTBL struct IDXGIDisplayControlVtbl * lpVtbl;
-};
+interface IDXGIDisplayControl { CONST_VTBL struct IDXGIDisplayControlVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -378,9 +376,7 @@ typedef struct IDXGIOutputDuplicationVtbl {
     END_INTERFACE
 } IDXGIOutputDuplicationVtbl;
 
-interface IDXGIOutputDuplication {
-    CONST_VTBL struct IDXGIOutputDuplicationVtbl * lpVtbl;
-};
+interface IDXGIOutputDuplication { CONST_VTBL struct IDXGIOutputDuplicationVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -426,8 +422,8 @@ interface IDXGIOutputDuplication {
 
         #endif /* __IDXGIOutputDuplication_INTERFACE_DEFINED__ */
 
-        /* interface __MIDL_itf_dxgi1_2_0000_0002 */
-        /* [local] */
+    /* interface __MIDL_itf_dxgi1_2_0000_0002 */
+    /* [local] */
 
     #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP) */
     #pragma endregion
@@ -555,9 +551,7 @@ typedef struct IDXGISurface2Vtbl {
     END_INTERFACE
 } IDXGISurface2Vtbl;
 
-interface IDXGISurface2 {
-    CONST_VTBL struct IDXGISurface2Vtbl * lpVtbl;
-};
+interface IDXGISurface2 { CONST_VTBL struct IDXGISurface2Vtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -715,9 +709,7 @@ typedef struct IDXGIResource1Vtbl {
     END_INTERFACE
 } IDXGIResource1Vtbl;
 
-interface IDXGIResource1 {
-    CONST_VTBL struct IDXGIResource1Vtbl * lpVtbl;
-};
+interface IDXGIResource1 { CONST_VTBL struct IDXGIResource1Vtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -916,9 +908,7 @@ typedef struct IDXGIDevice2Vtbl {
     END_INTERFACE
 } IDXGIDevice2Vtbl;
 
-interface IDXGIDevice2 {
-    CONST_VTBL struct IDXGIDevice2Vtbl * lpVtbl;
-};
+interface IDXGIDevice2 { CONST_VTBL struct IDXGIDevice2Vtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -966,8 +956,8 @@ interface IDXGIDevice2 {
 
         #endif /* __IDXGIDevice2_INTERFACE_DEFINED__ */
 
-        /* interface __MIDL_itf_dxgi1_2_0000_0005 */
-        /* [local] */
+    /* interface __MIDL_itf_dxgi1_2_0000_0005 */
+    /* [local] */
 
         #define DXGI_ENUM_MODES_STEREO (4UL)
 
@@ -1251,9 +1241,7 @@ typedef struct IDXGISwapChain1Vtbl {
     END_INTERFACE
 } IDXGISwapChain1Vtbl;
 
-interface IDXGISwapChain1 {
-    CONST_VTBL struct IDXGISwapChain1Vtbl * lpVtbl;
-};
+interface IDXGISwapChain1 { CONST_VTBL struct IDXGISwapChain1Vtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -1590,9 +1578,7 @@ typedef struct IDXGIFactory2Vtbl {
     END_INTERFACE
 } IDXGIFactory2Vtbl;
 
-interface IDXGIFactory2 {
-    CONST_VTBL struct IDXGIFactory2Vtbl * lpVtbl;
-};
+interface IDXGIFactory2 { CONST_VTBL struct IDXGIFactory2Vtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -1793,9 +1779,7 @@ typedef struct IDXGIAdapter2Vtbl {
     END_INTERFACE
 } IDXGIAdapter2Vtbl;
 
-interface IDXGIAdapter2 {
-    CONST_VTBL struct IDXGIAdapter2Vtbl * lpVtbl;
-};
+interface IDXGIAdapter2 { CONST_VTBL struct IDXGIAdapter2Vtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -2011,9 +1995,7 @@ typedef struct IDXGIOutput1Vtbl {
     END_INTERFACE
 } IDXGIOutput1Vtbl;
 
-interface IDXGIOutput1 {
-    CONST_VTBL struct IDXGIOutput1Vtbl * lpVtbl;
-};
+interface IDXGIOutput1 { CONST_VTBL struct IDXGIOutput1Vtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -2074,8 +2056,8 @@ interface IDXGIOutput1 {
 
         #endif /* __IDXGIOutput1_INTERFACE_DEFINED__ */
 
-        /* interface __MIDL_itf_dxgi1_2_0000_0009 */
-        /* [local] */
+    /* interface __MIDL_itf_dxgi1_2_0000_0009 */
+    /* [local] */
 
     #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) */
     #pragma endregion

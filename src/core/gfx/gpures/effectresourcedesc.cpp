@@ -25,10 +25,8 @@ struct EnumNames {
     int          value;
     const char * name;
 };
-#define ENUM_TABLE_BEGIN(name) \
-    { -1, name }
-#define ENUM_TABLE_END \
-    { -1, NULL }
+#define ENUM_TABLE_BEGIN(name) {-1, name}
+#define ENUM_TABLE_END         {-1, NULL}
 
 template<class RESULT_TYPE>
 static bool sParseEnum(RESULT_TYPE & result, const char * name, const EnumNames * table) {

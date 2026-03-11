@@ -89,7 +89,7 @@ std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuResource
                           .setType(vk::ImageViewType::e2D)
                           .setFormat(image->desc().format)
                           .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, si.mip, 1, si.face, 1));
-    auto mipExtent = rapid_vulkan::getMipLevelExtent(vk::Extent3D(baseExtent.width, baseExtent.height, 1), si.mip);
+    auto mipExtent  = rapid_vulkan::getMipLevelExtent(vk::Extent3D(baseExtent.width, baseExtent.height, 1), si.mip);
     return {image->getView(viewParams), vk::Extent2D(mipExtent.width, mipExtent.height)};
 }
 
@@ -127,7 +127,7 @@ vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const GpuReso
                                .setType(vk::ImageViewType::e2D)
                                .setFormat(image->desc().format)
                                .setRange(vk::ImageSubresourceRange(aspect, si.mip, 1, si.face, 1));
-    auto view = image->getView(depthViewParams);
+    auto view            = image->getView(depthViewParams);
     if (!view) GN_UNLIKELY {
             GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create depth view for depth target texture.");
             return {};

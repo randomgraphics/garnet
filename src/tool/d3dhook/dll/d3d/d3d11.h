@@ -1296,9 +1296,7 @@ typedef struct ID3D11DeviceChildVtbl {
     END_INTERFACE
 } ID3D11DeviceChildVtbl;
 
-interface ID3D11DeviceChild {
-    CONST_VTBL struct ID3D11DeviceChildVtbl * lpVtbl;
-};
+interface ID3D11DeviceChild { CONST_VTBL struct ID3D11DeviceChildVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1481,9 +1479,7 @@ typedef struct ID3D11DepthStencilStateVtbl {
     END_INTERFACE
 } ID3D11DepthStencilStateVtbl;
 
-interface ID3D11DepthStencilState {
-    CONST_VTBL struct ID3D11DepthStencilStateVtbl * lpVtbl;
-};
+interface ID3D11DepthStencilState { CONST_VTBL struct ID3D11DepthStencilStateVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1659,9 +1655,7 @@ typedef struct ID3D11BlendStateVtbl {
     END_INTERFACE
 } ID3D11BlendStateVtbl;
 
-interface ID3D11BlendState {
-    CONST_VTBL struct ID3D11BlendStateVtbl * lpVtbl;
-};
+interface ID3D11BlendState { CONST_VTBL struct ID3D11BlendStateVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1811,9 +1805,7 @@ typedef struct ID3D11RasterizerStateVtbl {
     END_INTERFACE
 } ID3D11RasterizerStateVtbl;
 
-interface ID3D11RasterizerState {
-    CONST_VTBL struct ID3D11RasterizerStateVtbl * lpVtbl;
-};
+interface ID3D11RasterizerState { CONST_VTBL struct ID3D11RasterizerStateVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1839,8 +1831,8 @@ interface ID3D11RasterizerState {
 
     #endif /* __ID3D11RasterizerState_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_d3d11_0000_0004 */
-    /* [local] */
+/* interface __MIDL_itf_d3d11_0000_0004 */
+/* [local] */
 
     #if !defined(D3D11_NO_HELPERS) && defined(__cplusplus)
 }
@@ -1943,9 +1935,7 @@ typedef struct ID3D11ResourceVtbl {
     END_INTERFACE
 } ID3D11ResourceVtbl;
 
-interface ID3D11Resource {
-    CONST_VTBL struct ID3D11ResourceVtbl * lpVtbl;
-};
+interface ID3D11Resource { CONST_VTBL struct ID3D11ResourceVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2089,9 +2079,7 @@ typedef struct ID3D11BufferVtbl {
     END_INTERFACE
 } ID3D11BufferVtbl;
 
-interface ID3D11Buffer {
-    CONST_VTBL struct ID3D11BufferVtbl * lpVtbl;
-};
+interface ID3D11Buffer { CONST_VTBL struct ID3D11BufferVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2241,9 +2229,7 @@ typedef struct ID3D11Texture1DVtbl {
     END_INTERFACE
 } ID3D11Texture1DVtbl;
 
-interface ID3D11Texture1D {
-    CONST_VTBL struct ID3D11Texture1DVtbl * lpVtbl;
-};
+interface ID3D11Texture1D { CONST_VTBL struct ID3D11Texture1DVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2399,9 +2385,7 @@ typedef struct ID3D11Texture2DVtbl {
     END_INTERFACE
 } ID3D11Texture2DVtbl;
 
-interface ID3D11Texture2D {
-    CONST_VTBL struct ID3D11Texture2DVtbl * lpVtbl;
-};
+interface ID3D11Texture2D { CONST_VTBL struct ID3D11Texture2DVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2553,9 +2537,7 @@ typedef struct ID3D11Texture3DVtbl {
     END_INTERFACE
 } ID3D11Texture3DVtbl;
 
-interface ID3D11Texture3D {
-    CONST_VTBL struct ID3D11Texture3DVtbl * lpVtbl;
-};
+interface ID3D11Texture3D { CONST_VTBL struct ID3D11Texture3DVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2671,9 +2653,7 @@ typedef struct ID3D11ViewVtbl {
     END_INTERFACE
 } ID3D11ViewVtbl;
 
-interface ID3D11View {
-    CONST_VTBL struct ID3D11ViewVtbl * lpVtbl;
-};
+interface ID3D11View { CONST_VTBL struct ID3D11ViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2799,7 +2779,7 @@ struct CD3D11_SHADER_RESOURCE_VIEW_DESC : public D3D11_SHADER_RESOURCE_VIEW_DESC
                                               UINT mipLevels       = -1, // NumElements for BUFFER
                                               UINT firstArraySlice = 0,  // First2DArrayFace for TEXTURECUBEARRAY
                                               UINT arraySize       = -1, // NumCubes for TEXTURECUBEARRAY
-                                              UINT flags           = 0)            // BUFFEREX only
+                                              UINT flags           = 0)  // BUFFEREX only
     {
         Format        = format;
         ViewDimension = viewDimension;
@@ -2892,8 +2872,8 @@ struct CD3D11_SHADER_RESOURCE_VIEW_DESC : public D3D11_SHADER_RESOURCE_VIEW_DESC
     }
     explicit CD3D11_SHADER_RESOURCE_VIEW_DESC(_In_ ID3D11Texture2D * pTex2D, D3D11_SRV_DIMENSION viewDimension, DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN,
                                               UINT mostDetailedMip = 0, UINT mipLevels = -1,
-                                              UINT firstArraySlice = 0, // First2DArrayFace for TEXTURECUBEARRAY
-                                              UINT arraySize       = -1)      // NumCubes for TEXTURECUBEARRAY
+                                              UINT firstArraySlice = 0,  // First2DArrayFace for TEXTURECUBEARRAY
+                                              UINT arraySize       = -1) // NumCubes for TEXTURECUBEARRAY
     {
         ViewDimension = viewDimension;
         if (DXGI_FORMAT_UNKNOWN == format ||
@@ -3036,9 +3016,7 @@ typedef struct ID3D11ShaderResourceViewVtbl {
     END_INTERFACE
 } ID3D11ShaderResourceViewVtbl;
 
-interface ID3D11ShaderResourceView {
-    CONST_VTBL struct ID3D11ShaderResourceViewVtbl * lpVtbl;
-};
+interface ID3D11ShaderResourceView { CONST_VTBL struct ID3D11ShaderResourceViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -3136,9 +3114,9 @@ struct CD3D11_RENDER_TARGET_VIEW_DESC : public D3D11_RENDER_TARGET_VIEW_DESC {
     CD3D11_RENDER_TARGET_VIEW_DESC() {}
     explicit CD3D11_RENDER_TARGET_VIEW_DESC(const D3D11_RENDER_TARGET_VIEW_DESC & o): D3D11_RENDER_TARGET_VIEW_DESC(o) {}
     explicit CD3D11_RENDER_TARGET_VIEW_DESC(D3D11_RTV_DIMENSION viewDimension, DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN,
-                                            UINT mipSlice        = 0, // FirstElement for BUFFER
-                                            UINT firstArraySlice = 0, // NumElements for BUFFER, FirstWSlice for TEXTURE3D
-                                            UINT arraySize       = -1)      // WSize for TEXTURE3D
+                                            UINT mipSlice        = 0,  // FirstElement for BUFFER
+                                            UINT firstArraySlice = 0,  // NumElements for BUFFER, FirstWSlice for TEXTURE3D
+                                            UINT arraySize       = -1) // WSize for TEXTURE3D
     {
         Format        = format;
         ViewDimension = viewDimension;
@@ -3333,9 +3311,7 @@ typedef struct ID3D11RenderTargetViewVtbl {
     END_INTERFACE
 } ID3D11RenderTargetViewVtbl;
 
-interface ID3D11RenderTargetView {
-    CONST_VTBL struct ID3D11RenderTargetViewVtbl * lpVtbl;
-};
+interface ID3D11RenderTargetView { CONST_VTBL struct ID3D11RenderTargetViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -3363,8 +3339,8 @@ interface ID3D11RenderTargetView {
 
     #endif /* __ID3D11RenderTargetView_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_d3d11_0000_0012 */
-    /* [local] */
+/* interface __MIDL_itf_d3d11_0000_0012 */
+/* [local] */
 
     #if !defined(D3D11_NO_HELPERS) && defined(__cplusplus)
 }
@@ -3699,9 +3675,7 @@ typedef struct ID3D11DepthStencilViewVtbl {
     END_INTERFACE
 } ID3D11DepthStencilViewVtbl;
 
-interface ID3D11DepthStencilView {
-    CONST_VTBL struct ID3D11DepthStencilViewVtbl * lpVtbl;
-};
+interface ID3D11DepthStencilView { CONST_VTBL struct ID3D11DepthStencilViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -3792,7 +3766,7 @@ struct CD3D11_UNORDERED_ACCESS_VIEW_DESC : public D3D11_UNORDERED_ACCESS_VIEW_DE
                                                UINT mipSlice        = 0,  // FirstElement for BUFFER
                                                UINT firstArraySlice = 0,  // NumElements for BUFFER, FirstWSlice for TEXTURE3D
                                                UINT arraySize       = -1, // WSize for TEXTURE3D
-                                               UINT flags           = 0)            // BUFFER only
+                                               UINT flags           = 0)  // BUFFER only
     {
         Format        = format;
         ViewDimension = viewDimension;
@@ -3976,9 +3950,7 @@ typedef struct ID3D11UnorderedAccessViewVtbl {
     END_INTERFACE
 } ID3D11UnorderedAccessViewVtbl;
 
-interface ID3D11UnorderedAccessView {
-    CONST_VTBL struct ID3D11UnorderedAccessViewVtbl * lpVtbl;
-};
+interface ID3D11UnorderedAccessView { CONST_VTBL struct ID3D11UnorderedAccessViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4066,9 +4038,7 @@ typedef struct ID3D11VertexShaderVtbl {
     END_INTERFACE
 } ID3D11VertexShaderVtbl;
 
-interface ID3D11VertexShader {
-    CONST_VTBL struct ID3D11VertexShaderVtbl * lpVtbl;
-};
+interface ID3D11VertexShader { CONST_VTBL struct ID3D11VertexShaderVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4152,9 +4122,7 @@ typedef struct ID3D11HullShaderVtbl {
     END_INTERFACE
 } ID3D11HullShaderVtbl;
 
-interface ID3D11HullShader {
-    CONST_VTBL struct ID3D11HullShaderVtbl * lpVtbl;
-};
+interface ID3D11HullShader { CONST_VTBL struct ID3D11HullShaderVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4238,9 +4206,7 @@ typedef struct ID3D11DomainShaderVtbl {
     END_INTERFACE
 } ID3D11DomainShaderVtbl;
 
-interface ID3D11DomainShader {
-    CONST_VTBL struct ID3D11DomainShaderVtbl * lpVtbl;
-};
+interface ID3D11DomainShader { CONST_VTBL struct ID3D11DomainShaderVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4324,9 +4290,7 @@ typedef struct ID3D11GeometryShaderVtbl {
     END_INTERFACE
 } ID3D11GeometryShaderVtbl;
 
-interface ID3D11GeometryShader {
-    CONST_VTBL struct ID3D11GeometryShaderVtbl * lpVtbl;
-};
+interface ID3D11GeometryShader { CONST_VTBL struct ID3D11GeometryShaderVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4410,9 +4374,7 @@ typedef struct ID3D11PixelShaderVtbl {
     END_INTERFACE
 } ID3D11PixelShaderVtbl;
 
-interface ID3D11PixelShader {
-    CONST_VTBL struct ID3D11PixelShaderVtbl * lpVtbl;
-};
+interface ID3D11PixelShader { CONST_VTBL struct ID3D11PixelShaderVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4496,9 +4458,7 @@ typedef struct ID3D11ComputeShaderVtbl {
     END_INTERFACE
 } ID3D11ComputeShaderVtbl;
 
-interface ID3D11ComputeShader {
-    CONST_VTBL struct ID3D11ComputeShaderVtbl * lpVtbl;
-};
+interface ID3D11ComputeShader { CONST_VTBL struct ID3D11ComputeShaderVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4582,9 +4542,7 @@ typedef struct ID3D11InputLayoutVtbl {
     END_INTERFACE
 } ID3D11InputLayoutVtbl;
 
-interface ID3D11InputLayout {
-    CONST_VTBL struct ID3D11InputLayoutVtbl * lpVtbl;
-};
+interface ID3D11InputLayout { CONST_VTBL struct ID3D11InputLayoutVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4646,18 +4604,18 @@ typedef enum D3D11_FILTER_TYPE { D3D11_FILTER_TYPE_POINT = 0, D3D11_FILTER_TYPE_
 
     #define D3D11_ANISOTROPIC_FILTERING_BIT (0x40)
 
-    #define D3D11_ENCODE_BASIC_FILTER(min, mag, mip, bComparison)                                                                             \
-        ((D3D11_FILTER) (((bComparison) ? D3D11_COMPARISON_FILTERING_BIT : 0) | (((min) &D3D11_FILTER_TYPE_MASK) << D3D11_MIN_FILTER_SHIFT) | \
-                         (((mag) &D3D11_FILTER_TYPE_MASK) << D3D11_MAG_FILTER_SHIFT) | (((mip) &D3D11_FILTER_TYPE_MASK) << D3D11_MIP_FILTER_SHIFT)))
+    #define D3D11_ENCODE_BASIC_FILTER(min, mag, mip, bComparison)                                                                              \
+        ((D3D11_FILTER) (((bComparison) ? D3D11_COMPARISON_FILTERING_BIT : 0) | (((min) & D3D11_FILTER_TYPE_MASK) << D3D11_MIN_FILTER_SHIFT) | \
+                         (((mag) & D3D11_FILTER_TYPE_MASK) << D3D11_MAG_FILTER_SHIFT) | (((mip) & D3D11_FILTER_TYPE_MASK) << D3D11_MIP_FILTER_SHIFT)))
     #define D3D11_ENCODE_ANISOTROPIC_FILTER(bComparison)   \
         ((D3D11_FILTER) (D3D11_ANISOTROPIC_FILTERING_BIT | \
                          D3D11_ENCODE_BASIC_FILTER(D3D11_FILTER_TYPE_LINEAR, D3D11_FILTER_TYPE_LINEAR, D3D11_FILTER_TYPE_LINEAR, bComparison)))
     #define D3D11_DECODE_MIN_FILTER(d3d11Filter)           ((D3D11_FILTER_TYPE) (((d3d11Filter) >> D3D11_MIN_FILTER_SHIFT) & D3D11_FILTER_TYPE_MASK))
     #define D3D11_DECODE_MAG_FILTER(d3d11Filter)           ((D3D11_FILTER_TYPE) (((d3d11Filter) >> D3D11_MAG_FILTER_SHIFT) & D3D11_FILTER_TYPE_MASK))
     #define D3D11_DECODE_MIP_FILTER(d3d11Filter)           ((D3D11_FILTER_TYPE) (((d3d11Filter) >> D3D11_MIP_FILTER_SHIFT) & D3D11_FILTER_TYPE_MASK))
-    #define D3D11_DECODE_IS_COMPARISON_FILTER(d3d11Filter) ((d3d11Filter) &D3D11_COMPARISON_FILTERING_BIT)
-    #define D3D11_DECODE_IS_ANISOTROPIC_FILTER(d3d11Filter)                                                                        \
-        (((d3d11Filter) &D3D11_ANISOTROPIC_FILTERING_BIT) && (D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MIN_FILTER(d3d11Filter)) && \
+    #define D3D11_DECODE_IS_COMPARISON_FILTER(d3d11Filter) ((d3d11Filter) & D3D11_COMPARISON_FILTERING_BIT)
+    #define D3D11_DECODE_IS_ANISOTROPIC_FILTER(d3d11Filter)                                                                         \
+        (((d3d11Filter) & D3D11_ANISOTROPIC_FILTERING_BIT) && (D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MIN_FILTER(d3d11Filter)) && \
          (D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MAG_FILTER(d3d11Filter)) && (D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MIP_FILTER(d3d11Filter)))
 typedef enum D3D11_TEXTURE_ADDRESS_MODE {
     D3D11_TEXTURE_ADDRESS_WRAP        = 1,
@@ -4798,9 +4756,7 @@ typedef struct ID3D11SamplerStateVtbl {
     END_INTERFACE
 } ID3D11SamplerStateVtbl;
 
-interface ID3D11SamplerState {
-    CONST_VTBL struct ID3D11SamplerStateVtbl * lpVtbl;
-};
+interface ID3D11SamplerState { CONST_VTBL struct ID3D11SamplerStateVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -4943,9 +4899,7 @@ typedef struct ID3D11AsynchronousVtbl {
     END_INTERFACE
 } ID3D11AsynchronousVtbl;
 
-interface ID3D11Asynchronous {
-    CONST_VTBL struct ID3D11AsynchronousVtbl * lpVtbl;
-};
+interface ID3D11Asynchronous { CONST_VTBL struct ID3D11AsynchronousVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -5091,9 +5045,7 @@ typedef struct ID3D11QueryVtbl {
     END_INTERFACE
 } ID3D11QueryVtbl;
 
-interface ID3D11Query {
-    CONST_VTBL struct ID3D11QueryVtbl * lpVtbl;
-};
+interface ID3D11Query { CONST_VTBL struct ID3D11QueryVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -5187,9 +5139,7 @@ typedef struct ID3D11PredicateVtbl {
     END_INTERFACE
 } ID3D11PredicateVtbl;
 
-interface ID3D11Predicate {
-    CONST_VTBL struct ID3D11PredicateVtbl * lpVtbl;
-};
+interface ID3D11Predicate { CONST_VTBL struct ID3D11PredicateVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -5352,9 +5302,7 @@ typedef struct ID3D11CounterVtbl {
     END_INTERFACE
 } ID3D11CounterVtbl;
 
-interface ID3D11Counter {
-    CONST_VTBL struct ID3D11CounterVtbl * lpVtbl;
-};
+interface ID3D11Counter { CONST_VTBL struct ID3D11CounterVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -5510,9 +5458,7 @@ typedef struct ID3D11ClassInstanceVtbl {
     END_INTERFACE
 } ID3D11ClassInstanceVtbl;
 
-interface ID3D11ClassInstance {
-    CONST_VTBL struct ID3D11ClassInstanceVtbl * lpVtbl;
-};
+interface ID3D11ClassInstance { CONST_VTBL struct ID3D11ClassInstanceVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -5652,9 +5598,7 @@ typedef struct ID3D11ClassLinkageVtbl {
     END_INTERFACE
 } ID3D11ClassLinkageVtbl;
 
-interface ID3D11ClassLinkage {
-    CONST_VTBL struct ID3D11ClassLinkageVtbl * lpVtbl;
-};
+interface ID3D11ClassLinkage { CONST_VTBL struct ID3D11ClassLinkageVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -5751,9 +5695,7 @@ typedef struct ID3D11CommandListVtbl {
     END_INTERFACE
 } ID3D11CommandListVtbl;
 
-interface ID3D11CommandList {
-    CONST_VTBL struct ID3D11CommandListVtbl * lpVtbl;
-};
+interface ID3D11CommandList { CONST_VTBL struct ID3D11CommandListVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -7522,9 +7464,7 @@ typedef struct ID3D11DeviceContextVtbl {
     END_INTERFACE
 } ID3D11DeviceContextVtbl;
 
-interface ID3D11DeviceContext {
-    CONST_VTBL struct ID3D11DeviceContextVtbl * lpVtbl;
-};
+interface ID3D11DeviceContext { CONST_VTBL struct ID3D11DeviceContextVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -7853,8 +7793,8 @@ interface ID3D11DeviceContext {
 
     #endif /* __ID3D11DeviceContext_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_d3d11_0000_0030 */
-    /* [local] */
+/* interface __MIDL_itf_d3d11_0000_0030 */
+/* [local] */
 
     #if !defined(D3D11_VIDEO_NO_HELPERS) && defined(__cplusplus)
 }
@@ -8054,9 +7994,7 @@ typedef struct ID3D11VideoDecoderVtbl {
     END_INTERFACE
 } ID3D11VideoDecoderVtbl;
 
-interface ID3D11VideoDecoder {
-    CONST_VTBL struct ID3D11VideoDecoderVtbl * lpVtbl;
-};
+interface ID3D11VideoDecoder { CONST_VTBL struct ID3D11VideoDecoderVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -8398,9 +8336,7 @@ typedef struct ID3D11VideoProcessorEnumeratorVtbl {
     END_INTERFACE
 } ID3D11VideoProcessorEnumeratorVtbl;
 
-interface ID3D11VideoProcessorEnumerator {
-    CONST_VTBL struct ID3D11VideoProcessorEnumeratorVtbl * lpVtbl;
-};
+interface ID3D11VideoProcessorEnumerator { CONST_VTBL struct ID3D11VideoProcessorEnumeratorVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -8605,9 +8541,7 @@ typedef struct ID3D11VideoProcessorVtbl {
     END_INTERFACE
 } ID3D11VideoProcessorVtbl;
 
-interface ID3D11VideoProcessor {
-    CONST_VTBL struct ID3D11VideoProcessorVtbl * lpVtbl;
-};
+interface ID3D11VideoProcessor { CONST_VTBL struct ID3D11VideoProcessorVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -8742,9 +8676,7 @@ typedef struct ID3D11AuthenticatedChannelVtbl {
     END_INTERFACE
 } ID3D11AuthenticatedChannelVtbl;
 
-interface ID3D11AuthenticatedChannel {
-    CONST_VTBL struct ID3D11AuthenticatedChannelVtbl * lpVtbl;
-};
+interface ID3D11AuthenticatedChannel { CONST_VTBL struct ID3D11AuthenticatedChannelVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -9101,9 +9033,7 @@ typedef struct ID3D11CryptoSessionVtbl {
     END_INTERFACE
 } ID3D11CryptoSessionVtbl;
 
-interface ID3D11CryptoSession {
-    CONST_VTBL struct ID3D11CryptoSessionVtbl * lpVtbl;
-};
+interface ID3D11CryptoSession { CONST_VTBL struct ID3D11CryptoSessionVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -9232,9 +9162,7 @@ typedef struct ID3D11VideoDecoderOutputViewVtbl {
     END_INTERFACE
 } ID3D11VideoDecoderOutputViewVtbl;
 
-interface ID3D11VideoDecoderOutputView {
-    CONST_VTBL struct ID3D11VideoDecoderOutputViewVtbl * lpVtbl;
-};
+interface ID3D11VideoDecoderOutputView { CONST_VTBL struct ID3D11VideoDecoderOutputViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -9356,9 +9284,7 @@ typedef struct ID3D11VideoProcessorInputViewVtbl {
     END_INTERFACE
 } ID3D11VideoProcessorInputViewVtbl;
 
-interface ID3D11VideoProcessorInputView {
-    CONST_VTBL struct ID3D11VideoProcessorInputViewVtbl * lpVtbl;
-};
+interface ID3D11VideoProcessorInputView { CONST_VTBL struct ID3D11VideoProcessorInputViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -9490,9 +9416,7 @@ typedef struct ID3D11VideoProcessorOutputViewVtbl {
     END_INTERFACE
 } ID3D11VideoProcessorOutputViewVtbl;
 
-interface ID3D11VideoProcessorOutputView {
-    CONST_VTBL struct ID3D11VideoProcessorOutputViewVtbl * lpVtbl;
-};
+interface ID3D11VideoProcessorOutputView { CONST_VTBL struct ID3D11VideoProcessorOutputViewVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -10710,9 +10634,7 @@ typedef struct ID3D11VideoContextVtbl {
     END_INTERFACE
 } ID3D11VideoContextVtbl;
 
-interface ID3D11VideoContext {
-    CONST_VTBL struct ID3D11VideoContextVtbl * lpVtbl;
-};
+interface ID3D11VideoContext { CONST_VTBL struct ID3D11VideoContextVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -11220,9 +11142,7 @@ typedef struct ID3D11VideoDeviceVtbl {
     END_INTERFACE
 } ID3D11VideoDeviceVtbl;
 
-interface ID3D11VideoDevice {
-    CONST_VTBL struct ID3D11VideoDeviceVtbl * lpVtbl;
-};
+interface ID3D11VideoDevice { CONST_VTBL struct ID3D11VideoDeviceVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -11285,8 +11205,8 @@ interface ID3D11VideoDevice {
 
     #endif /* __ID3D11VideoDevice_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_d3d11_0000_0040 */
-    /* [local] */
+/* interface __MIDL_itf_d3d11_0000_0040 */
+/* [local] */
 
     #include "winapifamily.h"
 
@@ -11943,9 +11863,7 @@ typedef struct ID3D11DeviceVtbl {
     END_INTERFACE
 } ID3D11DeviceVtbl;
 
-interface ID3D11Device {
-    CONST_VTBL struct ID3D11DeviceVtbl * lpVtbl;
-};
+interface ID3D11Device { CONST_VTBL struct ID3D11DeviceVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 

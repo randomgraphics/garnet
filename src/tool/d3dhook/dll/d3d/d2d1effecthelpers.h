@@ -252,25 +252,22 @@ T GetType(T t) {
             // Helper macros for declaring a D2D1_PROPERTY_BINDING for value, blob, or string callbacks.
             //
             #define D2D1_VALUE_TYPE_BINDING(NAME, SETTER, GETTER) \
-                { NAME, &ValueSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+                {NAME, &ValueSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl>}
 
             #define D2D1_BLOB_TYPE_BINDING(NAME, SETTER, GETTER) \
-                { NAME, &BlobSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+                {NAME, &BlobSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl>}
 
             #define D2D1_STRING_TYPE_BINDING(NAME, SETTER, GETTER) \
-                { NAME, &StringSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+                {NAME, &StringSetter<decltype(GetType(SETTER)), SETTER, ID2D1EffectImpl>, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl>}
 
             //
             // Read-only variants:
             //
-            #define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, GETTER) \
-                { NAME, NULL, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            #define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, GETTER) {NAME, NULL, &ValueGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl>}
 
-            #define D2D1_READONLY_BLOB_TYPE_BINDING(NAME, GETTER) \
-                { NAME, NULL, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            #define D2D1_READONLY_BLOB_TYPE_BINDING(NAME, GETTER) {NAME, NULL, &BlobGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl>}
 
-            #define D2D1_READONLY_STRING_TYPE_BINDING(NAME, GETTER) \
-                { NAME, NULL, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl> }
+            #define D2D1_READONLY_STRING_TYPE_BINDING(NAME, GETTER) {NAME, NULL, &StringGetter<decltype(GetType(GETTER)), GETTER, ID2D1EffectImpl>}
 
         #else // #ifdef D2D1_SIMPLE_BINDING_MACROS
 
@@ -278,31 +275,26 @@ T GetType(T t) {
             // Helper macros for declaring a D2D1_PROPERTY_BINDING for value, blob, or string callbacks.
             //
             #define D2D1_VALUE_TYPE_BINDING(NAME, TYPE, CLASS, SETTER, GETTER) \
-                { NAME, &ValueSetter<HRESULT (CLASS::*)(TYPE), SETTER, ID2D1EffectImpl>, &ValueGetter<TYPE (CLASS::*)() const, GETTER, ID2D1EffectImpl> }
+                {NAME, &ValueSetter<HRESULT (CLASS::*)(TYPE), SETTER, ID2D1EffectImpl>, &ValueGetter<TYPE (CLASS::*)() const, GETTER, ID2D1EffectImpl>}
 
-            #define D2D1_BLOB_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                                          \
-                {                                                                                                \
-                    NAME, &BlobSetter<HRESULT (CLASS::*)(const BYTE *, UINT32), SETTER, ID2D1EffectImpl>,        \
-                        &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> \
-                }
+            #define D2D1_BLOB_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                                \
+                {NAME, &BlobSetter<HRESULT (CLASS::*)(const BYTE *, UINT32), SETTER, ID2D1EffectImpl>, \
+                 &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl>}
 
-            #define D2D1_STRING_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                                         \
-                {                                                                                                 \
-                    NAME, &StringSetter<HRESULT (CLASS::*)(PCWSTR string), SETTER, ID2D1EffectImpl>,              \
-                        &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> \
-                }
+            #define D2D1_STRING_TYPE_BINDING(NAME, CLASS, SETTER, GETTER)                         \
+                {NAME, &StringSetter<HRESULT (CLASS::*)(PCWSTR string), SETTER, ID2D1EffectImpl>, \
+                 &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl>}
 
             //
             // Read-only variants:
             //
-            #define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, TYPE, CLASS, GETTER) \
-                { NAME, NULL, &ValueGetter<TYPE (CLASS::*)() const, GETTER, ID2D1EffectImpl> }
+            #define D2D1_READONLY_VALUE_TYPE_BINDING(NAME, TYPE, CLASS, GETTER) {NAME, NULL, &ValueGetter<TYPE (CLASS::*)() const, GETTER, ID2D1EffectImpl>}
 
             #define D2D1_READONLY_BLOB_TYPE_BINDING(NAME, CLASS, GETTER) \
-                { NAME, NULL, &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> }
+                {NAME, NULL, &BlobGetter<HRESULT (CLASS::*)(BYTE *, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl>}
 
             #define D2D1_READONLY_STRING_TYPE_BINDING(NAME, CLASS, GETTER) \
-                { NAME, NULL, &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl> }
+                {NAME, NULL, &StringGetter<HRESULT (CLASS::*)(PWSTR, UINT32, UINT32 *) const, GETTER, ID2D1EffectImpl>}
 
         #endif // #ifdef D2D1_SIMPLE_BINDING_MACROS
 

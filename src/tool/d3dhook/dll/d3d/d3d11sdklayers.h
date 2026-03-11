@@ -222,9 +222,7 @@ typedef struct ID3D11DebugVtbl {
     END_INTERFACE
 } ID3D11DebugVtbl;
 
-interface ID3D11Debug {
-    CONST_VTBL struct ID3D11DebugVtbl * lpVtbl;
-};
+interface ID3D11Debug { CONST_VTBL struct ID3D11DebugVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -258,8 +256,8 @@ interface ID3D11Debug {
 
         #endif /* __ID3D11Debug_INTERFACE_DEFINED__ */
 
-        /* interface __MIDL_itf_d3d11sdklayers_0000_0001 */
-        /* [local] */
+    /* interface __MIDL_itf_d3d11sdklayers_0000_0001 */
+    /* [local] */
 
     #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) */
     #pragma endregion
@@ -310,9 +308,7 @@ typedef struct ID3D11SwitchToRefVtbl {
     END_INTERFACE
 } ID3D11SwitchToRefVtbl;
 
-interface ID3D11SwitchToRef {
-    CONST_VTBL struct ID3D11SwitchToRefVtbl * lpVtbl;
-};
+interface ID3D11SwitchToRef { CONST_VTBL struct ID3D11SwitchToRefVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -332,8 +328,8 @@ interface ID3D11SwitchToRef {
 
         #endif /* __ID3D11SwitchToRef_INTERFACE_DEFINED__ */
 
-        /* interface __MIDL_itf_d3d11sdklayers_0000_0002 */
-        /* [local] */
+    /* interface __MIDL_itf_d3d11sdklayers_0000_0002 */
+    /* [local] */
 
     #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP) */
     #pragma endregion
@@ -439,9 +435,7 @@ typedef struct ID3D11TracingDeviceVtbl {
     END_INTERFACE
 } ID3D11TracingDeviceVtbl;
 
-interface ID3D11TracingDevice {
-    CONST_VTBL struct ID3D11TracingDeviceVtbl * lpVtbl;
-};
+interface ID3D11TracingDevice { CONST_VTBL struct ID3D11TracingDeviceVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -499,9 +493,7 @@ typedef struct ID3D11RefTrackingOptionsVtbl {
     END_INTERFACE
 } ID3D11RefTrackingOptionsVtbl;
 
-interface ID3D11RefTrackingOptions {
-    CONST_VTBL struct ID3D11RefTrackingOptionsVtbl * lpVtbl;
-};
+interface ID3D11RefTrackingOptions { CONST_VTBL struct ID3D11RefTrackingOptionsVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -555,9 +547,7 @@ typedef struct ID3D11RefDefaultTrackingOptionsVtbl {
     END_INTERFACE
 } ID3D11RefDefaultTrackingOptionsVtbl;
 
-interface ID3D11RefDefaultTrackingOptions {
-    CONST_VTBL struct ID3D11RefDefaultTrackingOptionsVtbl * lpVtbl;
-};
+interface ID3D11RefDefaultTrackingOptions { CONST_VTBL struct ID3D11RefDefaultTrackingOptionsVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -2083,20 +2073,17 @@ typedef struct ID3D11InfoQueueVtbl {
      /* [annotation] */
      _In_ BOOL bEnable);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)
-    (ID3D11InfoQueue * This,
-     /* [annotation] */
-     _In_ D3D11_MESSAGE_CATEGORY Category);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)(ID3D11InfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ D3D11_MESSAGE_CATEGORY Category);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)
-    (ID3D11InfoQueue * This,
-     /* [annotation] */
-     _In_ D3D11_MESSAGE_SEVERITY Severity);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)(ID3D11InfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ D3D11_MESSAGE_SEVERITY Severity);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnID)
-    (ID3D11InfoQueue * This,
-     /* [annotation] */
-     _In_ D3D11_MESSAGE_ID ID);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnID)(ID3D11InfoQueue * This,
+                                           /* [annotation] */
+                                           _In_ D3D11_MESSAGE_ID ID);
 
     void(STDMETHODCALLTYPE * SetMuteDebugOutput)(ID3D11InfoQueue * This,
                                                  /* [annotation] */
@@ -2107,9 +2094,7 @@ typedef struct ID3D11InfoQueueVtbl {
     END_INTERFACE
 } ID3D11InfoQueueVtbl;
 
-interface ID3D11InfoQueue {
-    CONST_VTBL struct ID3D11InfoQueueVtbl * lpVtbl;
-};
+interface ID3D11InfoQueue { CONST_VTBL struct ID3D11InfoQueueVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -2201,8 +2186,8 @@ interface ID3D11InfoQueue {
 
         #endif /* __ID3D11InfoQueue_INTERFACE_DEFINED__ */
 
-        /* interface __MIDL_itf_d3d11sdklayers_0000_0006 */
-        /* [local] */
+    /* interface __MIDL_itf_d3d11sdklayers_0000_0006 */
+    /* [local] */
 
     #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) */
     #pragma endregion

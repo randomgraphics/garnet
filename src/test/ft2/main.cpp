@@ -48,7 +48,7 @@ public:
     xFreeTypeLib() {}
 
     void load(const char * font_file1, const char * font_file2, int _w, int _h) {
-        //加载一个字体,取默认的Face,一般为Regualer
+        // 加载一个字体,取默认的Face,一般为Regualer
         FontFaceCreationDesc defaultFont;
         defaultFont.fontname = font_file1;
         defaultFont.width    = (uint16_t) _w;
@@ -73,13 +73,13 @@ public:
 
         xCharTexture & charTex = g_TexID[ch];
 
-        //取道位图数据
+        // 取道位图数据
         FontImage fbm;
         if (!mFace->loadFontImage(fbm, ch)) exit(-1);
 
         // imdebug( "rgba b=8 w=%d h=%d %p", bitmap.width, bitmap.rows, bitmap.buffer );
 
-        //把位图数据拷贝自己定义的数据区里.这样旧可以画到需要的东西上面了。
+        // 把位图数据拷贝自己定义的数据区里.这样旧可以画到需要的东西上面了。
         int width  = fbm.width;
         int height = fbm.height;
 
@@ -197,17 +197,17 @@ static const char * ascii_font  = "font::/lsans.ttf";
 static int          font_width  = 16;
 static int          font_height = 16;
 void                init(void) {
-                   glShadeModel(GL_SMOOTH);              // Enable Smooth Shading
-                   glClearColor(0.0f, 0.0f, 0.0f, 0.5f); // Black Background
-                   glEnable(GL_COLOR_MATERIAL);
-                   glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    glShadeModel(GL_SMOOTH);              // Enable Smooth Shading
+    glClearColor(0.0f, 0.0f, 0.0f, 0.5f); // Black Background
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
-                   printf("load font %s %dx%d\n", font_face, font_width, font_height);
-                   g_FreeTypeLib.load(font_face, ascii_font, font_width, font_height);
+    printf("load font %s %dx%d\n", font_face, font_width, font_height);
+    g_FreeTypeLib.load(font_face, ascii_font, font_width, font_height);
 
-                   glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 
-                   // glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    // glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 }
 
 void reshape(int w, int h) {

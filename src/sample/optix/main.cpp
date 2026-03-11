@@ -36,7 +36,7 @@ const char * getCudaErrorString(cudaError_t r) { return cudaGetErrorString(r); }
             failed;                                                                                                       \
         }                                                                                                                 \
     } while (0)
-#define CUDA_RETURN_ON_FAIL(x)       CUDA_CHECK(x, return )
+#define CUDA_RETURN_ON_FAIL(x)       CUDA_CHECK(x, return)
 #define CUDA_RETURN_FALSE_ON_FAIL(x) CUDA_CHECK(x, return false)
 
 #define OPTIX_CHECK(x, failed)                                                                                               \
@@ -47,7 +47,7 @@ const char * getCudaErrorString(cudaError_t r) { return cudaGetErrorString(r); }
             failed;                                                                                                          \
         }                                                                                                                    \
     } while (0)
-#define OPTIX_RETURN_ON_FAIL(x)       OPTIX_CHECK(x, return )
+#define OPTIX_RETURN_ON_FAIL(x)       OPTIX_CHECK(x, return)
 #define OPTIX_RETURN_FALSE_ON_FAIL(x) OPTIX_CHECK(x, return false)
 
 template<typename T>
