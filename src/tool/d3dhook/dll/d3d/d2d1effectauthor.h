@@ -477,7 +477,7 @@ typedef struct D2D1_FEATURE_DATA_D3D10_X_HARDWARE_OPTIONS {
 //------------------------------------------------------------------------------
 interface DX_DECLARE_INTERFACE("9b8b1336-00a5-4668-92b7-ced5d8bf9b7b") ID2D1VertexBuffer : public IUnknown {
 
-    STDMETHOD(Map)(_Outptr_result_bytebuffer_(bufferSize) BYTE ** data, UINT32 bufferSize) PURE;
+    STDMETHOD(Map)(_Outptr_result_bytebuffer_(bufferSize) BYTE * *data, UINT32 bufferSize) PURE;
 
     STDMETHOD(Unmap)() PURE;
 }; // interface ID2D1VertexBuffer
@@ -905,24 +905,24 @@ interface DX_DECLARE_INTERFACE("3d9f916b-27dc-4ad7-b4f1-64945340f563") ID2D1Effe
     // Create a new effect, the effect must either be built in or previously registered
     // through ID2D1Factory1::RegisterEffect.
     //
-    STDMETHOD(CreateEffect)(_In_ REFCLSID effectId, _Outptr_ ID2D1Effect ** effect) PURE;
+    STDMETHOD(CreateEffect)(_In_ REFCLSID effectId, _Outptr_ ID2D1Effect * *effect) PURE;
 
     STDMETHOD(GetMaximumSupportedFeatureLevel)
-    (_In_reads_(featureLevelsCount) CONST D3D_FEATURE_LEVEL * featureLevels, UINT32 featureLevelsCount,
-     _Out_ D3D_FEATURE_LEVEL * maximumSupportedFeatureLevel) CONST PURE;
+    (_In_reads_(featureLevelsCount) CONST D3D_FEATURE_LEVEL * featureLevels, UINT32 featureLevelsCount, _Out_ D3D_FEATURE_LEVEL * maximumSupportedFeatureLevel)
+        CONST PURE;
 
     //
     // Create a transform node from the passed in effect.
     //
-    STDMETHOD(CreateTransformNodeFromEffect)(_In_ ID2D1Effect * effect, _Outptr_ ID2D1TransformNode ** transformNode) PURE;
+    STDMETHOD(CreateTransformNodeFromEffect)(_In_ ID2D1Effect * effect, _Outptr_ ID2D1TransformNode * *transformNode) PURE;
 
-    STDMETHOD(CreateBlendTransform)(UINT32 numInputs, _In_ CONST D2D1_BLEND_DESCRIPTION * blendDescription, _Outptr_ ID2D1BlendTransform ** transform) PURE;
+    STDMETHOD(CreateBlendTransform)(UINT32 numInputs, _In_ CONST D2D1_BLEND_DESCRIPTION * blendDescription, _Outptr_ ID2D1BlendTransform * *transform) PURE;
 
-    STDMETHOD(CreateBorderTransform)(D2D1_EXTEND_MODE extendModeX, D2D1_EXTEND_MODE extendModeY, _Outptr_ ID2D1BorderTransform ** transform) PURE;
+    STDMETHOD(CreateBorderTransform)(D2D1_EXTEND_MODE extendModeX, D2D1_EXTEND_MODE extendModeY, _Outptr_ ID2D1BorderTransform * *transform) PURE;
 
-    STDMETHOD(CreateOffsetTransform)(D2D1_POINT_2L offset, _Outptr_ ID2D1OffsetTransform ** transform) PURE;
+    STDMETHOD(CreateOffsetTransform)(D2D1_POINT_2L offset, _Outptr_ ID2D1OffsetTransform * *transform) PURE;
 
-    STDMETHOD(CreateBoundsAdjustmentTransform)(_In_ CONST D2D1_RECT_L * outputRectangle, _Outptr_ ID2D1BoundsAdjustmentTransform ** transform) PURE;
+    STDMETHOD(CreateBoundsAdjustmentTransform)(_In_ CONST D2D1_RECT_L * outputRectangle, _Outptr_ ID2D1BoundsAdjustmentTransform * *transform) PURE;
 
     STDMETHOD(LoadPixelShader)(REFGUID shaderId, _In_reads_(shaderBufferCount) CONST BYTE * shaderBuffer, UINT32 shaderBufferCount) PURE;
 
@@ -934,15 +934,15 @@ interface DX_DECLARE_INTERFACE("3d9f916b-27dc-4ad7-b4f1-64945340f563") ID2D1Effe
 
     STDMETHOD(CreateResourceTexture)
     (_In_opt_ CONST GUID * resourceId, _In_ CONST D2D1_RESOURCE_TEXTURE_PROPERTIES * resourceTextureProperties, _In_reads_opt_(dataSize) CONST BYTE * data,
-     _In_reads_opt_(resourceTextureProperties->dimensions - 1) CONST UINT32 * strides, UINT32 dataSize, _Outptr_ ID2D1ResourceTexture ** resourceTexture) PURE;
+     _In_reads_opt_(resourceTextureProperties->dimensions - 1) CONST UINT32 * strides, UINT32 dataSize, _Outptr_ ID2D1ResourceTexture * *resourceTexture) PURE;
 
-    STDMETHOD(FindResourceTexture)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1ResourceTexture ** resourceTexture) PURE;
+    STDMETHOD(FindResourceTexture)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1ResourceTexture * *resourceTexture) PURE;
 
     STDMETHOD(CreateVertexBuffer)
     (_In_ CONST D2D1_VERTEX_BUFFER_PROPERTIES * vertexBufferProperties, _In_opt_ CONST GUID * resourceId,
-     _In_opt_ CONST D2D1_CUSTOM_VERTEX_BUFFER_PROPERTIES * customVertexBufferProperties, _Outptr_ ID2D1VertexBuffer ** buffer) PURE;
+     _In_opt_ CONST D2D1_CUSTOM_VERTEX_BUFFER_PROPERTIES * customVertexBufferProperties, _Outptr_ ID2D1VertexBuffer * *buffer) PURE;
 
-    STDMETHOD(FindVertexBuffer)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1VertexBuffer ** buffer) PURE;
+    STDMETHOD(FindVertexBuffer)(_In_ CONST GUID * resourceId, _Outptr_ ID2D1VertexBuffer * *buffer) PURE;
 
     //
     // Creates a color context from a color space.  If the space is Custom, the context
@@ -951,11 +951,11 @@ interface DX_DECLARE_INTERFACE("3d9f916b-27dc-4ad7-b4f1-64945340f563") ID2D1Effe
     // profile/profileSize are ignored.
     //
     STDMETHOD(CreateColorContext)
-    (D2D1_COLOR_SPACE space, _In_reads_opt_(profileSize) CONST BYTE * profile, UINT32 profileSize, _Outptr_ ID2D1ColorContext ** colorContext) PURE;
+    (D2D1_COLOR_SPACE space, _In_reads_opt_(profileSize) CONST BYTE * profile, UINT32 profileSize, _Outptr_ ID2D1ColorContext * *colorContext) PURE;
 
-    STDMETHOD(CreateColorContextFromFilename)(_In_ PCWSTR filename, _Outptr_ ID2D1ColorContext ** colorContext) PURE;
+    STDMETHOD(CreateColorContextFromFilename)(_In_ PCWSTR filename, _Outptr_ ID2D1ColorContext * *colorContext) PURE;
 
-    STDMETHOD(CreateColorContextFromWicColorContext)(_In_ IWICColorContext * wicColorContext, _Outptr_ ID2D1ColorContext ** colorContext) PURE;
+    STDMETHOD(CreateColorContextFromWicColorContext)(_In_ IWICColorContext * wicColorContext, _Outptr_ ID2D1ColorContext * *colorContext) PURE;
 
     STDMETHOD(CheckFeatureSupport)
     (D2D1_FEATURE feature, _Out_writes_bytes_(featureSupportDataSize) void * featureSupportData, UINT32 featureSupportDataSize) CONST PURE;
@@ -1001,9 +1001,7 @@ typedef struct ID2D1VertexBufferVtbl {
     STDMETHOD(Unmap)(ID2D1VertexBuffer * This) PURE;
 } ID2D1VertexBufferVtbl;
 
-interface ID2D1VertexBuffer {
-    CONST struct ID2D1VertexBufferVtbl * lpVtbl;
-};
+interface ID2D1VertexBuffer { CONST struct ID2D1VertexBufferVtbl * lpVtbl; };
 
         #define ID2D1VertexBuffer_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1026,9 +1024,7 @@ typedef struct ID2D1ResourceTextureVtbl {
      _In_reads_opt_(dimensions - 1) CONST UINT32 * strides, UINT32 dimensions, _In_reads_(dataCount) CONST BYTE * data, UINT32 dataCount) PURE;
 } ID2D1ResourceTextureVtbl;
 
-interface ID2D1ResourceTexture {
-    CONST struct ID2D1ResourceTextureVtbl * lpVtbl;
-};
+interface ID2D1ResourceTexture { CONST struct ID2D1ResourceTextureVtbl * lpVtbl; };
 
         #define ID2D1ResourceTexture_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1054,9 +1050,7 @@ typedef struct ID2D1RenderInfoVtbl {
     STDMETHOD_(void, SetInstructionCountHint)(ID2D1RenderInfo * This, UINT32 instructionCount) PURE;
 } ID2D1RenderInfoVtbl;
 
-interface ID2D1RenderInfo {
-    CONST struct ID2D1RenderInfoVtbl * lpVtbl;
-};
+interface ID2D1RenderInfo { CONST struct ID2D1RenderInfoVtbl * lpVtbl; };
 
         #define ID2D1RenderInfo_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1092,9 +1086,7 @@ typedef struct ID2D1DrawInfoVtbl {
      _In_opt_ CONST D2D1_BLEND_DESCRIPTION * blendDescription, _In_opt_ CONST D2D1_VERTEX_RANGE * vertexRange, _In_opt_ CONST GUID * vertexShader) PURE;
 } ID2D1DrawInfoVtbl;
 
-interface ID2D1DrawInfo {
-    CONST struct ID2D1DrawInfoVtbl * lpVtbl;
-};
+interface ID2D1DrawInfo { CONST struct ID2D1DrawInfoVtbl * lpVtbl; };
 
         #define ID2D1DrawInfo_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1138,9 +1130,7 @@ typedef struct ID2D1ComputeInfoVtbl {
     STDMETHOD(SetResourceTexture)(ID2D1ComputeInfo * This, UINT32 textureIndex, _In_ ID2D1ResourceTexture * resourceTexture) PURE;
 } ID2D1ComputeInfoVtbl;
 
-interface ID2D1ComputeInfo {
-    CONST struct ID2D1ComputeInfoVtbl * lpVtbl;
-};
+interface ID2D1ComputeInfo { CONST struct ID2D1ComputeInfoVtbl * lpVtbl; };
 
         #define ID2D1ComputeInfo_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1176,9 +1166,7 @@ typedef struct ID2D1TransformNodeVtbl {
     STDMETHOD_(UINT32, GetInputCount)(ID2D1TransformNode * This) PURE;
 } ID2D1TransformNodeVtbl;
 
-interface ID2D1TransformNode {
-    CONST struct ID2D1TransformNodeVtbl * lpVtbl;
-};
+interface ID2D1TransformNode { CONST struct ID2D1TransformNodeVtbl * lpVtbl; };
 
         #define ID2D1TransformNode_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1213,9 +1201,7 @@ typedef struct ID2D1TransformGraphVtbl {
     STDMETHOD(SetPassthroughGraph)(ID2D1TransformGraph * This, UINT32 effectInputIndex) PURE;
 } ID2D1TransformGraphVtbl;
 
-interface ID2D1TransformGraph {
-    CONST struct ID2D1TransformGraphVtbl * lpVtbl;
-};
+interface ID2D1TransformGraph { CONST struct ID2D1TransformGraphVtbl * lpVtbl; };
 
         #define ID2D1TransformGraph_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1259,9 +1245,7 @@ typedef struct ID2D1TransformVtbl {
     STDMETHOD(MapInvalidRect)(ID2D1Transform * This, UINT32 inputIndex, D2D1_RECT_L invalidInputRect, _Out_ D2D1_RECT_L * invalidOutputRect) PURE;
 } ID2D1TransformVtbl;
 
-interface ID2D1Transform {
-    CONST struct ID2D1TransformVtbl * lpVtbl;
-};
+interface ID2D1Transform { CONST struct ID2D1TransformVtbl * lpVtbl; };
 
         #define ID2D1Transform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1289,9 +1273,7 @@ typedef struct ID2D1DrawTransformVtbl {
     STDMETHOD(SetDrawInfo)(ID2D1DrawTransform * This, _In_ ID2D1DrawInfo * drawInfo) PURE;
 } ID2D1DrawTransformVtbl;
 
-interface ID2D1DrawTransform {
-    CONST struct ID2D1DrawTransformVtbl * lpVtbl;
-};
+interface ID2D1DrawTransform { CONST struct ID2D1DrawTransformVtbl * lpVtbl; };
 
         #define ID2D1DrawTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1325,9 +1307,7 @@ typedef struct ID2D1ComputeTransformVtbl {
     (ID2D1ComputeTransform * This, _In_ CONST D2D1_RECT_L * outputRect, _Out_ UINT32 * dimensionX, _Out_ UINT32 * dimensionY, _Out_ UINT32 * dimensionZ) PURE;
 } ID2D1ComputeTransformVtbl;
 
-interface ID2D1ComputeTransform {
-    CONST struct ID2D1ComputeTransformVtbl * lpVtbl;
-};
+interface ID2D1ComputeTransform { CONST struct ID2D1ComputeTransformVtbl * lpVtbl; };
 
         #define ID2D1ComputeTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1361,9 +1341,7 @@ typedef struct ID2D1AnalysisTransformVtbl {
     STDMETHOD(ProcessAnalysisResults)(ID2D1AnalysisTransform * This, _In_reads_(analysisDataCount) CONST BYTE * analysisData, UINT32 analysisDataCount) PURE;
 } ID2D1AnalysisTransformVtbl;
 
-interface ID2D1AnalysisTransform {
-    CONST struct ID2D1AnalysisTransformVtbl * lpVtbl;
-};
+interface ID2D1AnalysisTransform { CONST struct ID2D1AnalysisTransformVtbl * lpVtbl; };
 
         #define ID2D1AnalysisTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1385,9 +1363,7 @@ typedef struct ID2D1SourceTransformVtbl {
     STDMETHOD(Draw)(ID2D1SourceTransform * This, _In_ ID2D1Bitmap1 * target, _In_ CONST D2D1_RECT_L * drawRect, D2D1_POINT_2U targetOrigin) PURE;
 } ID2D1SourceTransformVtbl;
 
-interface ID2D1SourceTransform {
-    CONST struct ID2D1SourceTransformVtbl * lpVtbl;
-};
+interface ID2D1SourceTransform { CONST struct ID2D1SourceTransformVtbl * lpVtbl; };
 
         #define ID2D1SourceTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1422,9 +1398,7 @@ typedef struct ID2D1ConcreteTransformVtbl {
     STDMETHOD_(void, SetCached)(ID2D1ConcreteTransform * This, BOOL isCached) PURE;
 } ID2D1ConcreteTransformVtbl;
 
-interface ID2D1ConcreteTransform {
-    CONST struct ID2D1ConcreteTransformVtbl * lpVtbl;
-};
+interface ID2D1ConcreteTransform { CONST struct ID2D1ConcreteTransformVtbl * lpVtbl; };
 
         #define ID2D1ConcreteTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1450,9 +1424,7 @@ typedef struct ID2D1BlendTransformVtbl {
     STDMETHOD_(void, GetDescription)(ID2D1BlendTransform * This, _Out_ D2D1_BLEND_DESCRIPTION * description) PURE;
 } ID2D1BlendTransformVtbl;
 
-interface ID2D1BlendTransform {
-    CONST struct ID2D1BlendTransformVtbl * lpVtbl;
-};
+interface ID2D1BlendTransform { CONST struct ID2D1BlendTransformVtbl * lpVtbl; };
 
         #define ID2D1BlendTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1486,9 +1458,7 @@ typedef struct ID2D1BorderTransformVtbl {
     STDMETHOD_(D2D1_EXTEND_MODE, GetExtendModeY)(ID2D1BorderTransform * This) PURE;
 } ID2D1BorderTransformVtbl;
 
-interface ID2D1BorderTransform {
-    CONST struct ID2D1BorderTransformVtbl * lpVtbl;
-};
+interface ID2D1BorderTransform { CONST struct ID2D1BorderTransformVtbl * lpVtbl; };
 
         #define ID2D1BorderTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1522,9 +1492,7 @@ typedef struct ID2D1OffsetTransformVtbl {
     STDMETHOD_(D2D1_POINT_2L, GetOffset)(ID2D1OffsetTransform * This) PURE;
 } ID2D1OffsetTransformVtbl;
 
-interface ID2D1OffsetTransform {
-    CONST struct ID2D1OffsetTransformVtbl * lpVtbl;
-};
+interface ID2D1OffsetTransform { CONST struct ID2D1OffsetTransformVtbl * lpVtbl; };
 
         #define ID2D1OffsetTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1549,9 +1517,7 @@ typedef struct ID2D1BoundsAdjustmentTransformVtbl {
     STDMETHOD_(void, GetOutputBounds)(ID2D1BoundsAdjustmentTransform * This, _Out_ D2D1_RECT_L * outputBounds) PURE;
 } ID2D1BoundsAdjustmentTransformVtbl;
 
-interface ID2D1BoundsAdjustmentTransform {
-    CONST struct ID2D1BoundsAdjustmentTransformVtbl * lpVtbl;
-};
+interface ID2D1BoundsAdjustmentTransform { CONST struct ID2D1BoundsAdjustmentTransformVtbl * lpVtbl; };
 
         #define ID2D1BoundsAdjustmentTransform_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1578,9 +1544,7 @@ typedef struct ID2D1EffectImplVtbl {
     STDMETHOD(SetGraph)(ID2D1EffectImpl * This, _In_ ID2D1TransformGraph * transformGraph) PURE;
 } ID2D1EffectImplVtbl;
 
-interface ID2D1EffectImpl {
-    CONST struct ID2D1EffectImplVtbl * lpVtbl;
-};
+interface ID2D1EffectImpl { CONST struct ID2D1EffectImplVtbl * lpVtbl; };
 
         #define ID2D1EffectImpl_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 
@@ -1660,9 +1624,7 @@ typedef struct ID2D1EffectContextVtbl {
     STDMETHOD_(BOOL, IsBufferPrecisionSupported)(ID2D1EffectContext * This, D2D1_BUFFER_PRECISION bufferPrecision) PURE;
 } ID2D1EffectContextVtbl;
 
-interface ID2D1EffectContext {
-    CONST struct ID2D1EffectContextVtbl * lpVtbl;
-};
+interface ID2D1EffectContext { CONST struct ID2D1EffectContextVtbl * lpVtbl; };
 
         #define ID2D1EffectContext_QueryInterface(This, riid, ppv) ((This)->lpVtbl->Base.QueryInterface((IUnknown *) This, riid, ppv))
 

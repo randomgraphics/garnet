@@ -64,6 +64,6 @@ public:
     }
 };
 
-inline void * MemPoolTest::Test::operator new(size_t) { return MemPoolTest::sPool.allocUnconstructed(); }
-inline void MemPoolTest::Test::   operator delete(void * p) { MemPoolTest::sPool.freeWithoutDeconstruct(p); }
+inline void *                     MemPoolTest::Test::operator new(size_t) { return MemPoolTest::sPool.allocUnconstructed(); }
+inline void                       MemPoolTest::Test::operator delete(void * p) { MemPoolTest::sPool.freeWithoutDeconstruct(p); }
 GN::ObjectPool<MemPoolTest::Test> MemPoolTest::sPool;

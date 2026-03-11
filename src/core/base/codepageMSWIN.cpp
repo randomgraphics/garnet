@@ -97,8 +97,8 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
     if (0 != mCodePageFrom) {
         tempBuffer.resize(sourceBufferSizeInBytes);
 
-        converted = (size_t)::MultiByteToWideChar(mCodePageFrom, 0, (const char *) sourceBuffer, (int) sourceBufferSizeInBytes, tempBuffer.data(),
-                                                  (int) (tempBuffer.size() * sizeof(wchar_t)));
+        converted = (size_t) ::MultiByteToWideChar(mCodePageFrom, 0, (const char *) sourceBuffer, (int) sourceBufferSizeInBytes, tempBuffer.data(),
+                                                   (int) (tempBuffer.size() * sizeof(wchar_t)));
         if (0 == converted) {
             GN_ERROR(sLogger)("fail to convert input buffer to UNICODE.");
             return 0;
@@ -110,8 +110,8 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
 
     // convert from widechar encoding to target encoding
     if (0 != mCodePageTo) {
-        converted = (size_t)::WideCharToMultiByte(mCodePageTo, 0, (const wchar_t *) sourceBuffer, (int) (sourceBufferSizeInBytes / sizeof(wchar_t)),
-                                                  (char *) destBuffer, (int) destBufferSizeInBytes, NULL, NULL);
+        converted = (size_t) ::WideCharToMultiByte(mCodePageTo, 0, (const wchar_t *) sourceBuffer, (int) (sourceBufferSizeInBytes / sizeof(wchar_t)),
+                                                   (char *) destBuffer, (int) destBufferSizeInBytes, NULL, NULL);
         if (0 == converted) { GN_ERROR(sLogger)("fail to convert from UNICODE to target encoding."); }
         return converted;
     } else if (mEncodingTo == CharacterEncodingConverter::UTF16 || mEncodingTo == CharacterEncodingConverter::UTF16_LE ||

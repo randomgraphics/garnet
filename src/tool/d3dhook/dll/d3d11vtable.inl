@@ -5679,10 +5679,9 @@ typedef struct ID3DUserDefinedAnnotationVtbl {
 
     ULONG(STDMETHODCALLTYPE * Release)(ID3DUserDefinedAnnotation * This);
 
-    INT(STDMETHODCALLTYPE * BeginEvent)
-    (ID3DUserDefinedAnnotation * This,
-     /* [annotation] */
-     _In_ LPCWSTR Name);
+    INT(STDMETHODCALLTYPE * BeginEvent)(ID3DUserDefinedAnnotation * This,
+                                        /* [annotation] */
+                                        _In_ LPCWSTR Name);
 
     INT(STDMETHODCALLTYPE * EndEvent)(ID3DUserDefinedAnnotation * This);
 
@@ -5979,20 +5978,17 @@ typedef struct ID3D11InfoQueueVtbl {
      /* [annotation] */
      _In_ BOOL bEnable);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)
-    (ID3D11InfoQueue * This,
-     /* [annotation] */
-     _In_ D3D11_MESSAGE_CATEGORY Category);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)(ID3D11InfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ D3D11_MESSAGE_CATEGORY Category);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)
-    (ID3D11InfoQueue * This,
-     /* [annotation] */
-     _In_ D3D11_MESSAGE_SEVERITY Severity);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)(ID3D11InfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ D3D11_MESSAGE_SEVERITY Severity);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnID)
-    (ID3D11InfoQueue * This,
-     /* [annotation] */
-     _In_ D3D11_MESSAGE_ID ID);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnID)(ID3D11InfoQueue * This,
+                                           /* [annotation] */
+                                           _In_ D3D11_MESSAGE_ID ID);
 
     void(STDMETHODCALLTYPE * SetMuteDebugOutput)(ID3D11InfoQueue * This,
                                                  /* [annotation] */
@@ -8212,10 +8208,9 @@ typedef struct IDXGIInfoQueueVtbl {
                                                /* [annotation] */
                                                _In_ DXGI_DEBUG_ID Producer);
 
-    UINT(STDMETHODCALLTYPE * GetStorageFilterStackSize)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer);
+    UINT(STDMETHODCALLTYPE * GetStorageFilterStackSize)(IDXGIInfoQueue * This,
+                                                        /* [annotation] */
+                                                        _In_ DXGI_DEBUG_ID Producer);
 
     HRESULT(STDMETHODCALLTYPE * AddRetrievalFilterEntries)
     (IDXGIInfoQueue * This,
@@ -8263,10 +8258,9 @@ typedef struct IDXGIInfoQueueVtbl {
                                                  /* [annotation] */
                                                  _In_ DXGI_DEBUG_ID Producer);
 
-    UINT(STDMETHODCALLTYPE * GetRetrievalFilterStackSize)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer);
+    UINT(STDMETHODCALLTYPE * GetRetrievalFilterStackSize)(IDXGIInfoQueue * This,
+                                                          /* [annotation] */
+                                                          _In_ DXGI_DEBUG_ID Producer);
 
     HRESULT(STDMETHODCALLTYPE * AddMessage)
     (IDXGIInfoQueue * This,
@@ -8315,26 +8309,23 @@ typedef struct IDXGIInfoQueueVtbl {
      /* [annotation] */
      _In_ BOOL bEnable);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer,
-     /* [annotation] */
-     _In_ DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)(IDXGIInfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_DEBUG_ID Producer,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer,
-     /* [annotation] */
-     _In_ DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)(IDXGIInfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_DEBUG_ID Producer,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnID)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer,
-     /* [annotation] */
-     _In_ DXGI_INFO_QUEUE_MESSAGE_ID ID);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnID)(IDXGIInfoQueue * This,
+                                           /* [annotation] */
+                                           _In_ DXGI_DEBUG_ID Producer,
+                                           /* [annotation] */
+                                           _In_ DXGI_INFO_QUEUE_MESSAGE_ID ID);
 
     void(STDMETHODCALLTYPE * SetMuteDebugOutput)(IDXGIInfoQueue * This,
                                                  /* [annotation] */
@@ -8342,10 +8333,9 @@ typedef struct IDXGIInfoQueueVtbl {
                                                  /* [annotation] */
                                                  _In_ BOOL bMute);
 
-    BOOL(STDMETHODCALLTYPE * GetMuteDebugOutput)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer);
+    BOOL(STDMETHODCALLTYPE * GetMuteDebugOutput)(IDXGIInfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_DEBUG_ID Producer);
 
     END_INTERFACE
 } IDXGIInfoQueueVtbl;

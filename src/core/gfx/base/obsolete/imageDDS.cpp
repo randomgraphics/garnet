@@ -173,7 +173,7 @@ static GN::gfx::ColorFormat getImageFormat(const DDPixelFormat & ddpf) {
 
     bool fourcc = !!(flags & DDS_DDPF_FOURCC);
     bool bits   = !!(flags & (DDS_DDPF_ALPHA | DDS_DDPF_PALETTEINDEXED8 | DDS_DDPF_RGB | DDS_DDPF_ZBUFFER | DDS_DDPF_STENCILBUFFER | DDS_DDPF_BUMPLUMINANCE |
-                            DDS_DDPF_BUMPDUDV));
+                              DDS_DDPF_BUMPDUDV));
     bool r      = !!(flags & (DDS_DDPF_RGB | DDS_DDPF_STENCILBUFFER | DDS_DDPF_LUMINANCE | DDS_DDPF_BUMPLUMINANCE | DDS_DDPF_BUMPDUDV));
     bool g      = !!(flags & (DDS_DDPF_RGB | DDS_DDPF_ZBUFFER | DDS_DDPF_STENCILBUFFER | DDS_DDPF_BUMPLUMINANCE | DDS_DDPF_BUMPDUDV));
     bool b      = !!(flags & (DDS_DDPF_RGB | DDS_DDPF_STENCILBUFFER | DDS_DDPF_BUMPLUMINANCE | DDS_DDPF_BUMPDUDV));

@@ -39,7 +39,7 @@ protected:
         void Clone(InvocationElement & target) const {
             target.stub   = stub;
             target.object = object;
-        }                                                                                                                             // Clone
+        } // Clone
         bool         operator==(const InvocationElement & another) const { return another.stub == stub && another.object == object; } //==
         bool         operator!=(const InvocationElement & another) const { return another.stub != stub || another.object != object; } //!=
         const void * object = nullptr;

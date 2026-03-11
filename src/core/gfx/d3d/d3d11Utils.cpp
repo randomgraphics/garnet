@@ -706,18 +706,18 @@ Cleanup:
 
 HRESULT GN::d3d11::D3D11Resource::createDS(ID3D11Device * dev, UINT width, UINT height, DXGI_FORMAT resourceFormat, DXGI_FORMAT dsvFormat,
                                            DXGI_FORMAT srv1Format, DXGI_FORMAT srv2Format) {
-    HRESULT              hr   = S_OK;
-    D3D11_TEXTURE2D_DESC desc = {};
-    desc.Width                = width;
-    desc.Height               = height;
-    desc.MipLevels            = 0;
-    desc.ArraySize            = 1;
-    desc.Format               = resourceFormat;
-    desc.SampleDesc.Count     = 1;
-    desc.SampleDesc.Quality   = 0;
-    desc.Usage                = D3D11_USAGE_DEFAULT;
-    desc.BindFlags            = D3D11_BIND_DEPTH_STENCIL | ((DXGI_FORMAT_UNKNOWN != srv1Format) ? D3D11_BIND_SHADER_RESOURCE : 0) |
-                     ((DXGI_FORMAT_UNKNOWN != srv2Format) ? D3D11_BIND_SHADER_RESOURCE : 0);
+    HRESULT              hr                  = S_OK;
+    D3D11_TEXTURE2D_DESC desc                = {};
+    desc.Width                               = width;
+    desc.Height                              = height;
+    desc.MipLevels                           = 0;
+    desc.ArraySize                           = 1;
+    desc.Format                              = resourceFormat;
+    desc.SampleDesc.Count                    = 1;
+    desc.SampleDesc.Quality                  = 0;
+    desc.Usage                               = D3D11_USAGE_DEFAULT;
+    desc.BindFlags                           = D3D11_BIND_DEPTH_STENCIL | ((DXGI_FORMAT_UNKNOWN != srv1Format) ? D3D11_BIND_SHADER_RESOURCE : 0) |
+                                               ((DXGI_FORMAT_UNKNOWN != srv2Format) ? D3D11_BIND_SHADER_RESOURCE : 0);
     D3D11_SHADER_RESOURCE_VIEW_DESC srv1Desc = {};
     srv1Desc.Format                          = srv1Format;
     srv1Desc.ViewDimension                   = D3D11_SRV_DIMENSION_TEXTURE2D;

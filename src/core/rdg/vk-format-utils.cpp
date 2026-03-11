@@ -12,8 +12,8 @@ using PF = gfx::img::PixelFormat;
 #define PF1(l, s, sw)              PF::make(PF::LAYOUT_##l, PF::SIGN_##s, PF::SWIZZLE_##sw)
 #define PF4(l, s012, s3, sw)       PF::make(PF::LAYOUT_##l, PF::SIGN_##s012, PF::SIGN_##s3, PF::SWIZZLE_##sw)
 #define PF4S(l, s0, s12, s3, sw)   PF::make(PF::LAYOUT_##l, PF::SIGN_##s0, PF::SIGN_##s12, PF::SIGN_##s3, PF::SWIZZLE_##sw)
-#define PF_SW(l, s, swVal)         PF::make(PF::LAYOUT_##l, PF::SIGN_##s, (PF::Swizzle4)(swVal))
-#define PF4_SW(l, s012, s3, swVal) PF::make(PF::LAYOUT_##l, PF::SIGN_##s012, PF::SIGN_##s3, (PF::Swizzle4)(swVal))
+#define PF_SW(l, s, swVal)         PF::make(PF::LAYOUT_##l, PF::SIGN_##s, (PF::Swizzle4) (swVal))
+#define PF4_SW(l, s012, s3, swVal) PF::make(PF::LAYOUT_##l, PF::SIGN_##s012, PF::SIGN_##s3, (PF::Swizzle4) (swVal))
 #define UNK                        PF::UNKNOWN()
 // On little-endian, A8B8G8R8* packed formats have same memory layout as RGBA; vkFormatToPixelFormat() overrides.
 

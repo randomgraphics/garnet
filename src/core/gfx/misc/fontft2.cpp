@@ -269,7 +269,7 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
     size_t height = (size_t) bitmap.rows;
     size_t pitch  = (size_t) abs(bitmap.pitch);
 
-    //取道位图数据
+    // 取道位图数据
 #if SUBPIXEL_RENDERING
     mBitmapBuffer.resize(width * height * 4);
     uint8_t * buf = mBitmapBuffer.data();

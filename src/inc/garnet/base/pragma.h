@@ -31,7 +31,7 @@
     #pragma warning(disable : 4456) // declaration of 'xxx' hides previous local declaration
     #pragma warning(disable : 4511) // can't generate copy constructor
     #pragma warning(disable : 4512) // can't generate assignment operator
-    //#pragma warning( disable : 4714 ) // 标记为 __forceinline 的函数未内联
+    // #pragma warning( disable : 4714 ) // 标记为 __forceinline 的函数未内联
     #pragma warning(disable : 4786) // symbol trunc to 255 ...
     #if defined(NDEBUG)
         #pragma warning(disable : 4702) // 无法访问的代码2
@@ -49,7 +49,7 @@
     #pragma warning(disable : 373) // xxx is inaccessible
     #pragma warning(disable : 383) // reference to temporary
     #pragma warning(disable : 444) // destructor for xxx is not virtual
-    //#pragma warning(disable:858)      // type qualifier on return type is meaningless
+    // #pragma warning(disable:858)      // type qualifier on return type is meaningless
     #pragma warning(disable : 810)  // conversion from "xxx" to "xxx" may lose significant bits.
     #pragma warning(disable : 981)  // operands are evaluated in unspecified order
     #pragma warning(disable : 985)  // debug symbol greater than 255 chars

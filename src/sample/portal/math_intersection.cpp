@@ -114,9 +114,9 @@ static bool flatten_point_in_polygon(const POINT & point, const POINT * verts, s
 // check if the point is inside the 3D plane
 // ----------------------------------------------------------------------------
 static bool point_in_polygon(const Vector3f & point,
-                             const Plane3f &  p,     // 多边形所在平面
-                             const Vector3f * verts, // 多边形顶点列表
-                             size_t           numvert)         // 多边形顶点数目
+                             const Plane3f &  p,       // 多边形所在平面
+                             const Vector3f * verts,   // 多边形顶点列表
+                             size_t           numvert) // 多边形顶点数目
 {
     GN_ASSERT(0 == classify(p, point));
 

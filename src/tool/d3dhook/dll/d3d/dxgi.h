@@ -341,9 +341,7 @@ typedef struct IDXGIObjectVtbl {
     END_INTERFACE
 } IDXGIObjectVtbl;
 
-interface IDXGIObject {
-    CONST_VTBL struct IDXGIObjectVtbl * lpVtbl;
-};
+interface IDXGIObject { CONST_VTBL struct IDXGIObjectVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -443,9 +441,7 @@ typedef struct IDXGIDeviceSubObjectVtbl {
     END_INTERFACE
 } IDXGIDeviceSubObjectVtbl;
 
-interface IDXGIDeviceSubObject {
-    CONST_VTBL struct IDXGIDeviceSubObjectVtbl * lpVtbl;
-};
+interface IDXGIDeviceSubObject { CONST_VTBL struct IDXGIDeviceSubObjectVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -575,9 +571,7 @@ typedef struct IDXGIResourceVtbl {
     END_INTERFACE
 } IDXGIResourceVtbl;
 
-interface IDXGIResource {
-    CONST_VTBL struct IDXGIResourceVtbl * lpVtbl;
-};
+interface IDXGIResource { CONST_VTBL struct IDXGIResourceVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -697,9 +691,7 @@ typedef struct IDXGIKeyedMutexVtbl {
     END_INTERFACE
 } IDXGIKeyedMutexVtbl;
 
-interface IDXGIKeyedMutex {
-    CONST_VTBL struct IDXGIKeyedMutexVtbl * lpVtbl;
-};
+interface IDXGIKeyedMutex { CONST_VTBL struct IDXGIKeyedMutexVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -729,8 +721,8 @@ interface IDXGIKeyedMutex {
 
     #endif /* __IDXGIKeyedMutex_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_dxgi_0000_0004 */
-    /* [local] */
+/* interface __MIDL_itf_dxgi_0000_0004 */
+/* [local] */
 
     #define DXGI_MAP_READ (1UL)
 
@@ -760,7 +752,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE Map(
         /* [annotation][out] */
-        _Out_           DXGI_MAPPED_RECT * pLockedRect,
+        _Out_ DXGI_MAPPED_RECT * pLockedRect,
         /* [in] */ UINT MapFlags) = 0;
 
     virtual HRESULT STDMETHODCALLTYPE Unmap(void) = 0;
@@ -835,9 +827,7 @@ typedef struct IDXGISurfaceVtbl {
     END_INTERFACE
 } IDXGISurfaceVtbl;
 
-interface IDXGISurface {
-    CONST_VTBL struct IDXGISurfaceVtbl * lpVtbl;
-};
+interface IDXGISurface { CONST_VTBL struct IDXGISurfaceVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -972,9 +962,7 @@ typedef struct IDXGISurface1Vtbl {
     END_INTERFACE
 } IDXGISurface1Vtbl;
 
-interface IDXGISurface1 {
-    CONST_VTBL struct IDXGISurface1Vtbl * lpVtbl;
-};
+interface IDXGISurface1 { CONST_VTBL struct IDXGISurface1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1112,9 +1100,7 @@ typedef struct IDXGIAdapterVtbl {
     END_INTERFACE
 } IDXGIAdapterVtbl;
 
-interface IDXGIAdapter {
-    CONST_VTBL struct IDXGIAdapterVtbl * lpVtbl;
-};
+interface IDXGIAdapter { CONST_VTBL struct IDXGIAdapterVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1145,8 +1131,8 @@ interface IDXGIAdapter {
 
     #endif /* __IDXGIAdapter_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_dxgi_0000_0007 */
-    /* [local] */
+/* interface __MIDL_itf_dxgi_0000_0007 */
+/* [local] */
 
     #define DXGI_ENUM_MODES_INTERLACED (1UL)
 
@@ -1332,9 +1318,7 @@ typedef struct IDXGIOutputVtbl {
     END_INTERFACE
 } IDXGIOutputVtbl;
 
-interface IDXGIOutput {
-    CONST_VTBL struct IDXGIOutputVtbl * lpVtbl;
-};
+interface IDXGIOutput { CONST_VTBL struct IDXGIOutputVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1384,8 +1368,8 @@ interface IDXGIOutput {
 
     #endif /* __IDXGIOutput_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_dxgi_0000_0008 */
-    /* [local] */
+/* interface __MIDL_itf_dxgi_0000_0008 */
+/* [local] */
 
     #define DXGI_MAX_SWAP_CHAIN_BUFFERS        (16)
     #define DXGI_PRESENT_TEST                  0x00000001UL
@@ -1577,9 +1561,7 @@ typedef struct IDXGISwapChainVtbl {
     END_INTERFACE
 } IDXGISwapChainVtbl;
 
-interface IDXGISwapChain {
-    CONST_VTBL struct IDXGISwapChainVtbl * lpVtbl;
-};
+interface IDXGISwapChain { CONST_VTBL struct IDXGISwapChainVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1626,8 +1608,8 @@ interface IDXGISwapChain {
 
     #endif /* __IDXGISwapChain_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_dxgi_0000_0009 */
-    /* [local] */
+/* interface __MIDL_itf_dxgi_0000_0009 */
+/* [local] */
 
     #define DXGI_MWA_NO_WINDOW_CHANGES (1 << 0)
     #define DXGI_MWA_NO_ALT_ENTER      (1 << 1)
@@ -1752,9 +1734,7 @@ typedef struct IDXGIFactoryVtbl {
     END_INTERFACE
 } IDXGIFactoryVtbl;
 
-interface IDXGIFactory {
-    CONST_VTBL struct IDXGIFactoryVtbl * lpVtbl;
-};
+interface IDXGIFactory { CONST_VTBL struct IDXGIFactoryVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -1788,8 +1768,8 @@ interface IDXGIFactory {
 
     #endif /* __IDXGIFactory_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_dxgi_0000_0010 */
-    /* [local] */
+/* interface __MIDL_itf_dxgi_0000_0010 */
+/* [local] */
 
     #pragma region Desktop Family
     #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
@@ -1925,9 +1905,7 @@ typedef struct IDXGIDeviceVtbl {
     END_INTERFACE
 } IDXGIDeviceVtbl;
 
-interface IDXGIDevice {
-    CONST_VTBL struct IDXGIDeviceVtbl * lpVtbl;
-};
+interface IDXGIDevice { CONST_VTBL struct IDXGIDeviceVtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2100,9 +2078,7 @@ typedef struct IDXGIFactory1Vtbl {
     END_INTERFACE
 } IDXGIFactory1Vtbl;
 
-interface IDXGIFactory1 {
-    CONST_VTBL struct IDXGIFactory1Vtbl * lpVtbl;
-};
+interface IDXGIFactory1 { CONST_VTBL struct IDXGIFactory1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2230,9 +2206,7 @@ typedef struct IDXGIAdapter1Vtbl {
     END_INTERFACE
 } IDXGIAdapter1Vtbl;
 
-interface IDXGIAdapter1 {
-    CONST_VTBL struct IDXGIAdapter1Vtbl * lpVtbl;
-};
+interface IDXGIAdapter1 { CONST_VTBL struct IDXGIAdapter1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2377,9 +2351,7 @@ typedef struct IDXGIDevice1Vtbl {
     END_INTERFACE
 } IDXGIDevice1Vtbl;
 
-interface IDXGIDevice1 {
-    CONST_VTBL struct IDXGIDevice1Vtbl * lpVtbl;
-};
+interface IDXGIDevice1 { CONST_VTBL struct IDXGIDevice1Vtbl * lpVtbl; };
 
             #ifdef COBJMACROS
 
@@ -2419,8 +2391,8 @@ interface IDXGIDevice1 {
 
     #endif /* __IDXGIDevice1_INTERFACE_DEFINED__ */
 
-    /* interface __MIDL_itf_dxgi_0000_0014 */
-    /* [local] */
+/* interface __MIDL_itf_dxgi_0000_0014 */
+/* [local] */
 
     #ifdef __cplusplus
     #endif /*__cplusplus*/

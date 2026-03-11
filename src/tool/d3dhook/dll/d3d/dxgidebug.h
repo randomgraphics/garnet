@@ -457,10 +457,9 @@ typedef struct IDXGIInfoQueueVtbl {
                                                /* [annotation] */
                                                _In_ DXGI_DEBUG_ID Producer);
 
-    UINT(STDMETHODCALLTYPE * GetStorageFilterStackSize)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer);
+    UINT(STDMETHODCALLTYPE * GetStorageFilterStackSize)(IDXGIInfoQueue * This,
+                                                        /* [annotation] */
+                                                        _In_ DXGI_DEBUG_ID Producer);
 
     HRESULT(STDMETHODCALLTYPE * AddRetrievalFilterEntries)
     (IDXGIInfoQueue * This,
@@ -508,10 +507,9 @@ typedef struct IDXGIInfoQueueVtbl {
                                                  /* [annotation] */
                                                  _In_ DXGI_DEBUG_ID Producer);
 
-    UINT(STDMETHODCALLTYPE * GetRetrievalFilterStackSize)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer);
+    UINT(STDMETHODCALLTYPE * GetRetrievalFilterStackSize)(IDXGIInfoQueue * This,
+                                                          /* [annotation] */
+                                                          _In_ DXGI_DEBUG_ID Producer);
 
     HRESULT(STDMETHODCALLTYPE * AddMessage)
     (IDXGIInfoQueue * This,
@@ -560,26 +558,23 @@ typedef struct IDXGIInfoQueueVtbl {
      /* [annotation] */
      _In_ BOOL bEnable);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer,
-     /* [annotation] */
-     _In_ DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnCategory)(IDXGIInfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_DEBUG_ID Producer,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer,
-     /* [annotation] */
-     _In_ DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnSeverity)(IDXGIInfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_DEBUG_ID Producer,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity);
 
-    BOOL(STDMETHODCALLTYPE * GetBreakOnID)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer,
-     /* [annotation] */
-     _In_ DXGI_INFO_QUEUE_MESSAGE_ID ID);
+    BOOL(STDMETHODCALLTYPE * GetBreakOnID)(IDXGIInfoQueue * This,
+                                           /* [annotation] */
+                                           _In_ DXGI_DEBUG_ID Producer,
+                                           /* [annotation] */
+                                           _In_ DXGI_INFO_QUEUE_MESSAGE_ID ID);
 
     void(STDMETHODCALLTYPE * SetMuteDebugOutput)(IDXGIInfoQueue * This,
                                                  /* [annotation] */
@@ -587,17 +582,14 @@ typedef struct IDXGIInfoQueueVtbl {
                                                  /* [annotation] */
                                                  _In_ BOOL bMute);
 
-    BOOL(STDMETHODCALLTYPE * GetMuteDebugOutput)
-    (IDXGIInfoQueue * This,
-     /* [annotation] */
-     _In_ DXGI_DEBUG_ID Producer);
+    BOOL(STDMETHODCALLTYPE * GetMuteDebugOutput)(IDXGIInfoQueue * This,
+                                                 /* [annotation] */
+                                                 _In_ DXGI_DEBUG_ID Producer);
 
     END_INTERFACE
 } IDXGIInfoQueueVtbl;
 
-interface IDXGIInfoQueue {
-    CONST_VTBL struct IDXGIInfoQueueVtbl * lpVtbl;
-};
+interface IDXGIInfoQueue { CONST_VTBL struct IDXGIInfoQueueVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -736,9 +728,7 @@ typedef struct IDXGIDebugVtbl {
     END_INTERFACE
 } IDXGIDebugVtbl;
 
-interface IDXGIDebug {
-    CONST_VTBL struct IDXGIDebugVtbl * lpVtbl;
-};
+interface IDXGIDebug { CONST_VTBL struct IDXGIDebugVtbl * lpVtbl; };
 
                 #ifdef COBJMACROS
 
@@ -756,8 +746,8 @@ interface IDXGIDebug {
 
         #endif /* __IDXGIDebug_INTERFACE_DEFINED__ */
 
-        /* interface __MIDL_itf_dxgidebug_0000_0002 */
-        /* [local] */
+    /* interface __MIDL_itf_dxgidebug_0000_0002 */
+    /* [local] */
 
     #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP | WINAPI_PARTITION_TV_APP | WINAPI_PARTITION_TV_TITLE) */
     #pragma endregion

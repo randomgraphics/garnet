@@ -72,7 +72,7 @@ struct AutoFile {
 AutoFile g_logFile;
 
 __declspec(thread) int g_level = 0;
-volatile LONG g_count          = 0;
+volatile LONG          g_count = 0;
 
 bool g_callTraceEnabled = false;
 

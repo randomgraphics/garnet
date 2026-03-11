@@ -297,7 +297,7 @@ struct __vector4 {
 #if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
 typedef __m128 XMVECTOR;
 #elif defined(_XM_ARM_NEON_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
-typedef float32x4_t      XMVECTOR;
+typedef float32x4_t XMVECTOR;
 #else
 typedef __vector4 XMVECTOR;
 #endif
@@ -439,7 +439,7 @@ __declspec(align(16)) struct XMMATRIX
         float m[4][4];
     };
 #else
-    XMVECTOR   r[4];
+    XMVECTOR r[4];
 #endif
 
     XMMATRIX() = default;
@@ -1355,7 +1355,7 @@ XMMATRIX XM_CALLCONV XMMatrixMultiplyTranspose(FXMMATRIX M1, CXMMATRIX M2);
 XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M);
 XMMATRIX XM_CALLCONV XMMatrixInverse(_Out_opt_ XMVECTOR * pDeterminant, _In_ FXMMATRIX M);
 XMVECTOR XM_CALLCONV XMMatrixDeterminant(FXMMATRIX M);
-_Success_(return ) bool XM_CALLCONV XMMatrixDecompose(_Out_ XMVECTOR * outScale, _Out_ XMVECTOR * outRotQuat, _Out_ XMVECTOR * outTrans, _In_ FXMMATRIX M);
+_Success_(return) bool XM_CALLCONV XMMatrixDecompose(_Out_ XMVECTOR * outScale, _Out_ XMVECTOR * outRotQuat, _Out_ XMVECTOR * outTrans, _In_ FXMMATRIX M);
 
 XMMATRIX XM_CALLCONV XMMatrixIdentity();
 XMMATRIX XM_CALLCONV XMMatrixSet(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22,
@@ -2113,7 +2113,7 @@ XMGLOBALCONST XMVECTORU32 g_XMMaskA8R8G8B8         = {{{0x00FF0000, 0x0000FF00, 
 XMGLOBALCONST XMVECTORU32 g_XMFlipA8R8G8B8         = {{{0x00000000, 0x00000000, 0x00000000, 0x80000000}}};
 XMGLOBALCONST XMVECTORF32 g_XMFixAA8R8G8B8         = {{{0.0f, 0.0f, 0.0f, float(0x80000000U)}}};
 XMGLOBALCONST XMVECTORF32 g_XMNormalizeA8R8G8B8    = {
-       {{1.0f / (255.0f * float(0x10000)), 1.0f / (255.0f * float(0x100)), 1.0f / 255.0f, 1.0f / (255.0f * float(0x1000000))}}};
+    {{1.0f / (255.0f * float(0x10000)), 1.0f / (255.0f * float(0x100)), 1.0f / 255.0f, 1.0f / (255.0f * float(0x1000000))}}};
 XMGLOBALCONST XMVECTORU32 g_XMMaskA2B10G10R10      = {{{0x000003FF, 0x000FFC00, 0x3FF00000, 0xC0000000}}};
 XMGLOBALCONST XMVECTORU32 g_XMFlipA2B10G10R10      = {{{0x00000200, 0x00080000, 0x20000000, 0x80000000}}};
 XMGLOBALCONST XMVECTORF32 g_XMFixAA2B10G10R10      = {{{-512.0f, -512.0f * float(0x400), -512.0f * float(0x100000), float(0x80000000U)}}};
@@ -2158,7 +2158,7 @@ XMGLOBALCONST XMVECTORI32 g_XMXorByte4              = {{{0x80, 0x8000, 0x800000,
 XMGLOBALCONST XMVECTORF32 g_XMAddByte4              = {{{-128.0f, -128.0f * 256.0f, -128.0f * 65536.0f, 0}}};
 XMGLOBALCONST XMVECTORF32 g_XMFixUnsigned           = {{{32768.0f * 65536.0f, 32768.0f * 65536.0f, 32768.0f * 65536.0f, 32768.0f * 65536.0f}}};
 XMGLOBALCONST XMVECTORF32 g_XMMaxInt                = {
-                   {{65536.0f * 32768.0f - 128.0f, 65536.0f * 32768.0f - 128.0f, 65536.0f * 32768.0f - 128.0f, 65536.0f * 32768.0f - 128.0f}}};
+    {{65536.0f * 32768.0f - 128.0f, 65536.0f * 32768.0f - 128.0f, 65536.0f * 32768.0f - 128.0f, 65536.0f * 32768.0f - 128.0f}}};
 XMGLOBALCONST XMVECTORF32 g_XMMaxUInt = {
     {{65536.0f * 65536.0f - 256.0f, 65536.0f * 65536.0f - 256.0f, 65536.0f * 65536.0f - 256.0f, 65536.0f * 65536.0f - 256.0f}}};
 XMGLOBALCONST XMVECTORF32 g_XMUnsignedFix       = {{{32768.0f * 65536.0f, 32768.0f * 65536.0f, 32768.0f * 65536.0f, 32768.0f * 65536.0f}}};
