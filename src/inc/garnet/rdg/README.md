@@ -83,12 +83,9 @@ scene, effect, or pipeline policy.
 - `RenderTarget` — describes color and depth/stencil outputs for a draw operation.
 
 **Key actions** (`actions.h`):
-- `ClearRenderTarget` — explicitly clears a render target to a given value.
-  In most cases this action is not needed: any `GpuDraw` to a render target
-  automatically clears it if that draw is the first in a continuous sequence
-  targeting the same render target.  Use `ClearRenderTarget` explicitly only
-  when (a) a frame has no draw commands at all but the render target must still
-  be cleared, or (b) you need to clear in the middle of an ongoing render pass.
+- `ClearRenderTarget` — explicitly clears a render target.  Normally not needed:
+  the first `GpuDraw` to a render target clears it automatically.  Use this only
+  when there are no draw commands at all, or to clear mid-pass.
 - `PrepareBackbuffer` / `PresentBackbuffer` — swapchain lifecycle.
 - `GpuDraw` — generic indexed/instanced draw call with shader binaries and resource
   bindings. The building block for all render effects.
