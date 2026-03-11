@@ -243,8 +243,9 @@ Key files to read before starting:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: none
-In progress:    none
+Last completed: Task 6 (Document two-tier infrastructure)
+In progress:    none — ALL TASKS COMPLETE
+Branch:         wip/rdg/internal-test-infra
 --- END PROGRESS ---
 
 ---

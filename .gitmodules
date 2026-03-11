@@ -34,3 +34,7 @@
 	path = src/3rdparty/glfw
 	url = https://github.com/glfw/glfw.git
 	shallow = true
+[submodule "src/test/3rdparty/catch2"]
+	path = src/test/3rdparty/catch2
+	url = https://github.com/catchorg/Catch2.git
+	shallow = true

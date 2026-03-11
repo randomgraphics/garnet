@@ -22,6 +22,8 @@ function(add_simple_test folder)
     target_link_libraries(${target_name} GNcore)
 endfunction()
 
+add_subdirectory(3rdparty)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include)
 
 # this is needed for fmt to build correctly with unicode support on Windows platform.
@@ -55,6 +57,6 @@ add_simple_test(rt)
 #add_simple_test(simd)
 add_simple_test(sprite)
 add_subdirectory(ut)
-add_subdirectory(rdg)
+add_subdirectory(internal)
 add_simple_test(xml)
 add_subdirectory(foo)

@@ -90,48 +90,47 @@ endif()
 # Split everything into groups
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${sources})
 
-# ====================
-# Build GNcore library
-# ====================
-if(GN_BUILD_IS_STATIC)
-    add_library(GNcore ${sources} ${garnet_headers})
-else()
-    add_library(GNcore SHARED ${sources} ${garnet_headers})
-endif()
+# ================================
+# GNcore-objects: compile once
+# ================================
+# All production sources are compiled into an OBJECT library.
+# Both GNcore (the shipped shared/static library) and GNtest-internal (the
+# internal test executable) consume these same object files, so production
+# code is compiled exactly once regardless of how many consumers there are.
+# GNtest-internal links these objects directly, bypassing the DLL export table
+# and gaining access to every internal symbol.
+add_library(GNcore-objects OBJECT ${sources} ${garnet_headers})
+set_target_properties(GNcore-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if(TARGET GNcore-rdg-shaders)
-    add_dependencies(GNcore GNcore-rdg-shaders)
+    add_dependencies(GNcore-objects GNcore-rdg-shaders)
 endif()
 
 # =======================
-# setup GNcore properties
+# setup GNcore-objects properties
 # =======================
 function(add_core_libs)
-    if(GN_BUILD_IS_STATIC)
-        target_link_libraries(GNcore PUBLIC ${ARGN})
-    else()
-        target_link_libraries(GNcore PRIVATE ${ARGN})
-    endif()
+    target_link_libraries(GNcore-objects PUBLIC ${ARGN})
 endfunction()
 
-target_include_directories(GNcore PUBLIC
+target_include_directories(GNcore-objects PUBLIC
     ${BUILD_HEADER_INC}
     ../inc
     ../3rdparty/glm
     ../3rdparty/rapid-image/inc
     ../3rdparty/fmt/include
 )
-target_include_directories(GNcore PRIVATE
+target_include_directories(GNcore-objects PRIVATE
     ../3rdparty/stb
     ../3rdparty/backward-cpp
 )
-target_link_libraries(GNcore PUBLIC GNextern)
-target_compile_features(GNcore PUBLIC cxx_std_20)
-target_compile_definitions(GNcore PRIVATE GN_CORE_INTERNAL)
+target_link_libraries(GNcore-objects PUBLIC GNextern)
+target_compile_features(GNcore-objects PUBLIC cxx_std_20)
+target_compile_definitions(GNcore-objects PRIVATE GN_CORE_INTERNAL)
 
 # Link to GLFW library if it is built
 if (TARGET glfw)
     add_core_libs(glfw)
-    target_compile_definitions(GNcore PRIVATE HAS_GLFW=1)
+    target_compile_definitions(GNcore-objects PRIVATE HAS_GLFW=1)
 endif()
 
 # Qt6 window backend (deprecated; kept for reference, do not delete yet)
@@ -144,7 +143,7 @@ endif()
 
 # xinput
 if(XINPUT_FOUND)
-    target_compile_definitions(GNcore PRIVATE HAS_XINPUT=1)
+    target_compile_definitions(GNcore-objects PRIVATE HAS_XINPUT=1)
     add_core_libs(${DIRECTX_LIBRARIES})
 elseif(WIN32)
     message(FATAL_ERROR
@@ -155,7 +154,7 @@ endif()
 
 # X11
 if(X11_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_compile_definitions(GNcore PRIVATE HAS_X11=1)
+    target_compile_definitions(GNcore-objects PRIVATE HAS_X11=1)
 endif()
 
 # FBX
@@ -172,8 +171,8 @@ if(WIN32)
         set(FBX_LIB_PATH "${FBX_LIB_DIR}/libfbxsdk.lib")
         if(EXISTS "${FBX_INCLUDE_DIR}" AND EXISTS "${FBX_LIB_PATH}" AND EXISTS "${FBX_DLL_PATH}")
             message(STATUS "Use system FBX SDK at ${FBX_SDK_PATH}")
-            target_include_directories(GNcore PRIVATE ${FBX_INCLUDE_DIR})
-            target_compile_definitions(GNcore PRIVATE HAS_FBX=1)
+            target_include_directories(GNcore-objects PRIVATE ${FBX_INCLUDE_DIR})
+            target_compile_definitions(GNcore-objects PRIVATE HAS_FBX=1)
             add_core_libs(${FBX_LIB_PATH})
             file(COPY ${FBX_DLL_PATH} DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Debug")
             file(COPY ${FBX_DLL_PATH} DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RelWithDebInfo")
@@ -222,11 +221,11 @@ endif()
 
 # Vulkan
 if(VULKAN_FOUND)
-    target_compile_definitions(GNcore PRIVATE HAS_VULKAN=1)
+    target_compile_definitions(GNcore-objects PRIVATE HAS_VULKAN=1)
     # only include Vulkan headers. Do not link to Vulkan libraries. We'll use a loader to load all Vulkan functions.
-    target_include_directories(GNcore PUBLIC ${Vulkan_INCLUDE_DIRS})
+    target_include_directories(GNcore-objects PUBLIC ${Vulkan_INCLUDE_DIRS})
     # rapid-vulkan (randomgraphics/rapid-vulkan) for Vulkan instance/device setup
-    target_include_directories(GNcore PRIVATE ${CMAKE_SOURCE_DIR}/src/3rdparty/rapid-vulkan/inc)
+    target_include_directories(GNcore-objects PRIVATE ${CMAKE_SOURCE_DIR}/src/3rdparty/rapid-vulkan/inc)
 endif()
 
 # Other dependencies
@@ -237,21 +236,33 @@ add_core_libs(freetype)
 
 find_package(Iconv)
 if (Iconv_FOUND)
-    target_compile_definitions(GNcore PRIVATE HAS_ICONV=1)
+    target_compile_definitions(GNcore-objects PRIVATE HAS_ICONV=1)
     add_core_libs(${Iconv_LIBRARIES})
 endif()
 
 # compiler specific setup
 if(MSVC)
-    target_compile_definitions(GNcore PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
-    target_compile_options(GNcore PUBLIC
+    target_compile_definitions(GNcore-objects PUBLIC _UNICODE UNICODE) # REVIEW: why not private?
+    target_compile_options(GNcore-objects PUBLIC
         /utf-8 # enable utf-8 encoding
     )
 else()
     if (NOT GN_BUILD_IS_STATIC)
-        target_compile_options(GNcore PRIVATE
+        target_compile_options(GNcore-objects PRIVATE
             -fvisibility=hidden # hide symbols by default.
             -Wno-attributes # disable warning about attributes
         )
     endif()
 endif()
+
+# ====================
+# Build GNcore library
+# ====================
+# GNcore is now a thin wrapper: it contains no sources of its own; it re-exports
+# GNcore-objects and applies the DLL export table via GN_API annotations.
+if(GN_BUILD_IS_STATIC)
+    add_library(GNcore STATIC)
+else()
+    add_library(GNcore SHARED)
+endif()
+target_link_libraries(GNcore PUBLIC GNcore-objects GNextern)
