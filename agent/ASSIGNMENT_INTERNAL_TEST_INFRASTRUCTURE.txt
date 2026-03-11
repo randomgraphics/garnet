@@ -1,0 +1,698 @@
+# Assignment: Internal Unit Test Infrastructure
+
+---
+
+## Goal
+
+The current unit-test binary (`GNtest-unit-tests`) is built as a standalone executable
+that links `GNcore.dll/.so` but only has access to the public headers under
+`src/inc/garnet/`.  This works as a contract/smoke tester, but it cannot:
+
+  - Include private implementation headers (e.g. `src/core/rdg/submission.h`)
+  - Access `private:` members of internal types
+  - Unit-test a sub-system (e.g. RDG) without going through the public API
+
+"Done" means:
+
+  1. `src/core/CMakeLists.txt` is refactored to produce a `GNcore-objects` OBJECT
+     library from which both `GNcore.dll/.so` and `GNtest-internal` are built.
+     Production code is compiled exactly ONCE.
+  2. A second test target, `GNtest-internal`, exists and passes CI.
+  3. `GNtest-internal` can `#include` any private header under `src/core/` directly
+     AND can call any internal function without linker errors.
+  4. Test source files live side-by-side with the code they test, under
+     `src/core/<module>/test/`.
+  5. Catch2 is wired in as the framework for the new target (CxxTest remains
+     untouched for the legacy `GNtest-unit-tests`).
+  6. At least two meaningful internal test cases exist that would be impossible
+     from the public-only tier.
+  7. `env/bin/cit.py` runs both `GNtest-unit-tests` and `GNtest-internal`.
+  8. A conventions note in `src/test/README.md` explains the two-tier model.
+
+---
+
+## Background: Why the current setup falls short
+
+### What works
+`GNtest-unit-tests` proves the public API contract.  It is the right tool for
+regression-testing what an external consumer of `GNcore` can observe.
+
+### The two-layer problem
+
+Getting a test to call an internal function requires solving TWO independent
+problems: compile-time visibility and link-time visibility.
+
+**Layer 1 — compile-time (include path)**
+The test binary has no `target_include_directories` pointing to `src/core/`, so
+the compiler cannot find private headers.  Consequence: `#include "rdg/submission.h"`
+fails at compile.
+
+**Layer 2 — link-time (symbol visibility)**  ← the harder, less obvious problem
+`GNcore` is built as a shared library.  On Linux, it is compiled with
+`-fvisibility=hidden` (see `src/core/CMakeLists.txt` line ~252).  On Windows,
+only symbols marked `__declspec(dllexport)` (`GN_API`) are exported.  Internal
+implementation symbols are stripped from the export table.
+
+Therefore: even after fixing the include path, a test file that calls an internal
+function will fail at **link** with "unresolved external symbol" because the
+symbol is not exported from `GNcore.dll/.so`.
+
+**The root cause**
+`GNtest-unit-tests` is linked against `GNcore` (the shared library).  To call
+unexported symbols the test binary must not go through the DLL at all — it must
+link the object files directly.
+
+---
+
+## Design: Two-tier test infrastructure
+
+### Tier 1 — External / contract tests  (keep as-is)
+
+  Target:    GNtest-unit-tests
+  Framework: CxxTest  (unchanged)
+  Sources:   src/test/ut/
+  Links:     GNcore.dll/.so  (public API only)
+  Purpose:   Verify the public API; black-box tests.
+
+  No changes to this tier in this assignment.
+
+### Tier 2 — Internal / white-box tests  (new)
+
+  Target:    GNtest-internal
+  Framework: Catch2
+  Sources:   src/core/**/test/*.cpp  (side-by-side with the code under test)
+  Links:     GNcore-objects directly (bypasses DLL export table)
+  Purpose:   Test implementation details, private helpers, internal state.
+
+#### Key: compile production code ONCE via a CMake OBJECT library
+
+  The production sources are extracted into an intermediate OBJECT library,
+  `GNcore-objects`, that is compiled exactly once.  Both `GNcore` (the shipping
+  shared library) and `GNtest-internal` (the test executable) consume those same
+  object files:
+
+    src/core/**/*.cpp  compiled ONCE
+            │
+            ▼
+      GNcore-objects  (.o / .obj files)
+       ┌────┴────┐
+       ▼         ▼
+    GNcore      GNtest-internal
+    (.dll/.so)  (executable)
+    exports     links object files
+    via GN_API  directly — all
+    only        symbols visible
+
+  CMake OBJECT library sketch (to replace the current `add_library(GNcore ...)` block
+  in `src/core/CMakeLists.txt`):
+
+    # 1. Compile sources once
+    add_library(GNcore-objects OBJECT ${sources} ${garnet_headers})
+    set_target_properties(GNcore-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_compile_definitions(GNcore-objects PRIVATE GN_CORE_INTERNAL)
+    target_include_directories(GNcore-objects
+        PUBLIC  ${BUILD_HEADER_INC} ../inc ../3rdparty/glm
+                ../3rdparty/rapid-image/inc ../3rdparty/fmt/include
+        PRIVATE ../3rdparty/stb ../3rdparty/backward-cpp)
+    # ... (apply all remaining target_compile_definitions / options / link libs
+    #      that used to be on GNcore, now applied to GNcore-objects instead)
+
+    # 2. Production shared library: wraps the objects, adds DLL export table
+    if(GN_BUILD_IS_STATIC)
+        add_library(GNcore STATIC)
+    else()
+        add_library(GNcore SHARED)
+    endif()
+    target_link_libraries(GNcore PUBLIC GNcore-objects GNextern)
+
+  Then `GNtest-internal` links `GNcore-objects` directly:
+
+    file(GLOB_RECURSE test_sources
+        ${GARNET_ROOT}/src/core/**/test/*.cpp)
+    add_executable(GNtest-internal ${test_sources})
+    target_include_directories(GNtest-internal PRIVATE
+        ${GARNET_ROOT}/src/core)          # private headers visible to tests
+    target_link_libraries(GNtest-internal PRIVATE
+        GNcore-objects                    # all symbols, no DLL filter
+        GNextern
+        Catch2::Catch2WithMain)
+
+  Because `GNtest-internal` links the raw object files (not the shared library),
+  the DLL export table is bypassed entirely.  Every internal function is visible
+  to the linker.
+
+#### Test source file placement — side-by-side
+
+  Test files live next to the code they test:
+
+    src/core/
+      rdg/
+        submission.cpp
+        submission.h              ← private header
+        test/
+          submission-test.cpp    ← test file; can include ../submission.h
+      base/
+        array.h
+        test/
+          array-test.cpp
+
+  The `file(GLOB_RECURSE test_sources src/core/**/test/*.cpp)` in
+  `GNtest-internal`'s CMakeLists automatically picks up every test file.
+  Adding a new test file to any `test/` subfolder is all that is needed.
+
+#### Access model for internal code
+
+  | What you want to test | How | Production code change? |
+  |---|---|---|
+  | Internal types in private headers | `#include "rdg/submission.h"` via PRIVATE src/core include path | None |
+  | Any function in a private header | Direct call (linker sees obj files) | None |
+  | `private:` members of a public type | Manual `friend` declaration in production header | One line |
+  | `static` / anon-ns fn in a `.cpp` | Promote to private header, or accept indirect coverage | Minor refactor |
+
+  A manual `friend` declaration is a last resort for `private:` members of types
+  declared in *public* headers.  Internal impl types (Layer 1) are typically plain
+  `struct`s with all-public fields — friendship is not needed.
+
+#### Why Catch2 for Tier 2
+
+  | Feature | CxxTest | Catch2 |
+  |---|---|---|
+  | No code-generation pre-build step | No (cxxtestgen.py) | Yes |
+  | Automatic expression decomposition in failure messages | No | Yes |
+  | SECTION blocks (sub-cases sharing setup) | No | Yes |
+  | GENERATE (parameterized tests, no fixture boilerplate) | No | Yes |
+  | Simple CMake integration (single target, no code-gen) | No | Yes |
+  | IDE test discovery (VS Code, CLion) | No | Yes |
+
+  Catch2 requires no Python pre-build step (unlike CxxTest) and no separate mock
+  library for the test cases in scope.  If mocking or death-tests are needed later,
+  Trompeloeil pairs naturally with Catch2.
+
+  CxxTest is kept for Tier 1 to avoid unnecessary churn; it is already passing.
+
+### Optional Tier 3 — Embedded micro-tests  (future / optional, not in this assignment)
+
+  Framework: doctest (header-only, designed for co-location with source)
+  Pattern:   Place TEST_CASE blocks at the bottom of production .cpp files.
+             Define DOCTEST_CONFIG_DISABLE in production builds to strip them out.
+  Use when:  A `static`/anonymous-namespace helper in a .cpp file is complex enough
+             to need its own test but too small to deserve its own private header.
+
+---
+
+## Reference
+
+Key files to read before starting:
+
+  src/core/CMakeLists.txt               — GNcore build; the OBJECT library refactor
+                                          happens here (Task 2a)
+  src/test/ut/CMakeLists.txt            — how GNtest-unit-tests is built (leave alone)
+  src/test/CMakeLists.txt               — top-level test cmake; hook new target here
+                                          (Task 2b)
+  src/core/rdg/                         — private RDG impl headers; target for Task 3
+  src/inc/garnet/rdg/dependency-graph.h — public RDG header (boundary between tiers)
+  env/bin/cit.py                        — CI runner; must run both binaries (Task 4)
+  src/test/3rdparty/                    — where to add Catch2 submodule (Task 1)
+
+---
+
+## Build / CI
+
+  Build:  ./build.py d                        (debug build; see use-build-py skill)
+  Tests:  env/bin/cit.py                      (runs lint + all test binaries)
+  Manual: build/debug/GNtest-internal         (run internal tests directly)
+          build/debug/GNtest-unit-tests       (run legacy contract tests)
+
+---
+
+## Workflow / conventions
+
+  - Keep GNtest-unit-tests green at every step (never break it).
+  - Commit after each task is done and verified (assignment-commit-per-step rule).
+  - Push after every commit (git push).
+  - New test files go in src/core/<module>/test/<name>-test.cpp.
+  - File names follow filename-naming-convention (lowercase, hyphen-separated).
+  - Prefer private-include + object-link access for internal types (plain structs
+    in private headers have all-public fields — no friendship needed).
+  - If a `private:` member of a *public* type is unavoidable to test, use a named
+    `friend struct` in the production header (one line); do not change access to
+    protected/public just for tests.
+  - GNtest-internal MUST NOT link GNcore (.dll/.so).  It links GNcore-objects only.
+    Linking both would cause duplicate symbol errors.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: none
+In progress:    none
+--- END PROGRESS ---
+
+---
+
+## Tasks
+
+---
+
+### Task 1 — Add Catch2 as a submodule
+
+  What:
+    Add Catch2 v3 as a git submodule under src/test/3rdparty/catch2/ (shallow copy;
+    see use-submodule-shadow-copy skill) and wire it into CMake.
+
+    The directory src/test/3rdparty/ already exists and its README says "3rd party
+    libraries used in test code only."  Catch2 belongs there — it is never part of
+    the shipped GNcore library.
+
+  How:
+    a) In the repo root:
+         git submodule add --depth=1 \
+           https://github.com/catchorg/Catch2.git \
+           src/test/3rdparty/catch2
+    b) Create src/test/3rdparty/CMakeLists.txt:
+         add_subdirectory(catch2 EXCLUDE_FROM_ALL)
+       This defines the CMake targets Catch2::Catch2 and Catch2::Catch2WithMain.
+    c) In src/test/CMakeLists.txt, add before all other add_subdirectory calls:
+         add_subdirectory(3rdparty)
+    d) ./build.py d  — verify Catch2 CMake targets are defined (no compile errors
+       expected yet).
+
+  Verify:
+    ./build.py d — clean build, no errors.
+    cmake --build build/debug --target Catch2 — Catch2 lib builds.
+
+  Commit: "Assignment InternalTests: add Catch2 submodule (Task 1)"
+
+---
+
+### Task 2a — Refactor src/core/CMakeLists.txt: extract GNcore-objects
+
+  What:
+    Replace the current `add_library(GNcore ...)` block with:
+      1. `GNcore-objects` (OBJECT library) — compiled once, holds all production .o files.
+      2. `GNcore` (SHARED or STATIC as before) — now just wraps GNcore-objects.
+
+    All `target_include_directories`, `target_compile_definitions`,
+    `target_compile_options`, `target_compile_features`, and `add_core_libs` calls
+    that currently apply to `GNcore` must be moved to apply to `GNcore-objects`
+    (or kept on `GNcore` with PUBLIC propagation — see note below).
+
+  Key implementation notes:
+    - Set POSITION_INDEPENDENT_CODE ON on GNcore-objects so the same .o files
+      can be used in both GNcore.so (needs PIC) and GNtest-internal (no strict need,
+      but harmless).
+    - The add_core_libs() helper function currently calls target_link_libraries on
+      GNcore.  Refactor it (or add a parallel one) to apply to GNcore-objects.
+    - GNcore (SHARED/STATIC) simply does:
+        target_link_libraries(GNcore PUBLIC GNcore-objects GNextern)
+      It no longer lists sources — it gets them from GNcore-objects.
+    - On Linux the -fvisibility=hidden flag was applied to GNcore PRIVATE.
+      Move it to GNcore-objects PRIVATE.  It still correctly hides symbols in
+      GNcore.so; for GNtest-internal the flag has no harmful effect (the test
+      executable links objects statically, so visibility attributes are irrelevant).
+
+  Sketch of the refactored block (replaces lines ~96-257 in src/core/CMakeLists.txt):
+
+    # --- compile once ---
+    add_library(GNcore-objects OBJECT ${sources} ${garnet_headers})
+    set_target_properties(GNcore-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    target_compile_features(GNcore-objects PUBLIC cxx_std_20)
+    target_compile_definitions(GNcore-objects PRIVATE GN_CORE_INTERNAL)
+    target_include_directories(GNcore-objects PUBLIC
+        ${BUILD_HEADER_INC} ../inc
+        ../3rdparty/glm ../3rdparty/rapid-image/inc ../3rdparty/fmt/include)
+    target_include_directories(GNcore-objects PRIVATE
+        ../3rdparty/stb ../3rdparty/backward-cpp)
+
+    # redefine add_core_libs to target GNcore-objects
+    function(add_core_libs)
+        target_link_libraries(GNcore-objects PUBLIC ${ARGN})
+    endfunction()
+
+    # ... all the existing conditional blocks (GLFW, Vulkan, FBX, Threads,
+    #     assimp, freetype, iconv, MSVC flags, -fvisibility=hidden) stay here,
+    #     but now call add_core_libs / target_compile_definitions on GNcore-objects ...
+
+    # --- production library: just wraps the objects ---
+    if(GN_BUILD_IS_STATIC)
+        add_library(GNcore STATIC)
+    else()
+        add_library(GNcore SHARED)
+    endif()
+    target_link_libraries(GNcore PUBLIC GNcore-objects GNextern)
+    if(TARGET GNcore-rdg-shaders)
+        add_dependencies(GNcore GNcore-rdg-shaders)
+    endif()
+
+  Verify:
+    ./build.py d — GNcore.so/.dll builds.  Run GNtest-unit-tests to confirm no
+    regression.  ./build/debug/GNtest-unit-tests — all existing tests pass.
+
+  Commit: "Assignment InternalTests: extract GNcore-objects OBJECT library (Task 2a)"
+
+---
+
+### Task 2b — Create GNtest-internal CMake target (skeleton)
+
+  What:
+    - Create directory src/core/test/ (home for module-agnostic smoke tests)
+    - Create src/core/test/smoke-test.cpp (trivial first test)
+    - Create src/test/internal/CMakeLists.txt for the GNtest-internal target
+    - Add add_subdirectory(internal) to src/test/CMakeLists.txt
+
+  src/test/internal/CMakeLists.txt:
+
+    file(GLOB_RECURSE test_sources
+        ${CMAKE_SOURCE_DIR}/src/core/**/test/*.cpp)
+
+    add_executable(GNtest-internal ${test_sources})
+    target_include_directories(GNtest-internal PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/core)        # private headers accessible
+    target_link_libraries(GNtest-internal PRIVATE
+        GNcore-objects                       # all symbols, no DLL filter
+        GNextern
+        Catch2::Catch2WithMain)              # provides main(); no code-gen needed
+    if(IS_GNUC)
+        target_compile_options(GNtest-internal PRIVATE -Wno-sign-compare)
+    endif()
+    # add_test is optional — see note below.
+    add_test(NAME GNtest-internal COMMAND GNtest-internal)
+
+  Note on add_test():
+    add_test() registers GNtest-internal with CMake's CTest runner.  Benefits:
+      - `ctest` can run, filter (-R pattern), and parallelize (-j N) all tests.
+      - Some IDEs (CLion, VS) discover and display tests via CTest.
+      - Machine-readable XML output for CI dashboards.
+    This project uses env/bin/cit.py as its primary CI runner (Task 4), so
+    add_test() is supplementary.  Keep it for IDE integration; it costs nothing.
+
+  src/core/test/smoke-test.cpp:
+
+    #include <catch2/catch_test_macros.hpp>
+
+    TEST_CASE("Smoke: trivial assertions") {
+        REQUIRE(1 + 1 == 2);
+    }
+
+  Verify:
+    ./build.py d — GNtest-internal builds.
+    ./build/debug/GNtest-internal — 1 test passes.
+    ./build/debug/GNtest-unit-tests — still passes (no regression).
+
+  Commit: "Assignment InternalTests: add GNtest-internal skeleton (Task 2b)"
+
+---
+
+### Task 3 — Write first real internal test: vk-format-utils conversions
+
+  What:
+    Test pixelFormatToVkFormat() and vkFormatToPixelFormat() declared in the
+    private header src/core/rdg/vk-format-utils.h.  These functions are:
+      - Undiscoverable from Tier 1 (header not on public include path).
+      - Unlinkable from Tier 1 (symbols not exported from GNcore.dll/.so).
+    They are pure table-lookup routines with no GPU context or Vulkan device
+    required — ideal for fast, hermetic unit tests.
+
+  Test cases to cover:
+
+    1. vkFormatToPixelFormat: known formats map to the expected PixelFormat.
+         eR8G8B8A8Unorm → PF::RGBA_8_8_8_8_UNORM()
+         eR32Sfloat     → PF::R_32_FLOAT()
+         eD24UnormS8Uint → PF::RG_24_UNORM_8_UINT()
+         eUndefined     → PF::UNKNOWN()
+         out-of-range   → PF::UNKNOWN()
+
+    2. pixelFormatToVkFormat: known PixelFormats map to the expected vk::Format.
+         PF::RGBA_8_8_8_8_UNORM() → eR8G8B8A8Unorm
+         PF::R_32_FLOAT()         → eR32Sfloat
+         PF::UNKNOWN()            → eUndefined
+
+    3. Round-trip (GENERATE parameterized): for a representative set of vk::Format
+       values that have a known (non-UNK) mapping, verify:
+         pixelFormatToVkFormat(vkFormatToPixelFormat(fmt)) == fmt
+       Use Catch2's GENERATE to run one TEST_CASE body over each input — no
+       fixture class or separate TEST_CASE per format needed.
+
+  Create src/core/rdg/test/vk-format-utils-test.cpp:
+
+    #include <catch2/catch_test_macros.hpp>
+    // Both includes below fail in GNtest-unit-tests and fail to link against
+    // GNcore.dll — they only work in GNtest-internal:
+    #include "rdg/vk-format-utils.h"
+    #include <garnet/GNrdg.h>
+
+    using namespace GN::rdg;
+    using PF = GN::gfx::img::PixelFormat;
+
+    TEST_CASE("vkFormatToPixelFormat: known formats", "[rdg][format]") {
+        CHECK(vkFormatToPixelFormat(vk::Format::eR8G8B8A8Unorm) == PF::RGBA_8_8_8_8_UNORM());
+        CHECK(vkFormatToPixelFormat(vk::Format::eR32Sfloat)     == PF::R_32_FLOAT());
+        CHECK(vkFormatToPixelFormat(vk::Format::eD24UnormS8Uint) == PF::RG_24_UNORM_8_UINT());
+        CHECK(vkFormatToPixelFormat(vk::Format::eUndefined)     == PF::UNKNOWN());
+        CHECK(vkFormatToPixelFormat(static_cast<vk::Format>(9999)) == PF::UNKNOWN());
+    }
+
+    TEST_CASE("pixelFormatToVkFormat: known formats", "[rdg][format]") {
+        CHECK(pixelFormatToVkFormat(PF::RGBA_8_8_8_8_UNORM()) == vk::Format::eR8G8B8A8Unorm);
+        CHECK(pixelFormatToVkFormat(PF::R_32_FLOAT())         == vk::Format::eR32Sfloat);
+        CHECK(pixelFormatToVkFormat(PF::UNKNOWN())            == vk::Format::eUndefined);
+    }
+
+    TEST_CASE("round-trip: vkFormat → pixelFormat → vkFormat", "[rdg][format]") {
+        // GENERATE runs this body once per value — Catch2 parameterized test.
+        auto fmt = GENERATE(
+            vk::Format::eR8G8B8A8Unorm,
+            vk::Format::eR8G8B8A8Snorm,
+            vk::Format::eR32Sfloat,
+            vk::Format::eR16Sfloat,
+            vk::Format::eR8Unorm,
+            vk::Format::eR8Uint,
+            vk::Format::eD24UnormS8Uint,
+            vk::Format::eBc1RgbUnormBlock,
+            vk::Format::eBc7UnormBlock);
+        PF pf = vkFormatToPixelFormat(fmt);
+        REQUIRE(pf != PF::UNKNOWN());                         // must have a mapping
+        CHECK(pixelFormatToVkFormat(pf) == fmt);              // round-trip must hold
+    }
+
+  No CMake change needed — GLOB_RECURSE picks up the new file automatically
+  (a cmake reconfigure is required to refresh the glob).
+
+  Verify:
+    ./build.py d
+    ./build/debug/GNtest-internal — all 3 test cases pass (round-trip runs 9 times).
+    Confirm: adding #include "rdg/vk-format-utils.h" to a file in src/test/ut/
+    causes a compile error (proving tier separation is enforced).
+
+  Commit: "Assignment InternalTests: vk-format-utils round-trip tests (Task 3)"
+
+---
+
+### Task 4 — Wire GNtest-internal into cit.py
+
+  What:
+    env/bin/cit.py currently runs GNtest-unit-tests.  Add GNtest-internal to the
+    same CI invocation so both tiers run on every cit.py call.
+
+  How:
+    Read env/bin/cit.py, find where GNtest-unit-tests is invoked, add an equivalent
+    invocation for GNtest-internal immediately after.
+
+  Verify:
+    env/bin/cit.py — both binaries run; no failures.
+
+  Commit: "Assignment InternalTests: run GNtest-internal in cit.py (Task 4)"
+
+---
+
+### Task 5 — Migrate all RDG tests into GNtest-internal
+
+  Three existing RDG test files are spread across two separate locations and two
+  different runners.  This task consolidates them all into src/core/rdg/test/ under
+  Catch2, retires the old targets, and leaves the RDG test suite in one place.
+
+  Files to migrate:
+
+    src/test/rdg/smoke1.cpp                  → src/core/rdg/test/rdg-smoke-test.cpp
+    src/test/ut/rdg/rdg-test.cpp             → src/core/rdg/test/rdg-workflow-test.cpp
+    src/test/ut/rdg/pbr-shading-test.cpp     → src/core/rdg/test/pbr-shading-test.cpp
+
+  ─────────────────────────────────────────────────────────────────────────────
+  Task 5a — Migrate smoke1.cpp → rdg-smoke-test.cpp
+  ─────────────────────────────────────────────────────────────────────────────
+
+    Source:  src/test/rdg/smoke1.cpp  (standalone executable, int main(), no framework)
+    Target:  src/core/rdg/test/rdg-smoke-test.cpp  (Catch2 TEST_CASE)
+    Tags:    [rdg][smoke][gpu]  (GPU-dependent; skipped on headless CI)
+
+    Key porting decisions:
+      - Remove int main(). Catch2::Catch2WithMain provides it.
+      - Replace every "return -1" with REQUIRE(condition).
+      - GpuContext::create() returns null when Vulkan is absent.
+        Use SKIP() instead of failing:
+          if (!gpuContext) SKIP("No Vulkan GPU context");
+      - Replace pixel-check return with CHECK assertions.
+
+    Outline:
+      #include <catch2/catch_test_macros.hpp>
+      #include <garnet/GNrdg.h>
+      using namespace GN; using namespace GN::rdg;
+
+      TEST_CASE("RDG smoke: clear-to-red headless render", "[rdg][smoke][gpu]") {
+          auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
+          REQUIRE(db);
+          auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
+          REQUIRE(renderGraph);
+          auto gpuContext = GpuContext::create(*db, "gpu_context", {});
+          if (!gpuContext) SKIP("No Vulkan GPU context");
+          // ... port setup, workflow, submission from smoke1.cpp ...
+          auto result = submission->result();
+          REQUIRE(result.executionResult != Action::ExecutionResult::FAILED);
+          auto image = backbuffer->readback();
+          REQUIRE_FALSE(image.empty());
+          const uint8_t * p = image.at({}, image.width()/2, image.height()/2, 0);
+          CHECK((p[0]==255 && p[1]==0 && p[2]==0) ||   // RGBA red
+                (p[0]==0   && p[1]==0 && p[2]==255));   // BGRA red
+      }
+
+    Retire: delete src/test/rdg/smoke1.cpp, src/test/rdg/CMakeLists.txt,
+            remove add_subdirectory(rdg) from src/test/CMakeLists.txt.
+
+  ─────────────────────────────────────────────────────────────────────────────
+  Task 5b — Migrate rdg-test.cpp → rdg-workflow-test.cpp
+  ─────────────────────────────────────────────────────────────────────────────
+
+    Source:  src/test/ut/rdg/rdg-test.cpp  (CxxTest, no GPU needed)
+    Target:  src/core/rdg/test/rdg-workflow-test.cpp  (Catch2)
+    Renamed: "rdg-test" is too generic; "rdg-workflow-test" names what is tested
+             (custom artifact/action types, workflow scheduling, 3*(1+2)=9 execution).
+    Tags:    [rdg][workflow]
+
+    CxxTest → Catch2 mechanical substitutions:
+      #include "../testCommon.h"              → #include <catch2/catch_test_macros.hpp>
+      class RdgTest : public CxxTest::TestSuite { public:
+        void testXxx() { ... }               → TEST_CASE("...", "[rdg][workflow]") { ... }
+      };                                       (no class wrapper)
+      TS_ASSERT(x)                           → REQUIRE(x)  or  CHECK(x)
+      TS_ASSERT_EQUALS(a, b)                 → CHECK(a == b)
+      TS_ASSERT_DIFFERS(a, b)               → CHECK(a != b)
+
+    Note on TS_ASSERT inside action execute() methods:
+      rdg-test.cpp calls TS_ASSERT() inside InitIntegerAction::execute(),
+      AddIntegersAction::execute() etc.  In Catch2, CHECK/REQUIRE work inside
+      any function called from a TEST_CASE (Catch2 uses exceptions).  Replace
+      those TS_ASSERT calls with CHECK — the intent (catch wrong type) is clearer
+      as a test assertion than a runtime abort.
+
+    Retire: delete src/test/ut/rdg/rdg-test.cpp.
+
+  ─────────────────────────────────────────────────────────────────────────────
+  Task 5c — Migrate pbr-shading-test.cpp (keep filename)
+  ─────────────────────────────────────────────────────────────────────────────
+
+    Source:  src/test/ut/rdg/pbr-shading-test.cpp  (CxxTest, GPU-dependent)
+    Target:  src/core/rdg/test/pbr-shading-test.cpp  (Catch2)
+    Tags:    [rdg][pbr][gpu]  (all tests require GpuContext; some require media mount)
+
+    CxxTest → Catch2 mechanical substitutions (same table as 5b), plus:
+      if (!gpuContext) return;               → if (!gpuContext) SKIP("No GPU");
+      if (!fp) return;                       → if (!fp) SKIP("Media not mounted");
+      TS_ASSERT_DELTA(a, b, eps)            → CHECK(a == Approx(b).epsilon(eps))
+
+    Each void testXxx() becomes a separate TEST_CASE so failures are reported
+    individually.  All GPU-dependent cases get [gpu]; the one that also needs the
+    media mount gets [media] in addition:
+      TEST_CASE("PBR: type IDs non-zero", "[rdg][pbr]")          // no GPU needed
+      TEST_CASE("PBR: create and build without graph", "[rdg][pbr][gpu]")
+      TEST_CASE("PBR: build with render graph returns workflow",  "[rdg][pbr][gpu]")
+      TEST_CASE("PBR: SubGraph::drop clears workflows",           "[rdg][pbr][gpu]")
+      TEST_CASE("PBR: Material::load from empty MemFile",        "[rdg][pbr][gpu]")
+      TEST_CASE("PBR: Material::load resolves texture path",     "[rdg][pbr][gpu]")
+      TEST_CASE("PBR: Material::load lined-metal-sheeting",      "[rdg][pbr][gpu][media]")
+      TEST_CASE("PBR: SharedShaderConstants view round-trip",    "[rdg][pbr][gpu]")
+
+    Retire: delete src/test/ut/rdg/pbr-shading-test.cpp.
+
+  ─────────────────────────────────────────────────────────────────────────────
+  Cleanup after 5a/5b/5c
+  ─────────────────────────────────────────────────────────────────────────────
+
+    - src/test/ut/CMakeLists.txt: remove rdg/*.cpp from the GLOB line so the
+      CxxTest runner no longer tries to include the (now deleted) rdg test files.
+      New glob: file(GLOB sources base/*.cpp gfx/*.cpp)
+
+    - env/bin/cit.py: replace GNtest-rdg-smoke1 invocation with GNtest-internal.
+      (GNtest-internal now covers all three migrated tests.)
+
+    - GNtest-unit-tests still runs but covers only base/ and gfx/ tests (unchanged).
+
+  ─────────────────────────────────────────────────────────────────────────────
+  Verify (all of Task 5)
+  ─────────────────────────────────────────────────────────────────────────────
+
+    ./build.py d — GNtest-rdg-smoke1 target gone; GNtest-unit-tests still builds.
+    ./build/debug/GNtest-internal "[rdg][workflow]" — workflow tests pass (no GPU needed).
+    ./build/debug/GNtest-internal "[gpu]" — GPU tests pass on a Vulkan machine;
+      SKIP on headless CI.
+    ./build/debug/GNtest-unit-tests — base/ and gfx/ tests still pass (no regression).
+    env/bin/cit.py — all pass.
+
+  Commit: "Assignment InternalTests: migrate all RDG tests into GNtest-internal (Task 5)"
+
+---
+
+### Task 6 — Document test infrastructure conventions
+
+  What:
+    Create src/test/README.md explaining the two-tier model so future contributors
+    know which tier to use and how to add tests to each.
+
+  Content:
+    - Tier 1 (GNtest-unit-tests): purpose, framework (CxxTest), where to add tests
+      (src/test/ut/), accessible headers (public src/inc/ only).
+    - Tier 2 (GNtest-internal): purpose, framework (Catch2), where to add tests
+      (src/core/<module>/test/<name>-test.cpp), accessible headers (all of src/core/
+      via PRIVATE include path + GNcore-objects static link), when to use a friend
+      accessor struct for private: members of public types.
+    - Why GNtest-internal links GNcore-objects not GNcore.dll (DLL visibility problem).
+    - How to run each tier manually and via cit.py.
+    - Optional Tier 3 (doctest embedded): brief note for future consideration.
+
+  Verify:
+    File exists; ./build.py d passes; env/bin/cit.py passes.
+
+  Commit: "Assignment InternalTests: document two-tier infrastructure (Task 6)"
+
+---
+
+## Summary of files to touch
+
+  New files:
+    src/test/3rdparty/catch2/                        (submodule — Task 1)
+    src/test/3rdparty/CMakeLists.txt                 (add_subdirectory catch2 — Task 1)
+    src/core/test/smoke-test.cpp                     (trivial first test — Task 2b)
+    src/core/rdg/test/vk-format-utils-test.cpp       (format conversion tests — Task 3)
+    src/core/rdg/test/rdg-smoke-test.cpp             (migrated from smoke1.cpp — Task 5a)
+    src/core/rdg/test/rdg-workflow-test.cpp          (migrated from rdg-test.cpp — Task 5b)
+    src/core/rdg/test/pbr-shading-test.cpp           (migrated from ut/rdg/ — Task 5c)
+    src/test/internal/CMakeLists.txt                 (GNtest-internal target — Task 2b)
+    src/test/README.md                               (conventions doc — Task 6)
+
+  Modified files:
+    src/core/CMakeLists.txt      — extract GNcore-objects OBJECT library (Task 2a)
+    src/test/CMakeLists.txt      — add_subdirectory(3rdparty) + add_subdirectory(internal);
+                                   remove add_subdirectory(rdg) (Tasks 1, 2b, 5a)
+    src/test/ut/CMakeLists.txt   — remove rdg/*.cpp from GLOB (Task 5b/5c)
+    env/bin/cit.py               — replace GNtest-rdg-smoke1 with GNtest-internal
+                                   (Tasks 4, 5a)
+    .gitmodules                  — submodule entry (Task 1)
+
+  Deleted files:
+    src/test/rdg/smoke1.cpp                   (moved to src/core/rdg/test/ — Task 5a)
+    src/test/rdg/CMakeLists.txt               (target retired — Task 5a)
+    src/test/ut/rdg/rdg-test.cpp              (moved to src/core/rdg/test/ — Task 5b)
+    src/test/ut/rdg/pbr-shading-test.cpp      (moved to src/core/rdg/test/ — Task 5c)
+
+  Untouched:
+    src/test/ut/         — legacy CxxTest tests; no changes
+    src/core/**/*.cpp/h  — production code; no changes (except optional Task 5)
