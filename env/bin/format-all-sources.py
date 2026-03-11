@@ -35,7 +35,7 @@ if "Windows" == system:
 elif "Darwin" == system:
      clang_format = str(root_dir / "env/bin/clang-format/clang-format-22.1.0-apple")
 else:
-     clang_format = str(root_dir / "env/bin/clang-format/clang-format-22.1.0-linux")
+     clang_format = str(root_dir / "env/bin/clang-format/clang-format-22.1.0-x64-linux")
 
 # Check if $clang_format is valid executable on path.
 if not shutil.which(clang_format):
