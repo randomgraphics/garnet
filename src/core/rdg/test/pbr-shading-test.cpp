@@ -84,7 +84,7 @@ TEST_CASE("PBR: Material::load from empty MemFile", "[rdg][pbr][gpu]") {
     REQUIRE(memFile->readable());
     auto mat = PbrShading::Material::load(*db, "test_material_empty", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile});
     REQUIRE(mat != nullptr);
-    CHECK(mat->typeId == PbrShading::Material::TYPE_ID);
+    CHECK(mat->typeId() == PbrShading::Material::TYPE_ID);
 }
 
 TEST_CASE("PBR: Material::load resolves texture path", "[rdg][pbr][gpu]") {

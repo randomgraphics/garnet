@@ -14,18 +14,12 @@
 
 namespace GN::rdg {
 
-static inline uint64_t getTestTypeId() {
-    static std::atomic<uint64_t> nextId = 1;
-    return nextId.fetch_add(1, std::memory_order_relaxed);
-}
-
 struct IntegerArtifact : public Artifact {
-    inline static const uint64_t         TYPE_ID   = getTestTypeId();
-    inline static constexpr const char * TYPE_NAME = "IntegerArtifact";
+    GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
 
     int value = 0;
 
-    IntegerArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_ID, TYPE_NAME, name) {}
+    IntegerArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_INFO(), name) {}
 
     static GN::AutoRef<IntegerArtifact> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new IntegerArtifact(db, name);
@@ -38,12 +32,11 @@ struct IntegerArtifact : public Artifact {
 };
 
 struct InitIntegerAction : public Action {
-    inline static const uint64_t         TYPE_ID   = getTestTypeId();
-    inline static constexpr const char * TYPE_NAME = "InitIntegerAction";
+    GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
     int initValue = 0;
 
-    InitIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, TYPE_NAME, name) {}
+    InitIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
 
     static GN::AutoRef<InitIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new InitIntegerAction(db, name);
@@ -55,9 +48,8 @@ struct InitIntegerAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t         TYPE_ID   = getTestTypeId();
-        inline static constexpr const char * TYPE_NAME = "InitIntegerAction::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
         AutoRef<IntegerArtifact> output;
 
         void addToReadWriteList(ArtifactReadWriteList & list) const override {
@@ -80,10 +72,9 @@ struct InitIntegerAction : public Action {
 };
 
 struct AddIntegersAction : public Action {
-    inline static const uint64_t         TYPE_ID   = getTestTypeId();
-    inline static constexpr const char * TYPE_NAME = "AddIntegersAction";
+    GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
-    AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, TYPE_NAME, name) {}
+    AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
 
     static GN::AutoRef<AddIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new AddIntegersAction(db, name);
@@ -95,9 +86,8 @@ struct AddIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t         TYPE_ID   = getTestTypeId();
-        inline static constexpr const char * TYPE_NAME = "AddIntegersAction::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
         AutoRef<IntegerArtifact> input1;
         AutoRef<IntegerArtifact> input2;
         AutoRef<IntegerArtifact> output;
@@ -125,10 +115,9 @@ struct AddIntegersAction : public Action {
 };
 
 struct MultiplyIntegersAction : public Action {
-    inline static const uint64_t         TYPE_ID   = getTestTypeId();
-    inline static constexpr const char * TYPE_NAME = "MultiplyIntegersAction";
+    GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
-    MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, TYPE_NAME, name) {}
+    MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
 
     static GN::AutoRef<MultiplyIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new MultiplyIntegersAction(db, name);
@@ -140,9 +129,8 @@ struct MultiplyIntegersAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t         TYPE_ID   = getTestTypeId();
-        inline static constexpr const char * TYPE_NAME = "MultiplyIntegersAction::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
         AutoRef<IntegerArtifact> input1;
         AutoRef<IntegerArtifact> input2;
         AutoRef<IntegerArtifact> output;
@@ -172,9 +160,9 @@ struct MultiplyIntegersAction : public Action {
 };
 
 struct ReadIntegerAction : public Action {
-    inline static const uint64_t TYPE_ID = getTestTypeId();
+    GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
-    ReadIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_ID, "ReadIntegerAction", name) {}
+    ReadIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
 
     static GN::AutoRef<ReadIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
         auto * p = new ReadIntegerAction(db, name);
@@ -186,9 +174,8 @@ struct ReadIntegerAction : public Action {
     }
 
     struct A : public Arguments {
-        inline static const uint64_t         TYPE      = getTestTypeId();
-        inline static constexpr const char * TYPE_NAME = "ReadIntegerAction::A";
-        A(): Arguments(TYPE, TYPE_NAME) {}
+        GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
         AutoRef<IntegerArtifact> input;
 
         void addToReadWriteList(ArtifactReadWriteList & list) const override {

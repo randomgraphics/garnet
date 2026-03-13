@@ -1,5 +1,6 @@
 #pragma once
 
+#include <garnet/rdg/rtti.h>
 #include <glm/mat4x4.hpp>
 #include <mutex>
 
@@ -45,8 +46,7 @@ namespace GN::rdg {
 /// organises and uploads this data to GPU resources. The public interface does not
 /// expose any information about how the backend organises or binds these resources.
 struct SharedShaderConstants : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "SharedShaderConstants";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     /// Logical frame data. Implementation maps this to GPU resources as needed.
     struct FrameInformation {
@@ -257,14 +257,12 @@ struct GN_API SubGraph {
 };
 
 struct PbrShading : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "PbrShading";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     /// Represents a PBR material resource.
     /// Backend is free to determine the best way to implements it, such as texture set, material parameter values, etc.
     struct Material : public GpuResource {
-        GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "PbrMaterial";
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
         struct LoadParameters {
             AutoRef<GpuContext> gpu;
@@ -312,8 +310,7 @@ protected:
 };
 
 struct SkyBox : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "SkyBox";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     struct BuildParameters {
         AutoRef<SharedShaderConstants> sharedShaderConstants;

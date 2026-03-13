@@ -11,7 +11,7 @@ namespace GN::rdg {
 // BackbufferVulkan - constructor and init
 // =============================================================================
 
-BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE_ID, TYPE_NAME, name) {
+BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE_INFO(), name) {
     if (0 == sequence) { GN_ERROR(sLogger)("BackbufferVulkan::BackbufferVulkan: duplicate type+name, name='{}'", name); }
 }
 
@@ -215,7 +215,7 @@ AutoRef<Backbuffer> createBackbufferVulkan(ArtifactDatabase & db, const StrA & n
 ///    in a deferred rendering pipeline.
 class PrepareBackbufferVulkan : public PrepareBackbuffer {
 public:
-    PrepareBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
+    PrepareBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE_INFO(), name) {}
 
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
@@ -247,7 +247,7 @@ class PresentBackbufferVulkan : public PresentBackbuffer {
     AutoRef<GpuContextVulkan> mGpu;
 
 public:
-    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_ID, TYPE_NAME, name) {}
+    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_INFO(), name) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto a = arguments.castTo<PresentBackbuffer::A>();

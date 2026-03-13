@@ -1,6 +1,7 @@
 #pragma once
 
 #include <garnet/GNbase.h>
+#include <garnet/rdg/rtti.h>
 
 #include <concepts>
 #include <functional>
@@ -19,39 +20,10 @@ namespace GN::rdg {
 
 struct ArtifactDatabase;
 
-struct RuntimeType {
-    /// The unique identifier of the type for fast lookup and comparison.
-    /// This is a runtime ID generated each time application starts.
-    /// It is guaranteed to be unique within the entire application, even across DLL boundaries.
-    /// But DO NOT use it in external assets or files, since they are not stable and will change from session to session.
-    const uint64_t typeId;
-
-    /// The name of the type. No need to be unique, for now.
-    /// \note We could enforce uniqueness of the name too, if we want a stable ID for each type in the future.
-    const char * const typeName;
-
-    template<typename T>
-    T * castTo() {
-        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<T *>(this);
-        return nullptr;
-    }
-
-    template<typename T>
-    const T * castTo() const {
-        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<const T *>(this);
-        return nullptr;
-    }
-
-protected:
-    RuntimeType(uint64_t typeId_, const char * typeName_): typeId(typeId_), typeName(typeName_) {}
-
-    /// Returns a 64-bit integer that uniquely map to the name.
-    /// Same name always returns the same ID.
-    static GN_API uint64_t getStableTypeIdFromName(const char * name);
-};
-
-/// The basic building block of the render graph module. Base class of everthing that could be added to a render graph.
+/// The basic building block of the render graph module. Base class of everything that could be added to a render graph.
 struct Artifact : public RefCounter, public RuntimeType {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
+
     ArtifactDatabase & database;
     const StrA         name;
     const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
@@ -60,7 +32,7 @@ struct Artifact : public RefCounter, public RuntimeType {
 
 protected:
     /// Constructor
-    Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name);
+    Artifact(ArtifactDatabase & db, const TypeInfo & type, const StrA & name);
 };
 
 /// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
@@ -94,8 +66,8 @@ protected:
     ArtifactDatabase() = default;
 };
 
-inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
-    : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
+inline Artifact::Artifact(ArtifactDatabase & db, const TypeInfo & type, const StrA & name)
+    : RuntimeType(type), database(db), name(name), sequence(database.admit(this)) {}
 
 inline Artifact::~Artifact() {
     if (sequence) database.erase(sequence);
@@ -103,12 +75,10 @@ inline Artifact::~Artifact() {
 
 /// A helper class to wrap anything as an artifact.
 /// \param T    Type of the value to wrap.
-/// \param NAME Name of the artifact.
-template<typename T, const char * NAME>
+template<typename T>
 class TypedArtifact : public Artifact {
 public:
-    inline static const uint64_t TYPE_ID   = getStableTypeIdFromName(StrA::format("{}_{}", NAME, Guid::createRandom().toStr()).data());
-    inline static const char *   TYPE_NAME = NAME;
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
 
     T value;
 
@@ -136,9 +106,9 @@ public:
 
 private:
     // Constructor: only used by create() methods.
-    TypedArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_ID, TYPE_NAME, name), value() {}
-    TypedArtifact(ArtifactDatabase & db, const StrA & name, const T & v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(v) {}
-    TypedArtifact(ArtifactDatabase & db, const StrA & name, T && v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(std::move(v)) {}
+    TypedArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_INFO(), name), value() {}
+    TypedArtifact(ArtifactDatabase & db, const StrA & name, const T & v): Artifact(db, TYPE_INFO(), name), value(v) {}
+    TypedArtifact(ArtifactDatabase & db, const StrA & name, T && v): Artifact(db, TYPE_INFO(), name), value(std::move(v)) {}
 };
 
 template<class T>
@@ -146,7 +116,6 @@ concept DerivedFromArtifact = std::derived_from<T, Artifact>;
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 struct Arguments : public RefCounter, public RuntimeType {
-
     struct ArtifactReadWriteList {
         std::unordered_set<const Artifact *> & readList;
         std::unordered_set<const Artifact *> & writeList;
@@ -159,27 +128,6 @@ struct Arguments : public RefCounter, public RuntimeType {
 
 protected:
     using RuntimeType::RuntimeType;
-    // private:
-    //     DoubleLink * mHead = nullptr;
-
-    //     /// Only called by ArtifactArgument constructor to enlist the argument into the list.
-    //     void enlist(ArtifactArgument * arg) {
-    //         GN_ASSERT(arg);
-    //         GN_ASSERT(arg->name() != nullptr);
-    //         GN_ASSERT(arg->usage() != Usage::None);
-    //         DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
-    //         GN_ASSERT(link->prev == nullptr && link->next == nullptr);
-
-    //         if (!mHead)
-    //             mHead = link;
-    //         else {
-    //             GN_ASSERT(mHead->prev == nullptr);
-    //             link->linkBefore(mHead);
-    //             mHead = link;
-    //         }
-    //     }
-
-    //     friend struct ArtifactArgument;
 };
 
 /// A opaque struct to store information of each task in a submission. Defined in submission.h.
@@ -187,6 +135,8 @@ struct TaskInfo;
 
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).
 struct Action : public Artifact {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
+
     enum ExecutionResult {
         PASSED,  ///< the action executed successfully.
         WARNING, ///< the action executed successfully, but with warnings.

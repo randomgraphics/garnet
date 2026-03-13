@@ -163,7 +163,7 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
 
 public:
     SharedShaderConstantsVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
-        : SharedShaderConstants(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {
+        : SharedShaderConstants(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {
         initGpuResources();
     }
 

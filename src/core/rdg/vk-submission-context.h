@@ -1,5 +1,6 @@
 #pragma once
 #include "submission.h"
+#include <garnet/rdg/rtti.h>
 #include "vk-gpu-context.h"
 #include "vk-render-pass.h"
 #include "vk-command-buffer.h"
@@ -11,12 +12,10 @@ namespace GN::rdg {
 /// on demand when being asked for by a vulkan specific action, and
 /// destroyed when the submission is finished.
 struct SubmissionContextVulkan : public SubmissionImpl::Context, public SlotBase {
-    inline static const uint64_t         TYPE_ID   = getNextUniqueTypeId();
-    inline static constexpr const char * TYPE_NAME = "SubmissionContextVulkan";
+    GN_RDG_REGISTER_RUNTIME_TYPE();
 
     SubmissionContextVulkan(SubmissionImpl & submission_, AutoRef<GpuContextVulkan> gpu_)
-        : SubmissionImpl::Context(TYPE_ID, TYPE_NAME), submission(submission_), gpu(gpu_), renderPassManager({gpu_}),
-          commandBufferManager({gpu_, submission_}) {}
+        : SubmissionImpl::Context(TYPE_INFO()), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_, submission_}) {}
 
     SubmissionImpl &           submission;
     AutoRef<GpuContextVulkan>  gpu;

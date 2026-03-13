@@ -13,13 +13,11 @@ namespace GN::rdg {
 ///   the backbuffer is prepared and not presented. See PrepareBackbuffer and
 ///   PresentBackbuffer actions for more details.
 struct ClearRenderTarget : public Action {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "ClearRenderTarget";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
     struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "ClearRenderTarget::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
 
         AutoRef<RenderTarget> renderTarget;
 
@@ -57,13 +55,11 @@ protected:
 /// It must be called in pair with PresentBackbuffer action to properly
 /// rotate the swapchain buffers for rendering and presenting.
 struct PrepareBackbuffer : public Action {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
     struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "PrepareBackbuffer::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
 
         AutoRef<Backbuffer> backbuffer;
 
@@ -95,13 +91,11 @@ protected:
 /// It must be called in pair with PrepareBackbuffer action to properly
 /// rotate the swapchain buffers for rendering and presenting.
 struct PresentBackbuffer : public Action {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "PresentBackbuffer";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
     struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "PresentBackbuffer::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
 
         AutoRef<Backbuffer> backbuffer;
 
@@ -131,8 +125,7 @@ protected:
 
 /// Setup render states action for configuring GPU render pipeline state.
 struct SetupRenderStates : public Action {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "SetupRenderStates";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
     enum FillMode {
         FILL_SOLID = 0,
@@ -160,9 +153,8 @@ struct SetupRenderStates : public Action {
     };
 
     struct A : public Arguments {
-        GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "SetupRenderStates::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
 
         RenderStateDesc renderStates; ///< render state descriptor
 
@@ -181,6 +173,8 @@ protected:
 
 /// Base class for generic shader actions (draw and compute). Contains common shader resource binding definitions.
 struct GpuShaderAction : public Action {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Action);
+
     /// Shader binary that can be used to create the actual GPU shader program.
     struct ShaderBinary {
         void *       binary = nullptr; ///< pointer to the shader binary code.
@@ -204,8 +198,7 @@ protected:
 /// Generic GPU draw action. This is the building block of all other draw actions and effects.
 /// It depends on ClearRenderTarget action to set the render target. Without it, this action will simply fail.
 struct GpuDraw : public GpuShaderAction {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "GpuDraw";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuShaderAction);
 
     /// Represent a GPU renderable geometry.
     struct GpuGeometry {
@@ -280,9 +273,8 @@ struct GpuDraw : public GpuShaderAction {
     };
 
     struct GN_API A : public Arguments {
-        static const uint64_t                TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "GpuDraw::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
 
         GpuGeometry        geometry;   ///< geometry
         GpuResourceTable   resources;  ///< shader resources
@@ -313,8 +305,7 @@ protected:
 
 /// Generic GPU compute action. It is the building block of all GPU compute operations.
 struct GpuCompute : public GpuShaderAction {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "GenericCompute";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuShaderAction);
 
     /// Dispatch dimensions (thread group counts)
     struct DispatchSize {
@@ -324,9 +315,8 @@ struct GpuCompute : public GpuShaderAction {
     };
 
     struct GN_API A : public Arguments {
-        static const uint64_t                TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "GenericCompute::A";
-        A(): Arguments(TYPE_ID, TYPE_NAME) {}
+        GN_RDG_REGISTER_RUNTIME_TYPE();
+        A(): Arguments(TYPE_INFO()) {}
 
         GpuResourceTable   resources;  ///< shader resources
         DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.

@@ -4,7 +4,6 @@
 #include <future>
 #include <mutex>
 #include <optional>
-#include "runtime-type.h"
 
 #define GN_RDG_FAIL_ON_FAIL(expr, ...)                                                                            \
     do {                                                                                                          \
@@ -79,7 +78,7 @@ public:
     AutoRef<T> getSumissionContext() const {
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
         if (ctx == mExecutionContexts.end()) { return {}; }
-        GN_ASSERT(ctx->second->typeId == T::TYPE_ID);
+        GN_ASSERT(ctx->second->typeId() == T::TYPE_ID);
         return AutoRef<T>(ctx->second->template castTo<T>());
     }
 
@@ -88,7 +87,7 @@ public:
                 GN_ERROR(GN::getLogger("GN.rdg"))("SubmissionImpl::setExecutionContext: context is null");
                 return;
             }
-        mExecutionContexts[ctx->typeId] = ctx;
+        mExecutionContexts[ctx->typeId()] = ctx;
     }
 
     template<typename T, typename... Args>

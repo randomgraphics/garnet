@@ -11,7 +11,7 @@ namespace GN::rdg {
 class TextureCommon : public Texture {
 public:
 protected:
-    TextureCommon(ArtifactDatabase & db, const StrA & name): Texture(db, Texture::TYPE_ID, Texture::TYPE_NAME, name) {}
+    TextureCommon(ArtifactDatabase & db, const StrA & name): Texture(db, Texture::TYPE_INFO(), name) {}
 };
 
 } // namespace GN::rdg

@@ -44,7 +44,7 @@ class PbrShadingVulkan : public PbrShading {
     }
 
 public:
-    PbrShadingVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu): PbrShading(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+    PbrShadingVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu): PbrShading(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     GpuContext & gpu() const override { return *mGpu; }
 
@@ -147,8 +147,7 @@ class PbrMaterialImpl : public PbrShading::Material {
     AutoRef<Texture>    mNormalTexture;
 
 public:
-    PbrMaterialImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
-        : PbrShading::Material(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+    PbrMaterialImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu): PbrShading::Material(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     GpuContext & gpu() const override { return *mGpu; }
     Texture *    getBaseColorTexture() const override { return mBaseColorTexture.get(); }

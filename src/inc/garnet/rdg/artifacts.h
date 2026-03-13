@@ -1,5 +1,6 @@
 #pragma once
 
+#include <garnet/rdg/rtti.h>
 #include <garnet/gfx/image.h>
 #include <unordered_map>
 #include <variant>
@@ -12,8 +13,7 @@ namespace GN::rdg {
 
 /// GpuContext represents a GPU context (wrapper of D3D/Vulkan context).
 struct GpuContext : public Artifact {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "GpuContext";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
 
     struct CreateParameters {
         /// The graphics API ("auto" = platform default; "vulkan", "d3d12", "metal").
@@ -33,6 +33,8 @@ protected:
 
 /// Base class for all GPU resources.
 struct GpuResource : public Artifact {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
+
     virtual GpuContext & gpu() const = 0;
 
 protected:
@@ -44,8 +46,7 @@ protected:
 ///   PrepareBackbuffer and PresentBackbuffer actions for more details.
 /// - A newly created backbuffer is always in non-renderable state.
 struct Backbuffer : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "Backbuffer";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     /// Surface/window handle and size for backbuffer. Decoupled from window system; caller passes native handles.
     /// If handle is 0, create a headless backbuffer. width/height must be positive.
@@ -97,8 +98,7 @@ protected:
 
 /// Texture represents a 2D/3D/cube texture with optional mipmap and array layers.
 struct Texture : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "Texture";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
@@ -168,8 +168,7 @@ protected:
 
 /// Sampler represents GPU sampler state (filtering, addressing, LOD, anisotropy).
 struct Sampler : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "Sampler";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     // enum class Filter { POINT, LINEAR, ANISOTROPIC };
     // enum class AddressMode { REPEAT, MIRROR_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER, MIRROR_CLAMP_TO_EDGE };
@@ -205,8 +204,7 @@ protected:
 
 /// Buffer represents a GPU buffer
 struct Buffer : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "Buffer";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
@@ -365,11 +363,11 @@ struct GpuResourceView {
     BufferView bufferView = {};
 
     bool empty() const { return artifact.empty(); }
-    bool isTexture() const { return artifact && artifact->typeId == Texture::TYPE_ID; }
-    bool isBackbuffer() const { return artifact && artifact->typeId == Backbuffer::TYPE_ID; }
+    bool isTexture() const { return artifact && artifact->typeId() == Texture::TYPE_ID; }
+    bool isBackbuffer() const { return artifact && artifact->typeId() == Backbuffer::TYPE_ID; }
     bool isImage() const { return isTexture() || isBackbuffer(); }
-    bool isBuffer() const { return artifact && artifact->typeId == Buffer::TYPE_ID; }
-    bool isSampler() const { return artifact && artifact->typeId == Sampler::TYPE_ID; }
+    bool isBuffer() const { return artifact && artifact->typeId() == Buffer::TYPE_ID; }
+    bool isSampler() const { return artifact && artifact->typeId() == Sampler::TYPE_ID; }
 
     AutoRef<Texture>    texture() const { return AutoRef<Texture>(artifact ? artifact->template castTo<Texture>() : nullptr); }
     AutoRef<Backbuffer> backbuffer() const { return AutoRef<Backbuffer>(artifact ? artifact->template castTo<Backbuffer>() : nullptr); }
@@ -446,8 +444,7 @@ struct GpuResourceView {
 
 /// Render target represents a set of color and depth/stencil targets that GPU draws to.
 struct RenderTarget : public Artifact {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "RenderTarget";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
 
     struct BlendState {
         enum Arg {
@@ -727,8 +724,7 @@ typedef BitFlags<GpuShaderStageBits> GpuShaderStageFlags;
 /// A group of bindable GPU shader resources.
 /// Conceptually, it matches Vulkan's descriptor set.
 struct GpuResourceGroup : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "GpuResourceSet";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     struct SlotDescription {
         enum Type {

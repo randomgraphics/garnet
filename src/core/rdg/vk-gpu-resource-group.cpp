@@ -143,7 +143,7 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
 
 GpuResourceGroupVulkan::GpuResourceGroupVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu,
                                                const GpuResourceGroup::CreateParameters & params)
-    : GpuResourceGroup(db, GpuResourceGroup::TYPE_ID, GpuResourceGroup::TYPE_NAME, name), mGpu(std::move(gpu)), mSlots(params.slots) {
+    : GpuResourceGroup(db, GpuResourceGroup::TYPE_INFO(), name), mGpu(std::move(gpu)), mSlots(params.slots) {
     mBoundViews.resize(params.slots.size());
     buildLayoutAndPool();
 }

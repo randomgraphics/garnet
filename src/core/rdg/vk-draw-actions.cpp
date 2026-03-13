@@ -18,8 +18,7 @@ class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
 
 public:
-    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
-        : ClearRenderTarget(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu) {}
+    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): ClearRenderTarget(db, TYPE_INFO(), name), mGpu(gpu) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
@@ -73,7 +72,7 @@ class GpuDrawVulkan : public GpuDraw {
 
 public:
     GpuDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
-        : GpuDraw(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu), mCreateParams(params) {}
+        : GpuDraw(db, TYPE_INFO(), name), mGpu(gpu), mCreateParams(params) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);

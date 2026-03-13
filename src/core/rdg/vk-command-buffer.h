@@ -99,7 +99,7 @@ private:
 
     Action::ExecutionResult waitForIdle(SubmissionImpl &) {
         for (auto & [queue, submissionIDs] : mSubmissionIDs) {
-            vk::ArrayProxy<const rapid_vulkan::CommandQueue::SubmissionID> ids(submissionIDs.size(), submissionIDs.data());
+            vk::ArrayProxy<const rapid_vulkan::CommandQueue::SubmissionID> ids((uint32_t) submissionIDs.size(), submissionIDs.data());
             queue->wait(ids);
         }
         mSubmissionIDs.clear();

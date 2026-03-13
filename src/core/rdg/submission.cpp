@@ -254,15 +254,15 @@ Submission::State SubmissionImpl::dumpState() const {
                 // Print all resources read by this task
                 out += "      read artifacts:\n";
                 for (const Artifact * a : r) {
-                    const char * typeName = a->typeName ? a->typeName : "[unknown type]";
-                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId, a->name.c_str(),
+                    const char * typeName = a->typeInfo().name ? a->typeInfo().name : "[unknown type]";
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId(), a->name.c_str(),
                                         (unsigned long long) a->sequence);
                 }
                 // Print all resources written by this task
                 out += "      write artifacts:\n";
                 for (const Artifact * a : w) {
-                    const char * typeName = a->typeName ? a->typeName : "[unknown type]";
-                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId, a->name.c_str(),
+                    const char * typeName = a->typeInfo().name ? a->typeInfo().name : "[unknown type]";
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId(), a->name.c_str(),
                                         (unsigned long long) a->sequence);
                 }
             }

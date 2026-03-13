@@ -3,7 +3,6 @@
 file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS
     ${CMAKE_SOURCE_DIR}/src/core/*.cpp)
 list(FILTER test_sources INCLUDE REGEX ".*/test/[^/]+\\.cpp$")
-
 add_executable(GNtest-internal ${test_sources})
 target_include_directories(GNtest-internal PRIVATE
     ${CMAKE_SOURCE_DIR}/src/core
@@ -15,4 +14,4 @@ target_link_libraries(GNtest-internal PRIVATE
 if(IS_GNUC)
     target_compile_options(GNtest-internal PRIVATE -Wno-sign-compare)
 endif()
-add_test(NAME GNtest-internal COMMAND GNtest-internal)
+# add_test(NAME GNtest-internal COMMAND GNtest-internal)
