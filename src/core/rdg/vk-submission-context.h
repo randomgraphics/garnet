@@ -4,6 +4,7 @@
 #include "vk-gpu-context.h"
 #include "vk-render-pass.h"
 #include "vk-command-buffer.h"
+#include <garnet/base/array.h>
 
 namespace GN::rdg {
 
@@ -21,6 +22,10 @@ struct SubmissionContextVulkan : public SubmissionImpl::Context, public SlotBase
     AutoRef<GpuContextVulkan>  gpu;
     RenderPassManagerVulkan    renderPassManager;
     CommandBufferManagerVulkan commandBufferManager;
+
+    // /// Upload actions that wrote data during this submission.
+    // /// CommandBufferManagerVulkan::submit() walks this list to distribute GPU completion tokens.
+    // DynaArray<GpuBufferUploadVulkan *> activeUploads;
 
     // // -------------------------------------------------------------------------
     // // Frame Execution Context tracked on each backbuffer artifact.

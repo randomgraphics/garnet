@@ -53,15 +53,8 @@ struct RuntimeType {
     uint64_t typeId() const { return mTypeInfo.id; }
 
     template<typename T>
-    T * castTo() {
-        if (mTypeInfo.isDerivedFrom(T::TYPE_INFO())) GN_LIKELY return static_cast<T *>(this);
-        return nullptr;
-    }
-
-    template<typename T>
-    const T * castTo() const {
-        if (mTypeInfo.isDerivedFrom(T::TYPE_INFO())) GN_LIKELY return static_cast<const T *>(this);
-        return nullptr;
+    bool isKindOf() const {
+        return mTypeInfo.isDerivedFrom(T::TYPE_INFO());
     }
 
     /// Returns a new unique 64-bit type ID each call. Thread-safe. Defined in one TU and exported
@@ -75,7 +68,38 @@ protected:
     RuntimeType(const TypeInfo & typeInfo): mTypeInfo(typeInfo) {}
 };
 
-// --- Template: base type IDs from parameter pack ----------------------------------------------
+template<typename T>
+T * runtimeCast(RuntimeType * from) {
+    if (!from) return nullptr;
+    if (!from->isKindOf<T>()) return nullptr;
+    return static_cast<T *>(from);
+}
+
+template<typename T>
+T * runtimeCast(RuntimeType & from) {
+    if (!from.template isKindOf<T>()) return {};
+    return static_cast<T *>(&from);
+}
+
+template<typename T>
+const T * runtimeCast(const RuntimeType * from) {
+    if (!from) return nullptr;
+    if (!from->isKindOf<T>()) return nullptr;
+    return static_cast<const T *>(from);
+}
+
+template<typename T>
+T * runtimeCast(const RuntimeType & from) {
+    if (!from.template isKindOf<T>()) return {};
+    return static_cast<const T *>(&from);
+}
+
+template<typename T, typename F>
+AutoRef<T> runtimeCast(const AutoRef<F> & from) {
+    if (!from) return {};
+    if (!from->template isKindOf<T>()) return {};
+    return from.template staticCastTo<T>();
+}
 
 template<typename... BaseTypes>
 struct RttiBaseTypeIds {
@@ -102,15 +126,16 @@ struct RttiBaseTypeIds<> {
     static constexpr std::size_t                 SIZE() { return 0; }
 };
 
-#define GN_RDG_REGISTER_RUNTIME_TYPE(...)                                                                \
-    inline static const uint64_t                TYPE_ID = RuntimeType::getNextUniqueTypeId();            \
-    static const RuntimeType::TypeInfo & TYPE_INFO() {                                                   \
-        static const RuntimeType::TypeInfo ti = {.id    = TYPE_ID,                                       \
-                                                     .name  = GN_FUNCTION,                               \
-                                                     .level = RttiBaseTypeIds<__VA_ARGS__>::LEVEL() + 1, \
-                                                     .bases = RttiBaseTypeIds<__VA_ARGS__>::BASE(),      \
-                                                     .count = RttiBaseTypeIds<__VA_ARGS__>::SIZE()};     \
-        return ti;                                                                                       \
+// The main entry point for registering a runtime type.
+#define GN_RDG_REGISTER_RUNTIME_TYPE(...)                                                            \
+    inline static const uint64_t         TYPE_ID = RuntimeType::getNextUniqueTypeId();               \
+    static const RuntimeType::TypeInfo & TYPE_INFO() {                                               \
+        static const RuntimeType::TypeInfo ti = {.id    = TYPE_ID,                                   \
+                                                 .name  = GN_FUNCTION,                               \
+                                                 .level = RttiBaseTypeIds<__VA_ARGS__>::LEVEL() + 1, \
+                                                 .bases = RttiBaseTypeIds<__VA_ARGS__>::BASE(),      \
+                                                 .count = RttiBaseTypeIds<__VA_ARGS__>::SIZE()};     \
+        return ti;                                                                                   \
     }
 
 } // namespace GN::rdg

@@ -60,7 +60,7 @@ struct InitIntegerAction : public Action {
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     ExecutionResult execute(TaskInfo &, Arguments & args) override {
-        auto * a = args.castTo<A>();
+        auto * a = runtimeCast<A>(args);
         CHECK(a != nullptr);
         if (!a) return FAILED;
         auto * integerArtifact = a->output.get();
@@ -102,7 +102,7 @@ struct AddIntegersAction : public Action {
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     ExecutionResult execute(TaskInfo &, Arguments & args) override {
-        auto * a = args.castTo<A>();
+        auto * a = runtimeCast<A>(args);
         CHECK(a != nullptr);
         if (!a) return FAILED;
         CHECK(a->input1 != nullptr);
@@ -145,7 +145,7 @@ struct MultiplyIntegersAction : public Action {
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     ExecutionResult execute(TaskInfo &, Arguments & args) override {
-        auto * a = args.castTo<A>();
+        auto * a = runtimeCast<A>(args);
         CHECK(a != nullptr);
         if (!a) return FAILED;
         CHECK(a->input1 != nullptr);

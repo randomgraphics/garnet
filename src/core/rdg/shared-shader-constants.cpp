@@ -13,6 +13,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 namespace GN::rdg {
 
 // =============================================================================
+// SharedShaderConstantsVulkan — commented out for now; to be restored later.
+// =============================================================================
+#if 0
 // SharedShaderConstantsVulkan
 //
 // Vulkan GPU resource layout for Set 0 (shared per-frame constants):
@@ -22,8 +25,7 @@ namespace GN::rdg {
 // CPU/GPU sync: UBO buffers use host-coherent memory and are updated
 // synchronously before draw submission.  Proper frame-in-flight ring
 // buffering is deferred to a later phase.
-// =============================================================================
-
+//
 // Deduce render target dimensions from the first available color or depth
 // attachment.  Returns {1, 1} when no attachment is present.
 static std::pair<uint32_t, uint32_t> getRenderTargetSize(const RenderTarget * rt) {
@@ -42,24 +44,30 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
     ViewInformation           mView;
     DirectLightingInformation mLighting;
 
-    AutoRef<Buffer>           mCameraBuffer;   ///< GPU buffer for GlobalCameraUBO (Set 0, binding 0)
-    AutoRef<Buffer>           mLightingBuffer; ///< GPU buffer for DirectLightingUBO (Set 0, binding 1)
-    AutoRef<GpuResourceGroup> mSet0Group;      ///< Descriptor set for Set 0 (camera + lighting)
+    AutoRef<PersistentBuffer>  mCameraUniforms;   ///< uniform buffer for camera info
+    AutoRef<PersistentBuffer>  mLightingUinforms; ///< uniform buffer for lighting info
+    AutoRef<GpuResourceGroup>  mSet0Group;        ///< Descriptor set for Set 0 (camera + lighting)
+
+    GlobalCameraUBO   mPendingCamera   = {}; ///< CPU-side snapshot built by set*Information()
+    DirectLightingUBO mPendingLighting = {}; ///< CPU-side snapshot built by set*Information()
 
     void initGpuResources() {
-        // Camera UBO buffer
-        mCameraBuffer =
-            Buffer::create(database, StrA::format("{}.camera_ubo", name), Buffer::CreateParameters {.context = mGpu, .size = sizeof(GlobalCameraUBO)});
-        if (!mCameraBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create camera UBO buffer");
+        GpuBufferUpload::CreateParameters uploadParams;
+        uploadParams.gpu       = mGpu;
+        uploadParams.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
+        uploadParams.ringSlots = 2;
+
+        uploadParams.size = sizeof(GlobalCameraUBO);
+        mCameraUpload     = GpuBufferUpload::create(database, StrA::format("{}.camera_upload", name), uploadParams);
+        if (!mCameraUpload) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create camera upload action");
                 return;
             }
 
-        // Lighting UBO buffer
-        mLightingBuffer =
-            Buffer::create(database, StrA::format("{}.lighting_ubo", name), Buffer::CreateParameters {.context = mGpu, .size = sizeof(DirectLightingUBO)});
-        if (!mLightingBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting UBO buffer");
+        uploadParams.size = sizeof(DirectLightingUBO);
+        mLightingUpload   = GpuBufferUpload::create(database, StrA::format("{}.lighting_upload", name), uploadParams);
+        if (!mLightingUpload) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting upload action");
                 return;
             }
 
@@ -77,54 +85,43 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
                 return;
             }
 
-        // Bind camera buffer to slot 0, lighting buffer to slot 1
-        GpuResourceView cameraView;
-        cameraView.setArtifact(mCameraBuffer)
-            .setBufferView(GpuResourceView::BufferView {.type = GpuResourceView::BufferView::UNIFORM, .offset = 0, .size = sizeof(GlobalCameraUBO)});
+        // Point descriptors at slot 0 of each upload action (initial state before first build()).
+        auto cameraView = mCameraUpload->currentBufferView();
         mSet0Group->setResourceViews(0, 0, SafeArrayAccessor<const GpuResourceView>(&cameraView, 1));
 
-        GpuResourceView lightingView;
-        lightingView.setArtifact(mLightingBuffer)
-            .setBufferView(GpuResourceView::BufferView {.type = GpuResourceView::BufferView::UNIFORM, .offset = 0, .size = sizeof(DirectLightingUBO)});
+        auto lightingView = mLightingUpload->currentBufferView();
         mSet0Group->setResourceViews(1, 0, SafeArrayAccessor<const GpuResourceView>(&lightingView, 1));
     }
 
-    void uploadCameraUbo() {
-        if (!mCameraBuffer) return;
-        GlobalCameraUBO ubo {};
-
-        // Compute view matrix: camera world → view = inverse(camera TRS)
-        const glm::vec3 camPos     = mView.cameraPosition; // Location is glm::vec3 in meters
+    void packCameraUbo() {
+        mPendingCamera             = {};
+        const glm::vec3 camPos     = mView.cameraPosition;
         glm::mat4       camToWorld = glm::translate(glm::mat4(1.f), camPos) * glm::mat4_cast(mView.cameraOrientation);
-        ubo.viewMatrix             = glm::inverse(camToWorld);
+        mPendingCamera.viewMatrix  = glm::inverse(camToWorld);
 
-        // Compute projection matrix (RH, [0,1] depth, Vulkan Y-down flip)
-        ubo.projMatrix = glm::perspectiveRH_ZO(mView.cameraFov.value, mView.aspectRatio, mView.nearPlane, mView.farPlane);
-        ubo.projMatrix[1][1] *= -1.f;
+        mPendingCamera.projMatrix = glm::perspectiveRH_ZO(mView.cameraFov.value, mView.aspectRatio, mView.nearPlane, mView.farPlane);
+        mPendingCamera.projMatrix[1][1] *= -1.f;
 
-        ubo.viewProjMatrix   = ubo.projMatrix * ubo.viewMatrix;
-        ubo.cameraPosition   = glm::vec4(camPos, 1.f);
-        auto [rtW, rtH]      = getRenderTargetSize(mView.renderTarget.get());
-        ubo.renderTargetSize = glm::vec2((float) rtW, (float) rtH);
-        ubo.nearPlane        = mView.nearPlane;
-        ubo.farPlane         = mView.farPlane;
-        ubo.frameCounter     = mFrame.frameCounter;
-        ubo.frameDurationMs  = (float) ((double) mFrame.frameDuration.count() * 1e-3); // µs → ms
-
-        mCameraBuffer->setContent(&ubo, sizeof(ubo));
+        mPendingCamera.viewProjMatrix   = mPendingCamera.projMatrix * mPendingCamera.viewMatrix;
+        mPendingCamera.cameraPosition   = glm::vec4(camPos, 1.f);
+        auto [rtW, rtH]                 = getRenderTargetSize(mView.renderTarget.get());
+        mPendingCamera.renderTargetSize = glm::vec2((float) rtW, (float) rtH);
+        mPendingCamera.nearPlane        = mView.nearPlane;
+        mPendingCamera.farPlane         = mView.farPlane;
+        mPendingCamera.frameCounter     = mFrame.frameCounter;
+        mPendingCamera.frameDurationMs  = (float) ((double) mFrame.frameDuration.count() * 1e-3); // µs → ms
     }
 
-    void uploadLightingUbo() {
-        if (!mLightingBuffer) return;
-        DirectLightingUBO ubo {};
+    void packLightingUbo() {
+        mPendingLighting = {};
 
-        const auto &   lights    = mLighting.lights;
-        const uint32_t numLights = (uint32_t) std::min((size_t) MAX_DIRECT_LIGHTS, lights.size());
-        ubo.numLights            = numLights;
+        const auto &   lights      = mLighting.lights;
+        const uint32_t numLights   = (uint32_t) std::min((size_t) MAX_DIRECT_LIGHTS, lights.size());
+        mPendingLighting.numLights = numLights;
 
         for (uint32_t i = 0; i < numLights; ++i) {
             const DirectLight & src = lights[i];
-            DirectLightData &   dst = ubo.lights[i];
+            DirectLightData &   dst = mPendingLighting.lights[i];
 
             switch (src.type) {
             case DirectLight::POINT: {
@@ -146,7 +143,6 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
                 break;
             }
             case DirectLight::DIRECTIONAL: {
-                // Direction derived from orientation: camera looks down -Z in its local space
                 glm::vec3 dir     = glm::mat3_cast(src.directional.orientation) * glm::vec3(0.f, 0.f, -1.f);
                 dst.positionOrDir = glm::vec4(dir, (float) LIGHT_TYPE_DIRECTIONAL);
                 float irradiance  = src.directional.irradiance.irradiance.value;
@@ -157,8 +153,6 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
             }
             }
         }
-
-        mLightingBuffer->setContent(&ubo, sizeof(ubo));
     }
 
 public:
@@ -171,48 +165,62 @@ public:
 
     void setFrameInformation(const FrameInformation & v) override {
         mFrame = v;
-        uploadCameraUbo(); // frame counter + duration live in GlobalCameraUBO
+        packCameraUbo(); // frame counter + duration live in GlobalCameraUBO
     }
 
     void setViewInformation(const ViewInformation & v) override {
         mView = v;
-        uploadCameraUbo();
+        packCameraUbo();
     }
 
     void setDirectLightingInformation(const DirectLightingInformation & v) override {
         mLighting = v;
-        uploadLightingUbo();
+        packLightingUbo();
     }
 
     const FrameInformation &          getFrameInformation() const override { return mFrame; }
     const ViewInformation &           getViewInformation() const override { return mView; }
     const DirectLightingInformation & getDirectLightingInformation() const override { return mLighting; }
 
+    Workflow * build(RenderGraph & rg) override {
+        if (!mCameraUpload || !mLightingUpload || !mSet0Group) return nullptr;
+
+        // Pre-bind descriptors to the slots that will be written by execute().
+        // nextBufferView() predicts which ring slot execute() will write to next,
+        // ensuring the descriptor set and the upload stay in sync.
+        auto nextCameraView = mCameraUpload->nextBufferView();
+        if (!nextCameraView.empty()) mSet0Group->setResourceViews(0, 0, SafeArrayAccessor<const GpuResourceView>(&nextCameraView, 1));
+
+        auto nextLightingView = mLightingUpload->nextBufferView();
+        if (!nextLightingView.empty()) mSet0Group->setResourceViews(1, 0, SafeArrayAccessor<const GpuResourceView>(&nextLightingView, 1));
+
+        auto wf = rg.createWorkflow(StrA::format("{}.upload", name));
+        wf->tasks.append(Workflow::Task("camera", mCameraUpload, GpuBufferUpload::A::make(&mPendingCamera, sizeof(mPendingCamera))));
+        wf->tasks.append(Workflow::Task("lighting", mLightingUpload, GpuBufferUpload::A::make(&mPendingLighting, sizeof(mPendingLighting))));
+        return wf;
+    }
+
     /// Returns the Set 0 resource group (camera + lighting UBOs).
     /// Intended for backend use only (e.g. PbrShadingVulkan).
     GpuResourceGroup * getSet0Group() const { return mSet0Group.get(); }
 };
+#endif
 
 // =============================================================================
 // SharedShaderConstants::create() - API-neutral dispatch
 // =============================================================================
 
 GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+    (void) db;
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("SharedShaderConstants::create: gpu is null, name='{}'", name);
             return {};
         }
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
-    case GpuContextCommon::Api::Vulkan: {
-        auto * p = new SharedShaderConstantsVulkan(db, name, params.gpu);
-        if (p->sequence == 0) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstants::create: duplicate type+name, name='{}'", name);
-                delete p;
-                return {};
-            }
-        return AutoRef<SharedShaderConstants>(p);
-    }
+    case GpuContextCommon::Api::Vulkan:
+        GN_ERROR(sLogger)("SharedShaderConstants::create: Vulkan backend (SharedShaderConstantsVulkan) temporarily disabled, name='{}'", name);
+        return {};
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("SharedShaderConstants::create: D3D12 backend not implemented");
         return {};

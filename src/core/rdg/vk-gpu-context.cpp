@@ -34,7 +34,7 @@ GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, con
     dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
-    if (mDevice->handle()) mPsoFactory = std::make_unique<PsoFactoryVulkan>(*this);
+    if (mDevice->handle()) { mPsoFactory = std::make_unique<PsoFactoryVulkan>(*this); }
 }
 
 GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name); }

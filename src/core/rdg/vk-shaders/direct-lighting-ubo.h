@@ -20,7 +20,8 @@
 //   lights[]   DirectLightData[MAX_DIRECT_LIGHTS]  offset 16  (16 × 48 = 768 bytes)
 //   Total: 784 bytes
 
-#pragma once
+#ifndef GLSL_DIRECT_LIGHTING_UBO_H_
+#define GLSL_DIRECT_LIGHTING_UBO_H_
 
 #ifdef __cplusplus
     #include <cstdint>
@@ -61,3 +62,5 @@ static_assert(sizeof(DirectLightingUBO) == 784, "DirectLightingUBO must be 784 b
 static_assert(offsetof(DirectLightingUBO, numLights) == 0);
 static_assert(offsetof(DirectLightingUBO, lights) == 16);
 #endif
+
+#endif // GLSL_DIRECT_LIGHTING_UBO_H_

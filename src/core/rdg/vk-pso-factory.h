@@ -3,7 +3,6 @@
 /// PSO factory: get-or-create Vulkan graphics pipelines keyed by GraphicsPsoKey; used by GpuDrawVulkan with Drawable/DrawPack.
 
 #include "vk-gpu-context.h"
-#include <garnet/GNrdg.h>
 #include <cstdint>
 
 namespace GN::rdg {

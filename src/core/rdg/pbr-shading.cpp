@@ -74,28 +74,21 @@ public:
         // Render target comes from SharedShaderConstants.ViewInformation.
         if (params.sharedShaderConstants) drawArgs->renderTarget = params.sharedShaderConstants->getViewInformation().renderTarget;
 
-        // Push constants: model (64 bytes) + viewProj (64 bytes).
-        // GLM stores mat4 in column-major order, matching GLSL layout, so memcpy directly.
-        // TODO (Phase 3): replace push constants with Set 0 UBO bindings.
-
-        // Model matrix: translation + rotation; Location is glm::vec3 in meters.
-        const glm::mat4 model = glm::translate(glm::mat4(1.f), params.locationInWorldSpace) * glm::mat4_cast(params.orientationInWorldSpace);
-
-        // ViewProj matrix derived from SharedShaderConstants camera params.
-        glm::mat4 viewProj(1.f);
+        // Set 0: SharedShaderConstants provides camera UBO (binding 0) and lighting UBO (binding 1).
         if (params.sharedShaderConstants) {
-            const auto &    vi         = params.sharedShaderConstants->getViewInformation();
-            const glm::mat4 camToWorld = glm::translate(glm::mat4(1.f), vi.cameraPosition) * glm::mat4_cast(vi.cameraOrientation);
-            const glm::mat4 view       = glm::inverse(camToWorld);
-            glm::mat4       proj       = glm::perspectiveRH_ZO(vi.cameraFov.value, vi.aspectRatio, vi.nearPlane, vi.farPlane);
-            proj[1][1] *= -1.f; // Vulkan NDC Y-down
-            viewProj = proj * view;
+            auto set0 = params.sharedShaderConstants->getSet0Group();
+            if (set0) {
+                drawArgs->descriptorGroups.resize(1);
+                drawArgs->descriptorGroups[0].set(set0);
+            }
         }
 
-        drawArgs->immediates.resize(128);
-        float * pc = reinterpret_cast<float *>(drawArgs->immediates.data());
-        memcpy(pc, glm::value_ptr(model), 64);
-        memcpy(pc + 16, glm::value_ptr(viewProj), 64);
+        // Push constants: model matrix only (64 bytes). viewProj now comes from Set 0 UBO.
+        // GLM stores mat4 in column-major order, matching GLSL layout, so memcpy directly.
+        const glm::mat4 model = glm::translate(glm::mat4(1.f), params.locationInWorldSpace) * glm::mat4_cast(params.orientationInWorldSpace);
+        drawArgs->immediates.resize(64);
+        memcpy(drawArgs->immediates.data(), glm::value_ptr(model), 64);
+
         workflow->appendTask("PBR draw", AutoRef<Action>(mDrawAction), std::move(drawArgs));
         SubGraph sg(*params.renderGraph, "Pbr");
         sg.workflows.append(workflow);

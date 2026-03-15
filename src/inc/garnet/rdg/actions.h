@@ -280,6 +280,11 @@ struct GpuDraw : public GpuShaderAction {
         GpuResourceTable   resources;  ///< shader resources
         DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
 
+        /// Pre-built descriptor groups to bind per set index.
+        /// descriptorGroups[0] → vkCmdBindDescriptorSets(set=0), etc.
+        /// Null entries are skipped. Size may be smaller than the shader's set count.
+        DynaArray<AutoRef<GpuResourceGroup>> descriptorGroups;
+
         /// Render target.
         /// \note Must specify render target as argument for each draw action.
         /// So that the backend can determine this action's full read and write list.
@@ -336,146 +341,68 @@ protected:
     using GpuShaderAction::GpuShaderAction;
 };
 
-// namespace std {
+/// Level 2: stateless gpu resource copy action.
+///
+/// Copies a byte range from a source to a destination buffer.
+/// The source may be a regular Buffer artifact or a TransientBuffer (for
+/// CPU→GPU uploads via the transient pool).
+struct GpuCopy : public Action {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
-// template<>
-// struct hash<GN::rdg::GpuShaderAction::ShaderResourceBinding> {
-//     size_t operator()(const GN::rdg::GpuShaderAction::ShaderResourceBinding & key) const {
-//         auto hash = std::hash<uint32_t>()(key.set);
-//         GN::combineHash(hash, key.slot);
-//         return hash;
-//     }
-// };
+    struct BufferToBuffer : public Arguments {
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Arguments);
+        BufferToBuffer(): Arguments(TYPE_INFO()) {}
 
-// } // namespace std
+        AutoRef<Buffer> src;
+        AutoRef<Buffer> dst;
+        uint64_t        srcOffset = 0; ///< Additional offset within the source (added to TransientBuffer::offset() when applicable).
+        uint64_t        dstOffset = 0; ///< Byte offset in the destination buffer.
+        uint64_t        size      = 0; ///< Number of bytes to copy. 0 = copy nothing.
 
-// /// Composes one solid color and a set of textures into a single output texture.
-// /// Inputs: one color (set on the action) and up to MAX_INPUT_TEXTURES texture parameters.
-// /// Output: one texture (parameter "output").
-// struct Compose : public GpuShaderAction {
-//     GN_API static const uint64_t TYPE;
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (src) list.readList.insert(src.get());
+            if (dst) list.writeList.insert(dst.get());
+        }
+    };
 
-//     struct A : public Arguments {
-//         GN_API static const uint64_t TYPE;
-//         ReadOnly<AutoRef<Mesh>>                                 mesh;
-//         ReadOnly<Vector4f>                                      color;
-//         ReadOnlyArray<AutoRef<Texture>, 8, Arguments::Optional> textures;
-//         ReadWriteArray<RenderTarget, 8, Arguments::Optional>    renderTargets;
-//         ReadWrite<RenderTarget>                                 depthStencil;
-//     };
+    struct Region {
+        // Defines the image region that will be copied from/to.
+        GpuResourceView::SubresourceIndex imageSubresource;
+        Vector3<uint32_t>                 imageOffset;
+        Vector3<uint32_t>                 imageExtent;
 
-//     virtual bool reset() = 0;
+        /// Offset in bytes from the beginning of the source buffer to the start of the region to copy
+        uint64_t bufferOffset = 0;
 
-// protected:
-//     using GpuShaderAction::GpuShaderAction;
-// };
+        // Row length, in pixels, of the image stored in buffer. Set to 0 to use imageExtent.x.
+        uint32_t bufferRowLength = 0;
 
-// /// Physically Based Rendering (PBR) action using Disney PBR shading model.
-// /// Renders objects with realistic material properties including base color, metallic, roughness, and normal mapping.
-// struct PBRShading : public GpuShaderAction {
-//     GN_API static const uint64_t TYPE;
+        // Height of the image data, in pixels,stored in buffer. Set to 0 to use imageExtent.y.
+        uint32_t bufferHeight = 0;
+    };
 
-//     /// Light types for PBR lighting
-//     enum LightType {
-//         LIGHT_DIRECTIONAL = 0, ///< Directional light (sun)
-//         LIGHT_POINT,           ///< Point light (bulb)
-//         LIGHT_SPOT,            ///< Spot light (flashlight)
-//     };
+    struct BufferToImage : public Arguments {
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Arguments);
+        BufferToImage(): Arguments(TYPE_INFO()) {}
 
-//     /// Light source definition
-//     struct Light {
-//         LightType type = LIGHT_DIRECTIONAL; ///< light type
-//         Vector4f   color = {1.0f, 1.0f, 1.0f, 1.0f}; ///< light color (RGB) and intensity (A)
-//         Vector4f   position = {0.0f, 0.0f, 0.0f, 1.0f}; ///< light position (for point/spot) or direction (for directional, w=0)
-//         Vector4f   direction = {0.0f, 0.0f, -1.0f, 0.0f}; ///< light direction (for spot/directional)
-//         float      range = 100.0f; ///< light range (for point/spot)
-//         float      innerConeAngle = 0.0f; ///< inner cone angle in radians (for spot)
-//         float      outerConeAngle = 0.0f; ///< outer cone angle in radians (for spot)
-//     };
+        AutoRef<TransientBuffer> src;
+        AutoRef<Texture>         dst;
+        DynaArray<Region>        regions;
 
-//     /// Material properties for Disney PBR
-//     struct MaterialParams {
-//         Vector4f baseColor = {1.0f, 1.0f, 1.0f, 1.0f}; ///< base color (albedo)
-//         float    metallic = 0.0f;                       ///< metallic factor (0 = dielectric, 1 = metal)
-//         float    roughness = 0.5f;                     ///< roughness factor (0 = smooth, 1 = rough)
-//         float    specular = 0.5f;                      ///< specular factor (for non-metals)
-//         float    specularTint = 0.0f;                  ///< specular tint (0 = white, 1 = tinted)
-//         float    sheen = 0.0f;                         ///< sheen factor (for cloth)
-//         float    sheenTint = 0.5f;                     ///< sheen tint
-//         float    clearcoat = 0.0f;                     ///< clearcoat factor
-//         float    clearcoatGloss = 1.0f;                ///< clearcoat glossiness
-//         float    subsurface = 0.0f;                    ///< subsurface scattering factor
-//         float    subsurfaceColorR = 1.0f;               ///< subsurface color R
-//         float    subsurfaceColorG = 1.0f;               ///< subsurface color G
-//         float    subsurfaceColorB = 1.0f;              ///< subsurface color B
-//         float    anisotropic = 0.0f;                  ///< anisotropy factor
-//         float    anisotropicRotation = 0.0f;           ///< anisotropy rotation
-//         float    transmission = 0.0f;                  ///< transmission factor (for glass)
-//         float    ior = 1.5f;                           ///< index of refraction
-//         Vector4f emissive = {0.0f, 0.0f, 0.0f, 0.0f}; ///< emissive color and intensity
-//     };
+        void addToReadWriteList(ArtifactReadWriteList & list) const override {
+            if (src) list.readList.insert(src.get());
+            if (dst) list.writeList.insert(dst.get());
+        }
+    };
 
-//     /// Camera/view parameters
-//     struct CameraParams {
-//         Matrix44f viewMatrix;      ///< view matrix (world to view)
-//         Matrix44f projMatrix;      ///< projection matrix (view to clip)
-//         Matrix44f viewProjMatrix; ///< combined view-projection matrix
-//         Vector4f  cameraPosition; ///< camera position in world space (xyz, w=1)
-//     };
+    struct CreateParameters {
+        AutoRef<GpuContext> gpu;
+    };
 
-//     struct A : public Arguments {
-//         GN_API static const uint64_t TYPE;
+    static GN_API AutoRef<GpuCopy> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
-//         ReadOnly<AutoRef<Mesh>> mesh; ///< mesh to render
-
-//         // Material properties
-//         ReadOnly<MaterialParams> material; ///< material parameters
-
-//         // Material textures (optional - if not provided, use material parameter values)
-//         ReadOnly<TextureParameter, Arguments::Optional> baseColorTexture;     ///< base color texture (albedo)
-//         ReadOnly<TextureParameter, Arguments::Optional> metallicRoughnessTexture; ///< metallic (R) and roughness (G) packed texture
-//         ReadOnly<TextureParameter, Arguments::Optional> normalTexture;       ///< normal map texture
-//         ReadOnly<TextureParameter, Arguments::Optional> emissiveTexture;     ///< emissive texture
-//         ReadOnly<TextureParameter, Arguments::Optional> occlusionTexture;    ///< ambient occlusion texture
-//         ReadOnly<TextureParameter, Arguments::Optional> clearcoatTexture;     ///< clearcoat texture
-//         ReadOnly<TextureParameter, Arguments::Optional> clearcoatRoughnessTexture; ///< clearcoat roughness texture
-
-//         // Lighting
-//         ReadOnlyArray<Light, 8, Arguments::Optional> lights; ///< light sources (up to 8 lights)
-//         ReadOnly<TextureParameter, Arguments::Optional> environmentMap; ///< environment map for IBL (cubemap)
-//         ReadOnly<TextureParameter, Arguments::Optional> irradianceMap; ///< pre-computed irradiance map for IBL (cubemap)
-//         ReadOnly<TextureParameter, Arguments::Optional> prefilteredMap; ///< pre-filtered environment map for IBL (cubemap)
-//         ReadOnly<TextureParameter, Arguments::Optional> brdfLUT; ///< BRDF lookup texture for IBL
-
-//         // Camera/view
-//         ReadOnly<CameraParams> camera; ///< camera parameters
-
-//         // Transform
-//         ReadOnly<Matrix44f> modelMatrix; ///< model-to-world transformation matrix
-//         ReadOnly<Matrix44f, Arguments::Optional> normalMatrix; ///< normal transformation matrix (if not provided, derived from modelMatrix)
-
-//         // Render targets
-//         ReadWriteArray<RenderTarget, 8, Arguments::Optional> renderTargets; ///< color render targets
-//         ReadWrite<RenderTarget, Arguments::Optional> depthStencil;         ///< depth/stencil render target (optional)
-//     };
-
-//     /// Shader stage description
-//     struct ShaderStageDesc {
-//         AutoRef<Blob> shaderBinary; ///< shader binary code
-//         StrA          entryPoint;    ///< entry point name
-//     };
-
-//     /// Reset the PBR shading action with shader binaries for different stages.
-//     /// All parameters are optional - only provided stages will be set.
-//     virtual bool reset(const std::optional<ShaderStageDesc> & vs = {}, ///< vertex shader
-//                        const std::optional<ShaderStageDesc> & ds = {}, ///< domain shader
-//                        const std::optional<ShaderStageDesc> & hs = {}, ///< hull shader
-//                        const std::optional<ShaderStageDesc> & gs = {}, ///< geometry shader
-//                        const std::optional<ShaderStageDesc> & ps = {}  ///< pixel shader
-//                        ) = 0;
-
-// protected:
-//     using GpuShaderAction::GpuShaderAction;
-// };
+protected:
+    using Action::Action;
+};
 
 } // namespace GN::rdg

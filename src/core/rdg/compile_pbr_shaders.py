@@ -77,7 +77,8 @@ def main():
     for src in (vert_src, frag_src):
         spv = out_dir / (src.stem + src.suffix + ".spv")
         # -g keeps OpName in SPIR-V so rapid-vulkan reflection can get vertex input names; -O optimizes.
-        cmd = [glslc, str(src), "-o", str(spv), "-O", "-g"]
+        # -I adds shader_dir so #include "global-camera-ubo.h" resolves to the shared UBO headers.
+        cmd = [glslc, str(src), "-o", str(spv), "-O", "-g", f"-I{shader_dir}"]
         print(' '.join(cmd))
         r = subprocess.run(cmd)
         if r.returncode != 0:

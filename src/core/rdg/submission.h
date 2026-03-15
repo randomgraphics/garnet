@@ -27,20 +27,20 @@ namespace GN::rdg {
 class SubmissionImpl;
 
 struct TaskInfo {
-    // /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
-    // struct ExecutionContext : public RuntimeType {
-    //     virtual ~ExecutionContext() = default;
-
-    // protected:
-    //     ExecutionContext(uint64_t typeId, const char * typeName): RuntimeType(typeId, typeName) {}
-    // };
-
     SubmissionImpl & submission; ///< the submission that the task belongs to.
     const StrA       workflow;   ///< name of the workflow that the task belongs to.
     const StrA       task;       ///< name of the task.
     const uint64_t   index;  ///< index of the task within the entire submission. Can also be used as the unique identifier of the task within the submission.
     Action &         action; ///< The action processing this task.
-    // AutoRef<ExecutionContext> context {}; ///< context for the task. Usually created by the action's prepare() method and referenced by the execute() method.
+
+    /// Per-task context attachment. Actions set this in prepare() and read it in execute().
+    /// Lifetime is tied to the owning submission: released automatically when the submission finishes or fails.
+    AutoRef<RefCounter> context {};
+
+    template<typename T>
+    T * getContext() const {
+        return static_cast<T *>(context.get());
+    }
 };
 
 struct WorkflowImpl : public Workflow {
@@ -79,7 +79,7 @@ public:
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
         if (ctx == mExecutionContexts.end()) { return {}; }
         GN_ASSERT(ctx->second->typeId() == T::TYPE_ID);
-        return AutoRef<T>(ctx->second->template castTo<T>());
+        return ctx->second.template staticCastTo<T>();
     }
 
     void setSubmissionContext(AutoRef<Context> ctx) {
@@ -93,7 +93,7 @@ public:
     template<typename T, typename... Args>
     T & ensureSubmissionContext(Args &&... args) {
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
-        if (ctx != mExecutionContexts.end()) { return *ctx->second->template castTo<T>(); }
+        if (ctx != mExecutionContexts.end()) { return *ctx->second.template staticCastTo<T>(); }
         auto newCtx                    = AutoRef<T>(new T(*this, std::forward<Args>(args)...));
         mExecutionContexts[T::TYPE_ID] = newCtx;
         return *newCtx;

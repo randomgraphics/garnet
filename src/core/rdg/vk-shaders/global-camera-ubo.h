@@ -21,8 +21,8 @@
 //   frameDurationMs  float offset 228  ( 4 bytes)
 //   _pad0/_pad1      float offset 232  ( 8 bytes)  padding to 240 bytes
 //   Total: 240 bytes
-
-#pragma once
+#ifndef GLSL_GLOBAL_CAMERA_UBO_H_
+#define GLSL_GLOBAL_CAMERA_UBO_H_
 
 #ifdef __cplusplus
     #include <cstdint>
@@ -67,3 +67,5 @@ static_assert(offsetof(GlobalCameraUBO, farPlane) == 220);
 static_assert(offsetof(GlobalCameraUBO, frameCounter) == 224);
 static_assert(offsetof(GlobalCameraUBO, frameDurationMs) == 228);
 #endif
+
+#endif // GLSL_GLOBAL_CAMERA_UBO_H_

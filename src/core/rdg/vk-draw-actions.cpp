@@ -3,8 +3,9 @@
 #include "vk-submission-context.h"
 #include "vk-backbuffer.h"
 #include "vk-texture.h"
-#include "vk-buffer.h"
+#include "vk-transient-buffer.h"
 #include "vk-pso-factory.h"
+#include "vk-gpu-resource-group.h"
 
 namespace GN::rdg {
 
@@ -23,7 +24,7 @@ public:
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<ClearRenderTarget::A>();
+        auto a = runtimeCast<ClearRenderTarget::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
         // standard preparation.
@@ -38,7 +39,7 @@ public:
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<ClearRenderTarget::A>();
+        auto a = runtimeCast<ClearRenderTarget::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
         // standard execution
@@ -54,7 +55,7 @@ public:
 };
 
 AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, const StrA & name, const ClearRenderTarget::CreateParameters & params) {
-    auto gpu = params.gpu.castTo<GpuContextVulkan>();
+    auto gpu = params.gpu.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanClearRenderTarget: gpu is empty, name='{}'", name);
             return {};
@@ -75,13 +76,13 @@ public:
         : GpuDraw(db, TYPE_INFO(), name), mGpu(gpu), mCreateParams(params) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+        auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<GpuDraw::A>();
+        auto a = runtimeCast<GpuDraw::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
         // standard preparation.
-        auto & submissionContext = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
@@ -91,7 +92,7 @@ public:
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<GpuDraw::A>();
+        auto a = runtimeCast<GpuDraw::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
         const auto size = static_cast<uint32_t>(a->immediates.size());
@@ -128,7 +129,7 @@ public:
             .ps               = mCreateParams.ps,
             .renderTarget     = *currentRt,
             .geometry         = geom,
-            .pushConstantSize = 128,
+            .pushConstantSize = a->immediates.empty() ? 0u : static_cast<uint32_t>(a->immediates.size()),
         };
 
         auto pipeline = mGpu->psoFactory().getOrCreateGraphicsPso(createParams);
@@ -143,13 +144,25 @@ public:
 
         if (!a->immediates.empty()) drawable.c(0, a->immediates.size(), a->immediates.data(), vk::ShaderStageFlagBits::eVertex);
 
-        if (!geom.vertices.empty() && geom.vertices[0].buffer) {
-            auto *                                  bv  = static_cast<BufferVulkan *>(geom.vertices[0].buffer.get());
-            rapid_vulkan::Ref<rapid_vulkan::Buffer> ref = bv->refVkBuffer();
-            if (ref) {
-                const rapid_vulkan::BufferView view {ref, geom.vertices[0].offset, vk::DeviceSize(-1)};
-                drawable.v(vk::ArrayProxy<const rapid_vulkan::BufferView>(1, &view));
+        // Bind per-set descriptor groups before rendering.
+        if (!a->descriptorGroups.empty()) {
+            vk::CommandBuffer  cmd    = cb.commandBuffer().handle();
+            vk::PipelineLayout layout = pipeline->layout();
+            for (uint32_t setIdx = 0; setIdx < (uint32_t) a->descriptorGroups.size(); ++setIdx) {
+                const auto & grpRef = a->descriptorGroups[setIdx];
+                if (!grpRef) continue;
+                auto *            vkGrp = static_cast<GpuResourceGroupVulkan *>(grpRef.get());
+                vk::DescriptorSet ds    = vkGrp->vkSet();
+                if (ds) cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, setIdx, {ds}, {});
             }
+        }
+
+        if (!geom.vertices.empty() && geom.vertices[0].buffer) {
+            auto ref = BufferUtils::toRapid(geom.vertices[0].buffer);
+            if (ref) GN_LIKELY {
+                    const rapid_vulkan::BufferView view {ref.get(), geom.vertices[0].offset, vk::DeviceSize(-1)};
+                    drawable.v(vk::ArrayProxy<const rapid_vulkan::BufferView>(1, &view));
+                }
         }
 
         uint32_t                                       vertexCount = geom.vertexCount;
@@ -171,7 +184,7 @@ public:
 };
 
 AutoRef<GpuDraw> createVulkanGpuDraw(ArtifactDatabase & db, const StrA & name, const GpuDraw::CreateParameters & params) {
-    auto gpu = params.context.castTo<GpuContextVulkan>();
+    auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuDraw: gpu is empty, name='{}'", name);
             return {};

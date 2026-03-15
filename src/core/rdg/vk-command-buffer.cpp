@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-command-buffer.h"
+#include "vk-submission-context.h"
 
 namespace GN::rdg {
 
@@ -28,11 +29,14 @@ CommandBufferManagerVulkan::CommandBufferManagerVulkan(const ConstructParameters
         mTransferQueue = mGraphicsQueue;
     }
 
-    // connect to submission's allTasksExecuted signal.
+    // drain all submitted command buffers at the end of execution.
     connectToSignal<&CommandBufferManagerVulkan::waitForIdle>(params.submission.allTasksExecuted);
 }
 
-CommandBufferManagerVulkan::~CommandBufferManagerVulkan() {}
+CommandBufferManagerVulkan::~CommandBufferManagerVulkan() {
+    // by the time the destructor is called, all submissions should have been completed.
+    GN_ASSERT(mSubmissionIDs.empty());
+}
 
 rapid_vulkan::Ref<rapid_vulkan::CommandQueue> CommandBufferManagerVulkan::getQueueForType(CommandBufferType type) const {
     switch (type) {
@@ -97,6 +101,13 @@ void CommandBufferManagerVulkan::submit(CommandBuffer & commandBuffer) {
     auto   q            = commandBuffer.mQueue;
     auto & ids          = mSubmissionIDs[q];
     ids.append(submissionID);
+    // // Distribute GPU completion token to all upload actions registered this submission.
+    // // This lets each upload slot know which GPU submission is currently reading its data,
+    // // so waitUntilReady() can block only when the slot is actually in flight.
+    // auto sc = commandBuffer.mTaskInfo->submission.getSumissionContext<SubmissionContextVulkan>();
+    // if (sc) {
+    //     for (size_t i = 0; i < sc->activeUploads.size(); ++i) { sc->activeUploads[i]->notifyCompletion(submissionID); }
+    // }
 }
 
 } // namespace GN::rdg

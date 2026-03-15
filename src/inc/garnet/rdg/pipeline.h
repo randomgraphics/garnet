@@ -110,6 +110,15 @@ struct SharedShaderConstants : public GpuResource {
     virtual const ViewInformation &           getViewInformation() const           = 0;
     virtual const DirectLightingInformation & getDirectLightingInformation() const = 0;
 
+    /// Snapshot current CPU state and generate a Workflow that uploads it to GPU.
+    /// The returned Workflow is owned by the RenderGraph and is valid until the
+    /// next submission.  Call this once per frame before submitting draw workflows.
+    virtual Workflow * build(RenderGraph & rg) = 0;
+
+    /// Return the descriptor group for Set 0 (camera UBO binding 0, lighting UBO binding 1).
+    /// Intended for backend effect builders (e.g. PbrShadingVulkan) that need to bind Set 0.
+    virtual GpuResourceGroup * getSet0Group() const = 0;
+
     static GN_API AutoRef<SharedShaderConstants> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
 protected:

@@ -21,7 +21,7 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     if (0 == sequence) return false;
 
     // store GPU context and descriptor.
-    mGpuContext = params.context.castTo<GpuContextVulkan>();
+    mGpuContext = params.context.staticCastTo<GpuContextVulkan>();
     mDescriptor = params.descriptor;
 
     if (mDescriptor.width == 0 || mDescriptor.height == 0) {
@@ -220,10 +220,10 @@ public:
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto a = arguments.castTo<PrepareBackbuffer::A>();
+        auto a = runtimeCast<PrepareBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PrepareBackbuffer::A", taskInfo);
         GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
-        auto bb = a->backbuffer->castTo<BackbufferVulkan>();
+        auto bb = a->backbuffer.staticCastTo<BackbufferVulkan>();
         GN_RDG_FAIL_ON_FALSE(bb, "{} - backbuffer is not BackbufferVulkan", taskInfo);
         return bb->beginFrame(taskInfo);
     }
@@ -250,7 +250,7 @@ public:
     PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_INFO(), name) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto a = arguments.castTo<PresentBackbuffer::A>();
+        auto a = runtimeCast<PresentBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
         GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
 
@@ -263,9 +263,9 @@ public:
     }
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto a = arguments.castTo<PresentBackbuffer::A>();
+        auto a = runtimeCast<PresentBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
-        auto bb = a->backbuffer->castTo<BackbufferVulkan>();
+        auto bb = a->backbuffer.staticCastTo<BackbufferVulkan>();
         GN_RDG_FAIL_ON_FALSE(bb, "{} - backbuffer is not BackbufferVulkan", taskInfo);
 
         // standard execution.

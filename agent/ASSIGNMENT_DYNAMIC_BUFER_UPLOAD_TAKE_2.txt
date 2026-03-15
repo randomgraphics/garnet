@@ -1,0 +1,187 @@
+# Assignment: Dynamic GPU Buffer Upload — Take 2
+
+---
+
+## Goal
+
+Refine the dynamic GPU buffer upload design so that:
+
+- Multiple submissions can be in flight concurrently (no implicit global wait-for-idle at the end of each submission), allowing CPU and GPU to run in parallel across frames.
+- The action/artifact roles are cleanly separated: **actions are stateless command encoders**, while artifacts and per-submission temporaries own the actual GPU/CPU buffers and lifetime.
+- Transient GPU buffers used for upload are explicitly **per-submission** and **short-lived**, so the backend can use a simple ring-like pool instead of a general heap.
+- There is **no dedicated “uploader” action** at Level 2; “upload” is modeled as “write into a transient buffer artifact, then schedule buffer/texture copy actions or bind that transient artifact directly”.
+
+---
+
+## Notes from review / constraints
+
+1. **Parallel submissions and wait-for-idle**
+   - It must be valid for more than one submission to be “alive” at the same time:
+     - One submission from the previous frame may already be submitted and waiting for the GPU to process it.
+     - Another submission for the current frame may be in construction / recording, so the main render loop keeps scheduling work without blocking.
+   - A simple “wait-for-idle at the end of each submission” design is not acceptable because it serializes CPU/GPU work and prevents frame-to-frame pipelining.
+   - Any per-submission or per-slot waiting must be localized to resource reuse (e.g., when we are about to overwrite a slot that is still in use), not a global drain.
+
+2. **Action vs. artifact: actions must be stateless**
+   - Level 2 actions are **stateless command encoders**; they should **not** own GPU buffers by themselves.
+   - Actions operate purely on artifacts passed in via their `Arguments` (e.g. source/destination buffers, images, descriptor groups) and on submission-level lifetime management.
+   - Any CPU-side or GPU-side temporaries belong to artifacts and submission-level lifetime management, not to the action instance.
+   - Temporary resources and lifetimes must be tied to the **submission**:
+     - If one action instance is used in multiple tasks, the system uses submission IDs and completion tokens to reclaim the correct temporaries without conflating different uses.
+
+3. **Transient, per-submission, host-visible buffer**
+   - Introduce a dedicated **transient host-visible buffer artifact** (e.g. `TransientBuffer`), created from within a submission or submission-builder.
+   - Creation + `map` + write + `unmap` all happen **on the caller’s thread**. After unmap, the buffer is read-only from the GPU side; no further CPU writes are allowed.
+   - This buffer is explicitly **per-submission** and **short-lived**:
+     - It cannot be created outside of a submission.
+     - It must not be used across submission boundaries; the backend enforces this (e.g. by tagging with submission ID and asserting on cross-submission use).
+     - When the submission completes or fails, all transient buffers belonging to it are invalidated and their suballocations are returned to a simple ring-like pool.
+   - The transient buffer can be:
+     - Bound directly as a shader resource (zero-copy CPU→GPU write, host-visible GPU memory; good for small, per-frame data).
+     - Used as a **staging source** in buffer→buffer or buffer→image copy actions to upload into device-local buffers or textures.
+     - Used as a **per-draw data pool** when combined with dynamic-offset features (multiple per-draw payloads packed into one transient allocation, each draw using a different offset).
+   - Backend allocation uses a simple **grow-only ring-buffer style pool**:
+     - Start from a reasonable fixed default buffer size (no user-provided hints).
+     - When no existing backing buffer can satisfy a new allocation, allocate a **new, larger** host-visible buffer (e.g. geometric growth) and suballocate from it.
+     - Keep older backing buffers alive as long as they contain live suballocations from in-flight submissions.
+     - Allocation fails only when the driver refuses to allocate more GPU memory (out-of-memory), not when the pool is merely full.
+   - A future optimization (TODO in code) may add a **shrink** policy: if large backing buffers are consistently under-utilized once all their allocations are free, they can be retired or replaced by smaller ones.
+   - User code never has to manage multiple CPU-side copies or worry about worker-thread timing: once data is written and the transient buffer artifact is wired into tasks, the user can immediately drop their own pointers.
+
+4. **Copy actions instead of uploaders**
+   - Level 2 provides **copy actions** rather than a dedicated “uploader”:
+     - Buffer→buffer copy action: copies a range from a source buffer artifact (often a transient buffer) to a destination buffer artifact.
+     - Buffer→image copy action (future): copies from a buffer artifact to a texture/image artifact, with appropriate layout/state transitions.
+   - “Uploading” in this model means:
+     - Caller thread: allocate a transient buffer, `map`/write/`unmap`.
+     - RDG: schedule copy actions (and/or directly bind the transient buffer) within the same submission.
+   - Higher-level helpers (Level 3) may wrap these primitives for convenience, but the core Level 2 model is “transient artifacts + copy actions”, not “uploader objects that own buffers”.
+
+5. **Submission and TaskInfo attachments (lifetime management)**
+   - Submissions can own arbitrary **keep-alive attachments** (e.g. `AutoRef<RefCounted>` objects and completion callbacks) that are released when the submission is fully completed or fails.
+   - `TaskInfo` provides a generic interface to attach arbitrary task-specific context/data to a task (e.g. an `AutoRef<RefCounted>` payload or a small variant/struct).
+   - Any TaskInfo attachments are logically per-task but their lifetime is owned by the submission; they are released/recycled automatically when the submission finishes (success or failure).
+   - Actions stay stateless; they read any per-task/per-submission state exclusively through `TaskInfo` attachments and artifacts, never via their own member variables.
+   - This model ensures all temporaries (blobs, transient buffers, staging resources, task-local context) are released or recycled immediately after the submission they belong to is done, without requiring user code to track them manually.
+
+---
+
+## PROGRESS
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Task 5.1 — Audit and document usage patterns
+In progress: Transient buffer + arena interface update (data() instead of map/unmap)
+
+Design intention: TransientBuffer now exposes `data()` returning SafeArrayAccessor<uint8_t>
+instead of map()/unmap(). Caller writes directly via data().data() or accessor methods.
+Simpler API; no explicit unmap needed. Arena naming: TransientArena (was TransientBufferPool).
+
+Step: Fix transient buffer + arena interface (done)
+- vk-transient-buffer: replaced map()/unmap() with data() returning SafeArrayAccessor
+- rdg-transient-workflow-test.cpp: use tb->data() instead of map/unmap
+- rdg-copy-buffer-test.cpp: same
+- README.md: updated workflow diagram
+- Build passes. Tests compile and run; data() path works. Submission/copy execution
+  still fails ("srcBuffer or dstBuffer properly initialized") — RDG impl, ignored per user.
+
+Commit log:
+- ff9ae8c66: Task 1.1+1.2 — TaskInfo context attachment API + lifetime
+- 8386501c4: Task 2.1 — TransientBuffer API + GpuContext factory
+- f27c9fa9f: Task 2.2 — Vulkan transient buffer pool (grow-only)
+- 2e4cd7a6d: Task 3.1+3.2 — CopyBuffer action + Vulkan backend + test
+- 5f297b676: Task 3.3+4.1+4.2+5.1 — CopyBufferToImage stub, transient workflow tests, doc audit
+--- END PROGRESS ---
+
+---
+
+## Reference / related work
+
+- `agent/ASSIGNMENT_DYNAMIC_BUFFER_UPLOAD.txt` — original dynamic upload design (ring-buffered HOST_MAP/STAGED mechanisms, GpuUploadSlot, GpuBufferUpload, SharedShaderConstants integration, waitForIdle removal).
+- `src/inc/garnet/rdg/actions.h` — Level 2 actions and arguments model.
+- `src/inc/garnet/rdg/artifacts.h` — artifacts and resource views.
+- `src/core/rdg` backend implementations (Vulkan, others) for upload-related code and submission plumbing.
+
+---
+
+## Task breakdown (verifiable steps)
+
+### Phase 1: TaskInfo attachments for per-task context
+
+1. **Task 1.1 — Design TaskInfo attachment API**
+   - Add a minimal, type-agnostic attachment mechanism to `TaskInfo` (e.g. a single `AutoRef<RefCounted>` payload or a small struct/variant).
+   - Provide helper functions or templates to set/get the attachment in a safe, documented way.
+   - Ensure the attachment is **per-task** but its lifetime is tied to the owning submission.
+   - Verify: code compiles; no behavior change yet; add inline comments/docs describing intended usage for actions.
+
+2. **Task 1.2 — Wire TaskInfo attachment lifetime to submission**
+   - Ensure that when a submission finishes (success or failure), all TaskInfo attachments are released/recycled automatically.
+   - This may involve clearing attachment storage in the submission teardown path.
+   - Verify: add a small unit test (or debug logging) that attaches a ref-counted object to a TaskInfo and checks that its refcount drops when the submission is destroyed.
+
+### Phase 2: Transient per-submission buffer artifact
+
+3. **Task 2.1 — Declare transient buffer artifact in public API**
+   - In the Level 2 headers (e.g. `artifacts.h` / `actions.h`), declare a new artifact type representing a **transient, per-submission, host-visible buffer** (working name: `TransientBuffer`).
+   - API requirements:
+     - Created from within a submission or submission-builder, not from the global database.
+     - Exposes `map()` / `unmap()` on the caller thread.
+     - Provides a `GpuResourceView` for binding and for use as a copy source.
+   - Clearly document that it is **one-shot and per-submission only** (no cross-submission use, no re-mapping after use).
+   - Verify: headers compile; no backend implementation yet.
+
+4. **Task 2.2 — Implement transient buffer backend (Vulkan)**
+   - Implement the transient buffer in the Vulkan backend using a **grow-only host-visible ring-buffer pool**:
+     - Maintain one or more host-visible VkBuffers and suballocate ranges for each transient buffer.
+     - Start from a fixed default buffer size; when no existing buffer has space for a new allocation, allocate a new, larger buffer (e.g. double the previous largest size or at least the requested size).
+     - Tag each allocation with its owning submission ID.
+   - Enforce invariants:
+     - Creation fails or asserts if called outside of a submission context.
+     - Cross-submission use asserts (or is rejected) by checking the submission ID.
+     - Reuse of a suballocation is only allowed after the owning submission has completed.
+     - Allocation only fails when the underlying VkBuffer allocation fails (out of GPU memory), not when internal pool buffers are full.
+   - Leave a `// TODO` near the pool code describing a possible future **shrink** policy (retiring large under-used buffers once safe).
+   - Verify: unit tests or a small sample that allocates, maps/writes, unmaps, and binds a transient buffer for a single submission, and that a sequence of growing allocations results in additional backing buffers being created instead of user-visible failures.
+
+### Phase 3: Copy actions (buffer and image)
+
+5. **Task 3.1 — Buffer→buffer copy action API**
+   - Add a Level 2 action that represents a **buffer→buffer copy**:
+     - Arguments include source buffer artifact, destination buffer artifact, source/destination offsets, and size.
+     - Stateless; no internal buffers.
+   - Verify: headers compile; `addToReadWriteList` correctly marks source as read and destination as written.
+
+6. **Task 3.2 — Buffer→buffer copy backend (Vulkan)**
+   - Implement the Vulkan backend for the buffer→buffer copy action using `vkCmdCopyBuffer`.
+   - Ensure it:
+     - Works with both transient buffers and regular device-local buffers as source/destination.
+     - Respects the submission/TaskInfo lifetime model (no extra state on the action).
+   - Verify: unit test that records a copy from a transient buffer to a regular buffer and checks the destination contents after execution.
+
+7. **Task 3.3 — Buffer→image copy action API (optional initial stub)**
+   - Declare a Level 2 buffer→image copy action for future texture uploads:
+     - Arguments include source buffer, destination image, subresource range, offsets, and extents.
+   - Backend implementation can be stubbed initially (logging “not implemented”) if scope is large.
+   - Verify: headers compile; action is wired into the factory/dispatch but not yet used.
+
+### Phase 4: Integrate transient buffers into a simple workflow
+
+8. **Task 4.1 — Sample workflow using transient buffer + copy**
+   - Choose a simple existing path (e.g. a small UBO update or a test-only workflow) and reimplement it using:
+     - Transient buffer artifact (caller-thread map/write/unmap).
+     - Buffer→buffer copy action to upload into the real GPU buffer.
+   - Ensure the action itself remains stateless and uses TaskInfo attachments only if necessary.
+   - Verify: existing behavior (visual output or unit test) remains correct.
+
+9. **Task 4.2 — Per-draw dynamic-offset experiment (optional)**
+   - As an experiment (can be test-only), pack multiple small per-draw payloads into one transient buffer and use dynamic offsets to bind different regions for different draws.
+   - Verify: test or sample that renders multiple instances with distinct per-draw data coming from a single transient allocation.
+
+### Phase 5: Clean-up and documentation
+
+10. **Task 5.1 — Audit and document usage patterns**
+    - Update relevant comments/docs (assignment files, brief notes in headers) to:
+      - Emphasize the per-submission, one-shot nature of transient buffers.
+      - Show the intended “write on caller thread → copy action in submission” pattern.
+      - Clarify the role of TaskInfo attachments in keeping actions stateless.
+    - Verify: docs are consistent with the implemented API; no stale references to the old uploader action or write-function model remain.
+

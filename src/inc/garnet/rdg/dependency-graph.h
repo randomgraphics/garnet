@@ -116,6 +116,8 @@ concept DerivedFromArtifact = std::derived_from<T, Artifact>;
 
 /// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
 struct Arguments : public RefCounter, public RuntimeType {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
+
     struct ArtifactReadWriteList {
         std::unordered_set<const Artifact *> & readList;
         std::unordered_set<const Artifact *> & writeList;
@@ -215,20 +217,6 @@ struct Workflow {
         tasks.append(Task(name_, std::move(action_), std::move(arguments_)));
         return *this;
     }
-
-    // /// Collect usage of all artifacts
-    // std::unordered_map<uint64_t, Arguments::UsageBits> collectArtifactArguments() const {
-    //     std::unordered_map<uint64_t, Arguments::UsageBits> result;
-    //     for (const Task & task : tasks) {
-    //         if (!task.arguments) GN_LIKELY continue;
-    //         for (const Arguments::ArtifactArgument * p = task.arguments->firstArtifactArgument(); p; p = p->next()) {
-    //             for (const Artifact * a : p->artifacts()) {
-    //                 if (a) GN_LIKELY result[a->typeId] += p->usage();
-    //             }
-    //         }
-    //     }
-    //     return result;
-    // }
 };
 
 struct Submission : RefCounter {
@@ -262,19 +250,6 @@ protected:
     Submission(const StrA & name_): name(name_) {}
 };
 
-// /// A transient arena is a temporary memory pool that is used to allocate memory for the tasks that are executed.
-// /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
-// /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
-// struct TransientArena {
-//     virtual ~TransientArena() = default;
-
-//     GN_NO_COPY(TransientArena);
-//     GN_NO_MOVE(TransientArena);
-
-// protected:
-//     TransientArena() = default;
-// };
-
 /// Render graph: create workflows (thread-safe), then submit them for async execution.
 struct RenderGraph {
     struct CreateParameters {
@@ -304,12 +279,6 @@ struct RenderGraph {
     /// \return a pointer to the created workflow. The pointer is valid after passed to submit().
     ///         Modifying submitted workflow is undefined behavior.
     virtual Workflow * createWorkflow(StrA name) = 0;
-
-    // /// Add a transient arena to the render graph. The arena is used to allocate temporary used only by the the next submission.
-    // /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
-    // /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
-    // /// \param arena The transient arena to add.
-    // virtual void addTransientArena(TransientArena * arena) = 0;
 
     /// Submit workflows for <b>blocking</b> async execution in a topological order that satisfies workflow dependencies.
     virtual AutoRef<Submission> submit(const SubmitParameters & params) = 0;

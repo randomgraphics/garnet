@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "vk-gpu-resource-group.h"
-#include "vk-buffer.h"
+#include "vk-transient-buffer.h"
 #include "vk-texture.h"
 #include "vk-backbuffer.h"
 #include "vk-format-utils.h"
@@ -55,7 +55,7 @@ static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulk
         view.isTexture() ? vk::ImageAspectFlagBits::eColor : (view.isBackbuffer() ? vk::ImageAspectFlagBits::eColor : vk::ImageAspectFlagBits::eColor);
 
     if (view.isTexture()) {
-        auto tex = view.texture().castTo<TextureVulkan>();
+        auto tex = view.texture().staticCastTo<TextureVulkan>();
         if (!tex || !tex->image()) return {};
         vk::Format format =
             (iv.format != gfx::img::PixelFormat::UNKNOWN()) ? pixelFormatToVkFormat(iv.format) : pixelFormatToVkFormat(tex->descriptor().format);
@@ -66,7 +66,7 @@ static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulk
         return tex->image()->getView(params);
     }
     if (view.isBackbuffer()) {
-        auto bb = view.backbuffer().castTo<BackbufferVulkan>();
+        auto bb = view.backbuffer().staticCastTo<BackbufferVulkan>();
         if (!bb || !bb->backBufferImage()) return {};
         const auto * img    = bb->backBufferImage();
         vk::Format   format = img->desc().format;
@@ -186,15 +186,13 @@ void GpuResourceGroupVulkan::setResourceViews(size_t slot, size_t offset, SafeAr
     if (slotDesc.type == SlotType::UNIFORM_BUFFER || slotDesc.type == SlotType::STORAGE_BUFFER) {
         bufferInfos.reserve(n);
         for (size_t i = 0; i < n; ++i) {
-            const auto & v = views[i];
-            if (!v.isBuffer() || !v.buffer()) continue;
-            auto * bv  = static_cast<BufferVulkan *>(v.buffer().get());
-            auto   ref = bv->refVkBuffer();
-            if (!ref) continue;
+            const auto & v      = views[i];
+            auto         handle = BufferUtils::getHandle(v.buffer());
+            if (!handle) GN_UNLIKELY continue;
             uint64_t off = v.bufferView.offset;
             uint64_t sz  = v.bufferView.size;
             if (sz == 0) sz = vk::DeviceSize(-1);
-            bufferInfos.push_back(vk::DescriptorBufferInfo {}.setBuffer(ref->desc().handle).setOffset(off).setRange(sz));
+            bufferInfos.push_back(vk::DescriptorBufferInfo {}.setBuffer(handle).setOffset(off).setRange(sz));
         }
         if (!bufferInfos.empty()) {
             writes.push_back(vk::WriteDescriptorSet {}
@@ -256,12 +254,12 @@ AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(ArtifactDatabase & db, co
             GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is null, name='{}'", name);
             return {};
         }
-    auto gpu = params.context.castTo<GpuContextVulkan>();
+    auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is not Vulkan, name='{}'", name);
             return {};
         }
-    auto * p = new GpuResourceGroupVulkan(db, name, gpu, params);
+    auto p = new GpuResourceGroupVulkan(db, name, std::move(gpu), params);
     if (!p->sequence) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuResourceGroup: duplicate type+name, name='{}'", name);
             delete p;

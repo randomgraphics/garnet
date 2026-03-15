@@ -90,8 +90,11 @@ scene, effect, or pipeline policy.
 - `GpuDraw` — generic indexed/instanced draw call with shader binaries and resource
   bindings. The building block for all render effects.
 - `GpuCompute` — generic dispatch for compute shaders.
-- `GpuBufferUpload` — uploads CPU data into a GPU buffer. See *Dynamic Data Upload*
-  below.
+- `GpuBufferUpload` — uploads CPU data into a GPU buffer (legacy ring-slot model).
+  See *Dynamic Data Upload* below.
+- `CopyBuffer` — stateless buffer-to-buffer copy.  The preferred building block
+  for CPU→GPU uploads when combined with a `TransientBuffer`.
+- `CopyBufferToImage` — stateless buffer-to-image copy (stub, future work).
 
 **Naming note:** These files may be renamed `gpu-artifacts.h` / `gpu-actions.h` in
 a future refactor to make the level boundary visually obvious.
@@ -192,6 +195,37 @@ This model is the foundation for:
 - **Staged uploads** (STAGED, N=2 staging slots) — per-frame mesh data updates.
 - **Dynamic-offset sub-allocation** (`GpuUploadPool`, future) — one large ring
   buffer sub-allocated per draw call, each draw uses a dynamic buffer offset.
+
+### Preferred Model: Transient Buffers + Copy Actions
+
+The above `GpuBufferUpload` mechanisms remain functional, but the **preferred**
+approach for new code is the *transient buffer + copy action* model.  It cleanly
+separates the per-submission lifetime (transient buffer) from the stateless
+transfer operation (copy action) and requires zero user-side lifetime management.
+
+```
+Caller thread                            Submission worker
+─────────────                            ──────────────────
+1. arena = TransientArena::create(db, name, {.context = gpu}); tb = arena->allocate(N, name)
+2. mapped = tb->map(); write(mapped.data, data, N); mapped goes out of scope (unmap)
+3. tb is ready                             ─►  4. CopyBuffer::execute(tb → dst)
+5. tb ref can be dropped                 6. GPU copy completes
+```
+
+Key properties:
+- **TransientBuffer** (`artifacts.h`) — per-submission, one-shot, host-visible
+  buffer allocated from a grow-only ring-buffer pool.  Use `map()` to get a
+  `Mapped` accessor (data, size); write on the caller's thread, release by
+  letting it go out of scope or calling `unmap()`, then pass buffer to GPU actions.
+- **CopyBuffer** (`actions.h`) — a stateless Level 2 action that records
+  `vkCmdCopyBuffer`.  The source can be either a regular `Buffer` artifact or a
+  `TransientBuffer`.
+- **CopyBufferToImage** (`actions.h`) — stub for future texture uploads.
+- Actions stay **stateless**; per-task context is stored in `TaskInfo::context`
+  (an `AutoRef<RefCounter>` whose lifetime is tied to the owning submission).
+- **Per-draw dynamic offsets:** Multiple small payloads can be packed into a
+  single `TransientBuffer` and copied in one shot to a device-local storage or
+  uniform buffer.  Each draw then uses a dynamic offset to select its region.
 
 ---
 

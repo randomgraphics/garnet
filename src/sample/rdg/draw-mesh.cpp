@@ -73,7 +73,7 @@ static const Vertex kBoxVertices[] = {
 // -------------------------------------------------------------------------
 
 static AutoRef<Buffer> createBoxVertexBuffer(ArtifactDatabase & db, AutoRef<GpuContext> gpu) {
-    auto buf = Buffer::create(db, "box_vertex_buffer", Buffer::CreateParameters {.context = gpu, .size = sizeof(kBoxVertices)});
+    auto buf = PersistentBuffer::create(db, "box_vertex_buffer", PersistentBuffer::CreateParameters {.context = gpu, .size = sizeof(kBoxVertices)});
     if (!buf) {
         GN_ERROR(sLogger)("Failed to create box vertex buffer");
         return {};
