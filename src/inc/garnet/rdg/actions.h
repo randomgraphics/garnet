@@ -185,11 +185,19 @@ struct GpuShaderAction : public Action {
         bool valid() const { return binary != nullptr && size > 0 && entry != nullptr; }
     };
 
-    /// A 3-D table of shader resources.
-    /// The first dimension is the resource set index
-    /// The second dimension is the binding slot inside a resource set
-    /// The third dimension is the resource view index inside a binding slot.
-    using GpuResourceTable = DynaArray<DynaArray<DynaArray<GpuResourceView>>>;
+    /// Represent a list of GPU resources of same type. Bindable to a shader binding slot (usually mapped to a named shader
+    /// variable).
+    using GraphicsResourceSlot = DynaArray<GpuResourceView>;
+
+    // A resource set/group is an array of resource slots.
+    using GraphicsResourceSet = DynaArray<GraphicsResourceSlot>;
+
+    /// A resource table is an array of resoruce sets/groups.
+    /// It can also be treated as 3-D array of GPU resource views.
+    /// The first dimension is the resource set/group index.
+    /// The second dimension is the resource slot index inside a resource set/group.
+    /// The third dimension is the resource view index inside a resource slot.
+    using GpuResourceTable = DynaArray<GraphicsResourceSet>;
 
 protected:
     using Action::Action;
@@ -276,14 +284,11 @@ struct GpuDraw : public GpuShaderAction {
         GN_RDG_REGISTER_RUNTIME_TYPE();
         A(): Arguments(TYPE_INFO()) {}
 
-        GpuGeometry        geometry;   ///< geometry
+        GpuGeometry geometry; ///< geometry
+        /// 3-D resource table: resources[setIndex][bindingIndex][arrayIndex] = GpuResourceView.
+        /// Backend feeds this into rapid_vulkan Drawable (layout/descriptors managed by DrawPack).
         GpuResourceTable   resources;  ///< shader resources
         DynaArray<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
-
-        /// Pre-built descriptor groups to bind per set index.
-        /// descriptorGroups[0] → vkCmdBindDescriptorSets(set=0), etc.
-        /// Null entries are skipped. Size may be smaller than the shader's set count.
-        DynaArray<AutoRef<GpuResourceGroup>> descriptorGroups;
 
         /// Render target.
         /// \note Must specify render target as argument for each draw action.

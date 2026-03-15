@@ -22,11 +22,11 @@ class GpuCopyVulkan : public GpuCopy {
         GN_RDG_FAIL_ON_FALSE(srcHandle && dstHandle, "{} - CopyBufferVulkan::execute: srcBuffer or dstBuffer is properly initialized", taskInfo);
 
         uint64_t srcOff       = arguments.srcOffset;
-        auto     srcTransient = arguments.src.staticCastTo<TransientBufferVulkan>();
+        auto     srcTransient = runtimeCast<const TransientBufferVulkan>(arguments.src);
         if (srcTransient) srcOff += srcTransient->offset();
 
         uint64_t dstOff       = arguments.dstOffset;
-        auto     dstTransient = arguments.dst.staticCastTo<TransientBufferVulkan>();
+        auto     dstTransient = runtimeCast<const TransientBufferVulkan>(arguments.dst);
         if (dstTransient) dstOff += dstTransient->offset();
 
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
@@ -48,6 +48,43 @@ class GpuCopyVulkan : public GpuCopy {
 public:
     GpuCopyVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuCopy::CreateParameters & params)
         : GpuCopy(db, TYPE_INFO(), name), mGpu(std::move(gpu)), mCreateParams(params) {}
+
+    bool validate(const Arguments & arguments) const override {
+        const auto * a = runtimeCast<BufferToBuffer>(&arguments);
+        if (a) {
+            if (!a->src) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: src is null");
+                    return false;
+                }
+            if (!a->dst) {
+                GN_ERROR(sLogger)("GpuCopyVulkan::validate: dst is null");
+                return false;
+            }
+            // make sure the offset and size are valid
+            const uint64_t srcSize = BufferUtils::getSize(a->src);
+            const uint64_t dstSize = BufferUtils::getSize(a->dst);
+            if ((a->srcOffset + a->size) > srcSize) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: src offset and size are out of bounds");
+                    return false;
+                }
+            if ((a->dstOffset + a->size) > dstSize) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: dst offset and size are out of bounds");
+                    return false;
+                }
+            // make sure the src and dst are not the same
+            if (a->src == a->dst) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: src and dst are the same");
+                    return false;
+                }
+            return true;
+        }
+        if (runtimeCast<BufferToImage>(&arguments)) {
+            GN_ERROR(sLogger)("GpuCopyVulkan::validate: BufferToImage not implemented");
+            return false;
+        }
+        GN_ERROR(sLogger)("GpuCopyVulkan::validate: arguments must be either BufferToBuffer or BufferToImage");
+        return false;
+    }
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments &) override {
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);

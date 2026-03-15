@@ -25,7 +25,7 @@ using namespace GN::rdg;
 /// Returns the submission result.
 static Submission::Result submitUploadFrame(RenderGraph & rg, AutoRef<GpuBufferUpload> upload, const uint8_t * data, uint64_t size) {
     auto wf = rg.createWorkflow("upload");
-    wf->tasks.append(Workflow::Task("write", upload, GpuBufferUpload::A::make(data, size)));
+    wf->appendTask(Workflow::Task("write", upload, GpuBufferUpload::A::make(data, size)));
     auto sub = rg.submit({.workflows = {&wf, 1}});
     return sub->result();
 }
@@ -128,18 +128,18 @@ TEST_CASE("GpuBufferUpload Phase3: with draw command — slot gets submissionId"
     {
         auto prepA        = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
         prepA->backbuffer = backbuffer;
-        wf->tasks.append(Workflow::Task("prepare", prepareAction, prepA));
+        wf->appendTask(Workflow::Task("prepare", prepareAction, prepA));
     }
-    wf->tasks.append(Workflow::Task("upload", upload, GpuBufferUpload::A::make(data, sizeof(data))));
+    wf->appendTask(Workflow::Task("upload", upload, GpuBufferUpload::A::make(data, sizeof(data))));
     {
         auto clearA          = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
         clearA->renderTarget = rt;
-        wf->tasks.append(Workflow::Task("clear", clearAction, clearA));
+        wf->appendTask(Workflow::Task("clear", clearAction, clearA));
     }
     {
         auto presentA        = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
         presentA->backbuffer = backbuffer;
-        wf->tasks.append(Workflow::Task("present", presentAction, presentA));
+        wf->appendTask(Workflow::Task("present", presentAction, presentA));
     }
 
     auto sub = rg->submit({.workflows = {&wf, 1}});

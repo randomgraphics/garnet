@@ -4,6 +4,40 @@
 using namespace GN;
 using namespace GN::rdg;
 
+TEST_CASE("RDG smoke: prepare then present immediately (no draws)", "[rdg][smoke][gpu]") {
+    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
+    REQUIRE(db);
+
+    auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
+    REQUIRE(renderGraph);
+
+    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    if (!gpuContext) SKIP("No Vulkan GPU context available");
+
+    const uint32_t w = 64, h = 64;
+    auto backbuffer = Backbuffer::create(*db, "backbuffer",
+                                         Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {}.setDimensions(w, h)});
+    REQUIRE(backbuffer);
+
+    auto prepareAction = PrepareBackbuffer::create(*db, "prepare", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
+    REQUIRE(prepareAction);
+    auto presentAction = PresentBackbuffer::create(*db, "present", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
+    REQUIRE(presentAction);
+
+    auto wf = renderGraph->createWorkflow("Render");
+    REQUIRE(wf);
+    auto prepArgs        = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
+    prepArgs->backbuffer = backbuffer;
+    wf->appendTask(Workflow::Task("Prepare backbuffer", prepareAction, prepArgs));
+    auto presentArgs        = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
+    presentArgs->backbuffer = backbuffer;
+    wf->appendTask(Workflow::Task("Present backbuffer", presentAction, presentArgs));
+
+    auto submission = renderGraph->submit({.workflows = {&wf, 1}});
+    REQUIRE(submission);
+    REQUIRE(submission->result().executionResult != Action::ExecutionResult::FAILED);
+}
+
 TEST_CASE("RDG smoke: clear-to-red headless render", "[rdg][smoke][gpu]") {
     auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
     REQUIRE(db);
@@ -42,18 +76,18 @@ TEST_CASE("RDG smoke: clear-to-red headless render", "[rdg][smoke][gpu]") {
     auto prepareArgs        = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
     prepareArgs->backbuffer = backbuffer;
     prepareTask.arguments   = prepareArgs;
-    renderWorkflow->tasks.append(prepareTask);
+    renderWorkflow->appendTask(std::move(prepareTask));
 
     auto clearArgs          = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
     clearArgs->renderTarget = renderTarget;
-    renderWorkflow->tasks.append(Workflow::Task("Clear render target", clearAction, clearArgs));
+    renderWorkflow->appendTask(Workflow::Task("Clear render target", clearAction, clearArgs));
 
     auto presentTask        = Workflow::Task("Present backbuffer");
     presentTask.action      = presentAction;
     auto presentArgs        = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
     presentArgs->backbuffer = backbuffer;
     presentTask.arguments   = presentArgs;
-    renderWorkflow->tasks.append(presentTask);
+    renderWorkflow->appendTask(std::move(presentTask));
 
     auto submission = renderGraph->submit({.workflows = {&renderWorkflow, 1}});
     REQUIRE(submission);

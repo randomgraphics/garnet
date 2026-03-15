@@ -5,7 +5,6 @@
 #include "vk-texture.h"
 #include "vk-transient-buffer.h"
 #include "vk-pso-factory.h"
-#include "vk-gpu-resource-group.h"
 
 namespace GN::rdg {
 
@@ -144,16 +143,29 @@ public:
 
         if (!a->immediates.empty()) drawable.c(0, a->immediates.size(), a->immediates.data(), vk::ShaderStageFlagBits::eVertex);
 
-        // Bind per-set descriptor groups before rendering.
-        if (!a->descriptorGroups.empty()) {
-            vk::CommandBuffer  cmd    = cb.commandBuffer().handle();
-            vk::PipelineLayout layout = pipeline->layout();
-            for (uint32_t setIdx = 0; setIdx < (uint32_t) a->descriptorGroups.size(); ++setIdx) {
-                const auto & grpRef = a->descriptorGroups[setIdx];
-                if (!grpRef) continue;
-                auto *            vkGrp = static_cast<GpuResourceGroupVulkan *>(grpRef.get());
-                vk::DescriptorSet ds    = vkGrp->vkSet();
-                if (ds) cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, setIdx, {ds}, {});
+        // Bind shader resources from 3-D GpuResourceTable; Drawable/DrawPack manage layout and descriptors.
+        for (size_t setIdx = 0; setIdx < a->resources.size(); ++setIdx) {
+            const auto & set = a->resources[setIdx];
+            for (size_t bindingIdx = 0; bindingIdx < set.size(); ++bindingIdx) {
+                const auto & views = set[bindingIdx];
+                if (views.empty()) continue;
+                // Buffers: convert to rapid_vulkan BufferView and bind.
+                if (views[0].isBuffer()) {
+                    std::vector<rapid_vulkan::BufferView> rvViews;
+                    rvViews.reserve(views.size());
+                    for (const auto & v : views) {
+                        if (!v.artifact || !v.isBuffer()) continue;
+                        auto ref = BufferUtils::toRapid(v.buffer());
+                        if (!ref) continue;
+                        vk::DeviceSize sz = v.bufferView.size;
+                        if (sz == 0) sz = vk::DeviceSize(-1);
+                        rvViews.push_back(rapid_vulkan::BufferView {ref, v.bufferView.offset, sz});
+                    }
+                    if (!rvViews.empty()) {
+                        drawable.b(rapid_vulkan::DescriptorIdentifier(static_cast<uint32_t>(setIdx), static_cast<uint32_t>(bindingIdx)), rvViews);
+                    }
+                }
+                // TODO: image/sampler binding from GpuResourceView (ImageView + optional Sampler) → drawable.t() / drawable.s()
             }
         }
 

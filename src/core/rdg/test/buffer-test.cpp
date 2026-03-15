@@ -41,9 +41,10 @@ TEST_CASE("Buffer: Usage flags combine correctly via BitFlags", "[rdg][buffer]")
     CHECK((geometry.mask & static_cast<uint32_t>(BufferUsageBits::UNIFORM)) == 0);
 }
 
-TEST_CASE("Buffer: CreateParameters default usage is VERTEX|INDEX", "[rdg][buffer]") {
+TEST_CASE("Buffer: CreateParameters default usage is VERTEX|INDEX|UNIFORM", "[rdg][buffer]") {
     PersistentBuffer::CreateParameters cp;
-    uint32_t                           defaultMask = static_cast<uint32_t>(BufferUsageBits::VERTEX) | static_cast<uint32_t>(BufferUsageBits::INDEX);
+    uint32_t                           defaultMask =
+        static_cast<uint32_t>(BufferUsageBits::VERTEX) | static_cast<uint32_t>(BufferUsageBits::INDEX) | static_cast<uint32_t>(BufferUsageBits::UNIFORM);
     CHECK(cp.usage.mask == defaultMask);
 }
 

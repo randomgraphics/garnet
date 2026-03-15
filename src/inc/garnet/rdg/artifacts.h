@@ -779,6 +779,8 @@ enum class GpuShaderStageBits : uint32_t {
 
 typedef BitFlags<GpuShaderStageBits> GpuShaderStageFlags;
 
+// GpuResourceGroup commented out: we use GpuResourceTable (set/binding/view) + rapid_vulkan Drawable/DrawPack instead.
+#if 0
 /// A group of bindable GPU shader resources.
 /// Conceptually, it matches Vulkan's descriptor set.
 struct GpuResourceGroup : public GpuResource {
@@ -812,5 +814,6 @@ struct GpuResourceGroup : public GpuResource {
 protected:
     using GpuResource::GpuResource;
 };
+#endif
 
 } // namespace GN::rdg

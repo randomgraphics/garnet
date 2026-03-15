@@ -41,6 +41,60 @@ namespace GN::rdg {
 //     bool castingShadow = false;
 // };
 
+/// Self-contained list of workflows (and their tasks and arguments) that can be
+/// submitted to a RenderGraph to render the effect to screen or to a render target.
+struct GN_API SubGraph {
+    GN_NO_COPY(SubGraph); // not copyable
+
+    RenderGraph *           graph       = {};
+    StrA                    name        = {};
+    Action::ExecutionResult builtResult = Action::ExecutionResult::PASSED;
+    DynaArray<Workflow *>   workflows;
+
+    SubGraph() = default;
+
+    SubGraph(RenderGraph & graph, const StrA & name): graph(&graph), name(name) {}
+
+    ~SubGraph() { drop(); }
+
+    // move constructor
+    SubGraph(SubGraph && other) noexcept: graph(other.graph), name(other.name), builtResult(other.builtResult), workflows(std::move(other.workflows)) {
+        other.graph = nullptr;
+        other.name.clear();
+        other.builtResult = Action::ExecutionResult::PASSED;
+        GN_ASSERT(other.workflows.empty());
+    }
+
+    // move assignment
+    SubGraph & operator=(SubGraph && other) noexcept {
+        if (this == &other) return *this;
+        drop(); // drop current graph, if any.
+        graph       = other.graph;
+        name        = other.name;
+        builtResult = other.builtResult;
+        workflows   = std::move(other.workflows);
+        other.graph = nullptr;
+        other.name.clear();
+        other.builtResult = Action::ExecutionResult::PASSED;
+        GN_ASSERT(other.workflows.empty());
+        return *this;
+    }
+
+    /// Submit this subgraph for execution on the given render graph.
+    /// The workflows are submitted and then cleared from this SubGraph.
+    /// \return The submission object; valid until execution completes.
+    AutoRef<Submission> submit();
+
+    /// Drop this subgraph without executing. All workflows are dropped and cleared from this SubGraph.
+    SubGraph & drop() {
+        if (!graph) return *this;
+        Workflow::drop(workflows.data(), workflows.size());
+        workflows.clear();
+        builtResult = Action::ExecutionResult::DROPPED;
+        return *this;
+    }
+};
+
 /// A container for shader constants that are shared by other effects.
 /// Holds logical data (frame, view, lights, etc.); the API-specific implementation
 /// organises and uploads this data to GPU resources. The public interface does not
@@ -102,6 +156,10 @@ struct SharedShaderConstants : public GpuResource {
         AutoRef<GpuContext> gpu;
     };
 
+    /// Resource set for Set 0: bindings (camera UBO, lighting UBO, expandable).
+    /// Same shape as one set in GpuResourceTable: set0[bindingIndex][arrayIndex] = GpuResourceView.
+    using Set0ResourceSet = GpuShaderAction::GraphicsResourceSet;
+
     virtual void setFrameInformation(const FrameInformation &)                   = 0;
     virtual void setViewInformation(const ViewInformation &)                     = 0;
     virtual void setDirectLightingInformation(const DirectLightingInformation &) = 0;
@@ -109,15 +167,12 @@ struct SharedShaderConstants : public GpuResource {
     virtual const FrameInformation &          getFrameInformation() const          = 0;
     virtual const ViewInformation &           getViewInformation() const           = 0;
     virtual const DirectLightingInformation & getDirectLightingInformation() const = 0;
+    /// Last built Set 0 resource set (valid after build() has been called). Effects use this as set #0 in the resource table.
+    virtual const Set0ResourceSet & getSet0Resources() const = 0;
 
-    /// Snapshot current CPU state and generate a Workflow that uploads it to GPU.
-    /// The returned Workflow is owned by the RenderGraph and is valid until the
-    /// next submission.  Call this once per frame before submitting draw workflows.
-    virtual Workflow * build(RenderGraph & rg) = 0;
-
-    /// Return the descriptor group for Set 0 (camera UBO binding 0, lighting UBO binding 1).
-    /// Intended for backend effect builders (e.g. PbrShadingVulkan) that need to bind Set 0.
-    virtual GpuResourceGroup * getSet0Group() const = 0;
+    /// Snapshot current CPU state; upload to GPU. Returns a SubGraph whose workflows perform the upload. Call once per frame; submit that SubGraph (or its
+    /// workflows) before draw workflows. Effects get set0 via getSet0Resources().
+    virtual SubGraph build(RenderGraph & rg) = 0;
 
     static GN_API AutoRef<SharedShaderConstants> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
 
@@ -211,60 +266,6 @@ protected:
 //     using Artifact::Artifact;
 // };
 
-/// Self-contained list of workflows (and their tasks and arguments) that can be
-/// submitted to a RenderGraph to render the effect to screen or to a render target.
-struct GN_API SubGraph {
-    GN_NO_COPY(SubGraph); // not copyable
-
-    RenderGraph *           graph       = {};
-    StrA                    name        = {};
-    Action::ExecutionResult builtResult = Action::ExecutionResult::PASSED;
-    DynaArray<Workflow *>   workflows;
-
-    SubGraph() = default;
-
-    SubGraph(RenderGraph & graph, const StrA & name): graph(&graph), name(name) {}
-
-    ~SubGraph() { drop(); }
-
-    // move constructor
-    SubGraph(SubGraph && other) noexcept: graph(other.graph), name(other.name), builtResult(other.builtResult), workflows(std::move(other.workflows)) {
-        other.graph = nullptr;
-        other.name.clear();
-        other.builtResult = Action::ExecutionResult::PASSED;
-        GN_ASSERT(other.workflows.empty());
-    }
-
-    // move assignment
-    SubGraph & operator=(SubGraph && other) noexcept {
-        if (this == &other) return *this;
-        drop(); // drop current graph, if any.
-        graph       = other.graph;
-        name        = other.name;
-        builtResult = other.builtResult;
-        workflows   = std::move(other.workflows);
-        other.graph = nullptr;
-        other.name.clear();
-        other.builtResult = Action::ExecutionResult::PASSED;
-        GN_ASSERT(other.workflows.empty());
-        return *this;
-    }
-
-    /// Submit this subgraph for execution on the given render graph.
-    /// The workflows are submitted and then cleared from this SubGraph.
-    /// \return The submission object; valid until execution completes.
-    AutoRef<Submission> submit();
-
-    /// Drop this subgraph without executing. All workflows are dropped and cleared from this SubGraph.
-    SubGraph & drop() {
-        if (!graph) return *this;
-        for (auto * w : workflows) { graph->dropWorkflow(w); }
-        workflows.clear();
-        builtResult = Action::ExecutionResult::DROPPED;
-        return *this;
-    }
-};
-
 struct PbrShading : public GpuResource {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
@@ -297,12 +298,12 @@ struct PbrShading : public GpuResource {
     };
 
     struct BuildParameters {
-        RenderGraph *                  renderGraph = {};
-        AutoRef<SharedShaderConstants> sharedShaderConstants;
-        AutoRef<Material>              material;
-        GpuDraw::GpuGeometry           geometry;
-        Location                       locationInWorldSpace    = {0, 0, 0};
-        Orientation                    orientationInWorldSpace = ZERO_ROTATION;
+        RenderGraph *                        renderGraph = {};
+        AutoRef<const SharedShaderConstants> sharedShaderConstants;
+        AutoRef<Material>                    material;
+        GpuDraw::GpuGeometry                 geometry;
+        Location                             locationInWorldSpace    = {0, 0, 0};
+        Orientation                          orientationInWorldSpace = ZERO_ROTATION;
     };
 
     struct CreateParameters {
@@ -322,7 +323,7 @@ struct SkyBox : public GpuResource {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     struct BuildParameters {
-        AutoRef<SharedShaderConstants> sharedShaderConstants;
+        AutoRef<const SharedShaderConstants> sharedShaderConstants;
     };
 
     struct CreateParameters {

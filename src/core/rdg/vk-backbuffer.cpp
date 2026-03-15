@@ -247,7 +247,8 @@ class PresentBackbufferVulkan : public PresentBackbuffer {
     AutoRef<GpuContextVulkan> mGpu;
 
 public:
-    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PresentBackbuffer(db, TYPE_INFO(), name) {}
+    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
+        : PresentBackbuffer(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto a = runtimeCast<PresentBackbuffer::A>(arguments);
@@ -277,8 +278,10 @@ public:
     }
 };
 
-AutoRef<PresentBackbuffer> createPresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters &) {
-    auto * p = new PresentBackbufferVulkan(db, name);
+AutoRef<PresentBackbuffer> createPresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters & params) {
+    auto gpu = params.gpu.staticCastTo<GpuContextVulkan>();
+    if (!gpu) return {};
+    auto * p = new PresentBackbufferVulkan(db, name, std::move(gpu));
     if (p->sequence == 0) {
         GN_ERROR(sLogger)("createVulkanPresentBackbuffer: duplicate type+name, name='{}'", name);
         delete p;

@@ -212,6 +212,10 @@ int main(int, const char **) {
     GN_INFO(sLogger)("Starting PBR box render loop...");
 
     while (window->runUntilNoNewEvents()) {
+        // Build shared constants (upload UBOs); SSC build returns SubGraph with upload workflow(s).
+        auto       sscSubGraph = sharedConstants->build(*renderGraph);
+        Workflow * uploadWf    = sscSubGraph.workflows.empty() ? nullptr : sscSubGraph.workflows[0];
+
         auto renderWorkflow = renderGraph->createWorkflow("Render");
         if (!renderWorkflow) break;
 
@@ -227,12 +231,16 @@ int main(int, const char **) {
         pbrParams.orientationInWorldSpace = glm::angleAxis(glm::radians(30.f), glm::vec3(0.f, 1.f, 0.f));
         auto pbrSubGraph                  = pbrShading->build(pbrParams);
         if (pbrSubGraph.builtResult == Action::ExecutionResult::PASSED && !pbrSubGraph.workflows.empty()) {
-            for (auto & task : pbrSubGraph.workflows[0]->tasks) renderWorkflow->appendTask(task.name, task.action, task.arguments);
+            for (const auto & task : pbrSubGraph.workflows[0]->tasks()) renderWorkflow->appendTask(task.name, task.action, task.arguments);
         }
 
         renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
 
-        auto submission = renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&renderWorkflow, 1), .name = "Frame"});
+        // Submit upload workflow first (if any), then render workflow.
+        Workflow * workflows[] = {uploadWf, renderWorkflow};
+        auto       submission  = renderGraph->submit(
+            RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(uploadWf ? workflows : &renderWorkflow, uploadWf ? 2u : 1u),
+                                           .name      = "Frame"});
         if (!submission) {
             GN_ERROR(sLogger)("Failed to submit render graph");
             break;
@@ -240,6 +248,10 @@ int main(int, const char **) {
         auto result = submission->result();
         if (result.executionResult == Action::ExecutionResult::FAILED) break;
         if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph completed with warnings"); }
+
+        // Submission owns the workflows and will delete them when it is destroyed. Clear subgraph
+        // workflow lists so SubGraph destructors do not double-delete (destroy order: submission first, then subgraphs).
+        sscSubGraph.workflows.clear();
     }
 
     GN_INFO(sLogger)("PBR box demo finished");

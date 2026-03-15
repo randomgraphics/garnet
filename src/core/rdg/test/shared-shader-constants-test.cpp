@@ -76,10 +76,12 @@ TEST_CASE("SharedShaderConstants: build() returns workflow with two upload tasks
     fi.frameCounter = 1;
     ssc->setFrameInformation(fi);
 
-    Workflow * wf = ssc->build(*rg);
-    REQUIRE(wf != nullptr);
-    // Workflow should have two tasks: camera upload + lighting upload.
-    CHECK(wf->tasks.size() == 2u);
+    auto sg = ssc->build(*rg);
+    REQUIRE(!sg.workflows.empty());
+    // Workflow should have two tasks: camera copy + lighting copy.
+    CHECK(sg.workflows[0]->tasks().size() == 2u);
+    // Set 0 resource set has camera (binding 0) and lighting (binding 1).
+    CHECK(ssc->getSet0Resources().size() >= 2u);
 }
 
 TEST_CASE("SharedShaderConstants: build() + submit() succeeds", "[rdg][shared-constants][gpu]") {
@@ -99,13 +101,14 @@ TEST_CASE("SharedShaderConstants: build() + submit() succeeds", "[rdg][shared-co
     fi.frameCounter = 7;
     ssc->setFrameInformation(fi);
 
-    Workflow * wf = ssc->build(*rg);
-    REQUIRE(wf);
+    auto sg = ssc->build(*rg);
+    REQUIRE(!sg.workflows.empty());
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow *>(sg.workflows.data(), sg.workflows.size())});
     REQUIRE(sub);
     auto res = sub->result();
     CHECK(res.executionResult != Action::ExecutionResult::FAILED);
+    sg.workflows.clear();
 }
 
 TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[rdg][shared-constants][gpu]") {
@@ -126,21 +129,23 @@ TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[r
     fi.frameCounter = 1;
     ssc->setFrameInformation(fi);
     {
-        Workflow * wf = ssc->build(*rg);
-        REQUIRE(wf);
-        auto sub = rg->submit({.workflows = {&wf, 1}});
+        auto sg = ssc->build(*rg);
+        REQUIRE(!sg.workflows.empty());
+        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow *>(sg.workflows.data(), sg.workflows.size())});
         REQUIRE(sub);
         CHECK(sub->result().executionResult != Action::ExecutionResult::FAILED);
+        sg.workflows.clear();
     }
 
     // Frame 2 — ring slot must advance without blocking (waitForIdle still in place for now).
     fi.frameCounter = 2;
     ssc->setFrameInformation(fi);
     {
-        Workflow * wf = ssc->build(*rg);
-        REQUIRE(wf);
-        auto sub = rg->submit({.workflows = {&wf, 1}});
+        auto sg = ssc->build(*rg);
+        REQUIRE(!sg.workflows.empty());
+        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow *>(sg.workflows.data(), sg.workflows.size())});
         REQUIRE(sub);
         CHECK(sub->result().executionResult != Action::ExecutionResult::FAILED);
+        sg.workflows.clear();
     }
 }

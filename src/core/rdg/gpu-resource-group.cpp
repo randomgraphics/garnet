@@ -1,6 +1,8 @@
 #include "pch.h"
-#include "gpu-context.h"
-#include "vk-gpu-resource-group.h"
+// GpuResourceGroup commented out: use GpuResourceTable + Drawable/DrawPack instead.
+#if 0
+    #include "gpu-context.h"
+    #include "vk-gpu-resource-group.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
@@ -28,3 +30,4 @@ GN_API AutoRef<GpuResourceGroup> GpuResourceGroup::create(ArtifactDatabase & db,
 }
 
 } // namespace GN::rdg
+#endif

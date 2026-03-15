@@ -1,10 +1,12 @@
 #include "pch.h"
-#include "vk-gpu-resource-group.h"
-#include "vk-transient-buffer.h"
-#include "vk-texture.h"
-#include "vk-backbuffer.h"
-#include "vk-format-utils.h"
-#include "gpu-context.h"
+// GpuResourceGroupVulkan commented out: use GpuResourceTable + Drawable/DrawPack instead.
+#if 0
+    #include "vk-gpu-resource-group.h"
+    #include "vk-transient-buffer.h"
+    #include "vk-texture.h"
+    #include "vk-backbuffer.h"
+    #include "vk-format-utils.h"
+    #include "gpu-context.h"
 
 namespace GN::rdg {
 
@@ -269,3 +271,4 @@ AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(ArtifactDatabase & db, co
 }
 
 } // namespace GN::rdg
+#endif

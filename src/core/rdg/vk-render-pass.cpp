@@ -208,7 +208,7 @@ Action::ExecutionResult RenderPassManagerVulkan::preparePresent(TaskInfo & taskI
 
     // See if we are presenting the same backbuffer that was drawn to in the previous action.
     // If not, we inherit the draw target from the previous action.
-    AutoRef<RenderTarget> drawTarget = mEntries.rbegin()->second.draw;
+    auto drawTarget = mEntries.empty() ? AutoRef<RenderTarget> {} : mEntries.rbegin()->second.draw;
     if (drawTarget) {
         const auto & colors = drawTarget->colors;
         for (size_t i = 0; i < colors.size(); i++) {

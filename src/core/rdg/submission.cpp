@@ -8,6 +8,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
+GN_API void Workflow::drop(Workflow ** workflows, size_t count) {
+    if (!workflows) GN_UNLIKELY return;
+    for (size_t i = 0; i < count; ++i) {
+        delete WorkflowImpl::promote(workflows[i]);
+        workflows[i] = nullptr;
+    }
+}
+
 SubmissionImpl::SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params): Submission(params.name) {
     GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
@@ -23,7 +31,7 @@ SubmissionImpl::~SubmissionImpl() {
 void SubmissionImpl::cleanup(bool cleanupPendingWorkflows) noexcept {
     try {
         if (cleanupPendingWorkflows) {
-            for (Workflow * w : mWorkflows) delete w;
+            for (Workflow * w : mWorkflows) delete WorkflowImpl::promote(w);
             mWorkflows.clear();
         }
         mValidatedWorkflows.clear();
@@ -41,11 +49,11 @@ Submission::Result SubmissionImpl::result() {
 
 bool SubmissionImpl::validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex) {
     if (!task.action) {
-        GN_ERROR(sLogger)("Workflow '{}' task {}: action is null", workflowName, taskIndex);
+        GN_ERROR(sLogger)("Workflow '{}' task[{}] {}: action is null", workflowName, taskIndex, task.name);
         return false;
     }
     if (!task.arguments) {
-        GN_ERROR(sLogger)("Workflow '{}' task {}: arguments is null", workflowName, taskIndex);
+        GN_ERROR(sLogger)("Workflow '{}' task[{}] {}: arguments is null", workflowName, taskIndex, task.name);
         return false;
     }
     return true;
@@ -56,8 +64,9 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
         auto workflow = mWorkflows[workflowIdx];
         GN_ASSERT(workflow);
 
-        for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
-            const Workflow::Task & task = workflow->tasks[taskIdx];
+        auto tasks = workflow->tasks();
+        for (size_t taskIdx = 0; taskIdx < tasks.size(); ++taskIdx) {
+            const Workflow::Task & task = tasks[taskIdx];
             if (!validateTask(task, workflow->name, taskIdx)) return false;
         }
 
@@ -74,7 +83,7 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
     DynaArray<ArtifactSet> workflowWrites(mValidatedWorkflows.size());
     for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
         auto w = mValidatedWorkflows[i];
-        for (const Workflow::Task & task : w->tasks) {
+        for (const Workflow::Task & task : w->tasks()) {
             Arguments * args = task.arguments.get();
             if (!args) continue;
             Arguments::ArtifactReadWriteList list {workflowReads[i], workflowWrites[i]};
@@ -221,8 +230,9 @@ Submission::State SubmissionImpl::dumpState() const {
 
         // Tasks in this workflow: iterate actual tasks to get arguments, match ts by name for state.
         const StrA wfName = w->name.empty() ? StrA("[unnamed workflow]") : w->name;
-        for (size_t taskIdx = 0; taskIdx < w->tasks.size(); ++taskIdx) {
-            const Workflow::Task & task  = w->tasks[taskIdx];
+        auto       tasks  = w->tasks();
+        for (size_t taskIdx = 0; taskIdx < tasks.size(); ++taskIdx) {
+            const Workflow::Task & task  = tasks[taskIdx];
             const StrA             tName = task.name.empty() ? StrA("[unnamed task]") : task.name;
 
             // Find matching TaskExecutionState
@@ -325,8 +335,8 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
 
         // step 3: prepare all tasks in topological order.
         struct PendingTask {
-            Workflow::Task * task;
-            TaskInfo         info;
+            const Workflow::Task * task;
+            TaskInfo               info;
         };
         DynaArray<PendingTask> pendingTasks;
         bool                   hasWarning = false;
@@ -335,8 +345,9 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
             GN_ASSERT(workflowIdx < mValidatedWorkflows.size());
             Workflow * workflow = mValidatedWorkflows[workflowIdx];
             GN_ASSERT(workflow);
-            for (size_t taskIdx = 0; taskIdx < workflow->tasks.size(); ++taskIdx) {
-                Workflow::Task & task = workflow->tasks[taskIdx];
+            auto tasks = workflow->tasks();
+            for (size_t taskIdx = 0; taskIdx < tasks.size(); ++taskIdx) {
+                const Workflow::Task & task = tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
                 StrA     wfName = workflow->name.empty() ? StrA("[unnamed workflow]") : workflow->name;
                 StrA     tName  = task.name.empty() ? StrA("[unnamed task]") : task.name;

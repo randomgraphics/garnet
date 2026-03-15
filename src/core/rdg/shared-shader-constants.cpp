@@ -13,21 +13,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 namespace GN::rdg {
 
 // =============================================================================
-// SharedShaderConstantsVulkan — commented out for now; to be restored later.
+// SharedShaderConstantsVulkan — uses GpuResourceTable (Set 0 views) + PersistentBuffer.
 // =============================================================================
-#if 0
-// SharedShaderConstantsVulkan
 //
-// Vulkan GPU resource layout for Set 0 (shared per-frame constants):
-//   Binding 0: GlobalCameraUBO   (std140, vertex + fragment)
-//   Binding 1: DirectLightingUBO (std140, vertex + fragment)
+// Set 0 layout: binding 0 = GlobalCameraUBO, binding 1 = DirectLightingUBO.
+// Effect builders get Set 0 via getSet0Resources() and assign to draw args' resources[0].
+// draw args' resources[0][0] and resources[0][1]; backend binds via Drawable/DrawPack.
 //
-// CPU/GPU sync: UBO buffers use host-coherent memory and are updated
-// synchronously before draw submission.  Proper frame-in-flight ring
-// buffering is deferred to a later phase.
-//
-// Deduce render target dimensions from the first available color or depth
-// attachment.  Returns {1, 1} when no attachment is present.
+// Deduce render target dimensions from the first available color or depth attachment.
 static std::pair<uint32_t, uint32_t> getRenderTargetSize(const RenderTarget * rt) {
     if (!rt) return {1u, 1u};
     for (const auto & c : rt->colors) {
@@ -44,53 +37,44 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
     ViewInformation           mView;
     DirectLightingInformation mLighting;
 
-    AutoRef<PersistentBuffer>  mCameraUniforms;   ///< uniform buffer for camera info
-    AutoRef<PersistentBuffer>  mLightingUinforms; ///< uniform buffer for lighting info
-    AutoRef<GpuResourceGroup>  mSet0Group;        ///< Descriptor set for Set 0 (camera + lighting)
+    AutoRef<TransientArena>   mArena;          ///< Arena for per-frame transient UBO staging
+    AutoRef<GpuCopy>          mCopyAction;     ///< Stateless buffer-to-buffer copy (reused for camera + lighting)
+    AutoRef<PersistentBuffer> mCameraBuffer;   ///< Set 0 binding 0: GlobalCameraUBO
+    AutoRef<PersistentBuffer> mLightingBuffer; ///< Set 0 binding 1: DirectLightingUBO
 
-    GlobalCameraUBO   mPendingCamera   = {}; ///< CPU-side snapshot built by set*Information()
-    DirectLightingUBO mPendingLighting = {}; ///< CPU-side snapshot built by set*Information()
+    Set0ResourceSet mLastSet0; ///< Last built Set 0 resource set (for getSet0Resources()).
+
+    GlobalCameraUBO   mPendingCamera   = {};
+    DirectLightingUBO mPendingLighting = {};
 
     void initGpuResources() {
-        GpuBufferUpload::CreateParameters uploadParams;
-        uploadParams.gpu       = mGpu;
-        uploadParams.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
-        uploadParams.ringSlots = 2;
-
-        uploadParams.size = sizeof(GlobalCameraUBO);
-        mCameraUpload     = GpuBufferUpload::create(database, StrA::format("{}.camera_upload", name), uploadParams);
-        if (!mCameraUpload) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create camera upload action");
+        mArena = TransientArena::create(database, StrA::format("{}.arena", name), TransientArena::CreateParameters {.context = mGpu});
+        if (!mArena) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create transient arena");
                 return;
             }
 
-        uploadParams.size = sizeof(DirectLightingUBO);
-        mLightingUpload   = GpuBufferUpload::create(database, StrA::format("{}.lighting_upload", name), uploadParams);
-        if (!mLightingUpload) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting upload action");
+        mCopyAction = GpuCopy::create(database, StrA::format("{}.copy_ubo", name), GpuCopy::CreateParameters {.gpu = mGpu});
+        if (!mCopyAction) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create copy action");
                 return;
             }
 
-        // Set 0 descriptor group: slot 0 = camera UBO, slot 1 = lighting UBO
-        const GpuShaderStageFlags          vsAndPs(static_cast<uint32_t>(GpuShaderStageBits::VERTEX) | static_cast<uint32_t>(GpuShaderStageBits::PIXEL));
-        GpuResourceGroup::CreateParameters grpParams;
-        grpParams.context = mGpu;
-        grpParams.slots   = {
-            GpuResourceGroup::SlotDescription {.type = GpuResourceGroup::SlotDescription::UNIFORM_BUFFER, .count = 1, .stages = vsAndPs},
-            GpuResourceGroup::SlotDescription {.type = GpuResourceGroup::SlotDescription::UNIFORM_BUFFER, .count = 1, .stages = vsAndPs},
-        };
-        mSet0Group = GpuResourceGroup::create(database, StrA::format("{}.set0", name), grpParams);
-        if (!mSet0Group) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create Set 0 resource group");
+        PersistentBuffer::CreateParameters bufParams;
+        bufParams.context = mGpu;
+        bufParams.size    = sizeof(GlobalCameraUBO);
+        mCameraBuffer     = PersistentBuffer::create(database, StrA::format("{}.camera_ubo", name), bufParams);
+        if (!mCameraBuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create camera UBO");
                 return;
             }
 
-        // Point descriptors at slot 0 of each upload action (initial state before first build()).
-        auto cameraView = mCameraUpload->currentBufferView();
-        mSet0Group->setResourceViews(0, 0, SafeArrayAccessor<const GpuResourceView>(&cameraView, 1));
-
-        auto lightingView = mLightingUpload->currentBufferView();
-        mSet0Group->setResourceViews(1, 0, SafeArrayAccessor<const GpuResourceView>(&lightingView, 1));
+        bufParams.size  = sizeof(DirectLightingUBO);
+        mLightingBuffer = PersistentBuffer::create(database, StrA::format("{}.lighting_ubo", name), bufParams);
+        if (!mLightingBuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting UBO");
+                return;
+            }
     }
 
     void packCameraUbo() {
@@ -182,45 +166,91 @@ public:
     const ViewInformation &           getViewInformation() const override { return mView; }
     const DirectLightingInformation & getDirectLightingInformation() const override { return mLighting; }
 
-    Workflow * build(RenderGraph & rg) override {
-        if (!mCameraUpload || !mLightingUpload || !mSet0Group) return nullptr;
+    SubGraph build(RenderGraph & rg) override {
+        SubGraph sg(rg, StrA::format("{}.upload", name));
+        if (!mArena || !mCopyAction || !mCameraBuffer || !mLightingBuffer) return sg;
 
-        // Pre-bind descriptors to the slots that will be written by execute().
-        // nextBufferView() predicts which ring slot execute() will write to next,
-        // ensuring the descriptor set and the upload stay in sync.
-        auto nextCameraView = mCameraUpload->nextBufferView();
-        if (!nextCameraView.empty()) mSet0Group->setResourceViews(0, 0, SafeArrayAccessor<const GpuResourceView>(&nextCameraView, 1));
+        // Allocate transient staging buffers and write CPU snapshot (no setContent; use arena + copy).
+        AutoRef<TransientBuffer> tbCamera   = mArena->allocate(sizeof(GlobalCameraUBO), "camera");
+        AutoRef<TransientBuffer> tbLighting = mArena->allocate(sizeof(DirectLightingUBO), "lighting");
+        if (!tbCamera || !tbLighting) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: transient allocate failed");
+                return sg;
+            }
+        {
+            auto m = tbCamera->map();
+            if (!m.data() || m.size() < sizeof(GlobalCameraUBO)) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: camera map failed");
+                    return sg;
+                }
+            memcpy(m.data(), &mPendingCamera, sizeof(mPendingCamera));
+        }
+        {
+            auto m = tbLighting->map();
+            if (!m.data() || m.size() < sizeof(DirectLightingUBO)) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: lighting map failed");
+                    return sg;
+                }
+            memcpy(m.data(), &mPendingLighting, sizeof(mPendingLighting));
+        }
 
-        auto nextLightingView = mLightingUpload->nextBufferView();
-        if (!nextLightingView.empty()) mSet0Group->setResourceViews(1, 0, SafeArrayAccessor<const GpuResourceView>(&nextLightingView, 1));
+        // Copy transient → persistent; workflow keeps transient refs alive until submit completes.
+        auto * wf       = rg.createWorkflow(sg.name);
+        auto   camArgs  = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
+        camArgs->src    = tbCamera;
+        camArgs->dst    = mCameraBuffer;
+        camArgs->size   = sizeof(GlobalCameraUBO);
+        auto lightArgs  = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
+        lightArgs->src  = tbLighting;
+        lightArgs->dst  = mLightingBuffer;
+        lightArgs->size = sizeof(DirectLightingUBO);
+        wf->appendTask("camera", mCopyAction, std::move(camArgs));
+        wf->appendTask("lighting", mCopyAction, std::move(lightArgs));
+        sg.workflows.append(wf);
 
-        auto wf = rg.createWorkflow(StrA::format("{}.upload", name));
-        wf->tasks.append(Workflow::Task("camera", mCameraUpload, GpuBufferUpload::A::make(&mPendingCamera, sizeof(mPendingCamera))));
-        wf->tasks.append(Workflow::Task("lighting", mLightingUpload, GpuBufferUpload::A::make(&mPendingLighting, sizeof(mPendingLighting))));
-        return wf;
+        // Build Set 0 resource set (camera + lighting; expandable later) for effects to use as resources[0].
+        mLastSet0.resize(2);
+        mLastSet0[0].resize(1);
+        if (mCameraBuffer)
+            mLastSet0[0][0] = GpuResourceView {}
+                                  .setArtifact(mCameraBuffer)
+                                  .setBufferViewType(GpuResourceView::BufferView::Type::UNIFORM)
+                                  .setBufferViewOffset(0)
+                                  .setBufferViewSize(sizeof(GlobalCameraUBO));
+        mLastSet0[1].resize(1);
+        if (mLightingBuffer)
+            mLastSet0[1][0] = GpuResourceView {}
+                                  .setArtifact(mLightingBuffer)
+                                  .setBufferViewType(GpuResourceView::BufferView::Type::UNIFORM)
+                                  .setBufferViewOffset(0)
+                                  .setBufferViewSize(sizeof(DirectLightingUBO));
+
+        return sg;
     }
 
-    /// Returns the Set 0 resource group (camera + lighting UBOs).
-    /// Intended for backend use only (e.g. PbrShadingVulkan).
-    GpuResourceGroup * getSet0Group() const { return mSet0Group.get(); }
+    const Set0ResourceSet & getSet0Resources() const override { return mLastSet0; }
 };
-#endif
 
 // =============================================================================
 // SharedShaderConstants::create() - API-neutral dispatch
 // =============================================================================
 
 GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
-    (void) db;
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("SharedShaderConstants::create: gpu is null, name='{}'", name);
             return {};
         }
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
-    case GpuContextCommon::Api::Vulkan:
-        GN_ERROR(sLogger)("SharedShaderConstants::create: Vulkan backend (SharedShaderConstantsVulkan) temporarily disabled, name='{}'", name);
-        return {};
+    case GpuContextCommon::Api::Vulkan: {
+        auto * p = new SharedShaderConstantsVulkan(db, name, params.gpu);
+        if (!p->sequence) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstants::create: duplicate type+name, name='{}'", name);
+                delete p;
+                return {};
+            }
+        return AutoRef<SharedShaderConstants>(p);
+    }
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("SharedShaderConstants::create: D3D12 backend not implemented");
         return {};

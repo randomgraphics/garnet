@@ -28,6 +28,7 @@ public:
 
     vk::Buffer                              handle() const { return mHandle; }
     rapid_vulkan::Ref<rapid_vulkan::Buffer> rapid() const { return mVkBuffer; }
+    uint64_t                                size() const { return mAllocatedSize; }
 
 private:
 };

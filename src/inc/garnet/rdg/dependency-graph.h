@@ -146,6 +146,9 @@ struct Action : public Artifact {
         DROPPED, ///< the action is dropped; dependents are skipped.
     };
 
+    /// An optional argument validation method. Can be overridden by subclasses to validate the arguments.
+    virtual bool validate(const Arguments &) const { return true; }
+
     /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
     /// \param submission The submission that is executing the action.
     /// \param taskInfo The information of the task that is executing the action.
@@ -169,9 +172,6 @@ protected:
 /// A workflow is a sequence of tasks run in sequential order. It can depend on completion of other workflows.
 /// The render graph runs workflows in a topological order that satisfies these dependencies.
 struct Workflow {
-    /// Name for logging and debugging (not required, but recommended. No need to be unique).
-    StrA name;
-
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
     /// \note
     /// - Task A is considered newer than task B, if any of the following is true:
@@ -206,16 +206,57 @@ struct Workflow {
         }
     };
 
-    DynaArray<Task> tasks;
+    /// Name for logging and debugging (not required, but recommended. No need to be unique).
+    StrA name;
 
+    /// Read-only access to the task list. Use appendTask() to add tasks (validates at append time).
+    SafeArrayAccessor<const Task> tasks() const { return SafeArrayAccessor<const Task>(mTasks); }
+
+    /// Append a task. Validates action non-null, arguments non-null, and action->validate(arguments) at append time; on failure logs and does not append.
     Workflow & appendTask(Task && task) {
-        tasks.append(std::move(task));
+        const size_t taskIndex = mTasks.size();
+        if (validateTask(task, taskIndex)) GN_LIKELY mTasks.append(std::move(task));
         return *this;
     }
 
     Workflow & appendTask(const StrA & name_, AutoRef<Action> action_, AutoRef<Arguments> arguments_) {
-        tasks.append(Task(name_, std::move(action_), std::move(arguments_)));
-        return *this;
+        return appendTask(Task(name_, std::move(action_), std::move(arguments_)));
+    }
+
+    /// Drop and release a list of workflows.
+    /// After this method, the workflow pointers are cleared out and not accessible anymore.
+    GN_API static void drop(Workflow ** workflows, size_t count);
+
+    /// Drop and release an individual workflow. Sets \p workflow to nullptr.
+    static void drop(Workflow *& workflow) {
+        drop(&workflow, 1);
+        GN_ASSERT(workflow == nullptr);
+    }
+
+protected:
+    Workflow() = default;
+
+    // No need to be virtual, since we'll never delete this class directly. Always drop() it instead.
+    ~Workflow() = default;
+
+private:
+    DynaArray<Task> mTasks;
+
+    bool validateTask(const Task & task, size_t taskIndex) const {
+        auto * log = GN::getLogger("GN.rdg");
+        if (!task.action) GN_UNLIKELY {
+                GN_ERROR(log)("Workflow '{}' task [{}] '{}': action is null", name, taskIndex, task.name);
+                return false;
+            }
+        if (!task.arguments) GN_UNLIKELY {
+                GN_ERROR(log)("Workflow '{}' task [{}] '{}': arguments is null", name, taskIndex, task.name);
+                return false;
+            }
+        if (!task.action->validate(*task.arguments)) GN_UNLIKELY {
+                GN_ERROR(log)("Workflow '{}' task [{}] '{}': argument validation failed", name, taskIndex, task.name);
+                return false;
+            }
+        return true;
     }
 };
 
@@ -282,14 +323,6 @@ struct RenderGraph {
 
     /// Submit workflows for <b>blocking</b> async execution in a topological order that satisfies workflow dependencies.
     virtual AutoRef<Submission> submit(const SubmitParameters & params) = 0;
-
-    /// Helper function to properly drop a workflow.
-    /// \note You can't drop an already submitted workflow. That'll cause undefined behavior.
-    void dropWorkflow(Workflow * workflow) {
-        if (!workflow) return;
-        workflow->tasks.clear();
-        submit({.workflows = {&workflow, 1}, .name = StrA::format("Dropped workflow {}", workflow->name)});
-    }
 
 protected:
     RenderGraph() = default;

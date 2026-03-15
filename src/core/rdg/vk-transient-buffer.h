@@ -103,14 +103,6 @@ AutoRef<TransientArena> createVulkanTransientArena(ArtifactDatabase & db, const 
 
 /// Static helpers for Buffer → Vk handle / rapid_vulkan::Buffer. Three overloads per function: const Buffer &, const AutoRef<Buffer> &, const Buffer *.
 struct BufferUtils {
-    static inline bool isTransient(const Buffer & buffer) { return buffer.isKindOf<TransientBuffer>(); }
-    static inline bool isTransient(const AutoRef<Buffer> & buffer) { return buffer && isTransient(*buffer); }
-    static inline bool isTransient(const Buffer * buffer) { return buffer && isTransient(*buffer); }
-
-    static inline bool isPersistent(const Buffer & buffer) { return buffer.isKindOf<PersistentBuffer>(); }
-    static inline bool isPersistent(const AutoRef<Buffer> & buffer) { return buffer && isPersistent(*buffer); }
-    static inline bool isPersistent(const Buffer * buffer) { return buffer && isPersistent(*buffer); }
-
     static inline vk::Buffer getHandle(const Buffer & buffer) {
         if (buffer.isKindOf<TransientBuffer>()) { return static_cast<const TransientBufferVulkan &>(buffer).handle(); }
         GN_ASSERT(buffer.isKindOf<PersistentBuffer>());
@@ -123,6 +115,20 @@ struct BufferUtils {
     static inline vk::Buffer getHandle(const Buffer * buffer) {
         if (!buffer) return VK_NULL_HANDLE;
         return getHandle(*buffer);
+    }
+
+    static inline uint64_t getSize(const Buffer & buffer) {
+        if (buffer.isKindOf<TransientBuffer>()) return static_cast<const TransientBufferVulkan &>(buffer).size();
+        GN_ASSERT(buffer.isKindOf<PersistentBuffer>());
+        return static_cast<const PersistentBufferVulkan &>(buffer).size();
+    }
+    static inline uint64_t getSize(const AutoRef<Buffer> & buffer) {
+        if (!buffer) return 0;
+        return getSize(*buffer);
+    }
+    static inline uint64_t getSize(const Buffer * buffer) {
+        if (!buffer) return 0;
+        return getSize(*buffer);
     }
 
     static inline rapid_vulkan::Ref<rapid_vulkan::Buffer> toRapid(const Buffer & buffer) {

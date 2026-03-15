@@ -64,7 +64,7 @@ public:
         if (!mDrawAction) GN_UNLIKELY {
                 SubGraph sg(*params.renderGraph, "Pbr");
                 sg.builtResult = Action::ExecutionResult::FAILED;
-                params.renderGraph->dropWorkflow(workflow);
+                Workflow::drop(workflow);
                 return sg;
             }
         // Build arguments from params; the action is reused.
@@ -74,12 +74,12 @@ public:
         // Render target comes from SharedShaderConstants.ViewInformation.
         if (params.sharedShaderConstants) drawArgs->renderTarget = params.sharedShaderConstants->getViewInformation().renderTarget;
 
-        // Set 0: SharedShaderConstants provides camera UBO (binding 0) and lighting UBO (binding 1).
+        // Set 0: use shared resource set from SharedShaderConstants (camera + lighting; expandable).
         if (params.sharedShaderConstants) {
-            auto set0 = params.sharedShaderConstants->getSet0Group();
-            if (set0) {
-                drawArgs->descriptorGroups.resize(1);
-                drawArgs->descriptorGroups[0].set(set0);
+            const auto & set0 = params.sharedShaderConstants->getSet0Resources();
+            if (!set0.empty()) {
+                drawArgs->resources.resize(1);
+                drawArgs->resources[0] = set0;
             }
         }
 

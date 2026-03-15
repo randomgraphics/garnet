@@ -235,7 +235,7 @@ TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
             GN::rdg::Workflow::Task task(name);
             task.action    = action;
             task.arguments = args;
-            workflow->tasks.append(task);
+            workflow->appendTask(std::move(task));
         };
         appendInit("init_one", one, 1);
         appendInit("init_two", two, 2);
@@ -256,7 +256,7 @@ TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
         GN::rdg::Workflow::Task task("add_1_2");
         task.action    = addAction;
         task.arguments = addArgs;
-        workflow->tasks.append(task);
+        workflow->appendTask(std::move(task));
         workflows.append(workflow);
     }
 
@@ -273,7 +273,7 @@ TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
         GN::rdg::Workflow::Task task("multiply_3_sum");
         task.action    = mulAction;
         task.arguments = mulArgs;
-        workflow->tasks.append(task);
+        workflow->appendTask(std::move(task));
         workflows.append(workflow);
     }
 
@@ -372,18 +372,23 @@ TEST_CASE("RDG workflow: dependency write-write", "[rdg][workflow]") {
     init0->initValue = 1;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
-    w0->tasks.append(GN::rdg::Workflow::Task("init0"));
-    w0->tasks.back().action    = init0;
-    w0->tasks.back().arguments = args0;
-
+    {
+        GN::rdg::Workflow::Task t("init0");
+        t.action    = init0;
+        t.arguments = args0;
+        w0->appendTask(std::move(t));
+    }
     auto * w1        = renderGraph->createWorkflow("writer_second");
     auto   init1     = GN::rdg::InitIntegerAction::create(*db, "init1");
     init1->initValue = 2;
     auto args1       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args1->output    = x;
-    w1->tasks.append(GN::rdg::Workflow::Task("init1"));
-    w1->tasks.back().action    = init1;
-    w1->tasks.back().arguments = args1;
+    {
+        GN::rdg::Workflow::Task t("init1");
+        t.action    = init1;
+        t.arguments = args1;
+        w1->appendTask(std::move(t));
+    }
 
     auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1})});
     REQUIRE(submission != nullptr);
@@ -408,19 +413,24 @@ TEST_CASE("RDG workflow: dependency read-write", "[rdg][workflow]") {
     init0->initValue = 10;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
-    w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
-    w0->tasks.back().action    = init0;
-    w0->tasks.back().arguments = args0;
-
+    {
+        GN::rdg::Workflow::Task t("init_x");
+        t.action    = init0;
+        t.arguments = args0;
+        w0->appendTask(std::move(t));
+    }
     auto * w1     = renderGraph->createWorkflow("reader");
     auto   add1   = GN::rdg::AddIntegersAction::create(*db, "add");
     auto   args1  = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
     args1->input1 = x;
     args1->input2 = x;
     args1->output = y;
-    w1->tasks.append(GN::rdg::Workflow::Task("add"));
-    w1->tasks.back().action    = add1;
-    w1->tasks.back().arguments = args1;
+    {
+        GN::rdg::Workflow::Task t("add");
+        t.action    = add1;
+        t.arguments = args1;
+        w1->appendTask(std::move(t));
+    }
 
     auto submission = renderGraph->submit({.workflows = std::vector<GN::rdg::Workflow *>({w0, w1})});
     REQUIRE(submission != nullptr);
@@ -446,26 +456,33 @@ TEST_CASE("RDG workflow: dependency write-read", "[rdg][workflow]") {
     init0->initValue = 1;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
-    w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
-    w0->tasks.back().action    = init0;
-    w0->tasks.back().arguments = args0;
-
+    {
+        GN::rdg::Workflow::Task t("init_x");
+        t.action    = init0;
+        t.arguments = args0;
+        w0->appendTask(std::move(t));
+    }
     auto * w1    = renderGraph->createWorkflow("reader");
     auto   read1 = GN::rdg::ReadIntegerAction::create(*db, "read_x");
     auto   args1 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
     args1->input = x;
-    w1->tasks.append(GN::rdg::Workflow::Task("read_x"));
-    w1->tasks.back().action    = read1;
-    w1->tasks.back().arguments = args1;
-
+    {
+        GN::rdg::Workflow::Task t("read_x");
+        t.action    = read1;
+        t.arguments = args1;
+        w1->appendTask(std::move(t));
+    }
     auto * w2        = renderGraph->createWorkflow("writer_second");
     auto   init2     = GN::rdg::InitIntegerAction::create(*db, "overwrite_x");
     init2->initValue = 2;
     auto args2       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args2->output    = x;
-    w2->tasks.append(GN::rdg::Workflow::Task("overwrite_x"));
-    w2->tasks.back().action    = init2;
-    w2->tasks.back().arguments = args2;
+    {
+        GN::rdg::Workflow::Task t("overwrite_x");
+        t.action    = init2;
+        t.arguments = args2;
+        w2->appendTask(std::move(t));
+    }
 
     auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
     REQUIRE(submission != nullptr);
@@ -489,25 +506,32 @@ TEST_CASE("RDG workflow: dependency read-read (no dependency)", "[rdg][workflow]
     init0->initValue = 5;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
-    w0->tasks.append(GN::rdg::Workflow::Task("init_x"));
-    w0->tasks.back().action    = init0;
-    w0->tasks.back().arguments = args0;
-
+    {
+        GN::rdg::Workflow::Task t("init_x");
+        t.action    = init0;
+        t.arguments = args0;
+        w0->appendTask(std::move(t));
+    }
     auto * w1    = renderGraph->createWorkflow("reader1");
     auto   read1 = GN::rdg::ReadIntegerAction::create(*db, "read1");
     auto   args1 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
     args1->input = x;
-    w1->tasks.append(GN::rdg::Workflow::Task("read1"));
-    w1->tasks.back().action    = read1;
-    w1->tasks.back().arguments = args1;
-
+    {
+        GN::rdg::Workflow::Task t("read1");
+        t.action    = read1;
+        t.arguments = args1;
+        w1->appendTask(std::move(t));
+    }
     auto * w2    = renderGraph->createWorkflow("reader2");
     auto   read2 = GN::rdg::ReadIntegerAction::create(*db, "read2");
     auto   args2 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
     args2->input = x;
-    w2->tasks.append(GN::rdg::Workflow::Task("read2"));
-    w2->tasks.back().action    = read2;
-    w2->tasks.back().arguments = args2;
+    {
+        GN::rdg::Workflow::Task t("read2");
+        t.action    = read2;
+        t.arguments = args2;
+        w2->appendTask(std::move(t));
+    }
 
     auto submission = renderGraph->submit({GN::DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
     REQUIRE(submission != nullptr);

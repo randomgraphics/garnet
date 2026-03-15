@@ -89,7 +89,7 @@ const T * runtimeCast(const RuntimeType * from) {
 }
 
 template<typename T>
-T * runtimeCast(const RuntimeType & from) {
+const T * runtimeCast(const RuntimeType & from) {
     if (!from.template isKindOf<T>()) return {};
     return static_cast<const T *>(&from);
 }

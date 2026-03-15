@@ -51,7 +51,7 @@ TEST_CASE("PBR: build with render graph returns workflow", "[rdg][pbr][gpu]") {
     auto sg            = pbr->build(params);
     CHECK(sg.builtResult == Action::ExecutionResult::PASSED);
     REQUIRE_FALSE(sg.workflows.empty());
-    CHECK_FALSE(sg.workflows[0]->tasks.empty());
+    CHECK_FALSE(sg.workflows[0]->tasks().empty());
 }
 
 TEST_CASE("PBR: SubGraph::drop clears workflows", "[rdg][pbr][gpu]") {

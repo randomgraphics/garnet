@@ -128,7 +128,7 @@ TEST_CASE("GpuBufferUpload::create: currentBufferView returns empty before first
 static void runUploadFrame(RenderGraph & rg, GpuBufferUpload & upload, const void * data, uint64_t size) {
     auto wf = rg.createWorkflow("upload");
     REQUIRE(wf);
-    wf->tasks.append(Workflow::Task("write", AutoRef<GpuBufferUpload>(&upload), GpuBufferUpload::A::make(data, size)));
+    wf->appendTask(Workflow::Task("write", AutoRef<GpuBufferUpload>(&upload), GpuBufferUpload::A::make(data, size)));
     auto sub = rg.submit({.workflows = {&wf, 1}});
     REQUIRE(sub);
     auto res = sub->result();
@@ -221,7 +221,7 @@ TEST_CASE("GpuBufferUpload HOST_MAP: writeFn callback executes correctly", "[rdg
 
     auto wf = rg->createWorkflow("upload_fn");
     REQUIRE(wf);
-    wf->tasks.append(Workflow::Task("write_fn", upload, args));
+    wf->appendTask(Workflow::Task("write_fn", upload, args));
     auto sub = rg->submit({.workflows = {&wf, 1}});
     REQUIRE(sub);
     auto res = sub->result();
