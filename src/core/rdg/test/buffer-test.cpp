@@ -60,35 +60,29 @@ TEST_CASE("Buffer: CreateParameters accepts UNIFORM usage", "[rdg][buffer]") {
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("Buffer: create returns non-null for valid params", "[rdg][buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
     cp.context = gpu;
     cp.size    = 64;
-    auto buf   = PersistentBuffer::create(*db, "test_buf", cp);
+    auto buf   = PersistentBuffer::create("test_buf", cp);
     REQUIRE(buf != nullptr);
 }
 
 TEST_CASE("Buffer: create fails when size is 0", "[rdg][buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu2", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu2", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
     cp.context = gpu;
     cp.size    = 0;
-    auto buf   = PersistentBuffer::create(*db, "test_buf_zero", cp);
+    auto buf   = PersistentBuffer::create("test_buf_zero", cp);
     CHECK(buf == nullptr);
 }
 
 TEST_CASE("Buffer: setContent writes data correctly", "[rdg][buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu3", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu3", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint32_t kCount      = 4;
@@ -98,7 +92,7 @@ TEST_CASE("Buffer: setContent writes data correctly", "[rdg][buffer][gpu]") {
     PersistentBuffer::CreateParameters cp;
     cp.context = gpu;
     cp.size    = kSize;
-    auto buf   = PersistentBuffer::create(*db, "test_buf_content", cp);
+    auto buf   = PersistentBuffer::create("test_buf_content", cp);
     REQUIRE(buf != nullptr);
 
     bool ok = buf->setContent(src, kSize);
@@ -106,30 +100,26 @@ TEST_CASE("Buffer: setContent writes data correctly", "[rdg][buffer][gpu]") {
 }
 
 TEST_CASE("Buffer: setContent fails when data pointer is null", "[rdg][buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu4", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu4", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
     cp.context = gpu;
     cp.size    = 64;
-    auto buf   = PersistentBuffer::create(*db, "test_buf_null_ptr", cp);
+    auto buf   = PersistentBuffer::create("test_buf_null_ptr", cp);
     REQUIRE(buf != nullptr);
 
     CHECK_FALSE(buf->setContent(nullptr, 64));
 }
 
 TEST_CASE("Buffer: setContent fails when size exceeds allocated capacity", "[rdg][buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu5", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu5", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
     cp.context = gpu;
     cp.size    = 32;
-    auto buf   = PersistentBuffer::create(*db, "test_buf_overflow", cp);
+    auto buf   = PersistentBuffer::create("test_buf_overflow", cp);
     REQUIRE(buf != nullptr);
 
     const uint8_t bigData[64] = {};
@@ -137,15 +127,13 @@ TEST_CASE("Buffer: setContent fails when size exceeds allocated capacity", "[rdg
 }
 
 TEST_CASE("Buffer: setContent can be called multiple times (map-reuse)", "[rdg][buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu6", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu6", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
     cp.context = gpu;
     cp.size    = 64;
-    auto buf   = PersistentBuffer::create(*db, "test_buf_multi", cp);
+    auto buf   = PersistentBuffer::create("test_buf_multi", cp);
     REQUIRE(buf != nullptr);
 
     const uint8_t data1[64] = {};
@@ -155,15 +143,13 @@ TEST_CASE("Buffer: setContent can be called multiple times (map-reuse)", "[rdg][
 }
 
 TEST_CASE("Buffer: create with UNIFORM usage succeeds", "[rdg][buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu7", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu7", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
     cp.context = gpu;
     cp.size    = 256;
     cp.usage   = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM));
-    auto buf   = PersistentBuffer::create(*db, "test_ubo", cp);
+    auto buf   = PersistentBuffer::create("test_ubo", cp);
     REQUIRE(buf != nullptr);
 }

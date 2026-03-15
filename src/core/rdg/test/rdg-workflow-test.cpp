@@ -19,16 +19,9 @@ struct IntegerArtifact : public Artifact {
 
     int value = 0;
 
-    IntegerArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_INFO(), name) {}
+    IntegerArtifact(const StrA & name): Artifact(TYPE_INFO(), name) {}
 
-    static GN::AutoRef<IntegerArtifact> create(ArtifactDatabase & db, const StrA & name) {
-        auto * p = new IntegerArtifact(db, name);
-        if (p->sequence == 0) {
-            delete p;
-            return {};
-        }
-        return GN::AutoRef<IntegerArtifact>(p);
-    }
+    static GN::AutoRef<IntegerArtifact> create(const StrA & name) { return GN::AutoRef<IntegerArtifact>(new IntegerArtifact(name)); }
 };
 
 struct InitIntegerAction : public Action {
@@ -36,16 +29,9 @@ struct InitIntegerAction : public Action {
 
     int initValue = 0;
 
-    InitIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
+    InitIntegerAction(const StrA & name): Action(TYPE_INFO(), name) {}
 
-    static GN::AutoRef<InitIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
-        auto * p = new InitIntegerAction(db, name);
-        if (p->sequence == 0) {
-            delete p;
-            return {};
-        }
-        return GN::AutoRef<InitIntegerAction>(p);
-    }
+    static GN::AutoRef<InitIntegerAction> create(const StrA & name) { return GN::AutoRef<InitIntegerAction>(new InitIntegerAction(name)); }
 
     struct A : public Arguments {
         GN_RDG_REGISTER_RUNTIME_TYPE();
@@ -74,16 +60,9 @@ struct InitIntegerAction : public Action {
 struct AddIntegersAction : public Action {
     GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
-    AddIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
+    AddIntegersAction(const StrA & name): Action(TYPE_INFO(), name) {}
 
-    static GN::AutoRef<AddIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
-        auto * p = new AddIntegersAction(db, name);
-        if (p->sequence == 0) {
-            delete p;
-            return {};
-        }
-        return GN::AutoRef<AddIntegersAction>(p);
-    }
+    static GN::AutoRef<AddIntegersAction> create(const StrA & name) { return GN::AutoRef<AddIntegersAction>(new AddIntegersAction(name)); }
 
     struct A : public Arguments {
         GN_RDG_REGISTER_RUNTIME_TYPE();
@@ -117,16 +96,9 @@ struct AddIntegersAction : public Action {
 struct MultiplyIntegersAction : public Action {
     GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
-    MultiplyIntegersAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
+    MultiplyIntegersAction(const StrA & name): Action(TYPE_INFO(), name) {}
 
-    static GN::AutoRef<MultiplyIntegersAction> create(ArtifactDatabase & db, const StrA & name) {
-        auto * p = new MultiplyIntegersAction(db, name);
-        if (p->sequence == 0) {
-            delete p;
-            return {};
-        }
-        return GN::AutoRef<MultiplyIntegersAction>(p);
-    }
+    static GN::AutoRef<MultiplyIntegersAction> create(const StrA & name) { return GN::AutoRef<MultiplyIntegersAction>(new MultiplyIntegersAction(name)); }
 
     struct A : public Arguments {
         GN_RDG_REGISTER_RUNTIME_TYPE();
@@ -162,16 +134,9 @@ struct MultiplyIntegersAction : public Action {
 struct ReadIntegerAction : public Action {
     GN_RDG_REGISTER_RUNTIME_TYPE(Action);
 
-    ReadIntegerAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
+    ReadIntegerAction(const StrA & name): Action(TYPE_INFO(), name) {}
 
-    static GN::AutoRef<ReadIntegerAction> create(ArtifactDatabase & db, const StrA & name) {
-        auto * p = new ReadIntegerAction(db, name);
-        if (p->sequence == 0) {
-            delete p;
-            return {};
-        }
-        return GN::AutoRef<ReadIntegerAction>(p);
-    }
+    static GN::AutoRef<ReadIntegerAction> create(const StrA & name) { return GN::AutoRef<ReadIntegerAction>(new ReadIntegerAction(name)); }
 
     struct A : public Arguments {
         GN_RDG_REGISTER_RUNTIME_TYPE();
@@ -203,52 +168,49 @@ static bool workflowDependsOn(const std::unordered_map<uint64_t, GN::DynaArray<s
 // ============================================================================
 
 TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
-
     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
     REQUIRE(renderGraph != nullptr);
 
-    auto one    = GN::rdg::IntegerArtifact::create(*db, "one");
-    auto two    = GN::rdg::IntegerArtifact::create(*db, "two");
-    auto three  = GN::rdg::IntegerArtifact::create(*db, "three");
-    auto sum    = GN::rdg::IntegerArtifact::create(*db, "sum");
-    auto result = GN::rdg::IntegerArtifact::create(*db, "result");
+    auto one    = GN::rdg::IntegerArtifact::create("one");
+    auto two    = GN::rdg::IntegerArtifact::create("two");
+    auto three  = GN::rdg::IntegerArtifact::create("three");
+    auto sum    = GN::rdg::IntegerArtifact::create("sum");
+    auto result = GN::rdg::IntegerArtifact::create("result");
     REQUIRE(one != nullptr);
     REQUIRE(two != nullptr);
     REQUIRE(three != nullptr);
     REQUIRE(sum != nullptr);
     REQUIRE(result != nullptr);
 
-    GN::DynaArray<GN::rdg::Workflow *> workflows;
+    GN::DynaArray<GN::rdg::Workflow> workflows;
 
     // Workflow 1: initialize values
     {
-        auto * workflow = renderGraph->createWorkflow("initialize_values");
-        REQUIRE(workflow != nullptr);
+        auto workflow = renderGraph->createWorkflow("initialize_values");
+        REQUIRE(workflow.name() == "initialize_values");
 
         auto appendInit = [&](const char * name, GN::AutoRef<GN::rdg::IntegerArtifact> out, int val) {
-            auto action       = GN::rdg::InitIntegerAction::create(*db, name);
+            auto action       = GN::rdg::InitIntegerAction::create(name);
             action->initValue = val;
             auto args         = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
             args->output      = out;
             GN::rdg::Workflow::Task task(name);
             task.action    = action;
             task.arguments = args;
-            workflow->appendTask(std::move(task));
+            workflow.appendTask(std::move(task));
         };
         appendInit("init_one", one, 1);
         appendInit("init_two", two, 2);
         appendInit("init_three", three, 3);
-        workflows.append(workflow);
+        workflows.append(std::move(workflow));
     }
 
     // Workflow 2: sum = 1 + 2
     {
-        auto * workflow = renderGraph->createWorkflow("compute_sum");
-        REQUIRE(workflow != nullptr);
+        auto workflow = renderGraph->createWorkflow("compute_sum");
+        REQUIRE(workflow.name() == "compute_sum");
 
-        auto addAction  = GN::rdg::AddIntegersAction::create(*db, "add_1_2");
+        auto addAction  = GN::rdg::AddIntegersAction::create("add_1_2");
         auto addArgs    = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
         addArgs->input1 = one;
         addArgs->input2 = two;
@@ -256,16 +218,16 @@ TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
         GN::rdg::Workflow::Task task("add_1_2");
         task.action    = addAction;
         task.arguments = addArgs;
-        workflow->appendTask(std::move(task));
-        workflows.append(workflow);
+        workflow.appendTask(std::move(task));
+        workflows.append(std::move(workflow));
     }
 
     // Workflow 3: result = 3 * sum
     {
-        auto * workflow = renderGraph->createWorkflow("compute_result");
-        REQUIRE(workflow != nullptr);
+        auto workflow = renderGraph->createWorkflow("compute_result");
+        REQUIRE(workflow.name() == "compute_result");
 
-        auto mulAction  = GN::rdg::MultiplyIntegersAction::create(*db, "multiply_3_sum");
+        auto mulAction  = GN::rdg::MultiplyIntegersAction::create("multiply_3_sum");
         auto mulArgs    = GN::AutoRef<GN::rdg::MultiplyIntegersAction::A>::make();
         mulArgs->input1 = three;
         mulArgs->input2 = sum;
@@ -273,11 +235,11 @@ TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
         GN::rdg::Workflow::Task task("multiply_3_sum");
         task.action    = mulAction;
         task.arguments = mulArgs;
-        workflow->appendTask(std::move(task));
-        workflows.append(workflow);
+        workflow.appendTask(std::move(task));
+        workflows.append(std::move(workflow));
     }
 
-    auto submission = renderGraph->submit({.workflows = workflows});
+    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(workflows.data(), workflows.size())});
     REQUIRE(submission != nullptr);
 
     auto submissionResult = submission->result();
@@ -290,22 +252,19 @@ TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
 }
 
 TEST_CASE("RDG workflow: create three workflows", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
-
     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
     REQUIRE(renderGraph != nullptr);
 
-    CHECK(renderGraph->createWorkflow("w1") != nullptr);
-    CHECK(renderGraph->createWorkflow("w2") != nullptr);
-    CHECK(renderGraph->createWorkflow("w3") != nullptr);
+    auto w1 = renderGraph->createWorkflow("w1");
+    auto w2 = renderGraph->createWorkflow("w2");
+    auto w3 = renderGraph->createWorkflow("w3");
+    CHECK(w1.name() == "w1");
+    CHECK(w2.name() == "w2");
+    CHECK(w3.name() == "w3");
 }
 
 TEST_CASE("RDG workflow: arguments artifact discovery", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
-
-    auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+    auto x = GN::rdg::IntegerArtifact::create("x");
     REQUIRE(x != nullptr);
 
     auto initArgs    = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
@@ -320,12 +279,9 @@ TEST_CASE("RDG workflow: arguments artifact discovery", "[rdg][workflow]") {
 }
 
 TEST_CASE("RDG workflow: argument discovery counts", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
-
-    auto a1 = GN::rdg::IntegerArtifact::create(*db, "a1");
-    auto a2 = GN::rdg::IntegerArtifact::create(*db, "a2");
-    auto a3 = GN::rdg::IntegerArtifact::create(*db, "a3");
+    auto a1 = GN::rdg::IntegerArtifact::create("a1");
+    auto a2 = GN::rdg::IntegerArtifact::create("a2");
+    auto a3 = GN::rdg::IntegerArtifact::create("a3");
     REQUIRE(a1);
     REQUIRE(a2);
     REQUIRE(a3);
@@ -360,15 +316,13 @@ TEST_CASE("RDG workflow: argument discovery counts", "[rdg][workflow]") {
 }
 
 TEST_CASE("RDG workflow: dependency write-write", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
     REQUIRE(renderGraph != nullptr);
-    auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+    auto x = GN::rdg::IntegerArtifact::create("x");
     REQUIRE(x != nullptr);
 
-    auto * w0        = renderGraph->createWorkflow("writer_first");
-    auto   init0     = GN::rdg::InitIntegerAction::create(*db, "init0");
+    auto w0          = renderGraph->createWorkflow("writer_first");
+    auto init0       = GN::rdg::InitIntegerAction::create("init0");
     init0->initValue = 1;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
@@ -376,10 +330,10 @@ TEST_CASE("RDG workflow: dependency write-write", "[rdg][workflow]") {
         GN::rdg::Workflow::Task t("init0");
         t.action    = init0;
         t.arguments = args0;
-        w0->appendTask(std::move(t));
+        w0.appendTask(std::move(t));
     }
-    auto * w1        = renderGraph->createWorkflow("writer_second");
-    auto   init1     = GN::rdg::InitIntegerAction::create(*db, "init1");
+    auto w1          = renderGraph->createWorkflow("writer_second");
+    auto init1       = GN::rdg::InitIntegerAction::create("init1");
     init1->initValue = 2;
     auto args1       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args1->output    = x;
@@ -387,10 +341,13 @@ TEST_CASE("RDG workflow: dependency write-write", "[rdg][workflow]") {
         GN::rdg::Workflow::Task t("init1");
         t.action    = init1;
         t.arguments = args1;
-        w1->appendTask(std::move(t));
+        w1.appendTask(std::move(t));
     }
 
-    auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1})});
+    GN::DynaArray<GN::rdg::Workflow> toSubmit;
+    toSubmit.append(std::move(w0));
+    toSubmit.append(std::move(w1));
+    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();
@@ -399,17 +356,15 @@ TEST_CASE("RDG workflow: dependency write-write", "[rdg][workflow]") {
 }
 
 TEST_CASE("RDG workflow: dependency read-write", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
     REQUIRE(renderGraph != nullptr);
-    auto x = GN::rdg::IntegerArtifact::create(*db, "x");
-    auto y = GN::rdg::IntegerArtifact::create(*db, "y");
+    auto x = GN::rdg::IntegerArtifact::create("x");
+    auto y = GN::rdg::IntegerArtifact::create("y");
     REQUIRE(x != nullptr);
     REQUIRE(y != nullptr);
 
-    auto * w0        = renderGraph->createWorkflow("writer");
-    auto   init0     = GN::rdg::InitIntegerAction::create(*db, "init_x");
+    auto w0          = renderGraph->createWorkflow("writer");
+    auto init0       = GN::rdg::InitIntegerAction::create("init_x");
     init0->initValue = 10;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
@@ -417,11 +372,11 @@ TEST_CASE("RDG workflow: dependency read-write", "[rdg][workflow]") {
         GN::rdg::Workflow::Task t("init_x");
         t.action    = init0;
         t.arguments = args0;
-        w0->appendTask(std::move(t));
+        w0.appendTask(std::move(t));
     }
-    auto * w1     = renderGraph->createWorkflow("reader");
-    auto   add1   = GN::rdg::AddIntegersAction::create(*db, "add");
-    auto   args1  = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
+    auto w1       = renderGraph->createWorkflow("reader");
+    auto add1     = GN::rdg::AddIntegersAction::create("add");
+    auto args1    = GN::AutoRef<GN::rdg::AddIntegersAction::A>::make();
     args1->input1 = x;
     args1->input2 = x;
     args1->output = y;
@@ -429,10 +384,13 @@ TEST_CASE("RDG workflow: dependency read-write", "[rdg][workflow]") {
         GN::rdg::Workflow::Task t("add");
         t.action    = add1;
         t.arguments = args1;
-        w1->appendTask(std::move(t));
+        w1.appendTask(std::move(t));
     }
 
-    auto submission = renderGraph->submit({.workflows = std::vector<GN::rdg::Workflow *>({w0, w1})});
+    GN::DynaArray<GN::rdg::Workflow> toSubmit;
+    toSubmit.append(std::move(w0));
+    toSubmit.append(std::move(w1));
+    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();
@@ -442,17 +400,15 @@ TEST_CASE("RDG workflow: dependency read-write", "[rdg][workflow]") {
 }
 
 TEST_CASE("RDG workflow: dependency write-read", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
     REQUIRE(renderGraph != nullptr);
-    auto x = GN::rdg::IntegerArtifact::create(*db, "x");
-    auto y = GN::rdg::IntegerArtifact::create(*db, "y");
+    auto x = GN::rdg::IntegerArtifact::create("x");
+    auto y = GN::rdg::IntegerArtifact::create("y");
     REQUIRE(x != nullptr);
     REQUIRE(y != nullptr);
 
-    auto * w0        = renderGraph->createWorkflow("writer");
-    auto   init0     = GN::rdg::InitIntegerAction::create(*db, "init_x");
+    auto w0          = renderGraph->createWorkflow("writer");
+    auto init0       = GN::rdg::InitIntegerAction::create("init_x");
     init0->initValue = 1;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
@@ -460,20 +416,20 @@ TEST_CASE("RDG workflow: dependency write-read", "[rdg][workflow]") {
         GN::rdg::Workflow::Task t("init_x");
         t.action    = init0;
         t.arguments = args0;
-        w0->appendTask(std::move(t));
+        w0.appendTask(std::move(t));
     }
-    auto * w1    = renderGraph->createWorkflow("reader");
-    auto   read1 = GN::rdg::ReadIntegerAction::create(*db, "read_x");
-    auto   args1 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+    auto w1      = renderGraph->createWorkflow("reader");
+    auto read1   = GN::rdg::ReadIntegerAction::create("read_x");
+    auto args1   = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
     args1->input = x;
     {
         GN::rdg::Workflow::Task t("read_x");
         t.action    = read1;
         t.arguments = args1;
-        w1->appendTask(std::move(t));
+        w1.appendTask(std::move(t));
     }
-    auto * w2        = renderGraph->createWorkflow("writer_second");
-    auto   init2     = GN::rdg::InitIntegerAction::create(*db, "overwrite_x");
+    auto w2          = renderGraph->createWorkflow("writer_second");
+    auto init2       = GN::rdg::InitIntegerAction::create("overwrite_x");
     init2->initValue = 2;
     auto args2       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args2->output    = x;
@@ -481,10 +437,14 @@ TEST_CASE("RDG workflow: dependency write-read", "[rdg][workflow]") {
         GN::rdg::Workflow::Task t("overwrite_x");
         t.action    = init2;
         t.arguments = args2;
-        w2->appendTask(std::move(t));
+        w2.appendTask(std::move(t));
     }
 
-    auto submission = renderGraph->submit({.workflows = GN::DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
+    GN::DynaArray<GN::rdg::Workflow> toSubmit;
+    toSubmit.append(std::move(w0));
+    toSubmit.append(std::move(w1));
+    toSubmit.append(std::move(w2));
+    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();
@@ -494,15 +454,13 @@ TEST_CASE("RDG workflow: dependency write-read", "[rdg][workflow]") {
 }
 
 TEST_CASE("RDG workflow: dependency read-read (no dependency)", "[rdg][workflow]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
     auto renderGraph = GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {});
     REQUIRE(renderGraph != nullptr);
-    auto x = GN::rdg::IntegerArtifact::create(*db, "x");
+    auto x = GN::rdg::IntegerArtifact::create("x");
     REQUIRE(x != nullptr);
 
-    auto * w0        = renderGraph->createWorkflow("writer");
-    auto   init0     = GN::rdg::InitIntegerAction::create(*db, "init_x");
+    auto w0          = renderGraph->createWorkflow("writer");
+    auto init0       = GN::rdg::InitIntegerAction::create("init_x");
     init0->initValue = 5;
     auto args0       = GN::AutoRef<GN::rdg::InitIntegerAction::A>::make();
     args0->output    = x;
@@ -510,30 +468,34 @@ TEST_CASE("RDG workflow: dependency read-read (no dependency)", "[rdg][workflow]
         GN::rdg::Workflow::Task t("init_x");
         t.action    = init0;
         t.arguments = args0;
-        w0->appendTask(std::move(t));
+        w0.appendTask(std::move(t));
     }
-    auto * w1    = renderGraph->createWorkflow("reader1");
-    auto   read1 = GN::rdg::ReadIntegerAction::create(*db, "read1");
-    auto   args1 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+    auto w1      = renderGraph->createWorkflow("reader1");
+    auto read1   = GN::rdg::ReadIntegerAction::create("read1");
+    auto args1   = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
     args1->input = x;
     {
         GN::rdg::Workflow::Task t("read1");
         t.action    = read1;
         t.arguments = args1;
-        w1->appendTask(std::move(t));
+        w1.appendTask(std::move(t));
     }
-    auto * w2    = renderGraph->createWorkflow("reader2");
-    auto   read2 = GN::rdg::ReadIntegerAction::create(*db, "read2");
-    auto   args2 = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
+    auto w2      = renderGraph->createWorkflow("reader2");
+    auto read2   = GN::rdg::ReadIntegerAction::create("read2");
+    auto args2   = GN::AutoRef<GN::rdg::ReadIntegerAction::A>::make();
     args2->input = x;
     {
         GN::rdg::Workflow::Task t("read2");
         t.action    = read2;
         t.arguments = args2;
-        w2->appendTask(std::move(t));
+        w2.appendTask(std::move(t));
     }
 
-    auto submission = renderGraph->submit({GN::DynaArray<GN::rdg::Workflow *>({w0, w1, w2})});
+    GN::DynaArray<GN::rdg::Workflow> toSubmit;
+    toSubmit.append(std::move(w0));
+    toSubmit.append(std::move(w1));
+    toSubmit.append(std::move(w2));
+    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();
@@ -543,18 +505,5 @@ TEST_CASE("RDG workflow: dependency read-read (no dependency)", "[rdg][workflow]
     CHECK(!workflowDependsOn(state.workflowDependencies, 2, 1));
 }
 
-TEST_CASE("RDG workflow: duplicate artifact name returns null", "[rdg][workflow]") {
-    auto db = GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {});
-    REQUIRE(db != nullptr);
-
-    auto first = GN::rdg::IntegerArtifact::create(*db, "unique_name");
-    REQUIRE(first != nullptr);
-    CHECK(first->sequence != 0);
-
-    auto duplicate = GN::rdg::IntegerArtifact::create(*db, "unique_name");
-    CHECK(duplicate == nullptr);
-
-    auto fetched = db->fetch(GN::rdg::IntegerArtifact::TYPE_ID, "unique_name");
-    REQUIRE(fetched != nullptr);
-    CHECK(fetched->sequence == first->sequence);
-}
+// Name/sequence lookup and duplicate-name policy are the responsibility of higher-level layers (e.g. scene management).
+// RDG no longer provides ArtifactDatabase or duplicate-name rejection.

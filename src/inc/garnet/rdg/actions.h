@@ -45,7 +45,7 @@ struct ClearRenderTarget : public Action {
     };
 
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
-    static GN_API AutoRef<ClearRenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<ClearRenderTarget> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;
@@ -81,7 +81,7 @@ struct PrepareBackbuffer : public Action {
     };
 
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
-    static GN_API AutoRef<PrepareBackbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<PrepareBackbuffer> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;
@@ -117,7 +117,7 @@ struct PresentBackbuffer : public Action {
     };
 
     /// Create a new instance and register to the database via admit(). Implementation provided by backend.
-    static GN_API AutoRef<PresentBackbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<PresentBackbuffer> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;
@@ -165,7 +165,7 @@ struct SetupRenderStates : public Action {
         AutoRef<GpuContext> gpu;
     };
 
-    static GN_API AutoRef<SetupRenderStates> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<SetupRenderStates> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;
@@ -307,7 +307,7 @@ struct GpuDraw : public GpuShaderAction {
         ShaderBinary        ps; ///< pixel shader
     };
 
-    static GN_API AutoRef<GpuDraw> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuDraw> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuShaderAction::GpuShaderAction;
@@ -340,7 +340,7 @@ struct GpuCompute : public GpuShaderAction {
         ShaderBinary        cs; ///< compute shader
     };
 
-    static GN_API AutoRef<GpuCompute> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuCompute> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuShaderAction::GpuShaderAction;
@@ -404,7 +404,7 @@ struct GpuCopy : public Action {
         AutoRef<GpuContext> gpu;
     };
 
-    static GN_API AutoRef<GpuCopy> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuCopy> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using Action::Action;

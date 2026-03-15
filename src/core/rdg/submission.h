@@ -43,12 +43,11 @@ struct TaskInfo {
     }
 };
 
-struct WorkflowImpl : public Workflow {
+/// Implementation payload for workflow; adds sequence number used by the render graph.
+struct WorkflowImplPayload : public Workflow::Payload {
     mutable uint64_t sequence = 0;
 
-    explicit WorkflowImpl(const StrA & name_) { name = name_; }
-
-    static WorkflowImpl * promote(Workflow * workflow) { return static_cast<WorkflowImpl *>(workflow); }
+    explicit WorkflowImplPayload(StrA name_) { name = name_; }
 };
 
 /// Implementation of Submission. Holds all intermediate data and context for a single submit.
@@ -63,8 +62,8 @@ public:
         using RuntimeType::RuntimeType;
     };
 
-    /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (pointers).
-    SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params);
+    /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (payload pointers).
+    SubmissionImpl(DynaArray<WorkflowImplPayload *> pendingWorkflows, const RenderGraph::SubmitParameters & params);
 
     ~SubmissionImpl() override;
 
@@ -105,6 +104,11 @@ public:
     // Signaled after all pending tasks are successfully executed.
     Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksExecuted;
 
+    // A signal that guarantees to be signaled at the end of the submission thread,
+    // regardless of whether tasks in the submission are successful or failed.
+    // Use this signal to do cleanup work when the submission is done.
+    Signal<void(SubmissionImpl &)> endOfSubmission;
+
 private:
     /// Per-task execution state for dumpState().
     struct TaskExecutionState {
@@ -127,10 +131,10 @@ private:
 
     std::unordered_map<uint64_t, AutoRef<Context>> mExecutionContexts;
 
-    // Owned workflows (taken from graph on construction)
-    DynaArray<WorkflowImpl *>    mWorkflows;
-    DynaArray<WorkflowImpl *>    mValidatedWorkflows;
-    DynaArray<DynaArray<size_t>> mDependencyGraph;
+    // Owned workflow payloads (taken from workflows on submit)
+    DynaArray<WorkflowImplPayload *> mWorkflows;
+    DynaArray<WorkflowImplPayload *> mValidatedWorkflows;
+    DynaArray<DynaArray<size_t>>     mDependencyGraph;
 
     // State for dumpState() (written by run(), read by dumpState())
     mutable std::mutex                     mStateMutex;

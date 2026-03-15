@@ -12,13 +12,11 @@ TEST_CASE("CopyBuffer: TYPE_ID is non-zero and distinct", "[rdg][copy-buffer]") 
 }
 
 TEST_CASE("CopyBuffer::A: addToReadWriteList marks src read, dst write", "[rdg][copy-buffer]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu", {});
+    auto gpu = GpuContext::create("gpu", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto src = PersistentBuffer::create(*db, "src", {.context = gpu, .size = 64, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
-    auto dst = PersistentBuffer::create(*db, "dst", {.context = gpu, .size = 64, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
+    auto src = PersistentBuffer::create("src", {.context = gpu, .size = 64, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
+    auto dst = PersistentBuffer::create("dst", {.context = gpu, .size = 64, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
     REQUIRE(src);
     REQUIRE(dst);
 
@@ -37,31 +35,26 @@ TEST_CASE("CopyBuffer::A: addToReadWriteList marks src read, dst write", "[rdg][
 }
 
 TEST_CASE("CopyBuffer::create: returns non-null with valid gpu", "[rdg][copy-buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_cb", {});
+    auto gpu = GpuContext::create("gpu_cb", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto copy = GpuCopy::create(*db, "test_copy", {.gpu = gpu});
+    auto copy = GpuCopy::create("test_copy", {.gpu = gpu});
     REQUIRE(copy);
     CHECK(copy->typeId() == GpuCopy::TYPE_ID);
 }
 
 TEST_CASE("CopyBuffer: transient→buffer copy via submission", "[rdg][copy-buffer][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_tcopy", {});
+    auto gpu = GpuContext::create("gpu_tcopy", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t kSize = 64;
 
-    auto dst =
-        PersistentBuffer::create(*db, "dst_buf", {.context = gpu, .size = kSize, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
+    auto dst = PersistentBuffer::create("dst_buf", {.context = gpu, .size = kSize, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
     REQUIRE(dst);
 
-    auto arena = TransientArena::create(*db, "arena_tcopy", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_tcopy", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto tb = arena->allocate(kSize, "tb");
     REQUIRE(tb);
@@ -71,7 +64,7 @@ TEST_CASE("CopyBuffer: transient→buffer copy via submission", "[rdg][copy-buff
         memset(m.data(), 0xAB, kSize);
     }
 
-    auto copy = GpuCopy::create(*db, "copy_action", {.gpu = gpu});
+    auto copy = GpuCopy::create("copy_action", {.gpu = gpu});
     REQUIRE(copy);
 
     auto args  = AutoRef<GpuCopy::BufferToBuffer>::make();
@@ -79,10 +72,10 @@ TEST_CASE("CopyBuffer: transient→buffer copy via submission", "[rdg][copy-buff
     args->dst  = dst;
     args->size = kSize;
 
-    auto * wf = rg->createWorkflow("copy-wf");
-    wf->appendTask("copy-task", copy, args);
+    auto wf = rg->createWorkflow("copy-wf");
+    wf.appendTask("copy-task", copy, args);
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);

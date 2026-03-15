@@ -5,7 +5,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-GN_API AutoRef<GpuCopy> GpuCopy::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<GpuCopy> GpuCopy::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("GpuCopy::create: gpu is null, name='{}'", name);
             return {};
@@ -13,7 +13,7 @@ GN_API AutoRef<GpuCopy> GpuCopy::create(ArtifactDatabase & db, const StrA & name
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanGpuCopy(db, name, params);
+        return createVulkanGpuCopy(name, params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("GpuCopy::create: D3D12 backend not implemented yet");
         return {};

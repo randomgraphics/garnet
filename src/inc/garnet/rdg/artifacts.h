@@ -1,5 +1,6 @@
 #pragma once
 
+#include <garnet/rdg/dependency-graph.h>
 #include <garnet/rdg/rtti.h>
 #include <garnet/gfx/image.h>
 #include <unordered_map>
@@ -21,7 +22,7 @@ struct GpuContext : public Artifact {
     };
 
     /// Create a new instance of GpuContext.
-    static GN_API AutoRef<GpuContext> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuContext> create(const StrA & name, const CreateParameters & params);
 
     /// Vulkan instance handle (VkInstance cast to intptr_t) for use with Window::getVulkanSurfaceHandle.
     /// Returns 0 if this context is not Vulkan.
@@ -90,7 +91,7 @@ struct Backbuffer : public GpuResource {
     virtual gfx::img::Image readback() const = 0;
 
     /// Create a new instance of Backbuffer.
-    static GN_API AutoRef<Backbuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<Backbuffer> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -156,11 +157,11 @@ struct Texture : public GpuResource {
 
     /// Create a new instance of empty Texture The texture is not bound to any GPU resource yet. Must call reset() at least once for the texture to be valid to
     /// use.
-    static GN_API AutoRef<Texture> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<Texture> create(const StrA & name, const CreateParameters & params);
 
     /// Load texture from file. Returns a texture artifact named after the file name.
     /// If the file has been loaded before, return the existing artifact.
-    static GN_API AutoRef<Texture> load(ArtifactDatabase & db, const LoadParameters & params);
+    static GN_API AutoRef<Texture> load(const LoadParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -243,7 +244,7 @@ struct PersistentBuffer : public Buffer {
         BufferUsageFlags usage = BufferUsageBits::VERTEX | BufferUsageBits::INDEX | BufferUsageBits::UNIFORM;
     };
 
-    static GN_API AutoRef<PersistentBuffer> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<PersistentBuffer> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using Buffer::Buffer;
@@ -340,7 +341,7 @@ struct TransientArena : public GpuResource {
     /// Allocate a transient buffer from the arena.
     virtual AutoRef<TransientBuffer> allocate(uint64_t size, const char * name) = 0;
 
-    static GN_API AutoRef<TransientArena> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<TransientArena> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -755,7 +756,7 @@ struct RenderTarget : public Artifact {
         // tbd
     };
 
-    static GN_API AutoRef<RenderTarget> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<RenderTarget> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using Artifact::Artifact;
@@ -807,9 +808,9 @@ struct GpuResourceGroup : public GpuResource {
 
     virtual void setResourceViews(size_t slot, size_t offset, SafeArrayAccessor<const GpuResourceView> views) = 0;
 
-    virtual void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const = 0;
+    virtual void addToReadWriteList(Arguments::ArtifactReadWriteList & list) const = 0;
 
-    static GN_API AutoRef<GpuResourceGroup> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<GpuResourceGroup> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;

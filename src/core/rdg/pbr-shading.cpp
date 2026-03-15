@@ -14,17 +14,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 namespace GN::rdg {
 
 // =============================================================================
-// SubGraph::submit()
-// =============================================================================
-
-AutoRef<Submission> SubGraph::submit() {
-    if (!graph) return {};
-    auto sub = graph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(workflows.data(), workflows.size()), .name = name});
-    workflows.clear();
-    return sub;
-}
-
-// =============================================================================
 // PbrShadingVulkan - stub implementation
 // =============================================================================
 
@@ -38,13 +27,13 @@ class PbrShadingVulkan : public PbrShading {
         drawCp.context = mGpu;
         drawCp.vs      = {.binary = (void *) kPbrVertSpv, .size = kPbrVertSpvSize * sizeof(unsigned int), .entry = "main"};
         drawCp.ps      = {.binary = (void *) kPbrFragSpv, .size = kPbrFragSpvSize * sizeof(unsigned int), .entry = "main"};
-        StrA drawName  = StrA::format("pbr_draw_{}", (unsigned long) sequence);
-        mDrawAction    = GpuDraw::create(database, drawName, drawCp);
+        StrA drawName  = name.empty() ? "pbr_draw" : StrA::format("pbr_draw_{}", name.c_str());
+        mDrawAction    = GpuDraw::create(drawName, drawCp);
         GN_REQUIRE(mDrawAction, fmt::format("Failed to create PBR draw action, name='{}'", drawName));
     }
 
 public:
-    PbrShadingVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu): PbrShading(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {}
+    PbrShadingVulkan(const StrA & name, AutoRef<GpuContext> gpu): PbrShading(TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     GpuContext & gpu() const override { return *mGpu; }
 
@@ -54,7 +43,7 @@ public:
             sg.builtResult = Action::ExecutionResult::PASSED;
             return sg;
         }
-        Workflow * workflow = params.renderGraph->createWorkflow("Pbr");
+        Workflow workflow = params.renderGraph->createWorkflow("Pbr");
         if (!workflow) GN_UNLIKELY {
                 SubGraph sg;
                 sg.builtResult = Action::ExecutionResult::FAILED;
@@ -64,7 +53,6 @@ public:
         if (!mDrawAction) GN_UNLIKELY {
                 SubGraph sg(*params.renderGraph, "Pbr");
                 sg.builtResult = Action::ExecutionResult::FAILED;
-                Workflow::drop(workflow);
                 return sg;
             }
         // Build arguments from params; the action is reused.
@@ -89,9 +77,9 @@ public:
         drawArgs->immediates.resize(64);
         memcpy(drawArgs->immediates.data(), glm::value_ptr(model), 64);
 
-        workflow->appendTask("PBR draw", AutoRef<Action>(mDrawAction), std::move(drawArgs));
+        workflow.appendTask("PBR draw", AutoRef<Action>(mDrawAction), std::move(drawArgs));
         SubGraph sg(*params.renderGraph, "Pbr");
-        sg.workflows.append(workflow);
+        sg.workflows.append(std::move(workflow));
         sg.builtResult = Action::ExecutionResult::PASSED;
         return sg;
     }
@@ -101,7 +89,7 @@ public:
 // PbrShading::create() - API-neutral dispatch
 // =============================================================================
 
-GN_API AutoRef<PbrShading> PbrShading::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<PbrShading> PbrShading::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("PbrShading::create: gpu is null, name='{}'", name);
             return {};
@@ -109,13 +97,7 @@ GN_API AutoRef<PbrShading> PbrShading::create(ArtifactDatabase & db, const StrA 
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan: {
-        auto * p = new PbrShadingVulkan(db, name, params.gpu);
-        if (p->sequence == 0) GN_UNLIKELY {
-                GN_ERROR(sLogger)("PbrShading::create: duplicate type+name, name='{}'", name);
-                delete p;
-                return {};
-            }
-        return AutoRef<PbrShading>(p);
+        return AutoRef<PbrShading>(new PbrShadingVulkan(name, params.gpu));
     }
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("PbrShading::create: D3D12 backend not implemented");
@@ -140,7 +122,7 @@ class PbrMaterialImpl : public PbrShading::Material {
     AutoRef<Texture>    mNormalTexture;
 
 public:
-    PbrMaterialImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu): PbrShading::Material(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {}
+    PbrMaterialImpl(const StrA & name, AutoRef<GpuContext> gpu): PbrShading::Material(TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     GpuContext & gpu() const override { return *mGpu; }
     Texture *    getBaseColorTexture() const override { return mBaseColorTexture.get(); }
@@ -171,7 +153,7 @@ static bool parseMaterialLine(const std::string & line, std::string & key, std::
 // Material::load() - load from GN::File (key=value format; loads textures)
 // =============================================================================
 
-GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params) {
+GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(const StrA & name, const LoadParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("PbrShading::Material::load: gpu is null");
             return {};
@@ -184,12 +166,7 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(ArtifactDatabase
             GN_ERROR(sLogger)("PbrShading::Material::load: source is not readable");
             return {};
         }
-    auto * p = new PbrMaterialImpl(db, name, params.gpu);
-    if (p->sequence == 0) GN_UNLIKELY {
-            GN_ERROR(sLogger)("PbrShading::Material::load: duplicate type+name, name='{}'", name);
-            delete p;
-            return {};
-        }
+    auto * p = new PbrMaterialImpl(name, params.gpu);
 
     // Determine the base path to resolve relative texture paths.
     // If not provided, the the loader will try using the source file's directory as the base path, if it has one.
@@ -217,7 +194,7 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(ArtifactDatabase
 
         StrA             valueA(value.c_str());
         StrA             texPath = GN::fs::isAbsPath(valueA) ? valueA : GN::fs::resolvePath(basePath, valueA);
-        AutoRef<Texture> tex     = Texture::load(db, Texture::LoadParameters {.context = params.gpu, .filename = texPath});
+        AutoRef<Texture> tex     = Texture::load(Texture::LoadParameters {.context = params.gpu, .filename = texPath});
         if (!tex) {
             GN_ERROR(sLogger)("PbrShading::Material::load: failed to load texture '{}' for key '{}'", texPath, key);
             continue;

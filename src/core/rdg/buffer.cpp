@@ -6,7 +6,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-GN_API AutoRef<PersistentBuffer> PersistentBuffer::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<PersistentBuffer> PersistentBuffer::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
             GN_ERROR(sLogger)("PersistentBuffer::create: context is null, name='{}'", name);
             return {};
@@ -14,7 +14,7 @@ GN_API AutoRef<PersistentBuffer> PersistentBuffer::create(ArtifactDatabase & db,
     auto * common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanPersistentBuffer(db, name, params);
+        return createVulkanPersistentBuffer(name, params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("PersistentBuffer::create: D3D12 backend not implemented yet");
         return {};
@@ -27,7 +27,7 @@ GN_API AutoRef<PersistentBuffer> PersistentBuffer::create(ArtifactDatabase & db,
     }
 }
 
-GN_API AutoRef<TransientArena> TransientArena::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<TransientArena> TransientArena::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
             GN_ERROR(sLogger)("TransientBufferArena::create: context is null, name='{}'", name);
             return {};
@@ -35,7 +35,7 @@ GN_API AutoRef<TransientArena> TransientArena::create(ArtifactDatabase & db, con
     auto * common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanTransientArena(db, name, params);
+        return createVulkanTransientArena(name, params);
     default:
         GN_ERROR(sLogger)("TransientBufferArena::create: unknown API, name='{}'", name);
         return {};

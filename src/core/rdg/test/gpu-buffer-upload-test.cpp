@@ -60,9 +60,7 @@ TEST_CASE("GpuBufferUpload::CreateParameters: defaults are sensible", "[rdg][gpu
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("GpuBufferUpload::create: returns non-null for valid HOST_MAP params", "[rdg][gpu-buffer-upload][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -70,39 +68,32 @@ TEST_CASE("GpuBufferUpload::create: returns non-null for valid HOST_MAP params",
     cp.size      = 256;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "test_upload", cp);
+    auto upload  = GpuBufferUpload::create("test_upload", cp);
     REQUIRE(upload != nullptr);
     CHECK(upload->typeId == GpuBufferUpload::TYPE_ID);
 }
 
 TEST_CASE("GpuBufferUpload::create: fails when gpu is null", "[rdg][gpu-buffer-upload]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-
     GpuBufferUpload::CreateParameters cp;
     cp.gpu      = nullptr;
     cp.size     = 256;
-    auto upload = GpuBufferUpload::create(*db, "test_upload_no_gpu", cp);
+    auto upload = GpuBufferUpload::create("test_upload_no_gpu", cp);
     CHECK(upload == nullptr);
 }
 
 TEST_CASE("GpuBufferUpload::create: fails when size is 0", "[rdg][gpu-buffer-upload][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu2", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu2", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
     cp.gpu      = gpu;
     cp.size     = 0;
-    auto upload = GpuBufferUpload::create(*db, "test_upload_zero", cp);
+    auto upload = GpuBufferUpload::create("test_upload_zero", cp);
     CHECK(upload == nullptr);
 }
 
 TEST_CASE("GpuBufferUpload::create: currentBufferView returns empty before first execute", "[rdg][gpu-buffer-upload][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpu = GpuContext::create(*db, "gpu3", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu3", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -110,7 +101,7 @@ TEST_CASE("GpuBufferUpload::create: currentBufferView returns empty before first
     cp.size      = 64;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "test_upload_view", cp);
+    auto upload  = GpuBufferUpload::create("test_upload_view", cp);
     REQUIRE(upload != nullptr);
 
     // After construction, currentBufferView() returns a valid view pointing to slot 0.
@@ -128,19 +119,17 @@ TEST_CASE("GpuBufferUpload::create: currentBufferView returns empty before first
 static void runUploadFrame(RenderGraph & rg, GpuBufferUpload & upload, const void * data, uint64_t size) {
     auto wf = rg.createWorkflow("upload");
     REQUIRE(wf);
-    wf->appendTask(Workflow::Task("write", AutoRef<GpuBufferUpload>(&upload), GpuBufferUpload::A::make(data, size)));
-    auto sub = rg.submit({.workflows = {&wf, 1}});
+    wf.appendTask(Workflow::Task("write", AutoRef<GpuBufferUpload>(&upload), GpuBufferUpload::A::make(data, size)));
+    auto sub = rg.submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto res = sub->result();
     CHECK(res.executionResult != Action::ExecutionResult::FAILED);
 }
 
 TEST_CASE("GpuBufferUpload HOST_MAP: execute writes data; view stays valid", "[rdg][gpu-buffer-upload][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_exec", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_exec", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t                kSize = 64;
@@ -149,7 +138,7 @@ TEST_CASE("GpuBufferUpload HOST_MAP: execute writes data; view stays valid", "[r
     cp.size      = kSize;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "upl_exec", cp);
+    auto upload  = GpuBufferUpload::create("upl_exec", cp);
     REQUIRE(upload);
 
     const uint8_t data[kSize] = {};
@@ -162,11 +151,9 @@ TEST_CASE("GpuBufferUpload HOST_MAP: execute writes data; view stays valid", "[r
 }
 
 TEST_CASE("GpuBufferUpload HOST_MAP: currentBufferView rotates slot on each execute", "[rdg][gpu-buffer-upload][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_rot", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_rot", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t                kSize = 64;
@@ -175,7 +162,7 @@ TEST_CASE("GpuBufferUpload HOST_MAP: currentBufferView rotates slot on each exec
     cp.size      = kSize;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "upl_rot", cp);
+    auto upload  = GpuBufferUpload::create("upl_rot", cp);
     REQUIRE(upload);
 
     auto view0 = upload->currentBufferView(); // slot 0 initially
@@ -195,11 +182,9 @@ TEST_CASE("GpuBufferUpload HOST_MAP: currentBufferView rotates slot on each exec
 }
 
 TEST_CASE("GpuBufferUpload HOST_MAP: writeFn callback executes correctly", "[rdg][gpu-buffer-upload][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_fn", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_fn", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t                kSize = 64;
@@ -208,7 +193,7 @@ TEST_CASE("GpuBufferUpload HOST_MAP: writeFn callback executes correctly", "[rdg
     cp.size      = kSize;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "upl_fn", cp);
+    auto upload  = GpuBufferUpload::create("upl_fn", cp);
     REQUIRE(upload);
 
     bool callbackInvoked = false;
@@ -221,8 +206,8 @@ TEST_CASE("GpuBufferUpload HOST_MAP: writeFn callback executes correctly", "[rdg
 
     auto wf = rg->createWorkflow("upload_fn");
     REQUIRE(wf);
-    wf->appendTask(Workflow::Task("write_fn", upload, args));
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    wf.appendTask(Workflow::Task("write_fn", upload, args));
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto res = sub->result();
     CHECK(res.executionResult != Action::ExecutionResult::FAILED);

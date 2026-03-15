@@ -8,15 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-GN_API void Workflow::drop(Workflow ** workflows, size_t count) {
-    if (!workflows) GN_UNLIKELY return;
-    for (size_t i = 0; i < count; ++i) {
-        delete WorkflowImpl::promote(workflows[i]);
-        workflows[i] = nullptr;
-    }
-}
-
-SubmissionImpl::SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params): Submission(params.name) {
+SubmissionImpl::SubmissionImpl(DynaArray<WorkflowImplPayload *> pendingWorkflows, const RenderGraph::SubmitParameters & params): Submission(params.name) {
     GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
     mFuture    = std::async(std::launch::async, [this, params]() -> Result { return run(params); });
@@ -31,7 +23,7 @@ SubmissionImpl::~SubmissionImpl() {
 void SubmissionImpl::cleanup(bool cleanupPendingWorkflows) noexcept {
     try {
         if (cleanupPendingWorkflows) {
-            for (Workflow * w : mWorkflows) delete WorkflowImpl::promote(w);
+            for (WorkflowImplPayload * w : mWorkflows) delete w;
             mWorkflows.clear();
         }
         mValidatedWorkflows.clear();
@@ -61,16 +53,15 @@ bool SubmissionImpl::validateTask(const Workflow::Task & task, const StrA & work
 
 bool SubmissionImpl::validateAndBuildDependencyGraph() {
     for (size_t workflowIdx = 0; workflowIdx < mWorkflows.size(); ++workflowIdx) {
-        auto workflow = mWorkflows[workflowIdx];
-        GN_ASSERT(workflow);
+        auto * payload = mWorkflows[workflowIdx];
+        GN_ASSERT(payload);
 
-        auto tasks = workflow->tasks();
-        for (size_t taskIdx = 0; taskIdx < tasks.size(); ++taskIdx) {
-            const Workflow::Task & task = tasks[taskIdx];
-            if (!validateTask(task, workflow->name, taskIdx)) return false;
+        for (size_t taskIdx = 0; taskIdx < payload->tasks.size(); ++taskIdx) {
+            const Workflow::Task & task = payload->tasks[taskIdx];
+            if (!validateTask(task, payload->name, taskIdx)) return false;
         }
 
-        mValidatedWorkflows.append(workflow);
+        mValidatedWorkflows.append(payload);
     }
 
     GN_VERBOSE(sLogger)("Validated {} workflows.", mValidatedWorkflows.size());
@@ -82,8 +73,8 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
     DynaArray<ArtifactSet> workflowReads(mValidatedWorkflows.size());
     DynaArray<ArtifactSet> workflowWrites(mValidatedWorkflows.size());
     for (size_t i = 0; i < mValidatedWorkflows.size(); ++i) {
-        auto w = mValidatedWorkflows[i];
-        for (const Workflow::Task & task : w->tasks()) {
+        auto * w = mValidatedWorkflows[i];
+        for (const Workflow::Task & task : w->tasks) {
             Arguments * args = task.arguments.get();
             if (!args) continue;
             Arguments::ArtifactReadWriteList list {workflowReads[i], workflowWrites[i]};
@@ -212,11 +203,11 @@ Submission::State SubmissionImpl::dumpState() const {
     for (size_t orderIdx = 0; orderIdx < mExecutionOrder.size(); ++orderIdx) {
         size_t wfIdx = mExecutionOrder[orderIdx];
         if (wfIdx >= mValidatedWorkflows.size()) continue;
-        auto w = mValidatedWorkflows[wfIdx];
-        if (!w) continue;
+        auto * payload = mValidatedWorkflows[wfIdx];
+        if (!payload) continue;
 
-        out += StrA::format("\n--- Workflow [{}] \"{}\" (sequence={}, order={}) ---\n", wfIdx, w->name.empty() ? "[unnamed]" : w->name.c_str(),
-                            (long long) w->sequence, (unsigned long) orderIdx);
+        out += StrA::format("\n--- Workflow [{}] \"{}\" (sequence={}, order={}) ---\n", wfIdx, payload->name.empty() ? "[unnamed]" : payload->name.c_str(),
+                            (long long) payload->sequence, (unsigned long) orderIdx);
 
         // Dependencies (workflows that must run before this one)
         if (wfIdx < mDependencyGraph.size() && !mDependencyGraph[wfIdx].empty()) {
@@ -229,10 +220,9 @@ Submission::State SubmissionImpl::dumpState() const {
         }
 
         // Tasks in this workflow: iterate actual tasks to get arguments, match ts by name for state.
-        const StrA wfName = w->name.empty() ? StrA("[unnamed workflow]") : w->name;
-        auto       tasks  = w->tasks();
-        for (size_t taskIdx = 0; taskIdx < tasks.size(); ++taskIdx) {
-            const Workflow::Task & task  = tasks[taskIdx];
+        const StrA wfName = payload->name.empty() ? StrA("[unnamed workflow]") : payload->name;
+        for (size_t taskIdx = 0; taskIdx < payload->tasks.size(); ++taskIdx) {
+            const Workflow::Task & task  = payload->tasks[taskIdx];
             const StrA             tName = task.name.empty() ? StrA("[unnamed task]") : task.name;
 
             // Find matching TaskExecutionState
@@ -255,7 +245,7 @@ Submission::State SubmissionImpl::dumpState() const {
                 out += StrA::format("      finished:             {}\n", ts->executeDone ? "yes" : "no");
             }
 
-            // Artifact arguments: arg name, usage; per-artifact: type (id & name), artifact name, sequence
+            // Artifact arguments: arg name, usage; per-artifact: type (id & name), artifact name
             if (task.arguments) {
                 const Arguments &                    args = *task.arguments;
                 std::unordered_set<const Artifact *> r, w;
@@ -265,15 +255,13 @@ Submission::State SubmissionImpl::dumpState() const {
                 out += "      read artifacts:\n";
                 for (const Artifact * a : r) {
                     const char * typeName = a->typeInfo().name ? a->typeInfo().name : "[unknown type]";
-                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId(), a->name.c_str(),
-                                        (unsigned long long) a->sequence);
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"\n", typeName, (unsigned long long) a->typeId(), a->name.c_str());
                 }
                 // Print all resources written by this task
                 out += "      write artifacts:\n";
                 for (const Artifact * a : w) {
                     const char * typeName = a->typeInfo().name ? a->typeInfo().name : "[unknown type]";
-                    out += StrA::format("        [type:{} id:{}] name:\"{}\"  sequence:{}\n", typeName, (unsigned long long) a->typeId(), a->name.c_str(),
-                                        (unsigned long long) a->sequence);
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"\n", typeName, (unsigned long long) a->typeId(), a->name.c_str());
                 }
             }
         }
@@ -305,6 +293,8 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
     }
 
     try {
+        auto signalTheEndOfSubmission = AutoFinalizer([this]() { endOfSubmission.emit(*this); });
+
         // step 1: validate and build dependency graph.
         if (!validateAndBuildDependencyGraph()) {
             cleanup();
@@ -343,13 +333,12 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         for (size_t executionOrderIdx = 0; executionOrderIdx < executionOrder.size(); ++executionOrderIdx) {
             size_t workflowIdx = executionOrder[executionOrderIdx];
             GN_ASSERT(workflowIdx < mValidatedWorkflows.size());
-            Workflow * workflow = mValidatedWorkflows[workflowIdx];
-            GN_ASSERT(workflow);
-            auto tasks = workflow->tasks();
-            for (size_t taskIdx = 0; taskIdx < tasks.size(); ++taskIdx) {
-                const Workflow::Task & task = tasks[taskIdx];
+            WorkflowImplPayload * payload = mValidatedWorkflows[workflowIdx];
+            GN_ASSERT(payload);
+            for (size_t taskIdx = 0; taskIdx < payload->tasks.size(); ++taskIdx) {
+                const Workflow::Task & task = payload->tasks[taskIdx];
                 GN_ASSERT(task.action && task.arguments); // have been validated in validateTask().
-                StrA     wfName = workflow->name.empty() ? StrA("[unnamed workflow]") : workflow->name;
+                StrA     wfName = payload->name.empty() ? StrA("[unnamed workflow]") : payload->name;
                 StrA     tName  = task.name.empty() ? StrA("[unnamed task]") : task.name;
                 uint64_t idx    = (uint64_t) pendingTasks.size();
                 pendingTasks.append(
@@ -427,6 +416,9 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
             }
             if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
         }
+
+        // Signal EoS before returning the result to user thread.
+        signalTheEndOfSubmission.proceed();
 
         // Done
         Action::ExecutionResult finalResult = hasWarning ? Action::ExecutionResult::WARNING : Action::ExecutionResult::PASSED;

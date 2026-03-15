@@ -143,9 +143,9 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
     mSet = sets[0];
 }
 
-GpuResourceGroupVulkan::GpuResourceGroupVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu,
+GpuResourceGroupVulkan::GpuResourceGroupVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu,
                                                const GpuResourceGroup::CreateParameters & params)
-    : GpuResourceGroup(db, GpuResourceGroup::TYPE_INFO(), name), mGpu(std::move(gpu)), mSlots(params.slots) {
+    : GpuResourceGroup(GpuResourceGroup::TYPE_INFO(), name), mGpu(std::move(gpu)), mSlots(params.slots) {
     mBoundViews.resize(params.slots.size());
     buildLayoutAndPool();
 }
@@ -228,7 +228,7 @@ void GpuResourceGroupVulkan::setResourceViews(size_t slot, size_t offset, SafeAr
     if (!writes.empty()) dev.updateDescriptorSets(writes, {});
 }
 
-void GpuResourceGroupVulkan::addSlotToReadWriteList(size_t slot, std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const {
+void GpuResourceGroupVulkan::addSlotToReadWriteList(size_t slot, Arguments::ArtifactReadWriteList & list) const {
     if (slot >= mBoundViews.size()) return;
     const auto & slotDesc = mSlots[slot];
     using SlotType        = GpuResourceGroup::SlotDescription::Type;
@@ -237,21 +237,21 @@ void GpuResourceGroupVulkan::addSlotToReadWriteList(size_t slot, std::unordered_
 
     for (const auto & v : mBoundViews[slot]) {
         if (!v.artifact) continue;
-        uint64_t seq = v.artifact->sequence;
-        if (isRead) readList.insert(seq);
-        if (isWrite) writeList.insert(seq);
+        const Artifact * ptr = v.artifact.get();
+        if (isRead) list.readList.insert(ptr);
+        if (isWrite) list.writeList.insert(ptr);
     }
 }
 
-void GpuResourceGroupVulkan::addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const {
-    for (size_t s = 0; s < mBoundViews.size(); ++s) addSlotToReadWriteList(s, readList, writeList);
+void GpuResourceGroupVulkan::addToReadWriteList(Arguments::ArtifactReadWriteList & list) const {
+    for (size_t s = 0; s < mBoundViews.size(); ++s) addSlotToReadWriteList(s, list);
 }
 
 // =============================================================================
 // createVulkanGpuResourceGroup
 // =============================================================================
 
-AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(ArtifactDatabase & db, const StrA & name, const GpuResourceGroup::CreateParameters & params) {
+AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(const StrA & name, const GpuResourceGroup::CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is null, name='{}'", name);
             return {};
@@ -261,13 +261,7 @@ AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(ArtifactDatabase & db, co
             GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is not Vulkan, name='{}'", name);
             return {};
         }
-    auto p = new GpuResourceGroupVulkan(db, name, std::move(gpu), params);
-    if (!p->sequence) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuResourceGroup: duplicate type+name, name='{}'", name);
-            delete p;
-            return {};
-        }
-    return AutoRef<GpuResourceGroup>(p);
+    return AutoRef<GpuResourceGroup>(new GpuResourceGroupVulkan(name, std::move(gpu), params));
 }
 
 } // namespace GN::rdg

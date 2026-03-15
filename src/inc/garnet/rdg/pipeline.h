@@ -49,7 +49,7 @@ struct GN_API SubGraph {
     RenderGraph *           graph       = {};
     StrA                    name        = {};
     Action::ExecutionResult builtResult = Action::ExecutionResult::PASSED;
-    DynaArray<Workflow *>   workflows;
+    DynaArray<Workflow>     workflows;
 
     SubGraph() = default;
 
@@ -83,12 +83,15 @@ struct GN_API SubGraph {
     /// Submit this subgraph for execution on the given render graph.
     /// The workflows are submitted and then cleared from this SubGraph.
     /// \return The submission object; valid until execution completes.
-    AutoRef<Submission> submit();
+    AutoRef<Submission> submit() {
+        if (!graph) return {};
+        auto sub = graph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow>(workflows.data(), workflows.size()), .name = name});
+        workflows.clear();
+        return sub;
+    }
 
     /// Drop this subgraph without executing. All workflows are dropped and cleared from this SubGraph.
     SubGraph & drop() {
-        if (!graph) return *this;
-        Workflow::drop(workflows.data(), workflows.size());
         workflows.clear();
         builtResult = Action::ExecutionResult::DROPPED;
         return *this;
@@ -174,7 +177,7 @@ struct SharedShaderConstants : public GpuResource {
     /// workflows) before draw workflows. Effects get set0 via getSet0Resources().
     virtual SubGraph build(RenderGraph & rg) = 0;
 
-    static GN_API AutoRef<SharedShaderConstants> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<SharedShaderConstants> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -204,10 +207,10 @@ protected:
 //     };
 
 //     /// Create a new blank (full black) environment resource.
-//     static GN_API AutoRef<EnvironmentalLighting> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+//     static GN_API AutoRef<EnvironmentalLighting> create(const StrA & name, const CreateParameters & params);
 
 //     /// Load a Pbr environment resource from external file.
-//     static GN_API AutoRef<EnvironmentalLighting> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
+//     static GN_API AutoRef<EnvironmentalLighting> load(const StrA & name, const LoadParameters & params);
 
 // protected:
 //     using RenderGraphBuilder::RenderGraphBuilder;
@@ -223,7 +226,7 @@ protected:
 //         // tbd
 //     };
 
-//     static GN_API AutoRef<ShadowVisibility> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+//     static GN_API AutoRef<ShadowVisibility> create(const StrA & name, const CreateParameters & params);
 
 // protected:
 //     using RenderGraphBuilder::RenderGraphBuilder;
@@ -260,7 +263,7 @@ protected:
 //     /// Submit the accumulated workflows for execution. Clear out all workflow arrays.
 //     virtual AutoRef<Submission> submit() = 0;
 
-//     static GN_API AutoRef<SimpleForwardShadingPipeline> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+//     static GN_API AutoRef<SimpleForwardShadingPipeline> create(const StrA & name, const CreateParameters & params);
 
 // protected:
 //     using Artifact::Artifact;
@@ -288,7 +291,7 @@ struct PbrShading : public GpuResource {
             StrA basePath = {};
         };
 
-        static GN_API AutoRef<Material> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
+        static GN_API AutoRef<Material> load(const StrA & name, const LoadParameters & params);
 
         /// Optional: return base color texture if loaded from file. Default returns nullptr.
         virtual Texture * getBaseColorTexture() const { return nullptr; }
@@ -313,7 +316,7 @@ struct PbrShading : public GpuResource {
     /// Add task graphs into the workflow to render a PBR object.
     virtual SubGraph build(const BuildParameters & params) = 0;
 
-    static GN_API AutoRef<PbrShading> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<PbrShading> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -333,7 +336,7 @@ struct SkyBox : public GpuResource {
     /// Add task graphs into the workflow to render a sky box.
     virtual SubGraph build(const BuildParameters & params);
 
-    static GN_API AutoRef<SkyBox> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<SkyBox> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;

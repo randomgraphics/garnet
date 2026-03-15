@@ -10,7 +10,7 @@ namespace GN::rdg {
 // Texture::create() - API-neutral dispatch by context's backend
 // =============================================================================
 
-GN_API AutoRef<Texture> Texture::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<Texture> Texture::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) {
         GN_ERROR(sLogger)("Texture::create: context is null, name='{}'", name);
         return {};
@@ -19,7 +19,7 @@ GN_API AutoRef<Texture> Texture::create(ArtifactDatabase & db, const StrA & name
     auto * common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanTexture(db, name, params);
+        return createVulkanTexture(name, params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("Texture::create: D3D12 backend not implemented yet");
         return {};
@@ -36,7 +36,7 @@ GN_API AutoRef<Texture> Texture::create(ArtifactDatabase & db, const StrA & name
 // Texture::load() - API-neutral dispatch by context's backend
 // =============================================================================
 
-GN_API AutoRef<Texture> Texture::load(ArtifactDatabase & db, const LoadParameters & params) {
+GN_API AutoRef<Texture> Texture::load(const LoadParameters & params) {
     if (!params.context) {
         GN_ERROR(sLogger)("Texture::load: context is null, filename='{}'", params.filename);
         return {};
@@ -45,7 +45,7 @@ GN_API AutoRef<Texture> Texture::load(ArtifactDatabase & db, const LoadParameter
     auto * common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return loadVulkanTexture(db, params);
+        return loadVulkanTexture(params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("Texture::load: D3D12 backend not implemented yet");
         return {};

@@ -97,13 +97,12 @@ private:
     std::map<uint64_t, Entry>                     mEntries; // key is task index.
     SubmissionIDMap                               mSubmissionIDs;
 
-    Action::ExecutionResult waitForIdle(SubmissionImpl &) {
+    void waitForIdle(SubmissionImpl &) {
         for (auto & [queue, submissionIDs] : mSubmissionIDs) {
             vk::ArrayProxy<const rapid_vulkan::CommandQueue::SubmissionID> ids((uint32_t) submissionIDs.size(), submissionIDs.data());
             queue->wait(ids);
         }
         mSubmissionIDs.clear();
-        return Action::ExecutionResult::PASSED;
     }
 };
 

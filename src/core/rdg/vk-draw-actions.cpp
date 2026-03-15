@@ -18,7 +18,7 @@ class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
 
 public:
-    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu): ClearRenderTarget(db, TYPE_INFO(), name), mGpu(gpu) {}
+    ClearRenderTargetVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu): ClearRenderTarget(TYPE_INFO(), name), mGpu(gpu) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
@@ -53,13 +53,13 @@ public:
     }
 };
 
-AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, const StrA & name, const ClearRenderTarget::CreateParameters & params) {
+AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(const StrA & name, const ClearRenderTarget::CreateParameters & params) {
     auto gpu = params.gpu.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanClearRenderTarget: gpu is empty, name='{}'", name);
             return {};
         }
-    return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(db, name, gpu));
+    return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(name, gpu));
 }
 
 // =====================================================================================================================
@@ -71,8 +71,8 @@ class GpuDrawVulkan : public GpuDraw {
     GpuDraw::CreateParameters mCreateParams {};
 
 public:
-    GpuDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
-        : GpuDraw(db, TYPE_INFO(), name), mGpu(gpu), mCreateParams(params) {}
+    GpuDrawVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
+        : GpuDraw(TYPE_INFO(), name), mGpu(gpu), mCreateParams(params) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
@@ -195,13 +195,13 @@ public:
     }
 };
 
-AutoRef<GpuDraw> createVulkanGpuDraw(ArtifactDatabase & db, const StrA & name, const GpuDraw::CreateParameters & params) {
+AutoRef<GpuDraw> createVulkanGpuDraw(const StrA & name, const GpuDraw::CreateParameters & params) {
     auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuDraw: gpu is empty, name='{}'", name);
             return {};
         }
-    return AutoRef<GpuDraw>(new GpuDrawVulkan(db, name, gpu, params));
+    return AutoRef<GpuDraw>(new GpuDrawVulkan(name, gpu, params));
 }
 
 } // namespace GN::rdg

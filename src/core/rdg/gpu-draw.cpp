@@ -10,7 +10,7 @@ namespace GN::rdg {
 // ClearRenderTarget::create() - API-neutral dispatch by context's backend
 // =============================================================================
 
-GN_API AutoRef<ClearRenderTarget> ClearRenderTarget::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<ClearRenderTarget> ClearRenderTarget::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("ClearRenderTarget::create: context is null, name='{}'", name);
             return {};
@@ -18,7 +18,7 @@ GN_API AutoRef<ClearRenderTarget> ClearRenderTarget::create(ArtifactDatabase & d
     auto common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanClearRenderTarget(db, name, params);
+        return createVulkanClearRenderTarget(name, params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("ClearRenderTarget::create: D3D12 backend not implemented yet");
         return {};
@@ -35,7 +35,7 @@ GN_API AutoRef<ClearRenderTarget> ClearRenderTarget::create(ArtifactDatabase & d
 // GpuDraw::create() - API-neutral dispatch by context's backend
 // =============================================================================
 
-GN_API AutoRef<GpuDraw> GpuDraw::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<GpuDraw> GpuDraw::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
             GN_ERROR(sLogger)("GpuDraw::create: context is null, name='{}'", name);
             return {};
@@ -43,7 +43,7 @@ GN_API AutoRef<GpuDraw> GpuDraw::create(ArtifactDatabase & db, const StrA & name
     auto common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanGpuDraw(db, name, params);
+        return createVulkanGpuDraw(name, params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("GpuDraw::create: D3D12 backend not implemented yet");
         return {};

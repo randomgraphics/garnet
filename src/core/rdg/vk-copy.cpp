@@ -46,8 +46,8 @@ class GpuCopyVulkan : public GpuCopy {
     }
 
 public:
-    GpuCopyVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuCopy::CreateParameters & params)
-        : GpuCopy(db, TYPE_INFO(), name), mGpu(std::move(gpu)), mCreateParams(params) {}
+    GpuCopyVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuCopy::CreateParameters & params)
+        : GpuCopy(TYPE_INFO(), name), mGpu(std::move(gpu)), mCreateParams(params) {}
 
     bool validate(const Arguments & arguments) const override {
         const auto * a = runtimeCast<BufferToBuffer>(&arguments);
@@ -108,7 +108,7 @@ public:
 // Factory
 // ─────────────────────────────────────────────────────────────────────────────
 
-AutoRef<GpuCopy> createVulkanGpuCopy(ArtifactDatabase & db, const StrA & name, const GpuCopy::CreateParameters & params) {
+AutoRef<GpuCopy> createVulkanGpuCopy(const StrA & name, const GpuCopy::CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuCopy: gpu is null, name='{}'", name);
             return {};
@@ -118,13 +118,7 @@ AutoRef<GpuCopy> createVulkanGpuCopy(ArtifactDatabase & db, const StrA & name, c
             GN_ERROR(sLogger)("createVulkanGpuCopy: gpu is not Vulkan, name='{}'", name);
             return {};
         }
-    auto p = new GpuCopyVulkan(db, name, std::move(gpu), params);
-    if (!p->sequence) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuCopy: duplicate name, name='{}'", name);
-            delete p;
-            return {};
-        }
-    return AutoRef<GpuCopy>(p);
+    return AutoRef<GpuCopy>(new GpuCopyVulkan(name, std::move(gpu), params));
 }
 
 } // namespace GN::rdg

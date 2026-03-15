@@ -14,8 +14,7 @@ class PersistentBufferVulkan : public PersistentBuffer {
     vk::Buffer                              mHandle = VK_NULL_HANDLE;
 
 public:
-    PersistentBufferVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
-        : PersistentBuffer(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {}
+    PersistentBufferVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu): PersistentBuffer(TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     /// Pre-allocate the VkBuffer from CreateParameters. Called once by the factory.
     bool allocate(const CreateParameters & params);
@@ -33,6 +32,6 @@ public:
 private:
 };
 
-AutoRef<PersistentBuffer> createVulkanPersistentBuffer(ArtifactDatabase & db, const StrA & name, const PersistentBuffer::CreateParameters & params);
+AutoRef<PersistentBuffer> createVulkanPersistentBuffer(const StrA & name, const PersistentBuffer::CreateParameters & params);
 
 } // namespace GN::rdg

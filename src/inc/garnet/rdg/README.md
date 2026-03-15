@@ -56,7 +56,7 @@ write-after-read, or write-after-write pattern.
 
 **Conventions at this level:**
 - No GPU, shader, or rendering concept of any kind.
-- Artifacts are identified by (type, name) and tracked in an `ArtifactDatabase`.
+- Name/sequence lookup and deduplication are the responsibility of higher-level layers (e.g. scene management), not RDG.
 - `Arguments` objects are single-use: create, pass to `RenderGraph`, discard.
 
 ---

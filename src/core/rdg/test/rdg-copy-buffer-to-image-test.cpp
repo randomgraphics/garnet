@@ -19,16 +19,13 @@ TEST_CASE("CopyBufferToImage: TYPE_ID is non-zero and distinct from CopyBuffer",
 }
 
 TEST_CASE("CopyBufferToImage::A: addToReadWriteList marks src read, dst write", "[rdg][copy-buffer-to-image]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_b2i", {});
+    auto gpu = GpuContext::create("gpu_b2i", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto arena = TransientArena::create(*db, "arena_b2i", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_b2i", TransientArena::CreateParameters {.context = gpu});
     if (!arena) SKIP("TransientArena not available");
     auto src = arena->allocate(256, "tb");
-    auto dst =
-        Texture::create(*db, "dst_b2i", {.context = gpu, .descriptor = {.format = GN::gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM(), .width = 4, .height = 4}});
+    auto dst = Texture::create("dst_b2i", {.context = gpu, .descriptor = {.format = GN::gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM(), .width = 4, .height = 4}});
     if (!src) SKIP("TransientArena::allocate not available");
     REQUIRE(dst);
 
@@ -46,11 +43,9 @@ TEST_CASE("CopyBufferToImage::A: addToReadWriteList marks src read, dst write", 
 }
 
 TEST_CASE("CopyBufferToImage::create: GpuCopy::create returns non-null", "[rdg][copy-buffer-to-image][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_b2i_create", {});
+    auto gpu = GpuContext::create("gpu_b2i_create", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto action = GpuCopy::create(*db, "b2i_stub", {.gpu = gpu});
+    auto action = GpuCopy::create("b2i_stub", {.gpu = gpu});
     CHECK(action);
 }

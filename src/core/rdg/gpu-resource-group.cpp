@@ -8,7 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
-GN_API AutoRef<GpuResourceGroup> GpuResourceGroup::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<GpuResourceGroup> GpuResourceGroup::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
             GN_ERROR(sLogger)("GpuResourceGroup::create: context is null, name='{}'", name);
             return {};
@@ -16,7 +16,7 @@ GN_API AutoRef<GpuResourceGroup> GpuResourceGroup::create(ArtifactDatabase & db,
     auto * common = static_cast<GpuContextCommon *>(params.context.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan:
-        return createVulkanGpuResourceGroup(db, name, params);
+        return createVulkanGpuResourceGroup(name, params);
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("GpuResourceGroup::create: D3D12 backend not implemented yet");
         return {};

@@ -71,12 +71,9 @@ static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descr
     return rapid_vulkan::Ref<rapid_vulkan::Image>(new rapid_vulkan::Image(cp));
 }
 
-TextureVulkan::TextureVulkan(ArtifactDatabase & db, const StrA & name): TextureCommon(db, name) {
-    if (sequence == 0) { GN_ERROR(sLogger)("TextureVulkan::TextureVulkan: duplicate type+name, name='{}'", name); }
-}
+TextureVulkan::TextureVulkan(const StrA & name): TextureCommon(name) {}
 
 bool TextureVulkan::init(const Texture::CreateParameters & params) {
-    if (sequence == 0) return false;
     if (!params.context) {
         GN_ERROR(sLogger)("TextureVulkan::init: context is null");
         return false;
@@ -134,13 +131,8 @@ gfx::img::Image TextureVulkan::readback() const {
     return contentToImage(content);
 }
 
-AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, const Texture::CreateParameters & params) {
-    auto * p = new TextureVulkan(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("createVulkanTexture: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
-    }
+AutoRef<Texture> createVulkanTexture(const StrA & name, const Texture::CreateParameters & params) {
+    auto * p = new TextureVulkan(name);
     if (!p->init(params)) {
         delete p;
         return {};
@@ -149,7 +141,6 @@ AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, c
 }
 
 bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
-    if (sequence == 0) return false;
     if (!params.context) {
         GN_ERROR(sLogger)("TextureVulkan::initFromLoad: context is null");
         return false;
@@ -207,14 +198,9 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     return true;
 }
 
-AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params) {
+AutoRef<Texture> loadVulkanTexture(const Texture::LoadParameters & params) {
     StrA name = params.filename;
-    auto p    = AutoRef<TextureVulkan>::make(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("loadVulkanTexture: duplicate type+name, name='{}'", name);
-        p.clear();
-        return {};
-    }
+    auto p    = AutoRef<TextureVulkan>::make(name);
     if (!p->initFromLoad(params)) {
         p.clear();
         return {};

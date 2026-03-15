@@ -20,12 +20,10 @@ TEST_CASE("PBR: type IDs non-zero", "[rdg][pbr]") {
 }
 
 TEST_CASE("PBR: create and build without graph", "[rdg][pbr][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
-    auto pbr = PbrShading::create(*db, "pbr", PbrShading::CreateParameters {.gpu = gpuContext});
+    auto pbr = PbrShading::create("pbr", PbrShading::CreateParameters {.gpu = gpuContext});
     REQUIRE(pbr != nullptr);
 
     PbrShading::BuildParameters params;
@@ -36,14 +34,12 @@ TEST_CASE("PBR: create and build without graph", "[rdg][pbr][gpu]") {
 }
 
 TEST_CASE("PBR: build with render graph returns workflow", "[rdg][pbr][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
     auto renderGraph = RenderGraph::create({});
     REQUIRE(renderGraph != nullptr);
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
-    auto pbr = PbrShading::create(*db, "pbr_build", PbrShading::CreateParameters {.gpu = gpuContext});
+    auto pbr = PbrShading::create("pbr_build", PbrShading::CreateParameters {.gpu = gpuContext});
     REQUIRE(pbr != nullptr);
 
     PbrShading::BuildParameters params;
@@ -51,18 +47,16 @@ TEST_CASE("PBR: build with render graph returns workflow", "[rdg][pbr][gpu]") {
     auto sg            = pbr->build(params);
     CHECK(sg.builtResult == Action::ExecutionResult::PASSED);
     REQUIRE_FALSE(sg.workflows.empty());
-    CHECK_FALSE(sg.workflows[0]->tasks().empty());
+    CHECK_FALSE(sg.workflows[0].tasks().empty());
 }
 
 TEST_CASE("PBR: SubGraph::drop clears workflows", "[rdg][pbr][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
     auto renderGraph = RenderGraph::create({});
     REQUIRE(renderGraph != nullptr);
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
-    auto pbr = PbrShading::create(*db, "pbr_drop", PbrShading::CreateParameters {.gpu = gpuContext});
+    auto pbr = PbrShading::create("pbr_drop", PbrShading::CreateParameters {.gpu = gpuContext});
     REQUIRE(pbr != nullptr);
     PbrShading::BuildParameters params;
     params.renderGraph = renderGraph;
@@ -74,23 +68,19 @@ TEST_CASE("PBR: SubGraph::drop clears workflows", "[rdg][pbr][gpu]") {
 }
 
 TEST_CASE("PBR: Material::load from empty MemFile", "[rdg][pbr][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     static const char empty[1] = {};
     auto              memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
     REQUIRE(memFile->readable());
-    auto mat = PbrShading::Material::load(*db, "test_material_empty", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile});
+    auto mat = PbrShading::Material::load("test_material_empty", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile});
     REQUIRE(mat != nullptr);
     CHECK(mat->typeId() == PbrShading::Material::TYPE_ID);
 }
 
 TEST_CASE("PBR: Material::load resolves texture path", "[rdg][pbr][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     static const char content[] = "baseColorTexture=texture/earth.jpg\n";
@@ -98,26 +88,23 @@ TEST_CASE("PBR: Material::load resolves texture path", "[rdg][pbr][gpu]") {
     REQUIRE(memFile->readable());
     StrA basePath = "media::";
     auto mat =
-        PbrShading::Material::load(*db, "test_material_tex", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile, .basePath = basePath});
+        PbrShading::Material::load("test_material_tex", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile, .basePath = basePath});
     REQUIRE(mat != nullptr);
     CHECK(mat->getBaseColorTexture() != nullptr);
 }
 
 TEST_CASE("PBR: Material::load lined-metal-sheeting", "[rdg][pbr][gpu][media]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
     if (!fp) SKIP("Media not mounted (media::pbr/lined-metal-sheeting not found)");
 
-    auto mat = PbrShading::Material::load(*db, "lined_metal_sheeting",
-                                          PbrShading::Material::LoadParameters {
-                                              .gpu      = gpuContext,
-                                              .source   = fp,
-                                              .basePath = "media::pbr/lined-metal-sheeting",
-                                          });
+    auto mat = PbrShading::Material::load("lined_metal_sheeting", PbrShading::Material::LoadParameters {
+                                                                      .gpu      = gpuContext,
+                                                                      .source   = fp,
+                                                                      .basePath = "media::pbr/lined-metal-sheeting",
+                                                                  });
     REQUIRE(mat != nullptr);
     Texture * baseColorTex = mat->getBaseColorTexture();
     REQUIRE(baseColorTex != nullptr);
@@ -136,12 +123,10 @@ TEST_CASE("PBR: Material::load lined-metal-sheeting", "[rdg][pbr][gpu][media]") 
 }
 
 TEST_CASE("PBR: SharedShaderConstants view round-trip", "[rdg][pbr][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db != nullptr);
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
-    auto shared = SharedShaderConstants::create(*db, "shared", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
+    auto shared = SharedShaderConstants::create("shared", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
     REQUIRE(shared != nullptr);
 
     SharedShaderConstants::ViewInformation view;

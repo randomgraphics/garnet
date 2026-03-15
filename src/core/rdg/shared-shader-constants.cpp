@@ -48,13 +48,13 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
     DirectLightingUBO mPendingLighting = {};
 
     void initGpuResources() {
-        mArena = TransientArena::create(database, StrA::format("{}.arena", name), TransientArena::CreateParameters {.context = mGpu});
+        mArena = TransientArena::create(StrA::format("{}.arena", name), TransientArena::CreateParameters {.context = mGpu});
         if (!mArena) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create transient arena");
                 return;
             }
 
-        mCopyAction = GpuCopy::create(database, StrA::format("{}.copy_ubo", name), GpuCopy::CreateParameters {.gpu = mGpu});
+        mCopyAction = GpuCopy::create(StrA::format("{}.copy_ubo", name), GpuCopy::CreateParameters {.gpu = mGpu});
         if (!mCopyAction) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create copy action");
                 return;
@@ -63,14 +63,14 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
         PersistentBuffer::CreateParameters bufParams;
         bufParams.context = mGpu;
         bufParams.size    = sizeof(GlobalCameraUBO);
-        mCameraBuffer     = PersistentBuffer::create(database, StrA::format("{}.camera_ubo", name), bufParams);
+        mCameraBuffer     = PersistentBuffer::create(StrA::format("{}.camera_ubo", name), bufParams);
         if (!mCameraBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create camera UBO");
                 return;
             }
 
         bufParams.size  = sizeof(DirectLightingUBO);
-        mLightingBuffer = PersistentBuffer::create(database, StrA::format("{}.lighting_ubo", name), bufParams);
+        mLightingBuffer = PersistentBuffer::create(StrA::format("{}.lighting_ubo", name), bufParams);
         if (!mLightingBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting UBO");
                 return;
@@ -140,8 +140,7 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
     }
 
 public:
-    SharedShaderConstantsVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
-        : SharedShaderConstants(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {
+    SharedShaderConstantsVulkan(const StrA & name, AutoRef<GpuContext> gpu): SharedShaderConstants(TYPE_INFO(), name), mGpu(std::move(gpu)) {
         initGpuResources();
     }
 
@@ -195,8 +194,8 @@ public:
         }
 
         // Copy transient → persistent; workflow keeps transient refs alive until submit completes.
-        auto * wf       = rg.createWorkflow(sg.name);
-        auto   camArgs  = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
+        auto wf         = rg.createWorkflow(sg.name);
+        auto camArgs    = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
         camArgs->src    = tbCamera;
         camArgs->dst    = mCameraBuffer;
         camArgs->size   = sizeof(GlobalCameraUBO);
@@ -204,9 +203,9 @@ public:
         lightArgs->src  = tbLighting;
         lightArgs->dst  = mLightingBuffer;
         lightArgs->size = sizeof(DirectLightingUBO);
-        wf->appendTask("camera", mCopyAction, std::move(camArgs));
-        wf->appendTask("lighting", mCopyAction, std::move(lightArgs));
-        sg.workflows.append(wf);
+        wf.appendTask("camera", mCopyAction, std::move(camArgs));
+        wf.appendTask("lighting", mCopyAction, std::move(lightArgs));
+        sg.workflows.append(std::move(wf));
 
         // Build Set 0 resource set (camera + lighting; expandable later) for effects to use as resources[0].
         mLastSet0.resize(2);
@@ -235,7 +234,7 @@ public:
 // SharedShaderConstants::create() - API-neutral dispatch
 // =============================================================================
 
-GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("SharedShaderConstants::create: gpu is null, name='{}'", name);
             return {};
@@ -243,13 +242,7 @@ GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(ArtifactData
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan: {
-        auto * p = new SharedShaderConstantsVulkan(db, name, params.gpu);
-        if (!p->sequence) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstants::create: duplicate type+name, name='{}'", name);
-                delete p;
-                return {};
-            }
-        return AutoRef<SharedShaderConstants>(p);
+        return AutoRef<SharedShaderConstants>(new SharedShaderConstantsVulkan(name, params.gpu));
     }
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("SharedShaderConstants::create: D3D12 backend not implemented");

@@ -29,7 +29,7 @@ public:
         std::mutex            mapMutex;        ///< Protects lazy map/unmap of backing buffer.
     };
 
-    TransientArenaVulkan(ArtifactDatabase & db, const StrA & name, const TransientArena::CreateParameters & params);
+    TransientArenaVulkan(const StrA & name, const TransientArena::CreateParameters & params);
 
     ~TransientArenaVulkan() override;
 
@@ -64,8 +64,7 @@ class TransientBufferVulkan : public TransientBuffer {
     uint64_t                              mSize;
 
 public:
-    TransientBufferVulkan(ArtifactDatabase & db, const StrA & name, TransientArenaVulkan * owner, TransientArenaVulkan::BackingBuffer * backing,
-                          uint64_t offset, uint64_t size);
+    TransientBufferVulkan(const StrA & name, TransientArenaVulkan * owner, TransientArenaVulkan::BackingBuffer * backing, uint64_t offset, uint64_t size);
 
     ~TransientBufferVulkan() override;
 
@@ -99,7 +98,7 @@ public:
     uint64_t size() const { return mSize; }
 };
 
-AutoRef<TransientArena> createVulkanTransientArena(ArtifactDatabase & db, const StrA & name, const TransientArena::CreateParameters & params);
+AutoRef<TransientArena> createVulkanTransientArena(const StrA & name, const TransientArena::CreateParameters & params);
 
 /// Static helpers for Buffer → Vk handle / rapid_vulkan::Buffer. Three overloads per function: const Buffer &, const AutoRef<Buffer> &, const Buffer *.
 struct BufferUtils {

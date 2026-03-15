@@ -18,16 +18,9 @@ struct TaskInfoTestAction : public Action {
 
     int capturedValue = -1;
 
-    TaskInfoTestAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
+    TaskInfoTestAction(const StrA & name): Action(TYPE_INFO(), name) {}
 
-    static AutoRef<TaskInfoTestAction> create(ArtifactDatabase & db, const StrA & name) {
-        auto * p = new TaskInfoTestAction(db, name);
-        if (p->sequence == 0) {
-            delete p;
-            return {};
-        }
-        return AutoRef<TaskInfoTestAction>(p);
-    }
+    static AutoRef<TaskInfoTestAction> create(const StrA & name) { return AutoRef<TaskInfoTestAction>(new TaskInfoTestAction(name)); }
 
     struct A : public Arguments {
         GN_RDG_REGISTER_RUNTIME_TYPE(Arguments);
@@ -53,16 +46,9 @@ struct GrabAction : public Action {
 
     AutoRef<Payload> payloadToAttach;
 
-    GrabAction(ArtifactDatabase & db, const StrA & name): Action(db, TYPE_INFO(), name) {}
+    GrabAction(const StrA & name): Action(TYPE_INFO(), name) {}
 
-    static AutoRef<GrabAction> create(ArtifactDatabase & db, const StrA & name) {
-        auto * p = new GrabAction(db, name);
-        if (p->sequence == 0) {
-            delete p;
-            return {};
-        }
-        return AutoRef<GrabAction>(p);
-    }
+    static AutoRef<GrabAction> create(const StrA & name) { return AutoRef<GrabAction>(new GrabAction(name)); }
 
     struct A : public Arguments {
         GN_RDG_REGISTER_RUNTIME_TYPE(Arguments);
@@ -80,19 +66,17 @@ struct GrabAction : public Action {
 } // namespace GN::rdg
 
 TEST_CASE("TaskInfo context: set in prepare, read in execute", "[rdg][taskinfo]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
     auto rg = std::unique_ptr<GN::rdg::RenderGraph>(GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {}));
     REQUIRE(rg != nullptr);
 
-    auto action = GN::rdg::TaskInfoTestAction::create(*db, "ctx-test");
+    auto action = GN::rdg::TaskInfoTestAction::create("ctx-test");
     REQUIRE(action);
     auto args = GN::AutoRef<GN::rdg::TaskInfoTestAction::A>::make();
 
-    auto * wf = rg->createWorkflow("ctx-wf");
-    wf->appendTask("ctx-task", action, args);
+    auto wf = rg->createWorkflow("ctx-wf");
+    wf.appendTask("ctx-task", action, args);
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == GN::rdg::Action::PASSED);
@@ -100,21 +84,19 @@ TEST_CASE("TaskInfo context: set in prepare, read in execute", "[rdg][taskinfo]"
 }
 
 TEST_CASE("TaskInfo context: released after submission ends", "[rdg][taskinfo]") {
-    auto db = std::unique_ptr<GN::rdg::ArtifactDatabase>(GN::rdg::ArtifactDatabase::create(GN::rdg::ArtifactDatabase::CreateParameters {}));
-    REQUIRE(db != nullptr);
     auto rg = std::unique_ptr<GN::rdg::RenderGraph>(GN::rdg::RenderGraph::create(GN::rdg::RenderGraph::CreateParameters {}));
     REQUIRE(rg != nullptr);
 
     bool destroyed          = false;
-    auto action             = GN::rdg::GrabAction::create(*db, "grab");
+    auto action             = GN::rdg::GrabAction::create("grab");
     action->payloadToAttach = GN::AutoRef<GN::rdg::Payload>(new GN::rdg::Payload(99, &destroyed));
     CHECK(!destroyed);
 
-    auto   args = GN::AutoRef<GN::rdg::GrabAction::A>::make();
-    auto * wf   = rg->createWorkflow("grab-wf");
-    wf->appendTask("grab-task", action, args);
+    auto args = GN::AutoRef<GN::rdg::GrabAction::A>::make();
+    auto wf   = rg->createWorkflow("grab-wf");
+    wf.appendTask("grab-task", action, args);
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == GN::rdg::Action::PASSED);

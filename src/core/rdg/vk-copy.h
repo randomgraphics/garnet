@@ -49,6 +49,6 @@ namespace GN::rdg {
 //     // bool initSlots(uint32_t ringSlots);
 // };
 
-AutoRef<GpuCopy> createVulkanGpuCopy(ArtifactDatabase & db, const StrA & name, const GpuCopy::CreateParameters & params);
+AutoRef<GpuCopy> createVulkanGpuCopy(const StrA & name, const GpuCopy::CreateParameters & params);
 
 } // namespace GN::rdg

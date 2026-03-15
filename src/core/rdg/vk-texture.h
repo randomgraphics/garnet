@@ -46,7 +46,7 @@ public:
         }
     };
 
-    TextureVulkan(ArtifactDatabase & db, const StrA & name);
+    TextureVulkan(const StrA & name);
 
     /// Initialize from create parameters. Returns false on failure.
     bool init(const Texture::CreateParameters & params);
@@ -132,10 +132,10 @@ private:
 
 /// Create a Vulkan-backed Texture. Called from Texture::create() when context is Vulkan.
 /// Returns null on failure or duplicate type+name.
-AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, const Texture::CreateParameters & params);
+AutoRef<Texture> createVulkanTexture(const StrA & name, const Texture::CreateParameters & params);
 
 /// Load a texture from file and create a Vulkan-backed Texture. Called from Texture::load() when context is Vulkan.
 /// Name is derived from filename. Returns null on failure or duplicate type+name.
-AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params);
+AutoRef<Texture> loadVulkanTexture(const Texture::LoadParameters & params);
 
 } // namespace GN::rdg

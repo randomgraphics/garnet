@@ -63,7 +63,7 @@ AutoRef<Blob> PersistentBufferVulkan::readback() const {
     return result;
 }
 
-AutoRef<PersistentBuffer> createVulkanPersistentBuffer(ArtifactDatabase & db, const StrA & name, const PersistentBuffer::CreateParameters & params) {
+AutoRef<PersistentBuffer> createVulkanPersistentBuffer(const StrA & name, const PersistentBuffer::CreateParameters & params) {
     auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanBuffer: gpu is not Vulkan, name='{}'", name);
@@ -73,12 +73,7 @@ AutoRef<PersistentBuffer> createVulkanPersistentBuffer(ArtifactDatabase & db, co
             GN_ERROR(sLogger)("createVulkanBuffer: size is 0, name='{}'", name);
             return {};
         }
-    auto * p = new PersistentBufferVulkan(db, name, std::move(gpu));
-    if (!p->sequence) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanBuffer: duplicate type+name, name='{}'", name);
-            delete p;
-            return {};
-        }
+    auto * p = new PersistentBufferVulkan(name, std::move(gpu));
     if (!p->allocate(params)) GN_UNLIKELY {
             delete p;
             return {};

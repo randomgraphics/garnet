@@ -5,14 +5,14 @@ namespace GN::rdg {
 static GN::Logger * sLogger = getLogger("GN.rdg");
 
 struct RenderTargetImpl : public RenderTarget {
-    RenderTargetImpl(ArtifactDatabase & db, const StrA & name, const CreateParameters &): RenderTarget(db, RenderTarget::TYPE_INFO(), name) {}
+    RenderTargetImpl(const StrA & name, const CreateParameters &): RenderTarget(RenderTarget::TYPE_INFO(), name) {}
 
 private:
     mutable DynaArray<const Artifact *> mReferencedArtifacts;
 };
 
-AutoRef<RenderTarget> RenderTarget::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
-    return AutoRef<RenderTarget>(new RenderTargetImpl(db, name, params));
+AutoRef<RenderTarget> RenderTarget::create(const StrA & name, const CreateParameters & params) {
+    return AutoRef<RenderTarget>(new RenderTargetImpl(name, params));
 }
 
 } // namespace GN::rdg

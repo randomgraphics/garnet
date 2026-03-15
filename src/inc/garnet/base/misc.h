@@ -309,8 +309,12 @@ public:
     ///
     /// Dtor
     ///
-    ~AutoFinalizer() {
-        if (!mDismissed) mFunc();
+    ~AutoFinalizer() { proceed(); }
+
+    void proceed() {
+        if (mDismissed) return;
+        mDismissed = true;
+        mFunc();
     }
 
     ///

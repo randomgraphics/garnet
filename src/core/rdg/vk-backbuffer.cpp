@@ -11,14 +11,11 @@ namespace GN::rdg {
 // BackbufferVulkan - constructor and init
 // =============================================================================
 
-BackbufferVulkan::BackbufferVulkan(ArtifactDatabase & db, const StrA & name): Backbuffer(db, TYPE_INFO(), name) {
-    if (0 == sequence) { GN_ERROR(sLogger)("BackbufferVulkan::BackbufferVulkan: duplicate type+name, name='{}'", name); }
-}
+BackbufferVulkan::BackbufferVulkan(const StrA & name): Backbuffer(TYPE_INFO(), name) {}
 
 BackbufferVulkan::~BackbufferVulkan() { GN_INFO(sLogger)("Destorying Vulkan backbuffer, name='{}'", name); }
 
 bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
-    if (0 == sequence) return false;
 
     // store GPU context and descriptor.
     mGpuContext = params.context.staticCastTo<GpuContextVulkan>();
@@ -192,13 +189,8 @@ bool BackbufferVulkan::trackImageState(const TextureVulkan::ImageState & newStat
     return true;
 }
 
-AutoRef<Backbuffer> createBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const Backbuffer::CreateParameters & params) {
-    auto * p = new BackbufferVulkan(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("createVulkanBackbuffer: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
-    }
+AutoRef<Backbuffer> createBackbufferVulkan(const StrA & name, const Backbuffer::CreateParameters & params) {
+    auto * p = new BackbufferVulkan(name);
     if (!p->init(params)) {
         delete p;
         return {};
@@ -215,7 +207,7 @@ AutoRef<Backbuffer> createBackbufferVulkan(ArtifactDatabase & db, const StrA & n
 ///    in a deferred rendering pipeline.
 class PrepareBackbufferVulkan : public PrepareBackbuffer {
 public:
-    PrepareBackbufferVulkan(ArtifactDatabase & db, const StrA & name): PrepareBackbuffer(db, TYPE_INFO(), name) {}
+    PrepareBackbufferVulkan(const StrA & name): PrepareBackbuffer(TYPE_INFO(), name) {}
 
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
@@ -229,14 +221,8 @@ public:
     }
 };
 
-AutoRef<PrepareBackbuffer> createPrepareBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const PrepareBackbuffer::CreateParameters &) {
-    auto * p = new PrepareBackbufferVulkan(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("createVulkanPrepareBackbuffer: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
-    }
-    return AutoRef<PrepareBackbuffer>(p);
+AutoRef<PrepareBackbuffer> createPrepareBackbufferVulkan(const StrA & name, const PrepareBackbuffer::CreateParameters &) {
+    return AutoRef<PrepareBackbuffer>(new PrepareBackbufferVulkan(name));
 }
 
 // =============================================================================
@@ -247,8 +233,7 @@ class PresentBackbufferVulkan : public PresentBackbuffer {
     AutoRef<GpuContextVulkan> mGpu;
 
 public:
-    PresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
-        : PresentBackbuffer(db, TYPE_INFO(), name), mGpu(std::move(gpu)) {}
+    PresentBackbufferVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu): PresentBackbuffer(TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto a = runtimeCast<PresentBackbuffer::A>(arguments);
@@ -278,16 +263,10 @@ public:
     }
 };
 
-AutoRef<PresentBackbuffer> createPresentBackbufferVulkan(ArtifactDatabase & db, const StrA & name, const PresentBackbuffer::CreateParameters & params) {
+AutoRef<PresentBackbuffer> createPresentBackbufferVulkan(const StrA & name, const PresentBackbuffer::CreateParameters & params) {
     auto gpu = params.gpu.staticCastTo<GpuContextVulkan>();
     if (!gpu) return {};
-    auto * p = new PresentBackbufferVulkan(db, name, std::move(gpu));
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("createVulkanPresentBackbuffer: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
-    }
-    return AutoRef<PresentBackbuffer>(p);
+    return AutoRef<PresentBackbuffer>(new PresentBackbufferVulkan(name, std::move(gpu)));
 }
 
 } // namespace GN::rdg

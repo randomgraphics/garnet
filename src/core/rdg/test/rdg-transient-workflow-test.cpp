@@ -23,22 +23,20 @@ struct FakeCameraUBO {
 };
 
 TEST_CASE("Transient workflow: UBO upload via transient + copy", "[rdg][transient-workflow][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_tw", {});
+    auto gpu = GpuContext::create("gpu_tw", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t kUboSize = sizeof(FakeCameraUBO);
 
     // 1. Create the device-local UBO that shaders will bind to.
-    auto ubo = PersistentBuffer::create(*db, "camera_ubo",
-                                        {.context = gpu, .size = kUboSize, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
+    auto ubo =
+        PersistentBuffer::create("camera_ubo", {.context = gpu, .size = kUboSize, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
     REQUIRE(ubo);
 
     // 2. On the caller thread: create arena and allocate transient, write structured data.
-    auto arena = TransientArena::create(*db, "arena_ubo", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_ubo", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto tb = arena->allocate(kUboSize, "tb");
     REQUIRE(tb);
@@ -51,7 +49,7 @@ TEST_CASE("Transient workflow: UBO upload via transient + copy", "[rdg][transien
     }
 
     // 3. Create a stateless copy action and wire arguments.
-    auto copy = GpuCopy::create(*db, "ubo_copy", {.gpu = gpu});
+    auto copy = GpuCopy::create("ubo_copy", {.gpu = gpu});
     REQUIRE(copy);
 
     auto args  = AutoRef<GpuCopy::BufferToBuffer>::make();
@@ -60,10 +58,10 @@ TEST_CASE("Transient workflow: UBO upload via transient + copy", "[rdg][transien
     args->size = kUboSize;
 
     // 4. Submit a workflow that performs the copy.
-    auto * wf = rg->createWorkflow("ubo-upload-wf");
-    wf->appendTask("camera-copy", copy, args);
+    auto wf = rg->createWorkflow("ubo-upload-wf");
+    wf.appendTask("camera-copy", copy, args);
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);
@@ -82,21 +80,19 @@ struct FakeLightingUBO {
 };
 
 TEST_CASE("Transient workflow: multiple UBO copies in one submission", "[rdg][transient-workflow][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_tw2", {});
+    auto gpu = GpuContext::create("gpu_tw2", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     const BufferUsageFlags kDstUsage(static_cast<uint32_t>(BufferUsageBits::UNIFORM));
 
-    auto cameraUbo   = PersistentBuffer::create(*db, "cam_ubo", {.context = gpu, .size = sizeof(FakeCameraUBO), .usage = kDstUsage});
-    auto lightingUbo = PersistentBuffer::create(*db, "light_ubo", {.context = gpu, .size = sizeof(FakeLightingUBO), .usage = kDstUsage});
+    auto cameraUbo   = PersistentBuffer::create("cam_ubo", {.context = gpu, .size = sizeof(FakeCameraUBO), .usage = kDstUsage});
+    auto lightingUbo = PersistentBuffer::create("light_ubo", {.context = gpu, .size = sizeof(FakeLightingUBO), .usage = kDstUsage});
     REQUIRE(cameraUbo);
     REQUIRE(lightingUbo);
 
-    auto arena = TransientArena::create(*db, "arena_multi", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_multi", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
 
     // Caller thread: write both UBOs into separate transient allocations.
@@ -115,7 +111,7 @@ TEST_CASE("Transient workflow: multiple UBO copies in one submission", "[rdg][tr
     }
 
     // Reuse one stateless CopyBuffer action for both tasks.
-    auto copy = GpuCopy::create(*db, "multi_copy", {.gpu = gpu});
+    auto copy = GpuCopy::create("multi_copy", {.gpu = gpu});
     REQUIRE(copy);
 
     auto camArgs  = AutoRef<GpuCopy::BufferToBuffer>::make();
@@ -128,11 +124,11 @@ TEST_CASE("Transient workflow: multiple UBO copies in one submission", "[rdg][tr
     lightArgs->dst  = lightingUbo;
     lightArgs->size = sizeof(FakeLightingUBO);
 
-    auto * wf = rg->createWorkflow("multi-ubo-wf");
-    wf->appendTask("camera-copy", copy, camArgs);
-    wf->appendTask("lighting-copy", copy, lightArgs);
+    auto wf = rg->createWorkflow("multi-ubo-wf");
+    wf.appendTask("camera-copy", copy, camArgs);
+    wf.appendTask("lighting-copy", copy, lightArgs);
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);
@@ -148,11 +144,9 @@ struct PerDrawPayload {
 };
 
 TEST_CASE("Transient workflow: per-draw payloads packed in one transient buffer", "[rdg][transient-workflow][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_dyn", {});
+    auto gpu = GpuContext::create("gpu_dyn", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint32_t     kDrawCount   = 4;
@@ -160,7 +154,7 @@ TEST_CASE("Transient workflow: per-draw payloads packed in one transient buffer"
     constexpr uint64_t     kTotalSize   = kPayloadSize * kDrawCount;
     const BufferUsageFlags kDstUsage(static_cast<uint32_t>(BufferUsageBits::STORAGE));
 
-    auto arena = TransientArena::create(*db, "arena_dyn", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_dyn", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
 
     // Allocate one transient buffer large enough for all draws.
@@ -177,10 +171,10 @@ TEST_CASE("Transient workflow: per-draw payloads packed in one transient buffer"
     }
 
     // Copy the entire packed region into a device-local storage buffer.
-    auto dst = PersistentBuffer::create(*db, "per_draw_buf", {.context = gpu, .size = kTotalSize, .usage = kDstUsage});
+    auto dst = PersistentBuffer::create("per_draw_buf", {.context = gpu, .size = kTotalSize, .usage = kDstUsage});
     REQUIRE(dst);
 
-    auto copy = GpuCopy::create(*db, "dyn_copy", {.gpu = gpu});
+    auto copy = GpuCopy::create("dyn_copy", {.gpu = gpu});
     REQUIRE(copy);
 
     auto args  = AutoRef<GpuCopy::BufferToBuffer>::make();
@@ -188,10 +182,10 @@ TEST_CASE("Transient workflow: per-draw payloads packed in one transient buffer"
     args->dst  = dst;
     args->size = kTotalSize;
 
-    auto * wf = rg->createWorkflow("dyn-offset-wf");
-    wf->appendTask("pack-copy", copy, args);
+    auto wf = rg->createWorkflow("dyn-offset-wf");
+    wf.appendTask("pack-copy", copy, args);
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);

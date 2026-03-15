@@ -16,26 +16,22 @@ using namespace GN;
 using namespace GN::rdg;
 
 TEST_CASE("SharedShaderConstants: create succeeds with valid GPU", "[rdg][shared-constants][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ssc", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
     cp.gpu   = gpu;
-    auto ssc = SharedShaderConstants::create(*db, "ssc_basic", cp);
+    auto ssc = SharedShaderConstants::create("ssc_basic", cp);
     REQUIRE(ssc);
 }
 
 TEST_CASE("SharedShaderConstants: setters update CPU state, no GPU sync", "[rdg][shared-constants][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ssc2", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc2", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
     cp.gpu   = gpu;
-    auto ssc = SharedShaderConstants::create(*db, "ssc_setters", cp);
+    auto ssc = SharedShaderConstants::create("ssc_setters", cp);
     REQUIRE(ssc);
 
     SharedShaderConstants::FrameInformation fi;
@@ -60,16 +56,14 @@ TEST_CASE("SharedShaderConstants: setters update CPU state, no GPU sync", "[rdg]
 }
 
 TEST_CASE("SharedShaderConstants: build() returns workflow with two upload tasks", "[rdg][shared-constants][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_ssc3", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc3", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
     cp.gpu   = gpu;
-    auto ssc = SharedShaderConstants::create(*db, "ssc_build", cp);
+    auto ssc = SharedShaderConstants::create("ssc_build", cp);
     REQUIRE(ssc);
 
     SharedShaderConstants::FrameInformation fi;
@@ -79,22 +73,20 @@ TEST_CASE("SharedShaderConstants: build() returns workflow with two upload tasks
     auto sg = ssc->build(*rg);
     REQUIRE(!sg.workflows.empty());
     // Workflow should have two tasks: camera copy + lighting copy.
-    CHECK(sg.workflows[0]->tasks().size() == 2u);
+    CHECK(sg.workflows[0].tasks().size() == 2u);
     // Set 0 resource set has camera (binding 0) and lighting (binding 1).
     CHECK(ssc->getSet0Resources().size() >= 2u);
 }
 
 TEST_CASE("SharedShaderConstants: build() + submit() succeeds", "[rdg][shared-constants][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_ssc4", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc4", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
     cp.gpu   = gpu;
-    auto ssc = SharedShaderConstants::create(*db, "ssc_submit", cp);
+    auto ssc = SharedShaderConstants::create("ssc_submit", cp);
     REQUIRE(ssc);
 
     SharedShaderConstants::FrameInformation fi;
@@ -104,24 +96,21 @@ TEST_CASE("SharedShaderConstants: build() + submit() succeeds", "[rdg][shared-co
     auto sg = ssc->build(*rg);
     REQUIRE(!sg.workflows.empty());
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow *>(sg.workflows.data(), sg.workflows.size())});
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(sg.workflows.data(), sg.workflows.size())});
     REQUIRE(sub);
     auto res = sub->result();
     CHECK(res.executionResult != Action::ExecutionResult::FAILED);
-    sg.workflows.clear();
 }
 
 TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[rdg][shared-constants][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_ssc5", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc5", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
     cp.gpu   = gpu;
-    auto ssc = SharedShaderConstants::create(*db, "ssc_double", cp);
+    auto ssc = SharedShaderConstants::create("ssc_double", cp);
     REQUIRE(ssc);
 
     // Frame 1
@@ -131,10 +120,9 @@ TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[r
     {
         auto sg = ssc->build(*rg);
         REQUIRE(!sg.workflows.empty());
-        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow *>(sg.workflows.data(), sg.workflows.size())});
+        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(sg.workflows.data(), sg.workflows.size())});
         REQUIRE(sub);
         CHECK(sub->result().executionResult != Action::ExecutionResult::FAILED);
-        sg.workflows.clear();
     }
 
     // Frame 2 — ring slot must advance without blocking (waitForIdle still in place for now).
@@ -143,9 +131,8 @@ TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[r
     {
         auto sg = ssc->build(*rg);
         REQUIRE(!sg.workflows.empty());
-        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow *>(sg.workflows.data(), sg.workflows.size())});
+        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(sg.workflows.data(), sg.workflows.size())});
         REQUIRE(sub);
         CHECK(sub->result().executionResult != Action::ExecutionResult::FAILED);
-        sg.workflows.clear();
     }
 }

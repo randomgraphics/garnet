@@ -50,7 +50,7 @@ class GpuContextVulkan : public GpuContextCommon {
     std::unique_ptr<PsoFactoryVulkan>     mPsoFactory;
 
 public:
-    GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    GpuContextVulkan(const StrA & name, const CreateParameters & params);
 
     ~GpuContextVulkan() override;
 
@@ -79,6 +79,6 @@ public:
 
 /// Create a Vulkan-backed GpuContext. Called from GpuContext::create() when api is "vulkan".
 /// Returns null on failure or duplicate type+name.
-AutoRef<GpuContext> createVulkanGpuContext(ArtifactDatabase & db, const StrA & name, const GpuContext::CreateParameters & params);
+AutoRef<GpuContext> createVulkanGpuContext(const StrA & name, const GpuContext::CreateParameters & params);
 
 } // namespace GN::rdg

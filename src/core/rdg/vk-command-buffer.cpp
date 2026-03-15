@@ -30,7 +30,7 @@ CommandBufferManagerVulkan::CommandBufferManagerVulkan(const ConstructParameters
     }
 
     // drain all submitted command buffers at the end of execution.
-    connectToSignal<&CommandBufferManagerVulkan::waitForIdle>(params.submission.allTasksExecuted);
+    connectToSignal<&CommandBufferManagerVulkan::waitForIdle>(params.submission.endOfSubmission);
 }
 
 CommandBufferManagerVulkan::~CommandBufferManagerVulkan() {

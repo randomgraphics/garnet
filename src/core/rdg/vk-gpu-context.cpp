@@ -11,12 +11,7 @@ namespace GN::rdg {
 // GpuContextVulkan implementation (Instance/Device via std::optional, not Ref - they do not inherit Root)
 // =============================================================================
 
-GpuContextVulkan::GpuContextVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & /* params */)
-    : GpuContextCommon(db, name, GpuContextCommon::Api::Vulkan) {
-    if (0 == sequence) {
-        GN_ERROR(sLogger)("GpuContextVulkan::GpuContextVulkan: duplicate type+name, name='{}'", name);
-        return;
-    }
+GpuContextVulkan::GpuContextVulkan(const StrA & name, const CreateParameters & /* params */): GpuContextCommon(name, GpuContextCommon::Api::Vulkan) {
     rapid_vulkan::Instance::ConstructParameters ip;
     ip.apiVersion = VK_API_VERSION_1_3; // requires at least Vulkan 1.3+ to use dynamic rendering feature.
     ip.backtrace  = []() -> std::string { return GN::backtrace().c_str(); };
@@ -46,9 +41,9 @@ GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destroying Vulkan GPU 
 // createVulkanGpuContext - API-specific factory
 // =============================================================================
 
-AutoRef<GpuContext> createVulkanGpuContext(ArtifactDatabase & db, const StrA & name, const GpuContext::CreateParameters & params) {
-    auto p = std::make_unique<GpuContextVulkan>(db, name, params);
-    if (p->sequence == 0 || !p->instance().handle() || !p->device().handle()) return {};
+AutoRef<GpuContext> createVulkanGpuContext(const StrA & name, const GpuContext::CreateParameters & params) {
+    auto p = std::make_unique<GpuContextVulkan>(name, params);
+    if (!p->instance().handle() || !p->device().handle()) return {};
     return AutoRef<GpuContext>(p.release());
 }
 

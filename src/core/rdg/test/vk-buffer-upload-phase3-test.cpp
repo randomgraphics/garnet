@@ -25,8 +25,8 @@ using namespace GN::rdg;
 /// Returns the submission result.
 static Submission::Result submitUploadFrame(RenderGraph & rg, AutoRef<GpuBufferUpload> upload, const uint8_t * data, uint64_t size) {
     auto wf = rg.createWorkflow("upload");
-    wf->appendTask(Workflow::Task("write", upload, GpuBufferUpload::A::make(data, size)));
-    auto sub = rg.submit({.workflows = {&wf, 1}});
+    wf.appendTask(Workflow::Task("write", upload, GpuBufferUpload::A::make(data, size)));
+    auto sub = rg.submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     return sub->result();
 }
 
@@ -38,9 +38,7 @@ static GpuBufferUploadVulkan * asVulkan(GpuBufferUpload * upload) { return stati
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("GpuBufferUpload Phase3: slot is ready before any execute", "[rdg][upload-phase3][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_p3_ready", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_p3_ready", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -48,7 +46,7 @@ TEST_CASE("GpuBufferUpload Phase3: slot is ready before any execute", "[rdg][upl
     cp.size      = 64;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "upl_p3_ready", cp);
+    auto upload  = GpuBufferUpload::create("upl_p3_ready", cp);
     REQUIRE(upload);
 
     auto * vkUpload = asVulkan(upload.get());
@@ -61,10 +59,8 @@ TEST_CASE("GpuBufferUpload Phase3: slot is ready before any execute", "[rdg][upl
 TEST_CASE("GpuBufferUpload Phase3: upload-only submission — slot stays ready (no draw CB)", "[rdg][upload-phase3][gpu]") {
     // An upload-only workflow has no GPU command buffer, so CommandBufferManagerVulkan::submit()
     // is never called → no SubmissionID distributed.  The slot should remain isReady().
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg  = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
-    auto gpu = GpuContext::create(*db, "gpu_p3_nocd", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_p3_nocd", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -72,7 +68,7 @@ TEST_CASE("GpuBufferUpload Phase3: upload-only submission — slot stays ready (
     cp.size      = 64;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "upl_p3_nocd", cp);
+    auto upload  = GpuBufferUpload::create("upl_p3_nocd", cp);
     REQUIRE(upload);
 
     const uint8_t data[64] = {};
@@ -91,24 +87,22 @@ TEST_CASE("GpuBufferUpload Phase3: with draw command — slot gets submissionId"
     // A workflow that combines an upload with a draw (ClearRenderTarget is enough to
     // produce a GPU command buffer submission) should result in the upload slot
     // receiving a non-empty SubmissionID.
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create(*db, "gpu_p3_draw", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_p3_draw", GpuContext::CreateParameters {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     // Build a minimal renderable target (headless backbuffer).
     auto backbuffer =
-        Backbuffer::create(*db, "bb_p3", Backbuffer::CreateParameters {.context = gpu, .descriptor = Backbuffer::Descriptor {}.setDimensions(64, 64)});
+        Backbuffer::create("bb_p3", Backbuffer::CreateParameters {.context = gpu, .descriptor = Backbuffer::Descriptor {}.setDimensions(64, 64)});
     REQUIRE(backbuffer);
-    auto rt = RenderTarget::create(*db, "rt_p3", RenderTarget::CreateParameters {});
+    auto rt = RenderTarget::create("rt_p3", RenderTarget::CreateParameters {});
     REQUIRE(rt);
     rt->addColorTarget(backbuffer);
 
-    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_p3", PrepareBackbuffer::CreateParameters {.gpu = gpu});
-    auto clearAction   = ClearRenderTarget::create(*db, "clear_p3", ClearRenderTarget::CreateParameters {.gpu = gpu});
-    auto presentAction = PresentBackbuffer::create(*db, "present_p3", PresentBackbuffer::CreateParameters {.gpu = gpu});
+    auto prepareAction = PrepareBackbuffer::create("prepare_p3", PrepareBackbuffer::CreateParameters {.gpu = gpu});
+    auto clearAction   = ClearRenderTarget::create("clear_p3", ClearRenderTarget::CreateParameters {.gpu = gpu});
+    auto presentAction = PresentBackbuffer::create("present_p3", PresentBackbuffer::CreateParameters {.gpu = gpu});
     REQUIRE(prepareAction);
     REQUIRE(clearAction);
     REQUIRE(presentAction);
@@ -119,7 +113,7 @@ TEST_CASE("GpuBufferUpload Phase3: with draw command — slot gets submissionId"
     cp.size      = 64;
     cp.mechanism = GpuBufferUpload::Mechanism::HOST_MAP;
     cp.ringSlots = 2;
-    auto upload  = GpuBufferUpload::create(*db, "upl_p3_draw", cp);
+    auto upload  = GpuBufferUpload::create("upl_p3_draw", cp);
     REQUIRE(upload);
 
     // Build one workflow: prepare → upload → clear → present.
@@ -128,21 +122,21 @@ TEST_CASE("GpuBufferUpload Phase3: with draw command — slot gets submissionId"
     {
         auto prepA        = AutoRef<PrepareBackbuffer::A>(new PrepareBackbuffer::A());
         prepA->backbuffer = backbuffer;
-        wf->appendTask(Workflow::Task("prepare", prepareAction, prepA));
+        wf.appendTask(Workflow::Task("prepare", prepareAction, prepA));
     }
-    wf->appendTask(Workflow::Task("upload", upload, GpuBufferUpload::A::make(data, sizeof(data))));
+    wf.appendTask(Workflow::Task("upload", upload, GpuBufferUpload::A::make(data, sizeof(data))));
     {
         auto clearA          = AutoRef<ClearRenderTarget::A>(new ClearRenderTarget::A());
         clearA->renderTarget = rt;
-        wf->appendTask(Workflow::Task("clear", clearAction, clearA));
+        wf.appendTask(Workflow::Task("clear", clearAction, clearA));
     }
     {
         auto presentA        = AutoRef<PresentBackbuffer::A>(new PresentBackbuffer::A());
         presentA->backbuffer = backbuffer;
-        wf->appendTask(Workflow::Task("present", presentAction, presentA));
+        wf.appendTask(Workflow::Task("present", presentAction, presentA));
     }
 
-    auto sub = rg->submit({.workflows = {&wf, 1}});
+    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto res = sub->result();
     CHECK(res.executionResult != Action::ExecutionResult::FAILED);

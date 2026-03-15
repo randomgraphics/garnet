@@ -10,9 +10,9 @@ namespace GN::rdg {
 // TransientBufferVulkan
 // ---------------------------------------------------------------------------
 
-TransientBufferVulkan::TransientBufferVulkan(ArtifactDatabase & db, const StrA & name, TransientArenaVulkan * owner,
-                                             TransientArenaVulkan::BackingBuffer * backing, uint64_t offset, uint64_t size)
-    : TransientBuffer(db, TYPE_INFO(), name), mOwner(owner), mBacking(backing), mOffset(offset), mSize(size) {
+TransientBufferVulkan::TransientBufferVulkan(const StrA & name, TransientArenaVulkan * owner, TransientArenaVulkan::BackingBuffer * backing, uint64_t offset,
+                                             uint64_t size)
+    : TransientBuffer(TYPE_INFO(), name), mOwner(owner), mBacking(backing), mOffset(offset), mSize(size) {
     mBacking->liveCount.fetch_add(1, std::memory_order_relaxed);
 }
 
@@ -72,8 +72,7 @@ AutoRef<Blob> TransientBufferVulkan::readback() const {
 // TransientBufferPoolVulkan
 // ---------------------------------------------------------------------------
 
-TransientArenaVulkan::TransientArenaVulkan(ArtifactDatabase & db, const StrA & name, const CreateParameters & params)
-    : TransientArena(db, TYPE_INFO(), name), mParams(params) {
+TransientArenaVulkan::TransientArenaVulkan(const StrA & name, const CreateParameters & params): TransientArena(TYPE_INFO(), name), mParams(params) {
     auto gpu = mParams.context.staticCastTo<GpuContextVulkan>();
     GN_ASSERT(gpu);
     auto props = gpu->globalInfo().physical.getProperties();
@@ -151,25 +150,19 @@ AutoRef<TransientBuffer> TransientArenaVulkan::allocate(uint64_t size, const cha
         const uint64_t off  = back->offset;
         if (off + alignedSize <= cap) {
             back->offset = off + alignedSize;
-            return AutoRef<TransientBufferVulkan>(new TransientBufferVulkan(database, name, this, back, off, alignedSize));
+            return AutoRef<TransientBufferVulkan>(new TransientBufferVulkan(name, this, back, off, alignedSize));
         }
         if (!createBackingBuffer(alignedSize)) GN_UNLIKELY return {};
     }
 }
 
-AutoRef<TransientArena> createVulkanTransientArena(ArtifactDatabase & db, const StrA & name, const TransientArena::CreateParameters & params) {
+AutoRef<TransientArena> createVulkanTransientArena(const StrA & name, const TransientArena::CreateParameters & params) {
     auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanTransientArena: no GPU context, name='{}'", name);
             return {};
         }
-    auto * p = new TransientArenaVulkan(db, name, params);
-    if (!p->sequence) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanTransientArena: duplicate name, name='{}'", name);
-            delete p;
-            return {};
-        }
-    return AutoRef<TransientArena>(p);
+    return AutoRef<TransientArena>(new TransientArenaVulkan(name, params));
 }
 
 } // namespace GN::rdg

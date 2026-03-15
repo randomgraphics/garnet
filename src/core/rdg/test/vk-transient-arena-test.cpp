@@ -23,12 +23,10 @@ static TransientArenaVulkan & requireVulkanArena(TransientArena & arena) {
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: first allocation creates 16MB backing", "[rdg][transient-arena][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ta1", {});
+    auto gpu = GpuContext::create("gpu_ta1", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto arena = TransientArena::create(*db, "arena_ta1", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_ta1", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto & vk = requireVulkanArena(*arena);
 
@@ -50,12 +48,10 @@ TEST_CASE("TransientArena: first allocation creates 16MB backing", "[rdg][transi
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: multiple allocs bump offset within same backing", "[rdg][transient-arena][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ta2", {});
+    auto gpu = GpuContext::create("gpu_ta2", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto arena = TransientArena::create(*db, "arena_ta2", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_ta2", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto & vk = requireVulkanArena(*arena);
 
@@ -76,12 +72,10 @@ TEST_CASE("TransientArena: multiple allocs bump offset within same backing", "[r
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: map increments mappedCount, unmap decrements", "[rdg][transient-arena][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ta3", {});
+    auto gpu = GpuContext::create("gpu_ta3", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto arena = TransientArena::create(*db, "arena_ta3", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_ta3", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto tb = arena->allocate(64, "tb");
     REQUIRE(tb);
@@ -103,12 +97,10 @@ TEST_CASE("TransientArena: map increments mappedCount, unmap decrements", "[rdg]
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: recycling reuses backing when all refs dropped", "[rdg][transient-arena][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ta4", {});
+    auto gpu = GpuContext::create("gpu_ta4", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto arena = TransientArena::create(*db, "arena_ta4", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_ta4", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto & vk = requireVulkanArena(*arena);
 
@@ -137,12 +129,10 @@ TEST_CASE("TransientArena: recycling reuses backing when all refs dropped", "[rd
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: recyclable only when liveCount and mappedCount are 0", "[rdg][transient-arena][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ta5", {});
+    auto gpu = GpuContext::create("gpu_ta5", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
-    auto arena = TransientArena::create(*db, "arena_ta5", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_ta5", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto & vk = requireVulkanArena(*arena);
 
@@ -169,14 +159,12 @@ TEST_CASE("TransientArena: recyclable only when liveCount and mappedCount are 0"
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: geometric growth creates larger second backing", "[rdg][transient-arena][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ta6", {});
+    auto gpu = GpuContext::create("gpu_ta6", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t MB = 1024u * 1024u;
 
-    auto arena = TransientArena::create(*db, "arena_ta6", TransientArena::CreateParameters {.context = gpu});
+    auto arena = TransientArena::create("arena_ta6", TransientArena::CreateParameters {.context = gpu});
     REQUIRE(arena);
     auto & vk = requireVulkanArena(*arena);
 
@@ -196,14 +184,12 @@ TEST_CASE("TransientArena: geometric growth creates larger second backing", "[rd
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: suggestedArenaSize used when larger than default", "[rdg][transient-arena][gpu]") {
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    REQUIRE(db);
-    auto gpu = GpuContext::create(*db, "gpu_ta7", {});
+    auto gpu = GpuContext::create("gpu_ta7", {});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t MB = 1024u * 1024u;
 
-    auto arena = TransientArena::create(*db, "arena_ta7", TransientArena::CreateParameters {.context = gpu, .suggestedArenaSize = 32 * MB});
+    auto arena = TransientArena::create("arena_ta7", TransientArena::CreateParameters {.context = gpu, .suggestedArenaSize = 32 * MB});
     REQUIRE(arena);
     auto & vk = requireVulkanArena(*arena);
 
