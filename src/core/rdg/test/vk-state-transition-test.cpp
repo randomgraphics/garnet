@@ -3,6 +3,7 @@
  * command buffer (first use = resource state, subsequent = CB state; flush on submit).
  */
 
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
 #include "rdg/vk-buffer-state.h"
@@ -165,7 +166,7 @@ struct StateTransitionTestAction : public Action {
 // ---------------------------------------------------------------------------
 
 TEST_CASE("StateTransition: texture transition and getTextureState", "[rdg][state-transition][gpu]") {
-    auto gpu = GpuContext::create("gpu_tex", {});
+    auto gpu = GpuContext::create("gpu_tex", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
     auto vkGpu = gpu.staticCastTo<GpuContextVulkan>();
     if (!vkGpu) SKIP("Not Vulkan");
@@ -220,7 +221,7 @@ TEST_CASE("StateTransition: texture transition and getTextureState", "[rdg][stat
 // ---------------------------------------------------------------------------
 
 TEST_CASE("StateTransition: buffer transition and getBufferState", "[rdg][state-transition][gpu]") {
-    auto gpu = GpuContext::create("gpu_buf", {});
+    auto gpu = GpuContext::create("gpu_buf", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
     auto vkGpu = gpu.staticCastTo<GpuContextVulkan>();
     if (!vkGpu) SKIP("Not Vulkan");
@@ -271,7 +272,7 @@ TEST_CASE("StateTransition: buffer transition and getBufferState", "[rdg][state-
 // ---------------------------------------------------------------------------
 
 TEST_CASE("StateTransition: backbuffer API with null or no image", "[rdg][state-transition][gpu]") {
-    auto gpu = GpuContext::create("gpu_bb", {});
+    auto gpu = GpuContext::create("gpu_bb", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
     auto vkGpu = gpu.staticCastTo<GpuContextVulkan>();
     if (!vkGpu) SKIP("Not Vulkan");

@@ -55,7 +55,7 @@ AutoRef<Blob> PersistentBufferVulkan::readback() const {
     auto * q = mGpu->device().graphics();
     if (!q) return {};
     AutoRef<Blob> result;
-    auto  params = rapid_vulkan::Buffer::ReadParametersWithCallback {};
+    auto          params = rapid_vulkan::Buffer::ReadParametersWithCallback {};
     params.setQueue(*q).setRange(0, mAllocatedSize);
     params.callback = [&result](const void * data, size_t size) {
         if (data && size > 0) result = referenceTo(new SimpleBlob<uint8_t>(size, static_cast<const uint8_t *>(data)));

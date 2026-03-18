@@ -3,6 +3,7 @@
  * Uses internal vk-transient-buffer.h to verify backing buffer states.
  */
 
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
 #include "rdg/vk-transient-buffer.h"
@@ -23,7 +24,7 @@ static TransientArenaVulkan & requireVulkanArena(TransientArena & arena) {
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: first allocation creates 16MB backing", "[rdg][transient-arena][gpu]") {
-    auto gpu = GpuContext::create("gpu_ta1", {});
+    auto gpu = GpuContext::create("gpu_ta1", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto arena = TransientArena::create("arena_ta1", TransientArena::CreateParameters {.context = gpu});
@@ -48,7 +49,7 @@ TEST_CASE("TransientArena: first allocation creates 16MB backing", "[rdg][transi
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: multiple allocs bump offset within same backing", "[rdg][transient-arena][gpu]") {
-    auto gpu = GpuContext::create("gpu_ta2", {});
+    auto gpu = GpuContext::create("gpu_ta2", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto arena = TransientArena::create("arena_ta2", TransientArena::CreateParameters {.context = gpu});
@@ -72,7 +73,7 @@ TEST_CASE("TransientArena: multiple allocs bump offset within same backing", "[r
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: map increments mappedCount, unmap decrements", "[rdg][transient-arena][gpu]") {
-    auto gpu = GpuContext::create("gpu_ta3", {});
+    auto gpu = GpuContext::create("gpu_ta3", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto arena = TransientArena::create("arena_ta3", TransientArena::CreateParameters {.context = gpu});
@@ -97,7 +98,7 @@ TEST_CASE("TransientArena: map increments mappedCount, unmap decrements", "[rdg]
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: recycling reuses backing when all refs dropped", "[rdg][transient-arena][gpu]") {
-    auto gpu = GpuContext::create("gpu_ta4", {});
+    auto gpu = GpuContext::create("gpu_ta4", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto arena = TransientArena::create("arena_ta4", TransientArena::CreateParameters {.context = gpu});
@@ -129,7 +130,7 @@ TEST_CASE("TransientArena: recycling reuses backing when all refs dropped", "[rd
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: recyclable only when liveCount and mappedCount are 0", "[rdg][transient-arena][gpu]") {
-    auto gpu = GpuContext::create("gpu_ta5", {});
+    auto gpu = GpuContext::create("gpu_ta5", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto arena = TransientArena::create("arena_ta5", TransientArena::CreateParameters {.context = gpu});
@@ -159,7 +160,7 @@ TEST_CASE("TransientArena: recyclable only when liveCount and mappedCount are 0"
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: geometric growth creates larger second backing", "[rdg][transient-arena][gpu]") {
-    auto gpu = GpuContext::create("gpu_ta6", {});
+    auto gpu = GpuContext::create("gpu_ta6", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t MB = 1024u * 1024u;
@@ -184,7 +185,7 @@ TEST_CASE("TransientArena: geometric growth creates larger second backing", "[rd
 // ---------------------------------------------------------------------------
 
 TEST_CASE("TransientArena: suggestedArenaSize used when larger than default", "[rdg][transient-arena][gpu]") {
-    auto gpu = GpuContext::create("gpu_ta7", {});
+    auto gpu = GpuContext::create("gpu_ta7", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t MB = 1024u * 1024u;

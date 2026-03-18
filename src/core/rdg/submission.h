@@ -77,7 +77,7 @@ public:
     AutoRef<T> getSumissionContext() const {
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
         if (ctx == mExecutionContexts.end()) { return {}; }
-        GN_ASSERT(ctx->second->typeId() == T::TYPE_ID);
+        GN_ASSERT(ctx->second->template isKindOf<T>());
         return ctx->second.template staticCastTo<T>();
     }
 
@@ -86,7 +86,7 @@ public:
                 GN_ERROR(GN::getLogger("GN.rdg"))("SubmissionImpl::setExecutionContext: context is null");
                 return;
             }
-        mExecutionContexts[ctx->typeId()] = ctx;
+        mExecutionContexts[ctx->typeInfo().id] = ctx;
     }
 
     template<typename T, typename... Args>

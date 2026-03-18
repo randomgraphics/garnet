@@ -8,6 +8,7 @@
  *  - currentBufferView() from each upload action is non-empty after submit.
  */
 
+#include "common.h"
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
@@ -16,7 +17,7 @@ using namespace GN;
 using namespace GN::rdg;
 
 TEST_CASE("SharedShaderConstants: create succeeds with valid GPU", "[rdg][shared-constants][gpu]") {
-    auto gpu = GpuContext::create("gpu_ssc", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
@@ -26,7 +27,7 @@ TEST_CASE("SharedShaderConstants: create succeeds with valid GPU", "[rdg][shared
 }
 
 TEST_CASE("SharedShaderConstants: setters update CPU state, no GPU sync", "[rdg][shared-constants][gpu]") {
-    auto gpu = GpuContext::create("gpu_ssc2", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc2", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
@@ -58,7 +59,7 @@ TEST_CASE("SharedShaderConstants: setters update CPU state, no GPU sync", "[rdg]
 TEST_CASE("SharedShaderConstants: build() returns workflow with two upload tasks", "[rdg][shared-constants][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_ssc3", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc3", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
@@ -81,7 +82,7 @@ TEST_CASE("SharedShaderConstants: build() returns workflow with two upload tasks
 TEST_CASE("SharedShaderConstants: build() + submit() succeeds", "[rdg][shared-constants][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_ssc4", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc4", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;
@@ -105,7 +106,7 @@ TEST_CASE("SharedShaderConstants: build() + submit() succeeds", "[rdg][shared-co
 TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[rdg][shared-constants][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_ssc5", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_ssc5", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     SharedShaderConstants::CreateParameters cp;

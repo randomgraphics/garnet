@@ -1,3 +1,4 @@
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
 #include <memory>
@@ -12,7 +13,7 @@ TEST_CASE("CopyBuffer: TYPE_ID is non-zero and distinct", "[rdg][copy-buffer]") 
 }
 
 TEST_CASE("CopyBuffer::A: addToReadWriteList marks src read, dst write", "[rdg][copy-buffer]") {
-    auto gpu = GpuContext::create("gpu", {});
+    auto gpu = GpuContext::create("gpu", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto src = PersistentBuffer::create("src", {.context = gpu, .size = 64, .usage = BufferUsageFlags(static_cast<uint32_t>(BufferUsageBits::UNIFORM))});
@@ -35,18 +36,18 @@ TEST_CASE("CopyBuffer::A: addToReadWriteList marks src read, dst write", "[rdg][
 }
 
 TEST_CASE("CopyBuffer::create: returns non-null with valid gpu", "[rdg][copy-buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu_cb", {});
+    auto gpu = GpuContext::create("gpu_cb", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto copy = GpuCopy::create("test_copy", {.gpu = gpu});
     REQUIRE(copy);
-    CHECK(copy->typeId() == GpuCopy::TYPE_ID);
+    CHECK(copy->isKindOf<GpuCopy>());
 }
 
 TEST_CASE("CopyBuffer: transient→buffer copy via submission", "[rdg][copy-buffer][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_tcopy", {});
+    auto gpu = GpuContext::create("gpu_tcopy", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t kSize = 64;

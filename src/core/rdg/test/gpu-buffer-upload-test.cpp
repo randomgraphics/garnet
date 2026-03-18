@@ -60,7 +60,7 @@ TEST_CASE("GpuBufferUpload::CreateParameters: defaults are sensible", "[rdg][gpu
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("GpuBufferUpload::create: returns non-null for valid HOST_MAP params", "[rdg][gpu-buffer-upload][gpu]") {
-    auto gpu = GpuContext::create("gpu", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -70,7 +70,7 @@ TEST_CASE("GpuBufferUpload::create: returns non-null for valid HOST_MAP params",
     cp.ringSlots = 2;
     auto upload  = GpuBufferUpload::create("test_upload", cp);
     REQUIRE(upload != nullptr);
-    CHECK(upload->typeId == GpuBufferUpload::TYPE_ID);
+    CHECK(upload->isKindOf<GpuBufferUpload>());
 }
 
 TEST_CASE("GpuBufferUpload::create: fails when gpu is null", "[rdg][gpu-buffer-upload]") {
@@ -82,7 +82,7 @@ TEST_CASE("GpuBufferUpload::create: fails when gpu is null", "[rdg][gpu-buffer-u
 }
 
 TEST_CASE("GpuBufferUpload::create: fails when size is 0", "[rdg][gpu-buffer-upload][gpu]") {
-    auto gpu = GpuContext::create("gpu2", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu2", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -93,7 +93,7 @@ TEST_CASE("GpuBufferUpload::create: fails when size is 0", "[rdg][gpu-buffer-upl
 }
 
 TEST_CASE("GpuBufferUpload::create: currentBufferView returns empty before first execute", "[rdg][gpu-buffer-upload][gpu]") {
-    auto gpu = GpuContext::create("gpu3", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu3", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -129,7 +129,7 @@ static void runUploadFrame(RenderGraph & rg, GpuBufferUpload & upload, const voi
 TEST_CASE("GpuBufferUpload HOST_MAP: execute writes data; view stays valid", "[rdg][gpu-buffer-upload][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_exec", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_exec", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t                kSize = 64;
@@ -153,7 +153,7 @@ TEST_CASE("GpuBufferUpload HOST_MAP: execute writes data; view stays valid", "[r
 TEST_CASE("GpuBufferUpload HOST_MAP: currentBufferView rotates slot on each execute", "[rdg][gpu-buffer-upload][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_rot", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_rot", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t                kSize = 64;
@@ -184,7 +184,7 @@ TEST_CASE("GpuBufferUpload HOST_MAP: currentBufferView rotates slot on each exec
 TEST_CASE("GpuBufferUpload HOST_MAP: writeFn callback executes correctly", "[rdg][gpu-buffer-upload][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_fn", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_fn", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t                kSize = 64;

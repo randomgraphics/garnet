@@ -4,8 +4,6 @@
 #include <garnet/rdg/rtti.h>
 
 #include <concepts>
-#include <functional>
-#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 

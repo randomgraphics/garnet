@@ -6,6 +6,7 @@
  * unmap, then copy to device buffer via submission" pattern.
  */
 
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
 #include <cstring>
@@ -25,7 +26,7 @@ struct FakeCameraUBO {
 TEST_CASE("Transient workflow: UBO upload via transient + copy", "[rdg][transient-workflow][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_tw", {});
+    auto gpu = GpuContext::create("gpu_tw", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint64_t kUboSize = sizeof(FakeCameraUBO);
@@ -82,7 +83,7 @@ struct FakeLightingUBO {
 TEST_CASE("Transient workflow: multiple UBO copies in one submission", "[rdg][transient-workflow][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_tw2", {});
+    auto gpu = GpuContext::create("gpu_tw2", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     const BufferUsageFlags kDstUsage(static_cast<uint32_t>(BufferUsageBits::UNIFORM));
@@ -146,7 +147,7 @@ struct PerDrawPayload {
 TEST_CASE("Transient workflow: per-draw payloads packed in one transient buffer", "[rdg][transient-workflow][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_dyn", {});
+    auto gpu = GpuContext::create("gpu_dyn", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint32_t     kDrawCount   = 4;

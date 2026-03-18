@@ -6,6 +6,7 @@
  *   Phase 0.2 — BufferVulkan pre-allocation and setContent() contract.
  */
 
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
 #ifdef _MSC_VER
@@ -60,7 +61,7 @@ TEST_CASE("Buffer: CreateParameters accepts UNIFORM usage", "[rdg][buffer]") {
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("Buffer: create returns non-null for valid params", "[rdg][buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
@@ -71,7 +72,7 @@ TEST_CASE("Buffer: create returns non-null for valid params", "[rdg][buffer][gpu
 }
 
 TEST_CASE("Buffer: create fails when size is 0", "[rdg][buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu2", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu2", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
@@ -82,7 +83,7 @@ TEST_CASE("Buffer: create fails when size is 0", "[rdg][buffer][gpu]") {
 }
 
 TEST_CASE("Buffer: setContent writes data correctly", "[rdg][buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu3", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu3", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     constexpr uint32_t kCount      = 4;
@@ -100,7 +101,7 @@ TEST_CASE("Buffer: setContent writes data correctly", "[rdg][buffer][gpu]") {
 }
 
 TEST_CASE("Buffer: setContent fails when data pointer is null", "[rdg][buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu4", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu4", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
@@ -113,7 +114,7 @@ TEST_CASE("Buffer: setContent fails when data pointer is null", "[rdg][buffer][g
 }
 
 TEST_CASE("Buffer: setContent fails when size exceeds allocated capacity", "[rdg][buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu5", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu5", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
@@ -127,7 +128,7 @@ TEST_CASE("Buffer: setContent fails when size exceeds allocated capacity", "[rdg
 }
 
 TEST_CASE("Buffer: setContent can be called multiple times (map-reuse)", "[rdg][buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu6", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu6", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;
@@ -143,7 +144,7 @@ TEST_CASE("Buffer: setContent can be called multiple times (map-reuse)", "[rdg][
 }
 
 TEST_CASE("Buffer: create with UNIFORM usage succeeds", "[rdg][buffer][gpu]") {
-    auto gpu = GpuContext::create("gpu7", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu7", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     PersistentBuffer::CreateParameters cp;

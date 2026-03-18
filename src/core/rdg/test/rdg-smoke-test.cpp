@@ -1,3 +1,4 @@
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
 
@@ -8,7 +9,7 @@ TEST_CASE("RDG smoke: prepare then present immediately (no draws)", "[rdg][smoke
     auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(renderGraph);
 
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     const uint32_t w = 64, h = 64;
@@ -42,7 +43,7 @@ TEST_CASE("RDG smoke: clear-to-red headless render", "[rdg][smoke][gpu]") {
     auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(renderGraph);
 
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     const uint32_t displayWidth = 1280, displayHeight = 720;

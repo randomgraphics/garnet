@@ -27,7 +27,7 @@ public:
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = runtimeCast<ClearRenderTarget::A>(arguments);
+        auto a = RuntimeType::cast<ClearRenderTarget::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
         // standard preparation.
@@ -42,7 +42,7 @@ public:
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = runtimeCast<ClearRenderTarget::A>(arguments);
+        auto a = RuntimeType::cast<ClearRenderTarget::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
         // standard execution
@@ -113,7 +113,7 @@ public:
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = runtimeCast<GpuDraw::A>(arguments);
+        auto a = RuntimeType::cast<GpuDraw::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
         // standard preparation.
@@ -129,7 +129,7 @@ public:
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = runtimeCast<GpuDraw::A>(arguments);
+        auto a = RuntimeType::cast<GpuDraw::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
         const auto size = static_cast<uint32_t>(a->immediates.size());

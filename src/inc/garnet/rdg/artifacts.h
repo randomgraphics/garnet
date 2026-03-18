@@ -16,8 +16,25 @@ struct GpuContext : public Artifact {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
 
     struct CreateParameters {
+        enum DebugMode {
+            DISABLED,
+            ENABLED, ///< Enable API's built-in debug facilities, if available.
+        };
+
+        enum Verbosity {
+            SILENCE = 0,
+            BRIEF,
+            VERBOSE,
+        };
+
         /// The graphics API ("auto" = platform default; "vulkan", "d3d12", "metal").
         StrA api = "auto";
+
+        /// Set the debug mode.
+        DebugMode debug = GN_BUILD_DEBUG_ENABLED ? DebugMode::ENABLED : DebugMode::DISABLED;
+
+        /// Set the device capabilities print verbosity.
+        Verbosity howToPrintDeviceCaps = Verbosity::BRIEF;
     };
 
     /// Create a new instance of GpuContext.
@@ -431,12 +448,12 @@ struct GpuResourceView {
     bool isPersistentBuffer() const { return artifact && artifact->isKindOf<PersistentBuffer>(); }
     bool isBuffer() const { return artifact && artifact->isKindOf<Buffer>(); }
 
-    auto backbuffer() const -> AutoRef<Backbuffer> { return runtimeCast<Backbuffer>(artifact); }
-    auto texture() const -> AutoRef<Texture> { return runtimeCast<Texture>(artifact); }
-    auto sampler() const -> AutoRef<Sampler> { return runtimeCast<Sampler>(artifact); }
-    auto transientBuffer() const -> AutoRef<TransientBuffer> { return runtimeCast<TransientBuffer>(artifact); }
-    auto persistentBuffer() const -> AutoRef<PersistentBuffer> { return runtimeCast<PersistentBuffer>(artifact); }
-    auto buffer() const -> AutoRef<Buffer> { return runtimeCast<Buffer>(artifact); }
+    auto backbuffer() const -> AutoRef<Backbuffer> { return RuntimeType::cast<Backbuffer>(artifact); }
+    auto texture() const -> AutoRef<Texture> { return RuntimeType::cast<Texture>(artifact); }
+    auto sampler() const -> AutoRef<Sampler> { return RuntimeType::cast<Sampler>(artifact); }
+    auto transientBuffer() const -> AutoRef<TransientBuffer> { return RuntimeType::cast<TransientBuffer>(artifact); }
+    auto persistentBuffer() const -> AutoRef<PersistentBuffer> { return RuntimeType::cast<PersistentBuffer>(artifact); }
+    auto buffer() const -> AutoRef<Buffer> { return RuntimeType::cast<Buffer>(artifact); }
 
     GpuResourceView & setArtifact(AutoRef<Artifact> artifact_) {
         artifact = std::move(artifact_);

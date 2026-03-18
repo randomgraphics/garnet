@@ -38,7 +38,7 @@ static GpuBufferUploadVulkan * asVulkan(GpuBufferUpload * upload) { return stati
 // ─────────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("GpuBufferUpload Phase3: slot is ready before any execute", "[rdg][upload-phase3][gpu]") {
-    auto gpu = GpuContext::create("gpu_p3_ready", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_p3_ready", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -60,7 +60,7 @@ TEST_CASE("GpuBufferUpload Phase3: upload-only submission — slot stays ready (
     // An upload-only workflow has no GPU command buffer, so CommandBufferManagerVulkan::submit()
     // is never called → no SubmissionID distributed.  The slot should remain isReady().
     auto rg  = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
-    auto gpu = GpuContext::create("gpu_p3_nocd", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_p3_nocd", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     GpuBufferUpload::CreateParameters cp;
@@ -89,7 +89,7 @@ TEST_CASE("GpuBufferUpload Phase3: with draw command — slot gets submissionId"
     // receiving a non-empty SubmissionID.
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
-    auto gpu = GpuContext::create("gpu_p3_draw", GpuContext::CreateParameters {});
+    auto gpu = GpuContext::create("gpu_p3_draw", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     // Build a minimal renderable target (headless backbuffer).

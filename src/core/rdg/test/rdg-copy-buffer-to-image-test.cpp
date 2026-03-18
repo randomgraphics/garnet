@@ -5,6 +5,7 @@
  * returns null with an appropriate log message.
  */
 
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg.h>
 
@@ -19,7 +20,7 @@ TEST_CASE("CopyBufferToImage: TYPE_ID is non-zero and distinct from CopyBuffer",
 }
 
 TEST_CASE("CopyBufferToImage::A: addToReadWriteList marks src read, dst write", "[rdg][copy-buffer-to-image]") {
-    auto gpu = GpuContext::create("gpu_b2i", {});
+    auto gpu = GpuContext::create("gpu_b2i", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto arena = TransientArena::create("arena_b2i", TransientArena::CreateParameters {.context = gpu});
@@ -43,7 +44,7 @@ TEST_CASE("CopyBufferToImage::A: addToReadWriteList marks src read, dst write", 
 }
 
 TEST_CASE("CopyBufferToImage::create: GpuCopy::create returns non-null", "[rdg][copy-buffer-to-image][gpu]") {
-    auto gpu = GpuContext::create("gpu_b2i_create", {});
+    auto gpu = GpuContext::create("gpu_b2i_create", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpu) SKIP("No Vulkan GPU context available");
 
     auto action = GpuCopy::create("b2i_stub", {.gpu = gpu});

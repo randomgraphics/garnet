@@ -3,6 +3,7 @@
  * GPU-dependent tests use SKIP() when no Vulkan context is available.
  */
 
+#include "common.h"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <garnet/GNbase.h>
@@ -20,7 +21,7 @@ TEST_CASE("PBR: type IDs non-zero", "[rdg][pbr]") {
 }
 
 TEST_CASE("PBR: create and build without graph", "[rdg][pbr][gpu]") {
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     auto pbr = PbrShading::create("pbr", PbrShading::CreateParameters {.gpu = gpuContext});
@@ -36,7 +37,7 @@ TEST_CASE("PBR: create and build without graph", "[rdg][pbr][gpu]") {
 TEST_CASE("PBR: build with render graph returns workflow", "[rdg][pbr][gpu]") {
     auto renderGraph = RenderGraph::create({});
     REQUIRE(renderGraph != nullptr);
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     auto pbr = PbrShading::create("pbr_build", PbrShading::CreateParameters {.gpu = gpuContext});
@@ -53,7 +54,7 @@ TEST_CASE("PBR: build with render graph returns workflow", "[rdg][pbr][gpu]") {
 TEST_CASE("PBR: SubGraph::drop clears workflows", "[rdg][pbr][gpu]") {
     auto renderGraph = RenderGraph::create({});
     REQUIRE(renderGraph != nullptr);
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     auto pbr = PbrShading::create("pbr_drop", PbrShading::CreateParameters {.gpu = gpuContext});
@@ -68,7 +69,7 @@ TEST_CASE("PBR: SubGraph::drop clears workflows", "[rdg][pbr][gpu]") {
 }
 
 TEST_CASE("PBR: Material::load from empty MemFile", "[rdg][pbr][gpu]") {
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     static const char empty[1] = {};
@@ -76,11 +77,11 @@ TEST_CASE("PBR: Material::load from empty MemFile", "[rdg][pbr][gpu]") {
     REQUIRE(memFile->readable());
     auto mat = PbrShading::Material::load("test_material_empty", PbrShading::Material::LoadParameters {.gpu = gpuContext, .source = memFile});
     REQUIRE(mat != nullptr);
-    CHECK(mat->typeId() == PbrShading::Material::TYPE_ID);
+    CHECK(mat->isKindOf<PbrShading::Material>());
 }
 
 TEST_CASE("PBR: Material::load resolves texture path", "[rdg][pbr][gpu]") {
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     static const char content[] = "baseColorTexture=texture/earth.jpg\n";
@@ -94,7 +95,7 @@ TEST_CASE("PBR: Material::load resolves texture path", "[rdg][pbr][gpu]") {
 }
 
 TEST_CASE("PBR: Material::load lined-metal-sheeting", "[rdg][pbr][gpu][media]") {
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
@@ -123,7 +124,7 @@ TEST_CASE("PBR: Material::load lined-metal-sheeting", "[rdg][pbr][gpu][media]") 
 }
 
 TEST_CASE("PBR: SharedShaderConstants view round-trip", "[rdg][pbr][gpu]") {
-    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
     auto shared = SharedShaderConstants::create("shared", SharedShaderConstants::CreateParameters {.gpu = gpuContext});

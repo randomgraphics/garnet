@@ -237,7 +237,7 @@ public:
     ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto a = runtimeCast<PrepareBackbuffer::A>(arguments);
+        auto a = RuntimeType::cast<PrepareBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PrepareBackbuffer::A", taskInfo);
         GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
         auto bb = a->backbuffer.staticCastTo<BackbufferVulkan>();
@@ -261,7 +261,7 @@ public:
     PresentBackbufferVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu): PresentBackbuffer(TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
     ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto a = runtimeCast<PresentBackbuffer::A>(arguments);
+        auto a = RuntimeType::cast<PresentBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
         GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
 
@@ -274,7 +274,7 @@ public:
     }
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto a = runtimeCast<PresentBackbuffer::A>(arguments);
+        auto a = RuntimeType::cast<PresentBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
         auto bb = a->backbuffer.staticCastTo<BackbufferVulkan>();
         GN_RDG_FAIL_ON_FALSE(bb, "{} - backbuffer is not BackbufferVulkan", taskInfo);

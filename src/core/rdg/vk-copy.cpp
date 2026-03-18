@@ -24,11 +24,11 @@ class GpuCopyVulkan : public GpuCopy {
         GN_RDG_FAIL_ON_FALSE(srcHandle && dstHandle, "{} - CopyBufferVulkan::execute: srcBuffer or dstBuffer is properly initialized", taskInfo);
 
         uint64_t srcOff       = arguments.srcOffset;
-        auto     srcTransient = runtimeCast<const TransientBufferVulkan>(arguments.src);
+        auto     srcTransient = RuntimeType::cast<const TransientBufferVulkan>(arguments.src);
         if (srcTransient) srcOff += srcTransient->offset();
 
         uint64_t dstOff       = arguments.dstOffset;
-        auto     dstTransient = runtimeCast<const TransientBufferVulkan>(arguments.dst);
+        auto     dstTransient = RuntimeType::cast<const TransientBufferVulkan>(arguments.dst);
         if (dstTransient) dstOff += dstTransient->offset();
 
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
@@ -82,7 +82,7 @@ public:
         : GpuCopy(TYPE_INFO(), name), mGpu(std::move(gpu)), mCreateParams(params) {}
 
     bool validate(const Arguments & arguments) const override {
-        const auto * a = runtimeCast<BufferToBuffer>(&arguments);
+        const auto * a = RuntimeType::cast<BufferToBuffer>(&arguments);
         if (a) {
             if (!a->src) GN_UNLIKELY {
                     GN_ERROR(sLogger)("GpuCopyVulkan::validate: src is null");
@@ -110,7 +110,7 @@ public:
                 }
             return true;
         }
-        if (runtimeCast<BufferToImage>(&arguments)) {
+        if (RuntimeType::cast<BufferToImage>(&arguments)) {
             GN_ERROR(sLogger)("GpuCopyVulkan::validate: BufferToImage not implemented");
             return false;
         }
@@ -125,10 +125,10 @@ public:
     }
 
     ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
-        const auto * bufferToBuffer = runtimeCast<BufferToBuffer>(arguments);
+        const auto * bufferToBuffer = RuntimeType::cast<BufferToBuffer>(arguments);
         if (bufferToBuffer) return copyBufferToBuffer(taskInfo, *bufferToBuffer);
 
-        const auto * bufferToImage = runtimeCast<BufferToImage>(arguments);
+        const auto * bufferToImage = RuntimeType::cast<BufferToImage>(arguments);
         if (bufferToImage) return copyBufferToImage(taskInfo, *bufferToImage);
 
         GN_ERROR(sLogger)("GpuCopyVulkan::execute: arguments is not BufferToBuffer or BufferToImage");

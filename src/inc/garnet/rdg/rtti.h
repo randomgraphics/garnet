@@ -7,9 +7,11 @@
 
 #include <garnet/GNbase.h>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <concepts>
+#include <string_view>
+#include <tuple>
 
 namespace GN::rdg {
 
@@ -25,7 +27,7 @@ namespace GN::rdg {
 struct RuntimeType {
     struct TypeInfo {
         const uint64_t           id    = 0;
-        const char * const       name  = nullptr;
+        std::string_view         name  = {};
         const uint32_t           level = 0; ///< length of the inheritance chain
         const TypeInfo * const * bases = nullptr;
         const std::size_t        count = 0; ///< number of base types
@@ -47,14 +49,46 @@ struct RuntimeType {
         }
     };
 
+    /// Return the actual type info for current instance.
     const TypeInfo & typeInfo() const { return mTypeInfo; }
 
-    /// Type ID for compatibility; same as typeInfo().id.
-    uint64_t typeId() const { return mTypeInfo.id; }
-
+    /// Check if the current instance is derived from the given type.
     template<typename T>
     bool isKindOf() const {
-        return mTypeInfo.isDerivedFrom(T::TYPE_INFO());
+        return typeInfo().isDerivedFrom(T::TYPE_INFO());
+    }
+
+    template<typename TO, typename FROM>
+    static TO * cast(FROM * from) {
+        if (!from) return nullptr;
+        if (!from->typeInfo().isDerivedFrom(TO::TYPE_INFO())) return nullptr;
+        return static_cast<TO *>(from);
+    }
+
+    template<typename TO, typename FROM>
+    static TO * cast(FROM & from) {
+        if (!from.typeInfo().isDerivedFrom(TO::TYPE_INFO())) return nullptr;
+        return static_cast<TO *>(&from);
+    }
+
+    template<typename TO, typename FROM>
+    static const TO * cast(const FROM * from) {
+        if (!from) return nullptr;
+        if (!from->typeInfo().isDerivedFrom(TO::TYPE_INFO())) return nullptr;
+        return static_cast<const TO *>(from);
+    }
+
+    template<typename TO, typename FROM>
+    static const TO * cast(const FROM & from) {
+        if (!from.typeInfo().isDerivedFrom(TO::TYPE_INFO())) return nullptr;
+        return static_cast<const TO *>(&from);
+    }
+
+    template<typename TO, typename FROM>
+    static AutoRef<TO> cast(const AutoRef<FROM> & from) {
+        if (!from) return {};
+        if (!from->typeInfo().isDerivedFrom(TO::TYPE_INFO())) return {};
+        return from.template staticCastTo<TO>();
     }
 
     /// Returns a new unique 64-bit type ID each call. Thread-safe. Defined in one TU and exported
@@ -68,39 +102,6 @@ protected:
     RuntimeType(const TypeInfo & typeInfo): mTypeInfo(typeInfo) {}
 };
 
-template<typename T>
-T * runtimeCast(RuntimeType * from) {
-    if (!from) return nullptr;
-    if (!from->isKindOf<T>()) return nullptr;
-    return static_cast<T *>(from);
-}
-
-template<typename T>
-T * runtimeCast(RuntimeType & from) {
-    if (!from.template isKindOf<T>()) return {};
-    return static_cast<T *>(&from);
-}
-
-template<typename T>
-const T * runtimeCast(const RuntimeType * from) {
-    if (!from) return nullptr;
-    if (!from->isKindOf<T>()) return nullptr;
-    return static_cast<const T *>(from);
-}
-
-template<typename T>
-const T * runtimeCast(const RuntimeType & from) {
-    if (!from.template isKindOf<T>()) return {};
-    return static_cast<const T *>(&from);
-}
-
-template<typename T, typename F>
-AutoRef<T> runtimeCast(const AutoRef<F> & from) {
-    if (!from) return {};
-    if (!from->template isKindOf<T>()) return {};
-    return from.template staticCastTo<T>();
-}
-
 template<typename... BaseTypes>
 struct RttiBaseTypeIds {
     /// return max level of all base types.
@@ -110,32 +111,38 @@ struct RttiBaseTypeIds {
         return level;
     }
 
-    static const RuntimeType::TypeInfo * const * BASE() {
-        static const RuntimeType::TypeInfo * const table[] = {
-            &BaseTypes::TYPE_INFO()...,
-        };
-        return table;
+    /// Return type of the first base type.
+    using FirstBaseType = typename std::tuple_element<0, std::tuple<BaseTypes...>>::type;
+
+    static std::array<const RuntimeType::TypeInfo *, sizeof...(BaseTypes)> BASE() {
+        return std::array<const RuntimeType::TypeInfo *, sizeof...(BaseTypes)> {&BaseTypes::TYPE_INFO()...};
     }
-    static constexpr std::size_t SIZE() { return sizeof...(BaseTypes); }
 };
 
 template<>
 struct RttiBaseTypeIds<> {
-    static constexpr uint32_t                    LEVEL() { return 0; }
-    static const RuntimeType::TypeInfo * const * BASE() { return nullptr; }
-    static constexpr std::size_t                 SIZE() { return 0; }
+    static constexpr uint32_t                                     LEVEL() { return 0; }
+    static constexpr std::array<const RuntimeType::TypeInfo *, 0> BASE() { return std::array<const RuntimeType::TypeInfo *, 0> {}; }
+
+    using FirstBaseType = RuntimeType;
 };
 
 // The main entry point for registering a runtime type.
-#define GN_RDG_REGISTER_RUNTIME_TYPE(...)                                                            \
-    inline static const uint64_t         TYPE_ID = RuntimeType::getNextUniqueTypeId();               \
-    static const RuntimeType::TypeInfo & TYPE_INFO() {                                               \
-        static const RuntimeType::TypeInfo ti = {.id    = TYPE_ID,                                   \
-                                                 .name  = GN_FUNCTION,                               \
-                                                 .level = RttiBaseTypeIds<__VA_ARGS__>::LEVEL() + 1, \
-                                                 .bases = RttiBaseTypeIds<__VA_ARGS__>::BASE(),      \
-                                                 .count = RttiBaseTypeIds<__VA_ARGS__>::SIZE()};     \
-        return ti;                                                                                   \
+#define GN_RDG_REGISTER_RUNTIME_TYPE(...)                                                                    \
+    inline static const uint64_t         TYPE_ID = RuntimeType::getNextUniqueTypeId();                       \
+    static const RuntimeType::TypeInfo & TYPE_INFO() {                                                       \
+        static const auto bases = RttiBaseTypeIds<__VA_ARGS__>::BASE();                                      \
+        static const auto ti    = RuntimeType::TypeInfo {.id    = TYPE_ID,                                   \
+                                                         .name  = GN_FUNCTION,                               \
+                                                         .level = RttiBaseTypeIds<__VA_ARGS__>::LEVEL() + 1, \
+                                                         .bases = bases.data(),                              \
+                                                         .count = bases.size()};                             \
+        return ti;                                                                                           \
+    }                                                                                                        \
+    const TypeInfo & typeInfo() const { return RttiBaseTypeIds<__VA_ARGS__>::FirstBaseType::typeInfo(); }    \
+    template<typename DERIVED_TYPE>                                                                          \
+    bool isKindOf() const {                                                                                  \
+        return typeInfo().isDerivedFrom(DERIVED_TYPE::TYPE_INFO());                                          \
     }
 
 } // namespace GN::rdg

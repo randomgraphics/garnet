@@ -254,14 +254,14 @@ Submission::State SubmissionImpl::dumpState() const {
                 // Print all resources read by this task
                 out += "      read artifacts:\n";
                 for (const Artifact * a : r) {
-                    const char * typeName = a->typeInfo().name ? a->typeInfo().name : "[unknown type]";
-                    out += StrA::format("        [type:{} id:{}] name:\"{}\"\n", typeName, (unsigned long long) a->typeId(), a->name.c_str());
+                    auto typeName = a->typeInfo().name.empty() ? std::string_view("[unknown type]") : a->typeInfo().name;
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"\n", typeName, (unsigned long long) a->typeInfo().id, a->name.c_str());
                 }
                 // Print all resources written by this task
                 out += "      write artifacts:\n";
                 for (const Artifact * a : w) {
-                    const char * typeName = a->typeInfo().name ? a->typeInfo().name : "[unknown type]";
-                    out += StrA::format("        [type:{} id:{}] name:\"{}\"\n", typeName, (unsigned long long) a->typeId(), a->name.c_str());
+                    auto typeName = a->typeInfo().name.empty() ? std::string_view("[unknown type]") : a->typeInfo().name;
+                    out += StrA::format("        [type:{} id:{}] name:\"{}\"\n", typeName, (unsigned long long) a->typeInfo().id, a->name.c_str());
                 }
             }
         }
