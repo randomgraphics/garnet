@@ -3,6 +3,7 @@
 file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS
     ${CMAKE_SOURCE_DIR}/src/core/*.cpp)
 list(FILTER test_sources INCLUDE REGEX ".*/test/[^/]+\\.cpp$")
+list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/catch-failed-tests-listener.cpp)
 add_executable(GNtest-internal ${test_sources})
 target_include_directories(GNtest-internal PRIVATE
     ${CMAKE_SOURCE_DIR}/src/core

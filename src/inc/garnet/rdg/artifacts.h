@@ -1,6 +1,5 @@
 #pragma once
 
-#include <garnet/rdg/dependency-graph.h>
 #include <garnet/rdg/rtti.h>
 #include <garnet/gfx/image.h>
 #include <unordered_map>
@@ -357,31 +356,37 @@ struct GpuResourceView {
         bool operator!=(const SubresourceIndex & other) const { return !operator==(other); }
     };
 
-    struct SubresourceRange {
+    struct SubresourceExtent {
         uint32_t numMipLevels   = (uint32_t) -1; ///< -1 means all mip levels
         uint32_t numArrayLayers = (uint32_t) -1; ///< -1 means all array layers
 
-        bool operator==(const SubresourceRange & other) const { return numMipLevels == other.numMipLevels && numArrayLayers == other.numArrayLayers; }
+        bool operator==(const SubresourceExtent & other) const { return numMipLevels == other.numMipLevels && numArrayLayers == other.numArrayLayers; }
+        bool operator!=(const SubresourceExtent & other) const { return !operator==(other); }
+    };
+
+    /// Combined subresource index and extent for image views (classes/functions that need both use this).
+    struct SubresourceRange {
+        SubresourceIndex  i = {};
+        SubresourceExtent e = {};
+
+        bool operator==(const SubresourceRange & other) const { return i == other.i && e == other.e; }
         bool operator!=(const SubresourceRange & other) const { return !operator==(other); }
     };
 
-    // TODO: compress type, subresourceIndex, subresourceRange into 32 bits. So the whole view is 64 bits
+    // TODO: compress type and range into 32 bits. So the whole view is 64 bits
     struct ImageView {
         enum Type {
             SAMPLED,
             STORAGE,
         };
 
-        Type             type             = Type::SAMPLED; ///< sampled or storage image
-        SubresourceIndex subresourceIndex = {};
-        SubresourceRange subresourceRange = {};
+        Type             type  = Type::SAMPLED; ///< sampled or storage image
+        SubresourceRange range = {};            ///< subresource index (i) and extent (e)
 
         /// pixel format of the image view. Unknown means use the intrinsic format of the texture or backbuffer.
         gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
 
-        bool operator==(const ImageView & other) const {
-            return type == other.type && subresourceIndex == other.subresourceIndex && subresourceRange == other.subresourceRange && format == other.format;
-        }
+        bool operator==(const ImageView & other) const { return type == other.type && range == other.range && format == other.format; }
         bool operator!=(const ImageView & other) const { return !operator==(other); }
     };
 
@@ -453,13 +458,13 @@ struct GpuResourceView {
         return *this;
     }
 
-    GpuResourceView & setSubresourceIndex(SubresourceIndex subresourceIndex) {
-        imageView.subresourceIndex = subresourceIndex;
+    GpuResourceView & setSubresourceIndex(SubresourceIndex index) {
+        imageView.range.i = index;
         return *this;
     }
 
-    GpuResourceView & setSubresourceRange(SubresourceRange subresourceRange) {
-        imageView.subresourceRange = subresourceRange;
+    GpuResourceView & setSubresourceExtent(SubresourceExtent extent) {
+        imageView.range.e = extent;
         return *this;
     }
 
@@ -660,23 +665,23 @@ struct RenderTarget : public Artifact {
     ScissorRect                scissorRect  = {};
 
     RenderTarget & addColorTarget(AutoRef<Texture> texture, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) {
-        colors.append(ColorTarget {.target = GpuResourceView {}.setArtifact(texture).setSubresourceRange({1, 1}).setSubresourceIndex({mipLevel, arrayLayer})});
+        colors.append(ColorTarget {.target = GpuResourceView {}.setArtifact(texture).setSubresourceExtent({1, 1}).setSubresourceIndex({mipLevel, arrayLayer})});
         return *this;
     }
 
     RenderTarget & addColorTarget(AutoRef<Backbuffer> backbuffer) {
-        colors.append(ColorTarget {.target = GpuResourceView {}.setArtifact(backbuffer).setSubresourceRange({1, 1}).setSubresourceIndex({0, 0})});
+        colors.append(ColorTarget {.target = GpuResourceView {}.setArtifact(backbuffer).setSubresourceExtent({1, 1}).setSubresourceIndex({0, 0})});
         return *this;
     }
 
     RenderTarget & setColorTarget(size_t index, AutoRef<Texture> texture, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) {
         GN_ASSERT(index < colors.size());
-        colors[index].target.setArtifact(texture).setSubresourceRange({1, 1}).setSubresourceIndex({mipLevel, arrayLayer});
+        colors[index].target.setArtifact(texture).setSubresourceExtent({1, 1}).setSubresourceIndex({mipLevel, arrayLayer});
         return *this;
     }
 
     RenderTarget & setColorTarget(size_t index, AutoRef<Backbuffer> backbuffer) {
-        colors[index].target.setArtifact(backbuffer).setSubresourceRange({1, 1}).setSubresourceIndex({0, 0});
+        colors[index].target.setArtifact(backbuffer).setSubresourceExtent({1, 1}).setSubresourceIndex({0, 0});
         return *this;
     }
 
@@ -703,8 +708,8 @@ struct RenderTarget : public Artifact {
         return *this;
     }
 
-    RenderTarget & setDepthStencilSubresourceIndex(GpuResourceView::SubresourceIndex subresourceIndex) {
-        depthStencilTarget.imageView.subresourceIndex = subresourceIndex;
+    RenderTarget & setDepthStencilSubresourceIndex(GpuResourceView::SubresourceIndex index) {
+        depthStencilTarget.imageView.range.i = index;
         return *this;
     }
 

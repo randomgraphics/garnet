@@ -2,9 +2,13 @@
 #include "vk-draw-actions.h"
 #include "vk-submission-context.h"
 #include "vk-backbuffer.h"
+#include "vk-buffer-state.h"
+#include "vk-command-buffer.h"
 #include "vk-texture.h"
+#include "vk-format-utils.h"
 #include "vk-transient-buffer.h"
 #include "vk-pso-factory.h"
+#include <rapid-vulkan/rapid-vulkan.h>
 
 namespace GN::rdg {
 
@@ -44,8 +48,8 @@ public:
         // standard execution
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
-        GN_RDG_FAIL_ON_FAIL(cb);
-        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer().handle());
+        GN_RDG_FAIL_ON_FALSE(cb, "{} - failed to get command buffer", taskInfo);
+        auto rp = sc.renderPassManager.execute(taskInfo, &cb);
         GN_RDG_FAIL_ON_FAIL(rp);
 
         // done
@@ -66,9 +70,41 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(const StrA & name, cons
 // GpuDrawVulkan
 // =====================================================================================================================
 
+namespace {
+
+/// Get VkImageView for a GpuResourceView that is a texture. Returns VK_NULL_HANDLE on failure.
+vk::ImageView getTextureImageView(const GpuResourceView & view) {
+    if (!view.isTexture()) return {};
+    auto tex = view.texture().staticCastTo<TextureVulkan>();
+    if (!tex || !tex->image()) return {};
+    const auto & iv     = view.imageView;
+    uint32_t     mips   = (iv.range.e.numMipLevels == (uint32_t) -1) ? 1 : iv.range.e.numMipLevels;
+    uint32_t     layers = (iv.range.e.numArrayLayers == (uint32_t) -1) ? 1 : iv.range.e.numArrayLayers;
+    vk::Format   format = (iv.format != gfx::img::PixelFormat::UNKNOWN()) ? pixelFormatToVkFormat(iv.format) : pixelFormatToVkFormat(tex->descriptor().format);
+    auto         params = rapid_vulkan::Image::GetViewParameters()
+                              .setType(vk::ImageViewType::e2D)
+                              .setFormat(format)
+                              .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, iv.range.i.mip, mips, iv.range.i.face, layers));
+    return tex->image()->getView(params);
+}
+
+} // namespace
+
 class GpuDrawVulkan : public GpuDraw {
-    AutoRef<GpuContextVulkan> mGpu;
-    GpuDraw::CreateParameters mCreateParams {};
+    AutoRef<GpuContextVulkan>                        mGpu;
+    GpuDraw::CreateParameters                        mCreateParams {};
+    mutable rapid_vulkan::Ref<rapid_vulkan::Sampler> mDefaultSampler {};
+
+    rapid_vulkan::Sampler * ensureDefaultSampler() const {
+        if (mDefaultSampler) return mDefaultSampler.get();
+        const rapid_vulkan::GlobalInfo * gi = mGpu->device().gi();
+        if (!gi) return nullptr;
+        rapid_vulkan::Sampler::ConstructParameters cp;
+        cp.gi = gi;
+        cp.setLinear();
+        mDefaultSampler.reset(new rapid_vulkan::Sampler(cp));
+        return mDefaultSampler.get();
+    }
 
 public:
     GpuDrawVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
@@ -84,6 +120,8 @@ public:
         auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawTextureTransitions(taskInfo, a->resources));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawBufferTransitions(taskInfo, a->resources, a->geometry));
 
         return PASSED;
     }
@@ -102,8 +140,8 @@ public:
 
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
-        GN_RDG_FAIL_ON_FAIL(cb);
-        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer().handle());
+        GN_RDG_FAIL_ON_FALSE(cb, "{} - failed to get command buffer", taskInfo);
+        auto rp = sc.renderPassManager.execute(taskInfo, &cb);
         GN_RDG_FAIL_ON_FAIL(rp);
 
         const GpuGeometry & geom = a->geometry;
@@ -122,6 +160,8 @@ public:
                 GN_ERROR(sLogger)("{} - current render target is not set for GpuDraw action", taskInfo);
                 return FAILED;
             }
+
+        // Resource state transitions are done in the render pass manager at beginRenderPass (registered in prepare pass).
 
         GraphicsPsoCreateParams createParams = {
             .vs               = mCreateParams.vs,
@@ -165,7 +205,26 @@ public:
                         drawable.b(rapid_vulkan::DescriptorIdentifier(static_cast<uint32_t>(setIdx), static_cast<uint32_t>(bindingIdx)), rvViews);
                     }
                 }
-                // TODO: image/sampler binding from GpuResourceView (ImageView + optional Sampler) → drawable.t() / drawable.s()
+                // Image/sampler: bind as combined image sampler for material textures.
+                if (views[0].isImage()) {
+                    rapid_vulkan::Sampler * sampler = ensureDefaultSampler();
+                    if (!sampler) continue;
+                    std::vector<rapid_vulkan::ImageSampler> imgSamplers;
+                    imgSamplers.reserve(views.size());
+                    for (const auto & v : views) {
+                        if (!v.artifact || !v.isImage()) continue;
+                        vk::ImageView iv = getTextureImageView(v);
+                        if (!iv) continue;
+                        rapid_vulkan::ImageSampler is;
+                        is.view    = iv;
+                        is.layout  = vk::ImageLayout::eShaderReadOnlyOptimal;
+                        is.sampler = sampler;
+                        imgSamplers.push_back(is);
+                    }
+                    if (!imgSamplers.empty()) {
+                        drawable.t(rapid_vulkan::DescriptorIdentifier(static_cast<uint32_t>(setIdx), static_cast<uint32_t>(bindingIdx)), imgSamplers);
+                    }
+                }
             }
         }
 

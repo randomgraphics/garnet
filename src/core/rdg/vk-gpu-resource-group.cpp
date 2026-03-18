@@ -48,8 +48,8 @@ static vk::ShaderStageFlags stagesToVk(GpuShaderStageFlags stages) {
 static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulkan::GlobalInfo &) {
     if (!view.isImage()) return {};
     const auto & iv        = view.imageView;
-    uint32_t     mipLevels = iv.subresourceRange.numMipLevels;
-    uint32_t     numLayers = iv.subresourceRange.numArrayLayers;
+    uint32_t     mipLevels = iv.range.e.numMipLevels;
+    uint32_t     numLayers = iv.range.e.numArrayLayers;
     if (mipLevels == (uint32_t) -1) mipLevels = 1;
     if (numLayers == (uint32_t) -1) numLayers = 1;
 
@@ -64,7 +64,7 @@ static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulk
         auto params = rapid_vulkan::Image::GetViewParameters()
                           .setType(vk::ImageViewType::e2D)
                           .setFormat(format)
-                          .setRange(vk::ImageSubresourceRange(aspect, iv.subresourceIndex.mip, mipLevels, iv.subresourceIndex.face, numLayers));
+                          .setRange(vk::ImageSubresourceRange(aspect, iv.range.i.mip, mipLevels, iv.range.i.face, numLayers));
         return tex->image()->getView(params);
     }
     if (view.isBackbuffer()) {

@@ -296,6 +296,12 @@ struct PbrShading : public GpuResource {
         /// Optional: return base color texture if loaded from file. Default returns nullptr.
         virtual Texture * getBaseColorTexture() const { return nullptr; }
 
+        /// Optional: return metallic-roughness (or ARM) texture if loaded. Default returns nullptr.
+        virtual Texture * getMetallicRoughnessTexture() const { return nullptr; }
+
+        /// Optional: return normal map texture if loaded. Default returns nullptr.
+        virtual Texture * getNormalTexture() const { return nullptr; }
+
     protected:
         using GpuResource::GpuResource;
     };

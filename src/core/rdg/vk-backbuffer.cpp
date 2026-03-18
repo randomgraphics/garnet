@@ -134,9 +134,11 @@ Action::ExecutionResult BackbufferVulkan::beginFrame(const TaskInfo & taskInfo) 
     }
     GN_RDG_FAIL_ON_FALSE(mActiveFrame, "{} - beginFrame failed", taskInfo);
 
-    // mSwapChain->beginFrame() updated the backbuffer layout. So we
-    // need to track those changes here.
-    trackImageState(TextureVulkan::ImageState::UNDEFINED());
+    // New image acquired; track its layout as UNDEFINED for this frame.
+    const rapid_vulkan::Image * img = mActiveFrame->backbuffer().image;
+    auto &                      st  = mImageStates[img];
+    st.prev                         = TextureVulkan::ImageState::UNDEFINED();
+    st.curr                         = TextureVulkan::ImageState::UNDEFINED();
 
     // Update the pending semaphores.
     mPendingSemaphores.clear();
@@ -158,9 +160,11 @@ Action::ExecutionResult BackbufferVulkan::present(const TaskInfo & taskInfo) {
     // Call present() and update the image state to post-present layout.
     GN_VERBOSE(sLogger)("BackbufferVulkan::present: present frame");
     rapid_vulkan::Swapchain::BackbufferStatus newStatus;
+    const rapid_vulkan::Image *               currentImage = mActiveFrame->backbuffer().image;
+    auto                                      it           = mImageStates.find(currentImage);
+    auto                                      currState    = (it != mImageStates.end()) ? it->second.curr : TextureVulkan::ImageState::UNDEFINED();
     try {
-        auto pp = rapid_vulkan::Swapchain::PresentParameters(
-            rapid_vulkan::Swapchain::BackbufferStatus {mBackbufferState.curr.layout, mBackbufferState.curr.access, mBackbufferState.curr.stages});
+        auto pp = rapid_vulkan::Swapchain::PresentParameters(rapid_vulkan::Swapchain::BackbufferStatus {currState.layout, currState.access, currState.stages});
         pp.setRenderFinished(vk::ArrayProxy<vk::Semaphore>((uint32_t) mPendingSemaphores.size(), mPendingSemaphores.data()));
         newStatus = mSwapchain->present(pp);
     } catch (const std::exception & e) {
@@ -172,21 +176,42 @@ Action::ExecutionResult BackbufferVulkan::present(const TaskInfo & taskInfo) {
         mActiveFrame = nullptr;
         return Action::ExecutionResult::FAILED;
     }
-    trackImageState({newStatus.layout, newStatus.access, newStatus.stages});
+    auto & st = mImageStates[currentImage];
+    st.prev   = st.curr;
+    st.curr   = {newStatus.layout, newStatus.access, newStatus.stages};
 
     // Remember the backbuffer image and its post-present state for readbackOutsideRenderPass() (before frame is invalidated).
-    mLastPresentedImage           = mActiveFrame->backbuffer().image;
-    mLastPresentedBackbufferState = {newStatus.layout, newStatus.access, newStatus.stages};
+    mLastPresentedImage           = currentImage;
+    mLastPresentedBackbufferState = st.curr;
 
     // We are done. Close the frame
     mActiveFrame = nullptr;
     return Action::ExecutionResult::PASSED;
 }
 
+auto BackbufferVulkan::getImageState() const -> const TextureVulkan::ImageStateTransition & {
+    static const TextureVulkan::ImageStateTransition s_undefined {TextureVulkan::ImageState::UNDEFINED(), TextureVulkan::ImageState::UNDEFINED()};
+    if (!mActiveFrame) return s_undefined;
+    const rapid_vulkan::Image * img = mActiveFrame->backbuffer().image;
+    auto                        it  = mImageStates.find(img);
+    if (it == mImageStates.end()) return s_undefined;
+    return it->second;
+}
+
 bool BackbufferVulkan::trackImageState(const TextureVulkan::ImageState & newState, TextureVulkan::ImageStateTransitionFlags flags) {
-    if (mBackbufferState.curr == newState) return false;
-    mBackbufferState.transitTo(newState, flags);
+    if (!mActiveFrame) return false;
+    const rapid_vulkan::Image * img = mActiveFrame->backbuffer().image;
+    auto &                      st  = mImageStates[img];
+    if (st.curr == newState) return false;
+    st.transitTo(newState, flags);
     return true;
+}
+
+void BackbufferVulkan::assignFrom(const rapid_vulkan::Image * image, const TextureVulkan::ImageStateTransition & transition) {
+    if (!image) return;
+    auto & st = mImageStates[image];
+    st.prev   = transition.curr;
+    st.curr   = transition.curr;
 }
 
 AutoRef<Backbuffer> createBackbufferVulkan(const StrA & name, const Backbuffer::CreateParameters & params) {
@@ -256,7 +281,7 @@ public:
 
         // standard execution.
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(sc.renderPassManager.execute(taskInfo, {}));
+        GN_RDG_FAIL_ON_FAIL(sc.renderPassManager.execute(taskInfo, nullptr));
 
         // done
         return bb->present(taskInfo);

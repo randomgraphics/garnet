@@ -147,7 +147,7 @@ AutoRef<TransientBuffer> TransientArenaVulkan::allocate(uint64_t size, const cha
     for (;;) {
         auto *         back = mBackingBuffers[mActiveBackingIndex].get();
         const uint64_t cap  = back->capacity;
-        const uint64_t off  = back->offset;
+        const uint64_t off  = alignUp(back->offset, mAlignment); // ensure offset meets minUniformBufferOffsetAlignment for UBO binding
         if (off + alignedSize <= cap) {
             back->offset = off + alignedSize;
             return AutoRef<TransientBufferVulkan>(new TransientBufferVulkan(name, this, back, off, alignedSize));

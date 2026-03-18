@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "vk-copy.h"
 #include "vk-submission-context.h"
+#include "vk-buffer-state.h"
+#include "vk-command-buffer.h"
 #include "vk-transient-buffer.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
@@ -31,7 +33,37 @@ class GpuCopyVulkan : public GpuCopy {
 
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         auto   cb = sc.commandBufferManager.execute(taskInfo);
-        GN_RDG_FAIL_ON_FAIL(cb);
+        GN_RDG_FAIL_ON_FALSE(cb);
+
+        const vk::AccessFlags        transferRead  = vk::AccessFlagBits::eTransferRead;
+        const vk::AccessFlags        transferWrite = vk::AccessFlagBits::eTransferWrite;
+        const vk::PipelineStageFlags transferStage = vk::PipelineStageFlagBits::eTransfer;
+
+        rapid_vulkan::Barrier  barrier;
+        vk::PipelineStageFlags combinedSrcStage {};
+        vk::PipelineStageFlags combinedDstStage {};
+
+        Buffer * srcBuf = arguments.src.get();
+        Buffer * dstBuf = arguments.dst.get();
+        if (cb.transitionBuffer(srcBuf, srcOff, arguments.size, transferRead, transferStage)) {
+            const auto * st = cb.getBufferState(srcBuf);
+            if (st) {
+                combinedSrcStage |= st->prev.stage;
+                combinedDstStage |= st->curr.stage;
+                barrier.b(srcHandle, st->prev.access, st->curr.access, srcOff, arguments.size);
+            }
+        }
+        if (cb.transitionBuffer(dstBuf, dstOff, arguments.size, transferWrite, transferStage)) {
+            const auto * st = cb.getBufferState(dstBuf);
+            if (st) {
+                combinedSrcStage |= st->prev.stage;
+                combinedDstStage |= st->curr.stage;
+                barrier.b(dstHandle, st->prev.access, st->curr.access, dstOff, arguments.size);
+            }
+        }
+        if (combinedSrcStage) barrier.s(combinedSrcStage, combinedDstStage ? combinedDstStage : transferStage);
+        barrier.cmdWrite(cb.commandBuffer().handle());
+
         cb.commandBuffer().handle().copyBuffer(srcHandle, dstHandle, vk::BufferCopy(srcOff, dstOff, arguments.size));
 
         // done

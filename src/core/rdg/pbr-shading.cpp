@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-gpu-context.h"
+#include "vk-texture.h"
 #include "pbr-vert.spv.h"
 #include "pbr-frag.spv.h"
 #include <sstream>
@@ -19,7 +20,23 @@ namespace GN::rdg {
 
 class PbrShadingVulkan : public PbrShading {
     AutoRef<GpuContext>      mGpu;
-    mutable AutoRef<GpuDraw> mDrawAction; ///< Created once, reused for each build with different arguments.
+    mutable AutoRef<GpuDraw> mDrawAction;               ///< Created once, reused for each build with different arguments.
+    mutable AutoRef<Texture> mDefaultBaseColor;         ///< 1x1 white for missing base color
+    mutable AutoRef<Texture> mDefaultMetallicRoughness; ///< 1x1 (128,128,0) for missing ARM
+    mutable AutoRef<Texture> mDefaultNormal;            ///< 1x1 (128,128,255) for missing normal
+
+    Texture * defaultBaseColor() const {
+        if (!mDefaultBaseColor) mDefaultBaseColor = createDefault1x1Texture(mGpu, "pbr_default_base", 255, 255, 255, 255);
+        return mDefaultBaseColor.get();
+    }
+    Texture * defaultMetallicRoughness() const {
+        if (!mDefaultMetallicRoughness) mDefaultMetallicRoughness = createDefault1x1Texture(mGpu, "pbr_default_arm", 128, 128, 0, 255);
+        return mDefaultMetallicRoughness.get();
+    }
+    Texture * defaultNormal() const {
+        if (!mDefaultNormal) mDefaultNormal = createDefault1x1Texture(mGpu, "pbr_default_normal", 128, 128, 255, 255);
+        return mDefaultNormal.get();
+    }
 
     void ensureDrawAction() const {
         if (mDrawAction) return;
@@ -70,6 +87,27 @@ public:
                 drawArgs->resources[0] = set0;
             }
         }
+
+        // Set 1: PBR material textures (binding 0 = base color, 1 = metallic-roughness/ARM, 2 = normal). Always bind; use material or defaults.
+        auto addTex = [&](GpuShaderAction::GraphicsResourceSet & set, size_t binding, Texture * tex) {
+            Texture * t = tex ? tex : (binding == 0 ? defaultBaseColor() : (binding == 1 ? defaultMetallicRoughness() : defaultNormal()));
+            if (!t) return;
+            GpuResourceView v;
+            v.setArtifact(AutoRef<Artifact>(t));
+            v.setSubresourceExtent(GpuResourceView::SubresourceExtent {1, 1});
+            if (set.size() <= binding) set.resize(binding + 1);
+            set[binding].append(std::move(v));
+        };
+        GpuShaderAction::GraphicsResourceSet materialSet;
+        materialSet.resize(3);
+        Texture * baseColor = params.material ? params.material->getBaseColorTexture() : nullptr;
+        Texture * arm       = params.material ? params.material->getMetallicRoughnessTexture() : nullptr;
+        Texture * normal    = params.material ? params.material->getNormalTexture() : nullptr;
+        addTex(materialSet, 0, baseColor);
+        addTex(materialSet, 1, arm);
+        addTex(materialSet, 2, normal);
+        if (drawArgs->resources.size() < 2) drawArgs->resources.resize(2);
+        drawArgs->resources[1] = std::move(materialSet);
 
         // Push constants: model matrix only (64 bytes). viewProj now comes from Set 0 UBO.
         // GLM stores mat4 in column-major order, matching GLSL layout, so memcpy directly.
@@ -126,8 +164,8 @@ public:
 
     GpuContext & gpu() const override { return *mGpu; }
     Texture *    getBaseColorTexture() const override { return mBaseColorTexture.get(); }
-    Texture *    metallicRoughnessTexture() const { return mMetallicRoughnessTexture.get(); }
-    Texture *    normalTexture() const { return mNormalTexture.get(); }
+    Texture *    getMetallicRoughnessTexture() const override { return mMetallicRoughnessTexture.get(); }
+    Texture *    getNormalTexture() const override { return mNormalTexture.get(); }
 
     void setBaseColorTexture(AutoRef<Texture> t) { mBaseColorTexture = std::move(t); }
     void setMetallicRoughnessTexture(AutoRef<Texture> t) { mMetallicRoughnessTexture = std::move(t); }
@@ -205,7 +243,7 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(const StrA & nam
             p->setMetallicRoughnessTexture(std::move(tex));
         else if (key == "normalTexture" || key == "normalTexture_gl")
             p->setNormalTexture(std::move(tex));
-        else if (key == "normalTexture_dx" && !p->normalTexture())
+        else if (key == "normalTexture_dx" && !p->getNormalTexture())
             p->setNormalTexture(std::move(tex));
     }
     return AutoRef<PbrShading::Material>(p);

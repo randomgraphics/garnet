@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vk-buffer-state.h"
 #include "vk-persistent-buffer.h"
 #include <atomic>
 #include <memory>
@@ -96,6 +97,13 @@ public:
 
     uint64_t offset() const { return mOffset; }
     uint64_t size() const { return mSize; }
+
+    BufferStateTransition &       state() { return mBufferState; }
+    const BufferStateTransition & state() const { return mBufferState; }
+    void                          assignFrom(const BufferStateTransition & t) { mBufferState.assignFrom(t); }
+
+private:
+    BufferStateTransition mBufferState;
 };
 
 AutoRef<TransientArena> createVulkanTransientArena(const StrA & name, const TransientArena::CreateParameters & params);

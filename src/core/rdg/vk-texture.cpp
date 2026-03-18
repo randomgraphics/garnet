@@ -85,8 +85,32 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
 
-    // initialize the subresource image state array.
-    mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
+    mState = TextureState(mDescriptor.levels, mDescriptor.faces);
+    return true;
+}
+
+bool TextureVulkan::upload1x1Mip(const uint8_t rgba[4]) {
+    if (!mImage || !mImage->handle() || mDescriptor.width != 1 || mDescriptor.height != 1) GN_UNLIKELY {
+            GN_ERROR(sLogger)("TextureVulkan::upload1x1Mip: invalid state or non-1x1 texture");
+            return false;
+        }
+    auto * vkCtx = static_cast<GpuContextVulkan *>(mGpuContext.get());
+    if (!vkCtx) GN_UNLIKELY return false;
+    rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
+    if (!gq) GN_UNLIKELY {
+            GN_ERROR(sLogger)("TextureVulkan::upload1x1Mip: no graphics queue");
+            return false;
+        }
+    rapid_vulkan::Image::SetContentParameters sc;
+    sc.setQueue(*gq);
+    sc.mipLevel   = 0;
+    sc.arrayLayer = 0;
+    sc.area.w     = 1;
+    sc.area.h     = 1;
+    sc.area.d     = 1;
+    sc.pitch      = 4;
+    sc.pixels     = rgba;
+    mImage->setContent(sc);
     return true;
 }
 
@@ -169,7 +193,7 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
 
-    mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
+    mState = TextureState(mDescriptor.levels, mDescriptor.faces);
 
     rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
     if (!gq) {
@@ -208,6 +232,18 @@ AutoRef<Texture> loadVulkanTexture(const Texture::LoadParameters & params) {
     return AutoRef<Texture>(p);
 }
 
+AutoRef<Texture> createDefault1x1Texture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    if (!context) GN_UNLIKELY return {};
+    Texture::Descriptor desc;
+    desc.setDimensions(1, 1).setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setFaces(1).setLevels(1);
+    auto tex = Texture::create(name, Texture::CreateParameters {.context = context, .descriptor = desc});
+    if (!tex) GN_UNLIKELY return {};
+    auto *  tv      = static_cast<TextureVulkan *>(tex.get());
+    uint8_t rgba[4] = {r, g, b, a};
+    if (!tv->upload1x1Mip(rgba)) { return {}; }
+    return tex;
+}
+
 vk::Extent3D TextureVulkan::dimensions(uint32_t mip) const {
     if (mip >= mDescriptor.levels) {
         GN_ERROR(sLogger)
@@ -221,8 +257,8 @@ vk::Extent3D TextureVulkan::dimensions(uint32_t mip) const {
     return dim;
 }
 
-const TextureVulkan::ImageStateTransition * TextureVulkan::getImageState(uint32_t mip, uint32_t arrayLayer) const {
-    if (mip >= mDescriptor.levels || arrayLayer >= mDescriptor.faces) return nullptr;
+auto TextureState::get(uint32_t mip, uint32_t arrayLayer) const -> const ImageStateTransition * {
+    if (mip >= mNumMips || arrayLayer >= mNumArrayLayers) return nullptr;
     size_t index = subResourceIndex(mip, arrayLayer);
     GN_ASSERT(index < mSubresourceStates.size());
     return &mSubresourceStates[index];
@@ -230,19 +266,25 @@ const TextureVulkan::ImageStateTransition * TextureVulkan::getImageState(uint32_
 
 bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
                                     ImageStateTransitionFlags flags) {
-    if (mip >= mDescriptor.levels || arrayLayer >= mDescriptor.faces) {
-        GN_ERROR(sLogger)
-        ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
-        return false;
-    }
+    GpuResourceView::SubresourceRange range;
+    range.i.mip            = mip;
+    range.i.face           = arrayLayer;
+    range.e.numMipLevels   = levels;
+    range.e.numArrayLayers = layers;
+    return mState.set(range, newState, flags);
+}
+
+bool TextureState::set(const GpuResourceView::SubresourceRange & range, const ImageState & newState, ImageStateTransitionFlags flags) {
+    uint32_t mip        = range.i.mip;
+    uint32_t arrayLayer = range.i.face;
+    uint32_t levels     = range.e.numMipLevels;
+    uint32_t layers     = range.e.numArrayLayers;
+    rapid_vulkan::clampRange(mip, levels, mNumMips);
+    rapid_vulkan::clampRange(arrayLayer, layers, mNumArrayLayers);
+    if (levels == 0 || layers == 0) return false;
     auto mipEnd        = mip + levels;
     auto arrayLayerEnd = arrayLayer + layers;
-    if (mipEnd > mDescriptor.levels || arrayLayerEnd > mDescriptor.faces) {
-        GN_ERROR(sLogger)
-        ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
-        return false;
-    }
-    bool anyChange = false;
+    bool anyChange     = false;
     for (uint32_t i = mip; i < mipEnd; i++) {
         for (uint32_t j = arrayLayer; j < arrayLayerEnd; j++) {
             size_t index = subResourceIndex(i, j);
@@ -254,6 +296,14 @@ bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arra
         }
     }
     return anyChange;
+}
+
+void TextureState::assignFrom(const TextureState & src) {
+    const size_t n = std::min(mSubresourceStates.size(), src.mSubresourceStates.size());
+    for (size_t i = 0; i < n; ++i) {
+        mSubresourceStates[i].prev = src.mSubresourceStates[i].curr;
+        mSubresourceStates[i].curr = src.mSubresourceStates[i].curr;
+    }
 }
 
 // SubresourceIterator(const Texture::Descriptor & desc, const Texture::SubresourceIndex & index, const Texture::SubresourceRange & range)

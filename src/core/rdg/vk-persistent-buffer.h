@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vk-buffer-state.h"
 #include "vk-gpu-context.h"
 
 namespace GN::rdg {
@@ -29,7 +30,12 @@ public:
     rapid_vulkan::Ref<rapid_vulkan::Buffer> rapid() const { return mVkBuffer; }
     uint64_t                                size() const { return mAllocatedSize; }
 
+    BufferStateTransition &       state() { return mBufferState; }
+    const BufferStateTransition & state() const { return mBufferState; }
+    void                          assignFrom(const BufferStateTransition & t) { mBufferState.assignFrom(t); }
+
 private:
+    BufferStateTransition mBufferState;
 };
 
 AutoRef<PersistentBuffer> createVulkanPersistentBuffer(const StrA & name, const PersistentBuffer::CreateParameters & params);

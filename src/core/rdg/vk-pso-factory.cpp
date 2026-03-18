@@ -213,7 +213,7 @@ static std::pair<uint32_t, uint32_t> getGpuImageViewDimension(const GpuResourceV
     } else {
         return {0, 0};
     }
-    const auto & si     = view.imageView.subresourceIndex;
+    const auto & si     = view.imageView.range.i;
     uint32_t     width  = std::max(1u, baseWidth >> si.mip);
     uint32_t     height = std::max(1u, baseHeight >> si.mip);
     return {width, height};
