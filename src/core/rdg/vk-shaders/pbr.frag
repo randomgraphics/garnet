@@ -112,5 +112,5 @@ void main() {
         Lo          = baseColor * (0.03 + 0.97 * NdotL);
     }
 
-    outColor = vec4(Lo, 1.0);
+    outColor = vec4(baseColor, 1.0);
 }

@@ -1,3 +1,4 @@
+#include "gltf-loader.h"
 #include "pch.h"
 #include <garnet/GNbase.h>
 #include <garnet/GNwin.h>
@@ -10,102 +11,16 @@ using namespace GN::util;
 static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 
 // -------------------------------------------------------------------------
-// Box mesh geometry
-// -------------------------------------------------------------------------
-
-struct Vertex {
-    float px, py, pz; // position
-    float nx, ny, nz; // normal
-    float u, v;       // texcoord
-};
-static_assert(sizeof(Vertex) == 32);
-
-// One quad face = 2 triangles (6 vertices), winding CCW viewed from outside.
-// clang-format off
-static const Vertex kBoxVertices[] = {
-    // Front face (+Z, normal 0,0,1)
-    {-0.5f,-0.5f, 0.5f,  0,0,1,  0,1},
-    { 0.5f,-0.5f, 0.5f,  0,0,1,  1,1},
-    { 0.5f, 0.5f, 0.5f,  0,0,1,  1,0},
-    {-0.5f,-0.5f, 0.5f,  0,0,1,  0,1},
-    { 0.5f, 0.5f, 0.5f,  0,0,1,  1,0},
-    {-0.5f, 0.5f, 0.5f,  0,0,1,  0,0},
-    // Back face (-Z, normal 0,0,-1)
-    { 0.5f,-0.5f,-0.5f,  0,0,-1,  0,1},
-    {-0.5f,-0.5f,-0.5f,  0,0,-1,  1,1},
-    {-0.5f, 0.5f,-0.5f,  0,0,-1,  1,0},
-    { 0.5f,-0.5f,-0.5f,  0,0,-1,  0,1},
-    {-0.5f, 0.5f,-0.5f,  0,0,-1,  1,0},
-    { 0.5f, 0.5f,-0.5f,  0,0,-1,  0,0},
-    // Right face (+X, normal 1,0,0)
-    { 0.5f,-0.5f, 0.5f,  1,0,0,  0,1},
-    { 0.5f,-0.5f,-0.5f,  1,0,0,  1,1},
-    { 0.5f, 0.5f,-0.5f,  1,0,0,  1,0},
-    { 0.5f,-0.5f, 0.5f,  1,0,0,  0,1},
-    { 0.5f, 0.5f,-0.5f,  1,0,0,  1,0},
-    { 0.5f, 0.5f, 0.5f,  1,0,0,  0,0},
-    // Left face (-X, normal -1,0,0)
-    {-0.5f,-0.5f,-0.5f, -1,0,0,  0,1},
-    {-0.5f,-0.5f, 0.5f, -1,0,0,  1,1},
-    {-0.5f, 0.5f, 0.5f, -1,0,0,  1,0},
-    {-0.5f,-0.5f,-0.5f, -1,0,0,  0,1},
-    {-0.5f, 0.5f, 0.5f, -1,0,0,  1,0},
-    {-0.5f, 0.5f,-0.5f, -1,0,0,  0,0},
-    // Top face (+Y, normal 0,1,0)
-    {-0.5f, 0.5f, 0.5f,  0,1,0,  0,1},
-    { 0.5f, 0.5f, 0.5f,  0,1,0,  1,1},
-    { 0.5f, 0.5f,-0.5f,  0,1,0,  1,0},
-    {-0.5f, 0.5f, 0.5f,  0,1,0,  0,1},
-    { 0.5f, 0.5f,-0.5f,  0,1,0,  1,0},
-    {-0.5f, 0.5f,-0.5f,  0,1,0,  0,0},
-    // Bottom face (-Y, normal 0,-1,0)
-    {-0.5f,-0.5f,-0.5f,  0,-1,0,  0,1},
-    { 0.5f,-0.5f,-0.5f,  0,-1,0,  1,1},
-    { 0.5f,-0.5f, 0.5f,  0,-1,0,  1,0},
-    {-0.5f,-0.5f,-0.5f,  0,-1,0,  0,1},
-    { 0.5f,-0.5f, 0.5f,  0,-1,0,  1,0},
-    {-0.5f,-0.5f, 0.5f,  0,-1,0,  0,0},
-};
-// clang-format on
-
-// -------------------------------------------------------------------------
 // Helpers
 // -------------------------------------------------------------------------
 
-static AutoRef<Buffer> createBoxVertexBuffer(AutoRef<GpuContext> gpu) {
-    auto buf = PersistentBuffer::create("box_vertex_buffer", PersistentBuffer::CreateParameters {.context = gpu, .size = sizeof(kBoxVertices)});
-    if (!buf) {
-        GN_ERROR(sLogger)("Failed to create box vertex buffer");
-        return {};
-    }
-    if (!buf->setContent(kBoxVertices, sizeof(kBoxVertices))) {
-        GN_ERROR(sLogger)("Failed to upload box vertex data");
-        return {};
-    }
-    return buf;
-}
-
-static GpuDraw::GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
-    GpuDraw::GpuGeometry geom;
-    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {0, 0, GpuDraw::GpuGeometry::AttributeFormat::F32_3});  // position
-    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {1, 12, GpuDraw::GpuGeometry::AttributeFormat::F32_3}); // normal
-    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {2, 24, GpuDraw::GpuGeometry::AttributeFormat::F32_2}); // texcoord
-    GpuDraw::GpuGeometry::GeometryBuffer vb;
-    vb.buffer = std::move(vertexBuffer);
-    vb.offset = 0;
-    vb.stride = sizeof(Vertex);
-    geom.vertices.append(vb);
-    geom.vertexCount = static_cast<uint32_t>(sizeof(kBoxVertices) / sizeof(Vertex));
-    return geom;
-}
-
 static AutoRef<PbrShading::Material> loadPbrMaterial(AutoRef<GpuContext> gpu) {
-    auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
+    auto fp = fs::openFile("media::pbr/DamagedHelmet/DamagedHelmet.material", std::ios::in);
     if (fp && fp->readable()) {
         auto mat = PbrShading::Material::load("pbr_material", PbrShading::Material::LoadParameters {
                                                                   .gpu      = gpu,
                                                                   .source   = fp,
-                                                                  .basePath = "media::pbr/lined-metal-sheeting/",
+                                                                  .basePath = "media::pbr/DamagedHelmet/",
                                                               });
         if (mat) return mat;
         GN_WARN(sLogger)("Failed to load PBR material from file, using empty material");
@@ -145,11 +60,11 @@ int main(int, const char **) {
     auto material = loadPbrMaterial(gpuContext);
     if (!material) return -1;
 
-    auto vertexBuffer = createBoxVertexBuffer(gpuContext);
-    if (!vertexBuffer) return -1;
+    auto helmetGeometry = gltf::loadGltfGeometry(fs::toNativeDiskFilePath("media::pbr/DamagedHelmet/DamagedHelmet.gltf").c_str(), gpuContext);
+    if (helmetGeometry.vertexCount == 0) return -1;
 
     auto window = std::unique_ptr<win::Window>(
-        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR Box", .clientWidth = 1280, .clientHeight = 720}));
+        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Damaged Helmet", .clientWidth = 1280, .clientHeight = 720}));
     if (!window) return -1;
     window->show();
 
@@ -181,8 +96,7 @@ int main(int, const char **) {
     auto presentAction = PresentBackbuffer::create("present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
-    auto boxGeometry = buildBoxGeometry(vertexBuffer);
-    auto lighting    = buildLighting();
+    auto lighting = buildLighting();
 
     // SharedShaderConstants: camera at (1.8, 1.4, 2.4) m looking at origin, 60° FOV.
     auto sharedConstants = SharedShaderConstants::create("shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
@@ -204,7 +118,7 @@ int main(int, const char **) {
         sharedConstants->setDirectLightingInformation(lighting);
     }
 
-    GN_INFO(sLogger)("Starting PBR box render loop...");
+    GN_INFO(sLogger)("Starting PBR helmet render loop...");
 
     while (window->runUntilNoNewEvents()) {
         // Build shared constants (upload UBOs); SSC build returns SubGraph with upload workflow(s).
@@ -220,9 +134,10 @@ int main(int, const char **) {
         pbrParams.renderGraph             = renderGraph.get();
         pbrParams.sharedShaderConstants   = sharedConstants;
         pbrParams.material                = material;
-        pbrParams.geometry                = boxGeometry;
-        pbrParams.locationInWorldSpace    = {0, 0, 0}; // box at world origin
-        pbrParams.orientationInWorldSpace = glm::angleAxis(glm::radians(30.f), glm::vec3(0.f, 1.f, 0.f));
+        pbrParams.geometry                = helmetGeometry;
+        pbrParams.locationInWorldSpace    = {0, 0, 0};
+        // Apply the 90° X rotation from the GLTF node transform (ignored by the loader).
+        pbrParams.orientationInWorldSpace = glm::angleAxis(glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
         auto pbrSubGraph                  = pbrShading->build(pbrParams);
         if (pbrSubGraph.builtResult == Action::ExecutionResult::PASSED && !pbrSubGraph.workflows.empty()) {
             for (const auto & task : pbrSubGraph.workflows[0].tasks()) renderWorkflow.appendTask(task.name, task.action, task.arguments);
@@ -245,6 +160,6 @@ int main(int, const char **) {
         if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph completed with warnings"); }
     }
 
-    GN_INFO(sLogger)("PBR box demo finished");
+    GN_INFO(sLogger)("PBR helmet demo finished");
     return 0;
 }
