@@ -1,6 +1,12 @@
-termcolor
-Pillow
-numpy
-OpenEXR
-PyQt5
-texture2ddecoder
+# Core utilities
+termcolor>=2.0
+
+# Image I/O
+Pillow>=9.0
+numpy>=1.24
+imageio>=2.28
+OpenEXR>=3.0       # EXR loading (tex-viewer, hdri-to-cubemap)
+
+# Texture viewer (env/bin/tv  →  src/tool/texture-viewer/)
+PyQt5>=5.15        # GUI framework
+texture2ddecoder>=1.0.6  # BCn decompression (BC1/3/4/5/6H/7)

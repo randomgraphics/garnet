@@ -17,20 +17,24 @@ In progress:    none
 --- END PROGRESS ---
 
 REFERENCE
-  Launcher:          env/bin/tex-viewer.py
-  Package:           env/bin/tex_viewer/
+  Launcher alias:    env/bin/tv          (Linux)
+                     env/bin/tv.cmd      (Windows)
+  Main script:       src/tool/texture-viewer/tex-viewer.py
+  Package:           src/tool/texture-viewer/tex_viewer/
     dds.py           DDS parser + BCn dispatch
     tone_map.py      tonemapping operators
     canvas.py        ImageCanvas (zoom/pan/pixel pick)
     main_window.py   MainWindow + EXR loader
-  Requirements:      env/requirements.txt  (PyQt5, texture2ddecoder)
+  Requirements:      env/requirements.txt
   Test assets:
     media/env/bad-salzbrunn-walking-hall/skybox-cube.dds   1024² cubemap RGBA16F
     media/env/bad-salzbrunn-walking-hall/160_hdrmaps_com_free_4K.exr  4K EXR
 
 BUILD / RUN
-  Run:  python3 env/bin/tex-viewer.py [file]
-  Test: python3 env/bin/tex-viewer.py media/env/bad-salzbrunn-walking-hall/skybox-cube.dds
+  Run (Linux):   env/bin/tv [file]
+  Run (Windows): env\bin\tv.cmd [file]
+  Direct:        python3 src/tool/texture-viewer/tex-viewer.py [file]
+  Test:          env/bin/tv media/env/bad-salzbrunn-walking-hall/skybox-cube.dds
 
 WORKFLOW
   - One task per commit; message = "tex-viewer <Phase.Task>: <short description>"
@@ -367,11 +371,14 @@ Task 8.1: Detect EXR layers and populate a layer selector
 ====================================================================
 SUMMARY OF FILES TO TOUCH
 ====================================================================
-  env/bin/tex_viewer/dds.py           Bugs B1, B2; Phase 2 (make_test_dds.py, test_dds.py)
-  env/bin/tex_viewer/main_window.py   Bugs B3, B4, B5; Phase 3 (all); Phase 4 (all); Phase 5; Phase 8
-  env/bin/tex_viewer/canvas.py        Bug B5; Phase 3.3; Phase 4.5; Phase 5.4
-  env/bin/tex_viewer/tone_map.py      Phase 5.1, 5.2, 5.3
-  env/bin/tex_viewer/make_test_dds.py (create) Phase 2.1
-  env/bin/tex_viewer/test_dds.py      (create) Phase 2.2
-  env/bin/tex_viewer/loader.py        (create) Phase 6.1 worker
+  src/tool/texture-viewer/tex_viewer/dds.py          Bugs B1, B2; Phase 2 (make_test_dds, test_dds)
+  src/tool/texture-viewer/tex_viewer/main_window.py  Bugs B3, B4, B5; Phase 3-5; Phase 8
+  src/tool/texture-viewer/tex_viewer/canvas.py       Bug B5; Phase 3.3; Phase 4.5; Phase 5.4
+  src/tool/texture-viewer/tex_viewer/tone_map.py     Phase 5.1, 5.2, 5.3
+  src/tool/texture-viewer/tex_viewer/make_test_dds.py  (create) Phase 2.1
+  src/tool/texture-viewer/tex_viewer/test_dds.py       (create) Phase 2.2
+  src/tool/texture-viewer/tex_viewer/loader.py         (create) Phase 6.1 worker
+  env/bin/tv                          alias launcher (Linux)
+  env/bin/tv.cmd                      alias launcher (Windows)
+  env/requirements.txt                keep up to date
   agent/TASKS_TEX_VIEWER.txt          (this file, keep PROGRESS updated)
