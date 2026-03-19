@@ -1,4 +1,4 @@
 #!/bin/bash
 # Texture viewer launcher.  Usage: tv [file]
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-exec python3 "$SCRIPT_DIR/../../src/tool/texture-viewer/tex-viewer.py" "$@"
+exec python3 "$SCRIPT_DIR/../../src/tool/texture-viewer/texture-viewer.py" "$@"
