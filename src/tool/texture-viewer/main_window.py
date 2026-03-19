@@ -88,7 +88,7 @@ def _hline() -> QFrame:
 # MainWindow
 # ---------------------------------------------------------------------------
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, initial_file: str | None = None):
         super().__init__()
         self.setWindowTitle('Texture Viewer')
         self.resize(1280, 800)
@@ -103,11 +103,10 @@ class MainWindow(QMainWindow):
         self._connect_signals()
         self._apply_dark_theme()
 
-        # Restore last opened path
         self._settings = QSettings('garnet', 'tex-viewer')
-        last = self._settings.value('last_file', '')
-        if last and os.path.isfile(last):
-            self._open_file(last)
+
+        if initial_file:
+            self._open_file(initial_file)
 
     # ------------------------------------------------------------------
     # UI construction

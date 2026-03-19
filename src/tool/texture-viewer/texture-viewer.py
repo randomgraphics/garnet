@@ -19,11 +19,9 @@ def main() -> int:
     app.setApplicationName('Texture Viewer')
     app.setOrganizationName('garnet')
 
-    win = MainWindow()
+    file_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    win = MainWindow(initial_file=file_arg)
     win.show()
-
-    if len(sys.argv) > 1:
-        win.open_file(sys.argv[1])
 
     return app.exec_()
 
