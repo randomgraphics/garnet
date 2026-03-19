@@ -132,7 +132,7 @@ bool TransientArenaVulkan::createBackingBuffer(uint64_t minCapacity) {
     return true;
 }
 
-AutoRef<TransientBuffer> TransientArenaVulkan::allocate(uint64_t size, const char * name) {
+AutoRef<TransientBuffer> TransientArenaVulkan::allocate(uint64_t size, const char * name_) {
     if (!size) GN_UNLIKELY {
             GN_ERROR(sLogger)("TransientBufferPoolVulkan::allocate: size is 0");
             return {};
@@ -150,7 +150,7 @@ AutoRef<TransientBuffer> TransientArenaVulkan::allocate(uint64_t size, const cha
         const uint64_t off  = alignUp(back->offset, mAlignment); // ensure offset meets minUniformBufferOffsetAlignment for UBO binding
         if (off + alignedSize <= cap) {
             back->offset = off + alignedSize;
-            return AutoRef<TransientBufferVulkan>(new TransientBufferVulkan(name, this, back, off, alignedSize));
+            return AutoRef<TransientBufferVulkan>(new TransientBufferVulkan(name_, this, back, off, alignedSize));
         }
         if (!createBackingBuffer(alignedSize)) GN_UNLIKELY return {};
     }

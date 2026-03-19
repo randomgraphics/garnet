@@ -45,7 +45,8 @@ struct TextureState {
     };
 
     TextureState(): TextureState(0, 0) {}
-    TextureState(size_t mipLevels, size_t arrayLayers): mNumMips(mipLevels), mNumArrayLayers(arrayLayers), mSubresourceStates(mipLevels * arrayLayers) {}
+    TextureState(size_t mipLevels, size_t arrayLayers)
+        : mNumMips((uint32_t) mipLevels), mNumArrayLayers((uint32_t) arrayLayers), mSubresourceStates((uint32_t) (mipLevels * arrayLayers)) {}
 
     auto get(uint32_t mip, uint32_t arrayLayer) const -> const ImageStateTransition *;
 

@@ -44,7 +44,7 @@ class PbrShadingVulkan : public PbrShading {
         drawCp.context = mGpu;
         drawCp.vs      = {.binary = (void *) kPbrVertSpv, .size = kPbrVertSpvSize * sizeof(unsigned int), .entry = "main"};
         drawCp.ps      = {.binary = (void *) kPbrFragSpv, .size = kPbrFragSpvSize * sizeof(unsigned int), .entry = "main"};
-        StrA drawName  = name.empty() ? "pbr_draw" : StrA::format("pbr_draw_{}", name.c_str());
+        StrA drawName  = name.empty() ? "pbr_draw"_s : StrA::format("pbr_draw_{}", name);
         mDrawAction    = GpuDraw::create(drawName, drawCp);
         GN_REQUIRE(mDrawAction, fmt::format("Failed to create PBR draw action, name='{}'", drawName));
     }

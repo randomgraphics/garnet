@@ -131,11 +131,11 @@ int main(int, const char **) {
         // renderWorkflow.appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
 
         PbrShading::BuildParameters pbrParams;
-        pbrParams.renderGraph             = renderGraph.get();
-        pbrParams.sharedShaderConstants   = sharedConstants;
-        pbrParams.material                = material;
-        pbrParams.geometry                = helmetGeometry;
-        pbrParams.locationInWorldSpace    = {0, 0, 0};
+        pbrParams.renderGraph           = renderGraph.get();
+        pbrParams.sharedShaderConstants = sharedConstants;
+        pbrParams.material              = material;
+        pbrParams.geometry              = helmetGeometry;
+        pbrParams.locationInWorldSpace  = {0, 0, 0};
         // Apply the 90° X rotation from the GLTF node transform (ignored by the loader).
         pbrParams.orientationInWorldSpace = glm::angleAxis(glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
         auto pbrSubGraph                  = pbrShading->build(pbrParams);
