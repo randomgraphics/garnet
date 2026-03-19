@@ -1,101 +1,377 @@
 TITLE: Python DDS/EXR Texture Viewer (tex-viewer)
-GOAL: A standalone Python/Qt5 image viewer for DDS and EXR files that supports:
-  - Full mipmap chain navigation
-  - Cubemap face, array layer, and 3D depth-slice exploration
-  - Zoom, pan, fit-to-window
-  - Exact float pixel values under mouse cursor
-  - HDR display with configurable tonemapping (Linear, Reinhard, ACES, Filmic)
-  - BCn compressed DDS (BC1/3/4/5/6H/7) via texture2ddecoder
-  "Done" = all the above work on sky.dds (cubemap RGBA16F) and a 4K EXR panorama.
+
+GOAL
+  A standalone Python/Qt5 image viewer for DDS and EXR files with:
+    - Full mipmap chain: navigate every mip level, see correct dimensions per mip
+    - All texture types: 2D, cubemap (6 named faces), 2D array, 3D/volume (depth slices)
+    - Zoom (wheel), pan (drag), fit-to-window (F), 1:1 (1)
+    - Exact raw float R/G/B/A pixel values under mouse cursor
+    - HDR display with configurable tonemapping (5 modes, exposure, gamma)
+    - BCn compressed DDS (BC1/2/3/4/5/6H/7): decode via texture2ddecoder
+    - UX: drag-drop, recent files, window title, keyboard shortcuts
+  "Done" = every item in this list is exercised by a test or demo pass.
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 1   (assignment file created)
-In progress:    Task 2   (dds.py)
+Last completed: Phase 1 (initial implementation, committed 767a6187)
+In progress:    none
 --- END PROGRESS ---
 
 REFERENCE
-  Key files:
-    env/bin/tex-viewer.py              launcher
-    env/bin/tex_viewer/__init__.py     package marker
-    env/bin/tex_viewer/dds.py          DDS parser
-    env/bin/tex_viewer/tone_map.py     tonemapping
-    env/bin/tex_viewer/canvas.py       ImageCanvas widget
-    env/bin/tex_viewer/main_window.py  MainWindow
-    env/requirements.txt               add PyQt5, texture2ddecoder
+  Launcher:          env/bin/tex-viewer.py
+  Package:           env/bin/tex_viewer/
+    dds.py           DDS parser + BCn dispatch
+    tone_map.py      tonemapping operators
+    canvas.py        ImageCanvas (zoom/pan/pixel pick)
+    main_window.py   MainWindow + EXR loader
+  Requirements:      env/requirements.txt  (PyQt5, texture2ddecoder)
   Test assets:
-    media/env/sky.dds               512x512 cubemap RGBA16F (6 faces, 1 mip)
-    media/env/160_hdrmaps_com_free_4K.exr   4K equirect EXR
+    media/env/bad-salzbrunn-walking-hall/skybox-cube.dds   1024² cubemap RGBA16F
+    media/env/bad-salzbrunn-walking-hall/160_hdrmaps_com_free_4K.exr  4K EXR
 
-BUILD/CI
-  Run viewer:  python3 env/bin/tex-viewer.py media/env/sky.dds
-  Lint:        env/bin/cit.py  (or skip for tool scripts)
+BUILD / RUN
+  Run:  python3 env/bin/tex-viewer.py [file]
+  Test: python3 env/bin/tex-viewer.py media/env/bad-salzbrunn-walking-hall/skybox-cube.dds
 
 WORKFLOW
-  - Commit after each task is verified.
-  - Keep build green.
-  - All Python, no C++ dependencies.
-  - Use PyQt5 for GUI, numpy for image math, texture2ddecoder for BCn.
+  - One task per commit; message = "tex-viewer <Phase.Task>: <short description>"
+  - After each commit: push.
+  - Keep viewer runnable after every commit.
+  - All Python, no C++ deps.
 
-TASKS
+KNOWN BUGS (fix before adding new features)
+============================================
 
-Task 1: Create assignment file (DONE)
-  Verify: file exists.
+Bug B1: decode_bc6 return type assumed wrong  ← MOST IMPORTANT
+  PROBLEM: dds.py._decode_bcn() calls decode_bc6() and then reads result as
+           float16 RGB. But texture2ddecoder.decode_bc6() actually returns
+           BGRA uint8 bytes (64 bytes for a 4×4 block = 4 bytes/pixel),
+           not float16.  BC6H HDR textures will display garbage/crash.
+  FIX:
+    - Change _decode_bcn for BC6H_UF16/BC6H_SF16:
+        raw_out = t2d.decode_bc6(raw, w, h)
+        out = np.frombuffer(raw_out, dtype=np.uint8).reshape(h, w, 4).copy()
+        out = out[:, :, [2, 1, 0, 3]].astype(np.float32) / 255.0  # BGRA→RGBA
+      Note: this loses HDR range (all values clamped to [0,1]).
+      Mark output channels as "HDR data unavailable; decoded to LDR uint8" in
+      a comment, and document the limitation in a TODO.
+  VERIFY:
+    python3 -c "
+    import sys; sys.path.insert(0,'env/bin')
+    from tex_viewer.dds import _decode_bcn, Fmt
+    import numpy as np
+    dummy = bytes(16)   # one empty 4×4 BC6H block
+    out = _decode_bcn(dummy, 4, 4, Fmt.BC6H_UF16)
+    assert out.shape == (4, 4, 4), out.shape
+    assert out.dtype == np.float32, out.dtype
+    print('B1 fix verified')
+    "
+  COMMIT: "tex-viewer B1: fix BC6H decode (uint8 path, not float16)"
 
-Task 2: Write env/bin/tex_viewer/dds.py
-  - Parse DDS_HEADER + optional DX10 extension
-  - Detect texture type: 2D, cubemap, array, 3D/volume
-  - Compute per-subresource offset/size for mip × face/array × depth-slice
-  - Decode uncompressed DXGI formats → float32 RGBA numpy array
-  - Decode BCn (BC1/2/3/4/5/6H/7) via texture2ddecoder → float32 RGBA
-  - Legacy DDS (DDPF flags, DXT1/3/5 FourCC) → map to modern codes
-  Verify: `python3 -c "from tex_viewer.dds import DdsFile; d = DdsFile('media/env/sky.dds'); print(d)"` prints correct info.
-  Commit: "tex-viewer Task 2: DDS parser"
+Bug B2: texture2ddecoder has no decode_bc2
+  PROBLEM: dds.py calls t2d.decode_bc2() but that function does not exist
+           in texture2ddecoder. Any BC2 DDS will crash with AttributeError.
+  FIX:
+    - texture2ddecoder only has decode_bc1/3/4/5/6/7.  BC2 (DXT3) is rarely
+      used in practice.  Options:
+        (a) Raise a clear error: "BC2/DXT3 not supported by texture2ddecoder".
+        (b) Fallback: decode as BC3 (alpha channel will differ but won't crash).
+      Choose (a): raise ValueError with a helpful message.
+  VERIFY:
+    python3 -c "
+    import sys; sys.path.insert(0,'env/bin')
+    from tex_viewer.dds import _decode_bcn, Fmt
+    try:
+        _decode_bcn(bytes(16), 4, 4, Fmt.BC2_UNORM)
+        print('ERROR: should have raised')
+    except (ValueError, RuntimeError) as e:
+        print('B2 fix verified:', e)
+    "
+  COMMIT: "tex-viewer B2: raise clear error for BC2 (decode_bc2 absent)"
 
-Task 3: Write env/bin/tex_viewer/tone_map.py
-  - Class ToneMapper with fields: mode, exposure_ev, gamma
-  - Modes: none, reinhard, reinhard_ext, aces, filmic
-  - apply(float32_rgba) → uint8 RGBA numpy array ready for QImage
-  - Channel isolation: mode r/g/b/a shows that channel as grayscale
-  Verify: import + apply on a test array.
-  Commit: "tex-viewer Task 3: tonemapping"
+Bug B3: 3D depth-slice range not updated when mip changes
+  PROBLEM: main_window._on_face_changed() updates depth spin range for 3D textures
+           but it is connected to spin_face, NOT spin_mip.  When the user advances
+           the mip level of a 3D texture, the depth-slice spin keeps the wrong max
+           (base depth instead of base_depth >> mip).
+  FIX:
+    - Move the depth-range update out of _on_face_changed into a new helper
+      _update_depth_range() called from both _on_nav_changed and _on_face_changed.
+    - _update_depth_range():
+        if self._dds and self._dds.tex_type == TexType.TEX3D:
+            mip = self._spin_mip.value()
+            new_max = max(0, max(1, self._dds.depth >> mip) - 1)
+            old_val = self._spin_depth.value()
+            self._spin_depth.setRange(0, new_max)
+            self._spin_depth.setValue(min(old_val, new_max))
+  VERIFY:
+    Manual: open a 3D DDS with ≥2 mip levels; advance mip → depth max halves.
+    OR: unit test with a synthetic DDS (see Phase 3.1).
+  COMMIT: "tex-viewer B3: fix 3D depth-range update when mip changes"
 
-Task 4: Write env/bin/tex_viewer/canvas.py
-  - ImageCanvas(QWidget): holds a float32 RGBA array + ToneMapper ref
-  - zoom/pan via mouse wheel and left-drag
-  - F or double-click: fit to window
-  - Mouse move: emit pixel_hovered(x, y, r, g, b, a) signal with raw float values
-  Verify: instantiates without error.
-  Commit: "tex-viewer Task 4: ImageCanvas widget"
+Bug B4: White-point row visible at startup when it should be hidden
+  PROBLEM: _lbl_white and _spin_white are added to tm_lay and are VISIBLE by
+           default. They should only appear when mode == Reinhard Extended.
+           At startup (mode = Linear), they are shown but should be hidden.
+  FIX:
+    After building the tonemapping panel, add:
+        self._lbl_white.setVisible(False)
+        self._spin_white.setVisible(False)
+  VERIFY:
+    python3 -c "
+    import sys, os; sys.path.insert(0,'env/bin')
+    os.environ.setdefault('DISPLAY',':0')
+    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtCore import QTimer
+    from tex_viewer.main_window import MainWindow
+    app = QApplication([])
+    w = MainWindow()
+    w.show()
+    # white_point row should be hidden at startup (mode=Linear)
+    assert not w._spin_white.isVisible(), 'white_point visible at startup!'
+    print('B4 fix verified')
+    app.quit()
+    "
+  COMMIT: "tex-viewer B4: hide white-point row at startup"
 
-Task 5: Write env/bin/tex_viewer/main_window.py
-  - MainWindow(QMainWindow): File menu (Open, Recent, Quit)
-  - Left: ImageCanvas in QScrollArea-like setup
-  - Right dock: texture info, navigation (mip/face/layer/slice spinboxes),
-    channel buttons (R G B A RGB), tonemapping controls, pixel info readout
-  - Status bar: filename | WxHxD | format | type | file size
-  Verify: window shows, controls respond.
-  Commit: "tex-viewer Task 5: MainWindow"
+Bug B5: Zoom level label never updates
+  PROBLEM: status bar shows '100%' permanently; canvas._zoom is never surfaced.
+  FIX:
+    In canvas.py: add a zoom_changed(float) signal, emit it in _zoom_at() and
+    fit_to_window() and zoom_actual().
+    In main_window.py: connect canvas.zoom_changed to a slot that updates
+    self._zoom_label.setText(f'{zoom*100:.0f}%').
+  VERIFY:
+    Manual: open a file, scroll → zoom label changes.
+  COMMIT: "tex-viewer B5: live zoom-level display in status bar"
 
-Task 6: Write launcher + __init__
-  - env/bin/tex-viewer.py: add sys.path, launch app
-  - env/bin/tex_viewer/__init__.py: empty
-  Commit: "tex-viewer Task 6: launcher"
+====================================================================
+Phase 2: Test Assets
+  Goal: one synthetic DDS per texture type so every navigation path
+  is exercised non-interactively (scriptable headless test).
+====================================================================
 
-Task 7: Update requirements.txt
-  - Add PyQt5 and texture2ddecoder
-  Commit: "tex-viewer Task 7: update requirements"
+Task 2.1: Script to generate synthetic DDS test assets
+  FILE: env/bin/tex_viewer/make_test_dds.py
+  Generate:
+    tests/tex-viewer/tex2d_rgba8_mips.dds     — 64×64 RGBA8, 7 mip levels
+    tests/tex-viewer/cubemap_rgba16f.dds      — 32×32 RGBA16F cubemap, 1 mip
+    tests/tex-viewer/array_rgba8.dds          — 32×32 RGBA8, array[4], 1 mip
+    tests/tex-viewer/vol_rgba8.dds            — 32×32×8 RGBA8 volume, 4 mips
+  Each face/slice/array has a distinct solid colour so correctness is visible.
+  VERIFY:
+    python3 env/bin/tex_viewer/make_test_dds.py
+    → 4 files created in tests/tex-viewer/
+    python3 -c "
+    import sys; sys.path.insert(0,'env/bin')
+    from tex_viewer.dds import load, TexType
+    d = load('tests/tex-viewer/tex2d_rgba8_mips.dds')
+    assert d.mip_count == 7, d
+    d = load('tests/tex-viewer/cubemap_rgba16f.dds')
+    assert d.tex_type == TexType.CUBEMAP and d.array_size == 6, d
+    d = load('tests/tex-viewer/array_rgba8.dds')
+    assert d.tex_type == TexType.ARRAY and d.array_size == 4, d
+    d = load('tests/tex-viewer/vol_rgba8.dds')
+    assert d.tex_type == TexType.TEX3D and d.depth == 8 and d.mip_count == 4, d
+    print('2.1 verified')
+    "
+  COMMIT: "tex-viewer 2.1: synthetic DDS test-asset generator"
 
-Task 8: Smoke test
-  - Open sky.dds: shows cubemap faces, can navigate face +X/-X/etc., pixel values display
-  - Open 4K EXR: loads, tonemapping changes affect display
-  Commit: "tex-viewer Task 8: smoke-tested, ready"
+Task 2.2: Headless subresource correctness test
+  FILE: env/bin/tex_viewer/test_dds.py  (runs without display)
+  Test:
+    - tex2d: load, get_face(0,mip=6) → 1×1 image, pixel value matches
+    - cubemap: all 6 faces → each has distinct colour
+    - array: all 4 layers → each distinct colour
+    - volume: all 8 slices at mip=0, 4 slices at mip=1 → correct colour
+    - mip chain: face pixel value is the same "colour" regardless of mip
+  VERIFY:
+    python3 env/bin/tex_viewer/test_dds.py
+    → "All tests passed."
+  COMMIT: "tex-viewer 2.2: headless DDS subresource tests"
 
+====================================================================
+Phase 3: Navigation Polish
+====================================================================
+
+Task 3.1: Show mip dimensions next to mip spinbox
+  LOCATION: main_window._build_panel / _update_status
+  Add a QLabel next to _spin_mip that shows "512 × 512" updating on every
+  mip change. For 3D textures also show "× 8 slices".
+  VERIFY:
+    Open tex2d_rgba8_mips.dds → "64 × 64" at mip 0, "1 × 1" at mip 6.
+  COMMIT: "tex-viewer 3.1: show mip dimensions in navigation"
+
+Task 3.2: Show range in navigation spinboxes  (e.g. "0–5")
+  Add a QLabel after each spinbox: "/ N" where N = max value.
+  Update it when file is loaded.
+  VERIFY:
+    Open cubemap_rgba16f.dds → face shows "/ 5", mip shows "/ 0".
+  COMMIT: "tex-viewer 3.2: show spinbox ranges"
+
+Task 3.3: Keyboard shortcuts for navigation
+  When canvas has focus (or window-wide):
+    [ / ]  ← prev/next mip
+    , / .  ← prev/next face or array layer
+    - / +  ← prev/next depth slice  (only when 3D)
+  VERIFY:
+    Open tex2d_rgba8_mips.dds, press ] → mip advances to 1.
+  COMMIT: "tex-viewer 3.3: keyboard shortcuts for mip/face/depth navigation"
+
+Task 3.4: Navigate back to mip 0 / face 0 on new file open
+  Currently spinboxes are reset, but valueChanged signals may not fire if value
+  was already 0 from the previous file, leaving stale face label / depth range.
+  FIX: explicitly call _update_face_label() + _update_depth_range() after reset.
+  VERIFY:
+    Open cubemap (face label = "+X"), open 2D array → face label should clear
+    or show "0", depth spin should be disabled.
+  COMMIT: "tex-viewer 3.4: reset nav state cleanly on file open"
+
+====================================================================
+Phase 4: UX Polish
+====================================================================
+
+Task 4.1: Update window title on file open
+  Set self.setWindowTitle(f'{basename} — Texture Viewer') after open.
+  VERIFY:
+    Open skybox-cube.dds → title bar shows "skybox-cube.dds — Texture Viewer".
+  COMMIT: "tex-viewer 4.1: window title shows current filename"
+
+Task 4.2: Drag-and-drop file open
+  Override dragEnterEvent / dropEvent on MainWindow to accept
+  application/x-qt-drag-and-drop or text/uri-list drops of .dds/.exr/.hdr.
+  VERIFY:
+    Drag a DDS file from a file manager → viewer opens it.
+  COMMIT: "tex-viewer 4.2: drag-and-drop file open"
+
+Task 4.3: Recent files menu (up to 10 entries)
+  In File menu, add "Open Recent ▶" submenu.
+  Store up to 10 paths in QSettings('garnet','tex-viewer') key 'recent_files'.
+  Prepend each successfully opened file; trim to 10; skip missing files.
+  VERIFY:
+    Open 3 files → "Open Recent" lists all 3 in MRU order.
+    Restart viewer → recent files still listed.
+  COMMIT: "tex-viewer 4.3: recent files menu"
+
+Task 4.4: Error dialog for file-open failures
+  Currently errors go silently to status bar.  Add a QMessageBox.warning() when
+  _open_file catches an exception, showing the message.
+  Keep status bar update too.
+  VERIFY:
+    Open a non-DDS file with .dds extension → dialog pops up with error text.
+  COMMIT: "tex-viewer 4.4: error dialog on file open failure"
+
+Task 4.5: "Copy pixel value" (Ctrl+C / Ctrl+Shift+C)
+  When cursor is over the image:
+    Ctrl+C        → copies "R G B A" as tab-separated floats
+    Ctrl+Shift+C  → copies "(px, py)  R=x.xxx G=x.xxx B=x.xxx A=x.xxx"
+  Use QApplication.clipboard().setText(...)
+  VERIFY:
+    Hover over a pixel, press Ctrl+C, paste elsewhere → correct float values.
+  COMMIT: "tex-viewer 4.5: copy pixel value to clipboard"
+
+====================================================================
+Phase 5: Display Improvements
+====================================================================
+
+Task 5.1: sRGB linearisation toggle
+  DDS files flagged as sRGB (R8G8B8A8_UNORM_SRGB, BC1_UNORM_SRGB, etc.) currently
+  display without linearization.  For correct tonemapping they should be linearised
+  before tonemapping.
+  Add a checkbox "sRGB → Linear" in the Tonemapping group.
+  When checked and is_srgb is True, apply sRGB→linear before tonemapping:
+      x_lin = np.where(x <= 0.04045, x/12.92, ((x+0.055)/1.055)**2.4)
+  VERIFY:
+    Make or find an sRGB DDS; toggle the checkbox → visible brightness change.
+  COMMIT: "tex-viewer 5.1: sRGB linearisation toggle"
+
+Task 5.2: Alpha premultiplied / straight alpha toggle
+  Some DDS files store premultiplied alpha.  Add a "Premultiplied α" checkbox.
+  When checked, un-premultiply before display:
+      rgb = rgb / (alpha + 1e-6)    (clamp alpha to [0,1] first)
+  VERIFY:
+    Manual inspection with a known premultiplied-alpha texture.
+  COMMIT: "tex-viewer 5.2: premultiplied alpha toggle"
+
+Task 5.3: Display normalised-normal-map mode
+  BC5 / R16G16 textures are often normal maps (RG encoded, B reconstructed).
+  Add a "Normal Map" display mode that reconstructs B = sqrt(1-R²-G²) and
+  remaps [-1,1]→[0,1] for display.
+  Enabled automatically when format is BC5 / R16G16 and user has not overridden.
+  VERIFY:
+    Open a BC5 normal map → blue channel appears, surface normals visible.
+  COMMIT: "tex-viewer 5.3: normal-map reconstruction mode for RG/BC5 textures"
+
+Task 5.4: Zoom-to-fit respects HiDPI (devicePixelRatio)
+  On HiDPI displays the canvas widget size in logical pixels differs from the
+  physical pixel count.  QPixmap.devicePixelRatio() should be set correctly.
+  VERIFY:
+    On a HiDPI display the image does not appear 2× too large.
+    (Low-priority; skip if no HiDPI system available.)
+  COMMIT: "tex-viewer 5.4: HiDPI devicePixelRatio fix"
+
+====================================================================
+Phase 6: Performance
+====================================================================
+
+Task 6.1: Async loading for large files
+  Large EXR files (>50 MB) freeze the UI during load.
+  Move file I/O + decode into a QThread worker; show "Loading…" in status bar
+  and disable nav controls until done.  On completion update UI in main thread.
+  VERIFY:
+    Open the 10K EXR; status shows "Loading..." and UI stays responsive.
+  COMMIT: "tex-viewer 6.1: async file loading via QThread"
+
+Task 6.2: Cache decoded subresources
+  Navigating between faces or mip levels of the same DDS re-decodes from bytes
+  each time.  Add an LRU cache (max 32 MB) keyed by (path, array_idx, mip,
+  depth_slice) → float32 RGBA array.  Invalidate cache on new file open.
+  VERIFY:
+    Navigate cubemap faces → CPU usage drops after first visit.
+  COMMIT: "tex-viewer 6.2: LRU subresource decode cache"
+
+====================================================================
+Phase 7: Export
+====================================================================
+
+Task 7.1: Save current view as PNG
+  File → Save View As… → QFileDialog → save the tonemapped uint8 view as PNG
+  using Pillow (Image.fromarray).
+  VERIFY:
+    Open EXR with ACES tonemapping → Save View → PNG matches what is displayed.
+  COMMIT: "tex-viewer 7.1: save current view as PNG"
+
+Task 7.2: Export raw subresource as EXR
+  File → Export Raw Subresource… → save the raw float32 RGBA array as EXR
+  using OpenEXR.
+  VERIFY:
+    Export a face of the cubemap → open resulting .exr in a second viewer
+    (or compare with original).
+  COMMIT: "tex-viewer 7.2: export raw subresource as EXR"
+
+====================================================================
+Phase 8: Multi-layer EXR
+====================================================================
+
+Task 8.1: Detect EXR layers and populate a layer selector
+  Many production EXR files contain multiple named layers (e.g. beauty, diffuse,
+  specular) and each layer may have multiple channels.
+  - List all channel names from header['channels'].
+  - Group by layer prefix (e.g. 'beauty.R', 'beauty.G' → layer 'beauty').
+  - Add a QComboBox "Layer:" in the navigation panel for EXR files.
+  - On layer change, reload the (H, W, 4) array from the selected layer channels.
+  VERIFY:
+    Open a multi-layer EXR → "Layer:" combo lists all layers; switching layers
+    changes the displayed image.
+  COMMIT: "tex-viewer 8.1: multi-layer EXR layer selector"
+
+====================================================================
 SUMMARY OF FILES TO TOUCH
-  env/bin/tex-viewer.py              (create)
-  env/bin/tex_viewer/__init__.py     (create)
-  env/bin/tex_viewer/dds.py          (create)
-  env/bin/tex_viewer/tone_map.py     (create)
-  env/bin/tex_viewer/canvas.py       (create)
-  env/bin/tex_viewer/main_window.py  (create)
-  env/requirements.txt               (update)
-  agent/TASKS_TEX_VIEWER.txt         (this file)
+====================================================================
+  env/bin/tex_viewer/dds.py           Bugs B1, B2; Phase 2 (make_test_dds.py, test_dds.py)
+  env/bin/tex_viewer/main_window.py   Bugs B3, B4, B5; Phase 3 (all); Phase 4 (all); Phase 5; Phase 8
+  env/bin/tex_viewer/canvas.py        Bug B5; Phase 3.3; Phase 4.5; Phase 5.4
+  env/bin/tex_viewer/tone_map.py      Phase 5.1, 5.2, 5.3
+  env/bin/tex_viewer/make_test_dds.py (create) Phase 2.1
+  env/bin/tex_viewer/test_dds.py      (create) Phase 2.2
+  env/bin/tex_viewer/loader.py        (create) Phase 6.1 worker
+  agent/TASKS_TEX_VIEWER.txt          (this file, keep PROGRESS updated)
