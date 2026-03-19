@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from PyQt5.QtWidgets import QApplication
-from tex_viewer.main_window import MainWindow
+from main_window import MainWindow
 
 
 def main() -> int:
