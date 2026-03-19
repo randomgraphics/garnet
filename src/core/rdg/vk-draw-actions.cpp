@@ -236,9 +236,21 @@ public:
                 }
         }
 
-        uint32_t                                       vertexCount = geom.vertexCount;
+        if (geom.indexCount > 0 && geom.indices.buffer) {
+            auto ref = BufferUtils::toRapid(geom.indices.buffer);
+            if (ref) GN_LIKELY {
+                    const rapid_vulkan::BufferView  view {ref.get(), geom.indices.offset, vk::DeviceSize(-1)};
+                    const vk::IndexType             indexType = (geom.indices.stride == 4) ? vk::IndexType::eUint32 : vk::IndexType::eUint16;
+                    drawable.i(view, indexType);
+                }
+        }
+
         rapid_vulkan::GraphicsPipeline::DrawParameters drawParams {};
-        drawParams.setNonIndexed(vertexCount, 0).setInstance(1, 0);
+        if (geom.indexCount > 0 && geom.indices.buffer) {
+            drawParams.setIndexed(geom.indexCount).setInstance(1, 0);
+        } else {
+            drawParams.setNonIndexed(geom.vertexCount, 0).setInstance(1, 0);
+        }
         drawable.draw(drawParams);
 
         rapid_vulkan::Ref<const rapid_vulkan::DrawPack> drawPack = drawable.compile();

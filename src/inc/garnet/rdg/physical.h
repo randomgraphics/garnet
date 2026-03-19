@@ -8,15 +8,20 @@ namespace GN::rdg {
 using Nanoseconds  = std::chrono::nanoseconds;
 using Microseconds = std::chrono::microseconds;
 
+///< Intensity unit [cd].
 struct Candela {
     float value;
-}; ///< Intensity unit [cd].
+};
+
+/// Unit of illuminance [lx] = 1 lumen / m^2.
 struct Lux {
     float value;
-}; ///< Unit of illuminance [lx] = 1 lumen / m^2.
+};
+
+/// Radiance (Luminance) in unit of [cd/m^2].
 struct CandelaPerM2 {
     float value;
-}; ///< Radiance (Luminance) in unit of [cd/m^2].
+};
 
 /// Photometric Intensity (I). Usually used to represent point and spot light color.
 /// - Radiometric I = [W/sr]

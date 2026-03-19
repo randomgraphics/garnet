@@ -90,7 +90,7 @@ void main() {
         vec3  H     = normalize(V + L);
         float NdotL = max(dot(N, L), 0.0);
 
-        vec3 radiance = light.colorAndRange.rgb;
+        vec3 irradiance = light.colorAndRange.rgb;
 
         // Cook-Torrance specular: (D * G * F) / (4 * NdotV * NdotL)
         float NdotV = max(dot(N, V), 1e-5);
@@ -103,7 +103,7 @@ void main() {
         vec3 kD      = (vec3(1.0) - F) * (1.0 - metallic);
         vec3 diffuse = kD * baseColor / PI;
 
-        Lo += (diffuse + spec) * radiance * NdotL;
+        Lo += (diffuse + spec) * irradiance * NdotL;
     }
 
     if (u_lighting.data.numLights == 0u) {
@@ -112,5 +112,18 @@ void main() {
         Lo          = baseColor * (0.03 + 0.97 * NdotL);
     }
 
-    outColor = vec4(baseColor, 1.0);
+    // Exposure: scale cd/m² into a range where Reinhard's knee is useful.
+    // Without this, Lo ≈ 3000 cd/m² would give Lo/(Lo+1) ≈ 1 (blown-out white).
+    // exposure ≈ 1/477 so that a white diffuse surface at NdotL=0.5 maps to mid-gray.
+    const float exposure = 0.002;
+    Lo *= exposure;
+
+    // Reinhard tonemapping: maps [0, ∞) → [0, 1).
+    Lo = Lo / (Lo + vec3(1.0));
+
+    // Gamma correction: convert linear light to sRGB (γ ≈ 2.2).
+    // Skip if the render target has a _SRGB format (hardware does it automatically).
+    Lo = pow(Lo, vec3(1.0 / 2.2));
+
+    outColor = vec4(Lo, 1.0);
 }
