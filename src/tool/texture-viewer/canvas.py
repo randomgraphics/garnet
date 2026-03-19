@@ -18,6 +18,7 @@ from tone_map import ToneMapper
 
 class ImageCanvas(QWidget):
     pixel_hovered = pyqtSignal(int, int, float, float, float, float)
+    zoom_changed  = pyqtSignal(float)   # emits zoom factor (1.0 = 100%)
 
     _MIN_ZOOM = 1.0 / 64
     _MAX_ZOOM = 64.0
@@ -75,12 +76,14 @@ class ImageCanvas(QWidget):
         scale = min(ww / pw, wh / ph)
         self._zoom = scale
         self._center_image()
+        self.zoom_changed.emit(self._zoom)
         self.update()
 
     def zoom_actual(self):
         """Reset to 1:1 pixel size."""
         self._zoom = 1.0
         self._center_image()
+        self.zoom_changed.emit(self._zoom)
         self.update()
 
     # ------------------------------------------------------------------
@@ -172,6 +175,7 @@ class ImageCanvas(QWidget):
         img_y = (pos.y() - self._pan.y()) / old
         self._pan = QPoint(int(pos.x() - img_x * self._zoom),
                            int(pos.y() - img_y * self._zoom))
+        self.zoom_changed.emit(self._zoom)
         self.update()
 
     def _widget_center(self) -> QPoint:

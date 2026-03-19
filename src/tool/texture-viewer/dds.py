@@ -296,9 +296,8 @@ def _decode_bcn(raw: bytes, w: int, h: int, fmt: int) -> np.ndarray:
         out = np.frombuffer(raw_out, dtype=np.uint8).reshape(h, w, 4).copy()
         out = out[:, :, [2, 1, 0, 3]].astype(np.float32) / 255.0  # BGRA→RGBA
     elif fmt in (Fmt.BC2_UNORM, Fmt.BC2_UNORM_SRGB):
-        raw_out = t2d.decode_bc2(raw, w, h)
-        out = np.frombuffer(raw_out, dtype=np.uint8).reshape(h, w, 4).copy()
-        out = out[:, :, [2, 1, 0, 3]].astype(np.float32) / 255.0
+        # texture2ddecoder has no decode_bc2; BC2/DXT3 is extremely rare in practice
+        raise ValueError('BC2/DXT3 decompression is not supported by texture2ddecoder')
     elif fmt in (Fmt.BC3_UNORM, Fmt.BC3_UNORM_SRGB):
         raw_out = t2d.decode_bc3(raw, w, h)
         out = np.frombuffer(raw_out, dtype=np.uint8).reshape(h, w, 4).copy()
@@ -312,10 +311,10 @@ def _decode_bcn(raw: bytes, w: int, h: int, fmt: int) -> np.ndarray:
         out = np.frombuffer(raw_out, dtype=np.uint8).reshape(h, w, 2).copy()
         out = out.astype(np.float32) / 255.0
     elif fmt in (Fmt.BC6H_UF16, Fmt.BC6H_SF16):
+        # texture2ddecoder.decode_bc6 returns BGRA uint8 (HDR range is lost)
         raw_out = t2d.decode_bc6(raw, w, h)
-        # Returns float16 RGB bytes
-        out = np.frombuffer(raw_out, dtype=np.float16).reshape(h, w, 3).copy()
-        out = out.astype(np.float32)
+        out = np.frombuffer(raw_out, dtype=np.uint8).reshape(h, w, 4).copy()
+        out = out[:, :, [2, 1, 0, 3]].astype(np.float32) / 255.0  # BGRA→RGBA
     elif fmt in (Fmt.BC7_UNORM, Fmt.BC7_UNORM_SRGB):
         raw_out = t2d.decode_bc7(raw, w, h)
         out = np.frombuffer(raw_out, dtype=np.uint8).reshape(h, w, 4).copy()

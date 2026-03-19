@@ -213,6 +213,9 @@ class MainWindow(QMainWindow):
         tm_lay.addRow('Exposure (EV):', self._spin_exposure)
         tm_lay.addRow('Gamma:', self._spin_gamma)
         tm_lay.addRow(self._lbl_white, self._spin_white)
+        # Hidden until Reinhard Extended is selected
+        self._lbl_white.setVisible(False)
+        self._spin_white.setVisible(False)
         lay.addWidget(tm_group)
 
         # --- Pixel info ---
@@ -291,6 +294,8 @@ class MainWindow(QMainWindow):
         self._btn_a.clicked.connect(self._on_channel_changed)
 
         self._canvas.pixel_hovered.connect(self._on_pixel_hovered)
+        self._canvas.zoom_changed.connect(
+            lambda z: self._zoom_label.setText(f'{z * 100:.0f}%'))
         self._btn_fit.clicked.connect(self._canvas.fit_to_window)
         self._btn_1to1.clicked.connect(self._canvas.zoom_actual)
 
@@ -395,19 +400,24 @@ class MainWindow(QMainWindow):
     # Slots
     # ------------------------------------------------------------------
     def _on_nav_changed(self):
+        self._update_depth_range()
         self._reload_subresource()
         self._update_status()
 
     def _on_face_changed(self):
         self._update_face_label()
-        mip   = self._spin_mip.value()
-        face  = self._spin_face.value()
-        # When mip or face changes on a 3D tex, update depth range
-        if self._dds and self._dds.tex_type == dds_mod.TexType.TEX3D:
-            new_d = max(1, self._dds.depth >> mip) - 1
-            self._spin_depth.setRange(0, new_d)
+        self._update_depth_range()
         self._reload_subresource()
         self._update_status()
+
+    def _update_depth_range(self):
+        """Keep the depth-slice spinbox range correct for the current mip level."""
+        if self._dds and self._dds.tex_type == dds_mod.TexType.TEX3D:
+            mip = self._spin_mip.value()
+            new_max = max(0, max(1, self._dds.depth >> mip) - 1)
+            old_val = self._spin_depth.value()
+            self._spin_depth.setRange(0, new_max)
+            self._spin_depth.setValue(min(old_val, new_max))
 
     def _on_tone_changed(self):
         mode_str = self._combo_mode.currentText()
