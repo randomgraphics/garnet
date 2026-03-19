@@ -1,2 +1,6 @@
 termcolor
 Pillow
+numpy
+OpenEXR
+PyQt5
+texture2ddecoder

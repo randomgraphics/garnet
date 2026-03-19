@@ -1,0 +1,101 @@
+TITLE: Python DDS/EXR Texture Viewer (tex-viewer)
+GOAL: A standalone Python/Qt5 image viewer for DDS and EXR files that supports:
+  - Full mipmap chain navigation
+  - Cubemap face, array layer, and 3D depth-slice exploration
+  - Zoom, pan, fit-to-window
+  - Exact float pixel values under mouse cursor
+  - HDR display with configurable tonemapping (Linear, Reinhard, ACES, Filmic)
+  - BCn compressed DDS (BC1/3/4/5/6H/7) via texture2ddecoder
+  "Done" = all the above work on sky.dds (cubemap RGBA16F) and a 4K EXR panorama.
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Task 1   (assignment file created)
+In progress:    Task 2   (dds.py)
+--- END PROGRESS ---
+
+REFERENCE
+  Key files:
+    env/bin/tex-viewer.py              launcher
+    env/bin/tex_viewer/__init__.py     package marker
+    env/bin/tex_viewer/dds.py          DDS parser
+    env/bin/tex_viewer/tone_map.py     tonemapping
+    env/bin/tex_viewer/canvas.py       ImageCanvas widget
+    env/bin/tex_viewer/main_window.py  MainWindow
+    env/requirements.txt               add PyQt5, texture2ddecoder
+  Test assets:
+    media/env/sky.dds               512x512 cubemap RGBA16F (6 faces, 1 mip)
+    media/env/160_hdrmaps_com_free_4K.exr   4K equirect EXR
+
+BUILD/CI
+  Run viewer:  python3 env/bin/tex-viewer.py media/env/sky.dds
+  Lint:        env/bin/cit.py  (or skip for tool scripts)
+
+WORKFLOW
+  - Commit after each task is verified.
+  - Keep build green.
+  - All Python, no C++ dependencies.
+  - Use PyQt5 for GUI, numpy for image math, texture2ddecoder for BCn.
+
+TASKS
+
+Task 1: Create assignment file (DONE)
+  Verify: file exists.
+
+Task 2: Write env/bin/tex_viewer/dds.py
+  - Parse DDS_HEADER + optional DX10 extension
+  - Detect texture type: 2D, cubemap, array, 3D/volume
+  - Compute per-subresource offset/size for mip × face/array × depth-slice
+  - Decode uncompressed DXGI formats → float32 RGBA numpy array
+  - Decode BCn (BC1/2/3/4/5/6H/7) via texture2ddecoder → float32 RGBA
+  - Legacy DDS (DDPF flags, DXT1/3/5 FourCC) → map to modern codes
+  Verify: `python3 -c "from tex_viewer.dds import DdsFile; d = DdsFile('media/env/sky.dds'); print(d)"` prints correct info.
+  Commit: "tex-viewer Task 2: DDS parser"
+
+Task 3: Write env/bin/tex_viewer/tone_map.py
+  - Class ToneMapper with fields: mode, exposure_ev, gamma
+  - Modes: none, reinhard, reinhard_ext, aces, filmic
+  - apply(float32_rgba) → uint8 RGBA numpy array ready for QImage
+  - Channel isolation: mode r/g/b/a shows that channel as grayscale
+  Verify: import + apply on a test array.
+  Commit: "tex-viewer Task 3: tonemapping"
+
+Task 4: Write env/bin/tex_viewer/canvas.py
+  - ImageCanvas(QWidget): holds a float32 RGBA array + ToneMapper ref
+  - zoom/pan via mouse wheel and left-drag
+  - F or double-click: fit to window
+  - Mouse move: emit pixel_hovered(x, y, r, g, b, a) signal with raw float values
+  Verify: instantiates without error.
+  Commit: "tex-viewer Task 4: ImageCanvas widget"
+
+Task 5: Write env/bin/tex_viewer/main_window.py
+  - MainWindow(QMainWindow): File menu (Open, Recent, Quit)
+  - Left: ImageCanvas in QScrollArea-like setup
+  - Right dock: texture info, navigation (mip/face/layer/slice spinboxes),
+    channel buttons (R G B A RGB), tonemapping controls, pixel info readout
+  - Status bar: filename | WxHxD | format | type | file size
+  Verify: window shows, controls respond.
+  Commit: "tex-viewer Task 5: MainWindow"
+
+Task 6: Write launcher + __init__
+  - env/bin/tex-viewer.py: add sys.path, launch app
+  - env/bin/tex_viewer/__init__.py: empty
+  Commit: "tex-viewer Task 6: launcher"
+
+Task 7: Update requirements.txt
+  - Add PyQt5 and texture2ddecoder
+  Commit: "tex-viewer Task 7: update requirements"
+
+Task 8: Smoke test
+  - Open sky.dds: shows cubemap faces, can navigate face +X/-X/etc., pixel values display
+  - Open 4K EXR: loads, tonemapping changes affect display
+  Commit: "tex-viewer Task 8: smoke-tested, ready"
+
+SUMMARY OF FILES TO TOUCH
+  env/bin/tex-viewer.py              (create)
+  env/bin/tex_viewer/__init__.py     (create)
+  env/bin/tex_viewer/dds.py          (create)
+  env/bin/tex_viewer/tone_map.py     (create)
+  env/bin/tex_viewer/canvas.py       (create)
+  env/bin/tex_viewer/main_window.py  (create)
+  env/requirements.txt               (update)
+  agent/TASKS_TEX_VIEWER.txt         (this file)
