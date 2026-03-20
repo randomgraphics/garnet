@@ -1,6 +1,7 @@
 .vscode/
 .cache/
 /build*/
+__pycache__/
 tmp/
 *.pyo
 *.pyc
