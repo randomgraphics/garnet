@@ -339,19 +339,27 @@ protected:
     using GpuResource::GpuResource;
 };
 
+/// Renders the environment cubemap as a fullscreen background (skybox pass).
+///
+/// Uses a 3-vertex fullscreen triangle (no VBO). The vertex shader reconstructs a world-space
+/// ray direction per pixel via inverse-projection × inverse-view-rotation, then the fragment
+/// shader samples \c samplerCube at Set 0 binding 2 (skyboxCubemap from SharedShaderConstants).
+/// Depth is pinned to 1.0 (gl_Position.z = gl_Position.w) so skybox always renders behind
+/// all opaque geometry when executed first.
 struct SkyBox : public GpuResource {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     struct BuildParameters {
-        RenderGraph *                        renderGraph = {};
-        AutoRef<const SharedShaderConstants> sharedShaderConstants;
+        RenderGraph *                        renderGraph = {};      ///< Target render graph (required).
+        AutoRef<const SharedShaderConstants> sharedShaderConstants; ///< Provides Set 0 resources (camera + env map).
     };
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
     };
 
-    /// Add task graphs into the workflow to render a sky box.
+    /// Emit a Workflow into \p params.renderGraph that renders the skybox background.
+    /// Returns a SubGraph with \c builtResult == PASSED on success.
     virtual SubGraph build(const BuildParameters & params) = 0;
 
     static GN_API AutoRef<SkyBox> create(const StrA & name, const CreateParameters & params);
