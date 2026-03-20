@@ -38,8 +38,8 @@ def find_glslc() -> str:
 
 def derive_var_name(src: pathlib.Path) -> str:
     """pbr.vert -> kPbrVertSpv,  solid-triangle.frag -> kSolidTriangleFragSpv"""
-    stem = src.stem   # e.g. "solid-triangle"
-    ext  = src.suffix.lstrip(".")  # e.g. "vert"
+    stem = src.stem  # e.g. "solid-triangle"
+    ext = src.suffix.lstrip(".")  # e.g. "vert"
     parts = stem.replace("-", " ").split() + [ext]
     return "k" + "".join(p.title() for p in parts) + "Spv"
 
@@ -49,12 +49,14 @@ def derive_header_name(src: pathlib.Path) -> str:
     return f"{src.stem}-{src.suffix.lstrip('.')}.spv.h"
 
 
-def spv_to_header(spv_path: pathlib.Path, var_name: str, out_path: pathlib.Path) -> None:
+def spv_to_header(
+    spv_path: pathlib.Path, var_name: str, out_path: pathlib.Path
+) -> None:
     with open(spv_path, "rb") as f:
         data = f.read()
     if len(data) % 4 != 0:
         raise ValueError(f"SPIR-V size not multiple of 4: {spv_path}")
-    words     = struct.unpack(f"<{len(data) // 4}I", data)
+    words = struct.unpack(f"<{len(data) // 4}I", data)
     size_name = f"{var_name}Size"
     with open(out_path, "w") as f:
         f.write("#pragma once\n")
@@ -65,15 +67,22 @@ def spv_to_header(spv_path: pathlib.Path, var_name: str, out_path: pathlib.Path)
             line = "    " + ", ".join(f"0x{w:08x}u" for w in words[i : i + 4]) + ",\n"
             f.write(line)
         f.write("};\n")
-        f.write(f"static const unsigned int {size_name} = sizeof({var_name}) / sizeof({var_name}[0]);\n")
+        f.write(
+            f"static const unsigned int {size_name} = sizeof({var_name}) / sizeof({var_name}[0]);\n"
+        )
         f.write("// clang-format on\n")
 
 
-def compile_one(glslc: str, src: pathlib.Path, var_name: str, out_dir: pathlib.Path,
-                include_dirs: list[str]) -> None:
-    spv    = out_dir / (src.name + ".spv")
+def compile_one(
+    glslc: str,
+    src: pathlib.Path,
+    var_name: str,
+    out_dir: pathlib.Path,
+    include_dirs: list[str],
+) -> None:
+    spv = out_dir / (src.name + ".spv")
     header = out_dir / derive_header_name(src)
-    cmd    = [glslc, str(src), "-o", str(spv), "-O", "-g"]
+    cmd = [glslc, str(src), "-o", str(spv), "-O", "-g"]
     for d in include_dirs:
         cmd += [f"-I{d}"]
     print(" ".join(cmd))
@@ -93,18 +102,33 @@ def main() -> None:
         epilog=__doc__,
     )
     ap.add_argument("sources", nargs="+", type=pathlib.Path, help="GLSL source files")
-    ap.add_argument("--out-dir", type=pathlib.Path, default=None,
-                    help="Output directory for .spv.h files (default: directory of first source)")
-    ap.add_argument("--var-name", default=None,
-                    help="Override C++ array name (single-source mode only)")
-    ap.add_argument("-I", dest="includes", action="append", default=[],
-                    metavar="DIR", help="Add include directory (forwarded to glslc)")
+    ap.add_argument(
+        "--out-dir",
+        type=pathlib.Path,
+        default=None,
+        help="Output directory for .spv.h files (default: directory of first source)",
+    )
+    ap.add_argument(
+        "--var-name",
+        default=None,
+        help="Override C++ array name (single-source mode only)",
+    )
+    ap.add_argument(
+        "-I",
+        dest="includes",
+        action="append",
+        default=[],
+        metavar="DIR",
+        help="Add include directory (forwarded to glslc)",
+    )
     args = ap.parse_args()
 
     if args.var_name and len(args.sources) > 1:
         ap.error("--var-name can only be used with a single source file")
 
-    out_dir = args.out_dir if args.out_dir is not None else args.sources[0].resolve().parent
+    out_dir = (
+        args.out_dir if args.out_dir is not None else args.sources[0].resolve().parent
+    )
     out_dir = pathlib.Path(out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 

@@ -12,13 +12,15 @@
 #include "global-camera-ubo.h"
 #include "direct-lighting-ubo.h"
 
-layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; } u_camera;
-layout(std140, set = 0, binding = 1) uniform DirectLightingBlock { DirectLightingUBO data; } u_lighting;
+layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; }
+u_camera;
+layout(std140, set = 0, binding = 1) uniform DirectLightingBlock { DirectLightingUBO data; }
+u_lighting;
 
 // IBL maps — fallback to 1x1 black cube / white 2D if not set by the application.
 layout(set = 0, binding = 3) uniform samplerCube u_irradianceMap;
 layout(set = 0, binding = 4) uniform samplerCube u_prefilteredEnvMap;
-layout(set = 0, binding = 5) uniform sampler2D   u_brdfLut;
+layout(set = 0, binding = 5) uniform sampler2D u_brdfLut;
 
 layout(set = 1, binding = 0) uniform sampler2D u_baseColor;
 layout(set = 1, binding = 1) uniform sampler2D u_metallicRoughness;
@@ -120,20 +122,20 @@ void main() {
 
     // IBL ambient: split-sum diffuse (irradiance map) + specular (prefiltered env map + BRDF LUT).
     {
-        float NdotV    = max(dot(N, V), 0.0);
-        vec3  F_ibl    = fresnelSchlickRoughness(NdotV, F0, roughness);
-        vec3  kD_ibl   = (vec3(1.0) - F_ibl) * (1.0 - metallic);
+        float NdotV  = max(dot(N, V), 0.0);
+        vec3  F_ibl  = fresnelSchlickRoughness(NdotV, F0, roughness);
+        vec3  kD_ibl = (vec3(1.0) - F_ibl) * (1.0 - metallic);
 
         // Diffuse IBL: sample pre-convolved irradiance map in the surface-normal direction.
         vec3 irradiance  = texture(u_irradianceMap, N).rgb;
         vec3 diffuse_ibl = kD_ibl * baseColor * irradiance;
 
         // Specular IBL: sample prefiltered env map at roughness-derived mip + scale by split-sum BRDF LUT.
-        const float MAX_LOD = 4.0; // valid for a 512px prefilteredEnvMap (mips 0-4)
-        vec3  R            = reflect(-V, N);
-        vec3  prefiltColor = textureLod(u_prefilteredEnvMap, R, roughness * MAX_LOD).rgb;
-        vec2  brdf         = texture(u_brdfLut, vec2(NdotV, roughness)).rg;
-        vec3  specular_ibl = prefiltColor * (F_ibl * brdf.x + brdf.y);
+        const float MAX_LOD      = 4.0; // valid for a 512px prefilteredEnvMap (mips 0-4)
+        vec3        R            = reflect(-V, N);
+        vec3        prefiltColor = textureLod(u_prefilteredEnvMap, R, roughness * MAX_LOD).rgb;
+        vec2        brdf         = texture(u_brdfLut, vec2(NdotV, roughness)).rg;
+        vec3        specular_ibl = prefiltColor * (F_ibl * brdf.x + brdf.y);
 
         Lo += diffuse_ibl + specular_ibl;
     }

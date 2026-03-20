@@ -19,9 +19,9 @@ class SkyBoxVulkan : public SkyBox {
     void ensureDrawAction() const {
         if (mDrawAction) return;
         GpuDraw::CreateParameters cp;
-        cp.context = mGpu;
-        cp.vs      = {.binary = (void *) kSkyboxVertSpv, .size = kSkyboxVertSpvSize * sizeof(unsigned int), .entry = "main"};
-        cp.ps      = {.binary = (void *) kSkyboxFragSpv, .size = kSkyboxFragSpvSize * sizeof(unsigned int), .entry = "main"};
+        cp.context    = mGpu;
+        cp.vs         = {.binary = (void *) kSkyboxVertSpv, .size = kSkyboxVertSpvSize * sizeof(unsigned int), .entry = "main"};
+        cp.ps         = {.binary = (void *) kSkyboxFragSpv, .size = kSkyboxFragSpvSize * sizeof(unsigned int), .entry = "main"};
         StrA drawName = name.empty() ? "skybox_draw"_s : StrA::format("skybox_draw_{}", name);
         mDrawAction   = GpuDraw::create(drawName, cp);
         GN_REQUIRE(mDrawAction, fmt::format("Failed to create SkyBox draw action, name='{}'", drawName));

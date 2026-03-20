@@ -78,7 +78,10 @@ Last completed: Phase 3.3 — SkyBox::build unit test green
   Phase 4.1: pbr.frag: IBL sampler declarations added (Set 0 bindings 3 irradianceMap, 4 prefilteredEnvMap, 5 brdfLut)
   Phase 4.2: pbr.frag: IBL diffuse — irradiance map samples replace 0.03 ambient
   Phase 4.3: pbr.frag: IBL specular — split-sum (prefilteredEnvMap LOD + brdfLut scale/bias)
-In progress: Phase 4.4 — gen-ibl-maps.py (generate irradiance + prefiltered + BRDF LUT)
+  Phase 4.4: env/bin/gen-ibl-maps.py — Monte-Carlo irradiance + GGX prefiltered + split-sum BRDF LUT (all DDS)
+  Phase 4.5: draw-mesh.cpp: load irradiance/prefiltered/brdfLut; bind all 4 env textures to SSC
+  Phase 5: CI green + format (all clang-format violations fixed; format-all-sources.py false-positive from black suppressed)
+In progress: none — assignment complete; ready for review
 --- END PROGRESS ---
 
 --- REFERENCE ---

@@ -177,9 +177,9 @@ struct SharedShaderConstants : public GpuResource {
     virtual void setDirectLightingInformation(const DirectLightingInformation &)           = 0;
     virtual void setEnvironmentLightingInformation(const EnvironmentLightingInformation &) = 0;
 
-    virtual const FrameInformation &              getFrameInformation() const              = 0;
-    virtual const ViewInformation &               getViewInformation() const               = 0;
-    virtual const DirectLightingInformation &     getDirectLightingInformation() const     = 0;
+    virtual const FrameInformation &               getFrameInformation() const               = 0;
+    virtual const ViewInformation &                getViewInformation() const                = 0;
+    virtual const DirectLightingInformation &      getDirectLightingInformation() const      = 0;
     virtual const EnvironmentLightingInformation & getEnvironmentLightingInformation() const = 0;
     /// Last built Set 0 resource set (valid after build() has been called). Effects use this as set #0 in the resource table.
     virtual const Set0ResourceSet & getSet0Resources() const = 0;

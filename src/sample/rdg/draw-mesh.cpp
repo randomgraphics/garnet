@@ -60,12 +60,21 @@ int main(int, const char **) {
     auto skybox = SkyBox::create("skybox", SkyBox::CreateParameters {.gpu = gpuContext});
     if (!skybox) return -1;
 
-    // Load environment cubemap. Falls back to 1×1 black if absent.
-    auto skyboxCubemap = Texture::load(Texture::LoadParameters {
-        .context  = gpuContext,
-        .filename = fs::toNativeDiskFilePath("media::envmap/bad-salzbrunn-walking-hall/skybox.dds"),
-    });
-    if (!skyboxCubemap) { GN_WARN(sLogger)("Skybox cubemap not found; using fallback"); }
+    auto loadTex = [&](const char * path) -> AutoRef<Texture> {
+        auto tex = Texture::load(Texture::LoadParameters {
+            .context  = gpuContext,
+            .filename = fs::toNativeDiskFilePath(path),
+        });
+        if (!tex) { GN_WARN(sLogger)("IBL texture not found: {}", path); }
+        return tex;
+    };
+
+    // Load IBL assets. Each falls back to 1×1 fallback inside SSC if null.
+    static constexpr const char * kEnvDir           = "media::envmap/bad-salzbrunn-walking-hall/";
+    auto                          skyboxCubemap     = loadTex((StrA(kEnvDir) + "skybox.dds").c_str());
+    auto                          irradianceMap     = loadTex((StrA(kEnvDir) + "irradiance.dds").c_str());
+    auto                          prefilteredEnvMap = loadTex((StrA(kEnvDir) + "prefiltered.dds").c_str());
+    auto                          brdfLut           = loadTex((StrA(kEnvDir) + "brdf_lut.dds").c_str());
 
     auto material = loadPbrMaterial(gpuContext);
     if (!material) return -1;
@@ -126,9 +135,12 @@ int main(int, const char **) {
         view.renderTarget      = renderTarget;
         sharedConstants->setViewInformation(view);
         sharedConstants->setDirectLightingInformation(lighting);
-        if (skyboxCubemap) {
+        {
             SharedShaderConstants::EnvironmentLightingInformation env;
-            env.skyboxCubemap = skyboxCubemap;
+            env.skyboxCubemap     = skyboxCubemap;
+            env.irradianceMap     = irradianceMap;
+            env.prefilteredEnvMap = prefilteredEnvMap;
+            env.brdfLut           = brdfLut;
             sharedConstants->setEnvironmentLightingInformation(env);
         }
     }
@@ -147,12 +159,11 @@ int main(int, const char **) {
 
         // Skybox renders before geometry (fullscreen quad at max depth; PBR geometry overwrites it).
         SkyBox::BuildParameters skyboxParams;
-        skyboxParams.renderGraph          = renderGraph.get();
+        skyboxParams.renderGraph           = renderGraph.get();
         skyboxParams.sharedShaderConstants = sharedConstants;
-        auto skyboxSubGraph               = skybox->build(skyboxParams);
+        auto skyboxSubGraph                = skybox->build(skyboxParams);
         if (skyboxSubGraph.builtResult == Action::ExecutionResult::PASSED && !skyboxSubGraph.workflows.empty()) {
-            for (const auto & task : skyboxSubGraph.workflows[0].tasks())
-                renderWorkflow.appendTask(task.name, task.action, task.arguments);
+            for (const auto & task : skyboxSubGraph.workflows[0].tasks()) renderWorkflow.appendTask(task.name, task.action, task.arguments);
         }
 
         PbrShading::BuildParameters pbrParams;

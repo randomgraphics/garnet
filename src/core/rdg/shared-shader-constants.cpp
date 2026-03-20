@@ -45,8 +45,8 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
     AutoRef<PersistentBuffer> mLightingBuffer; ///< Set 0 binding 1: DirectLightingUBO
 
     // Fallback 1×1 env textures used when the caller has not provided real env maps.
-    AutoRef<Texture> mFallbackCubemap;   ///< 1×1 black cubemap (bindings 2, 3, 4 fallback)
-    AutoRef<Texture> mFallbackBrdfLut;   ///< 1×1 white 2D texture (binding 5 fallback)
+    AutoRef<Texture> mFallbackCubemap; ///< 1×1 black cubemap (bindings 2, 3, 4 fallback)
+    AutoRef<Texture> mFallbackBrdfLut; ///< 1×1 white 2D texture (binding 5 fallback)
 
     Set0ResourceSet mLastSet0; ///< Last built Set 0 resource set (for getSet0Resources()).
 

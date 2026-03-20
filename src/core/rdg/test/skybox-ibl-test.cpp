@@ -93,7 +93,7 @@ TEST_CASE("SkyBox: create and build produce a non-empty SubGraph", "[rdg][skybox
     ssc->build(*rg);
 
     SkyBox::BuildParameters bp;
-    bp.renderGraph          = rg.get();
+    bp.renderGraph           = rg.get();
     bp.sharedShaderConstants = ssc;
     auto sg                  = skybox->build(bp);
 
@@ -121,7 +121,7 @@ TEST_CASE("SharedShaderConstants: Set 0 binding 2 uses provided skyboxCubemap", 
     REQUIRE(!sg.workflows.empty());
 
     const auto & set0 = ssc->getSet0Resources();
-    REQUIRE(set0.size() >= 3u);                          // at least bindings 0..2
-    REQUIRE(set0[2].size() == 1u);                       // binding 2 has one view
-    CHECK(set0[2][0].artifact.get() == cube.get());      // binding 2 points to our cubemap
+    REQUIRE(set0.size() >= 3u);                     // at least bindings 0..2
+    REQUIRE(set0[2].size() == 1u);                  // binding 2 has one view
+    CHECK(set0[2][0].artifact.get() == cube.get()); // binding 2 points to our cubemap
 }
