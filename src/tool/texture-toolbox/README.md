@@ -9,6 +9,43 @@ All tools are on `PATH` after sourcing `env/garnet.rc` (Linux) or `env/garnet.ps
 
 ## Tools
 
+### build-mips
+
+Generates a complete mipmap chain for a DDS texture and writes an
+uncompressed DDS file.
+
+Reads only the mip-0 data from the input; any existing mip levels are
+discarded and rebuilt from scratch using a 2×2 box filter.
+
+If the input is block-compressed (BC1/3/4/5/6H/7) it is decompressed first;
+the output is always uncompressed.
+
+Output format is chosen automatically from the input:
+
+| Input | Output |
+|---|---|
+| Float (F16/F32) or BC6H (HDR) | `R32G32B32A32_FLOAT` |
+| Integer UNORM or BCn LDR | `R8G8B8A8_UNORM` |
+
+Supports all DDS texture types: 2D, cubemap, 2D array, 3D/volume.
+
+#### Usage
+
+```bash
+# Linux / macOS (after sourcing garnet.rc)
+build-mips.py  input.dds  output.dds
+build-mips.py  input.dds  --inplace        # uncompressed input only
+
+# Windows
+build-mips.cmd  input.dds  output.dds
+build-mips.cmd  input.dds  --inplace
+```
+
+`--inplace` writes the mip chain back into the original file.
+It is rejected for compressed inputs (will be supported in a future version).
+
+---
+
 ### texture-viewer
 
 A PyQt5 viewer for inspecting GPU textures and HDR images.
@@ -137,6 +174,8 @@ src/tool/texture-toolbox/
   texture-viewer.cmd       Windows launcher
   hdri-to-cubemap.py       entry point
   hdri-to-cubemap.cmd      Windows launcher
+  build-mips.py            entry point
+  build-mips.cmd           Windows launcher
   README.md
   texture_viewer/          texture-viewer package
     __init__.py
