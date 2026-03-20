@@ -358,7 +358,7 @@ Action::ExecutionResult RenderPassManagerVulkan::registerDrawBufferTransitions(T
 auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandBuffer * cb) -> RenderPass {
     if (mCurrentExecuteIndex >= mEntries.size()) GN_UNLIKELY {
             GN_ERROR(sLogger)("{} - execute index {} out of range (entries size {})", taskInfo, mCurrentExecuteIndex, mEntries.size());
-            return {taskInfo};
+            return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
     Entry &      entry = mEntries[mCurrentExecuteIndex];
@@ -367,16 +367,13 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
 
     if (entry.taskIndex != taskInfo.index) GN_UNLIKELY {
             GN_ERROR(sLogger)("{} - entry task index mismatch: entry has {}, expected {}", taskInfo, entry.taskIndex, taskInfo.index);
-            return {taskInfo};
+            return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
     vk::CommandBuffer vkCB;
     if (cb && *cb) vkCB = cb->commandBuffer().handle();
 
-    if (entry.isPresent()) {
-        // Present: no render pass begin; needToEnd handled by caller (present uses different path).
-        return {taskInfo, Action::ExecutionResult::PASSED, vk::CommandBuffer {}};
-    }
+    if (entry.isPresent()) { return {taskInfo, Action::ExecutionResult::PASSED, vk::CommandBuffer {}, nullptr}; }
 
     // Draw entry: need to begin if this entry starts the pass (renderPassBeginIndex == our index).
     bool needToBegin = (entry.renderPassBeginIndex == static_cast<int32_t>(index));
@@ -385,32 +382,20 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
     if ((!entry.textureTransitions.empty() || !entry.bufferTransitions.empty()) && entry.renderPassBeginIndex != static_cast<int32_t>(index)) GN_UNLIKELY {
             GN_ERROR(sLogger)("{} - integrity: draw resource transitions must be on render pass begin entry only (index={}, passBegin={})", taskInfo, index,
                               entry.renderPassBeginIndex);
-            return {taskInfo};
+            return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
-    if (needToBegin && !beginRenderPass(*entry.draw, vkCB, cb, &entry)) return {taskInfo};
+    if (needToBegin && !beginRenderPass(*entry.draw, vkCB, cb, &entry)) return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
 
     // Need to end render pass if: last entry; or next is a draw with different pass; or next is present of *this* render target's backbuffer.
-    // When next is present with next.draw empty, we're presenting the backbuffer we drew to → end pass. When next.draw non-empty, we're presenting a different
-    // backbuffer (e.g. we drew offscreen) → do not end.
     bool needToEnd = (index + 1 >= mEntries.size());
     if (!needToEnd) {
         const Entry & next = mEntries[index + 1];
-        needToEnd          = (next.isDraw() && (next.renderPassBeginIndex != entry.renderPassBeginIndex)) ||
-                             (next.isPresent() && !next.draw); // present of the backbuffer we drew to
+        needToEnd          = (next.isDraw() && (next.renderPassBeginIndex != entry.renderPassBeginIndex)) || (next.isPresent() && !next.draw);
     }
 
-    return {taskInfo, Action::ExecutionResult::PASSED, needToEnd ? vkCB : vk::CommandBuffer {}};
-}
-
-const RenderTarget * RenderPassManagerVulkan::getCurrentDrawTarget(uint64_t taskIndex) const {
-    if (mCurrentExecuteIndex == 0) return nullptr;
-    const Entry & last = mEntries[mCurrentExecuteIndex - 1];
-    if (last.taskIndex != taskIndex) GN_UNLIKELY {
-            GN_ERROR(sLogger)("getCurrentDrawTarget: task index mismatch (last executed entry has {}, requested {})", last.taskIndex, taskIndex);
-            return nullptr;
-        }
-    return last.draw.get();
+    const RenderTarget * drawTarget = entry.draw.get();
+    return {taskInfo, Action::ExecutionResult::PASSED, needToEnd ? vkCB : vk::CommandBuffer {}, drawTarget};
 }
 
 bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer vkCommandBuffer,

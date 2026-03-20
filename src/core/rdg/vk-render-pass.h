@@ -23,11 +23,13 @@ public:
 
     struct RenderPass : public NoCopy {
 
-        RenderPass(const TaskInfo & taskInfo, Action::ExecutionResult result = Action::ExecutionResult::FAILED, vk::CommandBuffer commandBuffer = {})
-            : mTaskInfo(taskInfo), mResult(result), mCommandBuffer(commandBuffer) {}
+        RenderPass(const TaskInfo & taskInfo, Action::ExecutionResult result = Action::ExecutionResult::FAILED, vk::CommandBuffer commandBuffer = {},
+                   const RenderTarget * drawTarget = nullptr)
+            : mTaskInfo(taskInfo), mResult(result), mCommandBuffer(commandBuffer), mDrawTarget(drawTarget) {}
 
-        RenderPass(RenderPass && o): mTaskInfo(o.mTaskInfo), mResult(o.mResult), mCommandBuffer(std::move(o.mCommandBuffer)) {
-            o.mResult = Action::ExecutionResult::FAILED;
+        RenderPass(RenderPass && o): mTaskInfo(o.mTaskInfo), mResult(o.mResult), mCommandBuffer(std::move(o.mCommandBuffer)), mDrawTarget(o.mDrawTarget) {
+            o.mResult     = Action::ExecutionResult::FAILED;
+            o.mDrawTarget = nullptr;
             GN_ASSERT(!o.mCommandBuffer);
         }
 
@@ -43,17 +45,23 @@ public:
             if (this == &o) return *this;
             mResult        = o.mResult;
             mCommandBuffer = std::move(o.mCommandBuffer);
+            mDrawTarget    = o.mDrawTarget;
             o.mResult      = Action::ExecutionResult::FAILED;
+            o.mDrawTarget  = nullptr;
             GN_ASSERT(!o.mCommandBuffer);
             return *this;
         }
 
         operator Action::ExecutionResult() const { return mResult; }
 
+        /// Current draw target for this executed entry; non-null only for draw tasks.
+        const RenderTarget * drawTarget() const { return mDrawTarget; }
+
     private:
         const TaskInfo &        mTaskInfo;
         Action::ExecutionResult mResult        = Action::ExecutionResult::FAILED;
         vk::CommandBuffer       mCommandBuffer = {};
+        const RenderTarget *    mDrawTarget    = nullptr;
     };
 
     RenderPassManagerVulkan(const ConstructParameters & params): mGpu(params.gpu) {}
@@ -79,13 +87,9 @@ public:
     /// If current render target is not this backbufer, then do nothing.
     Action::ExecutionResult preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
 
-    /// Called by task in execution pass to begin render pass.
+    /// Called by task in execution pass. Returns RenderPass with result, optional command buffer for ending, and current draw target (for draw tasks).
     /// \param cb RDG command buffer (for texture layout tracking and recording); null for tasks that do not record (e.g. present).
     RenderPass execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandBuffer * cb);
-
-    /// Current render target for the last executed draw entry. Call only after execute() for a draw task.
-    /// \param taskIndex Optional integrity check: must match the last executed entry's task index.
-    const RenderTarget * getCurrentDrawTarget(uint64_t taskIndex) const;
 
 private:
     struct TextureTransitionKey {

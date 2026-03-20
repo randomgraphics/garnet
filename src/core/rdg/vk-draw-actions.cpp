@@ -144,6 +144,12 @@ public:
         auto rp = sc.renderPassManager.execute(taskInfo, &cb);
         GN_RDG_FAIL_ON_FAIL(rp);
 
+        const RenderTarget * currentRt = rp.drawTarget();
+        if (!currentRt) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - current render target is not set for GpuDraw action", taskInfo);
+                return FAILED;
+            }
+
         const GpuGeometry & geom = a->geometry;
         if (0 == geom.vertexCount && 0 == geom.indexCount) GN_UNLIKELY {
                 GN_VERBOSE(sLogger)("{} - vertex and index count are zero. nothing to draw", taskInfo);
@@ -152,12 +158,6 @@ public:
 
         if (!mCreateParams.vs.binary || mCreateParams.vs.size == 0) GN_UNLIKELY {
                 GN_ERROR(sLogger)("{} - vertex shader is missing for GpuDraw action", taskInfo);
-                return FAILED;
-            }
-
-        const RenderTarget * currentRt = sc.renderPassManager.getCurrentDrawTarget(taskInfo.index);
-        if (!currentRt) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - current render target is not set for GpuDraw action", taskInfo);
                 return FAILED;
             }
 
@@ -239,8 +239,8 @@ public:
         if (geom.indexCount > 0 && geom.indices.buffer) {
             auto ref = BufferUtils::toRapid(geom.indices.buffer);
             if (ref) GN_LIKELY {
-                    const rapid_vulkan::BufferView  view {ref.get(), geom.indices.offset, vk::DeviceSize(-1)};
-                    const vk::IndexType             indexType = (geom.indices.stride == 4) ? vk::IndexType::eUint32 : vk::IndexType::eUint16;
+                    const rapid_vulkan::BufferView view {ref.get(), geom.indices.offset, vk::DeviceSize(-1)};
+                    const vk::IndexType            indexType = (geom.indices.stride == 4) ? vk::IndexType::eUint32 : vk::IndexType::eUint16;
                     drawable.i(view, indexType);
                 }
         }
