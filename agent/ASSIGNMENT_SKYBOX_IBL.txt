@@ -74,7 +74,8 @@ Last completed: Phase 3.3 — SkyBox::build unit test green
   Phase 3.2: SkyBox::create + SkyBoxVulkan::build in skybox.cpp
   Phase 3.3: skybox-ibl-test.cpp — SkyBox::create+build test added (6 tests total, all pass)
   Phase 3.4: draw-mesh.cpp: SkyBox created + wired into render loop before PBR (fallback 1x1 black cubemap)
-In progress: Phase 3.5 — load real environment cubemap into draw-mesh.cpp
+  Phase 3.5: media/envmap/.../skybox.dds generated (hdri-to-cubemap.py, 512px rgba16f); loaded + bound to SSC
+In progress: Phase 4.1 — IBL sampler declarations in pbr.frag (Set 0 bindings 3, 4, 5)
 --- END PROGRESS ---
 
 --- REFERENCE ---

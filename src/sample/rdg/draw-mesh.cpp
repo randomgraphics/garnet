@@ -60,6 +60,13 @@ int main(int, const char **) {
     auto skybox = SkyBox::create("skybox", SkyBox::CreateParameters {.gpu = gpuContext});
     if (!skybox) return -1;
 
+    // Load environment cubemap. Falls back to 1×1 black if absent.
+    auto skyboxCubemap = Texture::load(Texture::LoadParameters {
+        .context  = gpuContext,
+        .filename = fs::toNativeDiskFilePath("media::envmap/bad-salzbrunn-walking-hall/skybox.dds"),
+    });
+    if (!skyboxCubemap) { GN_WARN(sLogger)("Skybox cubemap not found; using fallback"); }
+
     auto material = loadPbrMaterial(gpuContext);
     if (!material) return -1;
 
@@ -119,6 +126,11 @@ int main(int, const char **) {
         view.renderTarget      = renderTarget;
         sharedConstants->setViewInformation(view);
         sharedConstants->setDirectLightingInformation(lighting);
+        if (skyboxCubemap) {
+            SharedShaderConstants::EnvironmentLightingInformation env;
+            env.skyboxCubemap = skyboxCubemap;
+            sharedConstants->setEnvironmentLightingInformation(env);
+        }
     }
 
     GN_INFO(sLogger)("Starting PBR helmet render loop...");
