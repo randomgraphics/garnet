@@ -4,20 +4,163 @@ from __future__ import annotations
 import os
 import numpy as np
 
-from PyQt5.QtCore import Qt, QSettings
-from PyQt5.QtGui import QFont, QKeySequence
+from PyQt5.QtCore import Qt, QSettings, QThread, QTimer, pyqtSignal, QRectF
+from PyQt5.QtGui import QFont, QKeySequence, QPainter, QPen, QColor
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QSplitter, QDockWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout,
     QLabel, QPushButton, QComboBox, QSlider, QSpinBox,
     QDoubleSpinBox, QGroupBox, QFileDialog, QAction,
     QStatusBar, QButtonGroup, QSizePolicy, QScrollArea,
-    QFrame,
+    QFrame, QDialog, QProgressBar, QMessageBox,
 )
 
 from canvas import ImageCanvas
 from tone_map import ToneMapper, ToneMode, ChannelMode
 import dds as dds_mod
+
+
+# ---------------------------------------------------------------------------
+# Async loading helpers
+# ---------------------------------------------------------------------------
+_LARGE_FILE_BYTES = 5 * 1024 * 1024   # show loading dialog for files > 5 MB
+
+
+class _Spinner(QWidget):
+    """Animated spinning-arc widget."""
+
+    def __init__(self, size: int = 44, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(size, size)
+        self._angle = 0
+        self._timer = QTimer(self)
+        self._timer.timeout.connect(self._tick)
+
+    def start(self):
+        self._timer.start(16)   # ~60 fps
+
+    def stop(self):
+        self._timer.stop()
+
+    def _tick(self):
+        self._angle = (self._angle + 8) % 360
+        self.update()
+
+    def paintEvent(self, _event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        s = self.width()
+        m = s * 0.12
+        rect = QRectF(m, m, s - 2 * m, s - 2 * m)
+        pen_w = s * 0.11
+
+        # Background track
+        pen = QPen(QColor(70, 70, 70), pen_w)
+        pen.setCapStyle(Qt.RoundCap)
+        p.setPen(pen)
+        p.drawEllipse(rect)
+
+        # Spinning arc (270° sweep)
+        pen.setColor(QColor(80, 150, 255))
+        p.setPen(pen)
+        start_angle = (90 - self._angle) * 16    # Qt angles: 0 = 3 o'clock, CCW
+        span_angle  = -270 * 16
+        p.drawArc(rect, start_angle, span_angle)
+
+
+class LoadingDialog(QDialog):
+    """Modal loading dialog with spinner animation and Cancel button."""
+
+    cancel_requested = pyqtSignal()
+
+    def __init__(self, filename: str, parent=None):
+        super().__init__(parent,
+                         Qt.Dialog | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        self.setModal(True)
+        self.setWindowTitle('Loading')
+        self.setFixedSize(340, 140)
+
+        lay = QVBoxLayout(self)
+        lay.setSpacing(10)
+        lay.setContentsMargins(20, 18, 20, 14)
+
+        # Spinner + text row
+        row = QHBoxLayout()
+        self._spinner = _Spinner(44)
+        row.addWidget(self._spinner, 0, Qt.AlignVCenter)
+        row.addSpacing(14)
+
+        text_col = QVBoxLayout()
+        text_col.setSpacing(3)
+        lbl_loading = QLabel('Loading…')
+        lbl_loading.setStyleSheet('font-weight: bold; font-size: 13px;')
+        text_col.addWidget(lbl_loading)
+        lbl_name = QLabel(os.path.basename(filename))
+        lbl_name.setStyleSheet('color: #999; font-size: 11px;')
+        lbl_name.setWordWrap(True)
+        text_col.addWidget(lbl_name)
+        row.addLayout(text_col, 1)
+        lay.addLayout(row)
+
+        # Thin indeterminate progress bar
+        bar = QProgressBar()
+        bar.setRange(0, 0)
+        bar.setFixedHeight(4)
+        bar.setTextVisible(False)
+        bar.setStyleSheet("""
+            QProgressBar { background: #444; border: none; border-radius: 2px; }
+            QProgressBar::chunk { background: #4a90e2; border-radius: 2px; }
+        """)
+        lay.addWidget(bar)
+
+        # Cancel button
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        btn = QPushButton('Cancel')
+        btn.setFixedWidth(80)
+        btn.clicked.connect(self._on_cancel)
+        btn_row.addWidget(btn)
+        lay.addLayout(btn_row)
+
+    def _on_cancel(self):
+        self.cancel_requested.emit()
+        self.reject()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._spinner.start()
+
+    def closeEvent(self, event):
+        self._spinner.stop()
+        super().closeEvent(event)
+
+
+class _LoadWorker(QThread):
+    """Loads a DDS or EXR file on a background thread."""
+
+    result_ready   = pyqtSignal(object)   # DdsFile | np.ndarray
+    error_occurred = pyqtSignal(str)
+
+    def __init__(self, path: str, parent=None):
+        super().__init__(parent)
+        self._path = path
+        self._cancelled = False
+
+    def cancel(self):
+        self._cancelled = True
+
+    def run(self):
+        try:
+            ext = self._path.lower().rsplit('.', 1)[-1]
+            if ext == 'dds':
+                result = dds_mod.load(self._path)
+            else:
+                result = _load_exr(self._path)
+            if not self._cancelled:
+                self.result_ready.emit(result)
+        except Exception as exc:
+            if not self._cancelled:
+                self.error_occurred.emit(str(exc))
 
 
 # ---------------------------------------------------------------------------
@@ -316,25 +459,79 @@ class MainWindow(QMainWindow):
 
     def _open_file(self, path: str):
         ext = path.lower().rsplit('.', 1)[-1]
+        if ext not in ('dds', 'exr', 'hdr'):
+            self._status_label.setText(f'Unsupported extension: {ext}')
+            return
+
+        try:
+            file_size = os.path.getsize(path)
+        except OSError as exc:
+            QMessageBox.warning(self, 'Load Error', str(exc))
+            return
+
+        if file_size >= _LARGE_FILE_BYTES:
+            self._open_async(path, ext)
+        else:
+            self._open_sync(path, ext)
+
+    # -- synchronous path (small files) ------------------------------------
+
+    def _open_sync(self, path: str, ext: str):
         try:
             if ext == 'dds':
-                self._load_dds(path)
-            elif ext in ('exr', 'hdr'):
-                self._load_exr(path)
+                self._apply_dds(path, dds_mod.load(path))
             else:
-                self._status_label.setText(f'Unsupported extension: {ext}')
-                return
+                self._apply_exr(path, _load_exr(path))
             self._settings.setValue('last_file', path)
             self._settings.setValue('last_dir', os.path.dirname(path))
         except Exception as exc:
+            QMessageBox.warning(self, 'Load Error', str(exc))
             self._status_label.setText(f'Error: {exc}')
 
-    def _load_dds(self, path: str):
-        self._dds = dds_mod.load(path)
-        self._is_exr = False
+    # -- asynchronous path (large files) -----------------------------------
+
+    def _open_async(self, path: str, ext: str):
+        dlg    = LoadingDialog(path, self)
+        worker = _LoadWorker(path, self)
+
+        def on_result(data):
+            dlg.accept()
+            try:
+                if ext == 'dds':
+                    self._apply_dds(path, data)
+                else:
+                    self._apply_exr(path, data)
+                self._settings.setValue('last_file', path)
+                self._settings.setValue('last_dir', os.path.dirname(path))
+            except Exception as exc:
+                QMessageBox.warning(self, 'Load Error', str(exc))
+                self._status_label.setText(f'Error: {exc}')
+
+        def on_error(msg):
+            dlg.reject()
+            QMessageBox.warning(self, 'Load Error', msg)
+            self._status_label.setText(f'Error: {msg}')
+
+        def on_cancel():
+            worker.cancel()
+            self._status_label.setText('Load cancelled.')
+
+        worker.result_ready.connect(on_result)
+        worker.error_occurred.connect(on_error)
+        dlg.cancel_requested.connect(on_cancel)
+
+        self._status_label.setText(f'Loading {os.path.basename(path)}…')
+        worker.start()
+        dlg.exec_()   # nested event loop — blocks main window; worker runs in bg
+        worker.wait()
+
+    # -- UI-update halves (called from main thread after data is ready) ----
+
+    def _apply_dds(self, path: str, d: dds_mod.DdsFile):
+        self._dds     = d
+        self._is_exr  = False
         self._exr_data = None
 
-        d = self._dds
         file_kb = os.path.getsize(path) / 1024
         self._lbl_file.setText(os.path.basename(path))
         self._lbl_file.setToolTip(path)
@@ -362,12 +559,12 @@ class MainWindow(QMainWindow):
         self._reload_subresource()
         self._update_status()
 
-    def _load_exr(self, path: str):
-        self._exr_data = _load_exr(path)
-        self._is_exr = True
-        self._dds = None
+    def _apply_exr(self, path: str, data: np.ndarray):
+        self._exr_data = data
+        self._is_exr   = True
+        self._dds      = None
 
-        h, w = self._exr_data.shape[:2]
+        h, w = data.shape[:2]
         file_kb = os.path.getsize(path) / 1024
         self._lbl_file.setText(os.path.basename(path))
         self._lbl_file.setToolTip(path)
@@ -381,7 +578,7 @@ class MainWindow(QMainWindow):
         self._spin_depth.setRange(0, 0)
         self._spin_depth.setEnabled(False)
 
-        self._canvas.set_image(self._exr_data, self._tone)
+        self._canvas.set_image(data, self._tone)
         self._update_status()
 
     def _reload_subresource(self):
