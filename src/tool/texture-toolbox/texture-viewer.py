@@ -8,7 +8,7 @@ Usage:
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'texture-viewer'))
 
 from PyQt5.QtWidgets import QApplication
 from main_window import MainWindow

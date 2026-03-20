@@ -109,7 +109,7 @@ PS1="\n\e[00;92m==== [GARNET] - \e[01;96m${GARNET_ROOT}\e[00;92m - \e[01;93m\$(g
 echo "Misc. setup..."
 unset INCLUDE
 unset LIBS
-PATH=${GARNET_ROOT}/env/bin:${PATH}
+PATH=${GARNET_ROOT}/env/bin:${GARNET_ROOT}/src/tool/texture-toolbox:${PATH}
 
 # =================
 # End of main setup

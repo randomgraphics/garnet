@@ -202,7 +202,7 @@ if (Test-Path -path "$GARNET_ROOT\.gitconfig") {
 # ==============================================================================
 
 # Setup PATH
-$env:Path = "$GARNET_ROOT\env\bin;$env:Path"
+$env:Path = "$GARNET_ROOT\env\bin;$GARNET_ROOT\src\tool\texture-toolbox;$env:Path"
 
 # update title
 $Host.UI.RawUI.WindowTitle = "garnet3d ( $GARNET_ROOT )"
