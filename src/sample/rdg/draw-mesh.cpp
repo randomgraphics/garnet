@@ -57,6 +57,9 @@ int main(int, const char **) {
     auto pbrShading = PbrShading::create("pbr_shading", PbrShading::CreateParameters {.gpu = gpuContext});
     if (!pbrShading) return -1;
 
+    auto skybox = SkyBox::create("skybox", SkyBox::CreateParameters {.gpu = gpuContext});
+    if (!skybox) return -1;
+
     auto material = loadPbrMaterial(gpuContext);
     if (!material) return -1;
 
@@ -129,6 +132,16 @@ int main(int, const char **) {
 
         renderWorkflow.appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
         // renderWorkflow.appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
+
+        // Skybox renders before geometry (fullscreen quad at max depth; PBR geometry overwrites it).
+        SkyBox::BuildParameters skyboxParams;
+        skyboxParams.renderGraph          = renderGraph.get();
+        skyboxParams.sharedShaderConstants = sharedConstants;
+        auto skyboxSubGraph               = skybox->build(skyboxParams);
+        if (skyboxSubGraph.builtResult == Action::ExecutionResult::PASSED && !skyboxSubGraph.workflows.empty()) {
+            for (const auto & task : skyboxSubGraph.workflows[0].tasks())
+                renderWorkflow.appendTask(task.name, task.action, task.arguments);
+        }
 
         PbrShading::BuildParameters pbrParams;
         pbrParams.renderGraph           = renderGraph.get();
