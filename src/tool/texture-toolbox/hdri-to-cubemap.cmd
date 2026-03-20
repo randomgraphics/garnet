@@ -1,1 +1,1 @@
-@python.exe "%~dp0hdri-to-cubemap.py" %*
+@python.exe %~dp0%~n0.py %*

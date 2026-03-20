@@ -1,1 +1,1 @@
-@python.exe "%~dp0texture-viewer.py" %*
+@python.exe %~dp0%~n0.py %*
