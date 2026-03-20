@@ -9,7 +9,7 @@ All tools are on `PATH` after sourcing `env/garnet.rc` (Linux) or `env/garnet.ps
 
 ## Tools
 
-### build-mips
+### mipgen
 
 Generates a complete mipmap chain for a DDS texture and writes an
 uncompressed DDS file.
@@ -33,12 +33,12 @@ Supports all DDS texture types: 2D, cubemap, 2D array, 3D/volume.
 
 ```bash
 # Linux / macOS (after sourcing garnet.rc)
-build-mips.py  input.dds  output.dds
-build-mips.py  input.dds  --inplace        # uncompressed input only
+mipgen.py  input.dds  output.dds
+mipgen.py  input.dds  --inplace        # uncompressed input only
 
 # Windows
-build-mips.cmd  input.dds  output.dds
-build-mips.cmd  input.dds  --inplace
+mipgen.cmd  input.dds  output.dds
+mipgen.cmd  input.dds  --inplace
 ```
 
 `--inplace` writes the mip chain back into the original file.
@@ -174,12 +174,13 @@ src/tool/texture-toolbox/
   texture-viewer.cmd       Windows launcher
   hdri-to-cubemap.py       entry point
   hdri-to-cubemap.cmd      Windows launcher
-  build-mips.py            entry point
-  build-mips.cmd           Windows launcher
+  mipgen.py                entry point
+  mipgen.cmd               Windows launcher
   README.md
-  texture_viewer/          texture-viewer package
+  texture_viewer/          shared package
     __init__.py
-    dds.py                 DDS parser (header + subresource extraction + BCn decode)
+    dds.py                 DDS I/O: parser, BCn decode, write(), encode_pixels(),
+                           is_compressed(), is_hdr()
     tone_map.py            HDR tonemapping operators
     canvas.py              ImageCanvas widget (zoom / pan / pixel pick)
     main_window.py         MainWindow, LoadingDialog, async load worker

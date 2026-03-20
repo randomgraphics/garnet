@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""build-mips.py – Generate a complete mipmap chain for a DDS texture.
+"""mipgen.py – Generate a complete mipmap chain for a DDS texture.
 
 Reads the mip-0 data from the input DDS, downsamples it with a box filter
 to produce a full mipmap chain, and writes an uncompressed DDS.
@@ -11,13 +11,12 @@ Output format (auto-selected from input):
   LDR inputs (uint8, BCn LDR)    →  R8G8B8A8_UNORM
 
 Usage:
-    build-mips.py  input.dds  output.dds
-    build-mips.py  input.dds  --inplace      # only for uncompressed input
+    mipgen.py  input.dds  output.dds
+    mipgen.py  input.dds  --inplace      # only for uncompressed input
 """
 
 import argparse
 import os
-import struct
 import sys
 
 import numpy as np
@@ -28,38 +27,11 @@ from texture_viewer.dds import DdsFile, Fmt, TexType
 
 
 # ---------------------------------------------------------------------------
-# Format helpers
+# Output format selection
 # ---------------------------------------------------------------------------
 
-_BCN_FMTS = {
-    Fmt.BC1_UNORM, Fmt.BC1_UNORM_SRGB,
-    Fmt.BC2_UNORM, Fmt.BC2_UNORM_SRGB,
-    Fmt.BC3_UNORM, Fmt.BC3_UNORM_SRGB,
-    Fmt.BC4_UNORM, Fmt.BC4_SNORM,
-    Fmt.BC5_UNORM, Fmt.BC5_SNORM,
-    Fmt.BC6H_UF16, Fmt.BC6H_SF16,
-    Fmt.BC7_UNORM, Fmt.BC7_UNORM_SRGB,
-}
-
-_HDR_FMTS = {
-    Fmt.R32G32B32A32_FLOAT,
-    Fmt.R32G32B32_FLOAT,
-    Fmt.R16G16B16A16_FLOAT,
-    Fmt.R32G32_FLOAT,
-    Fmt.R16G16_FLOAT,
-    Fmt.R32_FLOAT,
-    Fmt.R16_FLOAT,
-    Fmt.BC6H_UF16,
-    Fmt.BC6H_SF16,
-}
-
-
-def _is_compressed(fmt: int) -> bool:
-    return fmt in _BCN_FMTS
-
-
 def _output_fmt(input_fmt: int) -> Fmt:
-    return Fmt.R32G32B32A32_FLOAT if input_fmt in _HDR_FMTS else Fmt.R8G8B8A8_UNORM
+    return Fmt.R32G32B32A32_FLOAT if dds_mod.is_hdr(input_fmt) else Fmt.R8G8B8A8_UNORM
 
 
 # ---------------------------------------------------------------------------
@@ -86,128 +58,13 @@ def _gen_mips(base: np.ndarray) -> list[np.ndarray]:
     return mips
 
 
-# ---------------------------------------------------------------------------
-# Pixel serialisation
-# ---------------------------------------------------------------------------
-
-def _encode(img: np.ndarray, out_fmt: Fmt) -> bytes:
-    """float32 (H, W, 4) → packed bytes in the target format."""
-    if out_fmt == Fmt.R32G32B32A32_FLOAT:
-        return img.astype(np.float32).tobytes()
-    # R8G8B8A8_UNORM
-    return np.clip(img * 255.0 + 0.5, 0, 255).astype(np.uint8).tobytes()
-
-
-# ---------------------------------------------------------------------------
-# DDS writer
-# ---------------------------------------------------------------------------
-
-_DDSD_CAPS        = 0x1
-_DDSD_HEIGHT      = 0x2
-_DDSD_WIDTH       = 0x4
-_DDSD_PITCH       = 0x8
-_DDSD_PIXELFORMAT = 0x1000
-_DDSD_MIPMAPCOUNT = 0x20000
-_DDSD_DEPTH       = 0x800000
-_DDSCAPS_COMPLEX  = 0x8
-_DDSCAPS_MIPMAP   = 0x400000
-_DDSCAPS_TEXTURE  = 0x1000
-_DDSCAPS2_CUBEMAP     = 0x200
-_DDSCAPS2_CUBEMAP_ALL = 0xFC00
-_DDSCAPS2_VOLUME      = 0x200000
-_DDPF_FOURCC              = 0x4
-_D3D10_RES_TEX2D          = 3
-_D3D10_RES_TEX3D          = 4
-_D3D11_MISC_TEXTURECUBE   = 0x4
-
-
-def _write_dds(path: str,
-               subresources,       # see below
-               width: int, height: int, depth: int,
-               tex_type: TexType, array_size: int,
-               out_fmt: Fmt) -> None:
-    """Write a DX10-extended DDS file.
-
-    subresources layout:
-      2D / cubemap / array  →  subresources[array_idx][mip_idx]  : ndarray (H,W,4)
-      3D                    →  subresources[mip_idx][depth_slice] : ndarray (H,W,4)
-    """
-    if tex_type == TexType.TEX3D:
-        mip_count = len(subresources)
-    else:
-        mip_count = len(subresources[0])
-
-    bpp = 16 if out_fmt == Fmt.R32G32B32A32_FLOAT else 4  # bytes per pixel at mip 0
-
-    flags = (_DDSD_CAPS | _DDSD_HEIGHT | _DDSD_WIDTH |
-             _DDSD_PITCH | _DDSD_PIXELFORMAT)
-    if mip_count > 1:
-        flags |= _DDSD_MIPMAPCOUNT
-    if tex_type == TexType.TEX3D:
-        flags |= _DDSD_DEPTH
-
-    caps = _DDSCAPS_TEXTURE
-    if mip_count > 1 or tex_type in (TexType.CUBEMAP, TexType.ARRAY):
-        caps |= _DDSCAPS_COMPLEX
-    if mip_count > 1:
-        caps |= _DDSCAPS_MIPMAP
-
-    caps2 = 0
-    if tex_type == TexType.CUBEMAP:
-        caps2 = _DDSCAPS2_CUBEMAP | _DDSCAPS2_CUBEMAP_ALL
-    elif tex_type == TexType.TEX3D:
-        caps2 = _DDSCAPS2_VOLUME
-
-    hdr_depth = depth if tex_type == TexType.TEX3D else 0
-
-    # DDS_PIXELFORMAT (32 bytes) — just FOURCC "DX10"
-    pixfmt = struct.pack('<2I4sI4I', 32, _DDPF_FOURCC, b'DX10', 0, 0, 0, 0, 0)
-
-    # DDS_HEADER (124 bytes)
-    header  = struct.pack('<7I', 124, flags, height, width, width * bpp,
-                          hdr_depth, mip_count)
-    header += b'\x00' * 44   # reserved
-    header += pixfmt
-    header += struct.pack('<5I', caps, caps2, 0, 0, 0)
-    assert len(header) == 124
-
-    # DX10 extended header (20 bytes)
-    res_dim   = _D3D10_RES_TEX3D if tex_type == TexType.TEX3D else _D3D10_RES_TEX2D
-    misc_flag = _D3D11_MISC_TEXTURECUBE if tex_type == TexType.CUBEMAP else 0
-    dx10 = struct.pack('<5I', int(out_fmt), res_dim, misc_flag, array_size, 0)
-
-    with open(path, 'wb') as f:
-        f.write(b'DDS ')
-        f.write(header)
-        f.write(dx10)
-        if tex_type == TexType.TEX3D:
-            # mip-major, then depth-slice-major
-            for mip_slices in subresources:
-                for slc in mip_slices:
-                    f.write(_encode(slc, out_fmt))
-        else:
-            # array-major, then mip-major
-            for arr_mips in subresources:
-                for mip_img in arr_mips:
-                    f.write(_encode(mip_img, out_fmt))
-
-
-# ---------------------------------------------------------------------------
-# Subresource builders
-# ---------------------------------------------------------------------------
-
 def _build_2d_mips(dds: DdsFile) -> list[list[np.ndarray]]:
     """Return subresources[array_idx][mip_idx]."""
-    result = []
-    for a in range(dds.array_size):
-        base = dds.get_face(a, mip=0)      # float32 (H, W, 4)
-        result.append(_gen_mips(base))
-    return result
+    return [_gen_mips(dds.get_face(a, mip=0)) for a in range(dds.array_size)]
 
 
 def _build_3d_mips(dds: DdsFile) -> list[list[np.ndarray]]:
     """Return subresources[mip_idx][depth_slice]."""
-    # Collect mip-0 slices
     slices = [dds.get_face(0, mip=0, depth_slice=d) for d in range(dds.depth)]
     result = [slices]
 
@@ -215,16 +72,12 @@ def _build_3d_mips(dds: DdsFile) -> list[list[np.ndarray]]:
         prev = result[-1]
         ph, pw = prev[0].shape[:2]
         pd = len(prev)
-        nh = max(1, ph // 2)
-        nw = max(1, pw // 2)
-        nd = max(1, pd // 2)
+        nh, nw, nd = max(1, ph // 2), max(1, pw // 2), max(1, pd // 2)
         if nh == ph and nw == pw and nd == pd:
             break
 
-        # Spatially downsample each slice
         down = [_box_downsample(s) for s in prev]
 
-        # Depth-downsample by averaging consecutive pairs
         if nd < pd:
             merged = []
             for i in range(nd):
@@ -272,7 +125,7 @@ def main() -> int:
         return 1
     print(f'         {dds}')
 
-    compressed = _is_compressed(dds.fmt)
+    compressed = dds_mod.is_compressed(dds.fmt)
 
     # ------------------------------------------------------------------
     # In-place constraint
@@ -316,9 +169,9 @@ def main() -> int:
     # ------------------------------------------------------------------
     print(f'Writing : {out_path}')
     try:
-        _write_dds(out_path, subresources,
-                   dds.width, dds.height, max(1, dds.depth),
-                   dds.tex_type, dds.array_size, out_fmt)
+        dds_mod.write(out_path, subresources,
+                      dds.width, dds.height, max(1, dds.depth),
+                      dds.tex_type, dds.array_size, out_fmt)
     except Exception as e:
         print(f'ERROR: {e}', file=sys.stderr)
         return 1

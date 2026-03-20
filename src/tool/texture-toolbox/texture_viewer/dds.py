@@ -439,3 +439,154 @@ def _fmt_name(fmt: int) -> str:
         return Fmt(fmt).name
     except ValueError:
         return f'DXGI_{fmt}'
+
+
+# ---------------------------------------------------------------------------
+# Format classification helpers
+# ---------------------------------------------------------------------------
+
+_HDR_FMTS: frozenset[int] = frozenset({
+    Fmt.R32G32B32A32_FLOAT,
+    Fmt.R32G32B32_FLOAT,
+    Fmt.R16G16B16A16_FLOAT,
+    Fmt.R32G32_FLOAT,
+    Fmt.R16G16_FLOAT,
+    Fmt.R32_FLOAT,
+    Fmt.R16_FLOAT,
+    Fmt.BC6H_UF16,
+    Fmt.BC6H_SF16,
+})
+
+
+def is_compressed(fmt: int) -> bool:
+    """Return True if *fmt* is a BCn block-compressed format."""
+    info = _FMT_INFO.get(fmt)
+    return info is not None and info[3]  # index 3 = is_bcn
+
+
+def is_hdr(fmt: int) -> bool:
+    """Return True if *fmt* carries HDR (float) data."""
+    return fmt in _HDR_FMTS
+
+
+# ---------------------------------------------------------------------------
+# Pixel encoding
+# ---------------------------------------------------------------------------
+
+def encode_pixels(img: np.ndarray, fmt: Fmt) -> bytes:
+    """Encode a float32 (H, W, 4) RGBA array to packed bytes in *fmt*.
+
+    Supported output formats: R32G32B32A32_FLOAT, R16G16B16A16_FLOAT,
+    R8G8B8A8_UNORM.
+    """
+    if fmt == Fmt.R32G32B32A32_FLOAT:
+        return img.astype(np.float32).tobytes()
+    if fmt == Fmt.R16G16B16A16_FLOAT:
+        return img.astype(np.float16).tobytes()
+    if fmt == Fmt.R8G8B8A8_UNORM:
+        return np.clip(img * 255.0 + 0.5, 0, 255).astype(np.uint8).tobytes()
+    raise ValueError(f'encode_pixels: unsupported output format {_fmt_name(int(fmt))}')
+
+
+# ---------------------------------------------------------------------------
+# DDS writer
+# ---------------------------------------------------------------------------
+
+_WDDSD_CAPS        = 0x1
+_WDDSD_HEIGHT      = 0x2
+_WDDSD_WIDTH       = 0x4
+_WDDSD_PITCH       = 0x8
+_WDDSD_PIXELFORMAT = 0x1000
+_WDDSD_MIPMAPCOUNT = 0x20000
+_WDDSD_DEPTH       = 0x800000
+_WDDSCAPS_COMPLEX  = 0x8
+_WDDSCAPS_MIPMAP   = 0x400000
+_WDDSCAPS_TEXTURE  = 0x1000
+_WDDSCAPS2_CUBEMAP     = 0x200
+_WDDSCAPS2_CUBEMAP_ALL = 0xFC00
+_WDDSCAPS2_VOLUME      = 0x200000
+_WDDPF_FOURCC              = 0x4
+_WD3D10_RES_TEX2D          = 3
+_WD3D10_RES_TEX3D          = 4
+_WD3D11_MISC_TEXTURECUBE   = 0x4
+
+
+def write(path: str,
+          subresources,
+          width: int,
+          height: int,
+          depth: int,
+          tex_type: TexType,
+          array_size: int,
+          fmt: Fmt) -> None:
+    """Write an uncompressed DDS file with a DX10 extended header.
+
+    *subresources* layout:
+      2D / cubemap / array  →  subresources[array_idx][mip_idx]  : ndarray (H,W,4) float32
+      3D                    →  subresources[mip_idx][depth_slice] : ndarray (H,W,4) float32
+
+    *fmt* must be a format supported by :func:`encode_pixels`.
+    """
+    if tex_type == TexType.TEX3D:
+        mip_count = len(subresources)
+    else:
+        mip_count = len(subresources[0])
+
+    info = _FMT_INFO.get(int(fmt))
+    if info is None:
+        raise ValueError(f'write: unknown format {fmt}')
+    bpp = info[2]  # bytes per pixel (0 for BCn — caller should not pass BCn here)
+    if bpp == 0:
+        raise ValueError(f'write: cannot write compressed format {_fmt_name(int(fmt))}')
+
+    flags = (_WDDSD_CAPS | _WDDSD_HEIGHT | _WDDSD_WIDTH |
+             _WDDSD_PITCH | _WDDSD_PIXELFORMAT)
+    if mip_count > 1:
+        flags |= _WDDSD_MIPMAPCOUNT
+    if tex_type == TexType.TEX3D:
+        flags |= _WDDSD_DEPTH
+
+    caps = _WDDSCAPS_TEXTURE
+    if mip_count > 1 or tex_type in (TexType.CUBEMAP, TexType.ARRAY):
+        caps |= _WDDSCAPS_COMPLEX
+    if mip_count > 1:
+        caps |= _WDDSCAPS_MIPMAP
+
+    caps2 = 0
+    if tex_type == TexType.CUBEMAP:
+        caps2 = _WDDSCAPS2_CUBEMAP | _WDDSCAPS2_CUBEMAP_ALL
+    elif tex_type == TexType.TEX3D:
+        caps2 = _WDDSCAPS2_VOLUME
+
+    hdr_depth = depth if tex_type == TexType.TEX3D else 0
+
+    # DDS_PIXELFORMAT (32 bytes) — FOURCC "DX10" only
+    pixfmt = struct.pack('<2I4sI4I', 32, _WDDPF_FOURCC, b'DX10', 0, 0, 0, 0, 0)
+
+    # DDS_HEADER (124 bytes)
+    header  = struct.pack('<7I', 124, flags, height, width, width * bpp,
+                          hdr_depth, mip_count)
+    header += b'\x00' * 44   # reserved
+    header += pixfmt
+    header += struct.pack('<5I', caps, caps2, 0, 0, 0)
+    assert len(header) == 124
+
+    # DX10 extended header (20 bytes)
+    res_dim   = _WD3D10_RES_TEX3D if tex_type == TexType.TEX3D else _WD3D10_RES_TEX2D
+    misc_flag = _WD3D11_MISC_TEXTURECUBE if tex_type == TexType.CUBEMAP else 0
+    dx10 = struct.pack('<5I', int(fmt), res_dim, misc_flag, array_size, 0)
+
+    with open(path, 'wb') as f:
+        f.write(b'DDS ')
+        f.write(header)
+        f.write(dx10)
+        if tex_type == TexType.TEX3D:
+            # mip-major, then depth-slice-major
+            for mip_slices in subresources:
+                for slc in mip_slices:
+                    f.write(encode_pixels(slc, fmt))
+        else:
+            # array-major, then mip-major
+            for arr_mips in subresources:
+                for mip_img in arr_mips:
+                    f.write(encode_pixels(mip_img, fmt))
