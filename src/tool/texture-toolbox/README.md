@@ -138,7 +138,8 @@ src/tool/texture-toolbox/
   hdri-to-cubemap.py       entry point
   hdri-to-cubemap.cmd      Windows launcher
   README.md
-  texture-viewer/          texture-viewer modules
+  texture_viewer/          texture-viewer package
+    __init__.py
     dds.py                 DDS parser (header + subresource extraction + BCn decode)
     tone_map.py            HDR tonemapping operators
     canvas.py              ImageCanvas widget (zoom / pan / pixel pick)

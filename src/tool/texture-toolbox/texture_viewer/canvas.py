@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QSize, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QColor, QPen, QFont
 from PyQt5.QtWidgets import QWidget, QSizePolicy
 
-from tone_map import ToneMapper
+from .tone_map import ToneMapper
 
 
 class ImageCanvas(QWidget):

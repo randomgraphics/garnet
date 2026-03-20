@@ -15,9 +15,9 @@ from PyQt5.QtWidgets import (
     QFrame, QDialog, QProgressBar, QMessageBox,
 )
 
-from canvas import ImageCanvas
-from tone_map import ToneMapper, ToneMode, ChannelMode
-import dds as dds_mod
+from .canvas import ImageCanvas
+from .tone_map import ToneMapper, ToneMode, ChannelMode
+from . import dds as dds_mod
 
 
 # ---------------------------------------------------------------------------

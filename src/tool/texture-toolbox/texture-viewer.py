@@ -8,10 +8,12 @@ Usage:
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'texture-viewer'))
+# Ensure the toolbox root is on sys.path so the texture_viewer package is found
+# regardless of the current working directory.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt5.QtWidgets import QApplication
-from main_window import MainWindow
+from texture_viewer.main_window import MainWindow
 
 
 def main() -> int:
