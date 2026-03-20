@@ -13,7 +13,7 @@ args = ap.parse_args()
 root_dir = utils.get_root_folder()
 
 # Gather all GIT managed source files
-patterns = ["*.h", "*.hpp", "*.inl", "*.c", "*.cpp", "*.java", "*.glsl", "*.frag", "*.vert", "*.comp"]
+patterns = ["*.h", "*.hpp", "*.inl", "*.c", "*.cpp", "*.java", "*.glsl", "*.frag", "*.vert", "*.comp", "*.py"]
 if args.d:
      cmdline = ["git", "diff", "--name-only", "origin/master", "--"] + patterns
      all_files = subprocess.check_output(cmdline, cwd=root_dir).decode("utf-8").splitlines()
@@ -45,8 +45,8 @@ if not shutil.which(clang_format):
 # create a lock to serialize output
 lock = threading.Lock()
 
-# function to format one file
-def format_one_file(x):
+# clang format one file
+def format_one_file_with_clang_format(x):
      cmdline = [clang_format, ("--dry-run" if args.n else "-i"), x]
      if not args.q:
           with lock: print(' '.join(cmdline))
@@ -58,6 +58,27 @@ def format_one_file(x):
      err = ret.stderr.decode("utf-8").strip()
      if len(err) > 0:
           with lock: sys.stderr.write(err)
+
+# Black format one file
+def format_one_file_with_black(x):
+     cmdline = ["black", ("--check" if args.n else ""), x]
+     if not args.q:
+          with lock: print(' '.join(cmdline))
+     ret = subprocess.run(cmdline, cwd=root_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+     out = ret.stdout.decode("utf-8").strip()
+     if not args.q and len(out) > 0:
+          with lock: print(out)
+     # always print errors to stderr
+     err = ret.stderr.decode("utf-8").strip()
+     if len(err) > 0:
+          with lock: sys.stderr.write(err)
+
+# Format one file
+def format_one_file(x):
+     if x.endswith(".py"):
+          format_one_file_with_black(x)
+     else:
+          format_one_file_with_clang_format(x)
 
 # run clang-format on all files in parallel
 # for x in our_sources: format_one_file(x)
