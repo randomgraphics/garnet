@@ -154,13 +154,39 @@ class _LoadWorker(QThread):
             ext = self._path.lower().rsplit('.', 1)[-1]
             if ext == 'dds':
                 result = dds_mod.load(self._path)
-            else:
+            elif ext in ('exr', 'hdr'):
                 result = _load_exr(self._path)
+            else:
+                result = _load_image(self._path)
             if not self._cancelled:
                 self.result_ready.emit(result)
         except Exception as exc:
             if not self._cancelled:
                 self.error_occurred.emit(str(exc))
+
+
+# ---------------------------------------------------------------------------
+# Common image loader (JPG, PNG, BMP, GIF, TIFF, WebP, TGA, …) via Pillow
+# ---------------------------------------------------------------------------
+_COMMON_IMAGE_EXTS = {
+    'jpg', 'jpeg', 'png', 'bmp', 'gif', 'tiff', 'tif', 'webp', 'tga', 'ico',
+}
+
+def _load_image(path: str) -> np.ndarray:
+    """Load any Pillow-supported image → float32 (H, W, 4) RGBA in [0, 1]."""
+    from PIL import Image
+    img = Image.open(path)
+    # Preserve 16-bit grayscale / RGB precision before convert
+    if img.mode in ('I', 'I;16', 'I;16B'):
+        arr = np.array(img, dtype=np.float32) / 65535.0
+        rgba = np.stack([arr, arr, arr, np.ones_like(arr)], axis=-1)
+        return rgba
+    if img.mode == 'F':          # 32-bit float grayscale
+        arr = np.array(img, dtype=np.float32)
+        return np.stack([arr, arr, arr, np.ones_like(arr)], axis=-1)
+    img = img.convert('RGBA')
+    arr = np.array(img, dtype=np.float32) / 255.0
+    return arr
 
 
 # ---------------------------------------------------------------------------
@@ -450,7 +476,10 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(
             self, 'Open Texture',
             start_dir,
-            'Textures (*.dds *.exr *.hdr);;DDS (*.dds);;EXR (*.exr);;HDR (*.hdr);;All (*)')
+            'All Supported (*.dds *.exr *.hdr *.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.tga *.ico);;'
+            'DDS (*.dds);;EXR / HDR (*.exr *.hdr);;'
+            'Images (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.tga *.ico);;'
+            'All (*)')
         if path:
             self._open_file(path)
 
@@ -459,8 +488,8 @@ class MainWindow(QMainWindow):
 
     def _open_file(self, path: str):
         ext = path.lower().rsplit('.', 1)[-1]
-        if ext not in ('dds', 'exr', 'hdr'):
-            self._status_label.setText(f'Unsupported extension: {ext}')
+        if ext not in {'dds', 'exr', 'hdr'} | _COMMON_IMAGE_EXTS:
+            self._status_label.setText(f'Unsupported extension: .{ext}')
             return
 
         try:
@@ -480,8 +509,10 @@ class MainWindow(QMainWindow):
         try:
             if ext == 'dds':
                 self._apply_dds(path, dds_mod.load(path))
-            else:
+            elif ext in ('exr', 'hdr'):
                 self._apply_exr(path, _load_exr(path))
+            else:
+                self._apply_image(path, _load_image(path), ext)
             self._settings.setValue('last_file', path)
             self._settings.setValue('last_dir', os.path.dirname(path))
         except Exception as exc:
@@ -499,8 +530,10 @@ class MainWindow(QMainWindow):
             try:
                 if ext == 'dds':
                     self._apply_dds(path, data)
-                else:
+                elif ext in ('exr', 'hdr'):
                     self._apply_exr(path, data)
+                else:
+                    self._apply_image(path, data, ext)
                 self._settings.setValue('last_file', path)
                 self._settings.setValue('last_dir', os.path.dirname(path))
             except Exception as exc:
@@ -571,6 +604,28 @@ class MainWindow(QMainWindow):
         self._lbl_dims.setText(f'{w} × {h}')
         self._lbl_fmt.setText('R32G32B32A32_FLOAT')
         self._lbl_type.setText('2D (EXR)')
+        self._lbl_size.setText(f'{file_kb:.1f} KB')
+
+        self._spin_mip.setRange(0, 0)
+        self._spin_face.setRange(0, 0)
+        self._spin_depth.setRange(0, 0)
+        self._spin_depth.setEnabled(False)
+
+        self._canvas.set_image(data, self._tone)
+        self._update_status()
+
+    def _apply_image(self, path: str, data: np.ndarray, ext: str):
+        self._exr_data = data
+        self._is_exr   = True   # reuse the same display path as EXR
+        self._dds      = None
+
+        h, w = data.shape[:2]
+        file_kb = os.path.getsize(path) / 1024
+        self._lbl_file.setText(os.path.basename(path))
+        self._lbl_file.setToolTip(path)
+        self._lbl_dims.setText(f'{w} × {h}')
+        self._lbl_fmt.setText('RGBA8' if data.max() <= 1.0 else 'Float')
+        self._lbl_type.setText(f'2D ({ext.upper()})')
         self._lbl_size.setText(f'{file_kb:.1f} KB')
 
         self._spin_mip.setRange(0, 0)

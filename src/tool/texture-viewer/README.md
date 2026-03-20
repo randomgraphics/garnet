@@ -10,6 +10,7 @@ A Python/Qt5 texture viewer for DDS and EXR/HDR files.
   - Block-compressed: BC1, BC3, BC4, BC5, BC6H (HDR), BC7 via `texture2ddecoder`
   - BC2/DXT3 is not supported (absent from `texture2ddecoder`)
 - **EXR / HDR** — float32 RGBA via OpenEXR
+- **Common images** — JPEG, PNG, BMP, GIF, TIFF, WebP, TGA, ICO via Pillow
 
 ### Texture types
 - 2D texture
@@ -68,6 +69,7 @@ python3 src/tool/texture-viewer/texture-viewer.py [file]
 ```
 PyQt5 >= 5.15
 numpy >= 1.24
+Pillow >= 9.0
 OpenEXR >= 3.0
 texture2ddecoder >= 1.0.6
 ```
