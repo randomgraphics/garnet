@@ -26,5 +26,6 @@ void main() {
     v_dir = invViewRot * viewDir.xyz;
 
     // Place at maximum depth so skybox is always behind geometry.
-    gl_Position = vec4(ndc, 1.0, 1.0); // z/w == 1.0 == far plane depth
+    // LESS_EQUAL depth test (set on the draw action) makes 1.0 pass against the 1.0 clear value.
+    gl_Position = vec4(ndc, 1.0, 1.0);
 }

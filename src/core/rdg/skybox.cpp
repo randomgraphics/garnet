@@ -56,7 +56,24 @@ public:
         auto drawArgs = AutoRef<GpuDraw::A>(new GpuDraw::A());
 
         // Render target from SharedShaderConstants.ViewInformation.
-        if (params.sharedShaderConstants) drawArgs->renderTarget = params.sharedShaderConstants->getViewInformation().renderTarget;
+        // Override depth state: LESS_EQUAL so the skybox (at depth=1.0) passes the 1.0 clear value,
+        // and no depth write so real geometry (at smaller depth) can still occlude it.
+        if (params.sharedShaderConstants) {
+            const auto & sscRt = params.sharedShaderConstants->getViewInformation().renderTarget;
+            if (sscRt) {
+                auto skyboxRt               = RenderTarget::create("skybox_rt", {});
+                skyboxRt->colors            = sscRt->colors;
+                skyboxRt->clearColor        = sscRt->clearColor;
+                skyboxRt->depthStencilTarget = sscRt->depthStencilTarget;
+                skyboxRt->stencilState      = sscRt->stencilState;
+                skyboxRt->clearDepth        = sscRt->clearDepth;
+                skyboxRt->clearStencil      = sscRt->clearStencil;
+                skyboxRt->viewport          = sscRt->viewport;
+                skyboxRt->scissorRect       = sscRt->scissorRect;
+                skyboxRt->setDepthState({.func = RenderTarget::Compare::LESS_EQUAL, .write = false});
+                drawArgs->renderTarget = std::move(skyboxRt);
+            }
+        }
 
         // Set 0: shared camera + lighting + environment bindings from SSC.
         if (params.sharedShaderConstants) {
@@ -67,7 +84,7 @@ public:
             }
         }
 
-        // Full-screen triangle: 3 vertices, no vertex buffer. Depth write disabled by depth = 1.0 in vertex shader.
+        // Full-screen triangle: 3 vertices, no vertex buffer.
         drawArgs->geometry.vertexCount = 3;
 
         workflow.appendTask("Skybox draw", AutoRef<Action>(mDrawAction), std::move(drawArgs));
