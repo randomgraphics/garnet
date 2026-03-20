@@ -163,13 +163,24 @@ struct SharedShaderConstants : public GpuResource {
     /// Same shape as one set in GpuResourceTable: set0[bindingIndex][arrayIndex] = GpuResourceView.
     using Set0ResourceSet = GpuShaderAction::GraphicsResourceSet;
 
-    virtual void setFrameInformation(const FrameInformation &)                   = 0;
-    virtual void setViewInformation(const ViewInformation &)                     = 0;
-    virtual void setDirectLightingInformation(const DirectLightingInformation &) = 0;
+    /// Environment / image-based lighting. Supplies scene-level textures used by both the skybox
+    /// renderer and the IBL diffuse/specular terms in PBR shading.
+    struct EnvironmentLightingInformation {
+        AutoRef<Texture> skyboxCubemap;     ///< environment cubemap rendered as background
+        AutoRef<Texture> irradianceMap;     ///< pre-convolved diffuse-IBL cubemap (hemisphere integral)
+        AutoRef<Texture> prefilteredEnvMap; ///< mip-mapped specular-IBL cubemap (roughness → mip level)
+        AutoRef<Texture> brdfLut;           ///< split-sum BRDF LUT: NdotV×roughness → (scale, bias)
+    };
 
-    virtual const FrameInformation &          getFrameInformation() const          = 0;
-    virtual const ViewInformation &           getViewInformation() const           = 0;
-    virtual const DirectLightingInformation & getDirectLightingInformation() const = 0;
+    virtual void setFrameInformation(const FrameInformation &)                             = 0;
+    virtual void setViewInformation(const ViewInformation &)                               = 0;
+    virtual void setDirectLightingInformation(const DirectLightingInformation &)           = 0;
+    virtual void setEnvironmentLightingInformation(const EnvironmentLightingInformation &) = 0;
+
+    virtual const FrameInformation &              getFrameInformation() const              = 0;
+    virtual const ViewInformation &               getViewInformation() const               = 0;
+    virtual const DirectLightingInformation &     getDirectLightingInformation() const     = 0;
+    virtual const EnvironmentLightingInformation & getEnvironmentLightingInformation() const = 0;
     /// Last built Set 0 resource set (valid after build() has been called). Effects use this as set #0 in the resource table.
     virtual const Set0ResourceSet & getSet0Resources() const = 0;
 

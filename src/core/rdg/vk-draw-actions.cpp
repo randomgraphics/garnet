@@ -73,18 +73,20 @@ AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(const StrA & name, cons
 namespace {
 
 /// Get VkImageView for a GpuResourceView that is a texture. Returns VK_NULL_HANDLE on failure.
+/// For cubemap textures (faces==6) the view type is left as auto-detect so rapid-vulkan selects eCube.
 vk::ImageView getTextureImageView(const GpuResourceView & view) {
     if (!view.isTexture()) return {};
     auto tex = view.texture().staticCastTo<TextureVulkan>();
     if (!tex || !tex->image()) return {};
     const auto & iv     = view.imageView;
+    const bool   isCube = (tex->descriptor().faces == 6 && tex->descriptor().depth == 1);
     uint32_t     mips   = (iv.range.e.numMipLevels == (uint32_t) -1) ? 1 : iv.range.e.numMipLevels;
-    uint32_t     layers = (iv.range.e.numArrayLayers == (uint32_t) -1) ? 1 : iv.range.e.numArrayLayers;
+    uint32_t     layers = (iv.range.e.numArrayLayers == (uint32_t) -1) ? (isCube ? VK_REMAINING_ARRAY_LAYERS : 1u) : iv.range.e.numArrayLayers;
     vk::Format   format = (iv.format != gfx::img::PixelFormat::UNKNOWN()) ? pixelFormatToVkFormat(iv.format) : pixelFormatToVkFormat(tex->descriptor().format);
-    auto         params = rapid_vulkan::Image::GetViewParameters()
-                              .setType(vk::ImageViewType::e2D)
-                              .setFormat(format)
-                              .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, iv.range.i.mip, mips, iv.range.i.face, layers));
+    // For cubemaps leave the type as -1 (auto-detect → eCube); for 2D textures force e2D.
+    rapid_vulkan::Image::GetViewParameters params;
+    params.setFormat(format).setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, iv.range.i.mip, mips, iv.range.i.face, layers));
+    if (!isCube) params.setType(vk::ImageViewType::e2D);
     return tex->image()->getView(params);
 }
 

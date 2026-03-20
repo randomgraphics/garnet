@@ -67,7 +67,10 @@ static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descr
     if (optimalFeatures & vk::FormatFeatureFlagBits::eColorAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eColorAttachment;
     if (optimalFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
 
-    cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
+    if (descriptor.faces == 6 && descriptor.depth == 1)
+        cp.setCube(descriptor.width).setLevels(descriptor.levels).setFormat(cp.info.format);
+    else
+        cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
     return rapid_vulkan::Ref<rapid_vulkan::Image>(new rapid_vulkan::Image(cp));
 }
 
@@ -103,14 +106,16 @@ bool TextureVulkan::upload1x1Mip(const uint8_t rgba[4]) {
         }
     rapid_vulkan::Image::SetContentParameters sc;
     sc.setQueue(*gq);
-    sc.mipLevel   = 0;
-    sc.arrayLayer = 0;
-    sc.area.w     = 1;
-    sc.area.h     = 1;
-    sc.area.d     = 1;
-    sc.pitch      = 4;
-    sc.pixels     = rgba;
-    mImage->setContent(sc);
+    sc.mipLevel = 0;
+    sc.area.w   = 1;
+    sc.area.h   = 1;
+    sc.area.d   = 1;
+    sc.pitch    = 4;
+    sc.pixels   = rgba;
+    for (uint32_t face = 0; face < mDescriptor.faces; ++face) {
+        sc.arrayLayer = face;
+        mImage->setContent(sc);
+    }
     return true;
 }
 
@@ -236,6 +241,18 @@ AutoRef<Texture> createDefault1x1Texture(AutoRef<GpuContext> context, const StrA
     if (!context) GN_UNLIKELY return {};
     Texture::Descriptor desc;
     desc.setDimensions(1, 1).setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setFaces(1).setLevels(1);
+    auto tex = Texture::create(name, Texture::CreateParameters {.context = context, .descriptor = desc});
+    if (!tex) GN_UNLIKELY return {};
+    auto *  tv      = static_cast<TextureVulkan *>(tex.get());
+    uint8_t rgba[4] = {r, g, b, a};
+    if (!tv->upload1x1Mip(rgba)) { return {}; }
+    return tex;
+}
+
+AutoRef<Texture> createDefault1x1CubemapTexture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    if (!context) GN_UNLIKELY return {};
+    Texture::Descriptor desc;
+    desc.setDimensions(1, 1).setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setFaces(6).setLevels(1);
     auto tex = Texture::create(name, Texture::CreateParameters {.context = context, .descriptor = desc});
     if (!tex) GN_UNLIKELY return {};
     auto *  tv      = static_cast<TextureVulkan *>(tex.get());

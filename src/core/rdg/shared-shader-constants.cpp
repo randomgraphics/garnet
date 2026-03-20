@@ -4,6 +4,7 @@
 #include "vk-gpu-context.h"
 #include "vk-shaders/global-camera-ubo.h"
 #include "vk-shaders/direct-lighting-ubo.h"
+#include "vk-texture.h"
 #include <glm/gtc/matrix_transform.hpp>  // glm::translate, glm::inverse
 #include <glm/gtc/quaternion.hpp>        // glm::mat4_cast
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspectiveRH_ZO
@@ -32,15 +33,20 @@ static std::pair<uint32_t, uint32_t> getRenderTargetSize(const RenderTarget * rt
 }
 
 class SharedShaderConstantsVulkan : public SharedShaderConstants {
-    AutoRef<GpuContext>       mGpu;
-    FrameInformation          mFrame;
-    ViewInformation           mView;
-    DirectLightingInformation mLighting;
+    AutoRef<GpuContext>            mGpu;
+    FrameInformation               mFrame;
+    ViewInformation                mView;
+    DirectLightingInformation      mLighting;
+    EnvironmentLightingInformation mEnvLighting;
 
     AutoRef<TransientArena>   mArena;          ///< Arena for per-frame transient UBO staging
     AutoRef<GpuCopy>          mCopyAction;     ///< Stateless buffer-to-buffer copy (reused for camera + lighting)
     AutoRef<PersistentBuffer> mCameraBuffer;   ///< Set 0 binding 0: GlobalCameraUBO
     AutoRef<PersistentBuffer> mLightingBuffer; ///< Set 0 binding 1: DirectLightingUBO
+
+    // Fallback 1×1 env textures used when the caller has not provided real env maps.
+    AutoRef<Texture> mFallbackCubemap;   ///< 1×1 black cubemap (bindings 2, 3, 4 fallback)
+    AutoRef<Texture> mFallbackBrdfLut;   ///< 1×1 white 2D texture (binding 5 fallback)
 
     Set0ResourceSet mLastSet0; ///< Last built Set 0 resource set (for getSet0Resources()).
 
@@ -75,6 +81,9 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
                 GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting UBO");
                 return;
             }
+
+        mFallbackCubemap = createDefault1x1CubemapTexture(mGpu, StrA::format("{}.fallback_cubemap", name), 0, 0, 0, 255);
+        mFallbackBrdfLut = createDefault1x1Texture(mGpu, StrA::format("{}.fallback_brdf_lut", name), 255, 255, 255, 255);
     }
 
     void packCameraUbo() {
@@ -161,9 +170,12 @@ public:
         packLightingUbo();
     }
 
-    const FrameInformation &          getFrameInformation() const override { return mFrame; }
-    const ViewInformation &           getViewInformation() const override { return mView; }
-    const DirectLightingInformation & getDirectLightingInformation() const override { return mLighting; }
+    void setEnvironmentLightingInformation(const EnvironmentLightingInformation & v) override { mEnvLighting = v; }
+
+    const FrameInformation &               getFrameInformation() const override { return mFrame; }
+    const ViewInformation &                getViewInformation() const override { return mView; }
+    const DirectLightingInformation &      getDirectLightingInformation() const override { return mLighting; }
+    const EnvironmentLightingInformation & getEnvironmentLightingInformation() const override { return mEnvLighting; }
 
     SubGraph build(RenderGraph & rg) override {
         SubGraph sg(rg, StrA::format("{}.upload", name));
@@ -207,8 +219,13 @@ public:
         wf.appendTask("lighting", mCopyAction, std::move(lightArgs));
         sg.workflows.append(std::move(wf));
 
-        // Build Set 0 resource set (camera + lighting; expandable later) for effects to use as resources[0].
-        mLastSet0.resize(2);
+        // Build Set 0 resource set for effects (bindings 0..5).
+        // Bindings 0-1: UBOs (camera + lighting).
+        // Bindings 2-4: env cubemaps (skybox, irradiance, prefiltered); fallback to 1×1 black cube.
+        // Binding  5:   BRDF LUT 2D; fallback to 1×1 white.
+        auto envTex = [&](const AutoRef<Texture> & t) -> AutoRef<Texture> { return t ? t : mFallbackCubemap; };
+
+        mLastSet0.resize(6);
         mLastSet0[0].resize(1);
         if (mCameraBuffer)
             mLastSet0[0][0] = GpuResourceView {}
@@ -223,6 +240,13 @@ public:
                                   .setBufferViewType(GpuResourceView::BufferView::Type::UNIFORM)
                                   .setBufferViewOffset(0)
                                   .setBufferViewSize(sizeof(DirectLightingUBO));
+        for (int i = 0; i < 3; ++i) {
+            const AutoRef<Texture> * srcs[3] = {&mEnvLighting.skyboxCubemap, &mEnvLighting.irradianceMap, &mEnvLighting.prefilteredEnvMap};
+            mLastSet0[2 + i].resize(1);
+            mLastSet0[2 + i][0] = GpuResourceView {}.setArtifact(envTex(*srcs[i]));
+        }
+        mLastSet0[5].resize(1);
+        mLastSet0[5][0] = GpuResourceView {}.setArtifact(mEnvLighting.brdfLut ? mEnvLighting.brdfLut : mFallbackBrdfLut);
 
         return sg;
     }

@@ -175,4 +175,7 @@ AutoRef<Texture> loadVulkanTexture(const Texture::LoadParameters & params);
 /// Create a 1x1 RGBA8 texture with the given pixel and upload it. Used for PBR default textures when a material slot is missing.
 AutoRef<Texture> createDefault1x1Texture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
+/// Create a 1x1 RGBA8 cubemap (faces=6) with the given pixel uploaded to all 6 faces. Used as a fallback when no env cubemap is set.
+AutoRef<Texture> createDefault1x1CubemapTexture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+
 } // namespace GN::rdg

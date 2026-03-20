@@ -8,26 +8,55 @@ a skybox, lit by both the existing directional light and an environment map.
 Branch: feature/rdg/skybox-ibl  (off feature/rdg/main; do NOT pollute main)
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: none
-In progress: none
+Last completed: Task 2.1c (cubemap support in vk-texture + vk-draw-actions; SSC env lighting impl in Task 1.2)
+In progress: Task 2.1x-test (unit tests for cubemap + env lighting)
+Build state: green (build.py d passes as of last run)
+
+Completed so far:
+  Task 1.1  — EnvironmentLightingInformation added to pipeline.h
+  Task 2.1  — Cubemap investigation done (see CUBEMAP FINDINGS below)
+  Task 2.1a — createVkImage uses setCube(w) when faces==6
+  Task 2.1b — upload1x1Mip loops over all faces; createDefault1x1CubemapTexture added to vk-texture.h/cpp
+  Task 2.1c — getTextureImageView no longer forces e2D; auto-detects eCube for cubemap textures
+  Task 1.2  — EnvironmentLightingInformation stored + Set 0 extended to 6 bindings (fallbacks: 1×1 black cube + 1×1 white 2D)
+
+Not yet committed (pending unit test task 2.1x-test before committing this block):
+  src/inc/garnet/rdg/pipeline.h         — EnvironmentLightingInformation struct + virtual setters/getters
+  src/core/rdg/shared-shader-constants.cpp — env lighting storage, fallback textures, Set 0 bindings 2..5
+  src/core/rdg/vk-texture.cpp           — setCube in createVkImage, upload1x1Mip all faces, new cubemap helper
+  src/core/rdg/vk-texture.h             — createDefault1x1CubemapTexture declaration
+  src/core/rdg/vk-draw-actions.cpp      — getTextureImageView cubemap-aware view type
+
+Unit test file location:
+  No rdg-pbr-assignment.cpp was found in src/test/ut/. Need to locate or create the rdg unit test target
+  before writing tests. See REFERENCE section note added below.
 --- END PROGRESS ---
 
 --- REFERENCE ---
 
 Key public header:
   src/inc/garnet/rdg/pipeline.h
-    lines 105–184  SharedShaderConstants (ViewInformation, DirectLightingInformation, setters, getSet0Resources, build)
-    lines 186–217  EnvironmentalLighting — commented-out stub (useful context, do NOT un-comment as-is)
-    lines 272–329  PbrShading (BuildParameters, Material, build)
-    lines 331–349  SkyBox — interface declared, NO implementation yet
+    SharedShaderConstants struct — ViewInformation, DirectLightingInformation, EnvironmentLightingInformation,
+      setters/getters, getSet0Resources, build()
+    EnvironmentalLighting — commented-out stub (useful context, do NOT un-comment as-is)
+    PbrShading — BuildParameters, Material, build()
+    SkyBox — interface declared, NO implementation yet
 
 Key implementation files:
-  src/core/rdg/shared-shader-constants.cpp   — SharedShaderConstantsVulkan impl
+  src/core/rdg/shared-shader-constants.cpp   — SharedShaderConstantsVulkan impl (env lighting + Set 0 binding 2..5)
+  src/core/rdg/vk-texture.cpp               — cubemap-capable createVkImage, upload1x1Mip (all faces), cubemap helper
+  src/core/rdg/vk-texture.h                 — createDefault1x1CubemapTexture declaration
+  src/core/rdg/vk-draw-actions.cpp          — getTextureImageView with cubemap-aware view type
   src/core/rdg/pbr-shading.cpp              — PbrShadingVulkan; Set 0/Set 1 resource binding
   src/core/rdg/vk-shaders/pbr.vert          — PBR vertex shader
   src/core/rdg/vk-shaders/pbr.frag          — PBR fragment shader (Cook-Torrance BRDF)
   src/core/rdg/vk-shaders/global-camera-ubo.h  — GlobalCameraUBO (Set 0 binding 0)
   src/core/rdg/vk-shaders/direct-lighting-ubo.h — DirectLightingUBO (Set 0 binding 1)
+
+Unit test target:
+  No rdg unit test file was found at src/test/ut/rdg/. Before writing new rdg/cubemap tests, locate the
+  existing rdg unit test CMake target (search for "rdg" in src/test/ut/CMakeLists.txt) or create a new
+  test file src/test/ut/rdg-skybox-ibl-test.cpp and add it to the unit test target.
 
 Sample:
   src/sample/rdg/draw-mesh.cpp
@@ -96,7 +125,7 @@ See skills: use-build-py, run-cit.
 Phase 1: SharedShaderConstants — EnvironmentLightingInformation
 ============================
 
-Task 1.1 — Add EnvironmentLightingInformation struct to pipeline.h
+Task 1.1 — Add EnvironmentLightingInformation struct to pipeline.h  [DONE]
   Files: src/inc/garnet/rdg/pipeline.h
 
   What:
@@ -116,7 +145,7 @@ Task 1.1 — Add EnvironmentLightingInformation struct to pipeline.h
   Verify: build passes (no new impl yet; virtual = 0 so no linker error for the declaration).
   Commit: "Assignment Skybox+IBL: add EnvironmentLightingInformation to SharedShaderConstants header (Task 1.1)"
 
-Task 1.2 — Implement EnvironmentLightingInformation in shared-shader-constants.cpp
+Task 1.2 — Implement EnvironmentLightingInformation in shared-shader-constants.cpp  [DONE — unit tests pending in 2.1x-test]
   Files: src/core/rdg/shared-shader-constants.cpp
 
   What:
@@ -146,7 +175,7 @@ Task 1.2 — Implement EnvironmentLightingInformation in shared-shader-constants
 Phase 2: SkyBox subgraph implementation
 ============================
 
-Task 2.1 — Investigate cubemap support in Texture and GpuShaderAction
+Task 2.1 — Investigate cubemap support in Texture and GpuShaderAction  [DONE — see CUBEMAP FINDINGS]
   Files: (read-only investigation)
     src/inc/garnet/rdg/gpu-resource.h  (or wherever Texture::Descriptor is defined)
     src/core/rdg/ (Texture impl, GpuShaderAction for sampler types)
@@ -168,7 +197,7 @@ If Task 2.1 determines that Texture creation as a cubemap (VK_IMAGE_VIEW_TYPE_CU
 samplerCube binding via GpuShaderAction::GraphicsResourceSet are NOT yet supported, insert
 the following tasks between 2.1 and 2.2 before writing any shaders.
 
-Task 2.1a — Add cubemap descriptor flag to Texture API
+Task 2.1a — Add cubemap descriptor flag to Texture API  [DONE]
   Files: src/inc/garnet/rdg/gpu-resource.h  (or wherever Texture::Descriptor is)
          src/core/rdg/<texture-impl>.cpp
 
@@ -186,7 +215,7 @@ Task 2.1a — Add cubemap descriptor flag to Texture API
       errors); returned texture is non-null.
   Commit: "Assignment Skybox+IBL: add cubemap flag to Texture::Descriptor (Task 2.1a)"
 
-Task 2.1b — Add cubemap loading from 6 face images
+Task 2.1b — Add cubemap loading from 6 face images  [DONE — upload1x1Mip now uploads all faces; createDefault1x1CubemapTexture added]
   Files: src/inc/garnet/rdg/gpu-resource.h  (or Texture header)
          src/core/rdg/<texture-impl>.cpp
 
@@ -203,7 +232,7 @@ Task 2.1b — Add cubemap loading from 6 face images
       has 6 layers and cubemap view type.
   Commit: "Assignment Skybox+IBL: add cubemap face loading to Texture (Task 2.1b)"
 
-Task 2.1c — Verify samplerCube binding in GpuShaderAction::GraphicsResourceSet
+Task 2.1c — Verify samplerCube binding in GpuShaderAction::GraphicsResourceSet  [DONE]
   Files: src/core/rdg/<gpu-shader-action-impl>.cpp
 
   What:
@@ -494,8 +523,34 @@ Task 4.2 — Update pipeline.h doc comments for the new interface
   - Update SkyBox::build() doc comment to mention Set 0 binding 2.
   Commit: "Assignment Skybox+IBL: doc comments for env lighting interface (Task 4.2)"
 
---- CUBEMAP FINDINGS --- (fill in after Task 2.1)
-(pending Task 2.1 investigation)
+--- CUBEMAP FINDINGS --- (filled in after Task 2.1)
+
+1. Texture::Descriptor already has `faces` field: "1 = 2D, 6 = cubemap, >1 = array" (artifacts.h line ~126).
+   No API change needed for cubemap creation — just pass .setFaces(6).
+
+2. rapid_vulkan::Image has both set2D(w,h,a) and setCube(w):
+   - set2D clears eCubeCompatible flag → creates VK_IMAGE_VIEW_TYPE_2D_ARRAY even with 6 layers.
+   - setCube sets eCubeCompatible flag + arrayLayers=6 → creates VK_IMAGE_VIEW_TYPE_CUBE view.
+   Bug found: vk-texture.cpp was calling set2D(w,h,faces) unconditionally → cubemaps were broken.
+   Fix (Task 2.1a): use setCube(w) when faces==6 && depth==1.
+
+3. rapid_vulkan Image::getView auto-detects eCube when:
+   - Image has eCubeCompatible flag set, AND
+   - The view range covers all array layers (baseArrayLayer==0, layerCount==VK_REMAINING_ARRAY_LAYERS).
+   But type defaults to (vk::ImageViewType)-1 (auto-detect) only when NOT explicitly set.
+   Bug found: vk-draw-actions.cpp was calling .setType(vk::ImageViewType::e2D) → forced 2D view on cubemaps.
+   Fix (Task 2.1c): skip .setType() for cubemaps; set layers = VK_REMAINING_ARRAY_LAYERS for cubemaps.
+
+4. GpuShaderAction/Drawable binding: textures bound via drawable.t(set,binding, imgSamplers). The
+   VkDescriptorSetLayout is derived from SPIR-V reflection in rapid-vulkan. If a shader binding slot
+   is not declared in the SPIR-V, the corresponding call to drawable.t() is silently ignored. This
+   means SSC can safely provide all 6 bindings in Set 0 before shaders use all of them.
+
+5. samplerCube binding works automatically: once the VkImageView is eCube type, Vulkan will accept it
+   as a combined image sampler for a samplerCube binding in GLSL.
+
+6. createDefault1x1CubemapTexture helper added (vk-texture.h/cpp): creates a 1×1 cube with all 6
+   faces set to the given RGBA8 pixel. Used as fallback when caller provides no env map textures.
 
 --- SUMMARY OF FILES TO TOUCH ---
 
