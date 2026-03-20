@@ -78,15 +78,12 @@ vk::ImageView getTextureImageView(const GpuResourceView & view) {
     if (!view.isTexture()) return {};
     auto tex = view.texture().staticCastTo<TextureVulkan>();
     if (!tex || !tex->image()) return {};
-    const auto & iv     = view.imageView;
-    const bool   isCube = (tex->descriptor().faces == 6 && tex->descriptor().depth == 1);
-    uint32_t     mips   = (iv.range.e.numMipLevels == (uint32_t) -1) ? 1 : iv.range.e.numMipLevels;
-    uint32_t     layers = (iv.range.e.numArrayLayers == (uint32_t) -1) ? (isCube ? VK_REMAINING_ARRAY_LAYERS : 1u) : iv.range.e.numArrayLayers;
-    vk::Format   format = (iv.format != gfx::img::PixelFormat::UNKNOWN()) ? pixelFormatToVkFormat(iv.format) : pixelFormatToVkFormat(tex->descriptor().format);
-    // For cubemaps leave the type as -1 (auto-detect → eCube); for 2D textures force e2D.
+    const auto &                           iv     = view.imageView;
+    uint32_t                               mips   = (iv.range.e.numMipLevels == (uint32_t) -1) ? VK_REMAINING_MIP_LEVELS : iv.range.e.numMipLevels;
+    uint32_t                               layers = (iv.range.e.numArrayLayers == (uint32_t) -1) ? VK_REMAINING_ARRAY_LAYERS : iv.range.e.numArrayLayers;
+    vk::Format                             format = (iv.format != gfx::img::PixelFormat::UNKNOWN()) ? pixelFormatToVkFormat(iv.format) : vk::Format::eUndefined;
     rapid_vulkan::Image::GetViewParameters params;
     params.setFormat(format).setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, iv.range.i.mip, mips, iv.range.i.face, layers));
-    if (!isCube) params.setType(vk::ImageViewType::e2D);
     return tex->image()->getView(params);
 }
 
