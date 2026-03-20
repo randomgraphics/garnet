@@ -1,17 +1,24 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 
-/// PBR fragment shader (metallic-roughness) with Cook-Torrance BRDF.
-/// Set 0, binding 0: GlobalCameraUBO, binding 1: DirectLightingUBO.
-/// Set 1, binding 0: base color texture, binding 1: metallic-roughness (ARM), binding 2: normal map.
+/// PBR fragment shader (metallic-roughness) with Cook-Torrance BRDF + split-sum IBL.
+/// Set 0:  binding 0 = GlobalCameraUBO, binding 1 = DirectLightingUBO,
+///         binding 2 = skyboxCubemap (unused here; declared for Set0 layout compatibility),
+///         binding 3 = irradianceMap (Lambertian diffuse IBL),
+///         binding 4 = prefilteredEnvMap (mip-mapped specular IBL, roughness → mip),
+///         binding 5 = brdfLut (split-sum BRDF LUT: NdotV × roughness → scale, bias).
+/// Set 1:  binding 0 = base color, binding 1 = metallic-roughness (ARM), binding 2 = normal map.
 
 #include "global-camera-ubo.h"
 #include "direct-lighting-ubo.h"
 
-layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; }
-u_camera;
-layout(std140, set = 0, binding = 1) uniform DirectLightingBlock { DirectLightingUBO data; }
-u_lighting;
+layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; } u_camera;
+layout(std140, set = 0, binding = 1) uniform DirectLightingBlock { DirectLightingUBO data; } u_lighting;
+
+// IBL maps — fallback to 1x1 black cube / white 2D if not set by the application.
+layout(set = 0, binding = 3) uniform samplerCube u_irradianceMap;
+layout(set = 0, binding = 4) uniform samplerCube u_prefilteredEnvMap;
+layout(set = 0, binding = 5) uniform sampler2D   u_brdfLut;
 
 layout(set = 1, binding = 0) uniform sampler2D u_baseColor;
 layout(set = 1, binding = 1) uniform sampler2D u_metallicRoughness;
@@ -38,6 +45,11 @@ mat3 buildTBN(vec3 N, vec3 worldPos, vec2 uv) {
 
 // Fresnel-Schlick: F0 = mix(0.04, baseColor, metallic) for dielectrics/metals.
 vec3 fresnelSchlick(float cosTheta, vec3 F0) { return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0); }
+
+// Fresnel-Schlick with roughness bias (for IBL ambient).
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
 
 // GGX/Trowbridge-Reitz NDF.
 float distributionGGX(vec3 N, vec3 H, float roughness) {
@@ -75,7 +87,7 @@ void main() {
     vec3 V  = normalize(u_camera.data.cameraPosition.xyz - inWorldPos);
     vec3 F0 = mix(vec3(0.04), baseColor, metallic);
 
-    vec3 Lo = baseColor * 0.03; // ambient
+    vec3 Lo = vec3(0.0); // accumulate direct lighting
 
     for (uint i = 0u; i < u_lighting.data.numLights && i < uint(MAX_DIRECT_LIGHTS); ++i) {
         DirectLightData light = u_lighting.data.lights[i];
@@ -106,10 +118,29 @@ void main() {
         Lo += (diffuse + spec) * irradiance * NdotL;
     }
 
+    // IBL ambient: split-sum diffuse (irradiance map) + specular (prefiltered env map + BRDF LUT).
+    {
+        float NdotV    = max(dot(N, V), 0.0);
+        vec3  F_ibl    = fresnelSchlickRoughness(NdotV, F0, roughness);
+        vec3  kD_ibl   = (vec3(1.0) - F_ibl) * (1.0 - metallic);
+
+        // Diffuse IBL: sample pre-convolved irradiance map in the surface-normal direction.
+        vec3 irradiance  = texture(u_irradianceMap, N).rgb;
+        vec3 diffuse_ibl = kD_ibl * baseColor * irradiance;
+
+        // Specular IBL: sample prefiltered env map at roughness-derived mip + scale by split-sum BRDF LUT.
+        const float MAX_LOD = 4.0; // valid for a 512px prefilteredEnvMap (mips 0-4)
+        vec3  R            = reflect(-V, N);
+        vec3  prefiltColor = textureLod(u_prefilteredEnvMap, R, roughness * MAX_LOD).rgb;
+        vec2  brdf         = texture(u_brdfLut, vec2(NdotV, roughness)).rg;
+        vec3  specular_ibl = prefiltColor * (F_ibl * brdf.x + brdf.y);
+
+        Lo += diffuse_ibl + specular_ibl;
+    }
+
     if (u_lighting.data.numLights == 0u) {
-        vec3  L     = normalize(vec3(0.2, -1.0, 0.3));
-        float NdotL = max(dot(N, L), 0.0);
-        Lo          = baseColor * (0.03 + 0.97 * NdotL);
+        // No direct lights: add a small fallback so geometry is visible even with black IBL maps.
+        Lo += baseColor * 0.03;
     }
 
     // Exposure: scale cd/m² into a range where Reinhard's knee is useful.

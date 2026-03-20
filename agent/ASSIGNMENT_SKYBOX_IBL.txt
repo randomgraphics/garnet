@@ -75,7 +75,10 @@ Last completed: Phase 3.3 — SkyBox::build unit test green
   Phase 3.3: skybox-ibl-test.cpp — SkyBox::create+build test added (6 tests total, all pass)
   Phase 3.4: draw-mesh.cpp: SkyBox created + wired into render loop before PBR (fallback 1x1 black cubemap)
   Phase 3.5: media/envmap/.../skybox.dds generated (hdri-to-cubemap.py, 512px rgba16f); loaded + bound to SSC
-In progress: Phase 4.1 — IBL sampler declarations in pbr.frag (Set 0 bindings 3, 4, 5)
+  Phase 4.1: pbr.frag: IBL sampler declarations added (Set 0 bindings 3 irradianceMap, 4 prefilteredEnvMap, 5 brdfLut)
+  Phase 4.2: pbr.frag: IBL diffuse — irradiance map samples replace 0.03 ambient
+  Phase 4.3: pbr.frag: IBL specular — split-sum (prefilteredEnvMap LOD + brdfLut scale/bias)
+In progress: Phase 4.4 — gen-ibl-maps.py (generate irradiance + prefiltered + BRDF LUT)
 --- END PROGRESS ---
 
 --- REFERENCE ---
