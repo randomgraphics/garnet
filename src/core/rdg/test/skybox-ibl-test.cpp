@@ -1,11 +1,12 @@
 /*
- * Tests for Skybox + IBL infrastructure (Tasks 2.1a-c, 1.2).
+ * Tests for Skybox + IBL infrastructure (Phase 1 + Phase 3).
  *
  * Verifies:
  *  - Texture::create with faces=6 creates a cube-compatible Vulkan image.
  *  - createDefault1x1CubemapTexture succeeds and reports faces==6.
  *  - SharedShaderConstants: setEnvironmentLightingInformation round-trip.
  *  - After build(), getSet0Resources() has 6 bindings (camera, lighting, 4 env slots).
+ *  - SkyBox::create succeeds and build() produces a non-empty SubGraph.
  */
 
 #include "common.h"
@@ -76,6 +77,28 @@ TEST_CASE("SharedShaderConstants: build() provides 6-binding Set 0 after env lig
     auto sg = ssc->build(*rg);
     REQUIRE(!sg.workflows.empty());
     CHECK(ssc->getSet0Resources().size() == 6u);
+}
+
+TEST_CASE("SkyBox: create and build produce a non-empty SubGraph", "[rdg][skybox][gpu]") {
+    auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
+    REQUIRE(rg);
+    auto gpu = GpuContext::create("gpu_skybox", {.howToPrintDeviceCaps = gpuVerbosity});
+    if (!gpu) SKIP("No Vulkan GPU context available");
+
+    auto skybox = SkyBox::create("test_skybox", {.gpu = gpu});
+    REQUIRE(skybox);
+
+    auto ssc = SharedShaderConstants::create("ssc_skybox", {.gpu = gpu});
+    REQUIRE(ssc);
+    ssc->build(*rg);
+
+    SkyBox::BuildParameters bp;
+    bp.renderGraph          = rg.get();
+    bp.sharedShaderConstants = ssc;
+    auto sg                  = skybox->build(bp);
+
+    CHECK(sg.builtResult == Action::ExecutionResult::PASSED);
+    CHECK(!sg.workflows.empty());
 }
 
 TEST_CASE("SharedShaderConstants: Set 0 binding 2 uses provided skyboxCubemap", "[rdg][shared-constants][ibl][gpu]") {

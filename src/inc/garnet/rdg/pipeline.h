@@ -343,6 +343,7 @@ struct SkyBox : public GpuResource {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     struct BuildParameters {
+        RenderGraph *                        renderGraph = {};
         AutoRef<const SharedShaderConstants> sharedShaderConstants;
     };
 
@@ -351,7 +352,7 @@ struct SkyBox : public GpuResource {
     };
 
     /// Add task graphs into the workflow to render a sky box.
-    virtual SubGraph build(const BuildParameters & params);
+    virtual SubGraph build(const BuildParameters & params) = 0;
 
     static GN_API AutoRef<SkyBox> create(const StrA & name, const CreateParameters & params);
 

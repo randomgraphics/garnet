@@ -67,11 +67,13 @@ Variable name auto-derived: `solid-triangle.vert` → `kSolidTriangleVert`, head
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 2 — shader compile infrastructure (2 tasks, build green)
+Last completed: Phase 3.3 — SkyBox::build unit test green
   Phase 1: cubemap support + EnvironmentLightingInformation (6 tasks, build green, 5 unit tests pass)
-  Phase 2.1: env/bin/compile_glsl_shader.py — general GLSL→SPIR-V→header tool (kFooBarSpv naming)
-  Phase 2.2: compile_pbr_shaders.py + compile_shaders.py deleted; CMakeLists migrated to compile_glsl_shader.py; skybox.vert + skybox.frag written (Phase 3.1 done simultaneously)
-In progress: Phase 3.2 — implement SkyBox::create and SkyBox::build
+  Phase 2: shader compile infra — compile_glsl_shader.py, CMakeLists migrated, old scripts deleted
+  Phase 3.1: skybox.vert + skybox.frag — fullscreen-triangle cubemap sampler at binding 2
+  Phase 3.2: SkyBox::create + SkyBoxVulkan::build in skybox.cpp
+  Phase 3.3: skybox-ibl-test.cpp — SkyBox::create+build test added (6 tests total, all pass)
+In progress: Phase 3.4 — integrate SkyBox into draw-mesh.cpp
 --- END PROGRESS ---
 
 --- REFERENCE ---
