@@ -1,1 +1,1 @@
-@python.exe %~dp0%~n0.py %*
+@python.exe %~dp0..\..\src\tool\hdri-to-cubemap\hdri-to-cubemap.py %*
