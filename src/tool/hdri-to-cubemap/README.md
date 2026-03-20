@@ -11,10 +11,10 @@ Vulkan, and OpenGL cubemap samplers.
 
 ```bash
 # Linux
-env/bin/hdri-to-cubemap.py  input.exr  output.dds
+hdri-to-cubemap.py input.exr output.dds
 
 # Windows
-env\bin\hdri-to-cubemap.cmd  input.exr  output.dds
+python3.exe hdri-to-cubemap.py input.exr  output.dds
 ```
 
 ### Options
