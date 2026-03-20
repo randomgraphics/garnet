@@ -1,8 +1,11 @@
-# Optional: run compile_shaders.py to regenerate SPIR-V headers after editing .vert/.frag
-# Headers are committed so the build does not depend on glslc.
+# Optional: regenerate solid-triangle SPIR-V headers via the general compile tool.
+set(_compile_tool ${CMAKE_SOURCE_DIR}/env/bin/compile_glsl_shader.py)
 add_custom_target(rdg-simple-triangle-shaders
-  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/compile_shaders.py
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
+          ${CMAKE_CURRENT_SOURCE_DIR}/solid-triangle.vert
+          ${CMAKE_CURRENT_SOURCE_DIR}/solid-triangle.frag
+          --out-dir ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${_compile_tool}
   COMMENT "Compiling solid-triangle GLSL to SPIR-V headers"
 )
 

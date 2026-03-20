@@ -67,14 +67,11 @@ Variable name auto-derived: `solid-triangle.vert` → `kSolidTriangleVert`, head
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1 — cubemap support + EnvironmentLightingInformation (6 tasks, build green, 5 unit tests pass)
-  Phase 1.1: EnvironmentLightingInformation struct added to pipeline.h + SSC virtual setters/getters
-  Phase 1.2: SSC Vulkan impl: store env lighting; extend Set 0 to 6 bindings with 1x1 fallbacks
-  Phase 1.3: vk-texture.cpp: use setCube(w) when faces==6 so cubemaps get VK_IMAGE_VIEW_TYPE_CUBE
-  Phase 1.4: upload1x1Mip uploads all faces; createDefault1x1CubemapTexture added to vk-texture.h/cpp
-  Phase 1.5: getTextureImageView auto-detects eCube; no longer hardcodes e2D for all textures
-  Phase 1.6: skybox-ibl-test.cpp — 5 Catch2 tests (cubemap create, fallback, SSC round-trip, Set0 size, binding 2)
-In progress: Phase 2.1 — create env/bin/compile_glsl_shader.py
+Last completed: Phase 2 — shader compile infrastructure (2 tasks, build green)
+  Phase 1: cubemap support + EnvironmentLightingInformation (6 tasks, build green, 5 unit tests pass)
+  Phase 2.1: env/bin/compile_glsl_shader.py — general GLSL→SPIR-V→header tool (kFooBarSpv naming)
+  Phase 2.2: compile_pbr_shaders.py + compile_shaders.py deleted; CMakeLists migrated to compile_glsl_shader.py; skybox.vert + skybox.frag written (Phase 3.1 done simultaneously)
+In progress: Phase 3.2 — implement SkyBox::create and SkyBox::build
 --- END PROGRESS ---
 
 --- REFERENCE ---
