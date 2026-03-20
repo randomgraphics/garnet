@@ -1,0 +1,368 @@
+# Assignment: Skybox and Environment IBL for draw-mesh
+
+Goal: Extend the draw-mesh sample with (1) a skybox background rendered from a cubemap, and (2) image-based
+lighting (IBL) in the PBR shading pass — replacing the current hardcoded `0.03` ambient with physically-based
+diffuse irradiance and split-sum specular IBL. When done, `draw-mesh.cpp` renders the DamagedHelmet inside
+a skybox, lit by both the existing directional light and an environment map.
+
+Branch: feature/rdg/skybox-ibl  (off feature/rdg/main; do NOT pollute main)
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: none
+In progress: none
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Key public header:
+  src/inc/garnet/rdg/pipeline.h
+    lines 105–184  SharedShaderConstants (ViewInformation, DirectLightingInformation, setters, getSet0Resources, build)
+    lines 186–217  EnvironmentalLighting — commented-out stub (useful context, do NOT un-comment as-is)
+    lines 272–329  PbrShading (BuildParameters, Material, build)
+    lines 331–349  SkyBox — interface declared, NO implementation yet
+
+Key implementation files:
+  src/core/rdg/shared-shader-constants.cpp   — SharedShaderConstantsVulkan impl
+  src/core/rdg/pbr-shading.cpp              — PbrShadingVulkan; Set 0/Set 1 resource binding
+  src/core/rdg/vk-shaders/pbr.vert          — PBR vertex shader
+  src/core/rdg/vk-shaders/pbr.frag          — PBR fragment shader (Cook-Torrance BRDF)
+  src/core/rdg/vk-shaders/global-camera-ubo.h  — GlobalCameraUBO (Set 0 binding 0)
+  src/core/rdg/vk-shaders/direct-lighting-ubo.h — DirectLightingUBO (Set 0 binding 1)
+
+Sample:
+  src/sample/rdg/draw-mesh.cpp
+
+Current GPU descriptor layout (before this assignment):
+  Set 0 binding 0 : UBO  GlobalCameraUBO
+  Set 0 binding 1 : UBO  DirectLightingUBO
+  Set 1 binding 0 : sampler2D  base color
+  Set 1 binding 1 : sampler2D  metallic-roughness (ARM)
+  Set 1 binding 2 : sampler2D  normal map
+  Push 0..63      : mat4 model matrix
+
+After Phase 1+2+3 the target layout will be:
+  Set 0 binding 0 : UBO          GlobalCameraUBO
+  Set 0 binding 1 : UBO          DirectLightingUBO
+  Set 0 binding 2 : samplerCube  skyboxCubemap       (background + IBL env map)
+  Set 0 binding 3 : samplerCube  irradianceMap       (diffuse IBL)
+  Set 0 binding 4 : samplerCube  prefilteredEnvMap   (specular IBL, roughness → mip level)
+  Set 0 binding 5 : sampler2D    brdfLut             (split-sum BRDF LUT, NdotV×roughness)
+  Set 1 binding 0 : sampler2D    base color
+  Set 1 binding 1 : sampler2D    metallic-roughness
+  Set 1 binding 2 : sampler2D    normal map
+  Push 0..63      : mat4 model matrix
+
+Existing unit-test file (extend here):
+  src/test/ut/rdg/rdg-pbr-assignment.cpp
+
+Compile script pattern to follow:
+  src/core/rdg/compile_pbr_shaders.py  (model for a new compile_skybox_shaders.py)
+
+Envmap asset (download separately, not committed):
+  media/envmap/bad-salzbrunn-walking-hall/README.md  — has download URL for HDR source
+
+--- BUILD / CI ---
+
+  ./build.py d                    # debug build (or build.py r for release)
+  env/bin/cit.py                  # lint + unit tests
+  env/bin/cit.py -t               # unit tests only
+  ./build/GNsample-rdg-draw-mesh  # run the sample visually
+
+See skills: use-build-py, run-cit.
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep build green after every task. Never proceed to the next task with a compile error.
+- Commit after each task (or logical sub-step), then push. Message pattern:
+    Assignment Skybox+IBL: <one-liner describing this task> (Task X.Y)
+- Break the IBL textures into fallback (1×1) defaults — the code must work even without real assets.
+- IBL approach: classic split-sum (UE4 / learnopengl.com):
+    diffuse ambient  = irradianceMap.sample(N) * baseColor * (1 - metallic)
+    specular ambient = prefilteredEnvMap.sampleLod(R, roughness * MAX_LOD) * (F * envBRDF.x + envBRDF.y)
+    where envBRDF    = brdfLut.sample(NdotV, roughness).rg
+- Skybox rendering: render a skybox cube/quad behind all geometry. Use depth write = false and set
+  z = 1 in clip space (gl_Position = pos.xyww) so it renders at max depth.
+- The skybox cubemap (binding 2) is the original env map. The irradianceMap (binding 3) and
+  prefilteredEnvMap (binding 4) are pre-convolved. If only the skybox cubemap is provided, other
+  maps fall back to 1×1 white.
+- Inline small hot-path shader helpers; follow existing code style (see inline-small-functions skill).
+- File naming: lowercase-hyphen (see filename-naming-convention skill).
+- Minimal code change per step (see minimal-code-change skill).
+- If a task is blocked (e.g. cubemap loading not supported), stop and discuss before inventing infra.
+
+--- TASK BREAKDOWN ---
+
+============================
+Phase 1: SharedShaderConstants — EnvironmentLightingInformation
+============================
+
+Task 1.1 — Add EnvironmentLightingInformation struct to pipeline.h
+  Files: src/inc/garnet/rdg/pipeline.h
+
+  What:
+    - Add a new public struct inside SharedShaderConstants:
+
+        struct EnvironmentLightingInformation {
+            AutoRef<Texture> skyboxCubemap;      // rendered as skybox background; also used as IBL env map
+            AutoRef<Texture> irradianceMap;      // preconvolved diffuse-IBL cubemap
+            AutoRef<Texture> prefilteredEnvMap;  // mip-mapped specular-IBL cubemap (roughness → mip)
+            AutoRef<Texture> brdfLut;            // split-sum BRDF LUT (NdotV vs roughness → RG)
+        };
+
+    - Add virtual setter:  virtual void setEnvironmentLightingInformation(const EnvironmentLightingInformation &) = 0;
+    - Add virtual getter:  virtual const EnvironmentLightingInformation & getEnvironmentLightingInformation() const = 0;
+    - Keep the commented-out EnvironmentalLighting stub in place; do not remove or activate it.
+
+  Verify: build passes (no new impl yet; virtual = 0 so no linker error for the declaration).
+  Commit: "Assignment Skybox+IBL: add EnvironmentLightingInformation to SharedShaderConstants header (Task 1.1)"
+
+Task 1.2 — Implement EnvironmentLightingInformation in shared-shader-constants.cpp
+  Files: src/core/rdg/shared-shader-constants.cpp
+
+  What:
+    - In SharedShaderConstantsVulkan, add member:  EnvironmentLightingInformation mEnvLighting;
+    - Implement setEnvironmentLightingInformation() (store struct).
+    - Implement getEnvironmentLightingInformation() (return mEnvLighting).
+    - Extend getSet0Resources() / the set0 rebuild inside build() to include 4 new bindings:
+        binding 2: skyboxCubemap   (or 1×1 black cubemap fallback if nullptr)
+        binding 3: irradianceMap   (or 1×1 black cubemap fallback)
+        binding 4: prefilteredEnvMap (or 1×1 black cubemap fallback)
+        binding 5: brdfLut         (or 1×1 white 2D texture fallback)
+      Reuse the fallback-texture creation pattern already present for PBR material textures in
+      pbr-shading.cpp (create once, cache as member).
+
+  OPEN QUESTION: Does the existing GpuShaderAction::GraphicsResourceSet support samplerCube (cubemap)
+  bindings? Check the Texture API and GpuShaderAction for cubemap support before implementing.
+  If cubemap binding is not yet supported, flag this and discuss before adding infra.
+
+  Verify:
+    - Build passes.
+    - Unit test: in rdg-pbr-assignment.cpp, add a test that creates SharedShaderConstants, calls
+      setEnvironmentLightingInformation({}) (all nullptrs), calls build(), and checks that
+      getSet0Resources().size() == 6.
+  Commit: "Assignment Skybox+IBL: implement EnvironmentLightingInformation in SSC (Task 1.2)"
+
+============================
+Phase 2: SkyBox subgraph implementation
+============================
+
+Task 2.1 — Investigate cubemap support in Texture and GpuShaderAction
+  Files: (read-only investigation)
+    src/inc/garnet/rdg/gpu-resource.h  (or wherever Texture::Descriptor is defined)
+    src/core/rdg/ (Texture impl, GpuShaderAction for sampler types)
+
+  What:
+    - Check Texture::Descriptor for cubemap creation flags (e.g. VK_IMAGE_VIEW_TYPE_CUBE).
+    - Check whether GpuShaderAction::GraphicsResourceSet can bind a samplerCube.
+    - Document findings in this file under a new "CUBEMAP FINDINGS" section (below task list).
+    - If cubemap creation/loading is not supported, create a sub-task 2.1a to add minimal
+      cubemap support before proceeding.
+
+  Verify: purely investigative — "done" = CUBEMAP FINDINGS section filled in.
+  No commit needed (no code change).
+
+Task 2.2 — Write skybox GLSL shaders
+  Files: src/core/rdg/vk-shaders/skybox.vert
+         src/core/rdg/vk-shaders/skybox.frag
+
+  What (skybox.vert):
+    - Draw a single full-screen triangle (3 verts, no vertex buffer).
+    - Reconstruct a view-space ray direction per pixel from gl_VertexIndex.
+    - Use the camera's inverse-view-rotation (rotation only, no translation) to transform to world space.
+    - Set gl_Position.z = gl_Position.w so depth = 1.0 (skybox is behind everything).
+    - Pass world-space ray direction to fragment as an interpolant.
+
+  What (skybox.frag):
+    - Sample `layout(set=0, binding=2) uniform samplerCube u_skyboxCubemap` using the ray direction.
+    - Apply same tonemapping+gamma correction as pbr.frag for visual consistency.
+    - Output to outColor.
+
+  Verify: shaders compile with glslangValidator or spirv-cross (run compile script in Task 2.3).
+  No code-level commit until Task 2.3.
+
+Task 2.3 — Compile script and SPIR-V headers for skybox shaders
+  Files: src/core/rdg/compile_skybox_shaders.py   (new, modeled on compile_pbr_shaders.py)
+         src/core/rdg/CMakeLists.txt               (add compile step)
+
+  What:
+    - Create compile_skybox_shaders.py following the exact pattern of compile_pbr_shaders.py.
+    - Add a CMake custom command that runs it at build time and outputs skybox-vert.spv.h /
+      skybox-frag.spv.h into the build dir (same pattern as pbr shaders).
+    - Wire the generated headers into skybox.cpp (Task 2.4).
+
+  Verify: ./build.py d succeeds; CMake generates the .spv.h files.
+  Commit: "Assignment Skybox+IBL: add skybox shaders + compile pipeline (Task 2.2–2.3)"
+
+Task 2.4 — Implement SkyBox::create and SkyBox::build in skybox.cpp
+  Files: src/core/rdg/skybox.cpp   (new file)
+         src/core/rdg/CMakeLists.txt (add to sources)
+
+  What:
+    - Create SkyBoxVulkan : public SkyBox.
+    - SkyBox::create(): instantiate SkyBoxVulkan, build a GpuDrawPipeline (PSO) with:
+        Vertex stage:   skybox-vert.spv.h
+        Fragment stage: skybox-frag.spv.h
+        Depth write: false, depth test: LESS_OR_EQUAL (depth = 1.0)
+        No vertex input (full-screen triangle from gl_VertexIndex)
+        Descriptor layout: Set 0 must match SharedShaderConstants Set 0 layout (6 bindings)
+    - SkyBox::build(params):
+        - Read sharedShaderConstants->getSet0Resources() and bind as Set 0.
+        - Append a GpuDraw task: 3 verts, no index buffer, no vertex buffer.
+        - Return SubGraph wrapping that workflow.
+
+  Verify:
+    - Build passes.
+    - Unit test: create SkyBox, call build() with a valid SSC (with fallback textures), verify
+      builtResult == PASSED and workflow has 1 task.
+  Commit: "Assignment Skybox+IBL: implement SkyBox subgraph builder (Task 2.4)"
+
+Task 2.5 — Integrate SkyBox into draw-mesh.cpp
+  Files: src/sample/rdg/draw-mesh.cpp
+
+  What:
+    - Create a SkyBox instance after the PbrShading is created.
+    - In the render loop, call skyBox->build({.sharedShaderConstants = sharedConstants}) before
+      the PBR build.
+    - Append skybox workflow tasks to the render workflow BEFORE the PBR tasks (sky renders first,
+      depth = 1.0 so mesh renders over it).
+    - Initially use only fallback textures (no real cubemap yet) — skybox should render as black.
+
+  Verify:
+    - Build passes, sample runs without crash.
+    - Scene still renders (helmet visible), no validation errors.
+  Commit: "Assignment Skybox+IBL: wire SkyBox into draw-mesh render loop (Task 2.5)"
+
+Task 2.6 — Load a real environment cubemap into draw-mesh.cpp
+  Files: src/sample/rdg/draw-mesh.cpp
+         media/envmap/ (assets — obtained separately, see below)
+
+  What:
+    - Obtain a test cubemap. Options (pick simplest available):
+        a) Download the HDR from media/envmap/bad-salzbrunn-walking-hall/README.md and convert to
+           6-face PNG or KTX2 cubemap using a tool (e.g. cmft, hdrview, or texture-toolbox).
+        b) Use one of the 6-face cross images from a free IBL pack.
+        c) As a placeholder: create a 6-face cubemap programmatically (solid sky-blue top, grey horizon).
+    - Load the cubemap into a `Texture` using the existing `Texture::load` or a new cubemap loader
+      if Task 2.1 determined cubemap loading is not yet supported.
+    - Pass it to `sharedConstants->setEnvironmentLightingInformation({.skyboxCubemap = cubemap})`.
+
+  Verify:
+    - Skybox renders a recognizable color/gradient as the background in the sample.
+  Commit: "Assignment Skybox+IBL: load env cubemap, skybox renders in draw-mesh (Task 2.6)"
+
+============================
+Phase 3: PBR IBL — replace hardcoded ambient with environment-based lighting
+============================
+
+Task 3.1 — Add IBL sampler declarations to pbr.frag
+  Files: src/core/rdg/vk-shaders/pbr.frag
+         (possibly new header: src/core/rdg/vk-shaders/environment-ibl-ubo.h for shared defines)
+
+  What:
+    - Add three new Set 0 bindings in pbr.frag:
+        layout(set=0, binding=3) uniform samplerCube u_irradianceMap;
+        layout(set=0, binding=4) uniform samplerCube u_prefilteredEnvMap;
+        layout(set=0, binding=5) uniform sampler2D   u_brdfLut;
+    - Add constant: `const float MAX_REFLECTION_LOD = 4.0;`
+      (adjust once actual mip count is known from the prefiltered env map asset)
+    - No sampling logic yet — just declarations, to keep this step minimal.
+
+  Verify: shader compiles; pbr.frag build step passes.
+  No separate commit — bundle with Task 3.2.
+
+Task 3.2 — Implement IBL diffuse in pbr.frag
+  Files: src/core/rdg/vk-shaders/pbr.frag
+
+  What:
+    Replace `vec3 Lo = baseColor * 0.03; // ambient` with IBL diffuse:
+      ```glsl
+      vec3 kD_ambient   = (vec3(1.0) - fresnelSchlick(max(dot(N, V), 0.0), F0)) * (1.0 - metallic);
+      vec3 irradiance   = texture(u_irradianceMap, N).rgb;
+      vec3 Lo           = kD_ambient * baseColor * irradiance;
+      ```
+    Keep the direct-light loop unchanged.
+    The fallback 1×1 black irradiance map means Lo starts at 0 — visually similar to before
+    (the existing `0.03` hack disappears; ensure direct light still illuminates the scene).
+
+  Verify:
+    - Shader compiles.
+    - Sample renders; helmet is not pitch-black (direct light still works).
+    - With fallback textures: ambient is black — acceptable.
+  Commit: "Assignment Skybox+IBL: add IBL diffuse sampler + replace hardcoded ambient (Task 3.1–3.2)"
+
+Task 3.3 — Implement IBL specular (split-sum) in pbr.frag
+  Files: src/core/rdg/vk-shaders/pbr.frag
+
+  What:
+    Add split-sum specular after the diffuse ambient term:
+      ```glsl
+      vec3  R                = reflect(-V, N);
+      float NdotV            = max(dot(N, V), 0.0);
+      vec3  prefilteredColor = textureLod(u_prefilteredEnvMap, R, roughness * MAX_REFLECTION_LOD).rgb;
+      vec2  envBRDF          = texture(u_brdfLut, vec2(NdotV, roughness)).rg;
+      vec3  F_env            = fresnelSchlick(NdotV, F0);
+      vec3  specular_ambient = prefilteredColor * (F_env * envBRDF.x + envBRDF.y);
+      Lo += specular_ambient;
+      ```
+    Note: `Lo` must be accumulated BEFORE tonemapping/exposure, same as direct-light contributions.
+
+  Verify:
+    - Shader compiles.
+    - Sample renders; with fallback textures: specular ambient is 0 (prefilteredColor = 0) — acceptable.
+  Commit: "Assignment Skybox+IBL: add IBL specular split-sum to pbr.frag (Task 3.3)"
+
+Task 3.4 — Load precomputed IBL maps and BRDF LUT into draw-mesh.cpp
+  Files: src/sample/rdg/draw-mesh.cpp
+         media/envmap/ (assets)
+
+  What:
+    - Obtain precomputed irradiance cubemap, prefiltered env cubemap, and BRDF LUT for the
+      environment from Task 2.6 (use a tool like cmft, IBLBaker, or Filament's cmgen).
+      NOTE: the BRDF LUT is view-independent and can be a shared precomputed asset
+            (e.g. from https://github.com/nicktrevisan/brdf-lut or generated by cmgen).
+    - Load each into Textures and set them on SharedShaderConstants:
+        EnvironmentLightingInformation env;
+        env.skyboxCubemap      = cubemap;
+        env.irradianceMap      = irradianceMap;
+        env.prefilteredEnvMap  = prefilteredEnvMap;
+        env.brdfLut            = brdfLut;
+        sharedConstants->setEnvironmentLightingInformation(env);
+
+  Verify:
+    - Sample renders with visible IBL effect:
+        * Diffuse shading is influenced by the environment color (irradiance map).
+        * Metallic/smooth surfaces show specular reflections from the environment.
+        * Skybox background matches the environment map used for IBL.
+  Commit: "Assignment Skybox+IBL: load real IBL assets, full env lighting in draw-mesh (Task 3.4)"
+
+============================
+Phase 4: Cleanup and final polish
+============================
+
+Task 4.1 — Run full CI and fix any issues
+  - ./build.py d && ./build.py r && env/bin/cit.py
+  - Fix any lint/format issues (env/bin/format-all-sources.py).
+  - Ensure unit tests added in 1.2, 2.4 still pass.
+  Commit: "Assignment Skybox+IBL: CI green, format fixed (Task 4.1)"
+
+Task 4.2 — Update pipeline.h doc comments for the new interface
+  - Add a comment above EnvironmentLightingInformation describing each field's meaning.
+  - Update SkyBox::build() doc comment to mention Set 0 binding 2.
+  Commit: "Assignment Skybox+IBL: doc comments for env lighting interface (Task 4.2)"
+
+--- CUBEMAP FINDINGS --- (fill in after Task 2.1)
+(pending Task 2.1 investigation)
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+src/inc/garnet/rdg/pipeline.h                  — add EnvironmentLightingInformation (Task 1.1)
+src/core/rdg/shared-shader-constants.cpp       — implement env lighting storage + Set 0 ext (Task 1.2)
+src/core/rdg/vk-shaders/skybox.vert            — NEW: skybox vertex shader (Task 2.2)
+src/core/rdg/vk-shaders/skybox.frag            — NEW: skybox fragment shader (Task 2.2)
+src/core/rdg/compile_skybox_shaders.py         — NEW: SPIR-V compile script (Task 2.3)
+src/core/rdg/CMakeLists.txt                    — add skybox.cpp + compile step (Task 2.3, 2.4)
+src/core/rdg/skybox.cpp                        — NEW: SkyBoxVulkan implementation (Task 2.4)
+src/core/rdg/vk-shaders/pbr.frag               — add IBL samplers + diffuse + specular (Task 3.1–3.3)
+src/sample/rdg/draw-mesh.cpp                   — create SkyBox, load cubemap, set env lighting (Task 2.5, 2.6, 3.4)
+src/test/ut/rdg/rdg-pbr-assignment.cpp         — extend with env lighting + skybox unit tests (Task 1.2, 2.4)
+media/envmap/ (assets, not in git)             — cubemap, irradiance, prefiltered, BRDF LUT (Task 2.6, 3.4)
