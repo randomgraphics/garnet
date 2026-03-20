@@ -74,7 +74,7 @@ Last completed: Phase 1 — cubemap support + EnvironmentLightingInformation (6 
   Phase 1.4: upload1x1Mip uploads all faces; createDefault1x1CubemapTexture added to vk-texture.h/cpp
   Phase 1.5: getTextureImageView auto-detects eCube; no longer hardcodes e2D for all textures
   Phase 1.6: skybox-ibl-test.cpp — 5 Catch2 tests (cubemap create, fallback, SSC round-trip, Set0 size, binding 2)
-In progress: none — ready to start Phase 2 (compile_glsl_shader.py)
+In progress: Phase 2.1 — create env/bin/compile_glsl_shader.py
 --- END PROGRESS ---
 
 --- REFERENCE ---
