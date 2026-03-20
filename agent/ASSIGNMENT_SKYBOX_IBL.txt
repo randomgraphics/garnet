@@ -161,6 +161,68 @@ Task 2.1 — Investigate cubemap support in Texture and GpuShaderAction
   Verify: purely investigative — "done" = CUBEMAP FINDINGS section filled in.
   No commit needed (no code change).
 
+============================
+Phase 2.1x (CONDITIONAL): Add cubemap support — execute ONLY if Task 2.1 finds it missing
+============================
+If Task 2.1 determines that Texture creation as a cubemap (VK_IMAGE_VIEW_TYPE_CUBE) and/or
+samplerCube binding via GpuShaderAction::GraphicsResourceSet are NOT yet supported, insert
+the following tasks between 2.1 and 2.2 before writing any shaders.
+
+Task 2.1a — Add cubemap descriptor flag to Texture API
+  Files: src/inc/garnet/rdg/gpu-resource.h  (or wherever Texture::Descriptor is)
+         src/core/rdg/<texture-impl>.cpp
+
+  What:
+    - Add a boolean or enum flag to Texture::Descriptor: e.g. `bool cubemap = false;` or
+      `TextureType type = TEXTURE_2D;` with TEXTURE_CUBE value.
+    - Setting cubemap = true (and arrayLayers = 6) causes the Vulkan backend to create the
+      VkImage with VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT and the VkImageView with
+      VK_IMAGE_VIEW_TYPE_CUBE.
+    - Only add what is strictly needed; do not redesign the entire Texture API.
+
+  Verify:
+    - Build passes.
+    - Unit test: Texture::create with cubemap=true + arrayLayers=6 succeeds (no Vulkan validation
+      errors); returned texture is non-null.
+  Commit: "Assignment Skybox+IBL: add cubemap flag to Texture::Descriptor (Task 2.1a)"
+
+Task 2.1b — Add cubemap loading from 6 face images
+  Files: src/inc/garnet/rdg/gpu-resource.h  (or Texture header)
+         src/core/rdg/<texture-impl>.cpp
+
+  What:
+    - Add a static factory or extend Texture::LoadParameters to accept 6 face image paths
+      (or 6 File streams), ordered: +X, -X, +Y, -Y, +Z, -Z.
+    - Each face is uploaded as a separate array layer of the cubemap VkImage.
+    - If the existing Texture::load already handles VkImageType::IMAGE_TYPE_2D_ARRAY, extend
+      it; otherwise create a minimal Texture::loadCubeFaces() overload.
+
+  Verify:
+    - Build passes.
+    - Unit test: load 6 1×1 PNG (or raw pixel) faces, verify resulting Texture is non-null and
+      has 6 layers and cubemap view type.
+  Commit: "Assignment Skybox+IBL: add cubemap face loading to Texture (Task 2.1b)"
+
+Task 2.1c — Verify samplerCube binding in GpuShaderAction::GraphicsResourceSet
+  Files: src/core/rdg/<gpu-shader-action-impl>.cpp
+
+  What:
+    - In the Vulkan resource-set binding code, confirm that textures bound as array layers = 6
+      with a cube image view type are written to the VkDescriptorSet with
+      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER (same as 2D textures).
+    - If the binding code hard-codes VK_IMAGE_VIEW_TYPE_2D or similar, fix it to use the
+      actual VkImageView from the Texture (which will be CUBE type when the flag is set).
+    - No new public API needed — just make sure the binding path handles cube views.
+
+  Verify:
+    - Unit test from 2.1a/2.1b extended: bind the cubemap texture into a resource set and
+      call draw — no Vulkan validation errors reported.
+  Commit: "Assignment Skybox+IBL: ensure samplerCube binding works in GpuShaderAction (Task 2.1c)"
+
+============================
+(End of conditional Phase 2.1x)
+============================
+
 Task 2.2 — Write skybox GLSL shaders
   Files: src/core/rdg/vk-shaders/skybox.vert
          src/core/rdg/vk-shaders/skybox.frag
@@ -180,18 +242,54 @@ Task 2.2 — Write skybox GLSL shaders
   Verify: shaders compile with glslangValidator or spirv-cross (run compile script in Task 2.3).
   No code-level commit until Task 2.3.
 
-Task 2.3 — Compile script and SPIR-V headers for skybox shaders
-  Files: src/core/rdg/compile_skybox_shaders.py   (new, modeled on compile_pbr_shaders.py)
-         src/core/rdg/CMakeLists.txt               (add compile step)
+Task 2.3 — Create env/bin/compile_glsl_shader.py and migrate all shader compile scripts to use it
+  Files: env/bin/compile_glsl_shader.py                (NEW — general GLSL→SPIR-V→header tool)
+         src/core/rdg/compile_pbr_shaders.py            (DELETE — replaced by general tool)
+         src/sample/rdg/compile_shaders.py              (DELETE — replaced by general tool)
+         src/core/rdg/CMakeLists.txt                    (update PBR + add skybox compile commands)
+         src/sample/rdg/CMakeLists.txt                  (update solid-triangle compile command)
 
-  What:
-    - Create compile_skybox_shaders.py following the exact pattern of compile_pbr_shaders.py.
-    - Add a CMake custom command that runs it at build time and outputs skybox-vert.spv.h /
-      skybox-frag.spv.h into the build dir (same pattern as pbr shaders).
-    - Wire the generated headers into skybox.cpp (Task 2.4).
+  Sub-step 2.3a — Create env/bin/compile_glsl_shader.py
+    Interface:
+      compile_glsl_shader.py <src1.vert> [<src2.frag> ...] [--out-dir DIR] [--var-name NAME] [-I DIR]...
+      - Compiles each GLSL source to SPIR-V and emits a C++ uint32_t header.
+      - --var-name: override the C++ array name for a SINGLE source file; for multi-file batches,
+        auto-derives the name from the filename:
+          solid-triangle.vert → kSolidTriangleVert
+          pbr.vert            → kPbrVert
+          skybox.frag         → kSkyboxFrag
+        (rule: hyphen-words to UpperCamelCase, drop extension, prefix with 'k')
+      - Output header name: <stem>-<ext without dot>.spv.h
+          solid-triangle.vert → solid-triangle-vert.spv.h
+          pbr.frag            → pbr-frag.spv.h
+      - --out-dir: where headers are written (default: same dir as first source file).
+      - -I: include dirs forwarded to glslc (-I flags, repeatable).
+      - Uses same find_glslc() and spv_to_header() logic as the old scripts.
+      - Exits non-zero if any glslc invocation fails.
+    Make it executable (chmod +x).
 
-  Verify: ./build.py d succeeds; CMake generates the .spv.h files.
-  Commit: "Assignment Skybox+IBL: add skybox shaders + compile pipeline (Task 2.2–2.3)"
+  Sub-step 2.3b — Migrate existing scripts
+    - Delete src/core/rdg/compile_pbr_shaders.py (no longer needed).
+    - Delete src/sample/rdg/compile_shaders.py (no longer needed).
+    - Update src/core/rdg/CMakeLists.txt: replace the Python3 call to compile_pbr_shaders.py with:
+        ${Python3_EXECUTABLE} ${GARNET_ROOT}/env/bin/compile_glsl_shader.py
+            ${CMAKE_CURRENT_SOURCE_DIR}/vk-shaders/pbr.vert
+            ${CMAKE_CURRENT_SOURCE_DIR}/vk-shaders/pbr.frag
+            --out-dir "."
+            -I ${CMAKE_CURRENT_SOURCE_DIR}/vk-shaders
+      Update DEPENDS list accordingly.
+    - Update src/sample/rdg/CMakeLists.txt: replace compile_shaders.py call with compile_glsl_shader.py
+      for solid-triangle.vert and solid-triangle.frag.
+    - Add skybox compile command to src/core/rdg/CMakeLists.txt (same pattern, skybox.vert + skybox.frag).
+
+  Sub-step 2.3c — Smoke-test
+    - Manually run: python3 env/bin/compile_glsl_shader.py src/core/rdg/vk-shaders/pbr.vert
+        -I src/core/rdg/vk-shaders --out-dir /tmp/test-spv
+      Verify pbr-vert.spv.h appears with correct variable name.
+    - ./build.py d — all three shader groups (PBR, skybox, solid-triangle) compile successfully.
+
+  Verify: build passes; all existing SPIR-V headers regenerate correctly.
+  Commit: "Assignment Skybox+IBL: add compile_glsl_shader.py, migrate PBR+triangle scripts (Task 2.3)"
 
 Task 2.4 — Implement SkyBox::create and SkyBox::build in skybox.cpp
   Files: src/core/rdg/skybox.cpp   (new file)
@@ -311,6 +409,52 @@ Task 3.3 — Implement IBL specular (split-sum) in pbr.frag
     - Sample renders; with fallback textures: specular ambient is 0 (prefilteredColor = 0) — acceptable.
   Commit: "Assignment Skybox+IBL: add IBL specular split-sum to pbr.frag (Task 3.3)"
 
+Task 3.3a — Create env/bin/gen-ibl-maps.py: generate irradiance map, prefiltered env map, and BRDF LUT from a cubemap
+  Files: env/bin/gen-ibl-maps.py   (NEW)
+
+  What:
+    A self-contained Python script that takes a source environment map (equirectangular HDR or
+    6-face cubemap folder) and produces all three IBL assets needed by the PBR shader:
+
+    Input:
+      gen-ibl-maps.py --input <path-to-hdr-or-cubemap-folder>
+                      --out-dir <media/envmap/bad-salzbrunn-walking-hall/>
+                      [--face-size 128]          # default cubemap output face resolution
+                      [--prefilter-mips 5]       # number of roughness mip levels (default 5)
+
+    Output files written to --out-dir:
+      irradiance/       — 6 PNG face images (32×32 default), one per +X/-X/+Y/-Y/+Z/-Z
+      prefiltered/      — subdirs mip0/ mip1/ ... mipN/, each with 6 PNG face images
+                          mip0 = roughness 0 (mirror), mipN = roughness 1 (fully diffuse)
+      brdf-lut.png      — 256×256 2-channel (RG) image: R=scale, G=bias for split-sum
+
+    Algorithm:
+      - If input is equirectangular (.hdr/.exr/.png): convert to 6-face cube first using
+        standard spherical→cubemap UV mapping.
+      - Irradiance map: for each output texel direction N, integrate the hemisphere using
+        uniform sampling (Monte Carlo or Riemann sum over spherical coords); output is
+        per-face PNG with HDR values clamped to uint8 (use a configurable exposure scale or
+        store as float in EXR if imageio supports it).
+        Preferred: use 16-bit PNG (uint16) or EXR faces to preserve HDR range.
+      - Prefiltered env map: for each mip level k (roughness = k / (mips-1)), importance-sample
+        the GGX NDF using the Van der Corput / Halton low-discrepancy sequence; use the same
+        sample weights as learnopengl.com's IBL specular convolution. Output per-mip 6-face PNGs.
+      - BRDF LUT: for each (NdotV, roughness) texel, integrate the split-sum BRDF using
+        the same importance-sampling scheme; output a 256×256 2-channel image (R=G in grayscale
+        for now; or use a 2-channel format if imageio allows). Store as 16-bit PNG.
+      - Dependencies: numpy, imageio (both available in garnet's Python env or installable via pip).
+        No C++ required — pure Python.
+
+    NOTE: The script output format (face count, naming, bit-depth) must match what
+    Task 3.4 / draw-mesh.cpp loads via Texture::loadCubeFaces(). Keep both in sync.
+
+  Verify:
+    - Run manually on the downloaded HDR from media/envmap/bad-salzbrunn-walking-hall/README.md.
+    - Visually inspect irradiance faces (should be low-frequency, blurry env colors).
+    - Inspect brdf-lut.png (should resemble the well-known split-sum LUT image from learnopengl.com).
+    - Script exits 0 with no exceptions.
+  Commit: "Assignment Skybox+IBL: add env/bin/gen-ibl-maps.py for IBL asset generation (Task 3.3a)"
+
 Task 3.4 — Load precomputed IBL maps and BRDF LUT into draw-mesh.cpp
   Files: src/sample/rdg/draw-mesh.cpp
          media/envmap/ (assets)
@@ -355,14 +499,25 @@ Task 4.2 — Update pipeline.h doc comments for the new interface
 
 --- SUMMARY OF FILES TO TOUCH ---
 
+env/bin/compile_glsl_shader.py                 — NEW: general GLSL→SPIR-V→header tool (Task 2.3a)
+env/bin/gen-ibl-maps.py                        — NEW: IBL asset generator (Task 3.3a)
 src/inc/garnet/rdg/pipeline.h                  — add EnvironmentLightingInformation (Task 1.1)
+                                               — possibly add cubemap flag to Texture (Task 2.1a, conditional)
 src/core/rdg/shared-shader-constants.cpp       — implement env lighting storage + Set 0 ext (Task 1.2)
+src/core/rdg/compile_pbr_shaders.py            — DELETE, replaced by compile_glsl_shader.py (Task 2.3b)
 src/core/rdg/vk-shaders/skybox.vert            — NEW: skybox vertex shader (Task 2.2)
 src/core/rdg/vk-shaders/skybox.frag            — NEW: skybox fragment shader (Task 2.2)
-src/core/rdg/compile_skybox_shaders.py         — NEW: SPIR-V compile script (Task 2.3)
-src/core/rdg/CMakeLists.txt                    — add skybox.cpp + compile step (Task 2.3, 2.4)
+src/core/rdg/CMakeLists.txt                    — update compile commands + add skybox (Task 2.3b, 2.4)
 src/core/rdg/skybox.cpp                        — NEW: SkyBoxVulkan implementation (Task 2.4)
 src/core/rdg/vk-shaders/pbr.frag               — add IBL samplers + diffuse + specular (Task 3.1–3.3)
+src/sample/rdg/compile_shaders.py              — DELETE, replaced by compile_glsl_shader.py (Task 2.3b)
+src/sample/rdg/CMakeLists.txt                  — update solid-triangle compile command (Task 2.3b)
 src/sample/rdg/draw-mesh.cpp                   — create SkyBox, load cubemap, set env lighting (Task 2.5, 2.6, 3.4)
 src/test/ut/rdg/rdg-pbr-assignment.cpp         — extend with env lighting + skybox unit tests (Task 1.2, 2.4)
+                                               — cubemap create/load/bind tests if 2.1x tasks run
 media/envmap/ (assets, not in git)             — cubemap, irradiance, prefiltered, BRDF LUT (Task 2.6, 3.4)
+
+Possibly touched (conditional on Task 2.1 findings):
+  src/inc/garnet/rdg/gpu-resource.h            — Texture::Descriptor cubemap flag (Task 2.1a)
+  src/core/rdg/<texture-impl>.cpp              — cubemap VkImage/VkImageView creation (Task 2.1a/b)
+  src/core/rdg/<gpu-shader-action-impl>.cpp    — samplerCube binding fix (Task 2.1c)
