@@ -39,27 +39,28 @@ ShaderKey ShaderKey::makeCompute(const GpuShaderAction::ShaderBinary & cs) {
 }
 
 // --- RenderTargetKey: hash and conversion helpers ---
-static uint64_t hashBlendState(const RenderTarget::BlendState & b) {
-    uint64_t h = 0;
-    h          = h * 31 + static_cast<uint32_t>(b.colorOp);
-    h          = h * 31 + static_cast<uint32_t>(b.colorSrc);
-    h          = h * 31 + static_cast<uint32_t>(b.colorDst);
-    h          = h * 31 + static_cast<uint32_t>(b.alphaOp);
-    h          = h * 31 + static_cast<uint32_t>(b.alphaSrc);
-    h          = h * 31 + static_cast<uint32_t>(b.alphaDst);
-    return h;
+static void combineBlendState(std::size_t & seed, const RenderTarget::BlendState & b) {
+    GN::combineHash(seed, static_cast<uint32_t>(b.colorOp));
+    GN::combineHash(seed, static_cast<uint32_t>(b.colorSrc));
+    GN::combineHash(seed, static_cast<uint32_t>(b.colorDst));
+    GN::combineHash(seed, static_cast<uint32_t>(b.alphaOp));
+    GN::combineHash(seed, static_cast<uint32_t>(b.alphaSrc));
+    GN::combineHash(seed, static_cast<uint32_t>(b.alphaDst));
 }
-static uint64_t hashDepthState(const RenderTarget::DepthState & d) { return (static_cast<uint64_t>(static_cast<uint32_t>(d.func)) << 1) | (d.write ? 1u : 0u); }
-static uint64_t hashStencilState(const RenderTarget::StencilState & s) {
-    uint64_t h = 0;
-    h          = h * 31 + static_cast<uint32_t>(s.compare);
-    h          = h * 31 + static_cast<uint32_t>(s.pass);
-    h          = h * 31 + static_cast<uint32_t>(s.fail);
-    h          = h * 31 + static_cast<uint32_t>(s.zFail);
-    h          = h * 31 + s.ref;
-    h          = h * 31 + s.readMask;
-    h          = h * 31 + s.writeMask;
-    return h;
+
+static void combineDepthState(std::size_t & seed, const RenderTarget::DepthState & d) {
+    GN::combineHash(seed, static_cast<uint32_t>(d.func));
+    GN::combineHash(seed, d.write);
+}
+
+static void combineStencilState(std::size_t & seed, const RenderTarget::StencilState & s) {
+    GN::combineHash(seed, static_cast<uint32_t>(s.compare));
+    GN::combineHash(seed, static_cast<uint32_t>(s.pass));
+    GN::combineHash(seed, static_cast<uint32_t>(s.fail));
+    GN::combineHash(seed, static_cast<uint32_t>(s.zFail));
+    GN::combineHash(seed, s.ref);
+    GN::combineHash(seed, s.readMask);
+    GN::combineHash(seed, s.writeMask);
 }
 
 /// Resolve effective format: ImageView::format UNKNOWN means use the intrinsic format of the texture or backbuffer.
@@ -80,23 +81,46 @@ static auto getGpuImageViewFormat(const GpuResourceView & view) {
 }
 
 RenderTargetKey RenderTargetKey::make(const RenderTarget & renderTarget) {
-    RenderTargetKey k;
-    k.colorCount    = static_cast<uint8_t>(renderTarget.colors.size());
-    uint64_t stateH = 0;
-    for (size_t i = 0; i < renderTarget.colors.size() && k.colorCount < kMaxColorTargets; ++i) {
+    RenderTargetKey k {};
+    std::size_t     stateH = 0;
+
+    uint8_t n = 0;
+    for (size_t i = 0; i < renderTarget.colors.size() && n < kMaxColorTargets; ++i) {
         const auto & c   = renderTarget.colors[i];
         auto         fmt = getGpuImageViewFormat(c.target);
         if (fmt == gfx::img::PixelFormat::UNKNOWN()) continue;
-        k.colorFormats[k.colorCount++] = static_cast<uint32_t>(pixelFormatToVkFormat(fmt));
-        stateH ^= hashBlendState(c.blendState) + (static_cast<uint64_t>(c.writeMask) << 32) + (i * 0x9e3779b9);
+        k.colorFormats[n] = static_cast<uint32_t>(pixelFormatToVkFormat(fmt));
+        GN::combineHash(stateH, k.colorFormats[n]);
+        combineBlendState(stateH, c.blendState);
+        GN::combineHash(stateH, static_cast<uint32_t>(c.writeMask));
+        GN::combineHash(stateH, i);
+        ++n;
     }
+    k.colorCount = n;
+
     if (renderTarget.depthStencilTarget.artifact) {
         auto depthFmt = getGpuImageViewFormat(renderTarget.depthStencilTarget);
         if (depthFmt != gfx::img::PixelFormat::UNKNOWN()) k.depthFormat = static_cast<uint32_t>(pixelFormatToVkFormat(depthFmt));
     }
-    stateH ^= hashDepthState(renderTarget.depthState) * 31;
-    stateH ^= hashStencilState(renderTarget.stencilState) * 31;
-    k.stateHash = stateH;
+
+    combineDepthState(stateH, renderTarget.depthState);
+    combineStencilState(stateH, renderTarget.stencilState);
+
+    const auto & vp = renderTarget.viewport;
+    GN::combineHash(stateH, vp.x);
+    GN::combineHash(stateH, vp.y);
+    GN::combineHash(stateH, vp.width);
+    GN::combineHash(stateH, vp.height);
+    GN::combineHash(stateH, vp.minDepth);
+    GN::combineHash(stateH, vp.maxDepth);
+
+    const auto & sc = renderTarget.scissorRect;
+    GN::combineHash(stateH, sc.x);
+    GN::combineHash(stateH, sc.y);
+    GN::combineHash(stateH, sc.width);
+    GN::combineHash(stateH, sc.height);
+
+    k.stateHash = static_cast<uint64_t>(stateH);
     return k;
 }
 

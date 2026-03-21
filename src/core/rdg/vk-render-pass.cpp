@@ -165,10 +165,16 @@ vk::ImageView getStencilTargetImageView(const GpuResourceView & depthStencilTarg
     return depthView; // same view for both depth and stencil
 }
 
-bool sameDrawTarget(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
+bool belongToSameRenderPass(const AutoRef<RenderTarget> & a, const AutoRef<RenderTarget> & b) {
     if (a == b) return true;    // same render target pointer.
     if (!a || !b) return false; // one is empty, the other is not.
-    return *a == *b;
+    // Ignore depth/stencil/viewport/scissor state, only check color/depth-stencil attachments and pass-level clear/rect state.
+    // clang-format off
+    return a->colors == b->colors
+        && a->depthStencilTarget == b->depthStencilTarget
+        && a->clearDepth == b->clearDepth
+        && a->clearStencil == b->clearStencil;
+    // clang-format on
 }
 
 constexpr TextureVulkan::ImageState SHADER_READ_STATE {
@@ -211,7 +217,7 @@ Action::ExecutionResult RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo
     GN_ASSERT(renderTarget);
 
     const size_t entryIndex   = mEntries.size();
-    bool         needNewPass  = entryIndex == 0 || !mEntries.back().isDraw() || !sameDrawTarget(mEntries.back().draw, renderTarget);
+    bool         needNewPass  = entryIndex == 0 || !mEntries.back().isDraw() || !belongToSameRenderPass(mEntries.back().draw, renderTarget);
     int32_t      passBeginIdx = needNewPass ? static_cast<int32_t>(entryIndex) : mEntries.back().renderPassBeginIndex;
 
     mEntries.push_back(Entry {});

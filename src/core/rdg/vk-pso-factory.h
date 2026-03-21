@@ -18,14 +18,14 @@ struct ShaderKey {
     static ShaderKey makeCompute(const GpuShaderAction::ShaderBinary & cs);
 };
 
-/// Self-contained key for render target: all non-empty color formats, depth format, and hash of blend/depth/stencil state.
+/// Self-contained key for render target: color formats, depth format, and hash of blend/depth/stencil/viewport/scissor.
 struct RenderTargetKey {
     static constexpr size_t kMaxColorTargets = 8;
 
     uint32_t colorFormats[kMaxColorTargets] = {};
     uint8_t  colorCount                     = 0;
     uint32_t depthFormat                    = 0; ///< vk::Format (0 = eUndefined)
-    uint64_t stateHash                      = 0; ///< hash of blend, depth, stencil state
+    uint64_t stateHash                      = 0; ///< hash of blend, depth, stencil, viewport, scissor (see \c make)
 
     bool operator==(const RenderTargetKey & o) const {
         if (colorCount != o.colorCount || depthFormat != o.depthFormat || stateHash != o.stateHash) return false;

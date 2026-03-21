@@ -760,20 +760,6 @@ struct RenderTarget : public Artifact {
         return *this;
     }
 
-    bool operator==(const RenderTarget & other) const {
-        // clang-format off
-        return colors == other.colors
-            && depthStencilTarget == other.depthStencilTarget
-            && depthState == other.depthState
-            && stencilState == other.stencilState
-            && clearDepth == other.clearDepth
-            && clearStencil == other.clearStencil
-            && viewport == other.viewport
-            && scissorRect == other.scissorRect;
-        // clang-format on
-    }
-    bool operator!=(const RenderTarget & other) const { return !operator==(other); }
-
     struct CreateParameters {
         // tbd
     };

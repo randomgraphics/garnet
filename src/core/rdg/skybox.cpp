@@ -61,15 +61,15 @@ public:
         if (params.sharedShaderConstants) {
             const auto & sscRt = params.sharedShaderConstants->getViewInformation().renderTarget;
             if (sscRt) {
-                auto skyboxRt               = RenderTarget::create("skybox_rt", {});
-                skyboxRt->colors            = sscRt->colors;
-                skyboxRt->clearColor        = sscRt->clearColor;
+                auto skyboxRt                = RenderTarget::create("skybox_rt", {});
+                skyboxRt->colors             = sscRt->colors;
+                skyboxRt->clearColor         = sscRt->clearColor;
                 skyboxRt->depthStencilTarget = sscRt->depthStencilTarget;
-                skyboxRt->stencilState      = sscRt->stencilState;
-                skyboxRt->clearDepth        = sscRt->clearDepth;
-                skyboxRt->clearStencil      = sscRt->clearStencil;
-                skyboxRt->viewport          = sscRt->viewport;
-                skyboxRt->scissorRect       = sscRt->scissorRect;
+                skyboxRt->stencilState       = sscRt->stencilState;
+                skyboxRt->clearDepth         = sscRt->clearDepth;
+                skyboxRt->clearStencil       = sscRt->clearStencil;
+                skyboxRt->viewport           = sscRt->viewport;
+                skyboxRt->scissorRect        = sscRt->scissorRect;
                 skyboxRt->setDepthState({.func = RenderTarget::Compare::LESS_EQUAL, .write = false});
                 drawArgs->renderTarget = std::move(skyboxRt);
             }
