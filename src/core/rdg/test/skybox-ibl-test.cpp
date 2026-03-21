@@ -5,7 +5,7 @@
  *  - Texture::create with faces=6 creates a cube-compatible Vulkan image.
  *  - createDefault1x1CubemapTexture succeeds and reports faces==6.
  *  - SharedShaderConstants: setEnvironmentLightingInformation round-trip.
- *  - After build(), getSet0Resources() has 6 bindings (camera, lighting, 4 env slots).
+ *  - After build(), getSet0Resources() has 7 bindings (camera, lighting, 4 env textures, env UBO).
  *  - SkyBox::create succeeds and build() produces a non-empty SubGraph.
  */
 
@@ -61,9 +61,23 @@ TEST_CASE("SharedShaderConstants: setEnvironmentLightingInformation round-trip",
     ssc->setEnvironmentLightingInformation(env);
     CHECK(ssc->getEnvironmentLightingInformation().skyboxCubemap.get() == cube.get());
     CHECK(ssc->getEnvironmentLightingInformation().irradianceMap == nullptr);
+    CHECK(ssc->getEnvironmentLightingInformation().environmentRadianceScale == 1.0f);
 }
 
-TEST_CASE("SharedShaderConstants: build() provides 6-binding Set 0 after env lighting set", "[rdg][shared-constants][ibl][gpu]") {
+TEST_CASE("SharedShaderConstants: environmentRadianceScale round-trip", "[rdg][shared-constants][ibl][gpu]") {
+    auto gpu = GpuContext::create("gpu_env_scale", {.howToPrintDeviceCaps = gpuVerbosity});
+    if (!gpu) SKIP("No Vulkan GPU context available");
+
+    auto ssc = SharedShaderConstants::create("ssc_env_scale", {.gpu = gpu});
+    REQUIRE(ssc);
+
+    SharedShaderConstants::EnvironmentLightingInformation env;
+    env.environmentRadianceScale = 2.5f;
+    ssc->setEnvironmentLightingInformation(env);
+    CHECK(ssc->getEnvironmentLightingInformation().environmentRadianceScale == 2.5f);
+}
+
+TEST_CASE("SharedShaderConstants: build() provides 7-binding Set 0 after env lighting set", "[rdg][shared-constants][ibl][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
     auto gpu = GpuContext::create("gpu_env2", {.howToPrintDeviceCaps = gpuVerbosity});
@@ -72,11 +86,11 @@ TEST_CASE("SharedShaderConstants: build() provides 6-binding Set 0 after env lig
     auto ssc = SharedShaderConstants::create("ssc_env2", {.gpu = gpu});
     REQUIRE(ssc);
 
-    // Even without calling setEnvironmentLightingInformation, build() must provide 6 bindings
-    // (fallback textures fill slots 2-5).
+    // Even without calling setEnvironmentLightingInformation, build() must provide 7 bindings
+    // (fallback textures fill slots 2-5, env UBO at 6).
     auto sg = ssc->build(*rg);
     REQUIRE(!sg.workflows.empty());
-    CHECK(ssc->getSet0Resources().size() == 6u);
+    CHECK(ssc->getSet0Resources().size() == 7u);
 }
 
 TEST_CASE("SkyBox: create and build produce a non-empty SubGraph", "[rdg][skybox][gpu]") {

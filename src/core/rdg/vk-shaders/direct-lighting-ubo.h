@@ -7,7 +7,7 @@
 // GLSL usage:
 //   #extension GL_GOOGLE_include_directive : require
 //   #include "direct-lighting-ubo.h"
-//   layout(std140, set = 0, binding = 1) uniform DirectLightingBlock { DirectLightingUBO data; } u_lighting;
+//   // Declares u_lighting (set 0, binding 1) in the header.
 //
 // DirectLightData std140 layout (48 bytes per light):
 //   positionOrDir  vec4  offset  0   xyz = world-space position (point/spot) or direction (directional), w = type
@@ -51,6 +51,11 @@ struct DirectLightingUBO {
     float           _pad2;
     DirectLightData lights[MAX_DIRECT_LIGHTS];
 };
+
+#ifndef __cplusplus
+layout(std140, set = 0, binding = 1) uniform DirectLightingBlock { DirectLightingUBO data; }
+u_lighting;
+#endif
 
 #ifdef __cplusplus
     #undef vec4

@@ -7,7 +7,7 @@
 // GLSL usage:
 //   #extension GL_GOOGLE_include_directive : require
 //   #include "global-camera-ubo.h"
-//   layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; } u_camera;
+//   // Declares u_camera (set 0, binding 0) in the header.
 //
 // std140 layout (all offsets in bytes):
 //   viewMatrix       mat4  offset   0  (64 bytes)
@@ -48,6 +48,11 @@ struct GlobalCameraUBO {
     float _pad0;
     float _pad1;
 };
+
+#ifndef __cplusplus
+layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; }
+u_camera;
+#endif
 
 #ifdef __cplusplus
     #undef mat4

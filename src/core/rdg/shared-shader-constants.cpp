@@ -4,6 +4,7 @@
 #include "vk-gpu-context.h"
 #include "vk-shaders/global-camera-ubo.h"
 #include "vk-shaders/direct-lighting-ubo.h"
+#include "vk-shaders/environment-lighting-ubo.h"
 #include "vk-texture.h"
 #include <glm/gtc/matrix_transform.hpp>  // glm::translate, glm::inverse
 #include <glm/gtc/quaternion.hpp>        // glm::mat4_cast
@@ -17,7 +18,7 @@ namespace GN::rdg {
 // SharedShaderConstantsVulkan — uses GpuResourceTable (Set 0 views) + PersistentBuffer.
 // =============================================================================
 //
-// Set 0 layout: binding 0 = GlobalCameraUBO, binding 1 = DirectLightingUBO.
+// Set 0 layout: binding 0 = GlobalCameraUBO, binding 1 = DirectLightingUBO, binding 6 = EnvironmentLightingUBO.
 // Effect builders get Set 0 via getSet0Resources() and assign to draw args' resources[0].
 // draw args' resources[0][0] and resources[0][1]; backend binds via Drawable/DrawPack.
 //
@@ -39,10 +40,11 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
     DirectLightingInformation      mLighting;
     EnvironmentLightingInformation mEnvLighting;
 
-    AutoRef<TransientArena>   mArena;          ///< Arena for per-frame transient UBO staging
-    AutoRef<GpuCopy>          mCopyAction;     ///< Stateless buffer-to-buffer copy (reused for camera + lighting)
-    AutoRef<PersistentBuffer> mCameraBuffer;   ///< Set 0 binding 0: GlobalCameraUBO
-    AutoRef<PersistentBuffer> mLightingBuffer; ///< Set 0 binding 1: DirectLightingUBO
+    AutoRef<TransientArena>   mArena;             ///< Arena for per-frame transient UBO staging
+    AutoRef<GpuCopy>          mCopyAction;        ///< Stateless buffer-to-buffer copy (reused for camera + lighting)
+    AutoRef<PersistentBuffer> mCameraBuffer;      ///< Set 0 binding 0: GlobalCameraUBO
+    AutoRef<PersistentBuffer> mLightingBuffer;    ///< Set 0 binding 1: DirectLightingUBO
+    AutoRef<PersistentBuffer> mEnvLightingBuffer; ///< Set 0 binding 6: EnvironmentLightingUBO
 
     // Fallback 1×1 env textures used when the caller has not provided real env maps.
     AutoRef<Texture> mFallbackCubemap; ///< 1×1 black cubemap (bindings 2, 3, 4 fallback)
@@ -50,8 +52,9 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
 
     Set0ResourceSet mLastSet0; ///< Last built Set 0 resource set (for getSet0Resources()).
 
-    GlobalCameraUBO   mPendingCamera   = {};
-    DirectLightingUBO mPendingLighting = {};
+    GlobalCameraUBO        mPendingCamera   = {};
+    DirectLightingUBO      mPendingLighting = {};
+    EnvironmentLightingUBO mPendingEnv      = {};
 
     void initGpuResources() {
         mArena = TransientArena::create(StrA::format("{}.arena", name), TransientArena::CreateParameters {.context = mGpu});
@@ -79,6 +82,13 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
         mLightingBuffer = PersistentBuffer::create(StrA::format("{}.lighting_ubo", name), bufParams);
         if (!mLightingBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting UBO");
+                return;
+            }
+
+        bufParams.size     = sizeof(EnvironmentLightingUBO);
+        mEnvLightingBuffer = PersistentBuffer::create(StrA::format("{}.environment_lighting_ubo", name), bufParams);
+        if (!mEnvLightingBuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create environment lighting UBO");
                 return;
             }
 
@@ -148,6 +158,11 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
         }
     }
 
+    void packEnvironmentLightingUbo() {
+        mPendingEnv                          = {};
+        mPendingEnv.environmentRadianceScale = mEnvLighting.environmentRadianceScale;
+    }
+
 public:
     SharedShaderConstantsVulkan(const StrA & name, AutoRef<GpuContext> gpu): SharedShaderConstants(TYPE_INFO(), name), mGpu(std::move(gpu)) {
         initGpuResources();
@@ -179,12 +194,15 @@ public:
 
     SubGraph build(RenderGraph & rg) override {
         SubGraph sg(rg, StrA::format("{}.upload", name));
-        if (!mArena || !mCopyAction || !mCameraBuffer || !mLightingBuffer) return sg;
+        if (!mArena || !mCopyAction || !mCameraBuffer || !mLightingBuffer || !mEnvLightingBuffer) return sg;
+
+        packEnvironmentLightingUbo();
 
         // Allocate transient staging buffers and write CPU snapshot (no setContent; use arena + copy).
         AutoRef<TransientBuffer> tbCamera   = mArena->allocate(sizeof(GlobalCameraUBO), "camera");
         AutoRef<TransientBuffer> tbLighting = mArena->allocate(sizeof(DirectLightingUBO), "lighting");
-        if (!tbCamera || !tbLighting) GN_UNLIKELY {
+        AutoRef<TransientBuffer> tbEnv      = mArena->allocate(sizeof(EnvironmentLightingUBO), "environment_lighting");
+        if (!tbCamera || !tbLighting || !tbEnv) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: transient allocate failed");
                 return sg;
             }
@@ -204,6 +222,14 @@ public:
                 }
             memcpy(m.data(), &mPendingLighting, sizeof(mPendingLighting));
         }
+        {
+            auto m = tbEnv->map();
+            if (!m.data() || m.size() < sizeof(EnvironmentLightingUBO)) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: environment lighting map failed");
+                    return sg;
+                }
+            memcpy(m.data(), &mPendingEnv, sizeof(mPendingEnv));
+        }
 
         // Copy transient → persistent; workflow keeps transient refs alive until submit completes.
         auto wf         = rg.createWorkflow(sg.name);
@@ -215,17 +241,23 @@ public:
         lightArgs->src  = tbLighting;
         lightArgs->dst  = mLightingBuffer;
         lightArgs->size = sizeof(DirectLightingUBO);
+        auto envArgs    = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
+        envArgs->src    = tbEnv;
+        envArgs->dst    = mEnvLightingBuffer;
+        envArgs->size   = sizeof(EnvironmentLightingUBO);
         wf.appendTask("camera", mCopyAction, std::move(camArgs));
         wf.appendTask("lighting", mCopyAction, std::move(lightArgs));
+        wf.appendTask("environment_lighting", mCopyAction, std::move(envArgs));
         sg.workflows.append(std::move(wf));
 
-        // Build Set 0 resource set for effects (bindings 0..5).
+        // Build Set 0 resource set for effects (bindings 0–6).
         // Bindings 0-1: UBOs (camera + lighting).
         // Bindings 2-4: env cubemaps (skybox, irradiance, prefiltered); fallback to 1×1 black cube.
         // Binding  5:   BRDF LUT 2D; fallback to 1×1 white.
+        // Binding  6:   EnvironmentLightingUBO (radiance scale for env maps).
         auto envTex = [&](const AutoRef<Texture> & t) -> AutoRef<Texture> { return t ? t : mFallbackCubemap; };
 
-        mLastSet0.resize(6);
+        mLastSet0.resize(7);
         mLastSet0[0].resize(1);
         if (mCameraBuffer)
             mLastSet0[0][0] = GpuResourceView {}
@@ -247,6 +279,13 @@ public:
         }
         mLastSet0[5].resize(1);
         mLastSet0[5][0] = GpuResourceView {}.setArtifact(mEnvLighting.brdfLut ? mEnvLighting.brdfLut : mFallbackBrdfLut);
+        mLastSet0[6].resize(1);
+        if (mEnvLightingBuffer)
+            mLastSet0[6][0] = GpuResourceView {}
+                                  .setArtifact(mEnvLightingBuffer)
+                                  .setBufferViewType(GpuResourceView::BufferView::Type::UNIFORM)
+                                  .setBufferViewOffset(0)
+                                  .setBufferViewSize(sizeof(EnvironmentLightingUBO));
 
         return sg;
     }

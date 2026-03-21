@@ -6,8 +6,6 @@
 /// Push constant: model matrix only (64 bytes).
 
 #include "global-camera-ubo.h"
-layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; }
-u_camera;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;

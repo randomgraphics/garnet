@@ -170,6 +170,11 @@ struct SharedShaderConstants : public GpuResource {
         AutoRef<Texture> irradianceMap;     ///< pre-convolved diffuse-IBL cubemap (hemisphere integral)
         AutoRef<Texture> prefilteredEnvMap; ///< mip-mapped specular-IBL cubemap (roughness → mip level)
         AutoRef<Texture> brdfLut;           ///< split-sum BRDF LUT: NdotV×roughness → (scale, bias)
+
+        /// Linear radiance multiplier [dimensionless] applied in shaders to sampled HDR environment
+        /// (skybox cubemap, irradiance map, prefiltered specular map). \c 1.0 uses textures as stored;
+        /// larger values increase IBL/skybox strength without rebaking maps. Not applied to the BRDF LUT.
+        float environmentRadianceScale = 1.f;
     };
 
     virtual void setFrameInformation(const FrameInformation &)                             = 0;
@@ -343,7 +348,8 @@ protected:
 ///
 /// Uses a 3-vertex fullscreen triangle (no VBO). The vertex shader reconstructs a world-space
 /// ray direction per pixel via inverse-projection × inverse-view-rotation, then the fragment
-/// shader samples \c samplerCube at Set 0 binding 2 (skyboxCubemap from SharedShaderConstants).
+/// shader samples \c samplerCube at Set 0 binding 2 and applies \c environmentRadianceScale from binding 6
+/// (see \c environment-lighting-common.h in \c vk-shaders).
 /// Depth is pinned to 1.0 (gl_Position.z = gl_Position.w) so skybox always renders behind
 /// all opaque geometry when executed first.
 struct SkyBox : public GpuResource {

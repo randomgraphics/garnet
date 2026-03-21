@@ -2,8 +2,6 @@
 #extension GL_GOOGLE_include_directive : require
 
 #include "global-camera-ubo.h"
-layout(std140, set = 0, binding = 0) uniform GlobalCameraBlock { GlobalCameraUBO data; }
-u_camera;
 
 layout(location = 0) out vec3 v_dir;
 
