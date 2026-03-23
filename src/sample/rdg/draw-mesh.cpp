@@ -142,7 +142,7 @@ int main(int, const char **) {
             env.prefilteredEnvMap = prefilteredEnvMap;
             env.brdfLut           = brdfLut;
             // Linear radiance multiplier [dimensionless] on HDR env samples; tune without rebaking DDS.
-            env.environmentRadianceScale = 5.0f;
+            env.environmentRadianceScale = 5000.0f;
             sharedConstants->setEnvironmentLightingInformation(env);
         }
     }

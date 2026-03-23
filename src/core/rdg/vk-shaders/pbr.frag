@@ -137,18 +137,6 @@ void main() {
         Lo += baseColor * 0.03;
     }
 
-    // Exposure: scale cd/m² into a range where Reinhard's knee is useful.
-    // Without this, Lo ≈ 3000 cd/m² would give Lo/(Lo+1) ≈ 1 (blown-out white).
-    // exposure ≈ 1/477 so that a white diffuse surface at NdotL=0.5 maps to mid-gray.
-    const float exposure = 0.002;
-    Lo *= exposure;
-
-    // Reinhard tonemapping: maps [0, ∞) → [0, 1).
-    Lo = Lo / (Lo + vec3(1.0));
-
-    // Gamma correction: convert linear light to sRGB (γ ≈ 2.2).
-    // Skip if the render target has a _SRGB format (hardware does it automatically).
-    Lo = pow(Lo, vec3(1.0 / 2.2));
-
-    outColor = vec4(Lo, 1.0);
+    // Tonemap to sRGB
+    outColor = vec4(gn_tonemap(Lo), 1.0);
 }
