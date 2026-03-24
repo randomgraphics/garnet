@@ -226,6 +226,7 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
             sc.pixels                 = image.at(pc);
             mImage->setContent(sc);
         }
+    trackImageState(0, mDescriptor.levels, 0, mDescriptor.faces, TextureState::ImageState {.layout = vk::ImageLayout::eTransferDstOptimal});
     return true;
 }
 
