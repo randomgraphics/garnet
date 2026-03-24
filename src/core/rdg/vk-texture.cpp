@@ -199,6 +199,8 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
 
+    rapid_vulkan::setVkHandleName(vkCtx->globalInfo().device, mImage->handle(), params.filename.c_str());
+
     mState = TextureState(mDescriptor.levels, mDescriptor.faces);
 
     rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
