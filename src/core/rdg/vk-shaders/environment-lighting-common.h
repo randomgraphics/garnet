@@ -27,8 +27,7 @@ layout(set = 0, binding = 5) uniform sampler2D u_brdfLut;
 float gn_environmentRadianceScale() { return u_environmentLighting.data.environmentRadianceScale; }
 
 // Apply environment strength to linear RGB radiance (or irradiance map sample proportional to radiance).
-vec3 gn_scaleEnvironmentRadiance(vec3 sRGBRadiance) {
-    vec3 linearRadiance = pow(sRGBRadiance, vec3(2.2));
+vec3 gn_scaleEnvironmentRadiance(vec3 linearRadiance) {
     return linearRadiance * gn_environmentRadianceScale();
 }
 
