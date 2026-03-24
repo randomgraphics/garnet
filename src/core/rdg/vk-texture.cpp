@@ -87,6 +87,7 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     auto * vkCtx = static_cast<GpuContextVulkan *>(params.context.get());
     mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
+    rapid_vulkan::setVkHandleName(vkCtx->globalInfo().device, mImage->handle(), name.c_str());
 
     mState = TextureState(mDescriptor.levels, mDescriptor.faces);
     return true;
