@@ -50,14 +50,15 @@ vec3 gn_samplePrefilteredEnvRadiance(vec3 reflectionDir, float lod) {
 vec2 gn_sampleBrdfLut(vec2 ndotVRoughness) { return texture(u_brdfLut, ndotVRoughness).rg; }
 
 
-// vec3 gn_linearToSRGB(vec3 lrgb) {
-//     // Standard accurate conversion
-//     return mix(
-//         12.92 * lrgb,
-//         1.055 * pow(lrgb, vec3(1.0 / 2.4)) - 0.055,
-//         step(0.0031308, lrgb)
-//     );
-// }
+vec3 gn_linearToSRGB(vec3 lrgb) {
+    // // Standard accurate conversion
+    // return mix(
+    //     12.92 * lrgb,
+    //     1.055 * pow(lrgb, vec3(1.0 / 2.4)) - 0.055,
+    //     step(0.0031308, lrgb)
+    // );
+    return pow(lrgb, vec3(1.0 /2.2));
+}
 
 // A simple tonemapping function that transforms radiance in nit to color in sRGB.
 vec3 gn_tonemap(vec3 radiance) {
@@ -69,6 +70,8 @@ vec3 gn_tonemap(vec3 radiance) {
 
     // Reinhard tonemapping: maps [0, ∞) → [0, 1).
     linearColor = linearColor / (linearColor + vec3(1.0));
+
+    // TODO: do sRGB conversion depending on if the render target is sRGB or not
 
     // done
     return linearColor;

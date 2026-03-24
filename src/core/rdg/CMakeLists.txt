@@ -9,6 +9,7 @@ if(VULKAN_FOUND)
     set(_skybox_vert_h  ${CMAKE_CURRENT_BINARY_DIR}/skybox-vert.spv.h)
     set(_skybox_frag_h  ${CMAKE_CURRENT_BINARY_DIR}/skybox-frag.spv.h)
 
+    file(GLOB _shader_headers "${_shader_dir}/*.h")
     add_custom_command(
         OUTPUT "${_pbr_vert_h}" "${_pbr_frag_h}"
         COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
@@ -17,6 +18,7 @@ if(VULKAN_FOUND)
         DEPENDS ${_compile_tool}
                 ${_shader_dir}/pbr.vert
                 ${_shader_dir}/pbr.frag
+                ${_shader_headers}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling PBR GLSL to SPIR-V headers"
     )
@@ -29,6 +31,7 @@ if(VULKAN_FOUND)
         DEPENDS ${_compile_tool}
                 ${_shader_dir}/skybox.vert
                 ${_shader_dir}/skybox.frag
+                ${_shader_headers}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Skybox GLSL to SPIR-V headers"
     )
