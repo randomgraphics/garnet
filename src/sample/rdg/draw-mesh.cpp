@@ -97,9 +97,14 @@ int main(int, const char **) {
     if (!backbuffer) return -1;
     const auto & bbDesc = backbuffer->descriptor();
 
-    auto depthTexture = Texture::create("depth_texture", Texture::CreateParameters {.context    = gpuContext,
-                                                                                    .descriptor = Texture::Descriptor {}.setDimensions(1280, 720).setFormat(
-                                                                                        gfx::img::PixelFormat::RG_24_UNORM_8_UINT())});
+    gfx::img::PixelFormat depthFormat = gpuContext->caps().defaultDepthFormat;
+    if (depthFormat == gfx::img::PixelFormat::UNKNOWN()) {
+        GN_WARN(sLogger)("GpuContext caps.defaultDepthFormat is UNKNOWN; using D24_UNORM_S8_UINT pixel format for depth texture");
+        depthFormat = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
+    }
+    auto depthTexture =
+        Texture::create("depth_texture", Texture::CreateParameters {.context    = gpuContext,
+                                                                    .descriptor = Texture::Descriptor {}.setDimensions(1280, 720).setFormat(depthFormat)});
 
     auto renderTarget = RenderTarget::create("render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;

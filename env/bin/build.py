@@ -126,6 +126,33 @@ def cmake_config(args, build_dir, build_type):
             config += f" -DCMAKE_C_COMPILER=clang{clang_version} -DCMAKE_CXX_COMPILER=clang++{clang_version}"
     cmake(build_dir, config)
 
+def print_compiler_info():
+    import os, sys, subprocess
+    print("======================== Compiler info =========================")
+    print("sys.executable =", sys.executable)
+    print("PATH =", os.environ.get("PATH"))
+    print("SDKROOT =", os.environ.get("SDKROOT"))
+    print("CPATH =", os.environ.get("CPATH"))
+    print("CPLUS_INCLUDE_PATH =", os.environ.get("CPLUS_INCLUDE_PATH"))
+    print("CPPFLAGS =", os.environ.get("CPPFLAGS"))
+    print("================================================================")
+
+def build_all(args, build_dir, build_type):
+    # on MacOS, we sometimes need to explicitly set CPATH=/usr/local/include for CMake to find Vulkan headers.
+    # This depends on which version of python is used and if MacOS SDK is detected and used or not.
+    # To make things more deterministic, we explicitly set CPATH=/usr/local/include here.
+    if "Darwin" == platform.system():
+        os.environ["CPATH"] = "/usr/local/include"
+
+    if not args.skip_config:
+        cmake_config(args, build_dir, build_type)
+    if not args.config_only:
+        jobs = ["-j8"] # limit to 8 cores.
+        cmake(build_dir, ["--build", "."] + jobs + ["--config", build_type] + args.extra)
+        # if args.install_destination_folder:
+        #     inst_dir = str(pathlib.Path(args.install_destination_folder).absolute())
+        #     cmake(build_dir, ["--install", ".", "--config", build_type, "--prefix", inst_dir] + args.extra)
+
 # ==========
 # main
 # ==========
@@ -152,6 +179,7 @@ sdk_root_dir = utils.get_root_folder()
 # get cmake build variant and build folder
 build_type, build_dir, android_abi = get_cmake_build_info(args)
 
+# Check if the build type is None. If it is, then we need to clean the build directory.
 if build_type is None:
     if os.name == "nt":
         os.system('taskkill /f /im java.exe 2>nul')
@@ -163,11 +191,6 @@ if build_type is None:
         print(f"rm {x}")
         shutil.rmtree(x)
 else:
-    if not args.skip_config:
-        cmake_config(args, build_dir, build_type)
-    if not args.config_only:
-        jobs = ["-j8"] # limit to 8 cores.
-        cmake(build_dir, ["--build", "."] + jobs + ["--config", build_type] + args.extra)
-        # if args.install_destination_folder:
-        #     inst_dir = str(pathlib.Path(args.install_destination_folder).absolute())
-        #     cmake(build_dir, ["--install", ".", "--config", build_type, "--prefix", inst_dir] + args.extra)
+    # do the actual build here.
+    print_compiler_info()
+    build_all(args, build_dir, build_type)

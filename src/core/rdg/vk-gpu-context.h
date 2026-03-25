@@ -75,6 +75,11 @@ public:
         GN_ASSERT(mPsoFactory);
         return *mPsoFactory;
     }
+
+    GpuContext::Caps caps() const override { return mCaps; }
+
+private:
+    GpuContext::Caps mCaps {};
 };
 
 /// Create a Vulkan-backed GpuContext. Called from GpuContext::create() when api is "vulkan".

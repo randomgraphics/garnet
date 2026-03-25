@@ -37,8 +37,15 @@ struct GpuContext : public Artifact {
         Verbosity howToPrintDeviceCaps = Verbosity::BRIEF;
     };
 
+    struct Caps {
+        gfx::img::PixelFormat defaultDepthFormat = gfx::img::PixelFormat::UNKNOWN();
+    };
+
     /// Create a new instance of GpuContext.
     static GN_API AutoRef<GpuContext> create(const StrA & name, const CreateParameters & params);
+
+    /// Query commonly used GPU device capabilities.
+    virtual Caps caps() const = 0;
 
     /// Vulkan instance handle (VkInstance cast to intptr_t) for use with Window::getVulkanSurfaceHandle.
     /// Returns 0 if this context is not Vulkan.

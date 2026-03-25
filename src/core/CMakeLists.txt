@@ -21,7 +21,6 @@ configure_file(../inc/garnet/base/features.h.in ../inc/garnet/base/features.h)
 set(BUILD_HEADER_INC ${CMAKE_CURRENT_BINARY_DIR}/../inc/garnet)
 
 # print configuration summary
-# print summary
 GN_print_status("CMAKE_MAKE_PROGRAM         = ${CMAKE_MAKE_PROGRAM}")
 GN_print_status("CMAKE_BUILD_TYPE           = ${CMAKE_BUILD_TYPE}")
 GN_print_status("CMAKE_SIZEOF_VOID_P        = ${CMAKE_SIZEOF_VOID_P}")
@@ -34,6 +33,24 @@ GN_print_status("GN_BUILD_HAS_D3D11         = ${GN_BUILD_HAS_D3D11}")
 GN_print_status("GN_BUILD_HAS_D3D11_1       = ${GN_BUILD_HAS_D3D11_1}")
 GN_print_status("GN_BUILD_HAS_D3D12         = ${GN_BUILD_HAS_D3D12}")
 GN_print_status("GN_BUILD_HAS_VULKAN        = ${GN_BUILD_HAS_VULKAN}")
+if (VULKAN_FOUND)
+    GN_print_status("Vulkan_INCLUDE_DIRS        = ${Vulkan_INCLUDE_DIRS}")
+    GN_print_status("Vulkan_LIBRARIES           = ${Vulkan_LIBRARIES}")
+endif()
+
+# uncomment to print compiler info. helpful to diagnose build issues.
+# GN_print_status("\n======================== Compiler info =========================")
+# GN_print_status("C++ compiler: ${CMAKE_CXX_COMPILER}")
+# GN_print_status("C++ compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+# GN_print_status("C++ compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
+# execute_process(
+#     COMMAND ${CMAKE_CXX_COMPILER} -v -E -x c++ /dev/null
+#     OUTPUT_VARIABLE COMPILER_STDOUT
+#     ERROR_VARIABLE COMPILER_STDERR
+# )
+# GN_print_status("Compiler stdout: ${COMPILER_STDOUT}")
+# GN_print_status("Compiler stderr: ${COMPILER_STDERR}")
+# GN_print_status("================================================================\n")
 
 # ====================
 # Collect source files
