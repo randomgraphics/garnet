@@ -156,8 +156,11 @@ gfx::img::Image TextureVulkan::readback() const {
             return gfx::img::Image();
         }
     rapid_vulkan::Image::ReadContentParameters readParams;
-    readParams.setQueue(*gq);
-    auto content = mImage->readContent(readParams);
+    auto                                       content = mImage->readContent(readParams);
+
+    // readContent() method will transition the image to eTransferSrcOptimal layout.
+    mState.set({}, TextureState::ImageState {.layout = vk::ImageLayout::eTransferSrcOptimal}, TextureState::ImageStateTransitionFlags::DEFAULT(), name);
+
     return contentToImage(content);
 }
 

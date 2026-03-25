@@ -118,7 +118,7 @@ private:
     AutoRef<GpuContext>                    mGpuContext;
     Texture::Descriptor                    mDescriptor;
     rapid_vulkan::Ref<rapid_vulkan::Image> mImage;
-    TextureState                           mState;
+    mutable TextureState                   mState;
 };
 
 // /// Helper class to iterate over subresources of a texture, initialized from a Texture::Descriptor,
