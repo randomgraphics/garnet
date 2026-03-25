@@ -258,7 +258,7 @@ public:
                 return FAILED;
             }
 
-        cb.commandBuffer().render(drawPack);
+        cb.rapid().render(drawPack);
 
         // done
         return PASSED;

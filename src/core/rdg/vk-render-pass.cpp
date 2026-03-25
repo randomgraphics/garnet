@@ -80,7 +80,7 @@ static constexpr TextureVulkan::ImageState DEPTH_STENCIL_ATTACHMENT_STATE {
 ///    barrier->i for that subresource using prev/curr from getTextureState / getBackbufferState.
 /// 4. Create a 2D color VkImageView for the same mip/face and return mip-scaled extent for renderArea clamping.
 std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuResourceView & color, size_t stage, rapid_vulkan::Barrier * barrier,
-                                                               CommandBufferManagerVulkan::CommandBuffer & rdgCb) {
+                                                               CommandBufferManagerVulkan::CommandProxy & rdgCb) {
     // Underlying VkImage + extent at mip 0 for this view (texture cubemap/array face or swapchain image).
     auto [image, baseExtent] = getColorTargetImage(color, stage);
     if (!image) GN_UNLIKELY return {nullptr, {0, 0}};
@@ -372,7 +372,7 @@ Action::ExecutionResult RenderPassManagerVulkan::registerDrawBufferTransitions(T
     return Action::PASSED;
 }
 
-auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandBuffer * cb) -> RenderPass {
+auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandProxy * cb) -> RenderPass {
     if (mCurrentExecuteIndex >= mEntries.size()) GN_UNLIKELY {
             GN_ERROR(sLogger)("{} - execute index {} out of range (entries size {})", taskInfo, mCurrentExecuteIndex, mEntries.size());
             return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
@@ -393,7 +393,7 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
         }
 
     vk::CommandBuffer vkCB;
-    if (cb && *cb) vkCB = cb->commandBuffer().handle();
+    if (cb && *cb) vkCB = cb->rapid().handle();
 
     // Present-only bookkeeping; never touches Vulkan or beginRenderPass (cb may be null).
     if (entry.isPresent()) { return {taskInfo, Action::ExecutionResult::PASSED, vk::CommandBuffer {}, nullptr}; }
@@ -422,11 +422,11 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
     return {taskInfo, Action::ExecutionResult::PASSED, needToEnd ? vkCB : vk::CommandBuffer {}, drawTarget};
 }
 
-bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, CommandBufferManagerVulkan::CommandBuffer & rdgCommandBuffer,
+bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, CommandBufferManagerVulkan::CommandProxy & rdgCommandBuffer,
                                               const Entry * drawResourceTransitions) {
     GN_VERBOSE(sLogger)("begin render pass for render target: {}.", renderTarget.name);
 
-    vk::CommandBuffer vkCommandBuffer = rdgCommandBuffer.commandBuffer().handle();
+    vk::CommandBuffer vkCommandBuffer = rdgCommandBuffer.rapid().handle();
 
     // Emit barriers for all draw resources registered in prepare pass (textures -> shader read, buffers -> shader read / vertex input).
     if (drawResourceTransitions && (!drawResourceTransitions->textureTransitions.empty() || !drawResourceTransitions->bufferTransitions.empty())) {

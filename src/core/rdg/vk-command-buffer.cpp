@@ -61,12 +61,12 @@ Action::ExecutionResult CommandBufferManagerVulkan::prepare(TaskInfo & taskInfo,
         }
 
     GN_ASSERT(mEntries.find(taskInfo.index) == mEntries.end());
-    mEntries[taskInfo.index] = Entry {type, taskInfo.index, queue};
+    mEntries[taskInfo.index] = Entry {type, taskInfo.index, queue, {}};
 
     return Action::PASSED;
 };
 
-CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(TaskInfo & taskInfo) {
+CommandBufferManagerVulkan::CommandProxy CommandBufferManagerVulkan::execute(TaskInfo & taskInfo) {
     auto iter = mEntries.find(taskInfo.index);
     if (iter == mEntries.end()) GN_UNLIKELY {
             GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: task index {} not found (mEntries.size()={})", taskInfo.index, mEntries.size());
@@ -76,7 +76,8 @@ CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(Ta
 
     if (iter == mEntries.begin()) {
         // this is the first task that needs command buffer.
-        e.commandBuffer = e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary);
+        e.commandBuffer = std::make_shared<CommandBuffer>(
+            e.queue, e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary));
         if (!e.commandBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: queue->begin() returned empty for task {}", taskInfo.index);
                 return {};
@@ -87,7 +88,8 @@ CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(Ta
         Entry & prev     = prevIter->second;
         if (prev.type != e.type) {
             // the type has changed. need to start a new command buffer.
-            e.commandBuffer = e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary);
+            e.commandBuffer = std::make_shared<CommandBuffer>(
+                e.queue, e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary));
             if (!e.commandBuffer) GN_UNLIKELY {
                     GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: queue->begin() returned empty for task {} (type change)", taskInfo.index);
                     return {};
@@ -102,50 +104,51 @@ CommandBufferManagerVulkan::CommandBuffer CommandBufferManagerVulkan::execute(Ta
     bool needToSubmit = (iter == std::prev(mEntries.end())) || (iter->second.type != std::next(iter)->second.type);
 
     // done
-    return CommandBuffer(*this, taskInfo, std::move(e.commandBuffer), needToSubmit ? e.queue.get() : nullptr);
+    GN_ASSERT(e.commandBuffer);
+    return CommandProxy(*this, taskInfo, e.commandBuffer.get(), needToSubmit);
 }
 
-void CommandBufferManagerVulkan::submit(CommandBuffer & commandBuffer) {
-    GN_ASSERT(commandBuffer.mManager == this && commandBuffer.mTaskInfo && commandBuffer.mCommandBuffer && commandBuffer.mQueue);
-    GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", *commandBuffer.mTaskInfo);
-    for (auto & [tex, state] : commandBuffer.mTextureStates) {
+void CommandBufferManagerVulkan::submit(CommandProxy & proxy) {
+    if (proxy.mManager != this || !proxy.mTaskInfo) GN_UNLIKELY {
+            GN_ERROR(sLogger)("CommandBufferManagerVulkan::submit: invalid proxy. igored.");
+            return;
+        }
+    if (!proxy.mCommandBuffer) GN_UNLIKELY return; // already submitted. silently ignore.
+    GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", *proxy.mTaskInfo);
+    auto cb = proxy.mCommandBuffer.get();
+    for (auto & [tex, state] : cb->textureStates) {
         if (tex) tex->state().assignFrom(state, tex->name);
     }
-    for (auto & [bb, imageMap] : commandBuffer.mBackbufferStates) {
+    for (auto & [bb, imageMap] : cb->backbufferStates) {
         if (bb)
             for (auto & [image, transition] : imageMap) bb->assignFrom(image, transition);
     }
-    for (auto & [buf, transition] : commandBuffer.mBufferStates) {
+    for (auto & [buf, transition] : cb->bufferStates) {
         if (buf) assignBufferState(buf, transition);
     }
-    auto   submissionID = commandBuffer.mQueue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {commandBuffer.mCommandBuffer}});
-    auto   q            = commandBuffer.mQueue;
-    auto & ids          = mSubmissionIDs[q];
+    auto   submissionID = cb->queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb->commandBuffer}});
+    auto & ids          = mSubmissionIDs[cb->queue.get()];
     ids.append(submissionID);
-    // // Distribute GPU completion token to all upload actions registered this submission.
-    // // This lets each upload slot know which GPU submission is currently reading its data,
-    // // so waitUntilReady() can block only when the slot is actually in flight.
-    // auto sc = commandBuffer.mTaskInfo->submission.getSumissionContext<SubmissionContextVulkan>();
-    // if (sc) {
-    //     for (size_t i = 0; i < sc->activeUploads.size(); ++i) { sc->activeUploads[i]->notifyCompletion(submissionID); }
-    // }
+
+    // clear the command buffer pointer to avoid double submisson.
+    proxy.mCommandBuffer = nullptr;
 }
 
 bool CommandBufferManagerVulkan::CommandBuffer::transitionTexture(TextureVulkan * tex, const GpuResourceView::SubresourceRange & range,
                                                                   const TextureState::ImageState & newState, TextureState::ImageStateTransitionFlags flags) {
     if (!tex) return false;
-    auto it = mTextureStates.find(tex);
-    if (it == mTextureStates.end()) {
-        auto insertIt = mTextureStates.emplace(tex, tex->state());
-        it = insertIt.first;
+    auto it = textureStates.find(tex);
+    if (it == textureStates.end()) {
+        auto insertIt = textureStates.emplace(tex, tex->state());
+        it            = insertIt.first;
     }
     return it->second.set(range, newState, flags, tex->name);
 }
 
 const TextureState::ImageStateTransition * CommandBufferManagerVulkan::CommandBuffer::getTextureState(TextureVulkan * tex, uint32_t mip,
                                                                                                       uint32_t arrayLayer) const {
-    auto it = mTextureStates.find(tex);
-    if (it == mTextureStates.end()) return nullptr;
+    auto it = textureStates.find(tex);
+    if (it == textureStates.end()) return nullptr;
     return it->second.get(mip, arrayLayer);
 }
 
@@ -154,7 +157,7 @@ bool CommandBufferManagerVulkan::CommandBuffer::transitionBackbuffer(BackbufferV
     if (!bb) return false;
     const rapid_vulkan::Image * image = bb->backBufferImage();
     if (!image) return false;
-    auto & perBb = mBackbufferStates[bb];
+    auto & perBb = backbufferStates[bb];
     auto   it    = perBb.find(image);
     if (it == perBb.end()) it = perBb.emplace(image, bb->getImageState()).first;
     bool changed = (it->second.curr != newState);
@@ -166,8 +169,8 @@ const TextureState::ImageStateTransition * CommandBufferManagerVulkan::CommandBu
     if (!bb) return nullptr;
     const rapid_vulkan::Image * image = bb->backBufferImage();
     if (!image) return nullptr;
-    auto it = mBackbufferStates.find(bb);
-    if (it == mBackbufferStates.end()) return nullptr;
+    auto it = backbufferStates.find(bb);
+    if (it == backbufferStates.end()) return nullptr;
     auto it2 = it->second.find(image);
     if (it2 == it->second.end()) return nullptr;
     return &it2->second;
@@ -178,15 +181,15 @@ bool CommandBufferManagerVulkan::CommandBuffer::transitionBuffer(Buffer * buffer
     if (!buffer) return false;
     BufferStateTransition * resourceState = GN::rdg::getBufferState(buffer);
     if (!resourceState) return false;
-    auto it = mBufferStates.find(buffer);
-    if (it == mBufferStates.end()) it = mBufferStates.emplace(buffer, *resourceState).first;
+    auto it = bufferStates.find(buffer);
+    if (it == bufferStates.end()) it = bufferStates.emplace(buffer, *resourceState).first;
     return it->second.transitTo(newAccess, newStage, buffer->name);
 }
 
 const BufferStateTransition * CommandBufferManagerVulkan::CommandBuffer::getBufferState(Buffer * buffer) const {
     if (!buffer) return nullptr;
-    auto it = mBufferStates.find(buffer);
-    if (it == mBufferStates.end()) return nullptr;
+    auto it = bufferStates.find(buffer);
+    if (it == bufferStates.end()) return nullptr;
     return &it->second;
 }
 

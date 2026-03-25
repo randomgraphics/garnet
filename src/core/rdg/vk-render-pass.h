@@ -89,7 +89,7 @@ public:
 
     /// Called by task in execution pass. \p cb may be null for present-only steps; draw entries require a valid buffer.
     /// Present entries never begin a render pass.
-    RenderPass execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandBuffer * cb);
+    RenderPass execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandProxy * cb);
 
 private:
     struct TextureTransitionKey {
@@ -147,8 +147,7 @@ private:
     std::vector<Entry>        mEntries;                 // appended in prepare order; execute walks by index.
     size_t                    mCurrentExecuteIndex = 0; // next entry index to execute.
 
-    bool beginRenderPass(const RenderTarget & renderTarget, CommandBufferManagerVulkan::CommandBuffer & rdgCommandBuffer,
-                         const Entry * drawResourceTransitions);
+    bool beginRenderPass(const RenderTarget & renderTarget, CommandBufferManagerVulkan::CommandProxy & rdgCommandBuffer, const Entry * drawResourceTransitions);
 };
 
 } // namespace GN::rdg

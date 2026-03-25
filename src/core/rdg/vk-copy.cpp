@@ -64,9 +64,9 @@ class GpuCopyVulkan : public GpuCopy {
         }
         if (combinedSrcStage) barrier.s(combinedSrcStage, combinedDstStage ? combinedDstStage : transferStage);
         logBarrierBatchVerbose(sLogger, "gpu-copy buffer-to-buffer", barrier);
-        barrier.cmdWrite(cb.commandBuffer().handle());
+        barrier.cmdWrite(cb.rapid().handle());
 
-        cb.commandBuffer().handle().copyBuffer(srcHandle, dstHandle, vk::BufferCopy(srcOff, dstOff, arguments.size));
+        cb.rapid().handle().copyBuffer(srcHandle, dstHandle, vk::BufferCopy(srcOff, dstOff, arguments.size));
 
         // done
         return PASSED;
