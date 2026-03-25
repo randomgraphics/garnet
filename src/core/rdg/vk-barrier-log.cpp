@@ -4,7 +4,7 @@
 
 namespace GN::rdg {
 
-void logBarrierBatchVerbose(GN::Logger * logger, const char * label, const rapid_vulkan::Barrier & barrier) {
+void logBarrierBatchVerboseSlow(GN::Logger * logger, const char * label, const rapid_vulkan::Barrier & barrier) {
     if (!logger || !logger->isOn(GN::Logger::VERBOSE)) GN_LIKELY return;
     
     if (barrier.memories.empty() && barrier.buffers.empty() && barrier.images.empty()) GN_LIKELY return;

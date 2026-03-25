@@ -135,7 +135,10 @@ bool CommandBufferManagerVulkan::CommandBuffer::transitionTexture(TextureVulkan 
                                                                   const TextureState::ImageState & newState, TextureState::ImageStateTransitionFlags flags) {
     if (!tex) return false;
     auto it = mTextureStates.find(tex);
-    if (it == mTextureStates.end()) { it = mTextureStates.emplace(tex, tex->state()).first; }
+    if (it == mTextureStates.end()) {
+        auto insertIt = mTextureStates.emplace(tex, tex->state());
+        it = insertIt.first;
+    }
     return it->second.set(range, newState, flags, tex->name);
 }
 
