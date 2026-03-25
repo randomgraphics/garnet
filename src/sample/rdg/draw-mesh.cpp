@@ -1,5 +1,7 @@
 #include "gltf-loader.h"
 #include "pch.h"
+#include <chrono>
+#include <cmath>
 #include <garnet/GNbase.h>
 #include <garnet/GNwin.h>
 #include <garnet/base/filesys.h>
@@ -122,23 +124,8 @@ int main(int, const char **) {
 
     auto lighting = buildLighting();
 
-    // SharedShaderConstants: camera at (1.8, 1.4, 2.4) m looking at origin, 60° FOV.
     auto sharedConstants = SharedShaderConstants::create("shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
     if (sharedConstants) {
-        // Derive camera orientation from a lookAt.
-        const glm::vec3   eye(1.8f, 1.4f, 2.4f), target(0.f, 0.f, 0.f), up(0.f, 1.f, 0.f);
-        const glm::mat4   camToWorld = glm::inverse(glm::lookAtRH(eye, target, up));
-        const Orientation camOrient  = glm::quat_cast(glm::mat3(camToWorld));
-
-        SharedShaderConstants::ViewInformation view;
-        view.cameraPosition    = Location {1.8f, 1.4f, 2.4f};
-        view.cameraOrientation = camOrient;
-        view.cameraFov         = Degree(60.f);
-        view.aspectRatio       = (float) bbDesc.width / (float) bbDesc.height;
-        view.nearPlane         = 0.1f;
-        view.farPlane          = 100.f;
-        view.renderTarget      = renderTarget;
-        sharedConstants->setViewInformation(view);
         sharedConstants->setDirectLightingInformation(lighting);
         {
             SharedShaderConstants::EnvironmentLightingInformation env;
@@ -154,7 +141,34 @@ int main(int, const char **) {
 
     GN_INFO(sLogger)("Starting PBR helmet render loop...");
 
+    const auto orbitStartTime = std::chrono::steady_clock::now();
+    // Orbit in XZ at y = 1.4 m; radius matches initial (1.8, 2.4) → 3 m from mesh center at origin.
+    static constexpr float kOrbitRadiusXZ  = 3.0f;
+    static constexpr float kOrbitEyeY     = 1.4f;
+    static constexpr float kOrbitRadPerSec = 0.5f;
+    const float            orbitPhase0     = std::atan2(2.4f, 1.8f);
+
     while (window->runUntilNoNewEvents()) {
+        if (sharedConstants) {
+            const float elapsed =
+                std::chrono::duration<float>(std::chrono::steady_clock::now() - orbitStartTime).count();
+            const float            angle     = orbitPhase0 + kOrbitRadPerSec * elapsed;
+            const glm::vec3        eye       = {kOrbitRadiusXZ * std::cos(angle), kOrbitEyeY, kOrbitRadiusXZ * std::sin(angle)};
+            static const glm::vec3 kTarget(0.f, 0.f, 0.f), kUp(0.f, 1.f, 0.f);
+            const glm::mat4        camToWorld = glm::inverse(glm::lookAtRH(eye, kTarget, kUp));
+            const Orientation      camOrient  = glm::quat_cast(glm::mat3(camToWorld));
+
+            SharedShaderConstants::ViewInformation view;
+            view.cameraPosition    = eye;
+            view.cameraOrientation = camOrient;
+            view.cameraFov         = Degree(60.f);
+            view.aspectRatio       = (float) bbDesc.width / (float) bbDesc.height;
+            view.nearPlane         = 0.1f;
+            view.farPlane          = 100.f;
+            view.renderTarget      = renderTarget;
+            sharedConstants->setViewInformation(view);
+        }
+
         // Build shared constants (upload UBOs); SSC build returns SubGraph with upload workflow(s).
         auto sscSubGraph = sharedConstants->build(*renderGraph);
 
