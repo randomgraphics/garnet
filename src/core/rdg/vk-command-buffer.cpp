@@ -115,7 +115,7 @@ void CommandBufferManagerVulkan::submit(CommandProxy & proxy) {
         }
     if (!proxy.mCommandBuffer) GN_UNLIKELY return; // already submitted. silently ignore.
     GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", *proxy.mTaskInfo);
-    auto cb = proxy.mCommandBuffer.get();
+    auto cb = proxy.mCommandBuffer;
     for (auto & [tex, state] : cb->textureStates) {
         if (tex) tex->state().assignFrom(state, tex->name);
     }

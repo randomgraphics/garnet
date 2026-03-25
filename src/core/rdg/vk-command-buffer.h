@@ -85,10 +85,10 @@ public:
         operator bool() const { return valid(); }
 
     private:
-        CommandBufferManagerVulkan *   mManager  = nullptr;
-        const TaskInfo *               mTaskInfo = nullptr;
-        std::shared_ptr<CommandBuffer> mCommandBuffer;
-        bool                           mNeedToSubmit = false;
+        CommandBufferManagerVulkan * mManager       = nullptr;
+        const TaskInfo *             mTaskInfo      = nullptr;
+        CommandBuffer *              mCommandBuffer = nullptr;
+        bool                         mNeedToSubmit  = false;
         friend class CommandBufferManagerVulkan;
     };
 
