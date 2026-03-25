@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "vk-barrier-log.h"
 #include "vk-copy.h"
 #include "vk-submission-context.h"
 #include "vk-buffer-state.h"
@@ -62,6 +63,7 @@ class GpuCopyVulkan : public GpuCopy {
             }
         }
         if (combinedSrcStage) barrier.s(combinedSrcStage, combinedDstStage ? combinedDstStage : transferStage);
+        logBarrierBatchVerbose(sLogger, "gpu-copy buffer-to-buffer", barrier);
         barrier.cmdWrite(cb.commandBuffer().handle());
 
         cb.commandBuffer().handle().copyBuffer(srcHandle, dstHandle, vk::BufferCopy(srcOff, dstOff, arguments.size));

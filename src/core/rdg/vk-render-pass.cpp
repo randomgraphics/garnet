@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "vk-barrier-log.h"
 #include "vk-render-pass.h"
 #include "vk-backbuffer.h"
 #include "vk-texture.h"
@@ -61,54 +62,64 @@ static constexpr TextureVulkan::ImageState DEPTH_STENCIL_ATTACHMENT_STATE {
     vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
 };
 
+/// Build a Vulkan color attachment image view and the mip-level extent for one render-target color slot.
+///
+/// Parameters:
+/// - color: GPU resource view (texture or swapchain backbuffer) plus subresource (mip / array face).
+/// - stage: Color attachment index; forwarded only for diagnostics in getColorTargetImage.
+/// - barrier: Optional barrier batch. If non-null and the RDG tracker reports a real transition, appends one image
+///   barrier (prev → curr layout/access from the tracker) so the image is in eColorAttachmentOptimal before
+///   vkCmdBeginRendering. If null, state is still updated on the command buffer tracker but nothing is recorded.
+/// - rdgCb: Per–command-buffer layout state; first touch copies from the resource, later touches use the CB copy;
+///   submit writes final state back to TextureVulkan / BackbufferVulkan.
+///
+/// Steps:
+/// 1. Resolve the rapid_vulkan::Image and base extent (mip 0 dimensions for the selected face).
+/// 2. Request color-attachment state with discardContent so overlapping clears need not preserve prior layout.
+/// 3. transitionTexture / transitionBackbuffer return true only when curr changed; then, if barrier is set, emit
+///    barrier->i for that subresource using prev/curr from getTextureState / getBackbufferState.
+/// 4. Create a 2D color VkImageView for the same mip/face and return mip-scaled extent for renderArea clamping.
 std::pair<vk::ImageView, vk::Extent2D> getColorTargetImageView(const GpuResourceView & color, size_t stage, rapid_vulkan::Barrier * barrier,
-                                                               CommandBufferManagerVulkan::CommandBuffer * rdgCb) {
+                                                               CommandBufferManagerVulkan::CommandBuffer & rdgCb) {
+    // Underlying VkImage + extent at mip 0 for this view (texture cubemap/array face or swapchain image).
     auto [image, baseExtent] = getColorTargetImage(color, stage);
     if (!image) GN_UNLIKELY return {nullptr, {0, 0}};
 
     const auto & si = color.imageView.range.i;
+
     if (auto tex = color.texture().staticCastTo<TextureVulkan>().get()) {
-        if (tex && rdgCb) {
-            GpuResourceView::SubresourceRange range;
-            range.i.mip            = si.mip;
-            range.i.face           = si.face;
-            range.e.numMipLevels   = 1;
-            range.e.numArrayLayers = 1;
-            if (rdgCb->transitionTexture(tex, range, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT) && barrier) {
-                const auto * st = rdgCb->getTextureState(tex, si.mip, si.face);
-                if (st) {
-                    vk::ImageSubresourceRange vkRange(vk::ImageAspectFlagBits::eColor, si.mip, 1, si.face, 1);
-                    barrier->i(image->handle(), st->prev.access, st->curr.access, st->prev.layout, st->curr.layout, vkRange);
-                }
-            }
-        } else if (tex && !rdgCb && tex->trackImageState(si.mip, 1, si.face, 1, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT) && barrier) {
-            const auto * st = tex->getImageState(si.mip, si.face);
+        // Single mip / single layer: the view’s subresource from `color.imageView.range.i`.
+        GpuResourceView::SubresourceRange range;
+        range.i.mip            = si.mip;
+        range.i.face           = si.face;
+        range.e.numMipLevels   = 1;
+        range.e.numArrayLayers = 1;
+        // Update CB-local TextureState; if the subresource wasn’t tracked yet, seed from tex->state().
+        if (rdgCb.transitionTexture(tex, range, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT) && barrier) {
+            const auto * st = rdgCb.getTextureState(tex, si.mip, si.face);
             if (st) {
                 vk::ImageSubresourceRange vkRange(vk::ImageAspectFlagBits::eColor, si.mip, 1, si.face, 1);
                 barrier->i(image->handle(), st->prev.access, st->curr.access, st->prev.layout, st->curr.layout, vkRange);
             }
         }
     } else if (auto bb = color.backbuffer().staticCastTo<BackbufferVulkan>().get()) {
-        if (bb && rdgCb) {
-            if (rdgCb->transitionBackbuffer(bb, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT) && barrier) {
-                const auto * st = rdgCb->getBackbufferState(bb);
-                if (st) {
-                    vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
-                    barrier->i(image->handle(), st->prev.access, st->curr.access, st->prev.layout, st->curr.layout, range);
-                }
+        // Swapchain image is always 2D array layer 0, mip 0 from the RDG point of view; layout still tracked per image.
+        if (rdgCb.transitionBackbuffer(bb, COLOR_ATTACHMENT_STATE, DISCARD_CONTENT) && barrier) {
+            const auto * st = rdgCb.getBackbufferState(bb);
+            if (st) {
+                vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
+                barrier->i(image->handle(), st->prev.access, st->curr.access, st->prev.layout, st->curr.layout, range);
             }
-        } else if (bb && !rdgCb && bb->trackImageState(COLOR_ATTACHMENT_STATE, DISCARD_CONTENT) && barrier) {
-            const auto &              st = bb->getImageState();
-            vk::ImageSubresourceRange range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
-            barrier->i(image->handle(), st.prev.access, st.curr.access, st.prev.layout, st.curr.layout, range);
         }
     }
 
+    // View must match the subresource used for the barrier and for load/store in dynamic rendering.
     auto viewParams = rapid_vulkan::Image::GetViewParameters()
                           .setType(vk::ImageViewType::e2D)
                           .setFormat(image->desc().format)
                           .setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, si.mip, 1, si.face, 1));
-    auto mipExtent  = rapid_vulkan::getMipLevelExtent(vk::Extent3D(baseExtent.width, baseExtent.height, 1), si.mip);
+    // Render area for this attachment: size of the selected mip level (not full mip0 dimensions).
+    auto mipExtent = rapid_vulkan::getMipLevelExtent(vk::Extent3D(baseExtent.width, baseExtent.height, 1), si.mip);
     return {image->getView(viewParams), vk::Extent2D(mipExtent.width, mipExtent.height)};
 }
 
@@ -376,9 +387,15 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
             return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
+    if (!entry.isPresent() && (!cb || !*cb)) GN_UNLIKELY {
+            GN_ERROR(sLogger)("{} - draw entry requires a valid RDG command buffer", taskInfo);
+            return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
+        }
+
     vk::CommandBuffer vkCB;
     if (cb && *cb) vkCB = cb->commandBuffer().handle();
 
+    // Present-only bookkeeping; never touches Vulkan or beginRenderPass (cb may be null).
     if (entry.isPresent()) { return {taskInfo, Action::ExecutionResult::PASSED, vk::CommandBuffer {}, nullptr}; }
 
     // Draw entry: need to begin if this entry starts the pass (renderPassBeginIndex == our index).
@@ -391,7 +408,8 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
             return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
-    if (needToBegin && !beginRenderPass(*entry.draw, vkCB, cb, &entry)) return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
+    // beginRenderPass records to the same Vulkan command buffer wrapped by *cb (reference, not pointer).
+    if (needToBegin && !beginRenderPass(*entry.draw, *cb, &entry)) return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
 
     // Need to end render pass if: last entry; or next is a draw with different pass; or next is present of *this* render target's backbuffer.
     bool needToEnd = (index + 1 >= mEntries.size());
@@ -404,13 +422,14 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
     return {taskInfo, Action::ExecutionResult::PASSED, needToEnd ? vkCB : vk::CommandBuffer {}, drawTarget};
 }
 
-bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer vkCommandBuffer,
-                                              CommandBufferManagerVulkan::CommandBuffer * rdgCommandBuffer, const Entry * drawResourceTransitions) {
+bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, CommandBufferManagerVulkan::CommandBuffer & rdgCommandBuffer,
+                                              const Entry * drawResourceTransitions) {
     GN_VERBOSE(sLogger)("begin render pass for render target: {}.", renderTarget.name);
 
+    vk::CommandBuffer vkCommandBuffer = rdgCommandBuffer.commandBuffer().handle();
+
     // Emit barriers for all draw resources registered in prepare pass (textures -> shader read, buffers -> shader read / vertex input).
-    if (drawResourceTransitions && rdgCommandBuffer &&
-        (!drawResourceTransitions->textureTransitions.empty() || !drawResourceTransitions->bufferTransitions.empty())) {
+    if (drawResourceTransitions && (!drawResourceTransitions->textureTransitions.empty() || !drawResourceTransitions->bufferTransitions.empty())) {
         rapid_vulkan::Barrier  drawBarrier;
         vk::PipelineStageFlags combinedSrcStage {};
         vk::PipelineStageFlags combinedDstStage {};
@@ -421,8 +440,8 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
             range.i.face           = key.face;
             range.e.numMipLevels   = 1;
             range.e.numArrayLayers = 1;
-            if (rdgCommandBuffer->transitionTexture(key.tex, range, state)) {
-                const auto * st = rdgCommandBuffer->getTextureState(key.tex, key.mip, key.face);
+            if (rdgCommandBuffer.transitionTexture(key.tex, range, state)) {
+                const auto * st = rdgCommandBuffer.getTextureState(key.tex, key.mip, key.face);
                 if (st) {
                     combinedSrcStage |= st->prev.stages;
                     combinedDstStage |= st->curr.stages;
@@ -433,8 +452,8 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
         }
         for (const auto & [key, state] : drawResourceTransitions->bufferTransitions) {
             if (!key.buffer) continue;
-            if (rdgCommandBuffer->transitionBuffer(key.buffer, key.offset, key.size, state.access, state.stage)) {
-                const auto * st = rdgCommandBuffer->getBufferState(key.buffer);
+            if (rdgCommandBuffer.transitionBuffer(key.buffer, key.offset, key.size, state.access, state.stage)) {
+                const auto * st = rdgCommandBuffer.getBufferState(key.buffer);
                 if (st) {
                     combinedSrcStage |= st->prev.stage;
                     combinedDstStage |= st->curr.stage;
@@ -445,6 +464,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
         }
         if (combinedSrcStage) {
             drawBarrier.s(combinedSrcStage, combinedDstStage);
+            logBarrierBatchVerbose(sLogger, "render-pass begin: draw resource transitions (shader-read / vertex input)", drawBarrier);
             drawBarrier.cmdWrite(vkCommandBuffer);
         }
     }
@@ -456,7 +476,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     rapid_vulkan::Barrier layoutBarrier;
     layoutBarrier.s(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
 
-    // setup color attachments (and add layout barriers when trackImageState indicates a transition is needed).
+    // setup color attachments (and add layout barriers when RDG command-buffer tracking reports a transition).
     vk::Rect2D                               renderArea(vk::Offset2D(0, 0), vk::Extent2D(~0u, ~0u));
     std::vector<vk::RenderingAttachmentInfo> colorAttachments;
     colorAttachments.reserve(renderTarget.colors.size());
@@ -520,29 +540,24 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
             GN_ASSERT(depthImg);
             vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
             if (formatHasStencil(depthImg->desc().format)) aspect |= vk::ImageAspectFlagBits::eStencil;
-            const auto & si = depthStencilTarget.imageView.range.i;
-            if (rdgCommandBuffer) {
-                GpuResourceView::SubresourceRange range;
-                range.i.mip            = si.mip;
-                range.i.face           = si.face;
-                range.e.numMipLevels   = 1;
-                range.e.numArrayLayers = 1;
-                if (rdgCommandBuffer->transitionTexture(depthTex, range, DEPTH_STENCIL_ATTACHMENT_STATE)) {
-                    const auto * st = rdgCommandBuffer->getTextureState(depthTex, si.mip, si.face);
-                    if (st) {
-                        vk::ImageSubresourceRange vkRange(aspect, si.mip, 1, si.face, 1);
-                        layoutBarrier.i(depthImg->handle(), st->prev.access, st->curr.access, st->prev.layout, st->curr.layout, vkRange);
-                    }
+            const auto &                      si = depthStencilTarget.imageView.range.i;
+            GpuResourceView::SubresourceRange range;
+            range.i.mip            = si.mip;
+            range.i.face           = si.face;
+            range.e.numMipLevels   = 1;
+            range.e.numArrayLayers = 1;
+            if (rdgCommandBuffer.transitionTexture(depthTex, range, DEPTH_STENCIL_ATTACHMENT_STATE)) {
+                const auto * st = rdgCommandBuffer.getTextureState(depthTex, si.mip, si.face);
+                if (st) {
+                    vk::ImageSubresourceRange vkRange(aspect, si.mip, 1, si.face, 1);
+                    layoutBarrier.i(depthImg->handle(), st->prev.access, st->curr.access, st->prev.layout, st->curr.layout, vkRange);
                 }
-            } else {
-                vk::ImageSubresourceRange vkRange(aspect, si.mip, 1, si.face, 1);
-                layoutBarrier.i(depthImg->handle(), {}, vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-                                vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, vkRange);
             }
         }
     }
 
     // transfer image layout via barrier.
+    logBarrierBatchVerbose(sLogger, "render-pass begin: color/depth attachment layout", layoutBarrier);
     layoutBarrier.cmdWrite(vkCommandBuffer);
 
     // start a new dynamic render pass.

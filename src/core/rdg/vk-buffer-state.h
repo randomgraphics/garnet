@@ -22,17 +22,8 @@ struct BufferStateTransition {
     BufferState prev = BufferState::NONE();
     BufferState curr = BufferState::NONE();
 
-    bool transitTo(vk::AccessFlags newAccess, vk::PipelineStageFlags newStage) {
-        if (curr.access == newAccess && curr.stage == newStage) return false;
-        prev = curr;
-        curr = {newAccess, newStage};
-        return true;
-    }
-
-    void assignFrom(const BufferStateTransition & other) {
-        prev = other.curr;
-        curr = other.curr;
-    }
+    bool transitTo(vk::AccessFlags newAccess, vk::PipelineStageFlags newStage, const StrA & resourceName = {});
+    void assignFrom(const BufferStateTransition & other, const StrA & resourceName = {});
 };
 
 /// Get the buffer state transition for a Vulkan buffer; null if \p buffer is not a Vulkan buffer.

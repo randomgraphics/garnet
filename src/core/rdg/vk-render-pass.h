@@ -87,8 +87,8 @@ public:
     /// If current render target is not this backbufer, then do nothing.
     Action::ExecutionResult preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer);
 
-    /// Called by task in execution pass. Returns RenderPass with result, optional command buffer for ending, and current draw target (for draw tasks).
-    /// \param cb RDG command buffer (for texture layout tracking and recording); null for tasks that do not record (e.g. present).
+    /// Called by task in execution pass. \p cb may be null for present-only steps; draw entries require a valid buffer.
+    /// Present entries never begin a render pass.
     RenderPass execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandBuffer * cb);
 
 private:
@@ -114,13 +114,30 @@ private:
         }
     };
 
+    /// One workflow step (draw or present) in prepare/execute order.
+    ///
+    /// textureTransitions / bufferTransitions (populated on the render-pass begin entry only):
+    /// Draw tasks bind textures and buffers as shader resources (sampled images, storage, vertex/index data, etc.).
+    /// Those resources must be in the correct image layout and memory access/stage before any draw inside the pass.
+    /// With dynamic rendering (vkCmdBeginRendering), Vulkan does not allow inserting the usual global memory and
+    /// layout barriers for arbitrary resources while a render pass instance is active; attachment transitions are
+    /// handled separately. So every subresource (texture mip/face, buffer offset/size) that a draw will read must
+    /// already be transitioned before beginRenderPass records vkCmdBeginRendering. The prepare pass walks each draw’s
+    /// bindings and records the required target state here; beginRenderPass batches barriers once using the RDG
+    /// command-buffer tracker, then starts rendering. That keeps shader-visible resources legal for all draws that
+    /// share this pass without per-draw barriers inside the pass.
+    ///
+    /// The maps also enforce consistency: if two draws in the same pass disagree on the required state for the same
+    /// key, prepare fails early instead of undefined GPU behavior.
     struct Entry {
         uint64_t              taskIndex            = 0;
         AutoRef<Backbuffer>   present              = {};
         AutoRef<RenderTarget> draw                 = {};
         int32_t               renderPassBeginIndex = -1; // index into mEntries of first entry in this pass; -1 if not in a pass (e.g. present)
+        /// Subresources that must be in shader-read layout before this pass's vkCmdBeginRendering; see struct comment above.
         std::map<TextureTransitionKey, TextureVulkan::ImageState> textureTransitions;
-        std::map<BufferTransitionKey, BufferState>                bufferTransitions;
+        /// Buffer ranges that must have correct access/stage before draws in this pass; see struct comment above.
+        std::map<BufferTransitionKey, BufferState> bufferTransitions;
 
         bool isDraw() const { return !present && !!draw; }
         bool isPresent() const { return !!present; }
@@ -130,7 +147,7 @@ private:
     std::vector<Entry>        mEntries;                 // appended in prepare order; execute walks by index.
     size_t                    mCurrentExecuteIndex = 0; // next entry index to execute.
 
-    bool beginRenderPass(const RenderTarget & renderTarget, vk::CommandBuffer vkCommandBuffer, CommandBufferManagerVulkan::CommandBuffer * rdgCommandBuffer,
+    bool beginRenderPass(const RenderTarget & renderTarget, CommandBufferManagerVulkan::CommandBuffer & rdgCommandBuffer,
                          const Entry * drawResourceTransitions);
 };
 

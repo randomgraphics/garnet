@@ -52,11 +52,11 @@ struct TextureState {
 
     // returns true, if the state is changed. False, if the state is redundant or invalid.
     bool set(const GpuResourceView::SubresourceRange & range, const ImageState & newState,
-             ImageStateTransitionFlags flags = ImageStateTransitionFlags::DEFAULT());
+             ImageStateTransitionFlags flags = ImageStateTransitionFlags::DEFAULT(), const StrA & resourceName = {});
 
     /// Copies the current state (curr) of each subresource from \p src into this.
     /// Used when flushing command-buffer-level state back to the texture resource after submit.
-    void assignFrom(const TextureState & src);
+    void assignFrom(const TextureState & src, const StrA & resourceName = {});
 
 private:
     size_t subResourceIndex(uint32_t mip, uint32_t arrayLayer) const { return mip * mNumArrayLayers + arrayLayer; }
@@ -92,12 +92,6 @@ public:
     auto readback() const -> gfx::img::Image override;
 
     TextureState & state() { return mState; }
-
-    /// Returns state transition for one subresource; null if out of range.
-    const ImageStateTransition * getImageState(uint32_t mip, uint32_t arrayLayer) const { return mState.get(mip, arrayLayer); }
-    /// Returns true if any subresource state changed.
-    bool trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
-                         ImageStateTransitionFlags flags = ImageStateTransitionFlags::DEFAULT());
 
 private:
     // struct ImageKey {

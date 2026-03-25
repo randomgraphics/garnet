@@ -27,9 +27,7 @@ layout(set = 0, binding = 5) uniform sampler2D u_brdfLut;
 float gn_environmentRadianceScale() { return u_environmentLighting.data.environmentRadianceScale; }
 
 // Apply environment strength to linear RGB radiance (or irradiance map sample proportional to radiance).
-vec3 gn_scaleEnvironmentRadiance(vec3 linearRadiance) {
-    return linearRadiance * gn_environmentRadianceScale();
-}
+vec3 gn_scaleEnvironmentRadiance(vec3 linearRadiance) { return linearRadiance * gn_environmentRadianceScale(); }
 
 // Skybox: sample cubemap and scale RGB (alpha unchanged). Binding 2 sampler is declared by the including shader.
 vec3 gn_sampleSkyboxRadiance(vec3 worldDirection) {

@@ -32,7 +32,6 @@ public:
 
     BufferStateTransition &       state() { return mBufferState; }
     const BufferStateTransition & state() const { return mBufferState; }
-    void                          assignFrom(const BufferStateTransition & t) { mBufferState.assignFrom(t); }
 
 private:
     BufferStateTransition mBufferState;

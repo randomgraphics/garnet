@@ -109,7 +109,7 @@ void CommandBufferManagerVulkan::submit(CommandBuffer & commandBuffer) {
     GN_ASSERT(commandBuffer.mManager == this && commandBuffer.mTaskInfo && commandBuffer.mCommandBuffer && commandBuffer.mQueue);
     GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", *commandBuffer.mTaskInfo);
     for (auto & [tex, state] : commandBuffer.mTextureStates) {
-        if (tex) tex->state().assignFrom(state);
+        if (tex) tex->state().assignFrom(state, tex->name);
     }
     for (auto & [bb, imageMap] : commandBuffer.mBackbufferStates) {
         if (bb)
@@ -136,7 +136,7 @@ bool CommandBufferManagerVulkan::CommandBuffer::transitionTexture(TextureVulkan 
     if (!tex) return false;
     auto it = mTextureStates.find(tex);
     if (it == mTextureStates.end()) { it = mTextureStates.emplace(tex, tex->state()).first; }
-    return it->second.set(range, newState, flags);
+    return it->second.set(range, newState, flags, tex->name);
 }
 
 const TextureState::ImageStateTransition * CommandBufferManagerVulkan::CommandBuffer::getTextureState(TextureVulkan * tex, uint32_t mip,
@@ -177,7 +177,7 @@ bool CommandBufferManagerVulkan::CommandBuffer::transitionBuffer(Buffer * buffer
     if (!resourceState) return false;
     auto it = mBufferStates.find(buffer);
     if (it == mBufferStates.end()) it = mBufferStates.emplace(buffer, *resourceState).first;
-    return it->second.transitTo(newAccess, newStage);
+    return it->second.transitTo(newAccess, newStage, buffer->name);
 }
 
 const BufferStateTransition * CommandBufferManagerVulkan::CommandBuffer::getBufferState(Buffer * buffer) const {

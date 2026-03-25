@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "vk-barrier-log.h"
 #include "vk-backbuffer.h"
 #include "vk-submission-context.h"
 #include "vk-format-utils.h"
@@ -101,11 +102,13 @@ gfx::img::Image BackbufferVulkan::readbackOutsideRenderPass() const {
     // Restore the backbuffer image to its layout after present so normal rendering is unaffected.
     auto cb = gq->begin("readback restore layout", vk::CommandBufferLevel::ePrimary);
     if (cb) {
-        rapid_vulkan::Barrier()
+        rapid_vulkan::Barrier restoreLayout;
+        restoreLayout
             .i(img->handle(), vk::AccessFlagBits::eTransferRead, mLastPresentedBackbufferState.access, vk::ImageLayout::eTransferSrcOptimal,
                mLastPresentedBackbufferState.layout, vk::ImageAspectFlagBits::eColor)
-            .s(vk::PipelineStageFlagBits::eTransfer, mLastPresentedBackbufferState.stages)
-            .cmdWrite(cb.handle());
+            .s(vk::PipelineStageFlagBits::eTransfer, mLastPresentedBackbufferState.stages);
+        logBarrierBatchVerbose(sLogger, "backbuffer readback restore layout", restoreLayout);
+        restoreLayout.cmdWrite(cb.handle());
         gq->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb}});
     }
 

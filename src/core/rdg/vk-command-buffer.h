@@ -87,14 +87,15 @@ public:
     private:
         typedef std::unordered_map<TextureVulkan *, TextureState>                                                                           TextureStateMap;
         typedef std::unordered_map<BackbufferVulkan *, std::unordered_map<const rapid_vulkan::Image *, TextureState::ImageStateTransition>> BackbufferStateMap;
+        typedef std::unordered_map<Buffer *, BufferStateTransition>                                                                         BufferStateMap;
 
-        CommandBufferManagerVulkan *                        mManager       = nullptr;
-        const TaskInfo *                                    mTaskInfo      = nullptr;
-        rapid_vulkan::CommandBuffer                         mCommandBuffer = {};
-        rapid_vulkan::CommandQueue *                        mQueue         = nullptr;
-        TextureStateMap                                     mTextureStates;
-        BackbufferStateMap                                  mBackbufferStates;
-        std::unordered_map<Buffer *, BufferStateTransition> mBufferStates;
+        CommandBufferManagerVulkan * mManager       = nullptr;
+        const TaskInfo *             mTaskInfo      = nullptr;
+        rapid_vulkan::CommandBuffer  mCommandBuffer = {};
+        rapid_vulkan::CommandQueue * mQueue         = nullptr;
+        TextureStateMap              mTextureStates;
+        BackbufferStateMap           mBackbufferStates;
+        BufferStateMap               mBufferStates;
         friend class CommandBufferManagerVulkan;
     };
 

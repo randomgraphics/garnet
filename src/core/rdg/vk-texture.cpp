@@ -226,7 +226,13 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
             sc.pixels                 = image.at(pc);
             mImage->setContent(sc);
         }
-    trackImageState(0, mDescriptor.levels, 0, mDescriptor.faces, TextureState::ImageState {.layout = vk::ImageLayout::eTransferDstOptimal});
+    GpuResourceView::SubresourceRange loadedRange;
+    loadedRange.i.mip            = 0;
+    loadedRange.i.face           = 0;
+    loadedRange.e.numMipLevels   = mDescriptor.levels;
+    loadedRange.e.numArrayLayers = mDescriptor.faces;
+    mState.set(loadedRange, TextureState::ImageState {.layout = vk::ImageLayout::eTransferDstOptimal}, TextureState::ImageStateTransitionFlags::DEFAULT(),
+               name);
     return true;
 }
 
@@ -284,17 +290,8 @@ auto TextureState::get(uint32_t mip, uint32_t arrayLayer) const -> const ImageSt
     return &mSubresourceStates[index];
 }
 
-bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
-                                    ImageStateTransitionFlags flags) {
-    GpuResourceView::SubresourceRange range;
-    range.i.mip            = mip;
-    range.i.face           = arrayLayer;
-    range.e.numMipLevels   = levels;
-    range.e.numArrayLayers = layers;
-    return mState.set(range, newState, flags);
-}
-
-bool TextureState::set(const GpuResourceView::SubresourceRange & range, const ImageState & newState, ImageStateTransitionFlags flags) {
+bool TextureState::set(const GpuResourceView::SubresourceRange & range, const ImageState & newState, ImageStateTransitionFlags flags,
+                       const StrA & resourceName) {
     uint32_t mip        = range.i.mip;
     uint32_t arrayLayer = range.i.face;
     uint32_t levels     = range.e.numMipLevels;
@@ -312,17 +309,34 @@ bool TextureState::set(const GpuResourceView::SubresourceRange & range, const Im
             if (mSubresourceStates[index].curr != newState) {
                 anyChange = true;
                 mSubresourceStates[index].transitTo(newState, flags);
+                if (!resourceName.empty()) {
+                    const auto & tr = mSubresourceStates[index];
+                    GN_VERBOSE(sLogger)
+                    ("texture '{}': mip={} face={}: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}", resourceName.c_str(), i, j,
+                     static_cast<uint32_t>(tr.prev.layout), static_cast<uint32_t>(tr.curr.layout), static_cast<uint32_t>(tr.prev.access),
+                     static_cast<uint32_t>(tr.curr.access), static_cast<uint32_t>(tr.prev.stages), static_cast<uint32_t>(tr.curr.stages));
+                }
             }
         }
     }
     return anyChange;
 }
 
-void TextureState::assignFrom(const TextureState & src) {
+void TextureState::assignFrom(const TextureState & src, const StrA & resourceName) {
     const size_t n = std::min(mSubresourceStates.size(), src.mSubresourceStates.size());
     for (size_t i = 0; i < n; ++i) {
-        mSubresourceStates[i].prev = src.mSubresourceStates[i].curr;
-        mSubresourceStates[i].curr = src.mSubresourceStates[i].curr;
+        const ImageState oldCurr   = mSubresourceStates[i].curr;
+        const ImageState newCurr   = src.mSubresourceStates[i].curr;
+        mSubresourceStates[i].prev = newCurr;
+        mSubresourceStates[i].curr = newCurr;
+        if (!resourceName.empty() && oldCurr != newCurr) {
+            const uint32_t face = (uint32_t) (i % mNumArrayLayers);
+            const uint32_t mip  = (uint32_t) (i / mNumArrayLayers);
+            GN_VERBOSE(sLogger)
+            ("texture '{}': mip={} face={}: state sync after submit: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}", resourceName.c_str(),
+             mip, face, static_cast<uint32_t>(oldCurr.layout), static_cast<uint32_t>(newCurr.layout), static_cast<uint32_t>(oldCurr.access),
+             static_cast<uint32_t>(newCurr.access), static_cast<uint32_t>(oldCurr.stages), static_cast<uint32_t>(newCurr.stages));
+        }
     }
 }
 
