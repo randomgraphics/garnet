@@ -38,7 +38,7 @@ static SharedShaderConstants::DirectLightingInformation buildLighting() {
     SharedShaderConstants::DirectLight               light;
     light.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
     light.directional.orientation = Orientation(1.f, 0.f, 0.f, 0.f); // identity → light faces -Z
-    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {3000.0f}};  // warm white, 3000 lux
+    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {600.0f}};  // warm white, 600 lux (lux = lm/m^2)
     lighting.lights.append(light);
     return lighting;
 }
@@ -134,7 +134,9 @@ int main(int, const char **) {
             env.prefilteredEnvMap = prefilteredEnvMap;
             env.brdfLut           = brdfLut;
             // Linear radiance multiplier [dimensionless] on HDR env samples; tune without rebaking DDS.
-            env.environmentRadianceScale = 5000.0f;
+            // The goal is to scale the value read from the HDR environment map to match physical brightness
+            // (in nits) of the actual environment.
+            env.environmentRadianceScale = 3500.0f; // 3500 nit is about a bright office environment
             sharedConstants->setEnvironmentLightingInformation(env);
         }
     }
