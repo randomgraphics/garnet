@@ -56,7 +56,7 @@ TEST_CASE("SharedShaderConstants: setters update CPU state, no GPU sync", "[rdg]
     CHECK(ssc->getDirectLightingInformation().lights.size() == 1u);
 }
 
-TEST_CASE("SharedShaderConstants: build() returns workflow with two upload tasks", "[rdg][shared-constants][gpu]") {
+TEST_CASE("SharedShaderConstants: build() returns workflow with three upload tasks", "[rdg][shared-constants][gpu]") {
     auto rg = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     REQUIRE(rg);
     auto gpu = GpuContext::create("gpu_ssc3", {.howToPrintDeviceCaps = gpuVerbosity});
@@ -73,8 +73,8 @@ TEST_CASE("SharedShaderConstants: build() returns workflow with two upload tasks
 
     auto sg = ssc->build(*rg);
     REQUIRE(!sg.workflows.empty());
-    // Workflow should have two tasks: camera copy + lighting copy.
-    CHECK(sg.workflows[0].tasks().size() == 2u);
+    // Workflow should have two tasks: camera + direct lighting + environment lighting.
+    CHECK(sg.workflows[0].tasks().size() == 3u);
     // Set 0 resource set has camera (binding 0) and lighting (binding 1).
     CHECK(ssc->getSet0Resources().size() >= 2u);
 }

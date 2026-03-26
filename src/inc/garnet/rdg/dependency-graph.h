@@ -100,15 +100,21 @@ struct Action : public Artifact {
         DROPPED, ///< the action is dropped; dependents are skipped.
     };
 
-    /// An optional argument validation method. Can be overridden by subclasses to validate the arguments.
-    virtual bool validate(const Arguments &) const { return true; }
+    struct PrepareResult {
+        ExecutionResult result         = FAILED;
+        size_t          remainingSteps = 0;
 
-    /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
+        PrepareResult() = default;
+        PrepareResult(ExecutionResult r, size_t steps = 0): result(r), remainingSteps(steps) {}
+        operator bool() const { return result == PASSED || result == WARNING; }
+    };
+
+    /// Prepare for execution. Returns success code and number of additional steps required to complete the action.
     /// \param submission The submission that is executing the action.
     /// \param taskInfo The information of the task that is executing the action.
     /// \param arguments The arguments for the action.
-    /// \return The execution result.
-    virtual ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
+    /// \return The prepare result and how many additional steps (excluding this prepare step) are required to complete the action.
+    virtual PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments. The context is the same as the one returned from prepare().
     /// \param submission The submission that is executing the action.
@@ -116,7 +122,7 @@ struct Action : public Artifact {
     /// \param arguments Same as the one passed to prepare().
     /// \param context The context returned from prepare().
     /// \return The execution result.
-    virtual ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) = 0;
+    virtual ExecutionResult execute(TaskInfo & taskInfo, size_t step, Arguments & arguments) = 0;
 
 protected:
     /// Inherit constructor from Artifact
@@ -181,10 +187,10 @@ struct Workflow {
                     GN_ERROR(log)("Workflow '{}' task [{}] '{}': arguments is null", name, taskIndex, task.name);
                     return false;
                 }
-            if (!task.action->validate(*task.arguments)) GN_UNLIKELY {
-                    GN_ERROR(log)("Workflow '{}' task [{}] '{}': argument validation failed", name, taskIndex, task.name);
-                    return false;
-                }
+            // if (!task.action->validate(*task.arguments)) GN_UNLIKELY {
+            //         GN_ERROR(log)("Workflow '{}' task [{}] '{}': argument validation failed", name, taskIndex, task.name);
+            //         return false;
+            //     }
             tasks.append(std::move(task));
             return true;
         }

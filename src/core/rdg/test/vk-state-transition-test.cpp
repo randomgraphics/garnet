@@ -12,7 +12,6 @@
 #include "rdg/vk-texture.h"
 #include "rdg/vk-backbuffer.h"
 #include "rdg/vk-persistent-buffer.h"
-#include "rdg/vk-transient-buffer.h"
 #include <memory>
 #include <vulkan/vulkan_enums.hpp>
 
@@ -59,13 +58,13 @@ struct StateTransitionTestAction : public Action {
         }
     };
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments &) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments &) override {
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(sc.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        return PASSED;
+        return {PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult execute(TaskInfo & taskInfo, size_t, Arguments & arguments) override {
         auto * a = static_cast<A *>(&arguments); // type guaranteed by appendTask
         if (!a) return FAILED;
 

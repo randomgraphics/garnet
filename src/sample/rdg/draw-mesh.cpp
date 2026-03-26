@@ -38,7 +38,7 @@ static SharedShaderConstants::DirectLightingInformation buildLighting() {
     SharedShaderConstants::DirectLight               light;
     light.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
     light.directional.orientation = Orientation(1.f, 0.f, 0.f, 0.f); // identity → light faces -Z
-    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {600.0f}};  // warm white, 600 lux (lux = lm/m^2)
+    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {600.0f}};   // warm white, 600 lux (lux = lm/m^2)
     lighting.lights.append(light);
     return lighting;
 }
@@ -146,16 +146,15 @@ int main(int, const char **) {
     const auto orbitStartTime = std::chrono::steady_clock::now();
     // Orbit in XZ at y = 1.4 m; radius matches initial (1.8, 2.4) → 3 m from mesh center at origin.
     static constexpr float kOrbitRadiusXZ  = 3.0f;
-    static constexpr float kOrbitEyeY     = 1.4f;
+    static constexpr float kOrbitEyeY      = 1.4f;
     static constexpr float kOrbitRadPerSec = 0.5f;
     const float            orbitPhase0     = std::atan2(2.4f, 1.8f);
 
     while (window->runUntilNoNewEvents()) {
         if (sharedConstants) {
-            const float elapsed =
-                std::chrono::duration<float>(std::chrono::steady_clock::now() - orbitStartTime).count();
-            const float            angle     = orbitPhase0 + kOrbitRadPerSec * elapsed;
-            const glm::vec3        eye       = {kOrbitRadiusXZ * std::cos(angle), kOrbitEyeY, kOrbitRadiusXZ * std::sin(angle)};
+            const float            elapsed = std::chrono::duration<float>(std::chrono::steady_clock::now() - orbitStartTime).count();
+            const float            angle   = orbitPhase0 + kOrbitRadPerSec * elapsed;
+            const glm::vec3        eye     = {kOrbitRadiusXZ * std::cos(angle), kOrbitEyeY, kOrbitRadiusXZ * std::sin(angle)};
             static const glm::vec3 kTarget(0.f, 0.f, 0.f), kUp(0.f, 1.f, 0.f);
             const glm::mat4        camToWorld = glm::inverse(glm::lookAtRH(eye, kTarget, kUp));
             const Orientation      camOrient  = glm::quat_cast(glm::mat3(camToWorld));

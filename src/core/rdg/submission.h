@@ -98,11 +98,11 @@ public:
         return *newCtx;
     }
 
-    // Signaled after all pending tasks are successfully prepared.
-    Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksPrepared;
+    // // Signaled after all pending tasks are successfully prepared.
+    // Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksPrepared;
 
-    // Signaled after all pending tasks are successfully executed.
-    Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksExecuted;
+    // // Signaled after all pending tasks are successfully executed.
+    // Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksExecuted;
 
     // A signal that guarantees to be signaled at the end of the submission thread,
     // regardless of whether tasks in the submission are successful or failed.

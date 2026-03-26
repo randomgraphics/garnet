@@ -237,9 +237,10 @@ class PrepareBackbufferVulkan : public PrepareBackbuffer {
 public:
     PrepareBackbufferVulkan(const StrA & name): PrepareBackbuffer(TYPE_INFO(), name) {}
 
-    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
+    Action::PrepareResult prepare(TaskInfo &, Arguments &) override { return {PASSED, 1}; }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult execute(TaskInfo & taskInfo, [[maybe_unused]] size_t step, Arguments & arguments) override {
+        GN_ASSERT(0 == step);
         auto a = RuntimeType::cast<PrepareBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PrepareBackbuffer::A", taskInfo);
         GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
@@ -263,7 +264,7 @@ class PresentBackbufferVulkan : public PresentBackbuffer {
 public:
     PresentBackbufferVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu): PresentBackbuffer(TYPE_INFO(), name), mGpu(std::move(gpu)) {}
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto a = RuntimeType::cast<PresentBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
         GN_RDG_FAIL_ON_FALSE(a->backbuffer, "{} - backbuffer not set", taskInfo);
@@ -273,10 +274,11 @@ public:
         GN_RDG_FAIL_ON_FAIL(sc.renderPassManager.preparePresent(taskInfo, a->backbuffer));
 
         // done
-        return PASSED;
+        return {PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult execute(TaskInfo & taskInfo, [[maybe_unused]] size_t step, Arguments & arguments) override {
+        GN_ASSERT(0 == step);
         auto a = RuntimeType::cast<PresentBackbuffer::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not PresentBackbuffer::A", taskInfo);
         auto bb = a->backbuffer.staticCastTo<BackbufferVulkan>();

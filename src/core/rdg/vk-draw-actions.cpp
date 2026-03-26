@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "vk-draw-actions.h"
 #include "vk-submission-context.h"
-#include "vk-backbuffer.h"
-#include "vk-buffer-state.h"
 #include "vk-command-buffer.h"
 #include "vk-texture.h"
 #include "vk-format-utils.h"
@@ -24,7 +22,7 @@ class ClearRenderTargetVulkan : public ClearRenderTarget {
 public:
     ClearRenderTargetVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu): ClearRenderTarget(TYPE_INFO(), name), mGpu(gpu) {}
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
         auto a = RuntimeType::cast<ClearRenderTarget::A>(arguments);
@@ -36,10 +34,11 @@ public:
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         // done
-        return Action::PASSED;
+        // One execute step: begin render pass + record clear.
+        return {Action::PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult execute(TaskInfo & taskInfo, size_t, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
         auto a = RuntimeType::cast<ClearRenderTarget::A>(arguments);
@@ -109,7 +108,7 @@ public:
     GpuDrawVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
         : GpuDraw(TYPE_INFO(), name), mGpu(gpu), mCreateParams(params) {}
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
         auto a = RuntimeType::cast<GpuDraw::A>(arguments);
@@ -122,10 +121,11 @@ public:
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawTextureTransitions(taskInfo, a->resources));
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawBufferTransitions(taskInfo, a->resources, a->geometry));
 
-        return PASSED;
+        // One execute step: record actual draw commands.
+        return {PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult execute(TaskInfo & taskInfo, size_t, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
         auto a = RuntimeType::cast<GpuDraw::A>(arguments);

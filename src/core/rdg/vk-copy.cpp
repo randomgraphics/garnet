@@ -83,50 +83,53 @@ public:
     GpuCopyVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuCopy::CreateParameters & params)
         : GpuCopy(TYPE_INFO(), name), mGpu(std::move(gpu)), mCreateParams(params) {}
 
-    bool validate(const Arguments & arguments) const override {
+    bool validate(const TaskInfo & taskInfo, const Arguments & arguments) const {
         const auto * a = RuntimeType::cast<BufferToBuffer>(&arguments);
         if (a) {
             if (!a->src) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: src is null");
+                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: src is null", taskInfo);
                     return false;
                 }
             if (!a->dst) {
-                GN_ERROR(sLogger)("GpuCopyVulkan::validate: dst is null");
+                GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: dst is null", taskInfo);
                 return false;
             }
             // make sure the offset and size are valid
             const uint64_t srcSize = BufferUtils::getSize(a->src);
             const uint64_t dstSize = BufferUtils::getSize(a->dst);
             if ((a->srcOffset + a->size) > srcSize) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: src offset and size are out of bounds");
+                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: src offset and size are out of bounds", taskInfo);
                     return false;
                 }
             if ((a->dstOffset + a->size) > dstSize) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: dst offset and size are out of bounds");
+                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: dst offset and size are out of bounds", taskInfo);
                     return false;
                 }
             // make sure the src and dst are not the same
             if (a->src == a->dst) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("GpuCopyVulkan::validate: src and dst are the same");
+                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: src and dst are the same", taskInfo);
                     return false;
                 }
             return true;
         }
         if (RuntimeType::cast<BufferToImage>(&arguments)) {
-            GN_ERROR(sLogger)("GpuCopyVulkan::validate: BufferToImage not implemented");
+            GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: BufferToImage not implemented", taskInfo);
             return false;
         }
-        GN_ERROR(sLogger)("GpuCopyVulkan::validate: arguments must be either BufferToBuffer or BufferToImage");
+        GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: arguments must be either BufferToBuffer or BufferToImage", taskInfo);
         return false;
     }
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments &) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+        GN_RDG_FAIL_ON_FALSE(validate(taskInfo, arguments));
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
         GN_RDG_FAIL_ON_FAIL(sc.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        return PASSED;
+        // One execute step: record/cmd+barriers+copy, then let the manager submit/flush.
+        return {PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult execute(TaskInfo & taskInfo, [[maybe_unused]] size_t step, Arguments & arguments) override {
+        GN_ASSERT(0 == step);
         const auto * bufferToBuffer = RuntimeType::cast<BufferToBuffer>(arguments);
         if (bufferToBuffer) return copyBufferToBuffer(taskInfo, *bufferToBuffer);
 

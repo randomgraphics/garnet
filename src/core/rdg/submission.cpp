@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "submission.h"
-#include <limits>
 #include <chrono>
 #include <unordered_set>
 
@@ -327,8 +326,9 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         struct PendingTask {
             const Workflow::Task * task;
             TaskInfo               info;
+            size_t                 remainingSteps;
         };
-        DynaArray<PendingTask> pendingTasks;
+        std::list<PendingTask> pendingTasks;
         bool                   hasWarning = false;
         for (size_t executionOrderIdx = 0; executionOrderIdx < executionOrder.size(); ++executionOrderIdx) {
             size_t workflowIdx = executionOrder[executionOrderIdx];
@@ -341,84 +341,104 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                 StrA     wfName = payload->name.empty() ? StrA("[unnamed workflow]") : payload->name;
                 StrA     tName  = task.name.empty() ? StrA("[unnamed task]") : task.name;
                 uint64_t idx    = (uint64_t) pendingTasks.size();
-                pendingTasks.append(
-                    PendingTask {.task = &task,
-                                 .info = TaskInfo {.submission = *this, .workflow = wfName, .task = tName, .index = idx, .action = *task.action}});
+                pendingTasks.insert(
+                    pendingTasks.end(),
+                    PendingTask {.task           = &task,
+                                 .info           = TaskInfo {.submission = *this, .workflow = wfName, .task = tName, .index = idx, .action = *task.action},
+                                 .remainingSteps = 0});
                 {
                     std::lock_guard<std::mutex> lock(mStateMutex);
                     mTaskStates.append(TaskExecutionState {.workflowName = wfName, .taskName = tName, .index = idx, .validationPassed = true});
                 }
                 auto & pt = pendingTasks.back();
                 GN_VERBOSE(sLogger)("Preparing {}", pt.info);
-                auto result = task.action->prepare(pt.info, *task.arguments);
+                auto prepareResult = task.action->prepare(pt.info, *task.arguments);
                 {
                     std::lock_guard<std::mutex> lock(mStateMutex);
                     if (pt.info.index < mTaskStates.size()) {
                         mTaskStates[pt.info.index].prepareDone   = true;
-                        mTaskStates[pt.info.index].prepareResult = result;
+                        mTaskStates[pt.info.index].prepareResult = prepareResult.result;
                     }
                 }
-                if (result == Action::ExecutionResult::FAILED) {
+                if (prepareResult.result == Action::ExecutionResult::FAILED) {
                     GN_ERROR(sLogger)("{}: preparation failed", pt.info);
                     std::lock_guard<std::mutex> lock2(mStateMutex);
                     mRunResult = Action::ExecutionResult::FAILED;
                     return setResult(Action::ExecutionResult::FAILED);
                 }
-                if (result == Action::ExecutionResult::WARNING) {
+                if (prepareResult.result == Action::ExecutionResult::WARNING) {
                     GN_VERBOSE(sLogger)("{}: preparation completed with warnings", pt.info);
                     hasWarning = true;
                 }
-            }
-        }
-
-        // Emit prepare signal and check for errors.
-        auto signalResults = allTasksPrepared.emit(*this);
-        for (auto r : signalResults.results) {
-            if (r == Action::ExecutionResult::FAILED) {
-                std::lock_guard<std::mutex> lock(mStateMutex);
-                mRunResult = Action::ExecutionResult::FAILED;
-                return setResult(Action::ExecutionResult::FAILED);
-            }
-            if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
-        }
-
-        // step 4: execute workflows sequentially in topological order.
-        for (size_t i = 0; i < pendingTasks.size(); ++i) {
-            auto & pt = pendingTasks[i];
-            GN_VERBOSE(sLogger)("Executing {}", pt.info);
-            auto result = pt.task->action->execute(pt.info, *pt.task->arguments);
-            {
-                std::lock_guard<std::mutex> lock(mStateMutex);
-                if (pt.info.index < mTaskStates.size()) {
-                    mTaskStates[pt.info.index].executeDone   = true;
-                    mTaskStates[pt.info.index].executeResult = result;
+                pt.remainingSteps = prepareResult.remainingSteps;
+                if (0 == pt.remainingSteps) {
+                    // the task is done already. remove it from the pending list.
+                    pendingTasks.pop_back();
                 }
             }
-            if (result == Action::ExecutionResult::FAILED) {
-                GN_ERROR(sLogger)("{}: execution failed", pt.info);
-                std::lock_guard<std::mutex> lock(mStateMutex);
-                mRunResult = Action::ExecutionResult::FAILED;
-                return setResult(Action::ExecutionResult::FAILED);
-            }
-            if (result == Action::ExecutionResult::WARNING) {
-                GN_VERBOSE(sLogger)("{}: execution completed with warnings", pt.info);
-                hasWarning = true;
-            }
         }
 
-        // Emit execute signal and check for errors.
-        signalResults = allTasksExecuted.emit(*this);
-        for (auto r : signalResults.results) {
-            if (r == Action::ExecutionResult::FAILED) {
-                std::lock_guard<std::mutex> lock(mStateMutex);
-                mRunResult = Action::ExecutionResult::FAILED;
-                return setResult(Action::ExecutionResult::FAILED);
+        // // Emit prepare signal and check for errors.
+        // auto signalResults = allTasksPrepared.emit(*this);
+        // for (auto r : signalResults.results) {
+        //     if (r == Action::ExecutionResult::FAILED) {
+        //         std::lock_guard<std::mutex> lock(mStateMutex);
+        //         mRunResult = Action::ExecutionResult::FAILED;
+        //         return setResult(Action::ExecutionResult::FAILED);
+        //     }
+        //     if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
+        // }
+
+        // step 4: execute workflows sequentially in topological order.
+        // for (size_t i = 0; i < pendingTasks.size(); ++i) {
+        size_t currentStep = 0;
+        while (!pendingTasks.empty()) {
+            for (auto iter = pendingTasks.begin(); iter != pendingTasks.end();) {
+                auto & pt = *iter;
+                GN_VERBOSE(sLogger)("Executing {}, step = {}", pt.info, currentStep);
+                auto result = pt.task->action->execute(pt.info, currentStep, *pt.task->arguments);
+                {
+                    std::lock_guard<std::mutex> lock(mStateMutex);
+                    if (pt.info.index < mTaskStates.size()) {
+                        mTaskStates[pt.info.index].executeDone   = true;
+                        mTaskStates[pt.info.index].executeResult = result;
+                    }
+                }
+                if (result == Action::ExecutionResult::FAILED) {
+                    GN_ERROR(sLogger)("{}: execution failed", pt.info);
+                    std::lock_guard<std::mutex> lock(mStateMutex);
+                    mRunResult = Action::ExecutionResult::FAILED;
+                    return setResult(Action::ExecutionResult::FAILED);
+                }
+                if (result == Action::ExecutionResult::WARNING) {
+                    GN_VERBOSE(sLogger)("{}: execution completed with warnings", pt.info);
+                    hasWarning = true;
+                }
+                GN_ASSERT(pt.remainingSteps > 0);
+                --pt.remainingSteps;
+                if (0 == pt.remainingSteps) {
+                    // the task is done already. remove it from the pending list.
+                    iter = pendingTasks.erase(iter);
+                } else {
+                    ++iter;
+                }
             }
-            if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
+            ++currentStep;
         }
 
-        // Signal EoS before returning the result to user thread.
-        signalTheEndOfSubmission.proceed();
+        // // Emit execute signal and check for errors.
+        // signalResults = allTasksExecuted.emit(*this);
+        // for (auto r : signalResults.results) {
+        //     if (r == Action::ExecutionResult::FAILED) {
+        //         std::lock_guard<std::mutex> lock(mStateMutex);
+        //         mRunResult = Action::ExecutionResult::FAILED;
+        //         return setResult(Action::ExecutionResult::FAILED);
+        //     }
+        //     if (r == Action::ExecutionResult::WARNING) { hasWarning = true; }
+        // }
+
+        // // Signal EoS before returning the result to user thread.
+        // signalTheEndOfSubmission.proceed();
 
         // Done
         Action::ExecutionResult finalResult = hasWarning ? Action::ExecutionResult::WARNING : Action::ExecutionResult::PASSED;

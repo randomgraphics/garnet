@@ -28,12 +28,13 @@ struct TaskInfoTestAction : public Action {
         void addToReadWriteList(ArtifactReadWriteList &) const override {}
     };
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments &) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments &) override {
         taskInfo.context = AutoRef<Payload>(new Payload(42));
-        return PASSED;
+        return {PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments &) override {
+    ExecutionResult execute(TaskInfo & taskInfo, size_t step, Arguments &) override {
+        if (0 != step) return FAILED;
         auto * p = taskInfo.getContext<Payload>();
         if (!p) return FAILED;
         capturedValue = p->value;
@@ -56,11 +57,11 @@ struct GrabAction : public Action {
         void addToReadWriteList(ArtifactReadWriteList &) const override {}
     };
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments &) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments &) override {
         taskInfo.context = payloadToAttach;
-        return PASSED;
+        return {PASSED, 1};
     }
-    ExecutionResult execute(TaskInfo &, Arguments &) override { return PASSED; }
+    ExecutionResult execute(TaskInfo &, size_t, Arguments &) override { return PASSED; }
 };
 
 } // namespace GN::rdg

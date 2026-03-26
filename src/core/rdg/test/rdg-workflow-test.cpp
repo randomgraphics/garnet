@@ -43,9 +43,9 @@ struct InitIntegerAction : public Action {
         }
     };
 
-    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
+    Action::PrepareResult prepare(TaskInfo &, Arguments &) override { return {PASSED, 1}; }
 
-    ExecutionResult execute(TaskInfo &, Arguments & args) override {
+    ExecutionResult execute(TaskInfo &, size_t, Arguments & args) override {
         auto * a = RuntimeType::cast<A>(args);
         CHECK(a != nullptr);
         if (!a) return FAILED;
@@ -78,9 +78,9 @@ struct AddIntegersAction : public Action {
         }
     };
 
-    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
+    Action::PrepareResult prepare(TaskInfo &, Arguments &) override { return {PASSED, 1}; }
 
-    ExecutionResult execute(TaskInfo &, Arguments & args) override {
+    ExecutionResult execute(TaskInfo &, size_t, Arguments & args) override {
         auto * a = RuntimeType::cast<A>(args);
         CHECK(a != nullptr);
         if (!a) return FAILED;
@@ -114,9 +114,9 @@ struct MultiplyIntegersAction : public Action {
         }
     };
 
-    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
+    Action::PrepareResult prepare(TaskInfo &, Arguments &) override { return {PASSED, 1}; }
 
-    ExecutionResult execute(TaskInfo &, Arguments & args) override {
+    ExecutionResult execute(TaskInfo &, size_t, Arguments & args) override {
         auto * a = RuntimeType::cast<A>(args);
         CHECK(a != nullptr);
         if (!a) return FAILED;
@@ -148,8 +148,8 @@ struct ReadIntegerAction : public Action {
         }
     };
 
-    ExecutionResult prepare(TaskInfo &, Arguments &) override { return PASSED; }
-    ExecutionResult execute(TaskInfo &, Arguments &) override { return PASSED; }
+    PrepareResult   prepare(TaskInfo &, Arguments &) override { return {PASSED, 1}; }
+    ExecutionResult execute(TaskInfo &, size_t, Arguments &) override { return PASSED; }
 };
 
 } // namespace GN::rdg
