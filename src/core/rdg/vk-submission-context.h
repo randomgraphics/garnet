@@ -4,7 +4,6 @@
 #include "vk-gpu-context.h"
 #include "vk-render-pass.h"
 #include "vk-command-buffer.h"
-#include "vk-resource-tracker.h"
 #include <garnet/base/array.h>
 
 namespace GN::rdg {
@@ -17,14 +16,12 @@ struct SubmissionContextVulkan : public SubmissionImpl::Context, public SlotBase
     GN_RDG_REGISTER_RUNTIME_TYPE();
 
     SubmissionContextVulkan(SubmissionImpl & submission_, AutoRef<GpuContextVulkan> gpu_)
-        : SubmissionImpl::Context(TYPE_INFO()), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_, submission_}),
-          resourceTracker({submission_}) {}
+        : SubmissionImpl::Context(TYPE_INFO()), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_, submission_}) {}
 
     SubmissionImpl &           submission;
     AutoRef<GpuContextVulkan>  gpu;
     RenderPassManagerVulkan    renderPassManager;
     CommandBufferManagerVulkan commandBufferManager;
-    ResourceTrackerVulkan      resourceTracker;
 
     // /// Upload actions that wrote data during this submission.
     // /// CommandBufferManagerVulkan::submit() walks this list to distribute GPU completion tokens.

@@ -11,8 +11,6 @@ namespace GN::rdg {
 
 struct Buffer;
 
-class ResourceTrackerVulkan;
-
 class RenderPassManagerVulkan {
 public:
     inline static const uint64_t TYPE = RuntimeType::getNextUniqueTypeId();
