@@ -33,7 +33,7 @@ class GpuCopyVulkan : public GpuCopy {
         if (dstTransient) dstOff += dstTransient->offset();
 
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(taskInfo);
+        auto   cb = sc.commandBufferManager.execute(taskInfo, CommandBufferManagerVulkan::GRAPHICS);
         GN_RDG_FAIL_ON_FALSE(cb);
 
         const vk::AccessFlags        transferRead  = vk::AccessFlagBits::eTransferRead;
@@ -123,7 +123,7 @@ public:
     Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         GN_RDG_FAIL_ON_FALSE(validate(taskInfo, arguments));
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(sc.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
+        GN_RDG_FAIL_ON_FAIL(sc.commandBufferManager.prepare(taskInfo));
         // One execute step: record/cmd+barriers+copy, then let the manager submit/flush.
         return {PASSED, 1};
     }

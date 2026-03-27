@@ -30,7 +30,7 @@ public:
 
         // standard preparation.
         auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo));
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         // done
@@ -46,7 +46,7 @@ public:
 
         // standard execution
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(taskInfo);
+        auto   cb = sc.commandBufferManager.execute(taskInfo, CommandBufferManagerVulkan::GRAPHICS);
         GN_RDG_FAIL_ON_FALSE(cb, "{} - failed to get command buffer", taskInfo);
         auto rp = sc.renderPassManager.execute(taskInfo, &cb);
         GN_RDG_FAIL_ON_FAIL(rp);
@@ -116,7 +116,7 @@ public:
 
         // standard preparation.
         auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo));
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawTextureTransitions(taskInfo, a->resources));
         GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawBufferTransitions(taskInfo, a->resources, a->geometry));
@@ -138,7 +138,7 @@ public:
             }
 
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(taskInfo);
+        auto   cb = sc.commandBufferManager.execute(taskInfo, CommandBufferManagerVulkan::GRAPHICS);
         GN_RDG_FAIL_ON_FALSE(cb, "{} - failed to get command buffer", taskInfo);
         auto rp = sc.renderPassManager.execute(taskInfo, &cb);
         GN_RDG_FAIL_ON_FAIL(rp);

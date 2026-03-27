@@ -37,7 +37,12 @@ public:
         }
 
         ~CommandProxy() {
-            if (mManager && mCommandBuffer && mNeedToSubmit) { mManager->submit(*this); }
+            if (mManager && mCommandBuffer && mNeedToSubmit) {
+                mManager->submit(*mTaskInfo, *mCommandBuffer);
+                mManager       = nullptr;
+                mCommandBuffer = nullptr;
+                mNeedToSubmit  = false;
+            }
         }
 
         bool valid() const { return mManager && mCommandBuffer; }
@@ -97,15 +102,12 @@ public:
     ~CommandBufferManagerVulkan();
 
     /// Called by task in prepare pass to ask for certain type of command buffer.
-    Action::ExecutionResult prepare(TaskInfo & taskInfo, CommandBufferType type);
+    Action::ExecutionResult prepare(TaskInfo & taskInfo);
 
     /// Called by task in execution pass to retrieve the requested command buffer.
     /// \return The command buffer and a flag indicating if the caller needs to submit the command buffer to the queue.
     ///         If the submit flag is set, the caller must submit the command buffer to the queue.
-    CommandProxy execute(TaskInfo & taskInfo);
-
-    /// Called by CommandBuffer's destructor to submit itself to the queue. Do not call this function anywhere else.
-    void submit(CommandProxy & commandProxy);
+    CommandProxy execute(TaskInfo & taskInfo, CommandBufferType type);
 
 private:
     friend struct CommandProxy;
@@ -115,14 +117,15 @@ private:
         typedef std::unordered_map<BackbufferVulkan *, std::unordered_map<const rapid_vulkan::Image *, TextureState::ImageStateTransition>> BackbufferStateMap;
         typedef std::unordered_map<Buffer *, BufferStateTransition>                                                                         BufferStateMap;
 
+        CommandBufferType                             type;
         rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue;
         rapid_vulkan::CommandBuffer                   commandBuffer {};
         TextureStateMap                               textureStates;
         BackbufferStateMap                            backbufferStates;
         BufferStateMap                                bufferStates;
 
-        CommandBuffer(rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue_, rapid_vulkan::CommandBuffer && commandBuffer_)
-            : queue(std::move(queue_)), commandBuffer(std::move(commandBuffer_)) {}
+        CommandBuffer(CommandBufferType type_, rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue_, rapid_vulkan::CommandBuffer && commandBuffer_)
+            : type(type_), queue(std::move(queue_)), commandBuffer(std::move(commandBuffer_)) {}
 
         /// Texture layout tracker: use command-buffer state during recording; flush to resources on submit.
         /// If this is the first reference to \p tex in this command buffer, uses the texture's current state as source.
@@ -149,10 +152,8 @@ private:
     };
 
     struct Entry {
-        CommandBufferType                             type {};
-        uint64_t                                      taskIndex {};
-        rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue {};
-        std::shared_ptr<CommandBuffer>                commandBuffer;
+        uint64_t                       theVeryLastTaskIndexWeHaveSeen {};
+        std::shared_ptr<CommandBuffer> prevCommandBuffer {};
     };
 
     typedef std::map<rapid_vulkan::CommandQueue *, DynaArray<rapid_vulkan::CommandQueue::SubmissionID>> SubmissionIDMap;
@@ -163,8 +164,11 @@ private:
     rapid_vulkan::Ref<rapid_vulkan::CommandQueue> mGraphicsQueue;
     rapid_vulkan::Ref<rapid_vulkan::CommandQueue> mComputeQueue;
     rapid_vulkan::Ref<rapid_vulkan::CommandQueue> mTransferQueue;
-    std::map<uint64_t, Entry>                     mEntries; // key is task index.
+    Entry                                         mCommandEntry; // key is task index.
     SubmissionIDMap                               mSubmissionIDs;
+
+    /// Called by CommandBuffer's destructor to submit itself to the queue. Do not call this function anywhere else.
+    void submit(const TaskInfo & taskInfo, const CommandBuffer & cb);
 
     void waitForIdle(SubmissionImpl &) {
         for (auto & [queue, submissionIDs] : mSubmissionIDs) {

@@ -60,7 +60,7 @@ struct StateTransitionTestAction : public Action {
 
     Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments &) override {
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(sc.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
+        GN_RDG_FAIL_ON_FAIL(sc.commandBufferManager.prepare(taskInfo));
         return {PASSED, 1};
     }
 
@@ -69,7 +69,7 @@ struct StateTransitionTestAction : public Action {
         if (!a) return FAILED;
 
         auto & sc = taskInfo.submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(taskInfo);
+        auto   cb = sc.commandBufferManager.execute(taskInfo, CommandBufferManagerVulkan::GRAPHICS);
         if (!cb) {
             // Debug: action failed because execute() returned a failed CommandBuffer (e.g. task not in manager, or begin() failed).
             return FAILED;

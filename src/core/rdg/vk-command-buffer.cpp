@@ -54,84 +54,52 @@ rapid_vulkan::Ref<rapid_vulkan::CommandQueue> CommandBufferManagerVulkan::getQue
 }
 
 // Collecting all tasks that needs a command buffer, create an entry for each of them.
-Action::ExecutionResult CommandBufferManagerVulkan::prepare(TaskInfo & taskInfo, CommandBufferType type) {
-    rapid_vulkan::Ref<rapid_vulkan::CommandQueue> queue = getQueueForType(type);
-    if (queue.empty()) GN_UNLIKELY {
-            return Action::FAILED;
-        }
-
-    GN_ASSERT(mEntries.find(taskInfo.index) == mEntries.end());
-    mEntries[taskInfo.index] = Entry {type, taskInfo.index, queue, {}};
-
+Action::ExecutionResult CommandBufferManagerVulkan::prepare(TaskInfo & taskInfo) {
+    mCommandEntry.theVeryLastTaskIndexWeHaveSeen = taskInfo.index;
     return Action::PASSED;
 };
 
-CommandBufferManagerVulkan::CommandProxy CommandBufferManagerVulkan::execute(TaskInfo & taskInfo) {
-    auto iter = mEntries.find(taskInfo.index);
-    if (iter == mEntries.end()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: task index {} not found (mEntries.size()={})", taskInfo.index, mEntries.size());
-            return {};
-        }
-    Entry & e = iter->second;
+CommandBufferManagerVulkan::CommandProxy CommandBufferManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferType bufferType) {
+    // See if we need a new command buffer.
+    if (!mCommandEntry.prevCommandBuffer || mCommandEntry.prevCommandBuffer->type != bufferType) {
+        // submit the previous command buffer before creating a new one.
+        if (mCommandEntry.prevCommandBuffer) { submit(taskInfo, *mCommandEntry.prevCommandBuffer); }
 
-    if (iter == mEntries.begin()) {
-        // this is the first task that needs command buffer.
-        e.commandBuffer = std::make_shared<CommandBuffer>(
-            e.queue, e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary));
-        if (!e.commandBuffer) GN_UNLIKELY {
+        // create a new command buffer.
+        auto q = getQueueForType(bufferType);
+        auto b = std::make_shared<CommandBuffer>(bufferType, q,
+                                                 q->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary));
+        if (!b) GN_UNLIKELY {
                 GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: queue->begin() returned empty for task {}", taskInfo.index);
                 return {};
             }
-    } else {
-        // get the previous entry.
-        auto    prevIter = std::prev(iter);
-        Entry & prev     = prevIter->second;
-        if (prev.type != e.type) {
-            // the type has changed. need to start a new command buffer.
-            e.commandBuffer = std::make_shared<CommandBuffer>(
-                e.queue, e.queue->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary));
-            if (!e.commandBuffer) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: queue->begin() returned empty for task {} (type change)", taskInfo.index);
-                    return {};
-                }
-        } else {
-            // the type is the same. reuse the previous command buffer.
-            e.commandBuffer = prev.commandBuffer;
-        }
+
+        mCommandEntry.prevCommandBuffer = std::move(b);
     }
 
-    // check if we need to submit the command buffer.
-    bool needToSubmit = (iter == std::prev(mEntries.end())) || (iter->second.type != std::next(iter)->second.type);
+    // Mark the command buffer as needing submission if we are processing the very last task.
+    bool needToSubmit = (mCommandEntry.theVeryLastTaskIndexWeHaveSeen == taskInfo.index);
 
     // done
-    GN_ASSERT(e.commandBuffer);
-    return CommandProxy(*this, taskInfo, e.commandBuffer.get(), needToSubmit);
+    GN_ASSERT(mCommandEntry.prevCommandBuffer);
+    return CommandProxy(*this, taskInfo, mCommandEntry.prevCommandBuffer.get(), needToSubmit);
 }
 
-void CommandBufferManagerVulkan::submit(CommandProxy & proxy) {
-    if (proxy.mManager != this || !proxy.mTaskInfo) GN_UNLIKELY {
-            GN_ERROR(sLogger)("CommandBufferManagerVulkan::submit: invalid proxy. igored.");
-            return;
-        }
-    if (!proxy.mCommandBuffer) GN_UNLIKELY return; // already submitted. silently ignore.
-    GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", *proxy.mTaskInfo);
-    auto cb = proxy.mCommandBuffer;
-    for (auto & [tex, state] : cb->textureStates) {
+void CommandBufferManagerVulkan::submit(const TaskInfo & taskInfo, const CommandBuffer & cb) {
+    GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", taskInfo);
+    for (auto & [tex, state] : cb.textureStates) {
         if (tex) tex->state().assignFrom(state, tex->name);
     }
-    for (auto & [bb, imageMap] : cb->backbufferStates) {
+    for (auto & [bb, imageMap] : cb.backbufferStates) {
         if (bb)
             for (auto & [image, transition] : imageMap) bb->assignFrom(image, transition);
     }
-    for (auto & [buf, transition] : cb->bufferStates) {
+    for (auto & [buf, transition] : cb.bufferStates) {
         if (buf) assignBufferState(buf, transition);
     }
-    auto   submissionID = cb->queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb->commandBuffer}});
-    auto & ids          = mSubmissionIDs[cb->queue.get()];
+    auto   submissionID = cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
+    auto & ids          = mSubmissionIDs[cb.queue.get()];
     ids.append(submissionID);
-
-    // clear the command buffer pointer to avoid double submisson.
-    proxy.mCommandBuffer = nullptr;
 }
 
 bool CommandBufferManagerVulkan::CommandBuffer::transitionTexture(TextureVulkan * tex, const GpuResourceView::SubresourceRange & range,
