@@ -372,12 +372,12 @@ public:
     ~Signal() { mControlBlock.reset(); }
 
     /// Connect a lambda or lambda-like object to the signal.
-    /// The signal will only keep a ponter to the lambda object. It is the caller's responsibility to ensure
+    /// The signal will only keep a pointer to the lambda object. It is the caller's responsibility to ensure
     /// the lifetime of the lambda or lambda-like object is equal to or longer than the returned Tether object.
     template<typename F>
     [[nodiscard]] Tether connect(const F & func) const {
         auto lock = std::lock_guard(mControlBlock->mutex);
-        return addDelegate(DelegateType::template createLambda(func));
+        return addDelegate(DelegateType::template createLambda<F>(func));
     }
 
     template<RET (*STATIC_FUNCTION)(PARAMS...)>
