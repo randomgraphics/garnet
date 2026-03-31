@@ -6,7 +6,6 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-#include <vulkan/vulkan_enums.hpp>
 
 namespace GN::rdg {
 

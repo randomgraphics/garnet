@@ -13,7 +13,6 @@
 #include "rdg/vk-backbuffer.h"
 #include "rdg/vk-persistent-buffer.h"
 #include <memory>
-#include <vulkan/vulkan_enums.hpp>
 
 using namespace GN;
 using namespace GN::rdg;
