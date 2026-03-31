@@ -1,6 +1,12 @@
 #!/usr/bin/python3
+from pdb import run
 import sys, subprocess, re, argparse, platform, pathlib, os
 import importlib; utils = importlib.import_module("garnet-utils")
+
+def run_all_tests(args):
+    utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args, check=True, cwd=root_folder)
+    utils.run_the_latest_binary("build/{variant}/bin/GNtest-internal", args.test_args, check=True, cwd=root_folder)
+    utils.run_the_latest_binary("build/{variant}/bin/GNsample-rdg-simple-triangle", ["t"], check=True, cwd=root_folder)
 
 def run_style_check():
     print("Checking code styles...", end="", flush=True)
@@ -17,14 +23,24 @@ def run_style_check():
 
 # main
 ap = argparse.ArgumentParser()
-ap.add_argument("-l", action="store_true", help="Run code lint only. Skip test.")
+ap.add_argument("-l", action="store_true", help="Run code lint only. Skip rest.")
+ap.add_argument("-i", action="store_true", help="Run internal test only. Skip rest.")
+ap.add_argument("-u", action="store_true", help="Run unit test only. Skip rest.")
 ap.add_argument("-t", action="store_true", help="Run test only. Skip lint.")
 ap.add_argument("test_args", nargs="*")
 args = ap.parse_args()
-if not args.t:
+
+root_folder = utils.get_root_folder()
+
+if args.l:
     run_style_check()
-if not args.l:
-    # look for the root folder of the repository, then run the test app from that folder
-    root_folder = utils.get_root_folder()
+elif args.i:
+    utils.run_the_latest_binary("build/{variant}/bin/GNtest-internal", args.test_args, check=True, cwd=root_folder)
+elif args.u:
     utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args, check=True, cwd=root_folder)
-    utils.run_the_latest_binary("build/{variant}/bin/GNtest-rdg-smoke1", args.test_args, check=True, cwd=root_folder)
+elif args.t:
+    run_all_tests(args)
+else:
+    # the default behavior when there are no arguments specified at command line.
+    run_style_check()
+    run_all_tests(args)

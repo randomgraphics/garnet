@@ -17,21 +17,21 @@ class GpuResourceGroupVulkan : public GpuResourceGroup {
     DynaArray<DynaArray<GpuResourceView>> mBoundViews;
 
     void buildLayoutAndPool();
-    void addSlotToReadWriteList(size_t slot, std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const;
+    void addSlotToReadWriteList(size_t slot, Arguments::ArtifactReadWriteList & list) const;
 
 public:
-    GpuResourceGroupVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const CreateParameters & params);
+    GpuResourceGroupVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu, const CreateParameters & params);
     ~GpuResourceGroupVulkan() override;
 
     GpuContext & gpu() const override { return *mGpu; }
 
     void setResourceViews(size_t slot, size_t offset, SafeArrayAccessor<const GpuResourceView> views) override;
-    void addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const override;
+    void addToReadWriteList(Arguments::ArtifactReadWriteList & list) const override;
 
     vk::DescriptorSetLayout vkLayout() const { return mLayout; }
     vk::DescriptorSet       vkSet() const { return mSet; }
 };
 
-AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(ArtifactDatabase & db, const StrA & name, const GpuResourceGroup::CreateParameters & params);
+AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(const StrA & name, const GpuResourceGroup::CreateParameters & params);
 
 } // namespace GN::rdg

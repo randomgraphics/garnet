@@ -1,0 +1,175 @@
+# Assignment: GPU Resource Binding — Take 2
+
+---
+
+## Goal
+
+**Comment out GpuResourceGroup entirely.** Fall back to a simpler model:
+
+- Use a **3-D GpuResourceTable** to pass shader resources to shaders: `resources[setIndex][bindingIndex][arrayIndex]` = `GpuResourceView`.
+- Rely on **rapid_vulkan's Drawable and DrawPack** to manage layout and descriptors behind the scene (no manual descriptor set allocation or vkCmdBindDescriptorSets from our side for resource groups).
+
+So: actions and effect builders fill the table; the Vulkan backend converts table entries into `drawable.b()` / `drawable.t()` / `drawable.s()` calls; Drawable compiles to a DrawPack that owns descriptor sets and binding. We do not maintain GpuResourceGroup or its Vulkan descriptor-set implementation for now.
+
+---
+
+## User instructions / notes (from conversation)
+
+- "Comment out GpuResourceGroup entirely."
+- "Use a simpler 3-D GpuResourceTable to pass shader resources to shader."
+- "Rely on rapid_vulkan's Drawable and DrawPack to manage layout and descriptors behind the scene."
+- Treat this assignment file as **long-term memory**: progress, notes, instructions, and anything needed to resume or extend the work belong here.
+
+---
+
+## PROGRESS
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+
+**Last completed:** SubGraph moved before SharedShaderConstants in pipeline.h. Effect build() returns SubGraph (set0 not in SubGraph; apps get set0 from SharedShaderConstants::build() or getSet0Resources()). PbrShading and SkyBox accept AutoRef<const SharedShaderConstants> so effects only query state (getSet0Resources(), getViewInformation()) and cannot call build() or set*().
+
+**Done so far:**
+
+1. **artifacts.h**
+   - Wrapped entire `GpuResourceGroup` struct (and `create()` declaration) in `#if 0`.
+   - Comment: "we use GpuResourceTable (set/binding/view) + rapid_vulkan Drawable/DrawPack instead."
+
+2. **actions.h**
+   - Removed `descriptorGroups` from `GpuDraw::A`.
+   - Kept and documented `resources` (GpuResourceTable): "3-D resource table: resources[setIndex][bindingIndex][arrayIndex] = GpuResourceView. Backend feeds this into rapid_vulkan Drawable (layout/descriptors managed by DrawPack)."
+
+3. **vk-draw-actions.cpp**
+   - Removed `#include "vk-gpu-resource-group.h"`.
+   - Removed the block that bound `descriptorGroups` via `vkCmdBindDescriptorSets`.
+   - Added loop over `a->resources`: for each (set, binding) with buffer views, convert `GpuResourceView` → `rapid_vulkan::BufferView` (using `BufferUtils::toRapid`) and call `drawable.b(DescriptorIdentifier(set, binding), rvViews)`.
+   - Left **TODO** in code: "image/sampler binding from GpuResourceView (ImageView + optional Sampler) → drawable.t() / drawable.s()".
+
+4. **gpu-resource-group.cpp**
+   - Wrapped full implementation in `#if 0` (GpuResourceGroup::create and backend dispatch).
+
+5. **vk-gpu-resource-group.cpp**
+   - Wrapped full implementation in `#if 0` (GpuResourceGroupVulkan, createVulkanGpuResourceGroup, getImageView helper, etc.).
+
+6. **pipeline.h**
+   - Removed pure virtual `getSet0Group()`.
+   - Comment: "use GpuResourceTable (resources[set][binding]) + Drawable/DrawPack instead. When SharedShaderConstants is re-enabled, it should expose UBO views for populating draw args' resources table."
+
+7. **pbr-shading.cpp**
+   - Removed the block that called `getSet0Group()` and set `drawArgs->descriptorGroups[0]`.
+   - Comment: "Shader resources: use drawArgs->resources (GpuResourceTable). When SharedShaderConstants is re-enabled, it should provide camera UBO and lighting UBO views for resources[0][0] and resources[0][1]."
+
+**In progress:** None. Next: optional image/sampler binding from table.
+
+**Reinstated SharedShaderConstants (earlier):**
+- **pipeline.h:** Added virtual getCameraUboView() and getLightingUboView() returning GpuResourceView.
+- **shared-shader-constants.cpp:** Restored SharedShaderConstantsVulkan; two PersistentBuffers (camera, lighting UBO). create() instantiates SharedShaderConstantsVulkan for Vulkan.
+- **pbr-shading.cpp:** Fills drawArgs->resources[0] from SharedShaderConstants when present.
+
+**UBO upload without setContent (user request):**
+- **shared-shader-constants.cpp:** build() uses TransientArena + TransientBuffer to stage CPU data, then GpuCopy::BufferToBuffer tasks in a Workflow to copy transient → persistent. No setContent(). initGpuResources() creates mArena, mCopyAction, mCameraBuffer, mLightingBuffer.
+
+**build() returns Workflow + Set 0 resource set (user request):**
+- **pipeline.h:** BuildResult struct { Workflow* workflow; Set0ResourceSet set0 }. Set0ResourceSet = GpuShaderAction::GraphicsResourceSet (one set's bindings). build() return type → BuildResult. Added getSet0Resources() returning last built set0. Removed getCameraUboView() and getLightingUboView() from interface.
+- **shared-shader-constants.cpp:** build() returns BuildResult; fills mLastSet0 (camera + lighting views) and out.set0; getSet0Resources() returns mLastSet0. Set0 views built inline in build() (no getCameraUboView/getLightingUboView).
+- **pbr-shading.cpp:** Uses getSet0Resources() and assign drawArgs->resources[0] = set0 when non-empty.
+- **shared-shader-constants-test.cpp:** All tests use result = ssc->build(*rg); result.workflow, result.set0; one test checks result.set0.size() >= 2.
+- **draw-mesh.cpp:** Calls sharedConstants->build(*renderGraph) each frame; submits [upload workflow, render workflow] so UBOs are copied before draw.
+
+**SubGraph order + const SharedShaderConstants (user request):**
+- **pipeline.h:** SubGraph struct moved to appear before SharedShaderConstants. Effect build() already returns SubGraph (no set0 in SubGraph). PbrShading::BuildParameters.sharedShaderConstants and SkyBox::BuildParameters.sharedShaderConstants changed to AutoRef<const SharedShaderConstants> so effects cannot trigger build() or mutating methods; they only query (getSet0Resources(), getViewInformation(), etc.). App owns non-const SharedShaderConstants and calls build() per frame.
+
+**Build:** `python env/bin/build.py d` passes (Debug, Linux/WSL). Lint: `env/bin/cit.py -l`. (Some Vulkan copy/validation tests may fail on CI; PBR tests pass.)
+
+--- END PROGRESS ---
+
+---
+
+## Reference — key files
+
+**Public API**
+- `src/inc/garnet/rdg/artifacts.h` — GpuResourceView, GpuResourceTable; GpuResourceGroup is `#if 0`.
+- `src/inc/garnet/rdg/actions.h` — GpuDraw::A (geometry, resources, immediates, renderTarget); GpuResourceTable, GraphicsResourceSet.
+- `src/inc/garnet/rdg/pipeline.h` — SubGraph (before SharedShaderConstants); SharedShaderConstants: BuildResult(workflow, set0), build()→BuildResult, getSet0Resources(); Set0ResourceSet; PbrShading/SkyBox BuildParameters use AutoRef<const SharedShaderConstants>; ViewInformation.
+
+**Backend (Vulkan)**
+- `src/core/rdg/vk-draw-actions.cpp` — GpuDrawVulkan::execute(): builds Drawable, binds from `a->resources` (buffers only so far), compile + render DrawPack.
+- `src/core/rdg/vk-transient-buffer.h` — BufferUtils::toRapid(Buffer), getHandle(Buffer).
+- `src/core/rdg/vk-gpu-resource-group.cpp` — entire file under `#if 0` (was GpuResourceGroupVulkan + getImageView).
+- `src/core/rdg/gpu-resource-group.cpp` — entire implementation under `#if 0`.
+
+**Effect / shared constants**
+- `src/core/rdg/pbr-shading.cpp` — PbrShadingVulkan::build(): params.sharedShaderConstants is const; sets geometry, renderTarget, immediates; resources[0] = sharedShaderConstants->getSet0Resources() when present.
+- `src/core/rdg/shared-shader-constants.cpp` — SharedShaderConstantsVulkan: TransientArena + GpuCopy for UBO upload; build() returns BuildResult(workflow, set0); getSet0Resources() returns mLastSet0; Set 0 = camera UBO (binding 0) + lighting UBO (binding 1).
+
+**rapid_vulkan**
+- Drawable: `.b(DescriptorIdentifier(set, binding), BufferView[] )`, `.t(..., ImageSampler[])`, `.s(..., Sampler[])`, `.c(...)` push constants, `.v()` vertex buffers, `.i()` index buffer, `.draw()` / `.dispatch()`, `.compile()` → Ref<const DrawPack>.
+- DrawPack: layout and descriptors are compiled from the pipeline + bound arguments; CommandBuffer::render(drawPack) records the draw.
+
+---
+
+## Build / CI
+
+- Build: `./env/bin/build.py d` (from repo root; use env as in Dynamic Buffer Upload Take 2).
+- CI: `env/bin/cit.py` (lint + unit tests); `env/bin/cit.py -t` (tests only).
+
+---
+
+## Conventions (for this assignment)
+
+- One logical step per commit; commit after each verifiable step.
+- Prefer minimal code change; keep GpuResourceGroup and related code only under `#if 0` so it can be restored or referenced later.
+- When adding image/sampler binding: reuse or reimplement the getImageView (and sampler) logic from vk-gpu-resource-group.cpp (currently commented out); TextureVulkan may need to expose a Ref<const Image> for Drawable’s ImageSampler if not already available.
+
+---
+
+## Task breakdown (future / verifiable steps)
+
+### Phase 1: Image/sampler binding from GpuResourceTable (optional)
+
+- **Task 1.1 — Bind sampled/storage images and combined image-sampler from resources table**
+  - In vk-draw-actions.cpp, for `a->resources[set][binding]` where views are image/texture (GpuResourceView::isImage()), convert to rapid_vulkan ImageSampler (or image-only) and call `drawable.t(DescriptorIdentifier(set, binding), imageSamplers)`.
+  - Requires: VkImageView from GpuResourceView (texture/backbuffer); optional Ref<const Sampler>; Ref<const Image> for lifetime (TextureVulkan may need imageRef() if not already exposed).
+  - Reuse or copy getImageView logic from vk-gpu-resource-group.cpp (inside `#if 0`).
+  - Verify: build passes; a draw that uses a texture via resources table renders correctly.
+
+- **Task 1.2 — Bind sampler-only slots from resources table (if needed)**
+  - For GpuResourceView that is sampler-only, call `drawable.s(DescriptorIdentifier(set, binding), samplers)`.
+  - Verify: build + test or sample.
+
+### Phase 2: Re-enable SharedShaderConstants with resources table — DONE
+
+- **Task 2.1 — Re-enable SharedShaderConstantsVulkan** ✓
+  - Restored SharedShaderConstantsVulkan; two PersistentBuffers (camera, lighting UBO). Upload via TransientArena + GpuCopy (no setContent). build() returns BuildResult(workflow, set0); getSet0Resources() returns last built Set 0. getCameraUboView/getLightingUboView removed from interface.
+
+- **Task 2.2 — PbrShading: fill resources[0] from SharedShaderConstants** ✓
+  - drawArgs->resources[0] = sharedShaderConstants->getSet0Resources() when present. Build passes.
+
+### Phase 3: Clean-up and docs (optional)
+
+- **Task 3.1 — Update README or assignment docs**
+  - Document that descriptor binding is via GpuResourceTable + Drawable/DrawPack; GpuResourceGroup is deprecated/commented for this take.
+  - Remove or update any stale references to descriptorGroups or getSet0Group in comments outside this assignment file.
+
+---
+
+## Related assignments
+
+- `agent/completed/ASSIGNMENT_GPU_RESOURCE_BINDING.txt` — original 3-set binding policy and GpuResourceGroup + SharedShaderConstants design.
+- `agent/completed/ASSIGNMENT_DYNAMIC_BUFER_UPLOAD_TAKE_2.txt` — transient buffers, copy actions, TaskInfo attachments; relevant for how upload and per-submission resources work.
+
+---
+
+## Summary of files touched
+
+| File | Change |
+|------|--------|
+| src/inc/garnet/rdg/artifacts.h | GpuResourceGroup + create() wrapped in #if 0 |
+| src/inc/garnet/rdg/actions.h | descriptorGroups removed; resources, GraphicsResourceSet documented |
+| src/inc/garnet/rdg/pipeline.h | SubGraph moved before SharedShaderConstants; BuildResult(workflow, set0); build()→BuildResult; getSet0Resources(); PbrShading/SkyBox BuildParameters use AutoRef<const SharedShaderConstants> |
+| src/core/rdg/vk-draw-actions.cpp | Bind from a->resources (buffers) via drawable.b() |
+| src/core/rdg/gpu-resource-group.cpp | Full impl #if 0 |
+| src/core/rdg/vk-gpu-resource-group.cpp | Full impl #if 0 |
+| src/core/rdg/pbr-shading.cpp | resources[0] = getSet0Resources() when SharedShaderConstants present |
+| src/core/rdg/shared-shader-constants.cpp | TransientArena+GpuCopy upload; build()→BuildResult; getSet0Resources(); mLastSet0; create() Vulkan |
+| src/core/rdg/test/shared-shader-constants-test.cpp | Use BuildResult; result.workflow, result.set0 |
+| src/sample/rdg/draw-mesh.cpp | build() per frame; submit [upload, render] workflows |

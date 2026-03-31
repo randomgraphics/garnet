@@ -9,15 +9,12 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 
-int main(int, const char **) {
-    enableCRTMemoryCheck();
+int main(int argc, const char ** argv) {
 
-    // Create artifact database with auto-registration of built-in artifacts
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    if (!db) {
-        GN_ERROR(sLogger)("Failed to create artifact database");
-        return -1;
-    }
+    bool testMode = (argc > 1) && (argv[1][0] == 't');
+    if (testMode) { GN_INFO(sLogger)("Running in test mode"); }
+
+    enableCRTMemoryCheck();
 
     // Create render graph
     auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
@@ -27,7 +24,7 @@ int main(int, const char **) {
     }
 
     // Create GPU context (no window/size; those live on Backbuffer)
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
 
     // Create and load texture (commented out until Texture::load is implemented/linked)
@@ -39,25 +36,28 @@ int main(int, const char **) {
     // if (!mesh) return -1;
 
     // Create a main window and surface of 1280x720
-    uint32_t windowWidth  = 1280;
-    uint32_t windowHeight = 720;
-    auto     window       = std::unique_ptr<win::Window>(
-        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight}));
-    if (!window) return -1;
-    window->show();
+    uint32_t                     windowWidth  = 1280;
+    uint32_t                     windowHeight = 720;
+    std::unique_ptr<win::Window> window;
+    intptr_t                     surface = 0;
+    if (!testMode) {
+        window = std::unique_ptr<win::Window>(
+            win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Rendering Demo", .clientWidth = windowWidth, .clientHeight = windowHeight}));
+        if (!window) return -1;
+        window->show();
 
-    // Window owns the surface; do not destroy it. Destroy backbuffer before window.
-    intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
-    if (!surface) return -1;
+        // Window owns the surface; no need to destroy it explicitly. Must destroy backbuffer before window.
+        surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+        if (!surface) return -1;
+    }
 
-    auto backbuffer =
-        Backbuffer::create(*db, "backbuffer",
-                           Backbuffer::CreateParameters {.context    = gpuContext,
-                                                         .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(windowWidth, windowHeight)});
+    auto backbuffer = Backbuffer::create(
+        "backbuffer", Backbuffer::CreateParameters {.context    = gpuContext,
+                                                    .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(windowWidth, windowHeight)});
     if (!backbuffer) return -1;
 
     // Create a render target that references the backbuffer
-    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    auto renderTarget = RenderTarget::create("render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
     renderTarget->addColorTarget(backbuffer);
     renderTarget->setClearColor(0.2f, 0.3f, 0.4f, 1.0f);
@@ -73,7 +73,7 @@ int main(int, const char **) {
     // if (!sampler) return -1;
 
     // Create and initialize actions (each creates itself and registers via admit())
-    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
+    auto prepareAction = PrepareBackbuffer::create("prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
 
     // auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
@@ -83,7 +83,7 @@ int main(int, const char **) {
     // auto clearDepthAction = ClearDepthStencil::create(*db, "clear_depth_action", ClearDepthStencil::CreateParameters {.context = gpuContext});
     // if (!clearDepthAction) return -1;
 
-    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
+    auto presentAction = PresentBackbuffer::create("present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
     // GpuDraw with SPIR-V from compiled headers (Phase 4); workflow task added in Phase 5.
@@ -93,30 +93,34 @@ int main(int, const char **) {
     drawParams.context = gpuContext;
     drawParams.vs      = {.binary = vertBlob->data(), .size = vertBlob->size(), .entry = "main"};
     drawParams.ps      = {.binary = fragBlob->data(), .size = fragBlob->size(), .entry = "main"};
-    auto drawAction    = GpuDraw::create(*db, "draw_triangle", drawParams);
+    auto drawAction    = GpuDraw::create("draw_triangle", drawParams);
     if (!drawAction) return -1;
 
     GN_INFO(sLogger)("Starting render loop...");
 
     // Render loop: prepare, clear, compose, present until prepare fails
-    while (window->runUntilNoNewEvents()) {
-        // Schedule render workflow
-        auto renderWorkflow  = renderGraph->createWorkflow("Render");
-        renderWorkflow->name = "Render";
+    int totalFrames  = testMode ? 10 : 0;
+    int frameCounter = 1;
+    while (totalFrames == 0 || frameCounter++ <= totalFrames) {
+        // process window events
+        if (window && !window->runUntilNoNewEvents()) break;
 
-        renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
-        // renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
+        // Schedule render workflow
+        auto renderWorkflow = renderGraph->createWorkflow("Render");
+
+        renderWorkflow.appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
+        // renderWorkflow.appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
 
         // No vertex buffer; the vertex shader generates the triangle from gl_VertexIndex.
         auto drawArgs                  = AutoRef<GpuDraw::A>(new GpuDraw::A());
         drawArgs->geometry.vertexCount = 3;
         drawArgs->renderTarget         = renderTarget;
-        renderWorkflow->appendTask("DrawTriangle", drawAction, drawArgs);
+        renderWorkflow.appendTask("DrawTriangle", drawAction, drawArgs);
 
-        renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
+        renderWorkflow.appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
 
         // Submit render graph for execution
-        auto submission = renderGraph->submit({.workflows = {&renderWorkflow, 1}});
+        auto submission = renderGraph->submit({.workflows = SafeArrayAccessor<Workflow>(&renderWorkflow, 1)});
         if (!submission) {
             GN_ERROR(sLogger)("Failed to submit render graph");
             break;

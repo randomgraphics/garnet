@@ -1,0 +1,42 @@
+# Assignment: Render Pass Manager Refactor
+
+---
+
+## Goal
+
+Refactor the render pass manager to use the `TaskInfo` context attachment interface defined in `ASSIGNMENT_DYNAMIC_BUFER_UPLOAD_TAKE_2.txt`, replacing any ad-hoc per-task state it currently maintains.
+
+---
+
+## Design constraints
+
+1. **Use TaskInfo attachments for per-task context**
+   - For each render-pass-related task, any per-task context/data it needs at execute time should be attached via the TaskInfo attachment interface (e.g. an `AutoRef<RefCounted>` payload or a small struct) instead of being stored as mutable state on the manager.
+   - From inspecting a `TaskInfo` alone, it should be clear what render-pass-related context that task carries.
+
+2. **Reduce hidden state on the render pass manager**
+   - Minimize or eliminate ad-hoc per-task state stored directly on the render pass manager classes.
+   - The manager should coordinate behavior and lifetime, but task-specific data should live in TaskInfo attachments and artifacts, not in long-lived mutable fields.
+
+3. **Preserve behavior and performance**
+   - The refactor must keep existing behavior correct: all current tests and samples involving render passes must continue to function.
+   - Performance characteristics (number of passes, barriers, and render pass reuse) should remain the same or improve; the refactor should not introduce unnecessary work.
+
+---
+
+## PROGRESS
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: none
+In progress: none
+--- END PROGRESS ---
+
+---
+
+## Reference / related work
+
+- `agent/ASSIGNMENT_DYNAMIC_BUFFER_UPLOAD.txt` — original dynamic upload design (GpuUploadSlot, GpuBufferUpload, SharedShaderConstants, completion tokens).
+- `agent/ASSIGNMENT_DYNAMIC_BUFER_UPLOAD_TAKE_2.txt` — defines transient per-submission buffers, copy actions, and the TaskInfo attachment interface for per-task context.
+- `src/inc/garnet/rdg/actions.h` — `Action`, `Arguments`, and `TaskInfo` definitions.
+- `src/core/rdg/vk-render-pass.h/.cpp` — current render pass manager implementation to be refactored using TaskInfo attachments.
+

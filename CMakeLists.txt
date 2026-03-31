@@ -188,7 +188,6 @@ find_package(OpenGL)
 find_package(DirectX)
 find_package(Vulkan)
 find_package(X11)
-find_package(Qt6 COMPONENTS Core Widgets)
 
 # Check for CUDA support
 if (NOT ANDROID)

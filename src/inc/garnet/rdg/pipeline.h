@@ -1,5 +1,6 @@
 #pragma once
 
+#include <garnet/rdg/rtti.h>
 #include <glm/mat4x4.hpp>
 #include <mutex>
 
@@ -40,13 +41,69 @@ namespace GN::rdg {
 //     bool castingShadow = false;
 // };
 
+/// Self-contained list of workflows (and their tasks and arguments) that can be
+/// submitted to a RenderGraph to render the effect to screen or to a render target.
+struct GN_API SubGraph {
+    GN_NO_COPY(SubGraph); // not copyable
+
+    RenderGraph *           graph       = {};
+    StrA                    name        = {};
+    Action::ExecutionResult builtResult = Action::ExecutionResult::PASSED;
+    DynaArray<Workflow>     workflows;
+
+    SubGraph() = default;
+
+    SubGraph(RenderGraph & graph, const StrA & name): graph(&graph), name(name) {}
+
+    ~SubGraph() { drop(); }
+
+    // move constructor
+    SubGraph(SubGraph && other) noexcept: graph(other.graph), name(other.name), builtResult(other.builtResult), workflows(std::move(other.workflows)) {
+        other.graph = nullptr;
+        other.name.clear();
+        other.builtResult = Action::ExecutionResult::PASSED;
+        GN_ASSERT(other.workflows.empty());
+    }
+
+    // move assignment
+    SubGraph & operator=(SubGraph && other) noexcept {
+        if (this == &other) return *this;
+        drop(); // drop current graph, if any.
+        graph       = other.graph;
+        name        = other.name;
+        builtResult = other.builtResult;
+        workflows   = std::move(other.workflows);
+        other.graph = nullptr;
+        other.name.clear();
+        other.builtResult = Action::ExecutionResult::PASSED;
+        GN_ASSERT(other.workflows.empty());
+        return *this;
+    }
+
+    /// Submit this subgraph for execution on the given render graph.
+    /// The workflows are submitted and then cleared from this SubGraph.
+    /// \return The submission object; valid until execution completes.
+    AutoRef<Submission> submit() {
+        if (!graph) return {};
+        auto sub = graph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow>(workflows.data(), workflows.size()), .name = name});
+        workflows.clear();
+        return sub;
+    }
+
+    /// Drop this subgraph without executing. All workflows are dropped and cleared from this SubGraph.
+    SubGraph & drop() {
+        workflows.clear();
+        builtResult = Action::ExecutionResult::DROPPED;
+        return *this;
+    }
+};
+
 /// A container for shader constants that are shared by other effects.
 /// Holds logical data (frame, view, lights, etc.); the API-specific implementation
-/// organizes and uploads this data to uniform buffers and textures. The public
-/// interface does not expose GPU layout.
+/// organises and uploads this data to GPU resources. The public interface does not
+/// expose any information about how the backend organises or binds these resources.
 struct SharedShaderConstants : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "SharedShaderConstants";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     /// Logical frame data. Implementation maps this to GPU resources as needed.
     struct FrameInformation {
@@ -56,20 +113,24 @@ struct SharedShaderConstants : public GpuResource {
 
     /// Logical view/camera data. Implementation maps this to GPU resources as needed.
     struct ViewInformation {
-        glm::mat4             worldToClip    = glm::mat4(1.f);
-        Location              cameraPosition = {0, 0, 0}; ///< camera position in world space
-        AutoRef<RenderTarget> renderTarget;
+        Location              cameraPosition    = {0, 0, 0};            ///< camera position in world space
+        Orientation           cameraOrientation = {1.f, 0.f, 0.f, 0.f}; ///< camera orientation (world space)
+        Radian                cameraFov         = Degree(60.f);         ///< vertical field of view
+        float                 aspectRatio       = 16.f / 9.f;           ///< viewport width / height
+        float                 nearPlane         = 0.01f;                ///< near clip plane in meters
+        float                 farPlane          = 10000.f;              ///< far clip plane in meters
+        AutoRef<RenderTarget> renderTarget;                             ///< current render target; render target size is deduced from it
     };
 
     /// One direct light with physically correct photometric terms (see physical.h).
     struct DirectLight {
         enum Type : int { POINT, SPOT, DIRECTIONAL } type = POINT;
 
-        /// Point light: position, luminous intensity [cd], range in world units.
+        /// Point light: position, luminous intensity [cd], range in meters.
         struct Point {
             Location     position  = {0, 0, 0};
             IntensityRGB intensity = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range     = {0};
+            Distance     range     = 0;
         } point;
 
         /// Spot light: position, orientation, luminous intensity [cd], range, cone angles.
@@ -77,7 +138,7 @@ struct SharedShaderConstants : public GpuResource {
             Location     position          = {0, 0, 0};
             Orientation  orientation       = {0, 0, 0, 1.0f};
             IntensityRGB intensity         = {1.0f, 1.0f, 1.0f, {1.0f}};
-            WorldUnit    range             = {0};
+            Distance     range             = 0;
             float        cosInnerConeAngle = 1.0f;
             float        cosOuterConeAngle = 1.0f;
         } spot;
@@ -98,15 +159,41 @@ struct SharedShaderConstants : public GpuResource {
         AutoRef<GpuContext> gpu;
     };
 
-    virtual void setFrameInformation(const FrameInformation &)                   = 0;
-    virtual void setViewInformation(const ViewInformation &)                     = 0;
-    virtual void setDirectLightingInformation(const DirectLightingInformation &) = 0;
+    /// Resource set for Set 0: bindings (camera UBO, lighting UBO, expandable).
+    /// Same shape as one set in GpuResourceTable: set0[bindingIndex][arrayIndex] = GpuResourceView.
+    using Set0ResourceSet = GpuShaderAction::GraphicsResourceSet;
 
-    virtual const FrameInformation &          getFrameInformation() const          = 0;
-    virtual const ViewInformation &           getViewInformation() const           = 0;
-    virtual const DirectLightingInformation & getDirectLightingInformation() const = 0;
+    /// Environment / image-based lighting. Supplies scene-level textures used by both the skybox
+    /// renderer and the IBL diffuse/specular terms in PBR shading.
+    struct EnvironmentLightingInformation {
+        AutoRef<Texture> skyboxCubemap;     ///< environment cubemap rendered as background
+        AutoRef<Texture> irradianceMap;     ///< pre-convolved diffuse-IBL cubemap (hemisphere integral)
+        AutoRef<Texture> prefilteredEnvMap; ///< mip-mapped specular-IBL cubemap (roughness → mip level)
+        AutoRef<Texture> brdfLut;           ///< split-sum BRDF LUT: NdotV×roughness → (scale, bias)
 
-    static GN_API AutoRef<SharedShaderConstants> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+        /// Linear radiance multiplier [dimensionless] applied in shaders to sampled HDR environment
+        /// (skybox cubemap, irradiance map, prefiltered specular map). \c 1.0 uses textures as stored;
+        /// larger values increase IBL/skybox strength without rebaking maps. Not applied to the BRDF LUT.
+        float environmentRadianceScale = 1.f;
+    };
+
+    virtual void setFrameInformation(const FrameInformation &)                             = 0;
+    virtual void setViewInformation(const ViewInformation &)                               = 0;
+    virtual void setDirectLightingInformation(const DirectLightingInformation &)           = 0;
+    virtual void setEnvironmentLightingInformation(const EnvironmentLightingInformation &) = 0;
+
+    virtual const FrameInformation &               getFrameInformation() const               = 0;
+    virtual const ViewInformation &                getViewInformation() const                = 0;
+    virtual const DirectLightingInformation &      getDirectLightingInformation() const      = 0;
+    virtual const EnvironmentLightingInformation & getEnvironmentLightingInformation() const = 0;
+    /// Last built Set 0 resource set (valid after build() has been called). Effects use this as set #0 in the resource table.
+    virtual const Set0ResourceSet & getSet0Resources() const = 0;
+
+    /// Snapshot current CPU state; upload to GPU. Returns a SubGraph whose workflows perform the upload. Call once per frame; submit that SubGraph (or its
+    /// workflows) before draw workflows. Effects get set0 via getSet0Resources().
+    virtual SubGraph build(RenderGraph & rg) = 0;
+
+    static GN_API AutoRef<SharedShaderConstants> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
@@ -136,10 +223,10 @@ protected:
 //     };
 
 //     /// Create a new blank (full black) environment resource.
-//     static GN_API AutoRef<EnvironmentalLighting> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+//     static GN_API AutoRef<EnvironmentalLighting> create(const StrA & name, const CreateParameters & params);
 
 //     /// Load a Pbr environment resource from external file.
-//     static GN_API AutoRef<EnvironmentalLighting> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
+//     static GN_API AutoRef<EnvironmentalLighting> load(const StrA & name, const LoadParameters & params);
 
 // protected:
 //     using RenderGraphBuilder::RenderGraphBuilder;
@@ -155,7 +242,7 @@ protected:
 //         // tbd
 //     };
 
-//     static GN_API AutoRef<ShadowVisibility> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+//     static GN_API AutoRef<ShadowVisibility> create(const StrA & name, const CreateParameters & params);
 
 // protected:
 //     using RenderGraphBuilder::RenderGraphBuilder;
@@ -192,75 +279,19 @@ protected:
 //     /// Submit the accumulated workflows for execution. Clear out all workflow arrays.
 //     virtual AutoRef<Submission> submit() = 0;
 
-//     static GN_API AutoRef<SimpleForwardShadingPipeline> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+//     static GN_API AutoRef<SimpleForwardShadingPipeline> create(const StrA & name, const CreateParameters & params);
 
 // protected:
 //     using Artifact::Artifact;
 // };
 
-/// Self-contained list of workflows (and their tasks and arguments) that can be
-/// submitted to a RenderGraph to render the effect to screen or to a render target.
-struct GN_API SubGraph {
-    GN_NO_COPY(SubGraph); // not copyable
-
-    RenderGraph *           graph       = {};
-    StrA                    name        = {};
-    Action::ExecutionResult builtResult = Action::ExecutionResult::PASSED;
-    DynaArray<Workflow *>   workflows;
-
-    SubGraph() = default;
-
-    SubGraph(RenderGraph & graph, const StrA & name): graph(&graph), name(name) {}
-
-    ~SubGraph() { drop(); }
-
-    // move constructor
-    SubGraph(SubGraph && other) noexcept: graph(other.graph), name(other.name), builtResult(other.builtResult), workflows(std::move(other.workflows)) {
-        other.graph = nullptr;
-        other.name.clear();
-        other.builtResult = Action::ExecutionResult::PASSED;
-        GN_ASSERT(other.workflows.empty());
-    }
-
-    // move assignment
-    SubGraph & operator=(SubGraph && other) noexcept {
-        if (this == &other) return *this;
-        drop(); // drop current graph, if any.
-        graph       = other.graph;
-        name        = other.name;
-        builtResult = other.builtResult;
-        workflows   = std::move(other.workflows);
-        other.graph = nullptr;
-        other.name.clear();
-        other.builtResult = Action::ExecutionResult::PASSED;
-        GN_ASSERT(other.workflows.empty());
-        return *this;
-    }
-
-    /// Submit this subgraph for execution on the given render graph.
-    /// The workflows are submitted and then cleared from this SubGraph.
-    /// \return The submission object; valid until execution completes.
-    AutoRef<Submission> submit();
-
-    /// Drop this subgraph without executing. All workflows are dropped and cleared from this SubGraph.
-    SubGraph & drop() {
-        if (!graph) return *this;
-        for (auto * w : workflows) { graph->dropWorkflow(w); }
-        workflows.clear();
-        builtResult = Action::ExecutionResult::DROPPED;
-        return *this;
-    }
-};
-
 struct PbrShading : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "PbrShading";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     /// Represents a PBR material resource.
     /// Backend is free to determine the best way to implements it, such as texture set, material parameter values, etc.
     struct Material : public GpuResource {
-        GN_API static const uint64_t         TYPE_ID;
-        inline static constexpr const char * TYPE_NAME = "PbrMaterial";
+        GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
         struct LoadParameters {
             AutoRef<GpuContext> gpu;
@@ -276,24 +307,28 @@ struct PbrShading : public GpuResource {
             StrA basePath = {};
         };
 
-        static GN_API AutoRef<Material> load(ArtifactDatabase & db, const StrA & name, const LoadParameters & params);
+        static GN_API AutoRef<Material> load(const StrA & name, const LoadParameters & params);
 
         /// Optional: return base color texture if loaded from file. Default returns nullptr.
         virtual Texture * getBaseColorTexture() const { return nullptr; }
+
+        /// Optional: return metallic-roughness (or ARM) texture if loaded. Default returns nullptr.
+        virtual Texture * getMetallicRoughnessTexture() const { return nullptr; }
+
+        /// Optional: return normal map texture if loaded. Default returns nullptr.
+        virtual Texture * getNormalTexture() const { return nullptr; }
 
     protected:
         using GpuResource::GpuResource;
     };
 
     struct BuildParameters {
-        RenderGraph *                  renderGraph = {};
-        AutoRef<RenderTarget>          renderTarget;
-        AutoRef<SharedShaderConstants> sharedShaderConstants;
-        AutoRef<Material>              material;
-        GpuDraw::GpuGeometry           geometry;
-        AffineTransform                modelToWorld;
-        /// World-to-clip (view-projection) matrix. Used for push constants when SharedShaderConstants view is not yet available.
-        glm::mat4 worldToClip = glm::mat4(1.f);
+        RenderGraph *                        renderGraph = {};
+        AutoRef<const SharedShaderConstants> sharedShaderConstants;
+        AutoRef<Material>                    material;
+        GpuDraw::GpuGeometry                 geometry;
+        Location                             locationInWorldSpace    = {0, 0, 0};
+        Orientation                          orientationInWorldSpace = ZERO_ROTATION;
     };
 
     struct CreateParameters {
@@ -303,28 +338,37 @@ struct PbrShading : public GpuResource {
     /// Add task graphs into the workflow to render a PBR object.
     virtual SubGraph build(const BuildParameters & params) = 0;
 
-    static GN_API AutoRef<PbrShading> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<PbrShading> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;
 };
 
+/// Renders the environment cubemap as a fullscreen background (skybox pass).
+///
+/// Uses a 3-vertex fullscreen triangle (no VBO). The vertex shader reconstructs a world-space
+/// ray direction per pixel via inverse-projection × inverse-view-rotation, then the fragment
+/// shader samples \c samplerCube at Set 0 binding 2 and applies \c environmentRadianceScale from binding 6
+/// (see \c environment-lighting-common.h in \c vk-shaders).
+/// Depth is pinned to 1.0 (gl_Position.z = gl_Position.w) so skybox always renders behind
+/// all opaque geometry when executed first.
 struct SkyBox : public GpuResource {
-    GN_API static const uint64_t         TYPE_ID;
-    inline static constexpr const char * TYPE_NAME = "SkyBox";
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(GpuResource);
 
     struct BuildParameters {
-        AutoRef<SharedShaderConstants> sharedShaderConstants;
+        RenderGraph *                        renderGraph = {};      ///< Target render graph (required).
+        AutoRef<const SharedShaderConstants> sharedShaderConstants; ///< Provides Set 0 resources (camera + env map).
     };
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
     };
 
-    /// Add task graphs into the workflow to render a sky box.
-    virtual SubGraph build(const BuildParameters & params);
+    /// Emit a Workflow into \p params.renderGraph that renders the skybox background.
+    /// Returns a SubGraph with \c builtResult == PASSED on success.
+    virtual SubGraph build(const BuildParameters & params) = 0;
 
-    static GN_API AutoRef<SkyBox> create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params);
+    static GN_API AutoRef<SkyBox> create(const StrA & name, const CreateParameters & params);
 
 protected:
     using GpuResource::GpuResource;

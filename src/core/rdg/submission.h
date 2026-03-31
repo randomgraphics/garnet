@@ -4,11 +4,10 @@
 #include <future>
 #include <mutex>
 #include <optional>
-#include "runtime-type.h"
 
 #define GN_RDG_FAIL_ON_FAIL(expr, ...)                                                                            \
     do {                                                                                                          \
-        auto result___ = (expr);                                                                                  \
+        Action::ExecutionResult result___ = (expr);                                                               \
         if (result___ != Action::PASSED && result___ != Action::WARNING) GN_UNLIKELY {                            \
                 if constexpr (GN_COUNT_ARGS(__VA_ARGS__) > 0) { GN_ERROR(GN::getLogger("GN.rdg"))(__VA_ARGS__); } \
                 return result___;                                                                                 \
@@ -28,28 +27,27 @@ namespace GN::rdg {
 class SubmissionImpl;
 
 struct TaskInfo {
-    // /// A action might be used in multiple tasks. So we need a context structure to store data associated to a particular task.
-    // struct ExecutionContext : public RuntimeType {
-    //     virtual ~ExecutionContext() = default;
-
-    // protected:
-    //     ExecutionContext(uint64_t typeId, const char * typeName): RuntimeType(typeId, typeName) {}
-    // };
-
     SubmissionImpl & submission; ///< the submission that the task belongs to.
     const StrA       workflow;   ///< name of the workflow that the task belongs to.
     const StrA       task;       ///< name of the task.
     const uint64_t   index;  ///< index of the task within the entire submission. Can also be used as the unique identifier of the task within the submission.
     Action &         action; ///< The action processing this task.
-    // AutoRef<ExecutionContext> context {}; ///< context for the task. Usually created by the action's prepare() method and referenced by the execute() method.
+
+    /// Per-task context attachment. Actions set this in prepare() and read it in execute().
+    /// Lifetime is tied to the owning submission: released automatically when the submission finishes or fails.
+    AutoRef<RefCounter> context {};
+
+    template<typename T>
+    T * getContext() const {
+        return static_cast<T *>(context.get());
+    }
 };
 
-struct WorkflowImpl : public Workflow {
+/// Implementation payload for workflow; adds sequence number used by the render graph.
+struct WorkflowImplPayload : public Workflow::Payload {
     mutable uint64_t sequence = 0;
 
-    explicit WorkflowImpl(const StrA & name_) { name = name_; }
-
-    static WorkflowImpl * promote(Workflow * workflow) { return static_cast<WorkflowImpl *>(workflow); }
+    explicit WorkflowImplPayload(StrA name_) { name = name_; }
 };
 
 /// Implementation of Submission. Holds all intermediate data and context for a single submit.
@@ -64,8 +62,8 @@ public:
         using RuntimeType::RuntimeType;
     };
 
-    /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (pointers).
-    SubmissionImpl(DynaArray<WorkflowImpl *> pendingWorkflows, const RenderGraph::SubmitParameters & params);
+    /// Construct and start the submission asynchronously. Takes ownership of \p pendingWorkflows (payload pointers).
+    SubmissionImpl(DynaArray<WorkflowImplPayload *> pendingWorkflows, const RenderGraph::SubmitParameters & params);
 
     ~SubmissionImpl() override;
 
@@ -79,8 +77,8 @@ public:
     AutoRef<T> getSumissionContext() const {
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
         if (ctx == mExecutionContexts.end()) { return {}; }
-        GN_ASSERT(ctx->second->typeId == T::TYPE_ID);
-        return AutoRef<T>(ctx->second->template castTo<T>());
+        GN_ASSERT(ctx->second->template isKindOf<T>());
+        return ctx->second.template staticCastTo<T>();
     }
 
     void setSubmissionContext(AutoRef<Context> ctx) {
@@ -88,23 +86,22 @@ public:
                 GN_ERROR(GN::getLogger("GN.rdg"))("SubmissionImpl::setExecutionContext: context is null");
                 return;
             }
-        mExecutionContexts[ctx->typeId] = ctx;
+        mExecutionContexts[ctx->typeInfo().id] = ctx;
     }
 
     template<typename T, typename... Args>
     T & ensureSubmissionContext(Args &&... args) {
         auto ctx = mExecutionContexts.find(T::TYPE_ID);
-        if (ctx != mExecutionContexts.end()) { return *ctx->second->template castTo<T>(); }
+        if (ctx != mExecutionContexts.end()) { return *ctx->second.template staticCastTo<T>(); }
         auto newCtx                    = AutoRef<T>(new T(*this, std::forward<Args>(args)...));
         mExecutionContexts[T::TYPE_ID] = newCtx;
         return *newCtx;
     }
 
-    // Signaled after all pending tasks are successfully prepared.
-    Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksPrepared;
-
-    // Signaled after all pending tasks are successfully executed.
-    Signal<Action::ExecutionResult(SubmissionImpl &)> allTasksExecuted;
+    // A signal that guarantees to be signaled at the end of the submission thread,
+    // regardless of whether tasks in the submission are successful or failed.
+    // Use this signal to do cleanup work when the submission is done.
+    Signal<void(SubmissionImpl &)> endOfSubmission;
 
 private:
     /// Per-task execution state for dumpState().
@@ -128,10 +125,10 @@ private:
 
     std::unordered_map<uint64_t, AutoRef<Context>> mExecutionContexts;
 
-    // Owned workflows (taken from graph on construction)
-    DynaArray<WorkflowImpl *>    mWorkflows;
-    DynaArray<WorkflowImpl *>    mValidatedWorkflows;
-    DynaArray<DynaArray<size_t>> mDependencyGraph;
+    // Owned workflow payloads (taken from workflows on submit)
+    DynaArray<WorkflowImplPayload *> mWorkflows;
+    DynaArray<WorkflowImplPayload *> mValidatedWorkflows;
+    DynaArray<DynaArray<size_t>>     mDependencyGraph;
 
     // State for dumpState() (written by run(), read by dumpState())
     mutable std::mutex                     mStateMutex;

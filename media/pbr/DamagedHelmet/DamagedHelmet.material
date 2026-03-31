@@ -1,0 +1,4 @@
+baseColorTexture = baseColor_1.jpg
+armTexture       = DamagedHelmet_arm.png
+normalTexture_gl = normal_1-gl.jpg
+emissiveTexture  = emissive_1.jpg

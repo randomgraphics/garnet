@@ -5,9 +5,7 @@
 
 namespace GN::rdg {
 
-/// Vulkan texture: holds descriptor and GPU context; actual VkImage creation can be deferred or done in init().
-class TextureVulkan : public TextureCommon {
-public:
+struct TextureState {
     struct ImageState {
         vk::ImageLayout        layout = vk::ImageLayout::eUndefined;
         vk::AccessFlags        access = vk::AccessFlagBits::eNone;
@@ -46,7 +44,36 @@ public:
         }
     };
 
-    TextureVulkan(ArtifactDatabase & db, const StrA & name);
+    TextureState(): TextureState(0, 0) {}
+    TextureState(size_t mipLevels, size_t arrayLayers)
+        : mNumMips((uint32_t) mipLevels), mNumArrayLayers((uint32_t) arrayLayers), mSubresourceStates((uint32_t) (mipLevels * arrayLayers)) {}
+
+    auto get(uint32_t mip, uint32_t arrayLayer) const -> const ImageStateTransition *;
+
+    // returns true, if the state is changed. False, if the state is redundant or invalid.
+    bool set(const GpuResourceView::SubresourceRange & range, const ImageState & newState,
+             ImageStateTransitionFlags flags = ImageStateTransitionFlags::DEFAULT(), const StrA & resourceName = {});
+
+    /// Copies the current state (curr) of each subresource from \p src into this.
+    /// Used when flushing command-buffer-level state back to the texture resource after submit.
+    void assignFrom(const TextureState & src, const StrA & resourceName = {});
+
+private:
+    size_t subResourceIndex(uint32_t mip, uint32_t arrayLayer) const { return mip * mNumArrayLayers + arrayLayer; }
+
+    uint32_t                        mNumMips;
+    uint32_t                        mNumArrayLayers;
+    DynaArray<ImageStateTransition> mSubresourceStates;
+};
+
+/// Vulkan texture: holds descriptor and GPU context; actual VkImage creation can be deferred or done in init().
+class TextureVulkan : public TextureCommon {
+public:
+    using ImageState                = TextureState::ImageState;
+    using ImageStateTransition      = TextureState::ImageStateTransition;
+    using ImageStateTransitionFlags = TextureState::ImageStateTransitionFlags;
+
+    TextureVulkan(const StrA & name);
 
     /// Initialize from create parameters. Returns false on failure.
     bool init(const Texture::CreateParameters & params);
@@ -54,16 +81,17 @@ public:
     /// Initialize from load parameters (create + load from file). Returns false on failure.
     bool initFromLoad(const Texture::LoadParameters & params);
 
+    /// Upload 1x1 RGBA pixel to mip 0, layer 0. Texture must be 1x1 and already created. Returns false on failure.
+    bool upload1x1Mip(const uint8_t rgba[4]);
+
     auto gpu() const -> GpuContext & override { return *mGpuContext; }
     auto descriptor() const -> const Texture::Descriptor & override { return mDescriptor; }
     auto image() const -> const rapid_vulkan::Image * { return mImage.get(); }
     auto dimensions(uint32_t mip) const -> vk::Extent3D;
 
-    auto getImageState(uint32_t mip, uint32_t arrayLayer) const -> const ImageStateTransition *;
-    bool trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
-                         ImageStateTransitionFlags flags = ImageStateTransitionFlags::DEFAULT());
-
     auto readback() const -> gfx::img::Image override;
+
+    TextureState & state() { return mState; }
 
 private:
     // struct ImageKey {
@@ -90,7 +118,7 @@ private:
     AutoRef<GpuContext>                    mGpuContext;
     Texture::Descriptor                    mDescriptor;
     rapid_vulkan::Ref<rapid_vulkan::Image> mImage;
-    std::vector<ImageStateTransition>      mSubresourceStates;
+    mutable TextureState                   mState;
 };
 
 // /// Helper class to iterate over subresources of a texture, initialized from a Texture::Descriptor,
@@ -132,10 +160,16 @@ private:
 
 /// Create a Vulkan-backed Texture. Called from Texture::create() when context is Vulkan.
 /// Returns null on failure or duplicate type+name.
-AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, const Texture::CreateParameters & params);
+AutoRef<Texture> createVulkanTexture(const StrA & name, const Texture::CreateParameters & params);
 
 /// Load a texture from file and create a Vulkan-backed Texture. Called from Texture::load() when context is Vulkan.
 /// Name is derived from filename. Returns null on failure or duplicate type+name.
-AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params);
+AutoRef<Texture> loadVulkanTexture(const Texture::LoadParameters & params);
+
+/// Create a 1x1 RGBA8 texture with the given pixel and upload it. Used for PBR default textures when a material slot is missing.
+AutoRef<Texture> createDefault1x1Texture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+
+/// Create a 1x1 RGBA8 cubemap (faces=6) with the given pixel uploaded to all 6 faces. Used as a fallback when no env cubemap is set.
+AutoRef<Texture> createDefault1x1CubemapTexture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 } // namespace GN::rdg

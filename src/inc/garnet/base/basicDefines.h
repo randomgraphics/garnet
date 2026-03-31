@@ -297,12 +297,12 @@ public:                                                                     \
 ///
 /// 函数名称
 ///
-#if GN_MSVC
-    #define GN_FUNCTION __FUNCTION__
+#ifdef __FUNCDNAME__
+    #define GN_FUNCTION __FUNCDNAME__
 #elif defined(GN_GNUC)
     #define GN_FUNCTION __PRETTY_FUNCTION__
 #else
-    #define GN_FUNCTION ""
+    #define GN_FUNCTION __FUNCTION__
 #endif
 
 #define GN_JOIN(s1, s2)              GN_JOIN_DIRECT(s1, s2)                ///< join 2 symbols

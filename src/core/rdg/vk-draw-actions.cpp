@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "vk-draw-actions.h"
 #include "vk-submission-context.h"
-#include "vk-backbuffer.h"
+#include "vk-command-buffer.h"
 #include "vk-texture.h"
-#include "vk-buffer.h"
+#include "vk-format-utils.h"
+#include "vk-transient-buffer.h"
 #include "vk-pso-factory.h"
+#include <rapid-vulkan/rapid-vulkan.h>
 
 namespace GN::rdg {
 
@@ -18,89 +20,115 @@ class ClearRenderTargetVulkan : public ClearRenderTarget {
     AutoRef<GpuContextVulkan> mGpu;
 
 public:
-    ClearRenderTargetVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu)
-        : ClearRenderTarget(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu) {}
+    ClearRenderTargetVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu): ClearRenderTarget(TYPE_INFO(), name), mGpu(gpu) {}
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<ClearRenderTarget::A>();
+        auto a = RuntimeType::cast<ClearRenderTarget::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
         // standard preparation.
         auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
 
         // done
-        return Action::PASSED;
+        // One execute step: begin render pass + record clear.
+        return {Action::PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
-        bool hasWarning = false;
-
+    ExecutionResult execute(TaskInfo & taskInfo, size_t, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<ClearRenderTarget::A>();
+        auto a = RuntimeType::cast<ClearRenderTarget::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not ClearRenderTarget::A", taskInfo);
 
         // standard execution
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(taskInfo);
-        GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
-
-        // acquire render pass. End if if needed.
-        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
-        GN_RDG_FAIL_ON_FAIL(rp.result);
-        if (rp.needToEnd) cb.commandBuffer.handle().endRendering();
-
-        // submit command buffer, if asked to do so.
-        if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
+        auto   cb = sc.commandBufferManager.execute(taskInfo, CommandBufferManagerVulkan::GRAPHICS);
+        GN_RDG_FAIL_ON_FALSE(cb, "{} - failed to get command buffer", taskInfo);
+        auto rp = sc.renderPassManager.execute(taskInfo, &cb);
+        GN_RDG_FAIL_ON_FAIL(rp);
 
         // done
-        return hasWarning ? WARNING : PASSED;
+        return PASSED;
     }
 };
 
-AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(ArtifactDatabase & db, const StrA & name, const ClearRenderTarget::CreateParameters & params) {
-    auto gpu = params.gpu.castTo<GpuContextVulkan>();
+AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(const StrA & name, const ClearRenderTarget::CreateParameters & params) {
+    auto gpu = params.gpu.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanClearRenderTarget: gpu is empty, name='{}'", name);
             return {};
         }
-    return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(db, name, gpu));
+    return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(name, gpu));
 }
 
 // =====================================================================================================================
 // GpuDrawVulkan
 // =====================================================================================================================
 
+namespace {
+
+/// Get VkImageView for a GpuResourceView that is a texture. Returns VK_NULL_HANDLE on failure.
+/// For cubemap textures (faces==6) the view type is left as auto-detect so rapid-vulkan selects eCube.
+vk::ImageView getTextureImageView(const GpuResourceView & view) {
+    if (!view.isTexture()) return {};
+    auto tex = view.texture().staticCastTo<TextureVulkan>();
+    if (!tex || !tex->image()) return {};
+    const auto &                           iv     = view.imageView;
+    uint32_t                               mips   = (iv.range.e.numMipLevels == (uint32_t) -1) ? VK_REMAINING_MIP_LEVELS : iv.range.e.numMipLevels;
+    uint32_t                               layers = (iv.range.e.numArrayLayers == (uint32_t) -1) ? VK_REMAINING_ARRAY_LAYERS : iv.range.e.numArrayLayers;
+    vk::Format                             format = (iv.format != gfx::img::PixelFormat::UNKNOWN()) ? pixelFormatToVkFormat(iv.format) : vk::Format::eUndefined;
+    rapid_vulkan::Image::GetViewParameters params;
+    params.setFormat(format).setRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, iv.range.i.mip, mips, iv.range.i.face, layers));
+    return tex->image()->getView(params);
+}
+
+} // namespace
+
 class GpuDrawVulkan : public GpuDraw {
-    AutoRef<GpuContextVulkan> mGpu;
-    GpuDraw::CreateParameters mCreateParams {};
+    AutoRef<GpuContextVulkan>                        mGpu;
+    GpuDraw::CreateParameters                        mCreateParams {};
+    mutable rapid_vulkan::Ref<rapid_vulkan::Sampler> mDefaultSampler {};
+
+    rapid_vulkan::Sampler * ensureDefaultSampler() const {
+        if (mDefaultSampler) return mDefaultSampler.get();
+        const rapid_vulkan::GlobalInfo * gi = mGpu->device().gi();
+        if (!gi) return nullptr;
+        rapid_vulkan::Sampler::ConstructParameters cp;
+        cp.gi = gi;
+        cp.setLinear();
+        mDefaultSampler.reset(new rapid_vulkan::Sampler(cp));
+        return mDefaultSampler.get();
+    }
 
 public:
-    GpuDrawVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
-        : GpuDraw(db, TYPE_ID, TYPE_NAME, name), mGpu(gpu), mCreateParams(params) {}
+    GpuDrawVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu, const GpuDraw::CreateParameters & params)
+        : GpuDraw(TYPE_INFO(), name), mGpu(gpu), mCreateParams(params) {}
 
-    ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
-        auto & submissionImpl = static_cast<SubmissionImpl &>(taskInfo.submission);
+    Action::PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) override {
+        auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<GpuDraw::A>();
+        auto a = RuntimeType::cast<GpuDraw::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
         // standard preparation.
-        auto & submissionContext = submissionImpl.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo, CommandBufferManagerVulkan::GRAPHICS));
-        GN_RDG_FAIL_ON_FALSE(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
+        auto & submissionContext = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
+        GN_RDG_FAIL_ON_FAIL(submissionContext.commandBufferManager.prepare(taskInfo));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.prepareDraw(taskInfo, a->renderTarget));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawTextureTransitions(taskInfo, a->resources));
+        GN_RDG_FAIL_ON_FAIL(submissionContext.renderPassManager.registerDrawBufferTransitions(taskInfo, a->resources, a->geometry));
 
-        return PASSED;
+        // One execute step: record actual draw commands.
+        return {PASSED, 1};
     }
 
-    ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) override {
+    ExecutionResult execute(TaskInfo & taskInfo, size_t, Arguments & arguments) override {
         auto & submission = taskInfo.submission;
 
-        auto a = arguments.castTo<GpuDraw::A>();
+        auto a = RuntimeType::cast<GpuDraw::A>(arguments);
         GN_RDG_FAIL_ON_FALSE(a, "{} - arguments is not GpuDraw::A", taskInfo);
 
         const auto size = static_cast<uint32_t>(a->immediates.size());
@@ -110,17 +138,16 @@ public:
             }
 
         auto & sc = submission.ensureSubmissionContext<SubmissionContextVulkan>(mGpu);
-        auto   cb = sc.commandBufferManager.execute(taskInfo);
-        GN_RDG_FAIL_ON_FALSE(cb.queue && cb.commandBuffer);
-        auto rp = sc.renderPassManager.execute(taskInfo, cb.commandBuffer.handle());
-        GN_RDG_FAIL_ON_FAIL(rp.result);
-        auto onExit = AutoFinalizer([&]() {
-            if (rp.needToEnd) {
-                GN_VERBOSE(sLogger)("{} - ending render pass", taskInfo);
-                cb.commandBuffer.handle().endRendering();
+        auto   cb = sc.commandBufferManager.execute(taskInfo, CommandBufferManagerVulkan::GRAPHICS);
+        GN_RDG_FAIL_ON_FALSE(cb, "{} - failed to get command buffer", taskInfo);
+        auto rp = sc.renderPassManager.execute(taskInfo, &cb);
+        GN_RDG_FAIL_ON_FAIL(rp);
+
+        const RenderTarget * currentRt = rp.drawTarget();
+        if (!currentRt) GN_UNLIKELY {
+                GN_ERROR(sLogger)("{} - current render target is not set for GpuDraw action", taskInfo);
+                return FAILED;
             }
-            if (cb.submit) cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
-        });
 
         const GpuGeometry & geom = a->geometry;
         if (0 == geom.vertexCount && 0 == geom.indexCount) GN_UNLIKELY {
@@ -133,18 +160,14 @@ public:
                 return FAILED;
             }
 
-        const RenderTarget * currentRt = sc.renderPassManager.getCurrentDrawTarget(taskInfo.index);
-        if (!currentRt) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - current render target is not set for GpuDraw action", taskInfo);
-                return FAILED;
-            }
+        // Resource state transitions are done in the render pass manager at beginRenderPass (registered in prepare pass).
 
         GraphicsPsoCreateParams createParams = {
             .vs               = mCreateParams.vs,
             .ps               = mCreateParams.ps,
             .renderTarget     = *currentRt,
             .geometry         = geom,
-            .pushConstantSize = 128,
+            .pushConstantSize = a->immediates.empty() ? 0u : static_cast<uint32_t>(a->immediates.size()),
         };
 
         auto pipeline = mGpu->psoFactory().getOrCreateGraphicsPso(createParams);
@@ -159,18 +182,74 @@ public:
 
         if (!a->immediates.empty()) drawable.c(0, a->immediates.size(), a->immediates.data(), vk::ShaderStageFlagBits::eVertex);
 
-        if (!geom.vertices.empty() && geom.vertices[0].buffer) {
-            auto *                                  bv  = static_cast<BufferVulkan *>(geom.vertices[0].buffer.get());
-            rapid_vulkan::Ref<rapid_vulkan::Buffer> ref = bv->refVkBuffer();
-            if (ref) {
-                const rapid_vulkan::BufferView view {ref, geom.vertices[0].offset, vk::DeviceSize(-1)};
-                drawable.v(vk::ArrayProxy<const rapid_vulkan::BufferView>(1, &view));
+        // Bind shader resources from 3-D GpuResourceTable; Drawable/DrawPack manage layout and descriptors.
+        for (size_t setIdx = 0; setIdx < a->resources.size(); ++setIdx) {
+            const auto & set = a->resources[setIdx];
+            for (size_t bindingIdx = 0; bindingIdx < set.size(); ++bindingIdx) {
+                const auto & views = set[bindingIdx];
+                if (views.empty()) continue;
+                // Buffers: convert to rapid_vulkan BufferView and bind.
+                if (views[0].isBuffer()) {
+                    std::vector<rapid_vulkan::BufferView> rvViews;
+                    rvViews.reserve(views.size());
+                    for (const auto & v : views) {
+                        if (!v.artifact || !v.isBuffer()) continue;
+                        auto ref = BufferUtils::toRapid(v.buffer());
+                        if (!ref) continue;
+                        vk::DeviceSize sz = v.bufferView.size;
+                        if (sz == 0) sz = vk::DeviceSize(-1);
+                        rvViews.push_back(rapid_vulkan::BufferView {ref, v.bufferView.offset, sz});
+                    }
+                    if (!rvViews.empty()) {
+                        drawable.b(rapid_vulkan::DescriptorIdentifier(static_cast<uint32_t>(setIdx), static_cast<uint32_t>(bindingIdx)), rvViews);
+                    }
+                }
+                // Image/sampler: bind as combined image sampler for material textures.
+                if (views[0].isImage()) {
+                    rapid_vulkan::Sampler * sampler = ensureDefaultSampler();
+                    if (!sampler) continue;
+                    std::vector<rapid_vulkan::ImageSampler> imgSamplers;
+                    imgSamplers.reserve(views.size());
+                    for (const auto & v : views) {
+                        if (!v.artifact || !v.isImage()) continue;
+                        vk::ImageView iv = getTextureImageView(v);
+                        if (!iv) continue;
+                        rapid_vulkan::ImageSampler is;
+                        is.view    = iv;
+                        is.layout  = vk::ImageLayout::eShaderReadOnlyOptimal;
+                        is.sampler = sampler;
+                        imgSamplers.push_back(is);
+                    }
+                    if (!imgSamplers.empty()) {
+                        drawable.t(rapid_vulkan::DescriptorIdentifier(static_cast<uint32_t>(setIdx), static_cast<uint32_t>(bindingIdx)), imgSamplers);
+                    }
+                }
             }
         }
 
-        uint32_t                                       vertexCount = geom.vertexCount;
+        if (!geom.vertices.empty() && geom.vertices[0].buffer) {
+            auto ref = BufferUtils::toRapid(geom.vertices[0].buffer);
+            if (ref) GN_LIKELY {
+                    const rapid_vulkan::BufferView view {ref.get(), geom.vertices[0].offset, vk::DeviceSize(-1)};
+                    drawable.v(vk::ArrayProxy<const rapid_vulkan::BufferView>(1, &view));
+                }
+        }
+
+        if (geom.indexCount > 0 && geom.indices.buffer) {
+            auto ref = BufferUtils::toRapid(geom.indices.buffer);
+            if (ref) GN_LIKELY {
+                    const rapid_vulkan::BufferView view {ref.get(), geom.indices.offset, vk::DeviceSize(-1)};
+                    const vk::IndexType            indexType = (geom.indices.stride == 4) ? vk::IndexType::eUint32 : vk::IndexType::eUint16;
+                    drawable.i(view, indexType);
+                }
+        }
+
         rapid_vulkan::GraphicsPipeline::DrawParameters drawParams {};
-        drawParams.setNonIndexed(vertexCount, 0).setInstance(1, 0);
+        if (geom.indexCount > 0 && geom.indices.buffer) {
+            drawParams.setIndexed(geom.indexCount).setInstance(1, 0);
+        } else {
+            drawParams.setNonIndexed(geom.vertexCount, 0).setInstance(1, 0);
+        }
         drawable.draw(drawParams);
 
         rapid_vulkan::Ref<const rapid_vulkan::DrawPack> drawPack = drawable.compile();
@@ -179,19 +258,20 @@ public:
                 return FAILED;
             }
 
-        cb.commandBuffer.render(drawPack);
+        cb.rapid().render(drawPack);
 
+        // done
         return PASSED;
     }
 };
 
-AutoRef<GpuDraw> createVulkanGpuDraw(ArtifactDatabase & db, const StrA & name, const GpuDraw::CreateParameters & params) {
-    auto gpu = params.context.castTo<GpuContextVulkan>();
+AutoRef<GpuDraw> createVulkanGpuDraw(const StrA & name, const GpuDraw::CreateParameters & params) {
+    auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuDraw: gpu is empty, name='{}'", name);
             return {};
         }
-    return AutoRef<GpuDraw>(new GpuDrawVulkan(db, name, gpu, params));
+    return AutoRef<GpuDraw>(new GpuDrawVulkan(name, gpu, params));
 }
 
 } // namespace GN::rdg

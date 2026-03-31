@@ -1,10 +1,12 @@
 #include "pch.h"
-#include "vk-gpu-resource-group.h"
-#include "vk-buffer.h"
-#include "vk-texture.h"
-#include "vk-backbuffer.h"
-#include "vk-format-utils.h"
-#include "gpu-context.h"
+// GpuResourceGroupVulkan commented out: use GpuResourceTable + Drawable/DrawPack instead.
+#if 0
+    #include "vk-gpu-resource-group.h"
+    #include "vk-transient-buffer.h"
+    #include "vk-texture.h"
+    #include "vk-backbuffer.h"
+    #include "vk-format-utils.h"
+    #include "gpu-context.h"
 
 namespace GN::rdg {
 
@@ -46,8 +48,8 @@ static vk::ShaderStageFlags stagesToVk(GpuShaderStageFlags stages) {
 static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulkan::GlobalInfo &) {
     if (!view.isImage()) return {};
     const auto & iv        = view.imageView;
-    uint32_t     mipLevels = iv.subresourceRange.numMipLevels;
-    uint32_t     numLayers = iv.subresourceRange.numArrayLayers;
+    uint32_t     mipLevels = iv.range.e.numMipLevels;
+    uint32_t     numLayers = iv.range.e.numArrayLayers;
     if (mipLevels == (uint32_t) -1) mipLevels = 1;
     if (numLayers == (uint32_t) -1) numLayers = 1;
 
@@ -55,18 +57,18 @@ static vk::ImageView getImageView(const GpuResourceView & view, const rapid_vulk
         view.isTexture() ? vk::ImageAspectFlagBits::eColor : (view.isBackbuffer() ? vk::ImageAspectFlagBits::eColor : vk::ImageAspectFlagBits::eColor);
 
     if (view.isTexture()) {
-        auto tex = view.texture().castTo<TextureVulkan>();
+        auto tex = view.texture().staticCastTo<TextureVulkan>();
         if (!tex || !tex->image()) return {};
         vk::Format format =
             (iv.format != gfx::img::PixelFormat::UNKNOWN()) ? pixelFormatToVkFormat(iv.format) : pixelFormatToVkFormat(tex->descriptor().format);
         auto params = rapid_vulkan::Image::GetViewParameters()
                           .setType(vk::ImageViewType::e2D)
                           .setFormat(format)
-                          .setRange(vk::ImageSubresourceRange(aspect, iv.subresourceIndex.mip, mipLevels, iv.subresourceIndex.face, numLayers));
+                          .setRange(vk::ImageSubresourceRange(aspect, iv.range.i.mip, mipLevels, iv.range.i.face, numLayers));
         return tex->image()->getView(params);
     }
     if (view.isBackbuffer()) {
-        auto bb = view.backbuffer().castTo<BackbufferVulkan>();
+        auto bb = view.backbuffer().staticCastTo<BackbufferVulkan>();
         if (!bb || !bb->backBufferImage()) return {};
         const auto * img    = bb->backBufferImage();
         vk::Format   format = img->desc().format;
@@ -141,9 +143,9 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
     mSet = sets[0];
 }
 
-GpuResourceGroupVulkan::GpuResourceGroupVulkan(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContextVulkan> gpu,
+GpuResourceGroupVulkan::GpuResourceGroupVulkan(const StrA & name, AutoRef<GpuContextVulkan> gpu,
                                                const GpuResourceGroup::CreateParameters & params)
-    : GpuResourceGroup(db, GpuResourceGroup::TYPE_ID, GpuResourceGroup::TYPE_NAME, name), mGpu(std::move(gpu)), mSlots(params.slots) {
+    : GpuResourceGroup(GpuResourceGroup::TYPE_INFO(), name), mGpu(std::move(gpu)), mSlots(params.slots) {
     mBoundViews.resize(params.slots.size());
     buildLayoutAndPool();
 }
@@ -186,15 +188,13 @@ void GpuResourceGroupVulkan::setResourceViews(size_t slot, size_t offset, SafeAr
     if (slotDesc.type == SlotType::UNIFORM_BUFFER || slotDesc.type == SlotType::STORAGE_BUFFER) {
         bufferInfos.reserve(n);
         for (size_t i = 0; i < n; ++i) {
-            const auto & v = views[i];
-            if (!v.isBuffer() || !v.buffer()) continue;
-            auto * bv  = static_cast<BufferVulkan *>(v.buffer().get());
-            auto   ref = bv->refVkBuffer();
-            if (!ref) continue;
+            const auto & v      = views[i];
+            auto         handle = BufferUtils::getHandle(v.buffer());
+            if (!handle) GN_UNLIKELY continue;
             uint64_t off = v.bufferView.offset;
             uint64_t sz  = v.bufferView.size;
             if (sz == 0) sz = vk::DeviceSize(-1);
-            bufferInfos.push_back(vk::DescriptorBufferInfo {}.setBuffer(ref->desc().handle).setOffset(off).setRange(sz));
+            bufferInfos.push_back(vk::DescriptorBufferInfo {}.setBuffer(handle).setOffset(off).setRange(sz));
         }
         if (!bufferInfos.empty()) {
             writes.push_back(vk::WriteDescriptorSet {}
@@ -228,7 +228,7 @@ void GpuResourceGroupVulkan::setResourceViews(size_t slot, size_t offset, SafeAr
     if (!writes.empty()) dev.updateDescriptorSets(writes, {});
 }
 
-void GpuResourceGroupVulkan::addSlotToReadWriteList(size_t slot, std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const {
+void GpuResourceGroupVulkan::addSlotToReadWriteList(size_t slot, Arguments::ArtifactReadWriteList & list) const {
     if (slot >= mBoundViews.size()) return;
     const auto & slotDesc = mSlots[slot];
     using SlotType        = GpuResourceGroup::SlotDescription::Type;
@@ -237,37 +237,32 @@ void GpuResourceGroupVulkan::addSlotToReadWriteList(size_t slot, std::unordered_
 
     for (const auto & v : mBoundViews[slot]) {
         if (!v.artifact) continue;
-        uint64_t seq = v.artifact->sequence;
-        if (isRead) readList.insert(seq);
-        if (isWrite) writeList.insert(seq);
+        const Artifact * ptr = v.artifact.get();
+        if (isRead) list.readList.insert(ptr);
+        if (isWrite) list.writeList.insert(ptr);
     }
 }
 
-void GpuResourceGroupVulkan::addToReadWriteList(std::unordered_set<uint64_t> & readList, std::unordered_set<uint64_t> & writeList) const {
-    for (size_t s = 0; s < mBoundViews.size(); ++s) addSlotToReadWriteList(s, readList, writeList);
+void GpuResourceGroupVulkan::addToReadWriteList(Arguments::ArtifactReadWriteList & list) const {
+    for (size_t s = 0; s < mBoundViews.size(); ++s) addSlotToReadWriteList(s, list);
 }
 
 // =============================================================================
 // createVulkanGpuResourceGroup
 // =============================================================================
 
-AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(ArtifactDatabase & db, const StrA & name, const GpuResourceGroup::CreateParameters & params) {
+AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(const StrA & name, const GpuResourceGroup::CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is null, name='{}'", name);
             return {};
         }
-    auto gpu = params.context.castTo<GpuContextVulkan>();
+    auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is not Vulkan, name='{}'", name);
             return {};
         }
-    auto * p = new GpuResourceGroupVulkan(db, name, gpu, params);
-    if (!p->sequence) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuResourceGroup: duplicate type+name, name='{}'", name);
-            delete p;
-            return {};
-        }
-    return AutoRef<GpuResourceGroup>(p);
+    return AutoRef<GpuResourceGroup>(new GpuResourceGroupVulkan(name, std::move(gpu), params));
 }
 
 } // namespace GN::rdg
+#endif

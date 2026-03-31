@@ -2,41 +2,302 @@
 #include <garnet/GNrdg.h>
 #include "gpu-context.h"
 #include "vk-gpu-context.h"
+#include "vk-shaders/global-camera-ubo.h"
+#include "vk-shaders/direct-lighting-ubo.h"
+#include "vk-shaders/environment-lighting-ubo.h"
+#include "vk-texture.h"
+#include <glm/gtc/matrix_transform.hpp>  // glm::translate, glm::inverse
+#include <glm/gtc/quaternion.hpp>        // glm::mat4_cast
+#include <glm/ext/matrix_clip_space.hpp> // glm::perspectiveRH_ZO
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 
 namespace GN::rdg {
 
 // =============================================================================
-// SharedShaderConstantsImpl - stores logical data (Task 4.2)
+// SharedShaderConstantsVulkan — uses GpuResourceTable (Set 0 views) + PersistentBuffer.
 // =============================================================================
+//
+// Set 0 layout: binding 0 = GlobalCameraUBO, binding 1 = DirectLightingUBO, binding 6 = EnvironmentLightingUBO.
+// Effect builders get Set 0 via getSet0Resources() and assign to draw args' resources[0].
+// draw args' resources[0][0] and resources[0][1]; backend binds via Drawable/DrawPack.
+//
+// Deduce render target dimensions from the first available color or depth attachment.
+static std::pair<uint32_t, uint32_t> getRenderTargetSize(const RenderTarget * rt) {
+    if (!rt) return {1u, 1u};
+    for (const auto & c : rt->colors) {
+        if (auto tex = c.target.texture()) return {tex->descriptor().width, tex->descriptor().height};
+        if (auto bb = c.target.backbuffer()) return {bb->descriptor().width, bb->descriptor().height};
+    }
+    if (auto tex = rt->depthStencilTarget.texture()) return {tex->descriptor().width, tex->descriptor().height};
+    return {1u, 1u};
+}
 
-class SharedShaderConstantsImpl : public SharedShaderConstants {
-    AutoRef<GpuContext>       mGpu;
-    FrameInformation          mFrame;
-    ViewInformation           mView;
-    DirectLightingInformation mLighting;
+class SharedShaderConstantsVulkan : public SharedShaderConstants {
+    AutoRef<GpuContext>            mGpu;
+    FrameInformation               mFrame;
+    ViewInformation                mView;
+    DirectLightingInformation      mLighting;
+    EnvironmentLightingInformation mEnvLighting;
+
+    AutoRef<TransientArena>   mArena;             ///< Arena for per-frame transient UBO staging
+    AutoRef<GpuCopy>          mCopyAction;        ///< Stateless buffer-to-buffer copy (reused for camera + lighting)
+    AutoRef<PersistentBuffer> mCameraBuffer;      ///< Set 0 binding 0: GlobalCameraUBO
+    AutoRef<PersistentBuffer> mLightingBuffer;    ///< Set 0 binding 1: DirectLightingUBO
+    AutoRef<PersistentBuffer> mEnvLightingBuffer; ///< Set 0 binding 6: EnvironmentLightingUBO
+
+    // Fallback 1×1 env textures used when the caller has not provided real env maps.
+    AutoRef<Texture> mFallbackCubemap; ///< 1×1 black cubemap (bindings 2, 3, 4 fallback)
+    AutoRef<Texture> mFallbackBrdfLut; ///< 1×1 white 2D texture (binding 5 fallback)
+
+    Set0ResourceSet mLastSet0; ///< Last built Set 0 resource set (for getSet0Resources()).
+
+    GlobalCameraUBO        mPendingCamera   = {};
+    DirectLightingUBO      mPendingLighting = {};
+    EnvironmentLightingUBO mPendingEnv      = {};
+
+    void initGpuResources() {
+        mArena = TransientArena::create(StrA::format("{}.arena", name), TransientArena::CreateParameters {.context = mGpu});
+        if (!mArena) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create transient arena");
+                return;
+            }
+
+        mCopyAction = GpuCopy::create(StrA::format("{}.copy_ubo", name), GpuCopy::CreateParameters {.gpu = mGpu});
+        if (!mCopyAction) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create copy action");
+                return;
+            }
+
+        PersistentBuffer::CreateParameters bufParams;
+        bufParams.context = mGpu;
+        bufParams.size    = sizeof(GlobalCameraUBO);
+        mCameraBuffer     = PersistentBuffer::create(StrA::format("{}.camera_ubo", name), bufParams);
+        if (!mCameraBuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create camera UBO");
+                return;
+            }
+
+        bufParams.size  = sizeof(DirectLightingUBO);
+        mLightingBuffer = PersistentBuffer::create(StrA::format("{}.lighting_ubo", name), bufParams);
+        if (!mLightingBuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting UBO");
+                return;
+            }
+
+        bufParams.size     = sizeof(EnvironmentLightingUBO);
+        mEnvLightingBuffer = PersistentBuffer::create(StrA::format("{}.environment_lighting_ubo", name), bufParams);
+        if (!mEnvLightingBuffer) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create environment lighting UBO");
+                return;
+            }
+
+        mFallbackCubemap = createDefault1x1CubemapTexture(mGpu, StrA::format("{}.fallback_cubemap", name), 0, 0, 0, 255);
+        mFallbackBrdfLut = createDefault1x1Texture(mGpu, StrA::format("{}.fallback_brdf_lut", name), 255, 255, 255, 255);
+    }
+
+    void packCameraUbo() {
+        mPendingCamera             = {};
+        const glm::vec3 camPos     = mView.cameraPosition;
+        glm::mat4       camToWorld = glm::translate(glm::mat4(1.f), camPos) * glm::mat4_cast(mView.cameraOrientation);
+        mPendingCamera.viewMatrix  = glm::inverse(camToWorld);
+
+        mPendingCamera.projMatrix = glm::perspectiveRH_ZO(mView.cameraFov.value, mView.aspectRatio, mView.nearPlane, mView.farPlane);
+        mPendingCamera.projMatrix[1][1] *= -1.f;
+
+        mPendingCamera.viewProjMatrix   = mPendingCamera.projMatrix * mPendingCamera.viewMatrix;
+        mPendingCamera.cameraPosition   = glm::vec4(camPos, 1.f);
+        auto [rtW, rtH]                 = getRenderTargetSize(mView.renderTarget.get());
+        mPendingCamera.renderTargetSize = glm::vec2((float) rtW, (float) rtH);
+        mPendingCamera.nearPlane        = mView.nearPlane;
+        mPendingCamera.farPlane         = mView.farPlane;
+        mPendingCamera.frameCounter     = mFrame.frameCounter;
+        mPendingCamera.frameDurationMs  = (float) ((double) mFrame.frameDuration.count() * 1e-3); // µs → ms
+    }
+
+    void packLightingUbo() {
+        mPendingLighting = {};
+
+        const auto &   lights      = mLighting.lights;
+        const uint32_t numLights   = (uint32_t) std::min((size_t) MAX_DIRECT_LIGHTS, lights.size());
+        mPendingLighting.numLights = numLights;
+
+        for (uint32_t i = 0; i < numLights; ++i) {
+            const DirectLight & src = lights[i];
+            DirectLightData &   dst = mPendingLighting.lights[i];
+
+            switch (src.type) {
+            case DirectLight::POINT: {
+                glm::vec3 pos     = src.point.position;
+                dst.positionOrDir = glm::vec4(pos, (float) LIGHT_TYPE_POINT);
+                float intensity   = src.point.intensity.intensity.value;
+                dst.colorAndRange =
+                    glm::vec4(src.point.intensity.r * intensity, src.point.intensity.g * intensity, src.point.intensity.b * intensity, src.point.range);
+                dst.coneAngles = glm::vec4(0.f, 0.f, 0.f, 0.f);
+                break;
+            }
+            case DirectLight::SPOT: {
+                glm::vec3 pos     = src.spot.position;
+                dst.positionOrDir = glm::vec4(pos, (float) LIGHT_TYPE_SPOT);
+                float intensity   = src.spot.intensity.intensity.value;
+                dst.colorAndRange =
+                    glm::vec4(src.spot.intensity.r * intensity, src.spot.intensity.g * intensity, src.spot.intensity.b * intensity, src.spot.range);
+                dst.coneAngles = glm::vec4(src.spot.cosInnerConeAngle, src.spot.cosOuterConeAngle, 0.f, 0.f);
+                break;
+            }
+            case DirectLight::DIRECTIONAL: {
+                glm::vec3 dir     = glm::mat3_cast(src.directional.orientation) * glm::vec3(0.f, 0.f, -1.f);
+                dst.positionOrDir = glm::vec4(dir, (float) LIGHT_TYPE_DIRECTIONAL);
+                float irradiance  = src.directional.irradiance.irradiance.value;
+                dst.colorAndRange = glm::vec4(src.directional.irradiance.r * irradiance, src.directional.irradiance.g * irradiance,
+                                              src.directional.irradiance.b * irradiance, 0.f);
+                dst.coneAngles    = glm::vec4(0.f, 0.f, 0.f, 0.f);
+                break;
+            }
+            }
+        }
+    }
+
+    void packEnvironmentLightingUbo() {
+        mPendingEnv                          = {};
+        mPendingEnv.environmentRadianceScale = mEnvLighting.environmentRadianceScale;
+    }
 
 public:
-    SharedShaderConstantsImpl(ArtifactDatabase & db, const StrA & name, AutoRef<GpuContext> gpu)
-        : SharedShaderConstants(db, TYPE_ID, TYPE_NAME, name), mGpu(std::move(gpu)) {}
+    SharedShaderConstantsVulkan(const StrA & name, AutoRef<GpuContext> gpu): SharedShaderConstants(TYPE_INFO(), name), mGpu(std::move(gpu)) {
+        initGpuResources();
+    }
 
     GpuContext & gpu() const override { return *mGpu; }
 
-    void setFrameInformation(const FrameInformation & v) override { mFrame = v; }
-    void setViewInformation(const ViewInformation & v) override { mView = v; }
-    void setDirectLightingInformation(const DirectLightingInformation & v) override { mLighting = v; }
+    void setFrameInformation(const FrameInformation & v) override {
+        mFrame = v;
+        packCameraUbo(); // frame counter + duration live in GlobalCameraUBO
+    }
 
-    const FrameInformation &          getFrameInformation() const override { return mFrame; }
-    const ViewInformation &           getViewInformation() const override { return mView; }
-    const DirectLightingInformation & getDirectLightingInformation() const override { return mLighting; }
+    void setViewInformation(const ViewInformation & v) override {
+        mView = v;
+        packCameraUbo();
+    }
+
+    void setDirectLightingInformation(const DirectLightingInformation & v) override {
+        mLighting = v;
+        packLightingUbo();
+    }
+
+    void setEnvironmentLightingInformation(const EnvironmentLightingInformation & v) override { mEnvLighting = v; }
+
+    const FrameInformation &               getFrameInformation() const override { return mFrame; }
+    const ViewInformation &                getViewInformation() const override { return mView; }
+    const DirectLightingInformation &      getDirectLightingInformation() const override { return mLighting; }
+    const EnvironmentLightingInformation & getEnvironmentLightingInformation() const override { return mEnvLighting; }
+
+    SubGraph build(RenderGraph & rg) override {
+        SubGraph sg(rg, StrA::format("{}.upload", name));
+        if (!mArena || !mCopyAction || !mCameraBuffer || !mLightingBuffer || !mEnvLightingBuffer) return sg;
+
+        packEnvironmentLightingUbo();
+
+        // Allocate transient staging buffers and write CPU snapshot (no setContent; use arena + copy).
+        AutoRef<TransientBuffer> tbCamera   = mArena->allocate(sizeof(GlobalCameraUBO), "camera");
+        AutoRef<TransientBuffer> tbLighting = mArena->allocate(sizeof(DirectLightingUBO), "lighting");
+        AutoRef<TransientBuffer> tbEnv      = mArena->allocate(sizeof(EnvironmentLightingUBO), "environment_lighting");
+        if (!tbCamera || !tbLighting || !tbEnv) GN_UNLIKELY {
+                GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: transient allocate failed");
+                return sg;
+            }
+        {
+            auto m = tbCamera->map();
+            if (!m.data() || m.size() < sizeof(GlobalCameraUBO)) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: camera map failed");
+                    return sg;
+                }
+            memcpy(m.data(), &mPendingCamera, sizeof(mPendingCamera));
+        }
+        {
+            auto m = tbLighting->map();
+            if (!m.data() || m.size() < sizeof(DirectLightingUBO)) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: lighting map failed");
+                    return sg;
+                }
+            memcpy(m.data(), &mPendingLighting, sizeof(mPendingLighting));
+        }
+        {
+            auto m = tbEnv->map();
+            if (!m.data() || m.size() < sizeof(EnvironmentLightingUBO)) GN_UNLIKELY {
+                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: environment lighting map failed");
+                    return sg;
+                }
+            memcpy(m.data(), &mPendingEnv, sizeof(mPendingEnv));
+        }
+
+        // Copy transient → persistent; workflow keeps transient refs alive until submit completes.
+        auto wf         = rg.createWorkflow(sg.name);
+        auto camArgs    = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
+        camArgs->src    = tbCamera;
+        camArgs->dst    = mCameraBuffer;
+        camArgs->size   = sizeof(GlobalCameraUBO);
+        auto lightArgs  = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
+        lightArgs->src  = tbLighting;
+        lightArgs->dst  = mLightingBuffer;
+        lightArgs->size = sizeof(DirectLightingUBO);
+        auto envArgs    = AutoRef<GpuCopy::BufferToBuffer>(new GpuCopy::BufferToBuffer());
+        envArgs->src    = tbEnv;
+        envArgs->dst    = mEnvLightingBuffer;
+        envArgs->size   = sizeof(EnvironmentLightingUBO);
+        wf.appendTask("camera", mCopyAction, std::move(camArgs));
+        wf.appendTask("lighting", mCopyAction, std::move(lightArgs));
+        wf.appendTask("environment_lighting", mCopyAction, std::move(envArgs));
+        sg.workflows.append(std::move(wf));
+
+        // Build Set 0 resource set for effects (bindings 0–6).
+        // Bindings 0-1: UBOs (camera + lighting).
+        // Bindings 2-4: env cubemaps (skybox, irradiance, prefiltered); fallback to 1×1 black cube.
+        // Binding  5:   BRDF LUT 2D; fallback to 1×1 white.
+        // Binding  6:   EnvironmentLightingUBO (radiance scale for env maps).
+        auto envTex = [&](const AutoRef<Texture> & t) -> AutoRef<Texture> { return t ? t : mFallbackCubemap; };
+
+        mLastSet0.resize(7);
+        mLastSet0[0].resize(1);
+        if (mCameraBuffer)
+            mLastSet0[0][0] = GpuResourceView {}
+                                  .setArtifact(mCameraBuffer)
+                                  .setBufferViewType(GpuResourceView::BufferView::Type::UNIFORM)
+                                  .setBufferViewOffset(0)
+                                  .setBufferViewSize(sizeof(GlobalCameraUBO));
+        mLastSet0[1].resize(1);
+        if (mLightingBuffer)
+            mLastSet0[1][0] = GpuResourceView {}
+                                  .setArtifact(mLightingBuffer)
+                                  .setBufferViewType(GpuResourceView::BufferView::Type::UNIFORM)
+                                  .setBufferViewOffset(0)
+                                  .setBufferViewSize(sizeof(DirectLightingUBO));
+        for (int i = 0; i < 3; ++i) {
+            const AutoRef<Texture> * srcs[3] = {&mEnvLighting.skyboxCubemap, &mEnvLighting.irradianceMap, &mEnvLighting.prefilteredEnvMap};
+            mLastSet0[2 + i].resize(1);
+            mLastSet0[2 + i][0] = GpuResourceView {}.setArtifact(envTex(*srcs[i]));
+        }
+        mLastSet0[5].resize(1);
+        mLastSet0[5][0] = GpuResourceView {}.setArtifact(mEnvLighting.brdfLut ? mEnvLighting.brdfLut : mFallbackBrdfLut);
+        mLastSet0[6].resize(1);
+        if (mEnvLightingBuffer)
+            mLastSet0[6][0] = GpuResourceView {}
+                                  .setArtifact(mEnvLightingBuffer)
+                                  .setBufferViewType(GpuResourceView::BufferView::Type::UNIFORM)
+                                  .setBufferViewOffset(0)
+                                  .setBufferViewSize(sizeof(EnvironmentLightingUBO));
+
+        return sg;
+    }
+
+    const Set0ResourceSet & getSet0Resources() const override { return mLastSet0; }
 };
 
 // =============================================================================
 // SharedShaderConstants::create() - API-neutral dispatch
 // =============================================================================
 
-GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(ArtifactDatabase & db, const StrA & name, const CreateParameters & params) {
+GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
             GN_ERROR(sLogger)("SharedShaderConstants::create: gpu is null, name='{}'", name);
             return {};
@@ -44,13 +305,7 @@ GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(ArtifactData
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
     switch (common->api()) {
     case GpuContextCommon::Api::Vulkan: {
-        auto * p = new SharedShaderConstantsImpl(db, name, params.gpu);
-        if (p->sequence == 0) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstants::create: duplicate type+name, name='{}'", name);
-                delete p;
-                return {};
-            }
-        return AutoRef<SharedShaderConstants>(p);
+        return AutoRef<SharedShaderConstants>(new SharedShaderConstantsVulkan(name, params.gpu));
     }
     case GpuContextCommon::Api::D3D12:
         GN_ERROR(sLogger)("SharedShaderConstants::create: D3D12 backend not implemented");

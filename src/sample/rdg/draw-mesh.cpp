@@ -1,4 +1,7 @@
+#include "gltf-loader.h"
 #include "pch.h"
+#include <chrono>
+#include <cmath>
 #include <garnet/GNbase.h>
 #include <garnet/GNwin.h>
 #include <garnet/base/filesys.h>
@@ -10,141 +13,32 @@ using namespace GN::util;
 static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 
 // -------------------------------------------------------------------------
-// Box mesh geometry
-// -------------------------------------------------------------------------
-
-struct Vertex {
-    float px, py, pz; // position
-    float nx, ny, nz; // normal
-    float u, v;       // texcoord
-};
-static_assert(sizeof(Vertex) == 32);
-
-// One quad face = 2 triangles (6 vertices), winding CCW viewed from outside.
-// clang-format off
-static const Vertex kBoxVertices[] = {
-    // Front face (+Z, normal 0,0,1)
-    {-0.5f,-0.5f, 0.5f,  0,0,1,  0,1},
-    { 0.5f,-0.5f, 0.5f,  0,0,1,  1,1},
-    { 0.5f, 0.5f, 0.5f,  0,0,1,  1,0},
-    {-0.5f,-0.5f, 0.5f,  0,0,1,  0,1},
-    { 0.5f, 0.5f, 0.5f,  0,0,1,  1,0},
-    {-0.5f, 0.5f, 0.5f,  0,0,1,  0,0},
-    // Back face (-Z, normal 0,0,-1)
-    { 0.5f,-0.5f,-0.5f,  0,0,-1,  0,1},
-    {-0.5f,-0.5f,-0.5f,  0,0,-1,  1,1},
-    {-0.5f, 0.5f,-0.5f,  0,0,-1,  1,0},
-    { 0.5f,-0.5f,-0.5f,  0,0,-1,  0,1},
-    {-0.5f, 0.5f,-0.5f,  0,0,-1,  1,0},
-    { 0.5f, 0.5f,-0.5f,  0,0,-1,  0,0},
-    // Right face (+X, normal 1,0,0)
-    { 0.5f,-0.5f, 0.5f,  1,0,0,  0,1},
-    { 0.5f,-0.5f,-0.5f,  1,0,0,  1,1},
-    { 0.5f, 0.5f,-0.5f,  1,0,0,  1,0},
-    { 0.5f,-0.5f, 0.5f,  1,0,0,  0,1},
-    { 0.5f, 0.5f,-0.5f,  1,0,0,  1,0},
-    { 0.5f, 0.5f, 0.5f,  1,0,0,  0,0},
-    // Left face (-X, normal -1,0,0)
-    {-0.5f,-0.5f,-0.5f, -1,0,0,  0,1},
-    {-0.5f,-0.5f, 0.5f, -1,0,0,  1,1},
-    {-0.5f, 0.5f, 0.5f, -1,0,0,  1,0},
-    {-0.5f,-0.5f,-0.5f, -1,0,0,  0,1},
-    {-0.5f, 0.5f, 0.5f, -1,0,0,  1,0},
-    {-0.5f, 0.5f,-0.5f, -1,0,0,  0,0},
-    // Top face (+Y, normal 0,1,0)
-    {-0.5f, 0.5f, 0.5f,  0,1,0,  0,1},
-    { 0.5f, 0.5f, 0.5f,  0,1,0,  1,1},
-    { 0.5f, 0.5f,-0.5f,  0,1,0,  1,0},
-    {-0.5f, 0.5f, 0.5f,  0,1,0,  0,1},
-    { 0.5f, 0.5f,-0.5f,  0,1,0,  1,0},
-    {-0.5f, 0.5f,-0.5f,  0,1,0,  0,0},
-    // Bottom face (-Y, normal 0,-1,0)
-    {-0.5f,-0.5f,-0.5f,  0,-1,0,  0,1},
-    { 0.5f,-0.5f,-0.5f,  0,-1,0,  1,1},
-    { 0.5f,-0.5f, 0.5f,  0,-1,0,  1,0},
-    {-0.5f,-0.5f,-0.5f,  0,-1,0,  0,1},
-    { 0.5f,-0.5f, 0.5f,  0,-1,0,  1,0},
-    {-0.5f,-0.5f, 0.5f,  0,-1,0,  0,0},
-};
-// clang-format on
-
-// -------------------------------------------------------------------------
 // Helpers
 // -------------------------------------------------------------------------
 
-static AutoRef<Buffer> createBoxVertexBuffer(ArtifactDatabase & db, AutoRef<GpuContext> gpu) {
-    auto buf = Buffer::create(db, "box_vertex_buffer", Buffer::CreateParameters {.context = gpu, .size = sizeof(kBoxVertices)});
-    if (!buf) {
-        GN_ERROR(sLogger)("Failed to create box vertex buffer");
-        return {};
-    }
-    if (!buf->setContent(kBoxVertices, sizeof(kBoxVertices))) {
-        GN_ERROR(sLogger)("Failed to upload box vertex data");
-        return {};
-    }
-    return buf;
-}
-
-static GpuDraw::GpuGeometry buildBoxGeometry(AutoRef<Buffer> vertexBuffer) {
-    GpuDraw::GpuGeometry geom;
-    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {0, 0, GpuDraw::GpuGeometry::AttributeFormat::F32_3});  // position
-    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {1, 12, GpuDraw::GpuGeometry::AttributeFormat::F32_3}); // normal
-    geom.format.attributes.append(GpuDraw::GpuGeometry::VertexAttribute {2, 24, GpuDraw::GpuGeometry::AttributeFormat::F32_2}); // texcoord
-    GpuDraw::GpuGeometry::GeometryBuffer vb;
-    vb.buffer = std::move(vertexBuffer);
-    vb.offset = 0;
-    vb.stride = sizeof(Vertex);
-    geom.vertices.append(vb);
-    geom.vertexCount = static_cast<uint32_t>(sizeof(kBoxVertices) / sizeof(Vertex));
-    return geom;
-}
-
-static AutoRef<PbrShading::Material> loadPbrMaterial(ArtifactDatabase & db, AutoRef<GpuContext> gpu) {
-    auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
+static AutoRef<PbrShading::Material> loadPbrMaterial(AutoRef<GpuContext> gpu) {
+    auto fp = fs::openFile("media::pbr/DamagedHelmet/DamagedHelmet.material", std::ios::in);
     if (fp && fp->readable()) {
-        auto mat = PbrShading::Material::load(db, "pbr_material",
-                                              PbrShading::Material::LoadParameters {
-                                                  .gpu      = gpu,
-                                                  .source   = fp,
-                                                  .basePath = "media::pbr/lined-metal-sheeting/",
-                                              });
+        auto mat = PbrShading::Material::load("pbr_material", PbrShading::Material::LoadParameters {
+                                                                  .gpu      = gpu,
+                                                                  .source   = fp,
+                                                                  .basePath = "media::pbr/DamagedHelmet/",
+                                                              });
         if (mat) return mat;
         GN_WARN(sLogger)("Failed to load PBR material from file, using empty material");
     }
     // Fallback: empty material
     static const char empty[1] = {};
     AutoRef<MemFile>  memFile  = AutoRef<MemFile>::make(const_cast<char *>(empty), 0, "pbr_material");
-    return PbrShading::Material::load(db, "pbr_material", PbrShading::Material::LoadParameters {.gpu = gpu, .source = memFile});
-}
-
-static WorldToClipTransformChain buildCamera(uint32_t width, uint32_t height) {
-    WorldToClipTransformChain camera;
-    camera.setCamera({1.8f, 1.4f, 2.4f}, // eye: slightly off-axis to show 3 faces
-                     {0.0f, 0.0f, 0.0f}, // look at box center
-                     {0.0f, 1.0f, 0.0f}  // world up
-    );
-    camera.setPerspective(glm::radians(60.f),             // 60 degree vertical FOV
-                          (float) width / (float) height, // aspect ratio
-                          0.1f,                           // near plane
-                          100.0f                          // far plane
-    );
-    return camera;
-}
-
-static AffineTransform buildModelTransform() {
-    AffineTransform model;
-    model.reset();
-    // Rotate box 30 degrees around Y so we see a corner
-    model.setRotation(glm::radians(30.f), glm::vec3(0.f, 1.f, 0.f));
-    return model;
+    return PbrShading::Material::load("pbr_material", PbrShading::Material::LoadParameters {.gpu = gpu, .source = memFile});
 }
 
 static SharedShaderConstants::DirectLightingInformation buildLighting() {
     SharedShaderConstants::DirectLightingInformation lighting;
     SharedShaderConstants::DirectLight               light;
     light.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
-    light.directional.orientation = Quaternionf::sIdentity();
-    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {3000.0f}}; // warm white, 3000 lux
+    light.directional.orientation = Orientation(1.f, 0.f, 0.f, 0.f); // identity → light faces -Z
+    light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {600.0f}};   // warm white, 600 lux (lux = lm/m^2)
     lighting.lights.append(light);
     return lighting;
 }
@@ -156,26 +50,42 @@ static SharedShaderConstants::DirectLightingInformation buildLighting() {
 int main(int, const char **) {
     enableCRTMemoryCheck();
 
-    auto db = std::unique_ptr<ArtifactDatabase>(ArtifactDatabase::create({}));
-    if (!db) return -1;
-
     auto renderGraph = std::unique_ptr<RenderGraph>(RenderGraph::create({}));
     if (!renderGraph) return -1;
 
-    auto gpuContext = GpuContext::create(*db, "gpu_context", GpuContext::CreateParameters {});
+    auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
 
-    auto pbrShading = PbrShading::create(*db, "pbr_shading", PbrShading::CreateParameters {.gpu = gpuContext});
+    auto pbrShading = PbrShading::create("pbr_shading", PbrShading::CreateParameters {.gpu = gpuContext});
     if (!pbrShading) return -1;
 
-    auto material = loadPbrMaterial(*db, gpuContext);
+    auto skybox = SkyBox::create("skybox", SkyBox::CreateParameters {.gpu = gpuContext});
+    if (!skybox) return -1;
+
+    auto loadTex = [&](const char * path) -> AutoRef<Texture> {
+        auto tex = Texture::load(Texture::LoadParameters {
+            .context  = gpuContext,
+            .filename = fs::toNativeDiskFilePath(path),
+        });
+        if (!tex) { GN_WARN(sLogger)("IBL texture not found: {}", path); }
+        return tex;
+    };
+
+    // Load IBL assets. Each falls back to 1×1 fallback inside SSC if null.
+    static constexpr const char * kEnvDir           = "media::envmap/bad-salzbrunn-walking-hall/";
+    auto                          skyboxCubemap     = loadTex((StrA(kEnvDir) + "skybox.dds").c_str());
+    auto                          irradianceMap     = loadTex((StrA(kEnvDir) + "irradiance.dds").c_str());
+    auto                          prefilteredEnvMap = loadTex((StrA(kEnvDir) + "prefiltered.dds").c_str());
+    auto                          brdfLut           = loadTex((StrA(kEnvDir) + "brdf_lut.dds").c_str());
+
+    auto material = loadPbrMaterial(gpuContext);
     if (!material) return -1;
 
-    auto vertexBuffer = createBoxVertexBuffer(*db, gpuContext);
-    if (!vertexBuffer) return -1;
+    auto helmetGeometry = gltf::loadGltfGeometry(fs::toNativeDiskFilePath("media::pbr/DamagedHelmet/DamagedHelmet.gltf").c_str(), gpuContext);
+    if (helmetGeometry.vertexCount == 0) return -1;
 
     auto window = std::unique_ptr<win::Window>(
-        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR Box", .clientWidth = 1280, .clientHeight = 720}));
+        win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Damaged Helmet", .clientWidth = 1280, .clientHeight = 720}));
     if (!window) return -1;
     window->show();
 
@@ -183,73 +93,122 @@ int main(int, const char **) {
     intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
     if (!surface) return -1;
 
-    auto backbuffer = Backbuffer::create(
-        *db, "backbuffer",
-        Backbuffer::CreateParameters {.context = gpuContext, .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(1280, 720)});
+    auto backbuffer =
+        Backbuffer::create("backbuffer", Backbuffer::CreateParameters {.context    = gpuContext,
+                                                                       .descriptor = Backbuffer::Descriptor {}.setWindow(surface).setDimensions(1280, 720)});
     if (!backbuffer) return -1;
     const auto & bbDesc = backbuffer->descriptor();
 
-    auto depthTexture = Texture::create(
-        *db, "depth_texture",
-        Texture::CreateParameters {.context    = gpuContext,
-                                   .descriptor = Texture::Descriptor {}.setDimensions(1280, 720).setFormat(gfx::img::PixelFormat::RG_24_UNORM_8_UINT())});
+    gfx::img::PixelFormat depthFormat = gpuContext->caps().defaultDepthFormat;
+    if (depthFormat == gfx::img::PixelFormat::UNKNOWN()) {
+        GN_WARN(sLogger)("GpuContext caps.defaultDepthFormat is UNKNOWN; using D24_UNORM_S8_UINT pixel format for depth texture");
+        depthFormat = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
+    }
+    auto depthTexture =
+        Texture::create("depth_texture", Texture::CreateParameters {.context    = gpuContext,
+                                                                    .descriptor = Texture::Descriptor {}.setDimensions(1280, 720).setFormat(depthFormat)});
 
-    auto renderTarget = RenderTarget::create(*db, "render_target", RenderTarget::CreateParameters {});
+    auto renderTarget = RenderTarget::create("render_target", RenderTarget::CreateParameters {});
     if (!renderTarget) return -1;
     renderTarget->addColorTarget(backbuffer);
     renderTarget->setClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     renderTarget->setDepthStencilTarget(depthTexture);
     renderTarget->setDepthState(RenderTarget::DepthState {.func = RenderTarget::Compare::LESS, .write = true});
 
-    auto prepareAction = PrepareBackbuffer::create(*db, "prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
+    auto prepareAction = PrepareBackbuffer::create("prepare_action", PrepareBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!prepareAction) return -1;
-    // auto clearAction = ClearRenderTarget::create(*db, "clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
+    // auto clearAction = ClearRenderTarget::create("clear_action", ClearRenderTarget::CreateParameters {.gpu = gpuContext});
     // if (!clearAction) return -1;
-    auto presentAction = PresentBackbuffer::create(*db, "present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
+    auto presentAction = PresentBackbuffer::create("present_action", PresentBackbuffer::CreateParameters {.gpu = gpuContext});
     if (!presentAction) return -1;
 
-    // Build scene transforms once (static scene, no animation)
-    auto camera      = buildCamera(bbDesc.width, bbDesc.height);
-    auto modelXform  = buildModelTransform();
-    auto boxGeometry = buildBoxGeometry(vertexBuffer);
-    auto lighting    = buildLighting();
+    auto lighting = buildLighting();
 
-    // SharedShaderConstants: set view and lighting
-    auto sharedConstants = SharedShaderConstants::create(*db, "shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
+    auto sharedConstants = SharedShaderConstants::create("shared_constants", SharedShaderConstants::CreateParameters {.gpu = gpuContext});
     if (sharedConstants) {
-        SharedShaderConstants::ViewInformation view;
-        view.worldToClip    = camera.matrix();
-        view.cameraPosition = Location {WorldUnit((int64_t) (1.8f * 1e6f)), WorldUnit((int64_t) (1.4f * 1e6f)), WorldUnit((int64_t) (2.4f * 1e6f))};
-        view.renderTarget   = renderTarget;
-        sharedConstants->setViewInformation(view);
         sharedConstants->setDirectLightingInformation(lighting);
+        {
+            SharedShaderConstants::EnvironmentLightingInformation env;
+            env.skyboxCubemap     = skyboxCubemap;
+            env.irradianceMap     = irradianceMap;
+            env.prefilteredEnvMap = prefilteredEnvMap;
+            env.brdfLut           = brdfLut;
+            // Linear radiance multiplier [dimensionless] on HDR env samples; tune without rebaking DDS.
+            // The goal is to scale the value read from the HDR environment map to match physical brightness
+            // (in nits) of the actual environment.
+            env.environmentRadianceScale = 3500.0f; // 3500 nit is about a bright office environment
+            sharedConstants->setEnvironmentLightingInformation(env);
+        }
     }
 
-    GN_INFO(sLogger)("Starting PBR box render loop...");
+    GN_INFO(sLogger)("Starting PBR helmet render loop...");
+
+    const auto orbitStartTime = std::chrono::steady_clock::now();
+    // Orbit in XZ at y = 1.4 m; radius matches initial (1.8, 2.4) → 3 m from mesh center at origin.
+    static constexpr float kOrbitRadiusXZ  = 3.0f;
+    static constexpr float kOrbitEyeY      = 1.4f;
+    static constexpr float kOrbitRadPerSec = 0.5f;
+    const float            orbitPhase0     = std::atan2(2.4f, 1.8f);
 
     while (window->runUntilNoNewEvents()) {
+        if (sharedConstants) {
+            const float            elapsed = std::chrono::duration<float>(std::chrono::steady_clock::now() - orbitStartTime).count();
+            const float            angle   = orbitPhase0 + kOrbitRadPerSec * elapsed;
+            const glm::vec3        eye     = {kOrbitRadiusXZ * std::cos(angle), kOrbitEyeY, kOrbitRadiusXZ * std::sin(angle)};
+            static const glm::vec3 kTarget(0.f, 0.f, 0.f), kUp(0.f, 1.f, 0.f);
+            const glm::mat4        camToWorld = glm::inverse(glm::lookAtRH(eye, kTarget, kUp));
+            const Orientation      camOrient  = glm::quat_cast(glm::mat3(camToWorld));
+
+            SharedShaderConstants::ViewInformation view;
+            view.cameraPosition    = eye;
+            view.cameraOrientation = camOrient;
+            view.cameraFov         = Degree(60.f);
+            view.aspectRatio       = (float) bbDesc.width / (float) bbDesc.height;
+            view.nearPlane         = 0.1f;
+            view.farPlane          = 100.f;
+            view.renderTarget      = renderTarget;
+            sharedConstants->setViewInformation(view);
+        }
+
+        // Build shared constants (upload UBOs); SSC build returns SubGraph with upload workflow(s).
+        auto sscSubGraph = sharedConstants->build(*renderGraph);
+
         auto renderWorkflow = renderGraph->createWorkflow("Render");
         if (!renderWorkflow) break;
 
-        renderWorkflow->appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
-        // renderWorkflow->appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
+        renderWorkflow.appendTask("Prepare", prepareAction, PrepareBackbuffer::A::make(backbuffer));
+        // renderWorkflow.appendTask("Clear", clearAction, ClearRenderTarget::A::make(renderTarget));
+
+        // Skybox renders before geometry (fullscreen quad at max depth; PBR geometry overwrites it).
+        SkyBox::BuildParameters skyboxParams;
+        skyboxParams.renderGraph           = renderGraph.get();
+        skyboxParams.sharedShaderConstants = sharedConstants;
+        auto skyboxSubGraph                = skybox->build(skyboxParams);
+        if (skyboxSubGraph.builtResult == Action::ExecutionResult::PASSED && !skyboxSubGraph.workflows.empty()) {
+            for (const auto & task : skyboxSubGraph.workflows[0].tasks()) renderWorkflow.appendTask(task.name, task.action, task.arguments);
+        }
 
         PbrShading::BuildParameters pbrParams;
         pbrParams.renderGraph           = renderGraph.get();
-        pbrParams.renderTarget          = renderTarget;
         pbrParams.sharedShaderConstants = sharedConstants;
         pbrParams.material              = material;
-        pbrParams.geometry              = boxGeometry;
-        pbrParams.modelToWorld          = modelXform;
-        pbrParams.worldToClip           = camera.matrix();
-        auto pbrSubGraph                = pbrShading->build(pbrParams);
+        pbrParams.geometry              = helmetGeometry;
+        pbrParams.locationInWorldSpace  = {0, 0, 0};
+        // Apply the 90° X rotation from the GLTF node transform (ignored by the loader).
+        pbrParams.orientationInWorldSpace = glm::angleAxis(glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
+        auto pbrSubGraph                  = pbrShading->build(pbrParams);
         if (pbrSubGraph.builtResult == Action::ExecutionResult::PASSED && !pbrSubGraph.workflows.empty()) {
-            for (auto & task : pbrSubGraph.workflows[0]->tasks) renderWorkflow->appendTask(task.name, task.action, task.arguments);
+            for (const auto & task : pbrSubGraph.workflows[0].tasks()) renderWorkflow.appendTask(task.name, task.action, task.arguments);
         }
 
-        renderWorkflow->appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
+        renderWorkflow.appendTask("Present", presentAction, PresentBackbuffer::A::make(backbuffer));
 
-        auto submission = renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow *>(&renderWorkflow, 1), .name = "Frame"});
+        // Submit upload workflow first (if any), then render workflow.
+        DynaArray<Workflow> toSubmit;
+        if (!sscSubGraph.workflows.empty()) { toSubmit.append(std::move(sscSubGraph.workflows[0])); }
+        toSubmit.append(std::move(renderWorkflow));
+        auto submission =
+            renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow>(toSubmit.data(), toSubmit.size()), .name = "Frame"});
         if (!submission) {
             GN_ERROR(sLogger)("Failed to submit render graph");
             break;
@@ -259,6 +218,6 @@ int main(int, const char **) {
         if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph completed with warnings"); }
     }
 
-    GN_INFO(sLogger)("PBR box demo finished");
+    GN_INFO(sLogger)("PBR helmet demo finished");
     return 0;
 }

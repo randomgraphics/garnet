@@ -309,8 +309,12 @@ public:
     ///
     /// Dtor
     ///
-    ~AutoFinalizer() {
-        if (!mDismissed) mFunc();
+    ~AutoFinalizer() { proceed(); }
+
+    void proceed() {
+        if (mDismissed) return;
+        mDismissed = true;
+        mFunc();
     }
 
     ///
@@ -332,22 +336,69 @@ struct BitFlags {
     constexpr operator MaskType() const { return mask; }
 
     // relational operators
-    constexpr BitFlags operator==(const BitFlags & other) const { return mask == other.mask; }
-    constexpr BitFlags operator!=(const BitFlags & other) const { return mask != other.mask; }
-    constexpr bool     operator<(const BitFlags & other) const { return mask < other.mask; }
-    constexpr bool     operator>(const BitFlags & other) const { return mask > other.mask; }
-    constexpr bool     operator<=(const BitFlags & other) const { return mask <= other.mask; }
-    constexpr bool     operator>=(const BitFlags & other) const { return mask >= other.mask; }
+    constexpr bool operator==(const BitFlags & other) const { return mask == other.mask; }
+    constexpr bool operator!=(const BitFlags & other) const { return mask != other.mask; }
+    constexpr bool operator<(const BitFlags & other) const { return mask < other.mask; }
+    constexpr bool operator>(const BitFlags & other) const { return mask > other.mask; }
+    constexpr bool operator<=(const BitFlags & other) const { return mask <= other.mask; }
+    constexpr bool operator>=(const BitFlags & other) const { return mask >= other.mask; }
 
     // bitwise operators
-    constexpr BitFlags operator|(const BitFlags & other) const { return BitFlags(mask | other.mask); }
-    constexpr BitFlags operator&(const BitFlags & other) const { return BitFlags(mask & other.mask); }
-    constexpr BitFlags operator^(const BitFlags & other) const { return BitFlags(mask ^ other.mask); }
-    constexpr BitFlags operator~() const { return BitFlags(~mask); }
-    constexpr BitFlags operator<<(const BitFlags & other) const { return BitFlags(mask << other.mask); }
-    constexpr BitFlags operator>>(const BitFlags & other) const { return BitFlags(mask >> other.mask); }
-    constexpr BitFlags operator<<=(const BitFlags & other) const { return BitFlags(mask <<= other.mask); }
-    constexpr BitFlags operator>>=(const BitFlags & other) const { return BitFlags(mask >>= other.mask); }
+    constexpr BitFlags & operator|(const BitFlags & other) const {
+        mask |= other.mask;
+        return *this;
+    }
+    constexpr BitFlags & operator&(const BitFlags & other) const {
+        mask &= other.mask;
+        return *this;
+    }
+    constexpr BitFlags & operator^(const BitFlags & other) const {
+        mask ^= other.mask;
+        return *this;
+    }
+    constexpr BitFlags & operator~() const {
+        mask = ~mask;
+        return *this;
+    }
+    constexpr BitFlags & operator<<(size_t n) const {
+        mask <<= n;
+        return *this;
+    }
+    constexpr BitFlags & operator>>(size_t n) const {
+        mask >>= n;
+        return *this;
+    }
+    constexpr BitFlags & operator<<=(size_t n) const {
+        mask <<= n;
+        return *this;
+    }
+    constexpr BitFlags & operator>>=(size_t n) const {
+        mask >>= n;
+        return *this;
+    }
+
+    // bitwise operator with bits
+    constexpr BitFlags & operator|(T bit) {
+        mask |= static_cast<MaskType>(bit);
+        return *this;
+    }
+    constexpr BitFlags & operator&(T bit) {
+        mask &= static_cast<MaskType>(bit);
+        return *this;
+    }
+    constexpr BitFlags & operator^(T bit) {
+        mask ^= static_cast<MaskType>(bit);
+        return *this;
+    }
+    constexpr BitFlags & operator~() {
+        mask = ~mask;
+        return *this;
+    }
+
+    // bitwise operator with bits (the other way around)
+    friend constexpr BitFlags operator|(T bit, const BitFlags & flags) { return BitFlags(static_cast<MaskType>(bit) | flags.mask); }
+    friend constexpr BitFlags operator&(T bit, const BitFlags & flags) { return BitFlags(static_cast<MaskType>(bit) & flags.mask); }
+    friend constexpr BitFlags operator^(T bit, const BitFlags & flags) { return BitFlags(static_cast<MaskType>(bit) ^ flags.mask); }
 };
 
 namespace detail {

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <garnet/GNbase.h>
+#include <garnet/rdg/rtti.h>
 
 #include <concepts>
-#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -17,135 +17,59 @@ namespace GN::rdg {
 // - RenderGraph: create workflows (thread-safe); submit() submits selected list of workflows for async execution in a topological order that satisfies
 // dependencies.
 
-struct ArtifactDatabase;
-
-struct RuntimeType {
-    /// The unique identifier of the type for fast lookup and comparison.
-    /// This is a runtime ID generated each time application starts.
-    /// It is guaranteed to be unique within the entire application, even across DLL boundaries.
-    /// But DO NOT use it in external assets or files, since they are not stable and will change from session to session.
-    const uint64_t typeId;
-
-    /// The name of the type. No need to be unique, for now.
-    /// \note We could enforce uniqueness of the name too, if we want a stable ID for each type in the future.
-    const char * const typeName;
-
-    template<typename T>
-    T * castTo() {
-        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<T *>(this);
-        return nullptr;
-    }
-
-    template<typename T>
-    const T * castTo() const {
-        if (typeId == T::TYPE_ID) GN_LIKELY return static_cast<const T *>(this);
-        return nullptr;
-    }
-
-protected:
-    RuntimeType(uint64_t typeId_, const char * typeName_): typeId(typeId_), typeName(typeName_) {}
-
-    /// Returns a 64-bit integer that uniquely map to the name.
-    /// Same name always returns the same ID.
-    static GN_API uint64_t getStableTypeIdFromName(const char * name);
-};
-
-/// The basic building block of the render graph module. Base class of everthing that could be added to a render graph.
+/// The basic building block of the render graph module. Base class of everything that
+/// needs reference counting and runtime type information.
 struct Artifact : public RefCounter, public RuntimeType {
-    ArtifactDatabase & database;
-    const StrA         name;
-    const uint64_t     sequence; ///< the unique integer identifier of the artifact in the artifact database.
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
+
+    const StrA name;
 
     virtual ~Artifact();
 
 protected:
     /// Constructor
-    Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name);
+    Artifact(const TypeInfo & type, const StrA & name);
 };
 
-/// Database of all artifacts. Artifact is uniquely identified by its type and name, or by its sequence number.
-/// The database is only holding weak references to all artifacts, so it is not responsible for the lifetime of the artifacts.
-struct ArtifactDatabase {
-    struct CreateParameters {
-        // TBD
-    };
+inline Artifact::Artifact(const TypeInfo & type, const StrA & name): RuntimeType(type), name(name) {}
 
-    /// Create a new artifact database instance
-    static GN_API ArtifactDatabase * create(const CreateParameters & params);
-
-    virtual ~ArtifactDatabase() = default;
-
-    /// Acquire a new unique sequence number for the resource.
-    /// \return the non-zero sequence number if successful, 0 if the type and name combination exists already and/or artifact pointer is null.
-    /// \note this method is called by Artifact::constructor only. Artifact create()/load() must check artifact.sequence after construction;
-    ///       if 0 (duplicate type+name), delete the new instance and return null.
-    virtual uint64_t admit(Artifact * artifact) = 0;
-
-    /// Erase an artifact instance by its sequence number. Usually called by destructor of the artifact.
-    virtual bool erase(uint64_t sequence) = 0;
-
-    /// Search for an artifact instance by type and name.
-    virtual auto fetch(uint64_t type, const StrA & name) -> AutoRef<Artifact> = 0;
-
-    /// Search for an artifact instance by its sequence number. Faster than search by ID.
-    virtual auto fetch(uint64_t sequence) -> AutoRef<Artifact> = 0;
-
-protected:
-    ArtifactDatabase() = default;
-};
-
-inline Artifact::Artifact(ArtifactDatabase & db, uint64_t typeId, const char * typeName, const StrA & name)
-    : RuntimeType(typeId, typeName), database(db), name(name), sequence(database.admit(this)) {}
-
-inline Artifact::~Artifact() {
-    if (sequence) database.erase(sequence);
-}
+inline Artifact::~Artifact() = default;
 
 /// A helper class to wrap anything as an artifact.
 /// \param T    Type of the value to wrap.
-/// \param NAME Name of the artifact.
-template<typename T, const char * NAME>
+template<typename T>
 class TypedArtifact : public Artifact {
 public:
-    inline static const uint64_t TYPE_ID   = getStableTypeIdFromName(StrA::format("{}_{}", NAME, Guid::createRandom().toStr()).data());
-    inline static const char *   TYPE_NAME = NAME;
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
 
     T value;
 
     /// Create a new artifact with default value.
-    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name) {
-        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name));
-        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
-        return p;
-    }
+    AutoRef<TypedArtifact> create(const StrA & name) { return AutoRef<TypedArtifact>(new TypedArtifact(name)); }
 
     /// Create a new artifact with a specific value (copy).
-    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name, const T & value) {
-        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name, value));
-        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
+    AutoRef<TypedArtifact> create(const StrA & name, const T & value) {
+        auto p   = AutoRef<TypedArtifact>(new TypedArtifact(name, value));
         p->value = value;
         return p;
     }
 
     /// Create a new artifact with a specific value (move).
-    AutoRef<TypedArtifact> create(ArtifactDatabase & db, const StrA & name, T && value) {
-        auto p = AutoRef<TypedArtifact>(new TypedArtifact(db, name, std::move(value)));
-        if (0 == p->sequence) GN_UNLIKELY return {}; // most likely a duplicate type+name
-        return p;
-    }
+    AutoRef<TypedArtifact> create(const StrA & name, T && value) { return AutoRef<TypedArtifact>(new TypedArtifact(name, std::move(value))); }
 
 private:
     // Constructor: only used by create() methods.
-    TypedArtifact(ArtifactDatabase & db, const StrA & name): Artifact(db, TYPE_ID, TYPE_NAME, name), value() {}
-    TypedArtifact(ArtifactDatabase & db, const StrA & name, const T & v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(v) {}
-    TypedArtifact(ArtifactDatabase & db, const StrA & name, T && v): Artifact(db, TYPE_ID, TYPE_NAME, name), value(std::move(v)) {}
+    TypedArtifact(const StrA & name): Artifact(TYPE_INFO(), name), value() {}
+    TypedArtifact(const StrA & name, const T & v): Artifact(TYPE_INFO(), name), value(v) {}
+    TypedArtifact(const StrA & name, T && v): Artifact(TYPE_INFO(), name), value(std::move(v)) {}
 };
 
 template<class T>
 concept DerivedFromArtifact = std::derived_from<T, Artifact>;
 
-/// Base class of arguments for an action. This is not a subclass of Artifact, since it is means to be one time use: create, pass to action, and forget.
-struct Arguments : public RefCounter, public RuntimeType {
+/// Base class of arguments for an action.
+struct Arguments : public Artifact {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
 
     struct ArtifactReadWriteList {
         std::unordered_set<const Artifact *> & readList;
@@ -158,28 +82,8 @@ struct Arguments : public RefCounter, public RuntimeType {
     virtual void addToReadWriteList(ArtifactReadWriteList & list) const = 0;
 
 protected:
-    using RuntimeType::RuntimeType;
-    // private:
-    //     DoubleLink * mHead = nullptr;
-
-    //     /// Only called by ArtifactArgument constructor to enlist the argument into the list.
-    //     void enlist(ArtifactArgument * arg) {
-    //         GN_ASSERT(arg);
-    //         GN_ASSERT(arg->name() != nullptr);
-    //         GN_ASSERT(arg->usage() != Usage::None);
-    //         DoubleLink * link = const_cast<DoubleLink *>(&arg->mLink);
-    //         GN_ASSERT(link->prev == nullptr && link->next == nullptr);
-
-    //         if (!mHead)
-    //             mHead = link;
-    //         else {
-    //             GN_ASSERT(mHead->prev == nullptr);
-    //             link->linkBefore(mHead);
-    //             mHead = link;
-    //         }
-    //     }
-
-    //     friend struct ArtifactArgument;
+    /// For argument structs that have no logical name; subclasses use Arguments(TYPE_INFO()).
+    explicit Arguments(const TypeInfo & type): Artifact(type, "") {}
 };
 
 /// A opaque struct to store information of each task in a submission. Defined in submission.h.
@@ -187,6 +91,8 @@ struct TaskInfo;
 
 /// Base class of all actions. An action holds the logic for an operation and declares its parameters (input/output).
 struct Action : public Artifact {
+    GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Artifact);
+
     enum ExecutionResult {
         PASSED,  ///< the action executed successfully.
         WARNING, ///< the action executed successfully, but with warnings.
@@ -194,12 +100,21 @@ struct Action : public Artifact {
         DROPPED, ///< the action is dropped; dependents are skipped.
     };
 
-    /// Prepare for execution. Returns success code and an optional execution context that will be later passed to execute().
+    struct PrepareResult {
+        ExecutionResult result         = FAILED;
+        size_t          remainingSteps = 0;
+
+        PrepareResult() = default;
+        PrepareResult(ExecutionResult r, size_t steps = 0): result(r), remainingSteps(steps) {}
+        operator bool() const { return result == PASSED || result == WARNING; }
+    };
+
+    /// Prepare for execution. Returns success code and number of additional steps required to complete the action.
     /// \param submission The submission that is executing the action.
     /// \param taskInfo The information of the task that is executing the action.
     /// \param arguments The arguments for the action.
-    /// \return The execution result.
-    virtual ExecutionResult prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
+    /// \return The prepare result and how many additional steps (excluding this prepare step) are required to complete the action.
+    virtual PrepareResult prepare(TaskInfo & taskInfo, Arguments & arguments) = 0;
 
     /// Execute the action with the given arguments. The context is the same as the one returned from prepare().
     /// \param submission The submission that is executing the action.
@@ -207,7 +122,7 @@ struct Action : public Artifact {
     /// \param arguments Same as the one passed to prepare().
     /// \param context The context returned from prepare().
     /// \return The execution result.
-    virtual ExecutionResult execute(TaskInfo & taskInfo, Arguments & arguments) = 0;
+    virtual ExecutionResult execute(TaskInfo & taskInfo, size_t step, Arguments & arguments) = 0;
 
 protected:
     /// Inherit constructor from Artifact
@@ -216,9 +131,9 @@ protected:
 
 /// A workflow is a sequence of tasks run in sequential order. It can depend on completion of other workflows.
 /// The render graph runs workflows in a topological order that satisfies these dependencies.
+/// Workflow is move-only (like unique_ptr); it holds a pointer to an internal payload.
 struct Workflow {
-    /// Name for logging and debugging (not required, but recommended. No need to be unique).
-    StrA name;
+    GN_NO_COPY(Workflow);
 
     /// Represents a single task in the workflow. This is the atomic execution unit of the render graph.
     /// \note
@@ -254,31 +169,84 @@ struct Workflow {
         }
     };
 
-    DynaArray<Task> tasks;
+    /// Payload holds all workflow data. The workflow object holds a pointer to the payload.
+    struct Payload {
+        StrA            name;
+        DynaArray<Task> tasks;
 
+        virtual ~Payload() = default;
+
+        bool validateAndAppend(Task && task) {
+            const size_t taskIndex = tasks.size();
+            auto *       log       = GN::getLogger("GN.rdg");
+            if (!task.action) GN_UNLIKELY {
+                    GN_ERROR(log)("Workflow '{}' task [{}] '{}': action is null", name, taskIndex, task.name);
+                    return false;
+                }
+            if (!task.arguments) GN_UNLIKELY {
+                    GN_ERROR(log)("Workflow '{}' task [{}] '{}': arguments is null", name, taskIndex, task.name);
+                    return false;
+                }
+            // if (!task.action->validate(*task.arguments)) GN_UNLIKELY {
+            //         GN_ERROR(log)("Workflow '{}' task [{}] '{}': argument validation failed", name, taskIndex, task.name);
+            //         return false;
+            //     }
+            tasks.append(std::move(task));
+            return true;
+        }
+    };
+
+    constexpr Workflow() = default;
+
+    Workflow(Workflow && other) noexcept: mPayload(other.mPayload) { other.mPayload = nullptr; }
+
+    Workflow & operator=(Workflow && other) noexcept {
+        if (this == &other) return *this;
+        drop();
+        mPayload       = other.mPayload;
+        other.mPayload = nullptr;
+        return *this;
+    }
+
+    ~Workflow() { drop(); }
+
+    bool valid() const { return mPayload != nullptr; }
+
+    explicit operator bool() const { return valid(); }
+
+    /// Name for logging and debugging (not required, but recommended. No need to be unique).
+    StrA name() const { return mPayload ? mPayload->name : StrA(); }
+
+    /// Read-only access to the task list. Use appendTask() to add tasks (validates at append time).
+    SafeArrayAccessor<const Task> tasks() const {
+        if (!mPayload) return SafeArrayAccessor<const Task>();
+        return SafeArrayAccessor<const Task>(mPayload->tasks);
+    }
+
+    /// Append a task. Validates action non-null, arguments non-null, and action->validate(arguments) at append time; on failure logs and does not append.
     Workflow & appendTask(Task && task) {
-        tasks.append(std::move(task));
+        if (!mPayload) GN_UNLIKELY {
+                static auto * log = GN::getLogger("GN.rdg");
+                GN_ERROR(log)("Task '{}': Can't apend task to workflow of null payload.", task.name);
+                return *this;
+            }
+        mPayload->validateAndAppend(std::move(task));
         return *this;
     }
 
     Workflow & appendTask(const StrA & name_, AutoRef<Action> action_, AutoRef<Arguments> arguments_) {
-        tasks.append(Task(name_, std::move(action_), std::move(arguments_)));
-        return *this;
+        return appendTask(Task(name_, std::move(action_), std::move(arguments_)));
     }
 
-    // /// Collect usage of all artifacts
-    // std::unordered_map<uint64_t, Arguments::UsageBits> collectArtifactArguments() const {
-    //     std::unordered_map<uint64_t, Arguments::UsageBits> result;
-    //     for (const Task & task : tasks) {
-    //         if (!task.arguments) GN_LIKELY continue;
-    //         for (const Arguments::ArtifactArgument * p = task.arguments->firstArtifactArgument(); p; p = p->next()) {
-    //             for (const Artifact * a : p->artifacts()) {
-    //                 if (a) GN_LIKELY result[a->typeId] += p->usage();
-    //             }
-    //         }
-    //     }
-    //     return result;
-    // }
+    /// Drop and release a single workflow's payload. The workflow becomes empty.
+    void drop() {
+        safeDelete(mPayload);
+        GN_ASSERT(!mPayload);
+    }
+
+private:
+    Payload * mPayload = nullptr;
+    friend class RenderGraphImpl; // will modify mPayload directly.
 };
 
 struct Submission : RefCounter {
@@ -312,19 +280,6 @@ protected:
     Submission(const StrA & name_): name(name_) {}
 };
 
-// /// A transient arena is a temporary memory pool that is used to allocate memory for the tasks that are executed.
-// /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
-// /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
-// struct TransientArena {
-//     virtual ~TransientArena() = default;
-
-//     GN_NO_COPY(TransientArena);
-//     GN_NO_MOVE(TransientArena);
-
-// protected:
-//     TransientArena() = default;
-// };
-
 /// Render graph: create workflows (thread-safe), then submit them for async execution.
 struct RenderGraph {
     struct CreateParameters {
@@ -335,7 +290,8 @@ struct RenderGraph {
         /// The order of the workflow is important. A workflow in front of the array (smaller index)
         /// is considered older than the ones in the back of the array (larger index).
         /// Also, a workflow is always newer than any previously submitted workflows.
-        SafeArrayAccessor<Workflow *> workflows;
+        /// On submit, ownership of each workflow's payload is transferred to the submission.
+        SafeArrayAccessor<Workflow> workflows;
 
         /// name of the submission. For logging and debugging.
         StrA name = "[unnamed submission]"_s;
@@ -351,26 +307,11 @@ struct RenderGraph {
 
     /// Create a new workflow.
     /// \param name The name of the workflow.
-    /// \return a pointer to the created workflow. The pointer is valid after passed to submit().
-    ///         Modifying submitted workflow is undefined behavior.
-    virtual Workflow * createWorkflow(StrA name) = 0;
-
-    // /// Add a transient arena to the render graph. The arena is used to allocate temporary used only by the the next submission.
-    // /// It will be automatically deleted, along with all allocated memory, after the next submission is completed or cancelled.
-    // /// Accessing the added arena after calling submit() is prohibited and will result in undefined behavior.
-    // /// \param arena The transient arena to add.
-    // virtual void addTransientArena(TransientArena * arena) = 0;
+    /// \return a workflow by value (move-only). Empty workflow on allocation failure.
+    virtual Workflow createWorkflow(StrA name) = 0;
 
     /// Submit workflows for <b>blocking</b> async execution in a topological order that satisfies workflow dependencies.
     virtual AutoRef<Submission> submit(const SubmitParameters & params) = 0;
-
-    /// Helper function to properly drop a workflow.
-    /// \note You can't drop an already submitted workflow. That'll cause undefined behavior.
-    void dropWorkflow(Workflow * workflow) {
-        if (!workflow) return;
-        workflow->tasks.clear();
-        submit({.workflows = {&workflow, 1}, .name = StrA::format("Dropped workflow {}", workflow->name)});
-    }
 
 protected:
     RenderGraph() = default;

@@ -354,11 +354,13 @@ public:
     }
 
     ///
-    /// Cast to another type. Caller is responsible for ensuring the cast is valid.
+    /// Cast to another type w/o runtime type checking. Caller is responsible for ensuring the cast is valid.
+    /// This should only be used to cast back and forth between between base and derived classes.
     ///
-    template<typename T2>
-    AutoRef<T2> castTo() const {
-        return AutoRef<T2>(static_cast<T2 *>(mPtr));
+    template<typename T>
+    AutoRef<T> staticCastTo() const {
+        static_assert(std::is_base_of_v<X, T> || std::is_base_of_v<T, X>);
+        return AutoRef<T>(static_cast<T *>(mPtr));
     }
 
     ///

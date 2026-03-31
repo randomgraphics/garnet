@@ -67,16 +67,16 @@ static rapid_vulkan::Ref<rapid_vulkan::Image> createVkImage(const Texture::Descr
     if (optimalFeatures & vk::FormatFeatureFlagBits::eColorAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eColorAttachment;
     if (optimalFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
 
-    cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
+    if (descriptor.faces == 6 && descriptor.depth == 1)
+        cp.setCube(descriptor.width).setLevels(descriptor.levels).setFormat(cp.info.format);
+    else
+        cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
     return rapid_vulkan::Ref<rapid_vulkan::Image>(new rapid_vulkan::Image(cp));
 }
 
-TextureVulkan::TextureVulkan(ArtifactDatabase & db, const StrA & name): TextureCommon(db, name) {
-    if (sequence == 0) { GN_ERROR(sLogger)("TextureVulkan::TextureVulkan: duplicate type+name, name='{}'", name); }
-}
+TextureVulkan::TextureVulkan(const StrA & name): TextureCommon(name) {}
 
 bool TextureVulkan::init(const Texture::CreateParameters & params) {
-    if (sequence == 0) return false;
     if (!params.context) {
         GN_ERROR(sLogger)("TextureVulkan::init: context is null");
         return false;
@@ -87,9 +87,36 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
     auto * vkCtx = static_cast<GpuContextVulkan *>(params.context.get());
     mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
+    rapid_vulkan::setVkHandleName(vkCtx->globalInfo().device, mImage->handle(), name.c_str());
 
-    // initialize the subresource image state array.
-    mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
+    mState = TextureState(mDescriptor.levels, mDescriptor.faces);
+    return true;
+}
+
+bool TextureVulkan::upload1x1Mip(const uint8_t rgba[4]) {
+    if (!mImage || !mImage->handle() || mDescriptor.width != 1 || mDescriptor.height != 1) GN_UNLIKELY {
+            GN_ERROR(sLogger)("TextureVulkan::upload1x1Mip: invalid state or non-1x1 texture");
+            return false;
+        }
+    auto * vkCtx = static_cast<GpuContextVulkan *>(mGpuContext.get());
+    if (!vkCtx) GN_UNLIKELY return false;
+    rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
+    if (!gq) GN_UNLIKELY {
+            GN_ERROR(sLogger)("TextureVulkan::upload1x1Mip: no graphics queue");
+            return false;
+        }
+    rapid_vulkan::Image::SetContentParameters sc;
+    sc.setQueue(*gq);
+    sc.mipLevel = 0;
+    sc.area.w   = 1;
+    sc.area.h   = 1;
+    sc.area.d   = 1;
+    sc.pitch    = 4;
+    sc.pixels   = rgba;
+    for (uint32_t face = 0; face < mDescriptor.faces; ++face) {
+        sc.arrayLayer = face;
+        mImage->setContent(sc);
+    }
     return true;
 }
 
@@ -129,18 +156,16 @@ gfx::img::Image TextureVulkan::readback() const {
             return gfx::img::Image();
         }
     rapid_vulkan::Image::ReadContentParameters readParams;
-    readParams.setQueue(*gq);
-    auto content = mImage->readContent(readParams);
+    auto                                       content = mImage->readContent(readParams);
+
+    // readContent() method will transition the image to eTransferSrcOptimal layout.
+    mState.set({}, TextureState::ImageState {.layout = vk::ImageLayout::eTransferSrcOptimal}, TextureState::ImageStateTransitionFlags::DEFAULT(), name);
+
     return contentToImage(content);
 }
 
-AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, const Texture::CreateParameters & params) {
-    auto * p = new TextureVulkan(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("createVulkanTexture: duplicate type+name, name='{}'", name);
-        delete p;
-        return {};
-    }
+AutoRef<Texture> createVulkanTexture(const StrA & name, const Texture::CreateParameters & params) {
+    auto * p = new TextureVulkan(name);
     if (!p->init(params)) {
         delete p;
         return {};
@@ -149,7 +174,6 @@ AutoRef<Texture> createVulkanTexture(ArtifactDatabase & db, const StrA & name, c
 }
 
 bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
-    if (sequence == 0) return false;
     if (!params.context) {
         GN_ERROR(sLogger)("TextureVulkan::initFromLoad: context is null");
         return false;
@@ -177,8 +201,9 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     auto * vkCtx = static_cast<GpuContextVulkan *>(params.context.get());
     mImage       = createVkImage(mDescriptor, vkCtx->globalInfo());
     if (!mImage || !mImage->handle()) return false;
+    mImage->setName(params.filename.c_str());
 
-    mSubresourceStates.resize(mDescriptor.levels * mDescriptor.faces);
+    mState = TextureState(mDescriptor.levels, mDescriptor.faces);
 
     rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
     if (!gq) {
@@ -204,22 +229,48 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
             sc.pixels                 = image.at(pc);
             mImage->setContent(sc);
         }
+    GpuResourceView::SubresourceRange loadedRange;
+    loadedRange.i.mip            = 0;
+    loadedRange.i.face           = 0;
+    loadedRange.e.numMipLevels   = mDescriptor.levels;
+    loadedRange.e.numArrayLayers = mDescriptor.faces;
+    mState.set(loadedRange, TextureState::ImageState {.layout = vk::ImageLayout::eTransferDstOptimal}, TextureState::ImageStateTransitionFlags::DEFAULT(),
+               name);
     return true;
 }
 
-AutoRef<Texture> loadVulkanTexture(ArtifactDatabase & db, const Texture::LoadParameters & params) {
+AutoRef<Texture> loadVulkanTexture(const Texture::LoadParameters & params) {
     StrA name = params.filename;
-    auto p    = AutoRef<TextureVulkan>::make(db, name);
-    if (p->sequence == 0) {
-        GN_ERROR(sLogger)("loadVulkanTexture: duplicate type+name, name='{}'", name);
-        p.clear();
-        return {};
-    }
+    auto p    = AutoRef<TextureVulkan>::make(name);
     if (!p->initFromLoad(params)) {
         p.clear();
         return {};
     }
     return AutoRef<Texture>(p);
+}
+
+AutoRef<Texture> createDefault1x1Texture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    if (!context) GN_UNLIKELY return {};
+    Texture::Descriptor desc;
+    desc.setDimensions(1, 1).setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setFaces(1).setLevels(1);
+    auto tex = Texture::create(name, Texture::CreateParameters {.context = context, .descriptor = desc});
+    if (!tex) GN_UNLIKELY return {};
+    auto *  tv      = static_cast<TextureVulkan *>(tex.get());
+    uint8_t rgba[4] = {r, g, b, a};
+    if (!tv->upload1x1Mip(rgba)) { return {}; }
+    return tex;
+}
+
+AutoRef<Texture> createDefault1x1CubemapTexture(AutoRef<GpuContext> context, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    if (!context) GN_UNLIKELY return {};
+    Texture::Descriptor desc;
+    desc.setDimensions(1, 1).setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setFaces(6).setLevels(1);
+    auto tex = Texture::create(name, Texture::CreateParameters {.context = context, .descriptor = desc});
+    if (!tex) GN_UNLIKELY return {};
+    auto *  tv      = static_cast<TextureVulkan *>(tex.get());
+    uint8_t rgba[4] = {r, g, b, a};
+    if (!tv->upload1x1Mip(rgba)) { return {}; }
+    return tex;
 }
 
 vk::Extent3D TextureVulkan::dimensions(uint32_t mip) const {
@@ -235,28 +286,25 @@ vk::Extent3D TextureVulkan::dimensions(uint32_t mip) const {
     return dim;
 }
 
-const TextureVulkan::ImageStateTransition * TextureVulkan::getImageState(uint32_t mip, uint32_t arrayLayer) const {
-    if (mip >= mDescriptor.levels || arrayLayer >= mDescriptor.faces) return nullptr;
+auto TextureState::get(uint32_t mip, uint32_t arrayLayer) const -> const ImageStateTransition * {
+    if (mip >= mNumMips || arrayLayer >= mNumArrayLayers) return nullptr;
     size_t index = subResourceIndex(mip, arrayLayer);
     GN_ASSERT(index < mSubresourceStates.size());
     return &mSubresourceStates[index];
 }
 
-bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arrayLayer, uint32_t layers, const ImageState & newState,
-                                    ImageStateTransitionFlags flags) {
-    if (mip >= mDescriptor.levels || arrayLayer >= mDescriptor.faces) {
-        GN_ERROR(sLogger)
-        ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
-        return false;
-    }
+bool TextureState::set(const GpuResourceView::SubresourceRange & range, const ImageState & newState, ImageStateTransitionFlags flags,
+                       const StrA & resourceName) {
+    uint32_t mip        = range.i.mip;
+    uint32_t arrayLayer = range.i.face;
+    uint32_t levels     = range.e.numMipLevels;
+    uint32_t layers     = range.e.numArrayLayers;
+    rapid_vulkan::clampRange(mip, levels, mNumMips);
+    rapid_vulkan::clampRange(arrayLayer, layers, mNumArrayLayers);
+    if (levels == 0 || layers == 0) return false;
     auto mipEnd        = mip + levels;
     auto arrayLayerEnd = arrayLayer + layers;
-    if (mipEnd > mDescriptor.levels || arrayLayerEnd > mDescriptor.faces) {
-        GN_ERROR(sLogger)
-        ("TextureVulkan::trackImageState: invalid subresource index and/or range: (mip={}, levels={}, face={}, layers={}).", mip, levels, arrayLayer, layers);
-        return false;
-    }
-    bool anyChange = false;
+    bool anyChange     = false;
     for (uint32_t i = mip; i < mipEnd; i++) {
         for (uint32_t j = arrayLayer; j < arrayLayerEnd; j++) {
             size_t index = subResourceIndex(i, j);
@@ -264,10 +312,35 @@ bool TextureVulkan::trackImageState(uint32_t mip, uint32_t levels, uint32_t arra
             if (mSubresourceStates[index].curr != newState) {
                 anyChange = true;
                 mSubresourceStates[index].transitTo(newState, flags);
+                if (!resourceName.empty()) {
+                    const auto & tr = mSubresourceStates[index];
+                    GN_VERBOSE(sLogger)
+                    ("texture '{}': mip={} face={}: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}", resourceName.c_str(), i, j,
+                     static_cast<uint32_t>(tr.prev.layout), static_cast<uint32_t>(tr.curr.layout), static_cast<uint32_t>(tr.prev.access),
+                     static_cast<uint32_t>(tr.curr.access), static_cast<uint32_t>(tr.prev.stages), static_cast<uint32_t>(tr.curr.stages));
+                }
             }
         }
     }
     return anyChange;
+}
+
+void TextureState::assignFrom(const TextureState & src, const StrA & resourceName) {
+    const size_t n = std::min(mSubresourceStates.size(), src.mSubresourceStates.size());
+    for (size_t i = 0; i < n; ++i) {
+        const ImageState oldCurr   = mSubresourceStates[i].curr;
+        const ImageState newCurr   = src.mSubresourceStates[i].curr;
+        mSubresourceStates[i].prev = newCurr;
+        mSubresourceStates[i].curr = newCurr;
+        if (!resourceName.empty() && oldCurr != newCurr) {
+            const uint32_t face = (uint32_t) (i % mNumArrayLayers);
+            const uint32_t mip  = (uint32_t) (i / mNumArrayLayers);
+            GN_VERBOSE(sLogger)
+            ("texture '{}': mip={} face={}: state sync after submit: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}", resourceName.c_str(),
+             mip, face, static_cast<uint32_t>(oldCurr.layout), static_cast<uint32_t>(newCurr.layout), static_cast<uint32_t>(oldCurr.access),
+             static_cast<uint32_t>(newCurr.access), static_cast<uint32_t>(oldCurr.stages), static_cast<uint32_t>(newCurr.stages));
+        }
+    }
 }
 
 // SubresourceIterator(const Texture::Descriptor & desc, const Texture::SubresourceIndex & index, const Texture::SubresourceRange & range)

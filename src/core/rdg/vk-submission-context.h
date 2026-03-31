@@ -1,8 +1,10 @@
 #pragma once
 #include "submission.h"
+#include <garnet/rdg/rtti.h>
 #include "vk-gpu-context.h"
 #include "vk-render-pass.h"
 #include "vk-command-buffer.h"
+#include <garnet/base/array.h>
 
 namespace GN::rdg {
 
@@ -10,17 +12,20 @@ namespace GN::rdg {
 /// The life time of this context is within one submission. It is created
 /// on demand when being asked for by a vulkan specific action, and
 /// destroyed when the submission is finished.
-struct SubmissionContextVulkan : public SubmissionImpl::Context {
-    inline static const uint64_t         TYPE_ID   = getNextUniqueTypeId();
-    inline static constexpr const char * TYPE_NAME = "SubmissionContextVulkan";
+struct SubmissionContextVulkan : public SubmissionImpl::Context, public SlotBase {
+    GN_RDG_REGISTER_RUNTIME_TYPE();
 
     SubmissionContextVulkan(SubmissionImpl & submission_, AutoRef<GpuContextVulkan> gpu_)
-        : SubmissionImpl::Context(TYPE_ID, TYPE_NAME), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_}) {}
+        : SubmissionImpl::Context(TYPE_INFO()), submission(submission_), gpu(gpu_), renderPassManager({gpu_}), commandBufferManager({gpu_, submission_}) {}
 
     SubmissionImpl &           submission;
     AutoRef<GpuContextVulkan>  gpu;
     RenderPassManagerVulkan    renderPassManager;
     CommandBufferManagerVulkan commandBufferManager;
+
+    // /// Upload actions that wrote data during this submission.
+    // /// CommandBufferManagerVulkan::submit() walks this list to distribute GPU completion tokens.
+    // DynaArray<GpuBufferUploadVulkan *> activeUploads;
 
     // // -------------------------------------------------------------------------
     // // Frame Execution Context tracked on each backbuffer artifact.
