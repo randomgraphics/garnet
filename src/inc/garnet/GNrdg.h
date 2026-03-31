@@ -23,7 +23,6 @@
 namespace GN::rdg {};
 
 // Level 1: pure dependency graph (no GPU semantics).
-#include "rdg/dependency-graph.h"
 
 // Level 2: GPU render graph IR — thin, API-agnostic GPU resource and action types.
 #include "rdg/artifacts.h"

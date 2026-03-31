@@ -128,21 +128,21 @@ struct RttiBaseTypeIds<> {
 };
 
 // The main entry point for registering a runtime type.
-#define GN_RDG_REGISTER_RUNTIME_TYPE(...)                                                                    \
-    inline static const uint64_t         TYPE_ID = RuntimeType::getNextUniqueTypeId();                       \
-    static const RuntimeType::TypeInfo & TYPE_INFO() {                                                       \
-        static const auto bases = RttiBaseTypeIds<__VA_ARGS__>::BASE();                                      \
-        static const auto ti    = RuntimeType::TypeInfo {.id    = TYPE_ID,                                   \
-                                                         .name  = GN_FUNCTION,                               \
-                                                         .level = RttiBaseTypeIds<__VA_ARGS__>::LEVEL() + 1, \
-                                                         .bases = bases.data(),                              \
-                                                         .count = bases.size()};                             \
-        return ti;                                                                                           \
-    }                                                                                                        \
-    const TypeInfo & typeInfo() const { return RttiBaseTypeIds<__VA_ARGS__>::FirstBaseType::typeInfo(); }    \
-    template<typename DERIVED_TYPE>                                                                          \
-    bool isKindOf() const {                                                                                  \
-        return typeInfo().isDerivedFrom(DERIVED_TYPE::TYPE_INFO());                                          \
+#define GN_RDG_REGISTER_RUNTIME_TYPE(...)                                                                                                \
+    inline static const uint64_t                  TYPE_ID = GN::rdg::RuntimeType::getNextUniqueTypeId();                                 \
+    static const GN::rdg::RuntimeType::TypeInfo & TYPE_INFO() {                                                                          \
+        static const auto bases = RttiBaseTypeIds<__VA_ARGS__>::BASE();                                                                  \
+        static const auto ti    = GN::rdg::RuntimeType::TypeInfo {.id    = TYPE_ID,                                                      \
+                                                                  .name  = GN_FUNCTION,                                                  \
+                                                                  .level = RttiBaseTypeIds<__VA_ARGS__>::LEVEL() + 1,                    \
+                                                                  .bases = bases.data(),                                                 \
+                                                                  .count = bases.size()};                                                \
+        return ti;                                                                                                                       \
+    }                                                                                                                                    \
+    const GN::rdg::RuntimeType::TypeInfo & typeInfo() const { return GN::rdg::RttiBaseTypeIds<__VA_ARGS__>::FirstBaseType::typeInfo(); } \
+    template<typename DERIVED_TYPE>                                                                                                      \
+    bool isKindOf() const {                                                                                                              \
+        return typeInfo().isDerivedFrom(DERIVED_TYPE::TYPE_INFO());                                                                      \
     }
 
 } // namespace GN::rdg

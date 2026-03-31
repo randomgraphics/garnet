@@ -173,6 +173,9 @@ public:
         static_assert(sizeof(AutoRef) == sizeof(XPTR));
     }
 
+    /// construct from nullptr
+    AutoRef(std::nullptr_t) throw(): mPtr(nullptr) {}
+
     /// construct from a normal pointer
     /// We've already automatically cast AutoRef back to raw pointer via type cast operator.
     /// If this constructor is not marked as explict, it would create ambiguity for expression like: (AutoRef<T> == T*)
