@@ -99,7 +99,8 @@ protected:
 struct Artifact : public Entity {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Entity);
 
-    /// The version of this artifact.
+    /// The version of this artifact. Version ZERO is the initial version,
+    /// indicating that the artifact is not yet published.
     NeverOverflowingCounter version = NeverOverflowingCounter::OOO();
 
     /// The content of the artifact.
@@ -125,12 +126,6 @@ protected:
     using Entity::Entity;
 };
 using ArtifactPtr = AutoRef<Artifact>;
-
-struct ArtifactVersion {
-
-    /// The expected version of the artifact. Set to INF for the latest published version.
-    NeverOverflowingCounter version = NeverOverflowingCounter::INF();
-};
 
 // ============================================================
 // Arguments. Parameters passed to an action. Usually a collection of artifacts.
@@ -200,8 +195,8 @@ struct Token : Entity {
     bool                    satisfied = false;
     ArrayContainer<NodePtr> waiters;
 
-protected:
-    using Entity::Entity;
+    /// Constructor
+    Token(const StrA & name) : Entity(TYPE_INFO(), name) {}
 };
 using TokenPtr = AutoRef<Token>;
 
@@ -220,8 +215,9 @@ enum class DependencyKind : uint8_t {
 struct Dependency {
     DependencyKind kind = DependencyKind::Token;
 
-    TokenPtr   token = nullptr;
-    ArtifactPtr      artifact {};
+    TokenPtr                token = nullptr;
+    ArtifactPtr             artifact {};
+    NeverOverflowingCounter version = NeverOverflowingCounter::INF();
 
     static Dependency onToken(TokenPtr t) {
         Dependency d;
@@ -230,10 +226,11 @@ struct Dependency {
         return d;
     }
 
-    static Dependency onArtifactVersion(ArtifactPtr artifact, uint64_t version) {
+    static Dependency onArtifactVersion(ArtifactPtr artifact, NeverOverflowingCounter version) {
         Dependency d;
-        d.kind            = DependencyKind::ArtifactVersion;
-        d.artifactVersion = ArtifactVersion {artifact, version};
+        d.kind     = DependencyKind::Artifact;
+        d.artifact = artifact;
+        d.version  = version;
         return d;
     }
 
@@ -241,32 +238,19 @@ struct Dependency {
     // resolved to currently published concrete version at insertion time.
     static Dependency onLatestPublishedSnapshot(ArtifactPtr artifact) {
         Dependency d;
-        d.kind           = DependencyKind::LatestPublishedSnapshot;
-        d.latestArtifact = artifact;
+        d.kind     = DependencyKind::Artifact;
+        d.artifact = artifact;
+        d.version  = NeverOverflowingCounter::ONE();
         return d;
     }
-};
 
-enum class OutputKind : uint8_t { Token, PublishArtifactVersion };
-
-struct OutputSpec {
-    OutputKind kind = OutputKind::Token;
-
-    TokenPtr         token = nullptr;
-    ArtifactVersion artifactVersion {};
-
-    static OutputSpec producesToken(TokenPtr t) {
-        OutputSpec o;
-        o.kind  = OutputKind::Token;
-        o.token = t;
-        return o;
-    }
-
-    static OutputSpec publishesArtifactVersion(ArtifactPtr artifact, uint64_t version) {
-        OutputSpec o;
-        o.kind            = OutputKind::PublishArtifactVersion;
-        o.artifactVersion = ArtifactVersion {artifact, version};
-        return o;
+    static Dependency onNextPublishedVersion(ArtifactPtr artifact) {
+        Dependency d;
+        d.kind     = DependencyKind::Artifact;
+        d.artifact = artifact;
+        d.version  = artifact->version;
+        d.version.increment();
+        return d;
     }
 };
 
@@ -274,23 +258,15 @@ struct OutputSpec {
 // Node state / completion model
 // ============================================================
 
-enum class NodeState : uint8_t { Created, Blocked, Ready, Running, Completed, Cancelled, Failed };
+enum class NodeState : uint8_t { Created, Blocked, Ready, Running, Completed };
 
 enum class CompletionPolicy : uint8_t {
-    // Node completes when its own action finishes.
-    // Children do not block parent completion.
-    WhenOwnActionCompletes,
-
-    // Node completes when:
-    // - its own action is done (or there is no action)
-    // - and all children are done
-    //
-    // This is the "node can be a group" mode.
-    WhenSubtreeCompletes,
+    // Graph completes the node when its own action and all childrens are done.
+    Automatic,
 
     // Graph never auto-completes the node.
     // Host/domain layer must explicitly complete it.
-    Manual
+    Manual,
 };
 
 // ============================================================
@@ -298,25 +274,19 @@ enum class CompletionPolicy : uint8_t {
 // ============================================================
 
 struct NodeDesc {
-    std::string debugName;
+    StrA                       name = StrA::EMPTY();
+    ActionPtr                  action = nullptr;
+    ArgumentsPtr               arguments = nullptr;
+    ArrayContainer<Dependency> dependencies = {};
+    SchedulingHints            scheduling = {};
+    NodePtr                    parent           = nullptr;
+    CompletionPolicy           completionPolicy = CompletionPolicy::Automatic;
 
-    ActionPtr    action;
-    ArgumentsPtr arguments;
-
-    ArrayContainer<Dependency> dependencies;
-    ArrayContainer<OutputSpec> outputs;
-
-    SchedulingHints scheduling {};
-
-    NodePtr           parent           = nullptr;
-    CompletionPolicy  completionPolicy = CompletionPolicy::WhenOwnActionCompletes;
-
-    // If true, graph creates a completion token for this node and satisfies it
-    // when node reaches Completed.
-    bool autoCreateCompletionToken = true;
-
-    // If true, graph satisfies declared outputs automatically when node completes.
-    bool autoSatisfyOutputsOnComplete = true;
+    NodeDesc() = default;
+    NodeDesc(const NodeDesc & other) = default;
+    NodeDesc(NodeDesc && other) = default;
+    NodeDesc & operator=(const NodeDesc & other) = default;
+    NodeDesc & operator=(NodeDesc && other) = default;
 };
 
 // ============================================================
@@ -338,46 +308,38 @@ struct NodeDesc {
 struct Node : public Entity {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE(Entity);
 
-    ActionPtr    action;
-    ArgumentsPtr arguments;
-
-    SchedulingHints  scheduling {};
-    CompletionPolicy completionPolicy = CompletionPolicy::WhenOwnActionCompletes;
-
-    NodePtr              parent = nullptr;
-    ArrayContainer<NodePtr> children;
-
-    ArrayContainer<Dependency> originalDependencies;
-    ArrayContainer<OutputSpec> outputs;
-
-    TokenPtr completionToken              = nullptr;
-    bool    autoSatisfyOutputsOnComplete = true;
-
-    uint32_t  unresolvedDependencies = 0;
-    NodeState state                  = NodeState::Created;
+    const NodeDesc & desc() const { return mDesc; }
 
     // For subtree completion policy.
+    ArrayContainer<NodePtr> children;
     uint32_t liveChildren   = 0;
     bool     sealedChildren = false;
+
+    TokenPtr completionToken = nullptr;
+
+    uint32_t  unresolvedDependencies = 0;
+    
+    NodeState state = NodeState::Created;
 
     // Own-action lifecycle.
     bool ownActionStarted  = false;
     bool ownActionFinished = false;
+
+    /// Constructor
+    Node(const StrA & name, const NodeDesc & desc) : Entity(TYPE_INFO(), name), mDesc(desc) {}
+
+private:
+    NodeDesc mDesc;
 };
 
 // ============================================================
 // Node execution result
 // ============================================================
 
-struct NodeExecutionResult {
-    NodeState terminalState = NodeState::Completed;
-
-    // Optional extra satisfactions beyond declared outputs.
-    ArrayContainer<TokenPtr>         additionalSatisfiedTokens;
-    ArrayContainer<ArtifactVersion>  additionalPublishedVersions;
-
-    // Optional spawned children.
-    ArrayContainer<NodeDesc> spawnedChildren;
+struct NodeOutput {
+    ArrayContainer<TokenPtr>    satisfiedTokens;
+    ArrayContainer<ArtifactPtr> publishedArtifacts;
+    ArrayContainer<NodeDesc>    spawnedChildren;
 };
 
 // ============================================================
@@ -396,53 +358,35 @@ public:
     // Object creation
     // --------------------------------------------------------
 
-    TokenPtr createToken(std::string debugName = {}) {
-        auto tok       = std::make_unique<Token>();
-        tok->debugId   = ++m_nextTokenId;
-        tok->debugName = std::move(debugName);
-
-        TokenPtr out = tok.get();
-        m_tokens.emplace_back(std::move(tok));
-        return out;
+    TokenPtr createToken(const StrA & name = StrA::EMPTY()) {
+        auto tok = AutoRef<Token>(new Token(name));
+        m_tokens.emplace_back(tok);
+        return tok;
     }
 
-    NodePtr addNode(NodeDesc desc) {
-        auto node                          = std::make_unique<Node>();
-        node->debugId                      = ++m_nextNodeId;
-        node->debugName                    = std::move(desc.debugName);
-        node->action                       = std::move(desc.action);
-        node->arguments                    = std::move(desc.arguments);
-        node->scheduling                   = desc.scheduling;
-        node->completionPolicy             = desc.completionPolicy;
-        node->parent                       = desc.parent;
-        node->originalDependencies         = std::move(desc.dependencies);
-        node->outputs                      = std::move(desc.outputs);
-        node->autoSatisfyOutputsOnComplete = desc.autoSatisfyOutputsOnComplete;
-        node->state                        = NodeState::Created;
+    NodePtr addNode(const StrA & name, const NodeDesc & desc) {
+        auto node = AutoRef<Node>(new Node(name, desc));
+        m_nodes.emplace_back(node);
 
-        if (desc.autoCreateCompletionToken) { node->completionToken = createToken("NodeCompletion:" + node->debugName); }
-
-        NodePtr out = node.get();
-        m_nodes.emplace_back(std::move(node));
-
-        if (out->parent) {
-            out->parent->children.push_back(out);
-            ++out->parent->liveChildren;
+        auto parent = node->desc().parent.get();
+        if (parent) {
+            parent->children.append(out);
+            ++parent->liveChildren;
         }
+ 
+        node->unresolvedDependencies = resolveDependencies(*node);
+        node->state                  = (node->unresolvedDependencies == 0) ? NodeState::Ready : NodeState::Blocked;
 
-        out->unresolvedDependencies = resolveDependencies(*out);
-        out->state                  = (out->unresolvedDependencies == 0) ? NodeState::Ready : NodeState::Blocked;
+        if (node->state == NodeState::Ready) { pushReady(node); }
 
-        if (out->state == NodeState::Ready) { pushReady(out); }
-
-        return out;
+        return node;
     }
 
     ArrayContainer<NodePtr> addNodes(ArrayContainer<NodeDesc> descs) {
         ArrayContainer<NodePtr> out;
         out.reserve(descs.size());
 
-        for (auto & d : descs) { out.push_back(addNode(std::move(d))); }
+        for (auto & d : descs) { out.append(addNode(d)); }
 
         return out;
     }
