@@ -376,6 +376,27 @@ public:
     }
 };
 
+/// Disambiguate comparisons with \c nullptr against implicit conversion to raw pointer vs. \c AutoRef(std::nullptr_t).
+template<typename X>
+inline bool operator==(const AutoRef<X> & lhs, std::nullptr_t) throw() {
+    return lhs.empty();
+}
+
+template<typename X>
+inline bool operator==(std::nullptr_t, const AutoRef<X> & rhs) throw() {
+    return rhs.empty();
+}
+
+template<typename X>
+inline bool operator!=(const AutoRef<X> & lhs, std::nullptr_t) throw() {
+    return !lhs.empty();
+}
+
+template<typename X>
+inline bool operator!=(std::nullptr_t, const AutoRef<X> & rhs) throw() {
+    return !rhs.empty();
+}
+
 // Make sure the size of AutoRef is the same as the size of the pointer it holds.
 // This is important. So that we can cast an array of AutoRef to an array of pointer safely.
 static_assert(sizeof(AutoRef<int>) == sizeof(int *));
