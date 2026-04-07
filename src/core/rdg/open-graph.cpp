@@ -1,15 +1,15 @@
 #include "pch.h"
-#include <garnet/rdg/open-graph.h>
+#include <garnet/GNrdg2.h>
 
-#include <atomic>
 #include <queue>
 
 namespace GN::rdg2 {
 
 static NeverOverflowingCounter nextEntityNeverOverflowId() {
-    static std::atomic<uint64_t> counter {1};
-    const uint64_t               v = counter.fetch_add(1, std::memory_order_relaxed);
-    return NeverOverflowingCounter {v, 0};
+    static std::mutex              m;
+    static NeverOverflowingCounter counter = NeverOverflowingCounter::OOO();
+    std::lock_guard<std::mutex>    lock(m);
+    return counter.increment();
 }
 
 namespace {

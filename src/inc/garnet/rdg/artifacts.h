@@ -1,7 +1,5 @@
 #pragma once
 
-#include <garnet/rdg/dependency-graph.h>
-#include <garnet/rdg/rtti.h>
 #include <garnet/gfx/image.h>
 #include <unordered_map>
 #include <variant>

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <garnet/GNbase.h>
-#include <garnet/rdg/rtti.h>
-
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -32,17 +29,20 @@ struct NeverOverflowingCounter {
         return NeverOverflowingCounter {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()};
     }
 
-    void increment() {
+    NeverOverflowingCounter & increment() {
         if (++value0 == 0) { ++value1; }
+        return *this;
     }
 
-    void decrement() {
+    NeverOverflowingCounter & decrement() {
         if (--value0 == std::numeric_limits<uint64_t>::max()) { --value1; }
+        return *this;
     }
 
-    void reset() {
+    NeverOverflowingCounter & reset() {
         value0 = 0;
         value1 = 0;
+        return *this;
     }
 
     bool operator==(const NeverOverflowingCounter & other) const { return value0 == other.value0 && value1 == other.value1; }
