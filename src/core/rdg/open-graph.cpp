@@ -131,13 +131,7 @@ private:
     void pushReady_(Node * n);
     void pump_(std::unique_lock<std::mutex> & lock);
     void satisfyToken_(Token * t, std::unique_lock<std::mutex> & lock);
-    void completeNodeAfterExecute_(Node * n, std::unique_lock<std::mutex> & lock);
     bool tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lock);
-
-    bool idle_(const std::unique_lock<std::mutex> & lock) const {
-        (void) lock;
-        return m_running == 0 && m_ready.empty() && m_nonTerminalNodes == 0;
-    }
 
     mutable std::mutex              m_mutex;
     mutable std::condition_variable m_cv;
@@ -198,8 +192,6 @@ void OpenGraphImpl::satisfyToken_(Token * t, std::unique_lock<std::mutex> & lock
     }
     notifyAll_();
 }
-
-void OpenGraphImpl::completeNodeAfterExecute_(Node * n, std::unique_lock<std::mutex> & lock) { (void) tryCompleteNode_(n, lock); }
 
 bool OpenGraphImpl::tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lock) {
     (void) lock;
