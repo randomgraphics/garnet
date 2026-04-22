@@ -61,8 +61,7 @@ struct Artifact final : OpaqueBase {
     static constexpr FOURCC kTag {"ARTI"};
 
     const StrA              name;
-    bool                    m_hasPublished = false;
-    NeverOverflowingCounter m_version      = NeverOverflowingCounter::OOO();
+    NeverOverflowingCounter m_version = NeverOverflowingCounter::OOO();
     AutoRef<Entity>         m_content;
     // Pending: wait until m_version (after a publish) >= targetVersion.
     struct Pending {
@@ -295,8 +294,7 @@ void OpenGraphImpl::publishArtifact(ArtifactPtr ap, AutoRef<Entity> content) {
     if (!a) { return; }
     std::unique_lock lock(m_mutex);
     a->m_version.increment();
-    a->m_content      = std::move(content);
-    a->m_hasPublished = true;
+    a->m_content = std::move(content);
     for (size_t i = 0; i < a->m_pending.size();) {
         if (a->m_version >= a->m_pending[i].target) {
             if (a->m_pending[i].token) { satisfyToken_(a->m_pending[i].token, lock); }
