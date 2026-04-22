@@ -1,6 +1,10 @@
 #pragma once
 
+#include <garnet/GNbase.h>
+#include <garnet/rdg/rtti.h>
+
 #include <cstdint>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -10,6 +14,7 @@
 
 namespace GN::rdg2 {
 
+// Unqualified RttiBaseTypeIds in GN_RDG_REGISTER_RUNTIME_TYPE (see rtti.h) must resolve in this namespace.
 using GN::rdg::RttiBaseTypeIds;
 
 /// A counter that never overflows.
@@ -144,19 +149,6 @@ struct SchedulingHints {
 };
 
 // ============================================================
-// Published artifact identity (artifact + version counter)
-// ============================================================
-
-struct ArtifactVersion {
-    ArtifactPtr             artifact;
-    NeverOverflowingCounter version = NeverOverflowingCounter::OOO();
-
-    bool operator==(const ArtifactVersion & other) const { return artifact == other.artifact && version == other.version; }
-
-    bool operator!=(const ArtifactVersion & other) const { return !(*this == other); }
-};
-
-// ============================================================
 // Node description
 // ============================================================
 
@@ -201,11 +193,11 @@ public:
         FAILED,
     };
 
-    virtual WaitResult waitForIdle(std::chrono::milliseconds timeout = std::chrono::milliseconds::max()) = 0;
+    virtual WaitResult waitForIdle(std::chrono::milliseconds timeout = std::chrono::milliseconds::max()) const = 0;
 
-    bool isIdle() const { return waitForIdle(std::chrono::milliseconds::zero()) == WaitForIdleResult::IDLE; }
+    bool isIdle() const { return waitForIdle(std::chrono::milliseconds::zero()) == WaitResult::IDLE; }
 
-    virtual WaitResult waitForToken(TokenPtr token) = 0;
+    virtual WaitResult waitForToken(TokenPtr token) const = 0;
 
     // --------------------------------------------------------
     // Artifact management
@@ -214,8 +206,8 @@ public:
     /// Create a new artifact with no content and version equal to 0.
     virtual ArtifactPtr createArtifact(const StrA & name = StrA::EMPTYSTR()) = 0;
 
-    /// Publish new artifact.
-    virtual bool publishArtifact(ArtifactVersion version, AutoRef<Entity> content) = 0;
+    /// Publish new content for an artifact, increase artifact version number by 1.
+    virtual void publishArtifact(ArtifactPtr artifact, AutoRef<Entity> content) = 0;
 
     // --------------------------------------------------------
     // Node management
@@ -225,18 +217,18 @@ public:
     virtual NodePtr addNode(const NodeDesc & desc) = 0;
 
     /// Mark a node as complete. Trigger all completion tokens associated with the given node.
-    virtual bool satisfyNode(NodePtr node) = 0;
+    virtual void satisfyNode(NodePtr node) = 0;
 
     // --------------------------------------------------------
     // Token management
     // --------------------------------------------------------
 
-    /// Get a node that will be, or has been, satisfied when certain node completes.
+    /// Get a token satisfied by certain node completes.
     /// \param node The node to wait for
     /// \return The token will be satisfied when the given node completes.
     virtual TokenPtr getNodeCompletionToken(NodePtr node) = 0;
 
-    /// Get an artifact token that will be, or has been, satisfied when the given artifact version is published.
+    /// Get an token satisfied when the given artifact version is published.
     /// \param artifact The artifact to wait for.
     /// \param version The version of the artifact to wait for. If not provided (set to OOO), the next published version is used.
     /// \return The token that will be satisfied when the given artifact version is published.
