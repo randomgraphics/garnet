@@ -1,11 +1,13 @@
 #include "pch.h"
 #include <garnet/GNrdg2.h>
 
+#include <condition_variable>
+#include <mutex>
 #include <queue>
 
 namespace GN::rdg2 {
 
-static NeverOverflowingCounter nextEntityNeverOverflowId() {
+static NeverOverflowingCounter nextEntityNeverOverflowingId() {
     static std::mutex              m;
     static NeverOverflowingCounter counter = NeverOverflowingCounter::OOO();
     std::lock_guard<std::mutex>    lock(m);
@@ -14,521 +16,379 @@ static NeverOverflowingCounter nextEntityNeverOverflowId() {
     return out;
 }
 
+static thread_local int s_inGraphExecute = 0;
+
+// ============================================================
+// FOURCC / opaque
+// ============================================================
+
 struct FOURCC {
-    char ch0;
-    char ch1;
-    char ch2;
-    char ch3;
-
+    char ch0, ch1, ch2, ch3;
     constexpr FOURCC(): ch0(0), ch1(0), ch2(0), ch3(0) {}
-    constexpr FOURCC(const FOURCC & other): ch0(other.ch0), ch1(other.ch1), ch2(other.ch2), ch3(other.ch3) {}
-    constexpr FOURCC & operator=(const FOURCC & other) {
-        ch0 = other.ch0;
-        ch1 = other.ch1;
-        ch2 = other.ch2;
-        ch3 = other.ch3;
-        return *this;
-    }
-
+    constexpr FOURCC(const FOURCC & o): ch0(o.ch0), ch1(o.ch1), ch2(o.ch2), ch3(o.ch3) {}
     constexpr FOURCC(char c0, char c1, char c2, char c3): ch0(c0), ch1(c1), ch2(c2), ch3(c3) {}
-    constexpr FOURCC(const char * s): ch0(s[0]), ch1(s[1]), ch2(s[2]), ch3(s[3]) {}
-    constexpr FOURCC(const std::string_view & s): ch0(s[0]), ch1(s[1]), ch2(s[2]), ch3(s[3]) {}
-
-    constexpr bool operator==(const FOURCC & other) const { return ch0 == other.ch0 && ch1 == other.ch1 && ch2 == other.ch2 && ch3 == other.ch3; }
-    constexpr bool operator!=(const FOURCC & other) const { return !(*this == other); }
-    constexpr bool operator<(const FOURCC & other) const {
-        return ch0 < other.ch0 || (ch0 == other.ch0 && ch1 < other.ch1) || (ch0 == other.ch0 && ch1 == other.ch1 && ch2 < other.ch2) ||
-               (ch0 == other.ch0 && ch1 == other.ch1 && ch2 == other.ch2 && ch3 < other.ch3);
-    }
+    constexpr FOURCC(const char (&s)[5]): ch0(s[0]), ch1(s[1]), ch2(s[2]), ch3(s[3]) {}
+    bool operator==(const FOURCC & o) const { return ch0 == o.ch0 && ch1 == o.ch1 && ch2 == o.ch2 && ch3 == o.ch3; }
 };
 
-struct OpaquePointer {
+struct OpaqueBase {
     FOURCC tag;
-
-    OpaquePointer(const FOURCC & tag_): tag(tag_) {}
+    explicit OpaqueBase(const FOURCC & t): tag(t) {}
 };
 
-/// Generic satisfiable prerequisite / milestone.
-/// May be satisfied internally or externally.
-struct TokenImpl : public OpaquePointer {
-    static constexpr FOURCC TAG = {"TOKE"};
+// ============================================================
+// Token
+// ============================================================
 
-    static const TokenImpl * promote(const void * ptr) {
-        if (!ptr) return nullptr;
-        auto typedPtr = static_cast<const TokenImpl *>(ptr);
-        if (typedPtr->tag != TAG) return nullptr;
-        return typedPtr;
-    }
+struct Node;
 
-    static TokenImpl * promote(void * ptr) { return const_cast<TokenImpl *>(promote(static_cast<const void *>(ptr))); }
+struct Token final : OpaqueBase {
+    static constexpr FOURCC kTag {"TOKE"};
 
     const StrA name;
+    bool       satisfied = false;
+    // One waiter entry per dependency edge; duplicates of the same node are allowed.
+    ArrayContainer<Node *> waiters;
 
-    /// Constructor
-    Token(const StrA & name_): OpaquePointer(TAG), name(name_) {}
-};
-
-struct ArtifactImpl : public OpaquePointer {
-    static constexpr FOURCC TAG = {"ARTI"};
-
-    static constexpr const ArtifactImpl * promote(const void * ptr) {
-        if (!ptr) return nullptr;
-        auto typedPtr = static_cast<const ArtifactImpl *>(ptr);
-        if (typedPtr->tag != TAG) return nullptr;
-        return typedPtr;
-    }
-
-    static ArtifactImpl * promote(void * ptr) { return const_cast<ArtifactImpl *>(promote(static_cast<const void *>(ptr))); }
-
-    const StrA name;
-
-    std::map<NeverOverflowingCounter, AutoRef<Entity>> versions;
-
-    ArtifactImpl(const StrA & name_): OpaquePointer("ARTI"), name(name_) {}
-
-    bool publish(NeverOverflowingCounter newVersion, AutoRef<Entity> newContent) {
-        if (newVersion <= version) {
-            // can't roll back to a lower version
-            return false;
-        }
-        version = newVersion;
-        content = std::move(newContent);
-        return true;
-    }
-
-    bool publish(AutoRef<Entity> newContent) {
-        auto newVersion = version;
-        newVersion.increment();
-        return publish(newVersion, std::move(newContent));
-    }
-
-    // delete all but the latest versions with reference count equal to 1.
-    void purge() {
-        if (versions.size() <= 1) return;
-        auto latestVersion = versions.rbegin().base();
-        for (auto it = versions.begin(); it != latestVersion;) {
-            if (it->second->getref() == 1) {
-                it = versions.erase(it);
-            } else {
-                ++it;
-            }
-        }
-        GN_ASSERT(versions.size() == 1);
-        GN_ASSERT(versions.begin() == latestVersion);
-    }
+    explicit Token(const StrA & n): OpaqueBase(kTag), name(n) {}
 };
 
 // ============================================================
-// Node State
+// Artifact
 // ============================================================
 
-enum class NodeState : uint8_t { Created, Blocked, Ready, Running, Completed, Cancelled };
+struct Artifact final : OpaqueBase {
+    static constexpr FOURCC kTag {"ARTI"};
 
-// ============================================================
-// Node Execution Result
-// ============================================================
+    const StrA              name;
+    bool                    m_hasPublished = false;
+    NeverOverflowingCounter m_version      = NeverOverflowingCounter::OOO();
+    AutoRef<Entity>         m_content;
+    // Pending: wait until m_version (after a publish) >= targetVersion.
+    struct Pending {
+        NeverOverflowingCounter target;
+        Token *                 token;
+    };
+    ArrayContainer<Pending> m_pending;
 
-struct NodeExecutionResult {
-    ArrayContainer<NodeDesc>        spawnedChildren;
-    ArrayContainer<TokenPtr>        satisfiedTokens;
-    ArrayContainer<ArtifactVersion> publishedVersions;
+    explicit Artifact(const StrA & n): OpaqueBase(kTag), name(n) {}
 };
 
 // ============================================================
 // Node
 // ============================================================
 
-struct Node : public OpaquePointer {
-    static constexpr FOURCC TAG = {"NODE"};
+struct Node final : OpaqueBase {
+    static constexpr FOURCC kTag {"NODE"};
 
-    static const Node * promote(const void * ptr) {
-        if (!ptr) return nullptr;
-        auto typedPtr = static_cast<const Node *>(ptr);
-        if (typedPtr->tag != TAG) return nullptr;
-        return typedPtr;
-    }
+    NodeDesc desc;
+    uint32_t unresolvedDependencies                                         = 0;
+    enum class State : uint8_t { Blocked, Ready, Running, Completed } state = State::Blocked;
+    // Lazily created; satisfied by satisfyNode / pump.
+    Token * m_completion = nullptr;
 
-    static Node * promote(void * ptr) { return const_cast<Node *>(promote(static_cast<const void *>(ptr))); }
+    static Node * n(NodePtr p) { return reinterpret_cast<Node *>(p); }
 
-    const NodeDesc & desc() const { return mDesc; }
-
-    // For subtree completion policy.
-    ArrayContainer<NodePtr> children;
-    uint32_t                liveChildren   = 0;
-    bool                    sealedChildren = false;
-
-    TokenPtr completionToken = nullptr;
-
-    uint32_t unresolvedDependencies = 0;
-
-    NodeState state = NodeState::Created;
-
-    // Own-action lifecycle.
-    bool ownActionStarted  = false;
-    bool ownActionFinished = false;
-
-protected:
-    /// Constructor
-    Node(const NodeDesc & desc): Entity(TYPE_INFO(), desc.name), mDesc(desc) {}
-
-private:
-    NodeDesc mDesc;
+    explicit Node(NodeDesc d): OpaqueBase(kTag), desc(std::move(d)) {}
+    ~Node() = default;
 };
 
-struct ReadyNode {
-    NodePtr         node;
-    ActionPtr       action;
-    ArgumentsPtr    arguments;
-    SchedulingHints scheduling;
-};
+// ============================================================
+// OpenGraphImpl
+// ============================================================
 
 class OpenGraphImpl final : public Graph {
 public:
-    OpenGraphImpl()           = default;
-    ~OpenGraphImpl() override = default;
-
-    TokenPtr createToken(const StrA & name) override {
-        auto tok = AutoRef<Token>(new Token(name));
-        (void) m_tokens.append(tok);
-        return tok;
-    }
-
-    NodePtr addNode(const NodeDesc & desc) override {
-        // to be implemented
-        (void) desc;
-        return nullptr;
-    }
-
-    bool publishArtifact(ArtifactVersion version, AutoRef<Entity> content) override {
-        // PublishedArtifactEntry & slot = findOrCreatePublishedSlot(version.artifact);
-
-        // if (slot.version.has_value() && (*slot.version).version >= version.version) return false;
-
-        // slot.version = version;
-
-        // TokenPtr versionToken = getOrCreateArtifactVersionToken(version);
-        // return satisfyToken(versionToken);
-    }
-
-    ArtifactVersion getLatestPublishedVersion(ArtifactPtr artifact) const override {
-        // for (size_t i = 0; i < m_publishedArtifacts.size(); ++i) {
-        //     const PublishedArtifactEntry & p = m_publishedArtifacts[i];
-        //     if (p.artifact == artifact && p.version.has_value()) return *p.version;
-        // }
-        // return std::nullopt;
-    }
-
-    TokenPtr getOrCreateArtifactVersionToken(ArtifactVersion version) override {
-        for (size_t i = 0; i < m_artifactVersionTokens.size(); ++i) {
-            if (m_artifactVersionTokens[i].version == version) return m_artifactVersionTokens[i].token;
+    OpenGraphImpl() = default;
+    ~OpenGraphImpl() override {
+        {
+            std::unique_lock lock(m_mutex);
+            m_stopping = true;
+            m_cv.notify_all();
         }
-
-        TokenPtr                  t = createToken("ArtifactVersion");
-        ArtifactVersionTokenEntry entry;
-        entry.version = version;
-        entry.token   = t;
-        (void) m_artifactVersionTokens.append(std::move(entry));
-        return t;
+        for (size_t i = 0; i < m_nodeRegistry.size(); ++i) { delete m_nodeRegistry[i]; }
+        m_nodeRegistry.clear();
+        for (size_t i = 0; i < m_artifactRegistry.size(); ++i) { delete m_artifactRegistry[i]; }
+        m_artifactRegistry.clear();
+        for (size_t i = 0; i < m_allTokens.size(); ++i) { delete m_allTokens[i]; }
+        m_allTokens.clear();
     }
 
-    bool satisfyToken(TokenPtr token) override {
-        if (!token || token->satisfied) return false;
+    Graph::WaitResult waitForIdle(std::chrono::milliseconds timeout) const override;
+    Graph::WaitResult waitForToken(TokenPtr token) const override;
 
-        token->satisfied = true;
+    ArtifactPtr createArtifact(const StrA & name) override;
+    void        publishArtifact(ArtifactPtr artifact, AutoRef<Entity> content) override;
 
-        for (size_t wi = 0; wi < token->waiters.size(); ++wi) {
-            NodePtr waiter = token->waiters[wi];
-            if (!waiter) continue;
-            if (waiter->state != NodeState::Blocked) continue;
+    NodePtr addNode(const NodeDesc & desc) override;
+    void    satisfyNode(NodePtr node) override;
 
-            if (waiter->unresolvedDependencies > 0) {
-                --waiter->unresolvedDependencies;
-                if (waiter->unresolvedDependencies == 0) {
-                    waiter->state = NodeState::Ready;
-                    pushReady(waiter);
-                }
-            }
-        }
-
-        return true;
-    }
-
-    bool hasReadyNode() const override { return !m_ready.empty(); }
-
-    bool tryPopReadyNode(ReadyNode & out) override {
-        while (!m_ready.empty()) {
-            ReadyQueueEntry e = m_ready.top();
-            m_ready.pop();
-
-            NodePtr node = e.node;
-            if (!node) continue;
-
-            if (node->state != NodeState::Ready) continue;
-
-            node->state            = NodeState::Running;
-            node->ownActionStarted = true;
-
-            out.node       = node;
-            out.action     = node->desc().action;
-            out.arguments  = node->desc().arguments;
-            out.scheduling = node->desc().scheduling;
-            return true;
-        }
-
-        return false;
-    }
-
-    bool completeNode(NodePtr node, const NodeExecutionResult & result) override {
-        if (!node) return false;
-
-        if (node->state != NodeState::Running && node->state != NodeState::Ready && node->state != NodeState::Blocked) { return false; }
-
-        node->ownActionFinished = true;
-
-        for (size_t i = 0; i < result.spawnedChildren.size(); ++i) {
-            NodeDesc child = result.spawnedChildren[i];
-            child.parent   = node;
-            addNode(child.name, child);
-        }
-
-        if (result.terminalState == NodeState::Completed) {
-            node->state = NodeState::Running;
-            PendingCompletionExtras extra;
-            extra.node   = node;
-            extra.result = result;
-            (void) m_pendingCompletionExtras.append(std::move(extra));
-            tryAutoComplete(node);
-            return true;
-        }
-
-        node->state = result.terminalState;
-        onNodeBecameTerminal(node);
-        return true;
-    }
-
-    bool failNode(NodePtr node) override {
-        if (!node) return false;
-
-        if (isTerminal(node->state)) return false;
-
-        node->state             = NodeState::Failed;
-        node->ownActionFinished = true;
-        onNodeBecameTerminal(node);
-        return true;
-    }
-
-    bool cancelNode(NodePtr node) override {
-        if (!node) return false;
-
-        if (isTerminal(node->state)) return false;
-
-        node->state             = NodeState::Cancelled;
-        node->ownActionFinished = true;
-        onNodeBecameTerminal(node);
-        return true;
-    }
-
-    bool markNodeCompleted(NodePtr node) override {
-        if (!node) return false;
-        if (isTerminal(node->state)) return false;
-
-        node->ownActionFinished = true;
-        node->state             = NodeState::Completed;
-
-        finalizeCompletion(node, nullptr);
-        return true;
-    }
+    TokenPtr getNodeCompletionToken(NodePtr node) override;
+    TokenPtr getArtifactVersionToken(ArtifactPtr artifact, NeverOverflowingCounter version) override;
 
 private:
-    struct PublishedArtifactEntry {
-        ArtifactPtr                    artifact {};
-        std::optional<ArtifactVersion> version;
-    };
+    void notifyAll_() { m_cv.notify_all(); }
+    void pushReady_(Node * n);
+    void pump_(std::unique_lock<std::mutex> & lock);
+    void satisfyToken_(Token * t, std::unique_lock<std::mutex> & lock);
+    void completeNodeAfterExecute_(Node * n, std::unique_lock<std::mutex> & lock);
+    bool tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lock);
 
-    struct ArtifactVersionTokenEntry {
-        ArtifactVersion version {};
-        TokenPtr        token = nullptr;
-    };
+    bool idle_(const std::unique_lock<std::mutex> & lock) const {
+        (void) lock;
+        return m_running == 0 && m_ready.empty() && m_nonTerminalNodes == 0;
+    }
 
-    struct PendingCompletionExtras {
-        NodePtr             node = nullptr;
-        NodeExecutionResult result;
-    };
-
-    struct ReadyQueueEntry {
-        NodePtr         node = nullptr;
+    mutable std::mutex              m_mutex;
+    mutable std::condition_variable m_cv;
+    bool                            m_stopping         = false;
+    mutable int                     m_running          = 0;
+    mutable size_t                  m_nonTerminalNodes = 0;
+    mutable uint64_t                m_enqueueOrdinal   = 0;
+    // Ownership of heap nodes / artifacts; tokens on nodes/artifacts and in m_artifactOrphans.
+    ArrayContainer<Node *>     m_nodeRegistry;
+    ArrayContainer<Artifact *> m_artifactRegistry;
+    /// Owns all heap Token objects; freed in ~OpenGraphImpl (dep tokens, completion, artifact version).
+    ArrayContainer<Token *> m_allTokens;
+    // Ready queue: lower SchedulingClass and higher int priority first; stable tie-breaker.
+    struct ReadyEntry {
+        Node *          node = nullptr;
         SchedulingHints hints {};
-        uint64_t        enqueueOrdinal = 0;
+        uint64_t        ord = 0;
     };
-
-    struct ReadyQueueCompare {
-        bool operator()(const ReadyQueueEntry & a, const ReadyQueueEntry & b) const {
+    struct ReadyCompare {
+        bool operator()(const ReadyEntry & a, const ReadyEntry & b) const {
             if (a.hints.schedulingClass != b.hints.schedulingClass) {
                 return static_cast<int>(a.hints.schedulingClass) > static_cast<int>(b.hints.schedulingClass);
             }
-
             if (a.hints.priority != b.hints.priority) { return a.hints.priority < b.hints.priority; }
-
-            return a.enqueueOrdinal > b.enqueueOrdinal;
+            return a.ord > b.ord;
         }
     };
-
-    static bool isTerminal(NodeState s) { return s == NodeState::Completed || s == NodeState::Cancelled || s == NodeState::Failed; }
-
-    uint32_t resolveDependencies(NodePtr nodeRef) {
-        uint32_t unresolved = 0;
-
-        const ArrayContainer<Dependency> & deps = nodeRef->desc().dependencies;
-
-        for (size_t i = 0; i < deps.size(); ++i) {
-            const Dependency & dep   = deps[i];
-            TokenPtr           token = nullptr;
-
-            switch (dep.kind) {
-            case DependencyKind::Token:
-                token = dep.token;
-                break;
-
-            case DependencyKind::ArtifactExactVersion:
-                token = getOrCreateArtifactVersionToken(ArtifactVersion {dep.artifact, dep.version});
-                break;
-
-            case DependencyKind::LatestPublishedSnapshot: {
-                std::optional<ArtifactVersion> latest = getLatestPublishedVersion(dep.artifact);
-                if (!latest.has_value()) { continue; }
-                token = getOrCreateArtifactVersionToken(*latest);
-                break;
-            }
-            }
-
-            if (!token) continue;
-
-            if (!token->satisfied) {
-                ++unresolved;
-                (void) token->waiters.append(nodeRef);
-            }
-        }
-
-        return unresolved;
-    }
-
-    void pushReady(NodePtr node) {
-        ReadyQueueEntry e;
-        e.node           = node;
-        e.hints          = node->desc().scheduling;
-        e.enqueueOrdinal = ++m_enqueueOrdinal;
-        m_ready.push(e);
-    }
-
-    void tryAutoComplete(NodePtr node) {
-        if (!node) return;
-
-        if (node->desc().completionPolicy == CompletionPolicy::Manual) return;
-
-        const bool ownDone = (!node->desc().action) || node->ownActionFinished;
-
-        const bool subtreeDone = node->sealedChildren && (node->liveChildren == 0);
-
-        const CompletionPolicy policy = node->desc().completionPolicy;
-
-        if (policy == CompletionPolicy::WhenOwnActionCompletes) {
-            if (!ownDone) return;
-        } else if (policy == CompletionPolicy::WhenSubtreeCompletes) {
-            if (!ownDone || !subtreeDone) return;
-        } else if (policy == CompletionPolicy::Automatic) {
-            if (!ownDone) return;
-            if (!node->children.empty() && !subtreeDone) return;
-        }
-
-        if (node->state == NodeState::Completed) return;
-        if (node->state == NodeState::Cancelled || node->state == NodeState::Failed) return;
-
-        node->state = NodeState::Completed;
-        finalizeCompletion(node, findPendingCompletionExtras(node));
-    }
-
-    void finalizeCompletion(NodePtr node, PendingCompletionExtras * pending) {
-        if (node->completionToken) { satisfyToken(node->completionToken); }
-
-        if (node->desc().autoSatisfyOutputsOnComplete) {
-            const ArrayContainer<OutputSpec> & outs = node->desc().outputs;
-            for (size_t i = 0; i < outs.size(); ++i) {
-                const OutputSpec & output = outs[i];
-                switch (output.kind) {
-                case OutputKind::SatisfyToken:
-                    satisfyToken(output.token);
-                    break;
-                case OutputKind::PublishArtifactVersion:
-                    publishArtifactVersion(output.artifactVersion);
-                    break;
-                }
-            }
-        }
-
-        if (pending) {
-            for (size_t ti = 0; ti < pending->result.additionalSatisfiedTokens.size(); ++ti) { satisfyToken(pending->result.additionalSatisfiedTokens[ti]); }
-
-            for (size_t vi = 0; vi < pending->result.additionalPublishedVersions.size(); ++vi) {
-                publishArtifactVersion(pending->result.additionalPublishedVersions[vi]);
-            }
-
-            removePendingCompletionExtras(node);
-        }
-
-        onNodeBecameTerminal(node);
-    }
-
-    void onNodeBecameTerminal(NodePtr node) {
-        if (!node || !node->desc().parent) return;
-
-        NodePtr parent = node->desc().parent;
-        if (parent->liveChildren > 0) { --parent->liveChildren; }
-
-        tryAutoComplete(parent);
-    }
-
-    PublishedArtifactEntry & findOrCreatePublishedSlot(ArtifactPtr artifact) {
-        for (size_t i = 0; i < m_publishedArtifacts.size(); ++i) {
-            if (m_publishedArtifacts[i].artifact == artifact) return m_publishedArtifacts[i];
-        }
-
-        PublishedArtifactEntry entry;
-        entry.artifact = artifact;
-        entry.version  = std::nullopt;
-        (void) m_publishedArtifacts.append(std::move(entry));
-        return m_publishedArtifacts[m_publishedArtifacts.size() - 1];
-    }
-
-    PendingCompletionExtras * findPendingCompletionExtras(NodePtr node) {
-        for (size_t i = 0; i < m_pendingCompletionExtras.size(); ++i) {
-            if (m_pendingCompletionExtras[i].node == node) return &m_pendingCompletionExtras[i];
-        }
-        return nullptr;
-    }
-
-    void removePendingCompletionExtras(NodePtr node) {
-        for (size_t i = 0; i < m_pendingCompletionExtras.size(); ++i) {
-            if (m_pendingCompletionExtras[i].node == node) {
-                m_pendingCompletionExtras.eraseIdx(static_cast<size_t>(i));
-                return;
-            }
-        }
-    }
-
-    uint64_t m_enqueueOrdinal = 0;
-
-    ArrayContainer<NodePtr>  m_nodes;
-    ArrayContainer<TokenPtr> m_tokens;
-
-    ArrayContainer<PublishedArtifactEntry>    m_publishedArtifacts;
-    ArrayContainer<ArtifactVersionTokenEntry> m_artifactVersionTokens;
-    ArrayContainer<PendingCompletionExtras>   m_pendingCompletionExtras;
-
-    std::priority_queue<ReadyQueueEntry, std::vector<ReadyQueueEntry>, ReadyQueueCompare> m_ready;
+    std::priority_queue<ReadyEntry, std::vector<ReadyEntry>, ReadyCompare> m_ready;
 };
 
+// ============================================================
+// OpenGraphImpl — helpers
+// ============================================================
+
+void OpenGraphImpl::pushReady_(Node * n) {
+    if (!n) { return; }
+    ReadyEntry e;
+    e.node  = n;
+    e.hints = n->desc.scheduling;
+    e.ord   = ++m_enqueueOrdinal;
+    m_ready.push(e);
+    notifyAll_();
+}
+
+void OpenGraphImpl::satisfyToken_(Token * t, std::unique_lock<std::mutex> & lock) {
+    (void) lock;
+    if (!t || t->satisfied) { return; }
+    t->satisfied = true;
+    for (size_t i = 0; i < t->waiters.size(); ++i) {
+        Node * w = t->waiters[i];
+        if (!w) { continue; }
+        if (w->state != Node::State::Blocked) { continue; }
+        if (w->unresolvedDependencies > 0) { --w->unresolvedDependencies; }
+        if (w->unresolvedDependencies == 0) {
+            w->state = Node::State::Ready;
+            pushReady_(w);
+        }
+    }
+    notifyAll_();
+}
+
+void OpenGraphImpl::completeNodeAfterExecute_(Node * n, std::unique_lock<std::mutex> & lock) { (void) tryCompleteNode_(n, lock); }
+
+bool OpenGraphImpl::tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lock) {
+    (void) lock;
+    if (!n) { return false; }
+    if (n->state == Node::State::Completed) { return true; }
+    if (n->state != Node::State::Running) { return false; }
+    n->state = Node::State::Completed;
+    if (m_nonTerminalNodes > 0) { --m_nonTerminalNodes; }
+    if (n->m_completion) { satisfyToken_(n->m_completion, lock); }
+    return true;
+}
+
+void OpenGraphImpl::pump_(std::unique_lock<std::mutex> & lock) {
+    while (m_running == 0 && !m_ready.empty() && !m_stopping) {
+        ReadyEntry e = m_ready.top();
+        m_ready.pop();
+        Node * n = e.node;
+        if (!n) { continue; }
+        if (n->state != Node::State::Ready) { continue; }
+        n->state        = Node::State::Running;
+        m_running       = 1;
+        Action *    act = n->desc.action.get();
+        Arguments * arg = n->desc.arguments.get();
+        lock.unlock();
+        struct Scope {
+            int & d;
+            explicit Scope(int & d_): d(d_) { ++d; }
+            ~Scope() { --d; }
+        } scope(s_inGraphExecute);
+        if (act && arg) { act->execute(*arg); }
+        lock.lock();
+        m_running = 0;
+        tryCompleteNode_(n, lock);
+        if (m_stopping) { break; }
+    }
+    notifyAll_();
+}
+
+// ============================================================
+// Opaque pointer promotion
+// ============================================================
+
+static Token * promoteToken(TokenPtr p) {
+    if (!p) { return nullptr; }
+    return static_cast<Token *>(p);
+}
+
+static Artifact * promoteArtifact(ArtifactPtr p) {
+    if (!p) { return nullptr; }
+    return static_cast<Artifact *>(p);
+}
+
+// ============================================================
+// OpenGraphImpl — Graph
+// ============================================================
+
+Graph::WaitResult OpenGraphImpl::waitForIdle(std::chrono::milliseconds timeout) const {
+    if (s_inGraphExecute > 0) { return Graph::WaitResult::BUSY; }
+    auto * self          = const_cast<OpenGraphImpl *>(this);
+    using steady_clock   = std::chrono::steady_clock;
+    const auto deadline  = steady_clock::now() + timeout;
+    const bool finiteCap = (timeout < std::chrono::milliseconds::max() && timeout.count() > 0);
+
+    std::unique_lock lock(m_mutex);
+    for (;;) {
+        if (m_stopping) { return Graph::WaitResult::FAILED; }
+        self->pump_(lock);
+        if (m_stopping) { return Graph::WaitResult::FAILED; }
+        if (m_running == 0 && m_ready.empty() && m_nonTerminalNodes == 0) { return Graph::WaitResult::IDLE; }
+        if (timeout == std::chrono::milliseconds::zero()) { return Graph::WaitResult::BUSY; }
+        if (finiteCap && steady_clock::now() >= deadline) { return Graph::WaitResult::BUSY; }
+        if (finiteCap) {
+            m_cv.wait_until(lock, deadline);
+        } else {
+            m_cv.wait(lock);
+        }
+    }
+}
+
+Graph::WaitResult OpenGraphImpl::waitForToken(TokenPtr token) const {
+    if (s_inGraphExecute > 0) { return promoteToken(token) && promoteToken(token)->satisfied ? Graph::WaitResult::IDLE : Graph::WaitResult::BUSY; }
+    Token * t = promoteToken(token);
+    if (!t) { return Graph::WaitResult::FAILED; }
+    std::unique_lock lock(m_mutex);
+    for (;;) {
+        if (m_stopping) { return Graph::WaitResult::FAILED; }
+        if (t->satisfied) { return Graph::WaitResult::IDLE; }
+        m_cv.wait(lock, [t, this] { return t->satisfied || m_stopping; });
+    }
+}
+
+ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) {
+    std::lock_guard g(m_mutex);
+    auto *          a = new Artifact(name);
+    (void) m_artifactRegistry.append(a);
+    return static_cast<ArtifactPtr>(a);
+}
+
+void OpenGraphImpl::publishArtifact(ArtifactPtr ap, AutoRef<Entity> content) {
+    auto * a = promoteArtifact(ap);
+    if (!a) { return; }
+    std::unique_lock lock(m_mutex);
+    a->m_version.increment();
+    a->m_content      = std::move(content);
+    a->m_hasPublished = true;
+    for (size_t i = 0; i < a->m_pending.size();) {
+        if (a->m_version >= a->m_pending[i].target) {
+            if (a->m_pending[i].token) { satisfyToken_(a->m_pending[i].token, lock); }
+            a->m_pending.eraseIdx(i);
+        } else {
+            ++i;
+        }
+    }
+    notifyAll_();
+}
+
+static bool collectDeps(Node * n, const NodeDesc & d) {
+    n->unresolvedDependencies = 0;
+    for (size_t i = 0; i < d.dependencies.size(); ++i) {
+        TokenPtr tok = d.dependencies[i];
+        Token *  t   = static_cast<Token *>(tok);
+        if (!t) { continue; }
+        if (t->satisfied) { continue; }
+        ++n->unresolvedDependencies;
+        (void) t->waiters.append(n);
+    }
+    n->state = n->unresolvedDependencies == 0 ? Node::State::Ready : Node::State::Blocked;
+    return true;
+}
+
+NodePtr OpenGraphImpl::addNode(const NodeDesc & desc) {
+    std::unique_lock lock(m_mutex);
+    auto *           n = new Node(desc);
+    if (!n) { return nullptr; }
+    (void) collectDeps(n, desc);
+    (void) m_nodeRegistry.append(n);
+    ++m_nonTerminalNodes;
+    if (n->state == Node::State::Ready) { pushReady_(n); }
+    notifyAll_();
+    return reinterpret_cast<NodePtr>(n);
+}
+
+void OpenGraphImpl::satisfyNode(NodePtr node) {
+    Node * n = Node::n(node);
+    if (!n) { return; }
+    std::unique_lock lock(m_mutex);
+    if (m_stopping) { return; }
+    if (n->state == Node::State::Completed) { return; }
+    if (n->state == Node::State::Running) { tryCompleteNode_(n, lock); }
+    if (m_running == 0) { pump_(lock); }
+    notifyAll_();
+}
+
+TokenPtr OpenGraphImpl::getNodeCompletionToken(NodePtr node) {
+    Node * n = Node::n(node);
+    if (!n) { return nullptr; }
+    std::lock_guard g(m_mutex);
+    if (!n->m_completion) {
+        n->m_completion = new Token("node completion");
+        (void) m_allTokens.append(n->m_completion);
+    }
+    return static_cast<TokenPtr>(n->m_completion);
+}
+
+TokenPtr OpenGraphImpl::getArtifactVersionToken(ArtifactPtr ap, NeverOverflowingCounter version) {
+    auto * a = promoteArtifact(ap);
+    if (!a) { return nullptr; }
+    std::unique_lock lock(m_mutex);
+    const bool       isNext = (version == NeverOverflowingCounter::OOO());
+    Token *          t      = new Token("artifact version");
+    (void) m_allTokens.append(t);
+    NeverOverflowingCounter target = version;
+    if (isNext) {
+        target = a->m_version;
+        target.increment();
+    }
+    if (a->m_version >= target) {
+        satisfyToken_(t, lock);
+    } else {
+        Artifact::Pending p;
+        p.target = target;
+        p.token  = t;
+        (void) a->m_pending.append(p);
+    }
+    return static_cast<TokenPtr>(t);
+}
+
 GN_API Entity::Entity(const GN::rdg::RuntimeType::TypeInfo & type, const StrA & name)
-    : RefCounter(), RuntimeType(type), id(nextEntityNeverOverflowId()), name(name) {}
+    : RefCounter(), RuntimeType(type), id(nextEntityNeverOverflowingId()), name(name) {}
 
 GN_API AutoRef<Graph> Graph::create() { return AutoRef<Graph>(new OpenGraphImpl()); }
 
