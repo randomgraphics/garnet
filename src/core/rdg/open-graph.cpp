@@ -14,7 +14,173 @@ static NeverOverflowingCounter nextEntityNeverOverflowId() {
     return out;
 }
 
-namespace {
+struct FOURCC {
+    char ch0;
+    char ch1;
+    char ch2;
+    char ch3;
+
+    constexpr FOURCC(): ch0(0), ch1(0), ch2(0), ch3(0) {}
+    constexpr FOURCC(const FOURCC & other): ch0(other.ch0), ch1(other.ch1), ch2(other.ch2), ch3(other.ch3) {}
+    constexpr FOURCC & operator=(const FOURCC & other) {
+        ch0 = other.ch0;
+        ch1 = other.ch1;
+        ch2 = other.ch2;
+        ch3 = other.ch3;
+        return *this;
+    }
+
+    constexpr FOURCC(char c0, char c1, char c2, char c3): ch0(c0), ch1(c1), ch2(c2), ch3(c3) {}
+    constexpr FOURCC(const char * s): ch0(s[0]), ch1(s[1]), ch2(s[2]), ch3(s[3]) {}
+    constexpr FOURCC(const std::string_view & s): ch0(s[0]), ch1(s[1]), ch2(s[2]), ch3(s[3]) {}
+
+    constexpr bool operator==(const FOURCC & other) const { return ch0 == other.ch0 && ch1 == other.ch1 && ch2 == other.ch2 && ch3 == other.ch3; }
+    constexpr bool operator!=(const FOURCC & other) const { return !(*this == other); }
+    constexpr bool operator<(const FOURCC & other) const {
+        return ch0 < other.ch0 || (ch0 == other.ch0 && ch1 < other.ch1) || (ch0 == other.ch0 && ch1 == other.ch1 && ch2 < other.ch2) ||
+               (ch0 == other.ch0 && ch1 == other.ch1 && ch2 == other.ch2 && ch3 < other.ch3);
+    }
+};
+
+struct OpaquePointer {
+    FOURCC tag;
+
+    OpaquePointer(const FOURCC & tag_): tag(tag_) {}
+};
+
+/// Generic satisfiable prerequisite / milestone.
+/// May be satisfied internally or externally.
+struct TokenImpl : public OpaquePointer {
+    static constexpr FOURCC TAG = {"TOKE"};
+
+    static const TokenImpl * promote(const void * ptr) {
+        if (!ptr) return nullptr;
+        auto typedPtr = static_cast<const TokenImpl *>(ptr);
+        if (typedPtr->tag != TAG) return nullptr;
+        return typedPtr;
+    }
+
+    static TokenImpl * promote(void * ptr) { return const_cast<TokenImpl *>(promote(static_cast<const void *>(ptr))); }
+
+    const StrA name;
+
+    /// Constructor
+    Token(const StrA & name_): OpaquePointer(TAG), name(name_) {}
+};
+
+struct ArtifactImpl : public OpaquePointer {
+    static constexpr FOURCC TAG = {"ARTI"};
+
+    static constexpr const ArtifactImpl * promote(const void * ptr) {
+        if (!ptr) return nullptr;
+        auto typedPtr = static_cast<const ArtifactImpl *>(ptr);
+        if (typedPtr->tag != TAG) return nullptr;
+        return typedPtr;
+    }
+
+    static ArtifactImpl * promote(void * ptr) { return const_cast<ArtifactImpl *>(promote(static_cast<const void *>(ptr))); }
+
+    const StrA name;
+
+    std::map<NeverOverflowingCounter, AutoRef<Entity>> versions;
+
+    ArtifactImpl(const StrA & name_): OpaquePointer("ARTI"), name(name_) {}
+
+    bool publish(NeverOverflowingCounter newVersion, AutoRef<Entity> newContent) {
+        if (newVersion <= version) {
+            // can't roll back to a lower version
+            return false;
+        }
+        version = newVersion;
+        content = std::move(newContent);
+        return true;
+    }
+
+    bool publish(AutoRef<Entity> newContent) {
+        auto newVersion = version;
+        newVersion.increment();
+        return publish(newVersion, std::move(newContent));
+    }
+
+    // delete all but the latest versions with reference count equal to 1.
+    void purge() {
+        if (versions.size() <= 1) return;
+        auto latestVersion = versions.rbegin().base();
+        for (auto it = versions.begin(); it != latestVersion;) {
+            if (it->second->getref() == 1) {
+                it = versions.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        GN_ASSERT(versions.size() == 1);
+        GN_ASSERT(versions.begin() == latestVersion);
+    }
+};
+
+// ============================================================
+// Node State
+// ============================================================
+
+enum class NodeState : uint8_t { Created, Blocked, Ready, Running, Completed, Cancelled };
+
+// ============================================================
+// Node Execution Result
+// ============================================================
+
+struct NodeExecutionResult {
+    ArrayContainer<NodeDesc>        spawnedChildren;
+    ArrayContainer<TokenPtr>        satisfiedTokens;
+    ArrayContainer<ArtifactVersion> publishedVersions;
+};
+
+// ============================================================
+// Node
+// ============================================================
+
+struct Node : public OpaquePointer {
+    static constexpr FOURCC TAG = {"NODE"};
+
+    static const Node * promote(const void * ptr) {
+        if (!ptr) return nullptr;
+        auto typedPtr = static_cast<const Node *>(ptr);
+        if (typedPtr->tag != TAG) return nullptr;
+        return typedPtr;
+    }
+
+    static Node * promote(void * ptr) { return const_cast<Node *>(promote(static_cast<const void *>(ptr))); }
+
+    const NodeDesc & desc() const { return mDesc; }
+
+    // For subtree completion policy.
+    ArrayContainer<NodePtr> children;
+    uint32_t                liveChildren   = 0;
+    bool                    sealedChildren = false;
+
+    TokenPtr completionToken = nullptr;
+
+    uint32_t unresolvedDependencies = 0;
+
+    NodeState state = NodeState::Created;
+
+    // Own-action lifecycle.
+    bool ownActionStarted  = false;
+    bool ownActionFinished = false;
+
+protected:
+    /// Constructor
+    Node(const NodeDesc & desc): Entity(TYPE_INFO(), desc.name), mDesc(desc) {}
+
+private:
+    NodeDesc mDesc;
+};
+
+struct ReadyNode {
+    NodePtr         node;
+    ActionPtr       action;
+    ArgumentsPtr    arguments;
+    SchedulingHints scheduling;
+};
 
 class OpenGraphImpl final : public Graph {
 public:
@@ -27,60 +193,29 @@ public:
         return tok;
     }
 
-    NodePtr addNode(const StrA & name, const NodeDesc & desc) override {
-        auto node = AutoRef<Node>(new Node(name, desc));
-        (void) m_nodes.append(node);
-
-        NodePtr parent = desc.parent;
-        if (parent) {
-            (void) parent->children.append(node);
-            ++parent->liveChildren;
-        }
-
-        node->unresolvedDependencies = resolveDependencies(node);
-        node->state                  = (node->unresolvedDependencies == 0) ? NodeState::Ready : NodeState::Blocked;
-
-        if (node->state == NodeState::Ready) { pushReady(node); }
-
-        return node;
+    NodePtr addNode(const NodeDesc & desc) override {
+        // to be implemented
+        (void) desc;
+        return nullptr;
     }
 
-    ArrayContainer<NodePtr> addNodes(ArrayContainer<NodeDesc> descs) override {
-        ArrayContainer<NodePtr> out;
-        (void) out.reserve(descs.size());
+    bool publishArtifact(ArtifactVersion version, AutoRef<Entity> content) override {
+        // PublishedArtifactEntry & slot = findOrCreatePublishedSlot(version.artifact);
 
-        for (size_t i = 0; i < descs.size(); ++i) {
-            const NodeDesc & d = descs[i];
-            (void) out.append(addNode(d.name, d));
-        }
+        // if (slot.version.has_value() && (*slot.version).version >= version.version) return false;
 
-        return out;
+        // slot.version = version;
+
+        // TokenPtr versionToken = getOrCreateArtifactVersionToken(version);
+        // return satisfyToken(versionToken);
     }
 
-    void sealChildren(NodePtr node) override {
-        if (!node) return;
-
-        node->sealedChildren = true;
-        tryAutoComplete(node);
-    }
-
-    bool publishArtifactVersion(ArtifactVersion version) override {
-        PublishedArtifactEntry & slot = findOrCreatePublishedSlot(version.artifact);
-
-        if (slot.version.has_value() && (*slot.version).version >= version.version) return false;
-
-        slot.version = version;
-
-        TokenPtr versionToken = getOrCreateArtifactVersionToken(version);
-        return satisfyToken(versionToken);
-    }
-
-    std::optional<ArtifactVersion> getLatestPublishedVersion(ArtifactPtr artifact) const override {
-        for (size_t i = 0; i < m_publishedArtifacts.size(); ++i) {
-            const PublishedArtifactEntry & p = m_publishedArtifacts[i];
-            if (p.artifact == artifact && p.version.has_value()) return *p.version;
-        }
-        return std::nullopt;
+    ArtifactVersion getLatestPublishedVersion(ArtifactPtr artifact) const override {
+        // for (size_t i = 0; i < m_publishedArtifacts.size(); ++i) {
+        //     const PublishedArtifactEntry & p = m_publishedArtifacts[i];
+        //     if (p.artifact == artifact && p.version.has_value()) return *p.version;
+        // }
+        // return std::nullopt;
     }
 
     TokenPtr getOrCreateArtifactVersionToken(ArtifactVersion version) override {
@@ -134,7 +269,6 @@ public:
             node->ownActionStarted = true;
 
             out.node       = node;
-            out.debugName  = node->effectiveDebugName();
             out.action     = node->desc().action;
             out.arguments  = node->desc().arguments;
             out.scheduling = node->desc().scheduling;
@@ -392,8 +526,6 @@ private:
 
     std::priority_queue<ReadyQueueEntry, std::vector<ReadyQueueEntry>, ReadyQueueCompare> m_ready;
 };
-
-} // namespace
 
 GN_API Entity::Entity(const GN::rdg::RuntimeType::TypeInfo & type, const StrA & name)
     : RefCounter(), RuntimeType(type), id(nextEntityNeverOverflowId()), name(name) {}

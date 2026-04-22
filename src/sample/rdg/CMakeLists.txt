@@ -17,3 +17,7 @@ target_link_libraries(GNsample-rdg-simple-triangle GNcore)
 add_executable(GNsample-rdg-draw-mesh draw-mesh.cpp)
 target_include_directories(GNsample-rdg-draw-mesh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(GNsample-rdg-draw-mesh GNcore)
+
+add_executable(GNsample-open-graph-hello-world open-graph-hello-world.cpp)
+target_include_directories(GNsample-open-graph-hello-world PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(GNsample-open-graph-hello-world GNcore)
