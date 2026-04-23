@@ -7,6 +7,8 @@
 
 namespace GN::rdg2 {
 
+class OpenGraphImpl;
+
 /// Generates a process-wide unique entity id.
 ///
 /// Thread-safe and monotonic, using NeverOverflowingCounter to avoid wraparound.
@@ -119,13 +121,16 @@ struct Artifact final : OpaqueBase<Artifact> {
     /// Debug/display name for the artifact.
     const StrA name;
 
+    /// Creates an artifact with a human-readable name.
+    explicit Artifact(const StrA & n): name(n) {}
+
     /// Current version counter (increments on every publish).
-    NeverOverflowingCounter m_version = NeverOverflowingCounter::OOO();
+    NeverOverflowingCounter version = NeverOverflowingCounter::OOO();
 
     /// Latest published content for this artifact.
-    AutoRef<Entity> m_content;
+    AutoRef<Entity> content;
 
-    // Pending: wait until m_version (after a publish) >= targetVersion.
+    // Pending: wait until version (after a publish) >= targetVersion.
     /// A pending waiter for a specific target version.
     struct Pending {
         /// Version threshold that must be reached (inclusive).
@@ -135,10 +140,7 @@ struct Artifact final : OpaqueBase<Artifact> {
     };
 
     /// Wait list of version-threshold requests that haven't been satisfied yet.
-    std::list<Pending> m_pending;
-
-    /// Creates an artifact with a human-readable name.
-    explicit Artifact(const StrA & n): name(n) {}
+    std::list<Pending> pending;
 };
 
 // ============================================================
@@ -168,12 +170,15 @@ struct Node final : OpaqueBase<Node> {
     /// Current scheduling/execution lifecycle state.
     enum class State : uint8_t { Blocked, Ready, Running, FinishedAction, Completed } state = State::Blocked;
 
-    // Lazily created; satisfied by satisfyNode / pump.
-    /// Token satisfied when the node reaches Completed (created on demand).
-    Token * m_completion = nullptr;
-
     /// Constructs a node from a description (moves/copies as needed).
     explicit Node(NodeDesc d): desc(std::move(d)) {}
+
+private:
+    friend class OpenGraphImpl;
+
+    // Lazily created; satisfied by satisfyNode / pump.
+    /// Token satisfied when the node reaches Completed (created on demand).
+    Token * mCompletion = nullptr;
 };
 
 // ============================================================
@@ -182,23 +187,23 @@ struct Node final : OpaqueBase<Node> {
 
 /// A minimal single-worker "open graph" runtime.
 ///
-/// This implementation executes at most one node at a time (`m_running` is 0/1) and uses
+/// This implementation executes at most one node at a time (`mRunning` is 0/1) and uses
 /// condition-variable based waiting for idle/token satisfaction.
 class OpenGraphImpl final : public Graph {
 public:
     OpenGraphImpl() = default;
     ~OpenGraphImpl() override {
         {
-            std::unique_lock lock(m_mutex);
-            m_stopping = true;
-            m_cv.notify_all();
+            std::unique_lock lock(mMutex);
+            mStopping = true;
+            mCv.notify_all();
         }
-        for (size_t i = 0; i < m_nodeRegistry.size(); ++i) { delete m_nodeRegistry[i]; }
-        m_nodeRegistry.clear();
-        for (size_t i = 0; i < m_artifactRegistry.size(); ++i) { delete m_artifactRegistry[i]; }
-        m_artifactRegistry.clear();
-        for (size_t i = 0; i < m_allTokens.size(); ++i) { delete m_allTokens[i]; }
-        m_allTokens.clear();
+        for (size_t i = 0; i < mNodeRegistry.size(); ++i) { delete mNodeRegistry[i]; }
+        mNodeRegistry.clear();
+        for (size_t i = 0; i < mArtifactRegistry.size(); ++i) { delete mArtifactRegistry[i]; }
+        mArtifactRegistry.clear();
+        for (size_t i = 0; i < mAllTokens.size(); ++i) { delete mAllTokens[i]; }
+        mAllTokens.clear();
     }
 
     /// Blocks until the graph has no runnable work and no outstanding non-terminal nodes.
@@ -225,7 +230,7 @@ public:
 
 private:
     /// Wakes all waiters on the graph condition variable.
-    void notifyAll_() { m_cv.notify_all(); }
+    void notifyAll_() { mCv.notify_all(); }
     /// Enqueues a ready node in the priority queue and wakes waiters.
     void pushReady_(Node * n);
     /// Runs ready nodes while possible (single-worker) and completes them.
@@ -236,24 +241,24 @@ private:
     bool tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lock);
 
     /// Protects all state below (nodes, tokens, queues, versions).
-    mutable std::mutex m_mutex;
+    mutable std::mutex mMutex;
     /// Waiters sleep on this for token satisfaction, queue changes, or stopping.
-    mutable std::condition_variable m_cv;
+    mutable std::condition_variable mCv;
     /// Stop flag set during destruction to unblock waiters and prevent further work.
-    bool m_stopping = false;
+    bool mStopping = false;
     /// Number of currently running workers; this implementation uses 0/1.
-    mutable int m_running = 0;
+    mutable int mRunning = 0;
     /// Count of nodes that haven't completed yet (used to detect idleness).
-    mutable size_t m_nonTerminalNodes = 0;
+    mutable size_t mNonTerminalNodes = 0;
     /// Monotonic enqueue ordinal used as a stable tie-breaker in the ready queue.
-    mutable uint64_t m_enqueueOrdinal = 0;
-    // Ownership of heap nodes / artifacts; tokens on nodes/artifacts and in m_artifactOrphans.
+    mutable uint64_t mEnqueueOrdinal = 0;
+    // Ownership of heap nodes / artifacts; tokens on nodes/artifacts and in mArtifactOrphans.
     /// Owns all heap-allocated nodes for this graph instance.
-    ArrayContainer<Node *> m_nodeRegistry;
+    ArrayContainer<Node *> mNodeRegistry;
     /// Owns all heap-allocated artifacts for this graph instance.
-    ArrayContainer<Artifact *> m_artifactRegistry;
+    ArrayContainer<Artifact *> mArtifactRegistry;
     /// Owns all heap Token objects; freed in ~OpenGraphImpl (dep tokens, completion, artifact version).
-    ArrayContainer<Token *> m_allTokens;
+    ArrayContainer<Token *> mAllTokens;
     // Ready queue: lower SchedulingClass and higher int priority first; stable tie-breaker.
     /// Priority-queue element for a runnable node.
     struct ReadyEntry {
@@ -278,7 +283,7 @@ private:
         }
     };
     /// Runnable nodes waiting for execution.
-    std::priority_queue<ReadyEntry, std::vector<ReadyEntry>, ReadyCompare> m_ready;
+    std::priority_queue<ReadyEntry, std::vector<ReadyEntry>, ReadyCompare> mReady;
 };
 
 // ============================================================
@@ -291,8 +296,8 @@ void OpenGraphImpl::pushReady_(Node * n) {
     ReadyEntry e;
     e.node  = n;
     e.hints = n->desc.scheduling;
-    e.ord   = ++m_enqueueOrdinal;
-    m_ready.push(e);
+    e.ord   = ++mEnqueueOrdinal;
+    mReady.push(e);
     notifyAll_();
 }
 
@@ -328,8 +333,8 @@ bool OpenGraphImpl::tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lo
     if (n->state != Node::State::FinishedAction) { return false; }
     if (n->incompleteChildren != 0) { return false; }
     n->state = Node::State::Completed;
-    if (m_nonTerminalNodes > 0) { --m_nonTerminalNodes; }
-    if (n->m_completion) { satisfyToken_(n->m_completion, lock); }
+    if (mNonTerminalNodes > 0) { --mNonTerminalNodes; }
+    if (n->mCompletion) { satisfyToken_(n->mCompletion, lock); }
     if (n->parent) {
         if (n->parent->incompleteChildren > 0) GN_LIKELY {
                 --n->parent->incompleteChildren;
@@ -347,14 +352,14 @@ bool OpenGraphImpl::tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lo
 /// This is single-threaded execution: it pops the highest-priority ready node, runs its action
 /// outside the lock, then marks it completed.
 void OpenGraphImpl::pump_(std::unique_lock<std::mutex> & lock) {
-    while (m_running == 0 && !m_ready.empty() && !m_stopping) {
-        ReadyEntry e = m_ready.top();
-        m_ready.pop();
+    while (mRunning == 0 && !mReady.empty() && !mStopping) {
+        ReadyEntry e = mReady.top();
+        mReady.pop();
         Node * n = e.node;
         if (!n) { continue; }
         if (n->state != Node::State::Ready) { continue; }
         n->state        = Node::State::Running;
-        m_running       = 1;
+        mRunning        = 1;
         Action *    act = n->desc.action.get();
         Arguments * arg = n->desc.arguments.get();
         lock.unlock();
@@ -369,10 +374,11 @@ void OpenGraphImpl::pump_(std::unique_lock<std::mutex> & lock) {
         /// Executes the node action (if present); user code may call back into the graph.
         if (act && arg) { act->execute(*arg); }
         lock.lock();
-        m_running = 0;
+        mRunning = 0;
         // Mark the node's own work as finished; actual completion may be delayed by children.
         if (n->state == Node::State::Running) { n->state = Node::State::FinishedAction; }
-        (void) tryCompleteNode_(n, lock);
+        // Only try to complete the node when it is not manual completed.
+        if (!n->desc.manualComplete) (void) tryCompleteNode_(n, lock);
     }
     notifyAll_();
 }
@@ -392,18 +398,18 @@ Graph::WaitResult OpenGraphImpl::waitForIdle(std::chrono::milliseconds timeout) 
     const auto deadline  = steady_clock::now() + timeout;
     const bool finiteCap = (timeout < std::chrono::milliseconds::max() && timeout.count() > 0);
 
-    std::unique_lock lock(m_mutex);
+    std::unique_lock lock(mMutex);
     for (;;) {
-        if (m_stopping) { return Graph::WaitResult::FAILED; }
+        if (mStopping) { return Graph::WaitResult::FAILED; }
         self->pump_(lock);
-        if (m_stopping) { return Graph::WaitResult::FAILED; }
-        if (m_running == 0 && m_ready.empty() && m_nonTerminalNodes == 0) { return Graph::WaitResult::IDLE; }
+        if (mStopping) { return Graph::WaitResult::FAILED; }
+        if (mRunning == 0 && mReady.empty() && mNonTerminalNodes == 0) { return Graph::WaitResult::IDLE; }
         if (timeout == std::chrono::milliseconds::zero()) { return Graph::WaitResult::BUSY; }
         if (finiteCap && steady_clock::now() >= deadline) { return Graph::WaitResult::BUSY; }
         if (finiteCap) {
-            m_cv.wait_until(lock, deadline);
+            mCv.wait_until(lock, deadline);
         } else {
-            m_cv.wait(lock);
+            mCv.wait(lock);
         }
     }
 }
@@ -416,19 +422,19 @@ Graph::WaitResult OpenGraphImpl::waitForToken(TokenPtr token) const {
     Token * t = Token::prompt(token);
     if (!t) { return Graph::WaitResult::FAILED; }
     if (s_inGraphExecute > 0) { return t->satisfied ? Graph::WaitResult::IDLE : Graph::WaitResult::BUSY; }
-    std::unique_lock lock(m_mutex);
+    std::unique_lock lock(mMutex);
     for (;;) {
-        if (m_stopping) { return Graph::WaitResult::FAILED; }
+        if (mStopping) { return Graph::WaitResult::FAILED; }
         if (t->satisfied) { return Graph::WaitResult::IDLE; }
-        m_cv.wait(lock, [t, this] { return t->satisfied || m_stopping; });
+        mCv.wait(lock, [t, this] { return t->satisfied || mStopping; });
     }
 }
 
 /// Allocates and registers an artifact owned by this graph.
 ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) {
-    std::lock_guard g(m_mutex);
+    std::lock_guard g(mMutex);
     auto *          a = new Artifact(name);
-    (void) m_artifactRegistry.append(a);
+    (void) mArtifactRegistry.append(a);
     return static_cast<ArtifactPtr>(a);
 }
 
@@ -436,15 +442,15 @@ ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) {
 void OpenGraphImpl::publishArtifact(ArtifactPtr ap, AutoRef<Entity> content) {
     auto * a = GN::rdg2::Artifact::prompt(ap);
     if (!a) { return; }
-    std::unique_lock lock(m_mutex);
-    a->m_version.increment();
-    a->m_content = std::move(content);
-    // for (size_t i = 0; i < a->m_pending.size();) {
-    for (auto iter = a->m_pending.begin(); iter != a->m_pending.end();) {
-        if (a->m_version >= iter->target) {
-            auto pending = iter->token;
-            iter         = a->m_pending.erase(iter);
-            if (pending) { satisfyToken_(pending, lock); }
+    std::unique_lock lock(mMutex);
+    a->version.increment();
+    a->content = std::move(content);
+    // for (size_t i = 0; i < a->pending.size();) {
+    for (auto iter = a->pending.begin(); iter != a->pending.end();) {
+        if (a->version >= iter->target) {
+            auto pendingToken = iter->token;
+            iter              = a->pending.erase(iter);
+            if (pendingToken) { satisfyToken_(pendingToken, lock); }
         } else {
             ++iter;
         }
@@ -474,14 +480,14 @@ static bool collectDeps(Node * n, const NodeDesc & d) {
 
 /// Adds a node to the graph and enqueues it if all dependencies are already satisfied.
 NodePtr OpenGraphImpl::addNode(const NodeDesc & desc) {
-    std::unique_lock lock(m_mutex);
+    std::unique_lock lock(mMutex);
     auto *           n = new Node(desc);
     if (!n) { return nullptr; }
     n->parent = Node::prompt(desc.parent);
     if (n->parent) { ++n->parent->incompleteChildren; }
     (void) collectDeps(n, desc);
-    (void) m_nodeRegistry.append(n);
-    ++m_nonTerminalNodes;
+    (void) mNodeRegistry.append(n);
+    ++mNonTerminalNodes;
     if (n->state == Node::State::Ready) { pushReady_(n); }
     notifyAll_();
     return n;
@@ -494,13 +500,13 @@ NodePtr OpenGraphImpl::addNode(const NodeDesc & desc) {
 void OpenGraphImpl::satisfyNode(NodePtr node) {
     Node * n = Node::prompt(node);
     if (!n) { return; }
-    std::unique_lock lock(m_mutex);
-    if (m_stopping) { return; }
+    std::unique_lock lock(mMutex);
+    if (mStopping) { return; }
     if (n->state == Node::State::Completed) { return; }
     // Treat this as "node's own action is finished". Completion still waits for children.
     if (n->state == Node::State::Running) { n->state = Node::State::FinishedAction; }
     (void) tryCompleteNode_(n, lock);
-    if (m_running == 0) { pump_(lock); }
+    if (mRunning == 0) { pump_(lock); }
     notifyAll_();
 }
 
@@ -508,12 +514,12 @@ void OpenGraphImpl::satisfyNode(NodePtr node) {
 TokenPtr OpenGraphImpl::getNodeCompletionToken(NodePtr node) {
     Node * n = Node::prompt(node);
     if (!n) { return nullptr; }
-    std::lock_guard g(m_mutex);
-    if (!n->m_completion) {
-        n->m_completion = new Token("node completion");
-        (void) m_allTokens.append(n->m_completion);
+    std::lock_guard g(mMutex);
+    if (!n->mCompletion) {
+        n->mCompletion = new Token("node completion");
+        (void) mAllTokens.append(n->mCompletion);
     }
-    return n->m_completion;
+    return n->mCompletion;
 }
 
 /// Returns a token that becomes satisfied when an artifact reaches a target version.
@@ -522,22 +528,22 @@ TokenPtr OpenGraphImpl::getNodeCompletionToken(NodePtr node) {
 TokenPtr OpenGraphImpl::getArtifactVersionToken(ArtifactPtr ap, NeverOverflowingCounter version) {
     auto * a = Artifact::prompt(ap);
     if (!a) { return nullptr; }
-    std::unique_lock lock(m_mutex);
+    std::unique_lock lock(mMutex);
     const bool       isNext = (version == NeverOverflowingCounter::OOO());
     Token *          t      = new Token("artifact version");
-    (void) m_allTokens.append(t);
+    (void) mAllTokens.append(t);
     NeverOverflowingCounter target = version;
     if (isNext) {
-        target = a->m_version;
+        target = a->version;
         target.increment();
     }
-    if (a->m_version >= target) {
+    if (a->version >= target) {
         satisfyToken_(t, lock);
     } else {
         Artifact::Pending p;
         p.target = target;
         p.token  = t;
-        a->m_pending.insert(a->m_pending.end(), p);
+        a->pending.insert(a->pending.end(), p);
     }
     return t;
 }
