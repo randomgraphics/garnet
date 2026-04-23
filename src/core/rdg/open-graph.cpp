@@ -31,9 +31,19 @@ struct FOURCC {
     bool operator==(const FOURCC & o) const { return ch0 == o.ch0 && ch1 == o.ch1 && ch2 == o.ch2 && ch3 == o.ch3; }
 };
 
+template<typename T>
 struct OpaqueBase {
     FOURCC tag;
     explicit OpaqueBase(const FOURCC & t): tag(t) {}
+
+    static const T * prompt(const void * p) {
+        if (!p) return nullptr;
+        auto t = (const T *) p;
+        if (t->tag != T::kTag) return nullptr;
+        return t;
+    }
+
+    static T * prompt(void * p) { return const_cast<T *>(prompt((const void *) p)); }
 };
 
 // ============================================================
@@ -42,7 +52,7 @@ struct OpaqueBase {
 
 struct Node;
 
-struct Token final : OpaqueBase {
+struct Token final : OpaqueBase<Token> {
     static constexpr FOURCC kTag {"TOKE"};
 
     const StrA name;
@@ -57,7 +67,7 @@ struct Token final : OpaqueBase {
 // Artifact
 // ============================================================
 
-struct Artifact final : OpaqueBase {
+struct Artifact final : OpaqueBase<Artifact> {
     static constexpr FOURCC kTag {"ARTI"};
 
     const StrA              name;
@@ -68,7 +78,7 @@ struct Artifact final : OpaqueBase {
         NeverOverflowingCounter target;
         Token *                 token;
     };
-    ArrayContainer<Pending> m_pending;
+    std::list<Pending> m_pending;
 
     explicit Artifact(const StrA & n): OpaqueBase(kTag), name(n) {}
 };
@@ -77,7 +87,7 @@ struct Artifact final : OpaqueBase {
 // Node
 // ============================================================
 
-struct Node final : OpaqueBase {
+struct Node final : OpaqueBase<Node> {
     static constexpr FOURCC kTag {"NODE"};
 
     NodeDesc desc;
@@ -85,8 +95,6 @@ struct Node final : OpaqueBase {
     enum class State : uint8_t { Blocked, Ready, Running, Completed } state = State::Blocked;
     // Lazily created; satisfied by satisfyNode / pump.
     Token * m_completion = nullptr;
-
-    static Node * n(NodePtr p) { return reinterpret_cast<Node *>(p); }
 
     explicit Node(NodeDesc d): OpaqueBase(kTag), desc(std::move(d)) {}
     ~Node() = default;
@@ -230,20 +238,6 @@ void OpenGraphImpl::pump_(std::unique_lock<std::mutex> & lock) {
 }
 
 // ============================================================
-// Opaque pointer promotion
-// ============================================================
-
-static Token * promoteToken(TokenPtr p) {
-    if (!p) { return nullptr; }
-    return static_cast<Token *>(p);
-}
-
-static Artifact * promoteArtifact(ArtifactPtr p) {
-    if (!p) { return nullptr; }
-    return static_cast<Artifact *>(p);
-}
-
-// ============================================================
 // OpenGraphImpl — Graph
 // ============================================================
 
@@ -271,9 +265,9 @@ Graph::WaitResult OpenGraphImpl::waitForIdle(std::chrono::milliseconds timeout) 
 }
 
 Graph::WaitResult OpenGraphImpl::waitForToken(TokenPtr token) const {
-    if (s_inGraphExecute > 0) { return promoteToken(token) && promoteToken(token)->satisfied ? Graph::WaitResult::IDLE : Graph::WaitResult::BUSY; }
-    Token * t = promoteToken(token);
+    Token * t = Token::prompt(token);
     if (!t) { return Graph::WaitResult::FAILED; }
+    if (s_inGraphExecute > 0) { return t->satisfied ? Graph::WaitResult::IDLE : Graph::WaitResult::BUSY; }
     std::unique_lock lock(m_mutex);
     for (;;) {
         if (m_stopping) { return Graph::WaitResult::FAILED; }
@@ -290,17 +284,19 @@ ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) {
 }
 
 void OpenGraphImpl::publishArtifact(ArtifactPtr ap, AutoRef<Entity> content) {
-    auto * a = promoteArtifact(ap);
+    auto * a = GN::rdg2::Artifact::prompt(ap);
     if (!a) { return; }
     std::unique_lock lock(m_mutex);
     a->m_version.increment();
     a->m_content = std::move(content);
-    for (size_t i = 0; i < a->m_pending.size();) {
-        if (a->m_version >= a->m_pending[i].target) {
-            if (a->m_pending[i].token) { satisfyToken_(a->m_pending[i].token, lock); }
-            a->m_pending.eraseIdx(i);
+    // for (size_t i = 0; i < a->m_pending.size();) {
+    for (auto iter = a->m_pending.begin(); iter != a->m_pending.end();) {
+        if (a->m_version >= iter->target) {
+            auto pending = iter->token;
+            iter         = a->m_pending.erase(iter);
+            if (pending) { satisfyToken_(pending, lock); }
         } else {
-            ++i;
+            ++iter;
         }
     }
     notifyAll_();
@@ -329,11 +325,11 @@ NodePtr OpenGraphImpl::addNode(const NodeDesc & desc) {
     ++m_nonTerminalNodes;
     if (n->state == Node::State::Ready) { pushReady_(n); }
     notifyAll_();
-    return reinterpret_cast<NodePtr>(n);
+    return n;
 }
 
 void OpenGraphImpl::satisfyNode(NodePtr node) {
-    Node * n = Node::n(node);
+    Node * n = Node::prompt(node);
     if (!n) { return; }
     std::unique_lock lock(m_mutex);
     if (m_stopping) { return; }
@@ -344,18 +340,18 @@ void OpenGraphImpl::satisfyNode(NodePtr node) {
 }
 
 TokenPtr OpenGraphImpl::getNodeCompletionToken(NodePtr node) {
-    Node * n = Node::n(node);
+    Node * n = Node::prompt(node);
     if (!n) { return nullptr; }
     std::lock_guard g(m_mutex);
     if (!n->m_completion) {
         n->m_completion = new Token("node completion");
         (void) m_allTokens.append(n->m_completion);
     }
-    return static_cast<TokenPtr>(n->m_completion);
+    return n->m_completion;
 }
 
 TokenPtr OpenGraphImpl::getArtifactVersionToken(ArtifactPtr ap, NeverOverflowingCounter version) {
-    auto * a = promoteArtifact(ap);
+    auto * a = Artifact::prompt(ap);
     if (!a) { return nullptr; }
     std::unique_lock lock(m_mutex);
     const bool       isNext = (version == NeverOverflowingCounter::OOO());
@@ -372,9 +368,9 @@ TokenPtr OpenGraphImpl::getArtifactVersionToken(ArtifactPtr ap, NeverOverflowing
         Artifact::Pending p;
         p.target = target;
         p.token  = t;
-        (void) a->m_pending.append(p);
+        a->m_pending.insert(a->m_pending.end(), p);
     }
-    return static_cast<TokenPtr>(t);
+    return t;
 }
 
 GN_API Entity::Entity(const GN::rdg::RuntimeType::TypeInfo & type, const StrA & name)
