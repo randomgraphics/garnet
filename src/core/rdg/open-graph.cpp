@@ -54,7 +54,7 @@ struct OpaqueBase {
     /// Stores the expected tag into the object instance.
     OpaqueBase(): tag(T::kTag) {}
 
-    ~OpaqueBase() {
+    virtual ~OpaqueBase() {
         // fill tag with garbage data.
         tag.ch0 = 0xb;
         tag.ch1 = 0xad;
@@ -118,10 +118,13 @@ struct Artifact final : OpaqueBase<Artifact> {
 
     /// Debug/display name for the artifact.
     const StrA name;
+
     /// Current version counter (increments on every publish).
     NeverOverflowingCounter m_version = NeverOverflowingCounter::OOO();
+
     /// Latest published content for this artifact.
     AutoRef<Entity> m_content;
+
     // Pending: wait until m_version (after a publish) >= targetVersion.
     /// A pending waiter for a specific target version.
     struct Pending {
@@ -130,6 +133,7 @@ struct Artifact final : OpaqueBase<Artifact> {
         /// Token to satisfy when the version threshold is met.
         Token * token;
     };
+
     /// Wait list of version-threshold requests that haven't been satisfied yet.
     std::list<Pending> m_pending;
 
@@ -151,17 +155,25 @@ struct Node final : OpaqueBase<Node> {
 
     /// Immutable description: action, arguments, dependencies and scheduling hints.
     NodeDesc desc;
+
     /// Number of unsatisfied dependency edges remaining.
     uint32_t unresolvedDependencies = 0;
+
+    /// Number of incomplete child nodes.
+    uint32_t incompleteChildren = 0;
+
+    /// Parent node (if this is a child); stored as a validated internal pointer.
+    Node * parent = nullptr;
+
     /// Current scheduling/execution lifecycle state.
-    enum class State : uint8_t { Blocked, Ready, Running, Completed } state = State::Blocked;
+    enum class State : uint8_t { Blocked, Ready, Running, FinishedAction, Completed } state = State::Blocked;
+
     // Lazily created; satisfied by satisfyNode / pump.
     /// Token satisfied when the node reaches Completed (created on demand).
     Token * m_completion = nullptr;
 
     /// Constructs a node from a description (moves/copies as needed).
     explicit Node(NodeDesc d): desc(std::move(d)) {}
-    ~Node() = default;
 };
 
 // ============================================================
@@ -302,17 +314,31 @@ void OpenGraphImpl::satisfyToken_(Token * t, std::unique_lock<std::mutex> & lock
     notifyAll_();
 }
 
-/// Completes a node that is currently running.
+/// Finalizes a node that has finished its own action, if possible.
+///
+/// A node becomes Completed iff:
+/// - its own action has finished (state == FinishedAction), and
+/// - all of its children are Completed (incompleteChildren == 0).
 ///
 /// Returns true if the node is now completed (already completed counts as true).
 bool OpenGraphImpl::tryCompleteNode_(Node * n, std::unique_lock<std::mutex> & lock) {
     (void) lock;
     if (!n) { return false; }
     if (n->state == Node::State::Completed) { return true; }
-    if (n->state != Node::State::Running) { return false; }
+    if (n->state != Node::State::FinishedAction) { return false; }
+    if (n->incompleteChildren != 0) { return false; }
     n->state = Node::State::Completed;
     if (m_nonTerminalNodes > 0) { --m_nonTerminalNodes; }
     if (n->m_completion) { satisfyToken_(n->m_completion, lock); }
+    if (n->parent) {
+        if (n->parent->incompleteChildren > 0) GN_LIKELY {
+                --n->parent->incompleteChildren;
+            }
+        if (0 == n->parent->incompleteChildren) {
+            // Parent may become completable now.
+            (void) tryCompleteNode_(n->parent, lock);
+        }
+    }
     return true;
 }
 
@@ -344,8 +370,9 @@ void OpenGraphImpl::pump_(std::unique_lock<std::mutex> & lock) {
         if (act && arg) { act->execute(*arg); }
         lock.lock();
         m_running = 0;
-        tryCompleteNode_(n, lock);
-        if (m_stopping) { break; }
+        // Mark the node's own work as finished; actual completion may be delayed by children.
+        if (n->state == Node::State::Running) { n->state = Node::State::FinishedAction; }
+        (void) tryCompleteNode_(n, lock);
     }
     notifyAll_();
 }
@@ -450,6 +477,8 @@ NodePtr OpenGraphImpl::addNode(const NodeDesc & desc) {
     std::unique_lock lock(m_mutex);
     auto *           n = new Node(desc);
     if (!n) { return nullptr; }
+    n->parent = Node::prompt(desc.parent);
+    if (n->parent) { ++n->parent->incompleteChildren; }
     (void) collectDeps(n, desc);
     (void) m_nodeRegistry.append(n);
     ++m_nonTerminalNodes;
@@ -468,7 +497,9 @@ void OpenGraphImpl::satisfyNode(NodePtr node) {
     std::unique_lock lock(m_mutex);
     if (m_stopping) { return; }
     if (n->state == Node::State::Completed) { return; }
-    if (n->state == Node::State::Running) { tryCompleteNode_(n, lock); }
+    // Treat this as "node's own action is finished". Completion still waits for children.
+    if (n->state == Node::State::Running) { n->state = Node::State::FinishedAction; }
+    (void) tryCompleteNode_(n, lock);
     if (m_running == 0) { pump_(lock); }
     notifyAll_();
 }
