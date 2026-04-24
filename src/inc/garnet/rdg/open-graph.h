@@ -14,6 +14,9 @@
 
 namespace GN::rdg2 {
 
+// import RuntimeType class into rdg2 namespace
+using GN::rdg::RuntimeType;
+
 // Unqualified RttiBaseTypeIds in GN_RDG_REGISTER_RUNTIME_TYPE (see rtti.h) must resolve in this namespace.
 using GN::rdg::RttiBaseTypeIds;
 
@@ -83,7 +86,7 @@ struct NeverOverflowingCounter {
 
 /// The basic building block of the render graph module. Base class of everything that
 /// needs reference counting and runtime type information.
-struct Entity : public RefCounter, public GN::rdg::RuntimeType {
+struct Entity : public RefCounter, public RuntimeType {
     GN_API GN_RDG_REGISTER_RUNTIME_TYPE();
 
     /// ID of the entity. Guaranteed to be unique within the process.
@@ -96,7 +99,7 @@ struct Entity : public RefCounter, public GN::rdg::RuntimeType {
 
 protected:
     /// Constructor
-    GN_API Entity(const GN::rdg::RuntimeType::TypeInfo & type, const StrA & name);
+    GN_API Entity(const RuntimeType::TypeInfo & type, const StrA & name);
 };
 
 // ============================================================
