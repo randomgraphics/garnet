@@ -3,7 +3,7 @@
 /// Internal gpu2 header — not part of the public API surface.
 #include <garnet/GNgpu2.h>
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 /// Internal command buffer abstraction. Not part of the public API.
 /// Public callers use GpuContext::submit() + GpuPayload instead.
@@ -44,4 +44,4 @@ protected:
     AutoRef<GpuContext> mGpu;
 };
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

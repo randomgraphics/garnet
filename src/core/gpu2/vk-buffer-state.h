@@ -2,7 +2,7 @@
 
 #include "vk-gpu-context.h"
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 /// Tracks the Vulkan access state of an entire buffer. No offset/size: the whole buffer
 /// is assumed to be in a uniform access state at all times. Queue family ownership is
@@ -17,4 +17,4 @@ struct BufferStateVulkan {
     static constexpr BufferStateVulkan UNDEFINED() { return {vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eTopOfPipe}; }
 };
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

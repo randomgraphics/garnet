@@ -5,7 +5,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 namespace {
 
@@ -126,6 +126,6 @@ AutoRef<GpuCommandBuffer> createGpuCommandBufferVulkan2(const GpuCommandBuffer::
     return AutoRef<GpuCommandBuffer>(new GpuCommandBufferVulkan2(n, vk));
 }
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2
 
 #endif // 0

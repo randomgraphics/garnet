@@ -24,7 +24,7 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
     rt.addColorTarget(view).setClearColor(0.0f, 0.0f, 1.0f);
     auto raster = GpuRaster::create({.gpu = gpu, .renderTarget = rt});
     REQUIRE(raster);
-    GpuPayload * rasterPayload = raster->seal();
+    AutoRef<GpuPayload> rasterPayload = raster->seal();
 
     // Submit and block on CPU until the GPU fence fires.
     std::atomic<bool> done = false;

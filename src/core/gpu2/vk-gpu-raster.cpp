@@ -66,7 +66,8 @@ struct PostSubmitTextureFlush {
 
 class GpuRasterPayloadVulkan final : public GpuPayloadVulkan {
 public:
-    GpuRasterPayloadVulkan(RenderTarget rt, ArrayContainer<StoredDraw> draws): mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {
+    GpuRasterPayloadVulkan(const StrA & name, RenderTarget rt, ArrayContainer<StoredDraw> draws)
+        : GpuPayloadVulkan(name), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {
         if (!mRenderTarget.colors.empty()) {
             const GpuResourceView & cv = mRenderTarget.colors[0].target;
             if (cv.isTexture() && cv.texture()) {
@@ -276,13 +277,13 @@ public:
         mDraws.append(std::move(s));
     }
 
-    GpuPayload * seal() override {
+    AutoRef<GpuPayload> seal() override {
         if (mSealed) {
             GN_ERROR(sLogger)("GpuRasterVulkan2::seal: double seal");
-            return nullptr;
+            return {};
         }
         mSealed = true;
-        return new GpuRasterPayloadVulkan(std::move(mRenderTarget), std::move(mDraws));
+        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", std::move(mRenderTarget), std::move(mDraws)));
     }
 
 private:

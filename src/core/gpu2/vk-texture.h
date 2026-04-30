@@ -8,7 +8,7 @@ namespace GN::gpu2::rv {
 class Image;
 }
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 /// Shared Vulkan texture logic for owned images and swapchain-backed backbuffers.
 class TextureVulkanBase : public Texture {
@@ -41,4 +41,4 @@ private:
 AutoRef<Texture> createTextureVulkan2(const StrA & name, const Texture::CreateParameters & params);
 AutoRef<Texture> loadTextureVulkan2(const Texture::LoadParameters & params);
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

@@ -44,8 +44,8 @@ struct Swapchain : RootEntity {
     static GN_API AutoRef<Swapchain> create(const CreateDesc &);
 
     struct Frame {
-        GpuResourceView view;  ///< Render into this. Empty on failure.
-        GpuPayload *    ready; ///< Pass to GpuContext::submit waitForGpu before writing to view.
+        GpuResourceView     view;  ///< Render into this. Empty on failure.
+        AutoRef<GpuPayload> ready; ///< Waited by other GPU work to ensure the frame is ready to be drawn to (finished presenting of previous frame).
     };
 
     /// Acquire the next swapchain image. Returns an empty Frame on failure.

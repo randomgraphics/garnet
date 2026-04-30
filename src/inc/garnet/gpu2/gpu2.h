@@ -6,11 +6,16 @@
 
 namespace GN::gpu2 {
 
-/// Opaque payload representing recorded GPU work.
-/// Produced by GpuRaster::seal() and Swapchain::prepare().
-/// Internally carries a fence and semaphore so it can be waited on by CPU (onComplete
-/// callback) or GPU (GpuContext::submit waitForGpu, Swapchain::present).
-struct GpuPayload;
+// -----------------------------
+// Array container and proxy
+// -----------------------------
+//
+// Keep these local to gpu2 to avoid forcing rdg2 public headers into all gpu2 users.
+template<typename T>
+using ArrayContainer = DynaArray<T, size_t>;
+
+template<typename T>
+using ArrayProxy = SafeArrayAccessor<T>;
 
 // -----------------------------
 // Base entity
@@ -26,10 +31,25 @@ struct RootEntity : public RefCounter, public RuntimeType {
     /// Human-readable name. Optional; no uniqueness requirement.
     const StrA name;
 
-    virtual ~RootEntity() = default;
+    virtual ~RootEntity() {
+        static auto * logger = GN::getLogger("GN.gpu2");
+        GN_VVTRACE(logger)("Destroying entity, name='{}', type = {}, id={}", name, typeInfo().name, id);
+    }
 
 protected:
     GN_API RootEntity(const RuntimeType::TypeInfo & type, const StrA & name);
+};
+
+// -----------------------------
+// GpuPayload
+// -----------------------------
+
+/// API-neutral base class for a GPU payload. Represents a self-contained unit of GPU work load that is ready to record and submit to the GPU.
+struct GpuPayload : public RootEntity {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+
+protected:
+    using RootEntity::RootEntity;
 };
 
 // -----------------------------
@@ -83,19 +103,19 @@ struct GpuContext : public RootEntity {
     // --------------------------------------------------------
 
     struct SubmitParameters {
-        StrA                         name;
-        Queue                        queue = Queue::GRAPHICS; ///< Target queue tier for this submission.
-        ArrayContainer<GpuPayload *> work;                    ///< Sealed GPU payloads to execute.
-        ArrayContainer<GpuPayload *> waitForGpu; ///< GPU-side dependencies. Backend inserts semaphore (cross-queue) or barrier (same-queue) as needed.
-        std::function<void()>        onComplete; ///< CPU callback fired (from any thread) when the GPU fence signals.
+        StrA                                name;
+        Queue                               queue = Queue::GRAPHICS; ///< Target queue tier for this submission.
+        ArrayContainer<AutoRef<GpuPayload>> work;                    ///< Sealed GPU payloads to execute.
+        ArrayContainer<AutoRef<GpuPayload>> waitForGpu; ///< GPU-side dependencies. Backend inserts semaphore (cross-queue) or barrier (same-queue) as needed.
+        std::function<void()>               onComplete; ///< CPU callback fired (from any thread) when the GPU fence signals.
 
         SubmitParameters(const StrA & name_): name(name_) {}
 
-        SubmitParameters & appendWork(GpuPayload * w) {
+        SubmitParameters & appendWork(AutoRef<GpuPayload> w) {
             if (w) work.append(w);
             return *this;
         }
-        SubmitParameters & waitFor(GpuPayload * w) {
+        SubmitParameters & waitFor(AutoRef<GpuPayload> w) {
             if (w) waitForGpu.append(w);
             return *this;
         }

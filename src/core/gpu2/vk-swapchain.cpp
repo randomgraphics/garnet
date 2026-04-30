@@ -46,7 +46,8 @@ public:
         gpuStates.reset(0, 0);
     }
 
-    GpuPayloadVulkan readyPayload; ///< stable per-backbuffer payload; returned as frame.ready from prepare()
+    /// stable per-backbuffer payload; returned as frame.ready from prepare()
+    AutoRef<GpuPayloadVulkan> readyPayload = AutoRef<GpuPayloadVulkan>::make(name + "/ready");
 
 private:
     const rv::Image * vulkanSourceImageForReadback() const override { return mImage; }
@@ -158,7 +159,7 @@ Swapchain::Frame SwapchainVulkan2::prepare() {
     if (mActiveFrame.valid()) {
         GN_VERBOSE(sLogger)("SwapchainVulkan2::prepare: already prepared; redundant call ignored, name='{}'", name);
         GN_ASSERT(mActiveBackbufferTexture);
-        return Swapchain::Frame {makeFrameColorView(), &mActiveBackbufferTexture->readyPayload};
+        return Swapchain::Frame {makeFrameColorView(), mActiveBackbufferTexture->readyPayload};
     }
 
     mActiveFrame = mRvSwapchain->beginFrame();
@@ -181,10 +182,10 @@ Swapchain::Frame SwapchainVulkan2::prepare() {
     it->second->bindToSwapchainBackbuffer(
         bb.image, bb.view, w, h,
         mSurfaceFormat); // this will reset the texture's GPU state to UNDEFINED, which matches the swapchain image state after acquire and before any rendering
-    mActiveBackbufferTexture                         = it->second.get();
-    mActiveBackbufferTexture->readyPayload.semaphore = mActiveFrame.imageAvailable;
+    mActiveBackbufferTexture                          = it->second.get();
+    mActiveBackbufferTexture->readyPayload->semaphore = mActiveFrame.imageAvailable;
 
-    return Swapchain::Frame {makeFrameColorView(), &mActiveBackbufferTexture->readyPayload};
+    return Swapchain::Frame {makeFrameColorView(), mActiveBackbufferTexture->readyPayload};
 }
 
 void SwapchainVulkan2::present(GpuPayload & waitFor) {

@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2");
 // -----------------------------------------------------------------------
 // Factories for gpu2 types (GpuShader, Texture)
 // -----------------------------------------------------------------------
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 AutoRef<GpuShader> GpuShader::create(const CreateParameters & params) {
     if (!params.context) {
@@ -84,7 +84,7 @@ AutoRef<Texture> Texture::load(const LoadParameters & params) {
     }
 }
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2
 
 // -----------------------------------------------------------------------
 // Factory for GpuRaster (still an rdg2 type defined in raster.h)
@@ -96,16 +96,16 @@ AutoRef<GpuRaster> GpuRaster::create(const CreateParameters & params) {
         GN_ERROR(sLogger)("GpuRaster::create: GpuContext is null");
         return {};
     }
-    AutoRef<GN::gfx::gpu2::GpuContextCommon2> common = params.gpu.staticCastTo<GN::gfx::gpu2::GpuContextCommon2>();
+    AutoRef<GN::gpu2::GpuContextCommon2> common = params.gpu.staticCastTo<GN::gpu2::GpuContextCommon2>();
     if (!common) {
         GN_ERROR(sLogger)("GpuRaster::create: GpuContext is not GpuContextCommon2");
         return {};
     }
     switch (common->api()) {
-    case GN::gfx::gpu2::GpuContextCommon2::Api::VULKAN:
+    case GN::gpu2::GpuContextCommon2::Api::VULKAN:
         return createGpuRasterVulkan2(params);
-    case GN::gfx::gpu2::GpuContextCommon2::Api::D3D12:
-    case GN::gfx::gpu2::GpuContextCommon2::Api::METAL:
+    case GN::gpu2::GpuContextCommon2::Api::D3D12:
+    case GN::gpu2::GpuContextCommon2::Api::METAL:
         GN_ERROR(sLogger)("GpuRaster::create: backend not implemented");
         return {};
     default:

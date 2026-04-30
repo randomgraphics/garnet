@@ -7,7 +7,7 @@ namespace GN::gpu2::rv {
 class Shader;
 }
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 class GpuShaderVulkan;
 
@@ -29,4 +29,4 @@ private:
 
 AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & params);
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

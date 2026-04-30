@@ -1,7 +1,7 @@
 #include "vk-swapchain.h"
 #include "gpu-context.h"
 
-using GN::gfx::gpu2::GpuContextCommon2;
+using GN::gpu2::GpuContextCommon2;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2");
 

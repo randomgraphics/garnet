@@ -4,7 +4,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2");
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 // =============================================================================
 // RootEntity constructor
@@ -51,4 +51,4 @@ GN_API AutoRef<GpuContext> GpuContext::create(const StrA & name, const CreatePar
     }
 }
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

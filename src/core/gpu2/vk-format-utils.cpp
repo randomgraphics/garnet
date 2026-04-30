@@ -1,7 +1,7 @@
 #include "vk-format-utils.h"
 #include <unordered_map>
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 namespace {
 
@@ -345,4 +345,4 @@ vk::Format vertexAttributeFormatToVk(RenderGeometry::AttributeFormat f) {
         return vk::Format::eR32G32B32Sfloat;
     }
 }
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

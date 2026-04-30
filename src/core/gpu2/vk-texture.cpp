@@ -8,7 +8,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 namespace {
 
@@ -283,4 +283,4 @@ AutoRef<Texture> loadTextureVulkan2(const Texture::LoadParameters & params) {
     return AutoRef<Texture>(p);
 }
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

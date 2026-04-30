@@ -3,7 +3,7 @@
 #include <garnet/GNgpu2.h>
 #include <mutex>
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 /// Common base for API-specific \c GpuContext implementations (Vulkan, D3D12, Metal).
 class GpuContextCommon2 : public GpuContext {
@@ -23,4 +23,4 @@ protected:
     GpuContextCommon2(const StrA & name, Api api): GpuContext(GpuContextCommon2::TYPE_INFO(), name), mApi(api) {}
 };
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

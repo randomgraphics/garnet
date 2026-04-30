@@ -1,6 +1,7 @@
 #pragma once
 
-#include "gpu-payload.h"
+#include <garnet/GNgpu2.h>
+
 #include "vk-buffer-state.h"
 #include "vk-gpu-image-state.h"
 #include "vk-texture.h"
@@ -8,10 +9,13 @@
 #include <optional>
 #include <unordered_map>
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 /// Vulkan-specific GPU payload.
 struct GpuPayloadVulkan : GpuPayload {
+    GN_REGISTER_RUNTIME_TYPE(GpuPayload);
+
+    explicit GpuPayloadVulkan(const StrA & name): GpuPayload(TYPE_INFO(), name) {}
 
     /// One texture referenced by the payload.
     /// Carries the full per-subresource image state at the start of the payload's work,
@@ -44,4 +48,4 @@ struct GpuPayloadVulkan : GpuPayload {
     virtual void onSubmitComplete() {}
 };
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

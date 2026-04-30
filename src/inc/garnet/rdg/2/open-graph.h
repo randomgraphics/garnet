@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <any>
 
 namespace GN::rdg2 {
 
@@ -278,25 +279,28 @@ public:
     virtual ArtifactPtr createArtifact(const StrA & name = StrA::EMPTYSTR()) = 0;
 
     /// Publish new content for an artifact, increase artifact version number by 1.
-    virtual void publishArtifact(ArtifactPtr artifact, AutoRef<Entity> content) = 0;
+    virtual void publishArtifact(ArtifactPtr artifact, std::any && content) = 0;
 
-    /// Get the latest published content of an artifact.
+    /// Get an copy of the latest published content of an artifact.
     /// \param artifact The artifact to get the content of.
     /// \return The latest published content of the artifact. Or nullptr if no content is published yet.
-    virtual AutoRef<Entity> getArtifactContent(ArtifactPtr artifact) = 0;
+    virtual std::any getArtifactContent(ArtifactPtr artifact) = 0;
 
     template<typename T>
-    AutoRef<T> getTypedArtifactContent(ArtifactPtr artifact) {
+    T getTypedArtifactContent(ArtifactPtr artifact) {
         auto e = getArtifactContent(artifact);
-        if (!e) return {};
-        // Use Entity* overload so we do not match cast(AutoRef&) to the wrong template.
-        T * p = RuntimeType::cast<T>(e.get());
-        if (!p) GN_UNLIKELY {
-                static auto *                 logger = GN::getLogger("GN.rdg2");
-                const RuntimeType::TypeInfo & ti     = T::TYPE_INFO();
-                GN_ERROR(logger)("getTypedArtifactContent: artifact content is not of type %.*s", (int) ti.name.size(), ti.name.data());
-            }
-        return p ? GN::referenceTo(p) : AutoRef<T> {};
+        if (!e.has_value()) {
+            static auto * logger = GN::getLogger("GN.rdg2");
+            GN_ERROR(logger)("getTypedArtifactContent: artifact content is empty");
+            return {};
+        };
+        try {
+            return std::any_cast<T>(e);
+        } catch (const std::bad_any_cast & e) {
+            static auto * logger = GN::getLogger("GN.rdg2");
+            GN_ERROR(logger)("getTypedArtifactContent: artifact content is not of type %s", e.what());
+            return {};
+        }
     }
 
     // --------------------------------------------------------

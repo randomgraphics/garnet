@@ -17,7 +17,7 @@
         #define VK_USE_PLATFORM_WIN32_KHR 1
         #define NOMINMAX
     #endif
-    #define RAPID_VULKAN_NAMESPACE          GN::gfx::gpu2::rv
+    #define RAPID_VULKAN_NAMESPACE          GN::gpu2::rv
     #define RAPID_VULKAN_ENABLE_DEBUG_BUILD GN_BUILD_DEBUG_ENABLED
     #define RAPID_VULKAN_LOG(severity, prefix, message)                                                                                          \
         do {                                                                                                                                     \
@@ -43,7 +43,7 @@
         "vk-gpu-context.h included after another TU already included rapid-vulkan; this may cause ODR violations. Please include vk-gpu-context.h before any other TU that may include rapid-vulkan."
 #endif // !RAPID_VULKAN_H_
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 /// Vulkan-backed \c GpuContext (rapid-vulkan Instance + Device). Mirrors v1 \c GpuContextVulkan.
 class GpuContextVulkan2 : public GpuContextCommon2 {
@@ -65,10 +65,13 @@ public:
     GpuContext::Caps caps() const override;
     intptr_t         getVulkanInstanceHandle() const override;
     void             submit(const SubmitParameters &) override;
-    void             pump() override;
+    void             pump() override { pumpInternal(false); }
+
+private:
+    void pumpInternal(bool waitForIdle);
 };
 
 /// Create a Vulkan-backed rdg2 \c GpuContext. Used from \c GpuContext::create when API is "vulkan".
 AutoRef<GpuContext> createVulkanGpuContext2(const StrA & name, const GpuContext::CreateParameters & params);
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

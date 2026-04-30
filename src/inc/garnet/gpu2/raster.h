@@ -352,7 +352,7 @@ public:
 
     /// Finalize the render pass. Returns a GpuPayload* to pass to GpuContext::submit().
     /// After this call this GpuRaster object becomes unusable.
-    virtual GpuPayload * seal() = 0;
+    virtual AutoRef<GpuPayload> seal() = 0;
 
 protected:
     using RootEntity::RootEntity;

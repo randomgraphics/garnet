@@ -3,7 +3,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 void TextureGpuImageState::reset(uint32_t mipLevels, uint32_t arrayLayers, const ImageState & initialState) {
     if (mipLevels == 0 || arrayLayers == 0) {
@@ -51,4 +51,4 @@ bool TextureGpuImageState::set(const GpuResourceView::SubresourceRange & range, 
     return anyChange;
 }
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

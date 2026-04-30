@@ -8,7 +8,7 @@
 
     #include <vector>
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 // Vulkan backend completes the opaque nested types from \c gpu.h (single definition for all rdg2 Vulkan TUs).
 struct GpuCommandBuffer::Payload {
@@ -55,6 +55,6 @@ private:
 
 AutoRef<GpuCommandBuffer> createGpuCommandBufferVulkan2(const GpuCommandBuffer::CreateParameters & params);
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2
 
 #endif // 0

@@ -76,8 +76,8 @@ int main(int argc, const char ** argv) {
         // seal() is called immediately so it acts as a clear-only pass.
         RenderTarget rt;
         rt.addColorTarget(frame.view).setClearColor(0.0f, 0.0f, 1.0f);
-        auto         raster        = GpuRaster::create({.gpu = gpu, .renderTarget = rt});
-        GpuPayload * rasterPayload = raster->seal();
+        auto                raster        = GpuRaster::create({.gpu = gpu, .renderTarget = rt});
+        AutoRef<GpuPayload> rasterPayload = raster->seal();
 
         // Submit the clear pass, gated on frame.ready so we don't write before the image is acquired.
         gpu->submit(GpuContext::SubmitParameters("frame").appendWork(rasterPayload).waitFor(frame.ready));

@@ -4,7 +4,7 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 static StrA shaderEntityName(const GpuShader::CreateParameters & p) { return p.name.empty() ? StrA("gpu_shader") : p.name; }
 
@@ -61,4 +61,4 @@ AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & p)
     return AutoRef<GpuShader>(new GpuShaderVulkan(shaderEntityName(p), std::move(sh)));
 }
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

@@ -89,10 +89,10 @@ int main(int argc, const char ** argv) {
         if (frame.view.empty()) return -1;
 
         // Record the color pass inside a graph node so shader artifacts are ready.
-        GpuPayload * colorPassWork   = nullptr;
-        auto         colorPassAction = [&]() {
-            auto vs = graph->getTypedArtifactContent<GpuShader>(solidVs);
-            auto ps = graph->getTypedArtifactContent<GpuShader>(solidPs);
+        AutoRef<GpuPayload> colorPassWork;
+        auto                colorPassAction = [&]() {
+            auto vs = graph->getTypedArtifactContent<AutoRef<GpuShader>>(solidVs);
+            auto ps = graph->getTypedArtifactContent<AutoRef<GpuShader>>(solidPs);
             if (!vs || !ps) return;
 
             GpuRaster::CreateParameters rcp;
@@ -121,6 +121,8 @@ int main(int argc, const char ** argv) {
         // Present after the color pass payload completes on GPU.
         swapchain->present(*colorPassWork);
     }
+
+    graph->waitForIdle();
 
     return 0;
 }

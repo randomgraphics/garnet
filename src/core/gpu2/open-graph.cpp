@@ -127,7 +127,7 @@ struct Artifact final : OpaqueBase<Artifact> {
     NeverOverflowingCounter version = NeverOverflowingCounter::OOO();
 
     /// Latest published content for this artifact.
-    AutoRef<Entity> content;
+    std::any content;
 
     // Pending: wait until version (after a publish) >= targetVersion.
     /// A pending waiter for a specific target version.
@@ -213,7 +213,7 @@ public:
     /// Creates a new artifact instance tracked by this graph.
     ArtifactPtr createArtifact(const StrA & name) override;
     /// Publishes new content, increments version, and satisfies any pending version waiters.
-    void publishArtifact(ArtifactPtr artifact, AutoRef<Entity> content) override;
+    void publishArtifact(ArtifactPtr artifact, std::any && content) override;
 
     /// Adds a node, collects dependency edges, and enqueues it if ready.
     NodePtr addNode(const NodeDesc & desc) override;
@@ -227,10 +227,10 @@ public:
     /// If `version` is OOO(), it represents "next publish" relative to the current version.
     TokenPtr getArtifactVersionToken(ArtifactPtr artifact, NeverOverflowingCounter version) override;
 
-    /// Get the latest published content of an artifact.
+    /// Get an copy of the latest published content of an artifact.
     /// \param artifact The artifact to get the content of.
     /// \return The latest published content of the artifact. Or nullptr if no content is published yet.
-    AutoRef<Entity> getArtifactContent(ArtifactPtr artifact) override;
+    std::any getArtifactContent(ArtifactPtr artifact) override;
 
 private:
     /// Wakes all waiters on the graph condition variable.
@@ -447,9 +447,19 @@ ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) {
 }
 
 /// Publishes new artifact content, bumps the version, and satisfies pending version tokens.
-void OpenGraphImpl::publishArtifact(ArtifactPtr ap, AutoRef<Entity> content) {
+void OpenGraphImpl::publishArtifact(ArtifactPtr ap, std::any && content) {
     auto * a = GN::rdg2::Artifact::prompt(ap);
-    if (!a) { return; }
+    if (!a) GN_UNLIKELY {
+            GN_ERROR(GN::getLogger("GN.rdg2"))("publishArtifact: artifact is null");
+            return;
+        }
+
+    // make sure the content has data in it.
+    if (!content.has_value()) GN_UNLIKELY {
+            GN_ERROR(GN::getLogger("GN.rdg2"))("publishArtifact: content is empty");
+            return;
+        }
+
     std::unique_lock lock(mMutex);
     a->version.increment();
     a->content = std::move(content);
@@ -557,7 +567,7 @@ TokenPtr OpenGraphImpl::getArtifactVersionToken(ArtifactPtr ap, NeverOverflowing
 }
 
 /// Get the latest published content of an artifact.
-AutoRef<Entity> OpenGraphImpl::getArtifactContent(ArtifactPtr ap) {
+std::any OpenGraphImpl::getArtifactContent(ArtifactPtr ap) {
     auto * a = Artifact::prompt(ap);
     if (!a) { return nullptr; }
     std::unique_lock lock(mMutex);

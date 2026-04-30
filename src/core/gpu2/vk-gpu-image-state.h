@@ -3,7 +3,7 @@
 #include <garnet/GNgpu2.h>
 #include "vk-gpu-context.h"
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 /// Tracks the latest known Vulkan image state per subresource (mip × array layer).
 struct TextureGpuImageState {
@@ -44,4 +44,4 @@ private:
     DynaArray<ImageState> mSubresourceStates;
 };
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2

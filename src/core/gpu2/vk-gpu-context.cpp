@@ -11,7 +11,7 @@
 
 static GN::Logger * sLoggerVk = GN::getLogger("GN.gfx.gpu2.vk");
 
-namespace GN::gfx::gpu2 {
+namespace GN::gpu2 {
 
 // =============================================================================
 // Validation / verbosity (duplicated from vk-gpu-context.cpp; v2 uses enum class)
@@ -55,9 +55,10 @@ struct GpuContextVulkan2::Impl {
     GpuContext::Caps            mCaps;
 
     struct PendingSubmission {
-        StrA                  name;
-        vk::UniqueFence       fence;
-        std::function<void()> onComplete;
+        StrA                                   name;
+        vk::UniqueFence                        fence;
+        std::function<void()>                  onComplete;
+        std::vector<AutoRef<GpuPayloadVulkan>> works;
     };
     std::mutex                     mPendingMutex;
     std::vector<PendingSubmission> mPending;
@@ -97,7 +98,11 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     }
 }
 
-GpuContextVulkan2::~GpuContextVulkan2() { GN_INFO(sLoggerVk)("Destroying rdg2 Vulkan GPU context, name='{}'", name); }
+GpuContextVulkan2::~GpuContextVulkan2() {
+    GN_INFO(sLoggerVk)("Wait for GPU idle ...");
+    pumpInternal(true);
+    GN_INFO(sLoggerVk)("Destroying Vulkan GPU context");
+}
 
 GpuContext::Caps GpuContextVulkan2::caps() const {
     if (!mImpl) return {};
@@ -140,13 +145,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
             return;
         }
 
-    // collect semaphores to wait for from dependencies
-    std::vector<vk::Semaphore> waitSems;
-    for (size_t i = 0; i < sp.waitForGpu.size(); ++i) {
-        auto * p = static_cast<GpuPayloadVulkan *>(sp.waitForGpu[i]);
-        if (p && p->semaphore) waitSems.push_back(p->semaphore);
-    }
-
+    // construct a record context.
     GpuPayloadVulkan::RecordContext recordCtx;
     recordCtx.dev   = dev;
     recordCtx.queue = queue;
@@ -156,12 +155,19 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         return;
     }
 
-    std::vector<vk::Semaphore> signalSems;
-    for (size_t i = 0; i < sp.work.size(); ++i) {
-        auto * p = static_cast<GpuPayloadVulkan *>(sp.work[i]);
-        if (!p) GN_UNLIKELY continue;
-        p->recordForVulkanSubmit(recordCtx);
-        if (p->semaphore) signalSems.push_back(p->semaphore);
+    // collect semaphores to wait for from dependencies
+    std::vector<vk::Semaphore>             waitSems;
+    std::vector<vk::Semaphore>             signalSems;
+    std::vector<AutoRef<GpuPayloadVulkan>> works;
+    for (size_t i = 0; i < sp.waitForGpu.size(); ++i) {
+        auto w = RuntimeType::cast<GpuPayloadVulkan>(sp.waitForGpu[i]);
+        if (w && w->semaphore) waitSems.push_back(w->semaphore);
+        auto s = RuntimeType::cast<GpuPayloadVulkan>(sp.work[i]);
+        if (s) {
+            works.push_back(s);
+            s->recordForVulkanSubmit(recordCtx);
+            if (s->semaphore) signalSems.push_back(s->semaphore);
+        }
     }
 
     rv::CommandQueue::SubmitParameters qsp;
@@ -174,13 +180,13 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         qsp.signalFence       = fence.get();
         queue->submit(qsp);
         std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
-        mImpl->mPending.push_back({sp.name, std::move(fence), sp.onComplete});
+        mImpl->mPending.push_back({sp.name, std::move(fence), sp.onComplete, std::move(works)});
     } else {
         queue->submit(qsp);
     }
 }
 
-void GpuContextVulkan2::pump() {
+void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
     if (!mImpl || !mImpl->mDevice || !mImpl->mDevice->handle()) return;
     vk::Device device = mImpl->mDevice->gi()->device;
 
@@ -190,7 +196,14 @@ void GpuContextVulkan2::pump() {
         std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
         auto                        it = mImpl->mPending.begin();
         while (it != mImpl->mPending.end()) {
-            if (device.getFenceStatus(it->fence.get()) == vk::Result::eSuccess) {
+            bool fenceReady = false;
+            if (waitForIdle) {
+                (void) device.waitForFences({it->fence.get()}, true, std::numeric_limits<uint64_t>::max());
+                fenceReady = true;
+            } else {
+                fenceReady = device.getFenceStatus(it->fence.get()) == vk::Result::eSuccess;
+            }
+            if (fenceReady) {
                 readyCallbacks.push_back({std::move(it->name), std::move(it->onComplete)});
                 it = mImpl->mPending.erase(it);
             } else {
@@ -198,6 +211,7 @@ void GpuContextVulkan2::pump() {
             }
         }
     }
+    GN_ASSERT(!waitForIdle || mImpl->mPending.empty());
     for (auto & cb : readyCallbacks) {
         try {
             cb.second();
@@ -217,4 +231,4 @@ AutoRef<GpuContext> createVulkanGpuContext2(const StrA & name, const GpuContext:
     return AutoRef<GpuContext>(p.release());
 }
 
-} // namespace GN::gfx::gpu2
+} // namespace GN::gpu2
