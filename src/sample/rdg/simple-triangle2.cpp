@@ -23,10 +23,6 @@ int main(int argc, const char ** argv) {
     auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
 
-    // Create the open graph
-    auto graph = Graph::create();
-    if (!graph) return -1;
-
     // Create a main window and surface of 1280x720
     uint32_t                     windowWidth  = 1280;
     uint32_t                     windowHeight = 720;
@@ -43,10 +39,15 @@ int main(int argc, const char ** argv) {
         if (!surface) return -1;
     }
 
+    // Create the open graph
+    auto graph = Graph::create();
+    if (!graph) return -1;
+
     // Artifacts for vertex and pixel shaders (SPIR-V blobs via GpuShader::create).
     ArtifactPtr solidVs = graph->createArtifact("solid triangle VS");
     ArtifactPtr solidPs = graph->createArtifact("solid triangle PS");
 
+    // add node to create shaders.
     if (!graph->addNode(
             NodeDesc("create solid triangle shaders")
                 .setAction(

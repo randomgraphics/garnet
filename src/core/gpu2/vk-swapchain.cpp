@@ -233,7 +233,9 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
         backbufferTex->gpuStates.set(swapchainBackbufferSubresourceRange(), {bs.layout, bs.access, bs.stages});
     }
 
-    clearAcquiredFrameBindings();
+    // clear active frame
+    mActiveBackbufferTexture = nullptr;
+    mActiveFrame             = {};
 }
 
 AutoRef<Swapchain> createSwapchainVulkan2(const Swapchain::CreateDesc & desc) {
