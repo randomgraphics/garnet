@@ -226,22 +226,71 @@ protected:
 struct Buffer : public RootEntity {
     GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
 
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        uint64_t            size = 0; ///< Size in bytes. Must be greater than 0.
+
+        /// Set to true, if you need an CPU mappable buffer.
+        /// CPU mappable buffer is slower for GPU to access. It is mostly used to store short-lived data that is read or write only once by GPU.
+        bool mappable = false;
+    };
+
+    struct Mapped : NoCopy {
+        Mapped(TransientBuffer & buffer_, void * data_, size_t size_): mBuffer(&buffer_), mData(data_), mSize(size_) {}
+
+        ~Mapped() { unmap(); }
+
+        Mapped(Mapped && other) {
+            mBuffer     = std::move(other.mBuffer);
+            mData       = other.mData;
+            mSize       = other.mSize;
+            other.mData = nullptr;
+            other.mSize = 0;
+            GN_ASSERT(!other.mBuffer);
+        }
+
+        Mapped & operator=(Mapped && other) {
+            if (this == &other) GN_UNLIKELY return *this;
+            mBuffer     = std::move(other.mBuffer);
+            mData       = other.mData;
+            mSize       = other.mSize;
+            other.mData = nullptr;
+            other.mSize = 0;
+            GN_ASSERT(!other.mBuffer);
+            return *this;
+        }
+
+        void unmap() {
+            mData = nullptr;
+            mSize = 0;
+            if (mBuffer) {
+                mBuffer->unmap(*this);
+                mBuffer = {};
+            }
+        }
+
+        bool empty() const { return mBuffer.empty(); }
+
+        void * data() const { return mData; }
+
+        size_t size() const { return mSize; }
+
+    private:
+        AutoRef<Buffer> mBuffer = {};
+        void *          mData   = nullptr;
+        size_t          mSize   = 0;
+    };
+
+    /// Returns the data accessor of a transient buffer that can be directly written to.
+    /// Trying to map a un-mappable, or already mapped, buffer returns an empty Mapped object.
+    virtual Mapped map() = 0;
+
+    static GN_API AutoRef<Buffer> create(const StrA & name, const CreateParameters & params);
+
 protected:
+    virtual void unmap(const Mapped &) = 0;
+
     using RootEntity::RootEntity;
-};
-
-struct TransientBuffer : public Buffer {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Buffer);
-
-protected:
-    using Buffer::Buffer;
-};
-
-struct PersistentBuffer : public Buffer {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Buffer);
-
-protected:
-    using Buffer::Buffer;
 };
 
 // -----------------------------
@@ -296,8 +345,6 @@ struct GpuResourceView {
     bool empty() const { return resource.empty(); }
     bool isTexture() const { return resource && resource->isKindOf<Texture>(); }
     bool isSampler() const { return resource && resource->isKindOf<Sampler>(); }
-    bool isTransientBuffer() const { return resource && resource->isKindOf<TransientBuffer>(); }
-    bool isPersistentBuffer() const { return resource && resource->isKindOf<PersistentBuffer>(); }
     bool isBuffer() const { return resource && resource->isKindOf<Buffer>(); }
 
     auto texture() const -> AutoRef<Texture> {
@@ -307,14 +354,6 @@ struct GpuResourceView {
     auto sampler() const -> AutoRef<Sampler> {
         auto p = RuntimeType::cast<Sampler>(resource.get());
         return p ? GN::referenceTo(p) : AutoRef<Sampler>();
-    }
-    auto transientBuffer() const -> AutoRef<TransientBuffer> {
-        auto p = RuntimeType::cast<TransientBuffer>(resource.get());
-        return p ? GN::referenceTo(p) : AutoRef<TransientBuffer>();
-    }
-    auto persistentBuffer() const -> AutoRef<PersistentBuffer> {
-        auto p = RuntimeType::cast<PersistentBuffer>(resource.get());
-        return p ? GN::referenceTo(p) : AutoRef<PersistentBuffer>();
     }
     auto buffer() const -> AutoRef<Buffer> {
         auto p = RuntimeType::cast<Buffer>(resource.get());
