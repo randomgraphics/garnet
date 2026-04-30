@@ -19,13 +19,13 @@ int main(int argc, const char ** argv) {
 
     enableCRTMemoryCheck();
 
-    // Create the open graph
-    auto graph = Graph::create();
-    if (!graph) return -1;
-
     // Create GPU context
     auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
+
+    // Create the open graph
+    auto graph = Graph::create();
+    if (!graph) return -1;
 
     // Create a main window and surface of 1280x720
     uint32_t                     windowWidth  = 1280;
@@ -121,8 +121,6 @@ int main(int argc, const char ** argv) {
         // Present after the color pass payload completes on GPU.
         swapchain->present(*colorPassWork);
     }
-
-    graph->waitForIdle();
 
     return 0;
 }
