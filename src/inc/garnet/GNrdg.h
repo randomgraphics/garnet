@@ -23,16 +23,16 @@
 namespace GN::rdg {};
 
 // Level 1: pure dependency graph (no GPU semantics).
-#include "rdg/dependency-graph.h"
+#include "rdg/1/dependency-graph.h"
 
 // Level 2: GPU render graph IR — thin, API-agnostic GPU resource and action types.
-#include "rdg/artifacts.h"
-#include "rdg/actions.h"
+#include "rdg/1/artifacts.h"
+#include "rdg/1/actions.h"
 
 // Level 3: pipeline and effect library — rendering effects and subgraph builders.
-#include "rdg/physical.h"
-#include "rdg/transform.h"
-#include "rdg/pipeline.h"
+#include "rdg/1/physical.h"
+#include "rdg/1/transform.h"
+#include "rdg/1/pipeline.h"
 
 // Level 4: scene management — placeholder for future high-level scene graph work.
-#include "rdg/scene.h"
+#include "rdg/1/scene.h"

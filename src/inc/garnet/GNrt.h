@@ -6,7 +6,7 @@
 /// \author  chenlee(2019.05.17)
 // *****************************************************************************
 
-#include "GNgfx2.h"
+#include "GNgpu2.h"
 #include <stack>
 
 namespace GN {

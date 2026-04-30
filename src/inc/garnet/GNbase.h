@@ -56,6 +56,9 @@ namespace internal {}
 // smart pointer
 #include "base/smartptr.h"
 
+// low overhead run-time type information
+#include "base/rtti.h"
+
 // string types
 #include "base/string.h"
 

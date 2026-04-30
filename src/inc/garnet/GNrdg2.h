@@ -4,10 +4,10 @@
 ///
 namespace GN::rdg2 {};
 
-// The general domain-less open-graph
 #include "GNbase.h"
-#include "rdg/rtti.h"
-#include "rdg/open-graph.h"
+#include "GNgpu2.h"
 
-// GPU related concepts built on top of the general open graph.
-#include "rdg/gpu.h"
+// rdg2 subheaders below must only be included through this file (__GN_INSIDE_RDG2_H__ is checked there).
+#define __GN_INSIDE_RDG2_H__ 1
+#include "rdg/2/open-graph.h"
+#undef __GN_INSIDE_RDG2_H__

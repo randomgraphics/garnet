@@ -78,11 +78,12 @@ GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
 # Build RDG
-
-GN_add_source_folder(rdg_sources rdg PCH_SOURCE rdg/pch.cpp EXTRA_SOURCES rdg/vk-shaders/*.*)
 add_subdirectory(rdg)
-set_source_files_properties(${rdg_sources} PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg")
-list(APPEND sources ${rdg_sources})
+GN_add_source_folder(rdg1_sources rdg/1
+    PCH_SOURCE rdg/1/pch.cpp EXTRA_SOURCES rdg/1/vk-shaders/*.*)
+set_source_files_properties(${rdg1_sources} PROPERTIES
+    COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg/1")
+list(APPEND sources ${rdg1_sources})
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
@@ -95,10 +96,7 @@ if(D3D11_FOUND)
     GN_add_source_folder(sources gpu/d3d11 PCH_SOURCE gpu/d3d11/pch.cpp)
 endif()
 
-# D3D12 GPU Sources
-if(D3D12_FOUND)
-    GN_add_source_folder(sources gpu2/d3d12 PCH_SOURCE gpu2/d3d12/pch.cpp)
-endif()
+# (D3D12 gpu2 backend removed; gpu2 sources are compiled via the unconditional GN_add_source_folder above)
 
 # if(VULKAN_FOUND)
 #     GN_add_source_folder(sources vulkan RECURSIVE PCH_SOURCE vulkan/pch.cpp)

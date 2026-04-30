@@ -7,7 +7,7 @@ using namespace GN;
 namespace GN::rdg2 {
 
 struct HelloArgs final : public Arguments {
-    GN_RDG_REGISTER_RUNTIME_TYPE(Arguments);
+    GN_REGISTER_RUNTIME_TYPE(Arguments);
 
     explicit HelloArgs(const StrA & who_): Arguments(TYPE_INFO(), "HelloArgs"), who(who_) {}
 
@@ -15,18 +15,18 @@ struct HelloArgs final : public Arguments {
 };
 
 struct HelloAction final : public Action {
-    GN_RDG_REGISTER_RUNTIME_TYPE(Action);
+    GN_REGISTER_RUNTIME_TYPE(Action);
 
     HelloAction(): Action(TYPE_INFO(), "HelloAction") {}
 
-    void execute(Arguments & arguments) override {
-        const HelloArgs * a = GN::rdg::RuntimeType::cast<HelloArgs>(&arguments);
+    void execute(Arguments * arguments) override {
+        const HelloArgs * a = arguments ? GN::RuntimeType::cast<HelloArgs>(arguments) : nullptr;
         std::printf("Hello, %s!\n", a ? a->who.data() : "<unknown>");
     }
 };
 
 struct StartMark final : public Entity {
-    GN_RDG_REGISTER_RUNTIME_TYPE(Entity);
+    GN_REGISTER_RUNTIME_TYPE(Entity);
     StartMark(): Entity(TYPE_INFO(), "StartMark") {}
 };
 
@@ -39,9 +39,8 @@ int main() {
 
     // Unblock the graph by publishing a new artifact version after the node is scheduled.
     ArtifactPtr art = g->createArtifact("start");
-    TokenPtr    t   = g->getArtifactVersionToken(art);
-    NodeDesc    desc;
-    desc.name      = "hello-node";
+    TokenPtr    t   = g->getTokenToEnsureArtifactIsPublishedAtLeastOnce(art);
+    NodeDesc    desc("hello-node");
     desc.action    = AutoRef<HelloAction>(new HelloAction());
     desc.arguments = AutoRef<HelloArgs>(new HelloArgs("world"));
     (void) desc.dependencies.append(t);
