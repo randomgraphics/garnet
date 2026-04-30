@@ -351,7 +351,8 @@ public:
     virtual void draw(const DrawParameters &) = 0;
 
     /// Finalize the render pass. Returns a GpuPayload* to pass to GpuContext::submit().
-    /// After this call this GpuRaster object becomes unusable.
+    /// After this call this GpuRaster object becomes unusable and is safe to release.
+    /// All necessary data need to render are sealed inside the returned GpuPayload object.
     virtual AutoRef<GpuPayload> seal() = 0;
 
 protected:
