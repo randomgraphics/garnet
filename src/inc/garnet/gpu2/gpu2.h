@@ -32,8 +32,10 @@ struct RootEntity : public RefCounter, public RuntimeType {
     const StrA name;
 
     virtual ~RootEntity() {
+#if GN_BUILD_DEBUG_ENABLED
         static auto * logger = GN::getLogger("GN.gpu2");
         GN_VVTRACE(logger)("Destroying entity, name='{}', type = {}, id={}", name, typeInfo().name, id);
+#endif
     }
 
 protected:

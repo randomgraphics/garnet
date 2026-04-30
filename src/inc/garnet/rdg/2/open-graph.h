@@ -90,7 +90,12 @@ struct Entity : public RefCounter, public RuntimeType {
     /// Name of the entity. Optional. No uniqueness requirement.
     const StrA name;
 
-    virtual ~Entity() = default;
+    virtual ~Entity() {
+#if GN_BUILD_DEBUG_ENABLED
+        static auto * logger = GN::getLogger("GN.rdg2");
+        GN_VVTRACE(logger)("Destroying RDG2 entity: name='{}', type = {}, id={}.{}", name, typeInfo().name, id.value0, id.value1);
+#endif
+    }
 
 protected:
     /// Constructor
