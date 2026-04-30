@@ -190,6 +190,9 @@ struct Texture : RootEntity {
         Descriptor          descriptor;
     };
 
+    /// Create a new instance of empty Texture. Must call reset() at least once for the texture to be valid to use.
+    static GN_API AutoRef<Texture> create(const StrA & name, const CreateParameters & params);
+
     struct LoadParameters {
         AutoRef<GpuContext> context;
         StrA                filename;
@@ -197,16 +200,13 @@ struct Texture : RootEntity {
             false; ///< If false, return existing texture if the file has been loaded before. If true, always load a new texture instance from file.
     };
 
+    /// Load texture from file. Returns a texture named after the file name.
+    static GN_API AutoRef<Texture> load(const LoadParameters & params);
+
     virtual const Descriptor & descriptor() const = 0;
 
     /// Convenience method to read the texture content into an image. Stalls CPU and GPU. Slow. Do NOT use in performance-sensitive code or render loop.
     virtual gfx::img::Image readback() const = 0;
-
-    /// Create a new instance of empty Texture. Must call reset() at least once for the texture to be valid to use.
-    static GN_API AutoRef<Texture> create(const StrA & name, const CreateParameters & params);
-
-    /// Load texture from file. Returns a texture named after the file name.
-    static GN_API AutoRef<Texture> load(const LoadParameters & params);
 
 protected:
     using RootEntity::RootEntity;
@@ -234,6 +234,8 @@ struct Buffer : public RootEntity {
         /// CPU mappable buffer is slower for GPU to access. It is mostly used to store short-lived data that is read or write only once by GPU.
         bool mappable = false;
     };
+
+    static GN_API AutoRef<Buffer> create(const StrA & name, const CreateParameters & params);
 
     struct Mapped : NoCopy {
         Mapped(TransientBuffer & buffer_, void * data_, size_t size_): mBuffer(&buffer_), mData(data_), mSize(size_) {}
@@ -284,8 +286,6 @@ struct Buffer : public RootEntity {
     /// Returns the data accessor of a transient buffer that can be directly written to.
     /// Trying to map a un-mappable, or already mapped, buffer returns an empty Mapped object.
     virtual Mapped map() = 0;
-
-    static GN_API AutoRef<Buffer> create(const StrA & name, const CreateParameters & params);
 
 protected:
     virtual void unmap(const Mapped &) = 0;
@@ -429,12 +429,12 @@ struct GpuShader : public RootEntity {
         const char *        entry = nullptr;
     };
 
+    static GN_API AutoRef<GpuShader> create(const CreateParameters &);
+
     struct LoadParameters {
         AutoRef<GpuContext> context;
         AutoRef<File>       file;
     };
-
-    static GN_API AutoRef<GpuShader> create(const CreateParameters &);
 
     static GN_API AutoRef<GpuShader> load(const LoadParameters &);
 
