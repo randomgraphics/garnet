@@ -19,10 +19,8 @@ Two fundamental defects in v1 motivate a full redesign:
    where passes and resources emerge incrementally as the frame (or background job)
    unfolds.
 
-2. **Single draw = action node** — mapping one draw call to one graph node creates
-   an impedance mismatch with the GPU render pass concept, which is a *scope*
-   (begin/end bracket) containing multiple draws that share attachments. This made
-   render pass management unnecessarily complex.
+2. **External GPU2 dependency** — Instead of built-in GPU/API abstraction layer. v2
+   now depends on externally maintained GNgpu2.h
 
 ---
 
@@ -34,14 +32,11 @@ v2 uses three levels instead of four:
 ┌─────────────────────────────────────────────────────────────┐
 │  Level 3 — Scene Management                                 │  ← drives full frame rendering
 ├─────────────────────────────────────────────────────────────┤
-│  Level 2 — Rendering Scenarios                              │  ← render loop, shadow, lighting, skybox
+│  Level 2 — Rendering Scenarios                              │  ← global constants, shadow, lighting, skybox
 ├─────────────────────────────────────────────────────────────┤
 │  Level 1 — Open Graph                (open-graph.h)         │  ← domain-independent task/data graph
 └─────────────────────────────────────────────────────────────┘
 ```
-
-Each level depends only on levels below it. No GPU-API-specific type (`VkBuffer`,
-`ID3D12Resource`, `MTLBuffer`, etc.) may appear in any public header at any level.
 
 ---
 
