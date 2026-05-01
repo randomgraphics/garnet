@@ -238,7 +238,7 @@ struct Buffer : public RootEntity {
     static GN_API AutoRef<Buffer> create(const StrA & name, const CreateParameters & params);
 
     struct Mapped : NoCopy {
-        Mapped(TransientBuffer & buffer_, void * data_, size_t size_): mBuffer(&buffer_), mData(data_), mSize(size_) {}
+        Mapped(Buffer & buffer_, void * data_, size_t size_): mBuffer(&buffer_), mData(data_), mSize(size_) {}
 
         ~Mapped() { unmap(); }
 

@@ -79,11 +79,12 @@ GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
 # Build RDG
 add_subdirectory(rdg)
-GN_add_source_folder(rdg1_sources rdg/1
+GN_add_source_folder(rdg_sources rdg/1
     PCH_SOURCE rdg/1/pch.cpp EXTRA_SOURCES rdg/1/vk-shaders/*.*)
-set_source_files_properties(${rdg1_sources} PROPERTIES
+set_source_files_properties(${rdg_sources} PROPERTIES
     COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg/1")
-list(APPEND sources ${rdg1_sources})
+GN_add_source_folder(rdg_sources rdg/2)
+list(APPEND sources ${rdg_sources})
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
