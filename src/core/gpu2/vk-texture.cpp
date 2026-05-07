@@ -94,8 +94,7 @@ TextureVulkanBase::TextureVulkanBase(const GN::RuntimeType::TypeInfo & leafType,
 TextureVulkanBase::~TextureVulkanBase() = default;
 
 gfx::img::Image TextureVulkanBase::readback() const {
-    const rv::Image * src = vulkanSourceImageForReadback();
-    if (!src || !src->handle()) {
+    if (!mRvImage || !mImage) {
         GN_ERROR(sLogger)("TextureVulkanBase::readback: no image, name='{}'", name);
         return gfx::img::Image();
     }
@@ -114,15 +113,14 @@ gfx::img::Image TextureVulkanBase::readback() const {
     rv::Image::ReadContentParameters readParams;
     readParams.setQueue(*gq);
     if (const auto * state = gpuStates.get(0, 0)) readParams.setCurrentLayout(state->layout);
-    auto content = src->readContent(readParams);
+    auto content = mRvImage->readContent(readParams);
     if (!content) return {};
     gpuStates.reset(gpuStates.mipLevels(), gpuStates.arrayLayers(), TextureGpuImageState::ImageState::TRANSFER_SRC());
     return contentToImage(content);
 }
 
 bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
-    rv::Image * dst = vulkanImageForSetContent();
-    if (!dst || !dst->handle()) {
+    if (!mRvImage || !mImage) {
         GN_ERROR(sLogger)("TextureVulkanBase::setContent: texture not writable or not initialized, name='{}'", name);
         return false;
     }
@@ -154,27 +152,11 @@ bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
             sc.area.d     = 1;
             sc.pitch      = (size_t) plane.pitch;
             sc.pixels     = image.at(pc);
-            if (dst->setContent(sc)) { gpuStates.set(GpuResourceView::SubresourceRange {{l, f}, {1, 1}}, TextureGpuImageState::ImageState::TRANSFER_DST()); }
+            if (mRvImage->setContent(sc)) {
+                gpuStates.set(GpuResourceView::SubresourceRange {{l, f}, {1, 1}}, TextureGpuImageState::ImageState::TRANSFER_DST());
+            }
         }
     }
-    return true;
-}
-
-bool TextureVulkanBase::resolveVulkanColorAttachment(const GpuResourceView & viewSpec, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
-                                                     vk::Format * outVkFormat) const {
-    if (!outImage || !outView || !outExt || !outVkFormat) return false;
-    gfx::img::PixelFormat pf = viewSpec.imageView.format;
-    if (pf == gfx::img::PixelFormat::UNKNOWN()) pf = mDescriptor.format;
-    vk::Format fmt = pixelFormatToVkFormat(pf);
-    if (fmt == vk::Format::eUndefined) return false;
-
-    vk::Image     img {};
-    vk::ImageView iv {};
-    if (!vulkanColorAttachmentHandles(&img, &iv)) return false;
-    *outImage    = img;
-    *outView     = iv;
-    *outExt      = vk::Extent2D(mDescriptor.width, mDescriptor.height);
-    *outVkFormat = fmt;
     return true;
 }
 
@@ -188,10 +170,8 @@ public:
 
     explicit OwnedTextureVulkan(const StrA & entityName): TextureVulkanBase(OwnedTextureVulkan::TYPE_INFO(), entityName) {}
 
-    rv::Image * vulkanImageForSetContent() override { return mOwnedImage.get(); }
-
     bool initOwned(const CreateParameters & params) {
-        resetOwned();
+        reset();
         if (!params.context) {
             GN_ERROR(sLogger)("OwnedTextureVulkan::initOwned: context is null, name='{}'", name);
             return false;
@@ -210,18 +190,19 @@ public:
 
         rv::Image::GetViewParameters gvp;
         gvp.setFormat(pixelFormatToVkFormat(mDescriptor.format));
-        mOwnedColorView = mOwnedImage->getView(gvp);
-        if (!mOwnedColorView) {
+        vk::ImageView iv = mOwnedImage->getView(gvp);
+        if (!iv) {
             GN_ERROR(sLogger)("OwnedTextureVulkan::initOwned: getView failed, name='{}'", name);
             mOwnedImage.clear();
             return false;
         }
+        setVulkanHandles(mOwnedImage.get(), iv);
         gpuStates.reset(mDescriptor.levels, mDescriptor.faces, TextureGpuImageState::ImageState::UNDEFINED());
         return true;
     }
 
     bool initFromLoad(const LoadParameters & params) {
-        resetOwned();
+        reset();
         if (!params.context) {
             GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: context is null");
             return false;
@@ -256,11 +237,12 @@ public:
 
         rv::Image::GetViewParameters gvp;
         gvp.setFormat(pixelFormatToVkFormat(mDescriptor.format));
-        mOwnedColorView = mOwnedImage->getView(gvp);
-        if (!mOwnedColorView) {
+        vk::ImageView iv = mOwnedImage->getView(gvp);
+        if (!iv) {
             mOwnedImage.clear();
             return false;
         }
+        setVulkanHandles(mOwnedImage.get(), iv);
 
         rv::CommandQueue * gq = dev->graphics();
         if (!gq) {
@@ -291,25 +273,15 @@ public:
     }
 
 private:
-    void resetOwned() {
+    rv::Ref<rv::Image> mOwnedImage {};
+
+    void reset() {
         mOwnedImage.clear();
-        mOwnedColorView = vk::ImageView(nullptr);
-        mDescriptor     = {};
+        setVulkanHandles({}, {});
+        mDescriptor = {};
         mGpu.clear();
         gpuStates.reset(0, 0);
     }
-
-    const rv::Image * vulkanSourceImageForReadback() const override { return mOwnedImage.get(); }
-
-    bool vulkanColorAttachmentHandles(vk::Image * outImage, vk::ImageView * outView) const override {
-        if (!mOwnedImage || !mOwnedImage->handle() || !mOwnedColorView) return false;
-        *outImage = mOwnedImage->handle();
-        *outView  = mOwnedColorView;
-        return true;
-    }
-
-    rv::Ref<rv::Image> mOwnedImage;
-    vk::ImageView      mOwnedColorView {};
 };
 
 AutoRef<Texture> createTextureVulkan2(const StrA & entityName, const Texture::CreateParameters & params) {

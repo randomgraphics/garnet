@@ -13,6 +13,14 @@ This naturally handles aliasing without a global compile-phase analysis: two
 transient resources that are never live at the same time will reuse the same pool
 slot simply because one is returned before the other is allocated.
 
+## Raster DrawBundle and Payload optimization.
+
+- Create a new class DrawBundle that is to record a series of draws for certain GpuRaster class. Multiple draw bundles
+  can record draw calls in parallel. Once seal is called, information of all draw bundles are connected/packed together
+  to become the final payload od the GpuRaster class.
+- Refactor code to move most of the heavylifting logic from Payload's record-for-submit method back to draw() and seal(),
+  the goal is to keep payload's record-for-submit as lightweight as possible.
+
 ## Shader Hot Reload
 
 Add `GpuShader::reload()` for live shader reloading:

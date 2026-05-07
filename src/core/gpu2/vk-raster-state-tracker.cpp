@@ -122,7 +122,7 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
     vk::PipelineStageFlags            dstStages = {};
 
     for (const auto & a : mAttachments) {
-        vk::Image vkImg = a.tex->vulkanNativeImage();
+        vk::Image vkImg = a.tex->nativeImage();
         if (!vkImg) {
             GN_WARN(sLogger)("RasterStateTrackerVulkan: texture '{}' has no VkImage handle; skipping barrier", a.tex->name);
             continue;

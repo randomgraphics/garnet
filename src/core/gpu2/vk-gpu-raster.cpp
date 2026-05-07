@@ -25,16 +25,26 @@ struct StoredDraw {
     DynaArray<uint8_t> immediates;
 };
 
+static inline bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
+                                          vk::Format * outVkFormat) {
+    if (v.empty() || !v.isTexture()) return false;
+    auto * base = RuntimeType::cast<TextureVulkanBase>(v.texture().get());
+    if (!base || !base->nativeImage() || !base->nativeView()) return false;
+    gfx::img::PixelFormat pf = v.imageView.format;
+    if (pf == gfx::img::PixelFormat::UNKNOWN()) pf = base->descriptor().format;
+    vk::Format fmt = pixelFormatToVkFormat(pf);
+    if (fmt == vk::Format::eUndefined) return false;
+    *outImage    = base->nativeImage();
+    *outView     = base->nativeView();
+    *outExt      = vk::Extent2D(base->descriptor().width, base->descriptor().height);
+    *outVkFormat = fmt;
+    return true;
+}
+
 static bool resolveFirstColorAttachment(const RasterTarget & rt, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
                                         vk::Format * outVkFormat) {
     if (rt.colorTargets.empty()) return false;
-    const GpuResourceView & v = rt.colorTargets[0].target;
-    if (v.empty() || !v.isTexture()) return false;
-    AutoRef<Texture> t = v.texture();
-    if (!t) return false;
-    auto * base = RuntimeType::cast<TextureVulkanBase>(t.get());
-    if (!base) return false;
-    if (base->resolveVulkanColorAttachment(v, outImage, outView, outExt, outVkFormat)) return true;
+    if (resolveColorAttachment(rt.colorTargets[0].target, outImage, outView, outExt, outVkFormat)) return true;
     GN_WARN(sLogger)("GpuRaster Vulkan: color target could not be resolved to a Vulkan texture");
     return false;
 }

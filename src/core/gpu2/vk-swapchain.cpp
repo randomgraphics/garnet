@@ -32,35 +32,20 @@ public:
         mGpu = std::move(gpu);
     }
 
-    void bindToSwapchainBackbuffer(const rv::Image * image, vk::ImageView view, uint32_t w, uint32_t h, gfx::img::PixelFormat format) {
-        mImage      = image;
-        mView       = view;
+    void bindToSwapchainBackbuffer(rv::Image * image, vk::ImageView view, uint32_t w, uint32_t h, gfx::img::PixelFormat format) {
+        setVulkanHandles(image, view);
         mDescriptor = Texture::Descriptor {}.setFormat(format).setDimensions(w, h, 1).setFaces(1).setLevels(1).setSamples(1);
         gpuStates.reset(1, 1, GpuImageState::UNDEFINED());
     }
 
     void clearAcquiredBinding() {
-        mImage      = nullptr;
-        mView       = vk::ImageView(nullptr);
+        setVulkanHandles({}, {});
         mDescriptor = {};
         gpuStates.reset(0, 0);
     }
 
     /// stable per-backbuffer payload; returned as frame.ready from prepare()
     AutoRef<GpuPayloadVulkan> readyPayload = AutoRef<GpuPayloadVulkan>::make(name + "/ready");
-
-private:
-    const rv::Image * vulkanSourceImageForReadback() const override { return mImage; }
-
-    bool vulkanColorAttachmentHandles(vk::Image * outImage, vk::ImageView * outView) const override {
-        if (!mImage || !mView) return false;
-        *outImage = mImage->handle();
-        *outView  = mView;
-        return true;
-    }
-
-    const rv::Image * mImage = nullptr;
-    vk::ImageView     mView {};
 };
 
 } // namespace
