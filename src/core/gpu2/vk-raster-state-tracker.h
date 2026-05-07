@@ -1,6 +1,8 @@
 #pragma once
 
 #include <garnet/GNgpu2.h>
+#include "vk-buffer.h"
+#include "vk-buffer-state.h"
 #include "vk-gpu-image-state.h"
 #include "vk-texture.h"
 
@@ -22,6 +24,15 @@ public:
     void addSampledTexture(TextureVulkanBase * tex, const GpuResourceView & view,
                            vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader);
     void addStorageTexture(TextureVulkanBase * tex, const GpuResourceView & view, vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eFragmentShader);
+
+    void addUniformBuffer(BufferVulkan *         buf,
+                          vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader);
+    void addStorageBuffer(BufferVulkan * buf, bool write = false, vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eFragmentShader);
+    void addVertexBuffer(BufferVulkan * buf);
+    void addIndexBuffer(BufferVulkan * buf);
+
+    void addGpuResourceTable(const GpuResourceTable & table);
+    void addRasterGeometry(const RasterGeometry & geom);
 
     void emitPrePassBarriers(vk::CommandBuffer cb);
     void flushStatesToResources();
@@ -53,6 +64,21 @@ private:
     void addAttachment(TrackedAttachment a);
 
     DynaArray<TrackedAttachment> mAttachments;
+
+    struct TrackedBuffer {
+        BufferVulkan *         buf;
+        vk::AccessFlags        passAccess;
+        vk::PipelineStageFlags passStages;
+        vk::AccessFlags        finalAccess;
+        vk::PipelineStageFlags finalStages;
+        bool                   isWrite;
+        const char *           usageName;
+    };
+
+    bool checkBufferHazard(const TrackedBuffer & incoming) const;
+    void addBuffer(TrackedBuffer b);
+
+    DynaArray<TrackedBuffer> mBuffers;
 };
 
 } // namespace GN::gpu2

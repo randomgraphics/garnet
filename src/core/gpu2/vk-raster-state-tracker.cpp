@@ -99,6 +99,75 @@ void RasterStateTrackerVulkan::addSampledTexture(TextureVulkanBase * tex, const 
     addAttachment(std::move(a));
 }
 
+bool RasterStateTrackerVulkan::checkBufferHazard(const TrackedBuffer & incoming) const {
+    for (const auto & existing : mBuffers) {
+        if (existing.buf != incoming.buf) continue;
+        if (!existing.isWrite && !incoming.isWrite) continue;
+        const char * hazardKind = (existing.isWrite && incoming.isWrite) ? "write/write" : "read/write";
+        GN_ERROR(sLogger)("RasterStateTrackerVulkan: {} hazard on buffer '{}' — '{}' ({}) and '{}' ({})", hazardKind, incoming.buf->name, existing.usageName,
+                          existing.isWrite ? "write" : "read", incoming.usageName, incoming.isWrite ? "write" : "read");
+        return false;
+    }
+    return true;
+}
+
+void RasterStateTrackerVulkan::addBuffer(TrackedBuffer b) {
+    checkBufferHazard(b);
+    mBuffers.append(std::move(b));
+}
+
+void RasterStateTrackerVulkan::addUniformBuffer(BufferVulkan * buf, vk::PipelineStageFlags stages) {
+    if (!buf) return;
+    TrackedBuffer b;
+    b.buf         = buf;
+    b.passAccess  = vk::AccessFlagBits::eUniformRead;
+    b.passStages  = stages;
+    b.finalAccess = vk::AccessFlagBits::eUniformRead;
+    b.finalStages = stages;
+    b.isWrite     = false;
+    b.usageName   = "uniform buffer";
+    addBuffer(std::move(b));
+}
+
+void RasterStateTrackerVulkan::addStorageBuffer(BufferVulkan * buf, bool write, vk::PipelineStageFlags stages) {
+    if (!buf) return;
+    TrackedBuffer b;
+    b.buf         = buf;
+    b.passAccess  = vk::AccessFlagBits::eShaderRead | (write ? vk::AccessFlagBits::eShaderWrite : vk::AccessFlags {});
+    b.passStages  = stages;
+    b.finalAccess = b.passAccess;
+    b.finalStages = stages;
+    b.isWrite     = write;
+    b.usageName   = write ? "storage buffer (read-write)" : "storage buffer (read-only)";
+    addBuffer(std::move(b));
+}
+
+void RasterStateTrackerVulkan::addVertexBuffer(BufferVulkan * buf) {
+    if (!buf) return;
+    TrackedBuffer b;
+    b.buf         = buf;
+    b.passAccess  = vk::AccessFlagBits::eVertexAttributeRead;
+    b.passStages  = vk::PipelineStageFlagBits::eVertexInput;
+    b.finalAccess = vk::AccessFlagBits::eVertexAttributeRead;
+    b.finalStages = vk::PipelineStageFlagBits::eVertexInput;
+    b.isWrite     = false;
+    b.usageName   = "vertex buffer";
+    addBuffer(std::move(b));
+}
+
+void RasterStateTrackerVulkan::addIndexBuffer(BufferVulkan * buf) {
+    if (!buf) return;
+    TrackedBuffer b;
+    b.buf         = buf;
+    b.passAccess  = vk::AccessFlagBits::eIndexRead;
+    b.passStages  = vk::PipelineStageFlagBits::eVertexInput;
+    b.finalAccess = vk::AccessFlagBits::eIndexRead;
+    b.finalStages = vk::PipelineStageFlagBits::eVertexInput;
+    b.isWrite     = false;
+    b.usageName   = "index buffer";
+    addBuffer(std::move(b));
+}
+
 void RasterStateTrackerVulkan::addStorageTexture(TextureVulkanBase * tex, const GpuResourceView & view, vk::PipelineStageFlags stages) {
     if (!tex) return;
     TrackedAttachment a;
@@ -117,9 +186,32 @@ void RasterStateTrackerVulkan::addStorageTexture(TextureVulkanBase * tex, const 
 }
 
 void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
-    DynaArray<vk::ImageMemoryBarrier> barriers;
-    vk::PipelineStageFlags            srcStages = {};
-    vk::PipelineStageFlags            dstStages = {};
+    DynaArray<vk::BufferMemoryBarrier> bufferBarriers;
+    DynaArray<vk::ImageMemoryBarrier>  barriers;
+    vk::PipelineStageFlags             srcStages = {};
+    vk::PipelineStageFlags             dstStages = {};
+
+    for (const auto & b : mBuffers) {
+        vk::Buffer vkBuf = b.buf->nativeBuffer();
+        if (!vkBuf) {
+            GN_WARN(sLogger)("RasterStateTrackerVulkan: buffer '{}' has no VkBuffer handle; skipping barrier", b.buf->name);
+            continue;
+        }
+        const BufferStateVulkan & cur = b.buf->gpuState;
+        if (cur.access == b.passAccess && cur.stages == b.passStages) continue;
+
+        vk::BufferMemoryBarrier barrier;
+        barrier.setSrcAccessMask(cur.access)
+            .setDstAccessMask(b.passAccess)
+            .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            .setBuffer(vkBuf)
+            .setOffset(0)
+            .setSize(VK_WHOLE_SIZE);
+        bufferBarriers.append(barrier);
+        srcStages |= cur.stages;
+        dstStages |= b.passStages;
+    }
 
     for (const auto & a : mAttachments) {
         vk::Image vkImg = a.tex->nativeImage();
@@ -157,12 +249,13 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
         }
     }
 
-    if (barriers.empty()) return;
+    if (bufferBarriers.empty() && barriers.empty()) return;
 
     if (!srcStages) srcStages = vk::PipelineStageFlagBits::eTopOfPipe;
     if (!dstStages) dstStages = vk::PipelineStageFlagBits::eBottomOfPipe;
 
-    cb.pipelineBarrier(srcStages, dstStages, {}, nullptr, nullptr, vk::ArrayProxy<const vk::ImageMemoryBarrier>(barriers.size(), barriers.data()));
+    cb.pipelineBarrier(srcStages, dstStages, {}, nullptr, vk::ArrayProxy<const vk::BufferMemoryBarrier>(bufferBarriers.size(), bufferBarriers.data()),
+                       vk::ArrayProxy<const vk::ImageMemoryBarrier>(barriers.size(), barriers.data()));
 }
 
 void RasterStateTrackerVulkan::flushStatesToResources() {
@@ -172,6 +265,10 @@ void RasterStateTrackerVulkan::flushStatesToResources() {
         finalState.access = a.finalAccess;
         finalState.stages = a.finalStages;
         a.tex->gpuStates.set(a.resolvedRange, finalState, a.tex->name);
+    }
+    for (const auto & b : mBuffers) {
+        b.buf->gpuState.access = b.finalAccess;
+        b.buf->gpuState.stages = b.finalStages;
     }
 }
 

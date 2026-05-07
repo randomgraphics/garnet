@@ -1,4 +1,5 @@
 #include "gpu-context.h"
+#include "vk-buffer.h"
 #include "vk-gpu-raster.h"
 #include "vk-gpu-shader.h"
 #include "vk-texture.h"
@@ -36,6 +37,29 @@ AutoRef<GpuShader> GpuShader::create(const CreateParameters & params) {
 AutoRef<GpuShader> GpuShader::load(const LoadParameters & params) {
     if (!params.context) { GN_ERROR(sLogger)("GpuShader::load: GpuContext is null"); }
     return {};
+}
+
+AutoRef<Buffer> Buffer::create(const StrA & name, const CreateParameters & params) {
+    if (!params.context) {
+        GN_ERROR(sLogger)("Buffer::create: GpuContext is null");
+        return {};
+    }
+    AutoRef<GpuContextCommon2> common = params.context.staticCastTo<GpuContextCommon2>();
+    if (!common) {
+        GN_ERROR(sLogger)("Buffer::create: GpuContext is not GpuContextCommon2");
+        return {};
+    }
+    switch (common->api()) {
+    case GpuContextCommon2::Api::VULKAN:
+        return createBufferVulkan2(name, params);
+    case GpuContextCommon2::Api::D3D12:
+    case GpuContextCommon2::Api::METAL:
+        GN_ERROR(sLogger)("Buffer::create: backend not implemented");
+        return {};
+    default:
+        GN_ERROR(sLogger)("Buffer::create: unknown GpuContext::Api");
+        return {};
+    }
 }
 
 AutoRef<Texture> Texture::create(const StrA & entityName, const CreateParameters & params) {

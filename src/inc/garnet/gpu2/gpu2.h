@@ -246,7 +246,7 @@ struct Buffer : public RootEntity {
     static GN_API AutoRef<Buffer> create(const StrA & name, const CreateParameters & params);
 
     struct Mapped : NoCopy {
-        Mapped(Buffer & buffer_, void * data_, size_t size_): mBuffer(&buffer_), mData(data_), mSize(size_) {}
+        Mapped(Buffer * buffer_ = nullptr, void * data_ = nullptr, size_t size_ = 0): mBuffer(buffer_), mData(data_), mSize(size_) {}
 
         ~Mapped() { unmap(); }
 
@@ -307,6 +307,12 @@ struct Buffer : public RootEntity {
     /// staging buffers into the target buffers. This way multiple uploads can be batched together and submitted at
     /// once, significantly reducing CPU-GPU synchronization overhead.
     virtual bool setContent(ArrayProxy<const uint8_t> data, size_t offset = 0) = 0;
+
+    /// Read \p size bytes starting at \p offset from the buffer into a CPU-side vector.
+    /// Uses an internal staging buffer if the buffer is not CPU-mappable. Stalls CPU and GPU.
+    /// Slow; do NOT use in performance-sensitive code or render loop.
+    /// \return The bytes read, or an empty vector on failure.
+    virtual std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const = 0;
 
 protected:
     virtual void unmap(const Mapped &) = 0;
