@@ -155,3 +155,41 @@ Use these guards for API-specific code paths.
 This is deprecated module. Will be removed after RDG module comes in place.
 
 New backends go under `src/core/gpu2/<api>/`. Follow the D3D12 implementation pattern: add a feature flag in `features.h.in`, guard with `#if GN_BUILD_HAS_<API>`, and register the new target in `src/core/CMakeLists.txt`.
+
+## Module Rule Files
+
+Per-module guidance lives in `.claude/rules/` as path-scoped rule files. Each file has a YAML frontmatter `paths:` field listing glob patterns; Claude loads the file automatically when editing any matching file.
+
+| Rule file | Covers |
+|---|---|
+| `.claude/rules/gpu2.md` | `src/core/gpu2/**`, `src/inc/garnet/gpu2/**`, `src/inc/garnet/GNgpu2.h` |
+| `.claude/rules/rdg.md` | `src/core/rdg/**`, `src/inc/garnet/rdg/**`, `src/inc/garnet/GNrdg.h`, `src/inc/garnet/GNrdg2.h` |
+
+**When to create a new rule file:** Add `.claude/rules/<module>.md` whenever a module has non-obvious conventions, a complex internal architecture, or known stubs/pitfalls that Claude would otherwise have to rediscover each session. Keep rule files focused on the WHY and non-obvious patterns — file layout, object model, key invariants — not on things Claude can derive by reading the code.
+
+**Template for a new module rule file:**
+
+```markdown
+---
+paths:
+  - "src/core/<module>/**"
+  - "src/inc/garnet/<module>/**"
+  - "src/inc/garnet/GN<Module>.h"
+---
+
+# <Module> Module
+
+One-line description. Namespace. Status (stable / WIP / deprecated).
+
+## File Layout
+...
+
+## Object Model / Key Patterns
+...
+
+## Conventions Specific to This Module
+...
+
+## Known Stubs / Missing Pieces
+...
+```
