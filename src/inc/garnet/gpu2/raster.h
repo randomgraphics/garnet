@@ -6,10 +6,171 @@
 namespace GN::gpu2 {
 
 // -----------------------------
-// Render target
+// RasterState
+// -----------------------------
+// All fields are std::optional<>. Two construction modes:
+//   RasterState{}            — default ctor, all fields empty (used by draw parameters: absent = inherit from RasterTarget)
+//   RasterState{WithDefaults} — sets every field to its logical default (used by RasterTarget::renderState)
+//
+// Draw-level overrides are persistent within a render pass: if a draw sets viewport, all subsequent
+// draws in the same GpuRaster are affected until overridden again. Changes do not propagate outside
+// the pass; each GpuRaster owns its RasterTarget which carries the full default baseline.
+
+struct RasterState {
+    // ---- nested types ----
+
+    enum class Compare {
+        NEVER = 0,     // no read, no write
+        LESS,          // read and write
+        LESS_EQUAL,    // read and write
+        EQUAL,         // read and write
+        GREATER_EQUAL, // read and write
+        GREATER,       // read and write
+        NOT_EQUAL,     // read and write
+        ALWAYS,        // write only
+    };
+
+    struct DepthState {
+        Compare func  = Compare::ALWAYS; // depth disabled by default
+        bool    write = false;
+
+        constexpr bool testEnabled() const { return Compare::NEVER != func && Compare::ALWAYS != func; }
+        constexpr bool writeEnabled() const { return Compare::NEVER != func && write; }
+        constexpr bool operator==(const DepthState & o) const { return func == o.func && write == o.write; }
+        constexpr bool operator!=(const DepthState & o) const { return !operator==(o); }
+    };
+
+    struct StencilState {
+        enum Op {
+            KEEP = 0, // no read, no write
+            ZERO,     // write only
+            REPLACE,  // write only
+            INC_SAT,  // read and write
+            DEC_SAT,  // read and write
+            INVERT,   // read and write
+            INC,      // read and write
+            DEC,      // read and write
+        };
+
+        Compare compare   = Compare::ALWAYS; ///< stencil comparison function; disabled by default
+        Op      pass      = KEEP;            ///< stencil operation on pass
+        Op      fail      = KEEP;            ///< stencil operation on fail
+        Op      zFail     = KEEP;            ///< stencil operation on depth fail
+        uint8_t ref       = 0;
+        uint8_t readMask  = 0xFF;
+        uint8_t writeMask = 0xFF;
+
+        constexpr bool enabled() const {
+            bool read  = (0 != readMask) && (Compare::NEVER != compare) && (Compare::ALWAYS != compare);
+            bool write = (0 != writeMask) && ((KEEP != pass) || (KEEP != fail) || (KEEP != zFail));
+            return read || write;
+        }
+        constexpr bool operator==(const StencilState & o) const {
+            return compare == o.compare && pass == o.pass && fail == o.fail && zFail == o.zFail && ref == o.ref && readMask == o.readMask &&
+                   writeMask == o.writeMask;
+        }
+        constexpr bool operator!=(const StencilState & o) const { return !operator==(o); }
+    };
+
+    /// Viewport: NDC (-1,1) top-left maps to window (0,0); (1,-1) bottom-right maps to (width,height).
+    /// Set width/height to FLT_MAX to match the current render target size.
+    struct Viewport {
+        float x        = 0.0f;
+        float y        = 0.0f;
+        float width    = FLT_MAX;
+        float height   = FLT_MAX;
+        float minDepth = 0.0f;
+        float maxDepth = 1.0f;
+
+        constexpr bool fullScreen() const { return 0.0f == x && 0.0f == y && FLT_MAX == width && FLT_MAX == height; }
+        constexpr bool operator==(const Viewport & o) const {
+            return x == o.x && y == o.y && width == o.width && height == o.height && minDepth == o.minDepth && maxDepth == o.maxDepth;
+        }
+        constexpr bool operator!=(const Viewport & o) const { return !operator==(o); }
+    };
+
+    /// Scissor in window coordinates. Set width/height to (~0u) to cover the whole window.
+    struct ScissorRect {
+        int32_t  x      = 0;
+        int32_t  y      = 0;
+        uint32_t width  = (~0u);
+        uint32_t height = (~0u);
+
+        constexpr bool disabled() const { return (0 == x) && (0 == y) && (~0u == width) && (~0u == height); }
+        constexpr bool operator==(const ScissorRect & o) const { return x == o.x && y == o.y && width == o.width && height == o.height; }
+        constexpr bool operator!=(const ScissorRect & o) const { return !operator==(o); }
+    };
+
+    enum FillMode { FILL_SOLID = 0, FILL_WIREFRAME, FILL_POINT };
+    enum CullMode { CULL_NONE = 0, CULL_FRONT, CULL_BACK };
+    enum FrontFace { FRONT_CCW = 0, FRONT_CW };
+
+    // ---- construction ----
+
+    struct WithDefaults {}; ///< tag to request default-value initialization
+
+    RasterState() = default; ///< all fields empty (nullopt); used by draw parameters
+
+    RasterState(WithDefaults) { resetToDefault(); } ///< used by RasterTarget::renderState
+
+    /// Fills every field with its logical default value (non-empty).
+    void resetToDefault() {
+        fillMode     = FILL_SOLID;
+        cullMode     = CULL_BACK;
+        frontFace    = FRONT_CCW;
+        depthState   = DepthState {};
+        stencilState = StencilState {};
+        viewport     = Viewport {};
+        scissorRect  = ScissorRect {};
+    }
+
+    // ---- fields ----
+
+    std::optional<FillMode>     fillMode;
+    std::optional<CullMode>     cullMode;
+    std::optional<FrontFace>    frontFace;
+    std::optional<DepthState>   depthState;
+    std::optional<StencilState> stencilState;
+    std::optional<Viewport>     viewport;
+    std::optional<ScissorRect>  scissorRect;
+
+    // ---- setters (chainable) ----
+
+    RasterState & setFillMode(FillMode v) {
+        fillMode = v;
+        return *this;
+    }
+    RasterState & setCullMode(CullMode v) {
+        cullMode = v;
+        return *this;
+    }
+    RasterState & setFrontFace(FrontFace v) {
+        frontFace = v;
+        return *this;
+    }
+    RasterState & setDepthState(DepthState v) {
+        depthState = v;
+        return *this;
+    }
+    RasterState & setStencilState(StencilState v) {
+        stencilState = v;
+        return *this;
+    }
+    RasterState & setViewport(Viewport v) {
+        viewport = v;
+        return *this;
+    }
+    RasterState & setScissorRect(ScissorRect v) {
+        scissorRect = v;
+        return *this;
+    }
+};
+
+// -----------------------------
+// Raster target
 // -----------------------------
 
-struct RenderTarget {
+struct RasterTarget {
     struct BlendState {
         enum Arg {
             ZERO = 0,
@@ -53,92 +214,6 @@ struct RenderTarget {
         constexpr bool operator!=(const BlendState & other) const { return !operator==(other); }
     };
 
-    enum class Compare {
-        NEVER = 0,     // no read, no write
-        LESS,          // read and write
-        LESS_EQUAL,    // read and write
-        EQUAL,         // read and write
-        GREATER_EQUAL, // read and write
-        GREATER,       // read and write
-        NOT_EQUAL,     // read and write
-        ALWAYS,        // write only
-    };
-
-    struct DepthState {
-        // default state equals to depth disabled.
-        Compare func  = Compare::ALWAYS;
-        bool    write = false;
-
-        constexpr bool testEnabled() const { return Compare::NEVER != func && Compare::ALWAYS != func; }
-        constexpr bool writeEnabled() const { return Compare::NEVER != func && write; }
-        constexpr bool operator==(const DepthState & other) const { return func == other.func && write == other.write; }
-        constexpr bool operator!=(const DepthState & other) const { return !operator==(other); }
-    };
-
-    struct StencilState {
-        enum Op {
-            KEEP = 0, // no read, no write
-            ZERO,     // write only
-            REPLACE,  // write only
-            INC_SAT,  // read and write
-            DEC_SAT,  // read and write
-            INVERT,   // read and write
-            INC,      // read and write
-            DEC,      // read and write
-        };
-
-        // default to an state that stencil is effectively disabled.
-        Compare compare   = Compare::ALWAYS; ///< stencil comparison function
-        Op      pass      = KEEP;            ///< stencil operation on pass
-        Op      fail      = KEEP;            ///< stencil operation on fail
-        Op      zFail     = KEEP;            ///< stencil operation on depth fail
-        uint8_t ref       = 0;               ///< stencil reference value
-        uint8_t readMask  = 0xFF;            ///< stencil read mask
-        uint8_t writeMask = 0xFF;            ///< stencil write mask
-
-        constexpr bool enabled() const {
-            bool read  = (0 != readMask) && (Compare::NEVER != compare) && (Compare::ALWAYS != compare);
-            bool write = (0 != writeMask) && ((Op::KEEP != pass) || (Op::KEEP != fail) || (Op::KEEP != zFail));
-            return read || write;
-        }
-        constexpr bool operator==(const StencilState & other) const {
-            return pass == other.pass && fail == other.fail && zFail == other.zFail && compare == other.compare && ref == other.ref &&
-                   readMask == other.readMask && writeMask == other.writeMask;
-        }
-        constexpr bool operator!=(const StencilState & other) const { return !operator==(other); }
-    };
-
-    /// Viewport settings. Defines transform of normalized device coordinates (NDC) to Window coordinates.
-    ///   - Left top is (-1, 1) in NDC space, map to Window space coordinate (0, 0).
-    ///   - Right bottom is (1, -1) in NDC space, map to Window space coordinate (width, height).
-    ///   - Set width and/or heigh to FLT_MAX indicating the current size of the render target.
-    struct Viewport {
-        float x        = 0.0f;
-        float y        = 0.0f;
-        float width    = FLT_MAX; ///< default to current size of the render target.
-        float height   = FLT_MAX; ///< default to current size of the render target.
-        float minDepth = 0.0f;
-        float maxDepth = 1.0f;
-
-        constexpr bool fullScreen() const { return 0.0f == x && 0.0f == y && FLT_MAX == width && FLT_MAX == height; }
-        constexpr bool operator==(const Viewport & other) const {
-            return x == other.x && y == other.y && width == other.width && height == other.height && minDepth == other.minDepth && maxDepth == other.maxDepth;
-        }
-        constexpr bool operator!=(const Viewport & other) const { return !operator==(other); }
-    };
-
-    /// Scissor rectangle in Window coordinates. (0, 0) is the left top corner of the window.
-    struct ScissorRect {
-        int32_t  x      = 0;
-        int32_t  y      = 0;
-        uint32_t width  = (~0u); ///< Set to (~0u) indicating with of the current window.
-        uint32_t height = (~0u); ///< Set to (~0u) indicating height of the current window.
-
-        constexpr bool disabled() const { return (0 == x) && (0 == y) && (~0u == width) && (~0u == height); }
-        constexpr bool operator==(const ScissorRect & other) const { return x == other.x && y == other.y && width == other.width && height == other.height; }
-        constexpr bool operator!=(const ScissorRect & other) const { return !operator==(other); }
-    };
-
     union ClearColorValue {
         float    f4[4];
         uint32_t u4[4];
@@ -146,37 +221,34 @@ struct RenderTarget {
     };
 
     struct ColorTarget {
-        GpuResourceView target     = {};   // color target: typically \c Texture (e.g. swapchain frame from \c Swapchain::prepare())
-        BlendState      blendState = {};   // blend state for the color target
-        uint8_t         writeMask  = 0xFF; // 4 lower bits are write mask for R, G, B, A. Other bits are ignored.
+        GpuResourceView target     = {};
+        BlendState      blendState = {};
+        uint8_t         writeMask  = 0xFF; // 4 lower bits: write mask for R, G, B, A
 
         bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
 
-    StackArray<ColorTarget, 8> colors;
-    ClearColorValue            clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}}; // clear to solid black.
-    GpuResourceView            depthStencilTarget;                      // must be a texture
-    DepthState                 depthState   = {};
-    StencilState               stencilState = {};
-    float                      clearDepth   = 1.0;
+    StackArray<ColorTarget, 8> colorTargets;
+    GpuResourceView            depthStencilTarget;
+    ClearColorValue            clearColor   = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    float                      clearDepth   = 1.0f;
     uint32_t                   clearStencil = 0;
-    Viewport                   viewport     = {};
-    ScissorRect                scissorRect  = {};
+    RasterState                states       = RasterState::WithDefaults {}; ///< full render state baseline; every field has a value
 
-    /// Add a color target from an existing view.
-    RenderTarget & addColorTarget(const GpuResourceView & view) {
-        colors.append(ColorTarget {.target = view, .blendState = {}});
+    RasterTarget & setColorTarget(size_t index, const GpuResourceView & target) {
+        if (index >= colorTargets.MAX_SIZE) GN_UNLIKELY {
+                GN_ERROR(getLogger("GN.gpu2"))("Invalid color target index: %zu. Max supported is %zu.", index, colorTargets.MAX_SIZE);
+                return *this;
+            }
+        if (index >= colorTargets.size()) GN_UNLIKELY {
+                colorTargets.resize(index + 1);
+            }
+        colorTargets[index].target = target;
         return *this;
     }
 
-    RenderTarget & setColorTarget(size_t index, const GpuResourceView & target) {
-        GN_ASSERT(index < colors.size());
-        colors[index].target = target;
-        return *this;
-    }
-
-    RenderTarget & setClearColor(float r, float g, float b, float a = 1.0f) {
+    RasterTarget & setClearColor(float r, float g, float b, float a = 1.0f) {
         clearColor.f4[0] = r;
         clearColor.f4[1] = g;
         clearColor.f4[2] = b;
@@ -184,78 +256,28 @@ struct RenderTarget {
         return *this;
     }
 
-    RenderTarget & setDepthStencilTarget(GpuResourceView target) {
+    RasterTarget & setDepthStencilTarget(GpuResourceView target) {
         depthStencilTarget = target;
         return *this;
     }
 
-    RenderTarget & setDepthState(DepthState depthState_) {
-        depthState = depthState_;
-        return *this;
-    }
-
-    RenderTarget & setStencilState(StencilState stencilState_) {
-        stencilState = stencilState_;
-        return *this;
-    }
-
-    RenderTarget & setClearDepth(float clearDepth_) {
+    RasterTarget & setClearDepth(float clearDepth_) {
         clearDepth = clearDepth_;
         return *this;
     }
 
-    RenderTarget & setClearStencil(uint32_t clearStencil_) {
+    RasterTarget & setClearStencil(uint32_t clearStencil_) {
         clearStencil = clearStencil_;
         return *this;
     }
-
-    RenderTarget & setViewport(Viewport viewport_) {
-        viewport = viewport_;
-        return *this;
-    }
-
-    RenderTarget & setScissorRect(ScissorRect scissorRect_) {
-        scissorRect = scissorRect_;
-        return *this;
-    }
 };
 
 // -----------------------------
-// Render states
-// -----------------------------
-
-struct RenderStates {
-    /// Raster fill mode (mirrors v1 \c SetupRenderStates::FillMode).
-    enum FillMode {
-        FILL_SOLID = 0,
-        FILL_WIREFRAME,
-        FILL_POINT,
-    };
-
-    /// Face culling (mirrors v1 \c SetupRenderStates::CullMode).
-    enum CullMode {
-        CULL_NONE = 0,
-        CULL_FRONT,
-        CULL_BACK,
-    };
-
-    /// Front-face winding (mirrors v1 \c SetupRenderStates::FrontFace).
-    enum FrontFace {
-        FRONT_CCW = 0,
-        FRONT_CW,
-    };
-
-    std::optional<FillMode>  fillMode;  ///< fill mode (solid, wireframe, point)
-    std::optional<CullMode>  cullMode;  ///< cull mode (none, front, back)
-    std::optional<FrontFace> frontFace; ///< front face winding (CCW, CW)
-};
-
-// -----------------------------
-// RenderGeometry
+// RasterGeometry
 // -----------------------------
 
 /// GPU renderable geometry (mirrors v1 \c GpuDraw::GpuGeometry in \c actions.h).
-struct RenderGeometry {
+struct RasterGeometry {
     /// API-agnostic vertex attribute format; backend maps to native (e.g. VkFormat).
     enum class AttributeFormat : uint8_t {
         F32_1,
@@ -292,17 +314,15 @@ struct RenderGeometry {
         I8_4,
     };
 
-    /// Describes one vertex attribute (shader location, format, byte offset in vertex).
     struct VertexAttribute {
-        uint32_t        location = 0; ///< index into the vertex buffer array.
-        uint32_t        offset   = 0; ///< byte offset from the beginning of a vertex.
+        uint32_t        location = 0;
+        uint32_t        offset   = 0;
         AttributeFormat format   = AttributeFormat::F32_3;
 
         bool operator==(const VertexAttribute & other) const { return location == other.location && format == other.format && offset == other.offset; }
         bool operator!=(const VertexAttribute & other) const { return !operator==(other); }
     };
 
-    /// Vertex layout description. Geometry loader and sample code must populate this to match vertex buffer layout.
     struct VertexFormat {
         DynaArray<VertexAttribute> attributes;
 
@@ -312,9 +332,9 @@ struct RenderGeometry {
     };
 
     struct GeometryBuffer {
-        AutoRef<Buffer> buffer; ///< buffer containing the geometry data
-        uint64_t        offset; ///< offset in bytes from the beginning of the buffer.
-        uint32_t        stride; ///< size of one element in bytes
+        AutoRef<Buffer> buffer;
+        uint64_t        offset = 0;
+        uint32_t        stride = 0;
     };
 
     VertexFormat              format;
@@ -330,29 +350,35 @@ struct RenderGeometry {
 // Raster
 // -----------------------------
 
-/// Represent a graphical render pass
+/// Represent a graphical raster pass
 class GpuRaster : public RootEntity {
 public:
     GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
-        RenderTarget        renderTarget;
+        RasterTarget        target;
+        size_t              numberOfDrawsHint =
+            1000; ///< optional hint for expected number of draw calls, used to minimize internal allocations. The number of draws can exceed this hint.
     };
     GN_API static AutoRef<GpuRaster> create(const CreateParameters &);
 
     struct DrawParameters {
-        AutoRef<GpuShader>  vs, hs, ds, gs, ps;
-        RenderStates        renderStates;
-        RenderGeometry      geometry;
+        AutoRef<GpuShader> vs, hs, ds, gs, ps;
+        RasterState states; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
+                            ///< RasterTarget's baseline state.
+        RasterGeometry      geometry;
         GpuResourceTable    resources;
         ArrayProxy<uint8_t> immediates;
     };
     virtual void draw(const DrawParameters &) = 0;
 
-    /// Finalize the render pass. Returns a GpuPayload* to pass to GpuContext::submit().
-    /// After this call this GpuRaster object becomes unusable and is safe to release.
-    /// All necessary data needed to render are sealed inside the returned GpuPayload object.
+    /// @brief Get the render target associated with this raster. The target is immutable and fully defined at creation time. It can be used to inspect the
+    /// target attachments and their properties, but not to modify them.
+    virtual const RasterTarget & target() const = 0;
+
+    /// Finalize the render pass. Returns a payload to pass to GpuContext::submit().
+    /// After this call the GpuRaster is unusable and safe to release.
     virtual AutoRef<GpuPayload> seal() = 0;
 
 protected:

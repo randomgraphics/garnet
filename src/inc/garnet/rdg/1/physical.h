@@ -40,7 +40,7 @@ struct IntensityRGB {
 /// - Radiometric E = [W/m^2]
 /// - Photometric E = [lx] = [lm/m^2]
 /// - For uniform hemisphere emission, E = L * π.
-/// - For surece lit by a point light, E = I / r^2 * dot(n, l).
+/// - For surface lit by a point light, E = I / r^2 * dot(n, l).
 struct IrradianceRGB {
     float r, g, b;    // RGB ratio normalized to [0, 1].
     Lux   irradiance; // irradiance in lux.

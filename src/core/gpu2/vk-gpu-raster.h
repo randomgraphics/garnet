@@ -1,7 +1,6 @@
 #pragma once
 
 #include <garnet/GNgpu2.h>
-#include "vk-gpu-command-buffer.h"
 
 namespace GN::gpu2 {
 

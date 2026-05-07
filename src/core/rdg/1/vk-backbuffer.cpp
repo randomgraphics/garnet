@@ -97,6 +97,7 @@ gfx::img::Image BackbufferVulkan::readbackOutsideRenderPass() const {
 
     rapid_vulkan::Image::ReadContentParameters readParams;
     readParams.setQueue(*gq);
+    readParams.setCurrentLayout(mLastPresentedBackbufferState.layout);
     auto content = img->readContent(readParams);
 
     // Restore the backbuffer image to its layout after present so normal rendering is unaffected.

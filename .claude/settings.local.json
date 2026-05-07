@@ -41,7 +41,23 @@
       "Bash(git restore *)",
       "Bash(git commit *)",
       "Bash(xargs grep *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(python3 *)",
+      "Bash(cmake --build . -j8 --config Debug --target GNsample-rdg2-simple-triangle2)",
+      "Bash(cmake --build . -j8 --target GNsample-rdg2-simple-triangle2)",
+      "Bash(git *)",
+      "Bash(ninja rdg-skybox-shaders *)",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal [gpu2][texture] *)",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal \"[gpu2][texture]\")",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal)",
+      "Bash(lldb -o \"run\" -o \"bt\" -o \"quit\" -- build/darwin.gcc.d/bin/GNtest-internal)",
+      "Bash(lldb -o \"run\" -o \"bt\" -o \"quit\" -- build/darwin.gcc.d/bin/GNtest-internal \"[gpu2][raster]\")",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal \"[gpu2][raster]\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal \"[gpu2][raster][gpu]\")",
+      "Bash(echo \"exit=$?\")",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal \"[gpu2]\")",
+      "Bash(echo \"exit:$?\")"
     ]
   }
 }

@@ -6,11 +6,12 @@
 #include "vk-gpu-image-state.h"
 #include "vk-gpu-payload.h"
 #include "vk-gpu-shader.h"
+#include "vk-raster-state-tracker.h"
 #include "vk-texture.h"
 
 #include <string>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
 
@@ -18,16 +19,16 @@ namespace {
 
 struct StoredDraw {
     AutoRef<GpuShader> vs, hs, ds, gs, ps;
-    RenderStates       renderStates;
-    RenderGeometry     geometry;
+    RasterState        states;
+    RasterGeometry     geometry;
     GpuResourceTable   resources;
     DynaArray<uint8_t> immediates;
 };
 
-static bool resolveFirstColorAttachment(const RenderTarget & rt, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
+static bool resolveFirstColorAttachment(const RasterTarget & rt, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
                                         vk::Format * outVkFormat) {
-    if (rt.colors.empty()) return false;
-    const GpuResourceView & v = rt.colors[0].target;
+    if (rt.colorTargets.empty()) return false;
+    const GpuResourceView & v = rt.colorTargets[0].target;
     if (v.empty() || !v.isTexture()) return false;
     AutoRef<Texture> t = v.texture();
     if (!t) return false;
@@ -36,17 +37,6 @@ static bool resolveFirstColorAttachment(const RenderTarget & rt, vk::Image * out
     if (base->resolveVulkanColorAttachment(v, outImage, outView, outExt, outVkFormat)) return true;
     GN_WARN(sLogger)("GpuRaster Vulkan: color target could not be resolved to a Vulkan texture");
     return false;
-}
-
-static GpuResourceView::SubresourceRange subresourceRangeForPostSubmitFlush(const GpuResourceView & v, const Texture::Descriptor & d) {
-    GpuResourceView::SubresourceRange r  = v.imageView.range;
-    uint32_t                          nm = r.e.numMipLevels;
-    uint32_t                          na = r.e.numArrayLayers;
-    if (nm == (uint32_t) -1) nm = d.levels > r.i.mip ? d.levels - r.i.mip : 0;
-    if (na == (uint32_t) -1) na = d.faces > r.i.face ? d.faces - r.i.face : 0;
-    r.e.numMipLevels   = nm;
-    r.e.numArrayLayers = na;
-    return r;
 }
 
 static rv::Sampler * ensureLinearSampler(const rv::Device * dev, rv::Ref<rv::Sampler> & slot) {
@@ -58,47 +48,72 @@ static rv::Sampler * ensureLinearSampler(const rv::Device * dev, rv::Ref<rv::Sam
     return slot.get();
 }
 
-struct PostSubmitTextureFlush {
-    AutoRef<Texture>                  texture;
-    GpuResourceView::SubresourceRange range {};
-    TextureGpuImageState::ImageState  latest {};
-};
+// Merge non-empty fields from src into dst. Used once per draw at record time to fold draw-level
+// overrides into the target baseline, producing a fully self-contained per-draw state.
+static void mergeRenderState(RasterState & dst, const RasterState & src) {
+    if (src.fillMode) dst.fillMode = src.fillMode;
+    if (src.cullMode) dst.cullMode = src.cullMode;
+    if (src.frontFace) dst.frontFace = src.frontFace;
+    if (src.depthState) dst.depthState = src.depthState;
+    if (src.stencilState) dst.stencilState = src.stencilState;
+    if (src.viewport) dst.viewport = src.viewport;
+    if (src.scissorRect) dst.scissorRect = src.scissorRect;
+}
+
+// Convert RasterState viewport/scissor to Vulkan, using the render extent as the fallback for FLT_MAX/~0u.
+static vk::Viewport rsViewportToVk(const RasterState::Viewport & vp, vk::Extent2D ext) {
+    return vk::Viewport(vp.x, vp.y, (vp.width == FLT_MAX) ? (float) ext.width : vp.width, (vp.height == FLT_MAX) ? (float) ext.height : vp.height, vp.minDepth,
+                        vp.maxDepth);
+}
+
+static vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2D ext) {
+    return vk::Rect2D(vk::Offset2D(sr.x, sr.y),
+                      vk::Extent2D((sr.width == (~0u)) ? ext.width : (uint32_t) sr.width, (sr.height == (~0u)) ? ext.height : (uint32_t) sr.height));
+}
+
+static void applyRasterPipelineState(rv::GraphicsPipeline::ConstructParameters & gcp, const RasterState & rs) {
+    if (rs.fillMode && *rs.fillMode == RasterState::FILL_WIREFRAME) gcp.rast.setPolygonMode(vk::PolygonMode::eLine);
+    if (rs.cullMode) {
+        switch (*rs.cullMode) {
+        case RasterState::CULL_NONE:
+            gcp.rast.setCullMode(vk::CullModeFlagBits::eNone);
+            break;
+        case RasterState::CULL_FRONT:
+            gcp.rast.setCullMode(vk::CullModeFlagBits::eFront);
+            break;
+        case RasterState::CULL_BACK:
+            gcp.rast.setCullMode(vk::CullModeFlagBits::eBack);
+            break;
+        }
+    }
+    if (rs.frontFace && *rs.frontFace == RasterState::FRONT_CW) gcp.rast.setFrontFace(vk::FrontFace::eClockwise);
+}
 
 class GpuRasterPayloadVulkan final : public GpuPayloadVulkan {
 public:
-    GpuRasterPayloadVulkan(const StrA & name, RenderTarget rt, ArrayContainer<StoredDraw> draws)
+    GpuRasterPayloadVulkan(const StrA & name, RasterTarget rt, ArrayContainer<StoredDraw> draws)
         : GpuPayloadVulkan(name), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {
-        if (!mRenderTarget.colors.empty()) {
-            const GpuResourceView & cv = mRenderTarget.colors[0].target;
-            if (cv.isTexture() && cv.texture()) {
-                AutoRef<Texture> t = cv.texture();
-                if (auto * base = RuntimeType::cast<TextureVulkanBase>(t.get())) {
-                    PostSubmitTextureFlush e;
-                    e.texture = std::move(t);
-                    e.range   = subresourceRangeForPostSubmitFlush(cv, base->descriptor());
-                    e.latest  = TextureGpuImageState::ImageState {vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits::eMemoryRead,
-                                                                  vk::PipelineStageFlagBits::eBottomOfPipe};
-                    mPostSubmitTextureFlushes.append(std::move(e));
+        for (const auto & ct : mRenderTarget.colorTargets) {
+            if (!ct.target.isTexture() || !ct.target.texture()) GN_UNLIKELY continue;
+            if (auto * base = RuntimeType::cast<TextureVulkanBase>(ct.target.texture().get())) mStateTracker.addColorTarget(base, ct.target);
+        }
+        if (mRenderTarget.depthStencilTarget.isTexture() && mRenderTarget.depthStencilTarget.texture()) {
+            if (auto * base = RuntimeType::cast<TextureVulkanBase>(mRenderTarget.depthStencilTarget.texture().get())) GN_LIKELY {
+                    const auto & ds = mRenderTarget.states;
+                    bool         ro = ds.depthState && !ds.depthState->writeEnabled() && !(ds.stencilState && ds.stencilState->enabled());
+                    mStateTracker.addDepthStencilTarget(base, mRenderTarget.depthStencilTarget, ro);
                 }
-            }
         }
     }
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
-    void onSubmitComplete() override;
+    void onSubmitComplete() override { mStateTracker.flushStatesToResources(); }
 
 private:
-    RenderTarget                           mRenderTarget;
-    ArrayContainer<StoredDraw>             mDraws;
-    ArrayContainer<PostSubmitTextureFlush> mPostSubmitTextureFlushes;
+    RasterTarget               mRenderTarget;
+    ArrayContainer<StoredDraw> mDraws;
+    RasterStateTrackerVulkan   mStateTracker;
 };
-
-void GpuRasterPayloadVulkan::onSubmitComplete() {
-    for (size_t i = 0; i < mPostSubmitTextureFlushes.size(); ++i) {
-        PostSubmitTextureFlush & e = mPostSubmitTextureFlushes[i];
-        if (auto * tb = RuntimeType::cast<TextureVulkanBase>(e.texture.get())) tb->gpuStates.set(e.range, e.latest);
-    }
-}
 
 void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     if (!ctx.dev || ctx.cmd.empty()) return;
@@ -114,14 +129,7 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         return;
     }
 
-    vk::ImageMemoryBarrier preBarrier;
-    preBarrier.setOldLayout(vk::ImageLayout::eUndefined)
-        .setNewLayout(vk::ImageLayout::eColorAttachmentOptimal)
-        .setImage(colorImage)
-        .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
-        .setSrcAccessMask({})
-        .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
-    vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, nullptr, nullptr, preBarrier);
+    mStateTracker.emitPrePassBarriers(vkcb);
 
     const auto &        cc = mRenderTarget.clearColor;
     vk::ClearColorValue clearCv(std::array<float, 4> {cc.f4[0], cc.f4[1], cc.f4[2], cc.f4[3]});
@@ -138,11 +146,6 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
 
     vkcb.beginRendering(ri);
 
-    vk::Viewport vp(0.0f, 0.0f, (float) ext.width, (float) ext.height, 0.0f, 1.0f);
-    vkcb.setViewport(0, 1, &vp);
-    vk::Rect2D scissor(vk::Offset2D(0, 0), ext);
-    vkcb.setScissor(0, 1, &scissor);
-
     rv::Ref<rv::Sampler> defaultSampler;
 
     for (size_t di = 0; di < mDraws.size(); ++di) {
@@ -154,6 +157,15 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
             continue;
         }
 
+        // Each draw's state is fully self-contained (target baseline merged with draw overrides at record
+        // time). State changes are transient: they apply only to this draw and do not affect later draws.
+        {
+            vk::Viewport vp = rsViewportToVk(*d.states.viewport, ext);
+            vkcb.setViewport(0, 1, &vp);
+            vk::Rect2D sc = rsScissorToVk(*d.states.scissorRect, ext);
+            vkcb.setScissor(0, 1, &sc);
+        }
+
         rv::GraphicsPipeline::ConstructParameters gcp;
         gcp.setName(std::string(StrA::format("rdg2_gfx_{}", di).c_str()));
         gcp.setDynamicRendering(colorFmt, vk::Format::eUndefined);
@@ -161,28 +173,14 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         if (psVk && psVk->rvShader()) gcp.setFS(psVk->rvShader());
         gcp.dynamicViewport(1).dynamicScissor(1);
 
-        const RenderGeometry & geom = d.geometry;
+        const RasterGeometry & geom = d.geometry;
         for (size_t bi = 0; bi < geom.vertices.size(); ++bi) { gcp.addVertexBuffer(geom.vertices[bi].stride); }
         for (size_t ai = 0; ai < geom.format.attributes.size(); ++ai) {
-            const RenderGeometry::VertexAttribute & a = geom.format.attributes[ai];
+            const RasterGeometry::VertexAttribute & a = geom.format.attributes[ai];
             gcp.addVertexAttribute(a.location, (uint32_t) a.offset, vertexAttributeFormatToVk(a.format));
         }
 
-        if (d.renderStates.fillMode && *d.renderStates.fillMode == RenderStates::FILL_WIREFRAME) { gcp.rast.setPolygonMode(vk::PolygonMode::eLine); }
-        if (d.renderStates.cullMode) {
-            switch (*d.renderStates.cullMode) {
-            case RenderStates::CULL_NONE:
-                gcp.rast.setCullMode(vk::CullModeFlagBits::eNone);
-                break;
-            case RenderStates::CULL_FRONT:
-                gcp.rast.setCullMode(vk::CullModeFlagBits::eFront);
-                break;
-            case RenderStates::CULL_BACK:
-                gcp.rast.setCullMode(vk::CullModeFlagBits::eBack);
-                break;
-            }
-        }
-        if (d.renderStates.frontFace && *d.renderStates.frontFace == RenderStates::FRONT_CW) { gcp.rast.setFrontFace(vk::FrontFace::eClockwise); }
+        applyRasterPipelineState(gcp, d.states);
 
         rv::Ref<const rv::GraphicsPipeline> pipeline;
         try {
@@ -241,40 +239,36 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     }
 
     vkcb.endRendering();
-
-    vk::ImageMemoryBarrier postBarrier;
-    postBarrier.setOldLayout(vk::ImageLayout::eColorAttachmentOptimal)
-        .setNewLayout(vk::ImageLayout::ePresentSrcKHR)
-        .setImage(colorImage)
-        .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
-        .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-        .setDstAccessMask(vk::AccessFlagBits::eMemoryRead);
-    vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eBottomOfPipe, {}, nullptr, nullptr, postBarrier);
 }
 
 class GpuRasterVulkan2 final : public GpuRaster {
 public:
     GN_REGISTER_RUNTIME_TYPE(GpuRaster);
 
-    GpuRasterVulkan2(const StrA & entityName, RenderTarget rt): GpuRaster(TYPE_INFO(), entityName), mRenderTarget(std::move(rt)), mSealed(false) {}
+    GpuRasterVulkan2(const StrA & entityName, CreateParameters cp): GpuRaster(TYPE_INFO(), entityName), mCreateParams(std::move(cp)) {
+        mDraws.reserve(mCreateParams.numberOfDrawsHint);
+    }
+
+    const RasterTarget & target() const override { return mCreateParams.target; }
 
     void draw(const DrawParameters & dp) override {
         if (mSealed) {
             GN_ERROR(sLogger)("GpuRasterVulkan2::draw: already sealed");
             return;
         }
-        StoredDraw s;
+        mDraws.resize(mDraws.size() + 1);
+        StoredDraw & s = mDraws.back();
         s.vs           = dp.vs;
         s.hs           = dp.hs;
         s.ds           = dp.ds;
         s.gs           = dp.gs;
         s.ps           = dp.ps;
-        s.renderStates = dp.renderStates;
         s.geometry     = dp.geometry;
         s.resources    = dp.resources;
+        s.states       = mCreateParams.target.states;
+        mergeRenderState(s.states, dp.states);
         s.immediates.clear();
         if (dp.immediates.data() && dp.immediates.size() > 0) { s.immediates.append(dp.immediates.data(), (size_t) dp.immediates.size()); }
-        mDraws.append(std::move(s));
     }
 
     AutoRef<GpuPayload> seal() override {
@@ -283,12 +277,12 @@ public:
             return {};
         }
         mSealed = true;
-        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", std::move(mRenderTarget), std::move(mDraws)));
+        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", std::move(mCreateParams.target), std::move(mDraws)));
     }
 
 private:
-    RenderTarget               mRenderTarget;
-    bool                       mSealed;
+    CreateParameters           mCreateParams;
+    bool                       mSealed = false;
     ArrayContainer<StoredDraw> mDraws;
 };
 
@@ -299,7 +293,7 @@ AutoRef<GpuRaster> createGpuRasterVulkan2(const GpuRaster::CreateParameters & pa
     AutoRef<GpuContextVulkan2> vkGpu = params.gpu.staticCastTo<GpuContextVulkan2>();
     if (!vkGpu || !vkGpu->ready()) return {};
     StrA n = params.gpu->name.empty() ? StrA("raster_pass") : params.gpu->name + "/raster";
-    return AutoRef<GpuRaster>(new GpuRasterVulkan2(n, params.renderTarget));
+    return AutoRef<GpuRaster>(new GpuRasterVulkan2(n, params));
 }
 
 } // namespace GN::gpu2

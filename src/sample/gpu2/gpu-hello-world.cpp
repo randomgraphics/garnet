@@ -74,9 +74,10 @@ int main(int argc, const char ** argv) {
 
         // Empty raster pass: no draw calls, just clears the backbuffer to pure blue.
         // seal() is called immediately so it acts as a clear-only pass.
-        RenderTarget rt;
-        rt.addColorTarget(frame.view).setClearColor(0.0f, 0.0f, 1.0f);
-        auto                raster        = GpuRaster::create({.gpu = gpu, .renderTarget = rt});
+        RasterTarget rt;
+        rt.colorTargets.append(RasterTarget::ColorTarget {.target = frame.view});
+        rt.setClearColor(0.0f, 0.0f, 1.0f);
+        auto                raster        = GpuRaster::create({.gpu = gpu, .target = rt});
         AutoRef<GpuPayload> rasterPayload = raster->seal();
 
         // Submit the clear pass, gated on frame.ready so we don't write before the image is acquired.

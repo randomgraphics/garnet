@@ -4,7 +4,7 @@
 #include "vk-texture.h"
 #include <garnet/GNrdg2.h>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
 
 // -----------------------------------------------------------------------
 // Factories for gpu2 types (GpuShader, Texture)

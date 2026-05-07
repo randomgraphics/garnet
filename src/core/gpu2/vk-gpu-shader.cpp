@@ -2,7 +2,7 @@
 #include "gpu-context.h"
 #include "vk-gpu-context.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
 

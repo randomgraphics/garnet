@@ -136,6 +136,9 @@ struct GpuContext : public RootEntity {
     /// Called by the L1 graph's wait loop while sleeping on manual-complete nodes.
     virtual void pump() = 0;
 
+    /// Wait for GPU idle.
+    virtual void waitIdle() = 0;
+
 protected:
     using RootEntity::RootEntity;
 };
@@ -207,6 +210,11 @@ struct Texture : RootEntity {
 
     /// Convenience method to read the texture content into an image. Stalls CPU and GPU. Slow. Do NOT use in performance-sensitive code or render loop.
     virtual gfx::img::Image readback() const = 0;
+
+    /// Convenience method to set content of the whole texture from an image. Stalls CPU and GPU. Slow. Do NOT use in performance-sensitive code or render loop.
+    /// The method assumes the input image has the same format and dimensions as the texture. It'll simply reject the image and fail,
+    /// if the input image does not completely match the texture's format and dimensions.
+    virtual bool setContent(const gfx::img::Image & image) = 0;
 
 protected:
     using RootEntity::RootEntity;
@@ -286,6 +294,19 @@ struct Buffer : public RootEntity {
     /// Returns the data accessor of a transient buffer that can be directly written to.
     /// Trying to map a un-mappable, or already mapped, buffer returns an empty Mapped object.
     virtual Mapped map() = 0;
+
+    /// Upload \p size bytes from \p data into the buffer using an internal staging buffer.
+    /// The caller does not need to create the buffer as mappable. Internally this allocates
+    /// a short-lived CPU-visible staging buffer, copies the data, then issues a GPU copy
+    /// command to transfer it into the device-local buffer. The upload is submitted
+    /// immediately and the method blocks until the GPU copy completes.
+    /// \return true on success, false if the upload failed (e.g. out-of-memory).
+    /// \note Set buffer content in this way is, although convenient, very inefficient, especially when uploading data
+    /// to many buffers, since it completely stalls the CPU and GPU until the upload completes. For better performance,
+    /// consider uploading data into mappable staging buffers, then issue GPU copy commands to transfer data from the
+    /// staging buffers into the target buffers. This way multiple uploads can be batched together and submitted at
+    /// once, significantly reducing CPU-GPU synchronization overhead.
+    virtual bool setContent(ArrayProxy<const uint8_t> data, size_t offset = 0) = 0;
 
 protected:
     virtual void unmap(const Mapped &) = 0;

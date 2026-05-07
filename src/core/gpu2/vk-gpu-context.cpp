@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-static GN::Logger * sLoggerVk = GN::getLogger("GN.gfx.gpu2.vk");
+static GN::Logger * sLoggerVk = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
 
@@ -59,6 +59,7 @@ struct GpuContextVulkan2::Impl {
         vk::UniqueFence                        fence;
         std::function<void()>                  onComplete;
         std::vector<AutoRef<GpuPayloadVulkan>> works;
+        rv::CommandQueue::SubmissionID         submissionId; ///< ID returned by queue->submit(); used to flush rv::CommandQueue before fence is destroyed.
     };
     std::mutex                     mPendingMutex;
     std::vector<PendingSubmission> mPending;
@@ -162,6 +163,8 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     for (size_t i = 0; i < sp.waitForGpu.size(); ++i) {
         auto w = RuntimeType::cast<GpuPayloadVulkan>(sp.waitForGpu[i]);
         if (w && w->semaphore) waitSems.push_back(w->semaphore);
+    }
+    for (size_t i = 0; i < sp.work.size(); ++i) {
         auto s = RuntimeType::cast<GpuPayloadVulkan>(sp.work[i]);
         if (s) {
             works.push_back(s);
@@ -178,17 +181,24 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     if (sp.onComplete) {
         vk::UniqueFence fence = mImpl->mDevice->gi()->device.createFenceUnique({});
         qsp.signalFence       = fence.get();
-        queue->submit(qsp);
+        auto submissionId     = queue->submit(qsp);
+        for (auto & w : works) {
+            if (w) w->onSubmitComplete();
+        }
         std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
-        mImpl->mPending.push_back({sp.name, std::move(fence), sp.onComplete, std::move(works)});
+        mImpl->mPending.push_back({sp.name, std::move(fence), sp.onComplete, std::move(works), submissionId});
     } else {
         queue->submit(qsp);
+        for (auto & w : works) {
+            if (w) w->onSubmitComplete();
+        }
     }
 }
 
 void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
     if (!mImpl || !mImpl->mDevice || !mImpl->mDevice->handle()) return;
-    vk::Device device = mImpl->mDevice->gi()->device;
+    vk::Device         device = mImpl->mDevice->gi()->device;
+    rv::CommandQueue * queue  = mImpl->mDevice->graphics();
 
     // Collect completed callbacks outside the lock so they can safely call submit() or pump() themselves.
     std::vector<std::pair<StrA, std::function<void()>>> readyCallbacks;
@@ -204,6 +214,10 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
                 fenceReady = device.getFenceStatus(it->fence.get()) == vk::Result::eSuccess;
             }
             if (fenceReady) {
+                // Flush rv::CommandQueue's InternalSubmission for this fence BEFORE erasing (which destroys the fence).
+                // Without this, rv::CommandQueue::waitIdle() in the destructor would try to vkWaitForFences on an
+                // already-destroyed handle, triggering a validation error and SIGTRAP.
+                if (queue) queue->wait({it->submissionId});
                 readyCallbacks.push_back({std::move(it->name), std::move(it->onComplete)});
                 it = mImpl->mPending.erase(it);
             } else {

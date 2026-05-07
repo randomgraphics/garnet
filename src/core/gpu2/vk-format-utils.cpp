@@ -274,8 +274,8 @@ gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt) {
     return PF::UNKNOWN();
 }
 
-vk::Format vertexAttributeFormatToVk(RenderGeometry::AttributeFormat f) {
-    using F = RenderGeometry::AttributeFormat;
+vk::Format vertexAttributeFormatToVk(RasterGeometry::AttributeFormat f) {
+    using F = RasterGeometry::AttributeFormat;
     switch (f) {
     case F::F32_1:
         return vk::Format::eR32Sfloat;

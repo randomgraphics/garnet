@@ -20,6 +20,8 @@ public:
 
     void testRunStarting(Catch::TestRunInfo const &) override { m_failedNames.clear(); }
 
+    void testCaseStarting(Catch::TestCaseInfo const & t) override { std::cout << "\n----- Starting test: " << t.name << " -----\n" << std::flush; }
+
     void testCaseEnded(Catch::TestCaseStats const & testCaseStats) override {
         if (testCaseStats.totals.assertions.total() > 0 && !testCaseStats.totals.assertions.allOk()) { m_failedNames.push_back(testCaseStats.testInfo->name); }
     }

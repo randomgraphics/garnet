@@ -8,6 +8,6 @@ vk::Format pixelFormatToVkFormat(gfx::img::PixelFormat pf);
 
 gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt);
 
-vk::Format vertexAttributeFormatToVk(RenderGeometry::AttributeFormat f);
+vk::Format vertexAttributeFormatToVk(RasterGeometry::AttributeFormat f);
 
 } // namespace GN::gpu2

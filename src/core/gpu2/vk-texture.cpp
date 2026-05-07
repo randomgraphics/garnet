@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cstring>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
 
@@ -65,11 +65,11 @@ rv::Ref<rv::Image> createVkImage(const Texture::Descriptor & descriptor, const r
     return rv::Ref<rv::Image>(new rv::Image(cp));
 }
 
-gfx::img::Image contentToImage(const rv::Image::Content & content) {
-    if (content.subresources.empty() || content.storage.empty()) return gfx::img::Image();
+gfx::img::Image contentToImage(const rv::Image::Content & content, size_t subresourceIndex = 0) {
+    if (subresourceIndex >= content.subresources.size() || content.storage.empty()) return gfx::img::Image();
     gfx::img::PixelFormat pf = vkFormatToPixelFormat(content.format);
     if (pf == gfx::img::PixelFormat::UNKNOWN()) return gfx::img::Image();
-    const auto & sub = content.subresources[0];
+    const auto & sub = content.subresources[subresourceIndex];
     uint32_t     w   = sub.extent.width;
     uint32_t     h   = sub.extent.height;
     uint32_t     d   = sub.extent.depth;
@@ -78,7 +78,9 @@ gfx::img::Image contentToImage(const rv::Image::Content & content) {
     extent.set(w, h, d);
     gfx::img::PlaneDesc planeDesc = gfx::img::PlaneDesc::make(pf, extent);
     gfx::img::ImageDesc imageDesc = gfx::img::ImageDesc::make(planeDesc, 1, 1, 1);
-    return gfx::img::Image(imageDesc, content.storage.data(), content.storage.size());
+    const uint8_t *     src       = content.storage.data() + sub.offset;
+    size_t              sz        = (size_t) sub.pitch * h * d;
+    return gfx::img::Image(imageDesc, src, sz);
 }
 
 } // namespace
@@ -108,10 +110,54 @@ gfx::img::Image TextureVulkanBase::readback() const {
         GN_ERROR(sLogger)("TextureVulkanBase::readback: no graphics queue, name='{}'", name);
         return gfx::img::Image();
     }
+    mGpu->waitIdle(); // Ensure all submitted GPU operations are complete before readback.
     rv::Image::ReadContentParameters readParams;
     readParams.setQueue(*gq);
+    if (const auto * state = gpuStates.get(0, 0)) readParams.setCurrentLayout(state->layout);
     auto content = src->readContent(readParams);
+    if (!content) return {};
+    gpuStates.reset(gpuStates.mipLevels(), gpuStates.arrayLayers(), TextureGpuImageState::ImageState::TRANSFER_SRC());
     return contentToImage(content);
+}
+
+bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
+    rv::Image * dst = vulkanImageForSetContent();
+    if (!dst || !dst->handle()) {
+        GN_ERROR(sLogger)("TextureVulkanBase::setContent: texture not writable or not initialized, name='{}'", name);
+        return false;
+    }
+    if (image.empty()) {
+        GN_ERROR(sLogger)("TextureVulkanBase::setContent: input image is empty, name='{}'", name);
+        return false;
+    }
+    if (!mGpu || !mGpu->ready()) return false;
+    const rv::Device * dev = mGpu->vulkanDevice();
+    if (!dev || !dev->gi()) return false;
+    rv::CommandQueue * gq = dev->graphics();
+    if (!gq) return false;
+    mGpu->waitIdle(); // Ensure all submitted GPU operations are complete before setting new content.
+    for (uint32_t f = 0; f < mDescriptor.faces; ++f) {
+        for (uint32_t l = 0; l < mDescriptor.levels; ++l) {
+            gfx::img::PlaneCoord pc {};
+            pc.face              = (size_t) f;
+            pc.level             = (size_t) l;
+            const auto &   plane = image.plane(pc);
+            const uint32_t w     = (uint32_t) plane.extent.w;
+            const uint32_t h     = (uint32_t) plane.extent.h;
+            if (w == 0 || h == 0) continue;
+            rv::Image::SetContentParameters sc;
+            sc.setQueue(*gq);
+            sc.mipLevel   = l;
+            sc.arrayLayer = f;
+            sc.area.w     = w;
+            sc.area.h     = h;
+            sc.area.d     = 1;
+            sc.pitch      = (size_t) plane.pitch;
+            sc.pixels     = image.at(pc);
+            if (dst->setContent(sc)) { gpuStates.set(GpuResourceView::SubresourceRange {{l, f}, {1, 1}}, TextureGpuImageState::ImageState::TRANSFER_DST()); }
+        }
+    }
+    return true;
 }
 
 bool TextureVulkanBase::resolveVulkanColorAttachment(const GpuResourceView & viewSpec, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
@@ -141,6 +187,8 @@ public:
     GN_REGISTER_RUNTIME_TYPE(TextureVulkanBase);
 
     explicit OwnedTextureVulkan(const StrA & entityName): TextureVulkanBase(OwnedTextureVulkan::TYPE_INFO(), entityName) {}
+
+    rv::Image * vulkanImageForSetContent() override { return mOwnedImage.get(); }
 
     bool initOwned(const CreateParameters & params) {
         resetOwned();

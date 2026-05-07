@@ -10,7 +10,7 @@ using namespace GN::rdg2;
 using namespace GN::gpu2;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.gpu2");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.rdg");
 
 int main(int argc, const char ** argv) {
 
@@ -89,7 +89,7 @@ int main(int argc, const char ** argv) {
         Swapchain::Frame frame = swapchain->prepare();
         if (frame.view.empty()) return -1;
 
-        // Record the color pass inside a graph node so shader artifacts are ready.
+        // create the main rendering node.
         AutoRef<GpuPayload> colorPassWork;
         auto                colorPassAction = [&]() {
             auto vs = graph->getTypedArtifactContent<AutoRef<GpuShader>>(solidVs);
@@ -98,13 +98,15 @@ int main(int argc, const char ** argv) {
 
             GpuRaster::CreateParameters rcp;
             rcp.gpu = gpuContext;
-            rcp.renderTarget.addColorTarget(frame.view);
+            rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = frame.view});
+            rcp.target.setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
 
-            auto                      r = GpuRaster::create(rcp);
             GpuRaster::DrawParameters drawParams;
             drawParams.vs                   = vs;
             drawParams.ps                   = ps;
             drawParams.geometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
+
+            auto r = GpuRaster::create(rcp);
             r->draw(drawParams);
             colorPassWork = r->seal();
         };
@@ -113,13 +115,13 @@ int main(int argc, const char ** argv) {
                                                 .dependsOn(solidVsReady)
                                                 .dependsOn(solidPsReady));
 
-        // Wait for the color pass node to finish recording.
+        // Wait for the color pass node to generate GPU payload.
         graph->waitForToken(graph->getNodeCompletionToken(colorPassNode));
 
-        // Submit: wait for swapchain image ready on GPU, then run the color pass.
+        // Submit the payload to GPU, waiting on swapchain image ready.
         gpuContext->submit(GpuContext::SubmitParameters(StrA::format("frame {}", frameCounter)).appendWork(colorPassWork).waitFor(frame.ready));
 
-        // Present after the color pass payload completes on GPU.
+        // Present the frame, after the color pass payload
         swapchain->present(*colorPassWork);
     }
 

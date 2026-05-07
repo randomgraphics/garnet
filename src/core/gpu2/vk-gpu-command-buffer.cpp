@@ -3,7 +3,7 @@
     #include "vk-gpu-command-buffer.h"
     #include <garnet/GNrdg2.h>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2.vk");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
 

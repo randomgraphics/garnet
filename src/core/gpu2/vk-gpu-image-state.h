@@ -17,6 +17,10 @@ struct TextureGpuImageState {
 
         static constexpr ImageState UNDEFINED() { return {vk::ImageLayout::eUndefined, vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eBottomOfPipe}; }
 
+        static constexpr ImageState TRANSFER_SRC() {
+            return {vk::ImageLayout::eTransferSrcOptimal, vk::AccessFlagBits::eTransferRead, vk::PipelineStageFlagBits::eTransfer};
+        }
+
         static constexpr ImageState TRANSFER_DST() {
             return {vk::ImageLayout::eTransferDstOptimal, vk::AccessFlagBits::eTransferWrite, vk::PipelineStageFlagBits::eTransfer};
         }

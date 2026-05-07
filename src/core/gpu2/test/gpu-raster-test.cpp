@@ -20,10 +20,12 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
     // Clear-only raster pass: no draw calls, pure blue clear color.
     GpuResourceView view;
     view.resource = texture; // AutoRef<Texture> implicitly widens to AutoRef<Entity>
-    RenderTarget rt;
-    rt.addColorTarget(view).setClearColor(0.0f, 0.0f, 1.0f);
-    auto raster = GpuRaster::create({.gpu = gpu, .renderTarget = rt});
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget {.target = view});
+    rt.setClearColor(0.0f, 0.0f, 1.0f);
+    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
     REQUIRE(raster);
+    REQUIRE(raster->target().clearColor.f4[3] == 1.0f);
     AutoRef<GpuPayload> rasterPayload = raster->seal();
 
     // Submit and block on CPU until the GPU fence fires.
@@ -41,9 +43,9 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
     std::vector<gfx::img::RGBA8> pixels = image.plane().toRGBA8(image.data());
     REQUIRE(pixels.size() == (size_t) (W * H));
     for (const auto & px : pixels) {
-        CHECK(px.r == 0);
-        CHECK(px.g == 0);
-        CHECK(px.b == 255);
-        CHECK(px.a == 255);
+        CHECK(px.r == 0u);
+        CHECK(px.g == 0u);
+        CHECK(px.b == 255u);
+        CHECK(px.a == 255u);
     }
 }

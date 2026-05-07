@@ -2,7 +2,7 @@
 #include "vk-gpu-context.h"
 #include <mutex>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu2");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
 
 namespace GN::gpu2 {
 
