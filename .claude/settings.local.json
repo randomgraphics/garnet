@@ -57,7 +57,11 @@
       "Bash(build/darwin.gcc.d/bin/GNtest-internal \"[gpu2][raster][gpu]\")",
       "Bash(echo \"exit=$?\")",
       "Bash(build/darwin.gcc.d/bin/GNtest-internal \"[gpu2]\")",
-      "Bash(echo \"exit:$?\")"
+      "Bash(echo \"exit:$?\")",
+      "Bash(awk '{print $9, \"\\(\" $5 \"\\)\"}')",
+      "WebSearch",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal [gpu2][buffer] *)",
+      "Bash(build/darwin.gcc.d/bin/GNtest-internal \"[gpu2][buffer]\")"
     ]
   }
 }
