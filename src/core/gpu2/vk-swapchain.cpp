@@ -14,14 +14,6 @@ namespace {
 
 using GpuImageState = TextureGpuImageState::ImageState;
 
-static GpuResourceView::SubresourceRange swapchainBackbufferSubresourceRange() {
-    GpuResourceView::SubresourceRange r;
-    r.i                = {};
-    r.e.numMipLevels   = 1;
-    r.e.numArrayLayers = 1;
-    return r;
-}
-
 /// One stable \c Texture per swapchain backbuffer \c Image (non-owning view of rapid-vulkan swapchain memory).
 class SwapchainBackbufferTextureVulkan final : public TextureVulkanBase {
 public:
@@ -35,13 +27,13 @@ public:
     void bindToSwapchainBackbuffer(rv::Image * image, uint32_t w, uint32_t h, gfx::img::PixelFormat format) {
         setVulkanHandles(image);
         mDescriptor = Texture::Descriptor {}.setFormat(format).setDimensions(w, h, 1).setFaces(1).setLevels(1).setSamples(1);
-        gpuStates.reset(1, 1, GpuImageState::UNDEFINED());
+        gpuStates.reset(pixelFormatToVkFormat(format), 1, 1, GpuImageState::UNDEFINED());
     }
 
     void clearAcquiredBinding() {
         setVulkanHandles(nullptr);
         mDescriptor = {};
-        gpuStates.reset(0, 0);
+        gpuStates.clear();
     }
 
     /// stable per-backbuffer payload; returned as frame.ready from prepare()
@@ -81,7 +73,6 @@ GpuResourceView SwapchainVulkan2::makeFrameColorView() const {
     if (!mActiveBackbufferTexture) return out;
     Texture * t = mActiveBackbufferTexture;
     out.resource.set(t);
-    out.imageView.range = swapchainBackbufferSubresourceRange();
     out.setImageViewFormat(mSurfaceFormat);
     return out;
 }
@@ -191,8 +182,9 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
     }
 
     // Get the latest state of the backbuffer image directly from the back buffer texture. This assumes all pending
-    // GpuPayloads have been submitted to the GPU already.
-    GpuImageState tracked = *backbufferTex->gpuStates.get(0, 0);
+    // GpuPayloads have been submitted to the GPU already. Backbuffer is always color-format → eColor plane.
+    const auto *  trackedPtr = backbufferTex->gpuStates.get(0, 0, vk::ImageAspectFlagBits::eColor);
+    GpuImageState tracked    = trackedPtr ? *trackedPtr : GpuImageState::UNDEFINED();
 
     auto &        vkWaitFor      = static_cast<GpuPayloadVulkan &>(waitFor);
     vk::Semaphore renderFinished = vkWaitFor.semaphore;
@@ -214,7 +206,7 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
 
     if (backbufferTex) {
         auto & bs = result.backbufferStatus;
-        backbufferTex->gpuStates.set(swapchainBackbufferSubresourceRange(), {bs.layout, bs.access, bs.stages});
+        backbufferTex->gpuStates.set(backbufferTex->name, {bs.layout, bs.access, bs.stages});
     }
 
     // clear active frame

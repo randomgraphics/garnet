@@ -340,8 +340,8 @@ struct GpuResourceView {
     };
 
     struct SubresourceRange {
-        SubresourceIndex  i = {};
-        SubresourceExtent e = {};
+        SubresourceIndex  i = {}; // default to (0, 0)
+        SubresourceExtent e = {}; // default to (max, max) = whole resource
         bool              operator==(const SubresourceRange & o) const { return i == o.i && e == o.e; }
         bool              operator!=(const SubresourceRange & o) const { return !(*this == o); }
     };

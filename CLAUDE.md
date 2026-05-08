@@ -57,6 +57,20 @@ env/bin/format-all-sources.py -n     # Dry-run (report violations only)
 env/bin/format-all-sources.py -d     # Format only files changed from master
 ```
 
+## Code Comments
+
+Add a reasonable amount of comments to code. Comments should mainly explain **why** the code is written the way it is — the logic, the reasoning, the assumptions, the constraints, the non-obvious tradeoffs.
+
+Do **not** write comments that just narrate **what** the code does — well-named identifiers already convey that.
+
+Guidelines:
+- Add a comment when the *reason* for an approach is non-obvious: invariants, why a particular algorithm/order/check is needed, performance assumptions, hardware/API quirks being worked around, etc.
+- Skip comments that merely restate the code (e.g., `// increment counter` above `++counter`).
+- Keep comments concise — usually one short line. Multi-line only when the rationale genuinely needs it.
+- Do not reference task numbers, PR numbers, or "added for X" — explain the enduring reason, not the transient circumstance.
+
+This rule overrides the default "write no comments" stance.
+
 ## Architecture
 
 ### Module Map
