@@ -65,8 +65,8 @@ env/bin/format-all-sources.py -d     # Format only files changed from master
 |--------|---------|--------|-------------|
 | Base | `GNbase.h` | `src/core/base/` | Memory, logging, threading, data structures |
 | Graphics | `GNgfx.h` | `src/core/gfx/` | Images, pixel formats, sprites, fonts |
-| GPU v1 | (via GNgfx.h) | `src/core/gpu/` | OpenGL backend (stable) |
-| GPU v2 | (via GNgfx.h) | `src/core/gpu2/` | D3D12 backend (modern architecture). WIP. Might be dropped layer. |
+| GPU v1 | (via GNgfx.h) | `src/core/gpu/` | OpenGL backend (stable, but slated for retirement) |
+| GPU v2 | (via GNgfx.h) | `src/core/gpu2/` | Modern GPU abstraction (D3D12 + Vulkan WIP). Go-to GPU model for future code. |
 | RDG | `GNrdg.h` | `src/core/rdg/` | Render dependency graph. The one that is being actively developed. |
 | Engine | `GNengine.h` | `src/core/engine/` | Entity-component, meshes, scene objects. Works with GPU v1 only. |
 | Input | `GNinput.h` | `src/core/input/` | Keyboard, mouse, gamepad |
@@ -152,7 +152,7 @@ Use these guards for API-specific code paths.
 
 ### Adding a New GPU Backend
 
-This is deprecated module. Will be removed after RDG module comes in place.
+GPU v2 is the go-to GPU model for future code; v1 (`src/core/gpu/`) will retire eventually.
 
 New backends go under `src/core/gpu2/<api>/`. Follow the D3D12 implementation pattern: add a feature flag in `features.h.in`, guard with `#if GN_BUILD_HAS_<API>`, and register the new target in `src/core/CMakeLists.txt`.
 
