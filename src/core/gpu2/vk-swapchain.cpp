@@ -32,14 +32,14 @@ public:
         mGpu = std::move(gpu);
     }
 
-    void bindToSwapchainBackbuffer(rv::Image * image, vk::ImageView view, uint32_t w, uint32_t h, gfx::img::PixelFormat format) {
-        setVulkanHandles(image, view);
+    void bindToSwapchainBackbuffer(rv::Image * image, uint32_t w, uint32_t h, gfx::img::PixelFormat format) {
+        setVulkanHandles(image);
         mDescriptor = Texture::Descriptor {}.setFormat(format).setDimensions(w, h, 1).setFaces(1).setLevels(1).setSamples(1);
         gpuStates.reset(1, 1, GpuImageState::UNDEFINED());
     }
 
     void clearAcquiredBinding() {
-        setVulkanHandles({}, {});
+        setVulkanHandles(nullptr);
         mDescriptor = {};
         gpuStates.reset(0, 0);
     }
@@ -164,9 +164,8 @@ Swapchain::Frame SwapchainVulkan2::prepare() {
         AutoRef<SwapchainBackbufferTextureVulkan> tex(new SwapchainBackbufferTextureVulkan(texName, mGpu));
         it = mBackbufferTextures.emplace(bb.image, tex).first;
     }
-    it->second->bindToSwapchainBackbuffer(
-        bb.image, bb.view, w, h,
-        mSurfaceFormat); // this will reset the texture's GPU state to UNDEFINED, which matches the swapchain image state after acquire and before any rendering
+    it->second->bindToSwapchainBackbuffer(bb.image, w, h, mSurfaceFormat); // this will reset the texture's GPU state to UNDEFINED,
+                                                                           // which matches the swapchain image state after acquire and before any rendering
     mActiveBackbufferTexture                          = it->second.get();
     mActiveBackbufferTexture->readyPayload->semaphore = mActiveFrame.imageAvailable;
 

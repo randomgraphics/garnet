@@ -188,15 +188,7 @@ public:
         if (!mOwnedImage || !mOwnedImage->handle()) return false;
         rv::setVkHandleName(dev->gi()->device, mOwnedImage->handle(), name.c_str());
 
-        rv::Image::GetViewParameters gvp;
-        gvp.setFormat(pixelFormatToVkFormat(mDescriptor.format));
-        vk::ImageView iv = mOwnedImage->getView(gvp);
-        if (!iv) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initOwned: getView failed, name='{}'", name);
-            mOwnedImage.clear();
-            return false;
-        }
-        setVulkanHandles(mOwnedImage.get(), iv);
+        setVulkanHandles(mOwnedImage.get());
         gpuStates.reset(mDescriptor.levels, mDescriptor.faces, TextureGpuImageState::ImageState::UNDEFINED());
         return true;
     }
@@ -235,14 +227,7 @@ public:
         if (!mOwnedImage || !mOwnedImage->handle()) return false;
         mOwnedImage->setName(path.c_str());
 
-        rv::Image::GetViewParameters gvp;
-        gvp.setFormat(pixelFormatToVkFormat(mDescriptor.format));
-        vk::ImageView iv = mOwnedImage->getView(gvp);
-        if (!iv) {
-            mOwnedImage.clear();
-            return false;
-        }
-        setVulkanHandles(mOwnedImage.get(), iv);
+        setVulkanHandles(mOwnedImage.get());
 
         rv::CommandQueue * gq = dev->graphics();
         if (!gq) {
@@ -277,7 +262,7 @@ private:
 
     void reset() {
         mOwnedImage.clear();
-        setVulkanHandles({}, {});
+        setVulkanHandles(nullptr);
         mDescriptor = {};
         mGpu.clear();
         gpuStates.reset(0, 0);

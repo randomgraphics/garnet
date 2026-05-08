@@ -43,6 +43,13 @@ struct NeverOverflowingCounter {
         return NeverOverflowingCounter {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()};
     }
 
+    /// hash function for this counter, so it can be used as a key in hash-based containers.
+    static inline size_t hash(const NeverOverflowingCounter & c) {
+        auto h = std::hash<uint64_t>()(c.value0);
+        combineHash(h, c.value1);
+        return h;
+    }
+
     NeverOverflowingCounter & increment() {
         if (++value0 == 0) { ++value1; }
         return *this;

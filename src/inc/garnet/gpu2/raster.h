@@ -339,7 +339,7 @@ struct RasterGeometry {
 
     VertexFormat              format;
     DynaArray<GeometryBuffer> instances;
-    uint32_t                  instanceCount = 0;
+    uint32_t                  instanceCount = 1;
     DynaArray<GeometryBuffer> vertices;
     uint32_t                  vertexCount = 0;
     GeometryBuffer            indices;

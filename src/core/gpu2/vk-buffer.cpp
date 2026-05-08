@@ -44,8 +44,8 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
     cp.gi    = dev->gi();
     cp.size  = params.size;
     cp.usage = kAllUsages;
-    cp.memory = params.mappable ? (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)
-                                : vk::MemoryPropertyFlagBits::eDeviceLocal;
+    cp.memory =
+        params.mappable ? (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) : vk::MemoryPropertyFlagBits::eDeviceLocal;
 
     mRvBuffer = rv::Ref<rv::Buffer>(new rv::Buffer(cp));
     if (!mRvBuffer || !mRvBuffer->handle()) {
@@ -127,9 +127,9 @@ std::vector<uint8_t> BufferVulkan::readContent(size_t offset, size_t size) const
     mGpu->waitIdle();
     rv::Buffer::ReadParameters rp;
     rp.setQueue(*gq).setRange((vk::DeviceSize) offset, size == (size_t) -1 ? vk::DeviceSize(-1) : (vk::DeviceSize) size);
-    auto result          = mRvBuffer->readContent(rp);
-    gpuState.access      = vk::AccessFlagBits::eTransferRead;
-    gpuState.stages      = vk::PipelineStageFlagBits::eTransfer;
+    auto result     = mRvBuffer->readContent(rp);
+    gpuState.access = vk::AccessFlagBits::eTransferRead;
+    gpuState.stages = vk::PipelineStageFlagBits::eTransfer;
     return result;
 }
 

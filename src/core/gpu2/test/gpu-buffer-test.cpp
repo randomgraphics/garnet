@@ -39,8 +39,8 @@ TEST_CASE("GPU2: Buffer setContent with offset (device-local)", "[gpu2][buffer][
     const std::vector<uint32_t> zeros(kCount, 0);
     REQUIRE(buf->setContent(ArrayProxy<const uint8_t>((const uint8_t *) zeros.data(), kSz)));
 
-    const std::vector<uint32_t> patch  = {0xDEAD, 0xBEEF, 0xCAFE, 0xF00D};
-    const size_t                half   = kSz / 2;
+    const std::vector<uint32_t> patch = {0xDEAD, 0xBEEF, 0xCAFE, 0xF00D};
+    const size_t                half  = kSz / 2;
     REQUIRE(buf->setContent(ArrayProxy<const uint8_t>((const uint8_t *) patch.data(), half), half));
 
     auto dst = buf->readContent();

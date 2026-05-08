@@ -10,7 +10,7 @@ class BufferVulkan final : public Buffer {
 public:
     GN_REGISTER_RUNTIME_TYPE(Buffer);
 
-    explicit BufferVulkan(const StrA & entityName) : Buffer(TYPE_INFO(), entityName) {}
+    explicit BufferVulkan(const StrA & entityName): Buffer(TYPE_INFO(), entityName) {}
     ~BufferVulkan() override;
 
     bool init(const CreateParameters & params);
@@ -19,8 +19,9 @@ public:
     bool                 setContent(ArrayProxy<const uint8_t> data, size_t offset = 0) override;
     std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const override;
 
-    vk::Buffer nativeBuffer() const { return mRvBuffer ? mRvBuffer->handle() : vk::Buffer {}; }
-    uint64_t   bufferSize() const { return mSize; }
+    vk::Buffer          nativeBuffer() const { return mRvBuffer ? mRvBuffer->handle() : vk::Buffer {}; }
+    rv::Ref<rv::Buffer> rvBuffer() const { return mRvBuffer; }
+    uint64_t            bufferSize() const { return mSize; }
 
     mutable BufferStateVulkan gpuState {};
 
