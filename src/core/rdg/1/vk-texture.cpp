@@ -155,12 +155,14 @@ gfx::img::Image TextureVulkan::readback() const {
             GN_ERROR(sLogger)("TextureVulkan::readback: no graphics queue");
             return gfx::img::Image();
         }
+    // Sync RDG v1's tracked state into rv::Image so readContent() can issue the correct barrier.
+    if (auto * st = mState.get(0, 0)) mImage->setState(rapid_vulkan::Image::State::PlaneState {st->curr.layout, st->curr.access, st->curr.stages});
+
     rapid_vulkan::Image::ReadContentParameters readParams;
     readParams.setQueue(*gq);
-    if (auto * st = mState.get(0, 0)) readParams.setCurrentLayout(st->curr.layout);
     auto content = mImage->readContent(readParams);
 
-    // readContent() method will transition the image to eTransferSrcOptimal layout.
+    // readContent() transitions to TRANSFER_SRC; keep RDG v1's own tracker in sync.
     mState.set({}, TextureState::ImageState {.layout = vk::ImageLayout::eTransferSrcOptimal}, TextureState::ImageStateTransitionFlags::DEFAULT(), name);
 
     return contentToImage(content);

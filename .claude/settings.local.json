@@ -57,7 +57,8 @@
       "Bash(echo \"exit=$?\")",
       "Bash(echo \"exit:$?\")",
       "Bash(awk '{print $9, \"\\(\" $5 \"\\)\"}')",
-      "WebSearch"
+      "WebSearch",
+      "Bash(gh pr *)"
     ]
   }
 }

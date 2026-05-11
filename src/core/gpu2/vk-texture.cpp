@@ -112,11 +112,8 @@ gfx::img::Image TextureVulkanBase::readback() const {
     mGpu->waitIdle(); // Ensure all submitted GPU operations are complete before readback.
     rv::Image::ReadContentParameters readParams;
     readParams.setQueue(*gq);
-    // Use the color plane's layout for non-DS textures; DS textures aren't readback-supported here.
-    if (const auto * state = gpuStates.get(0, 0, vk::ImageAspectFlagBits::eColor)) readParams.setCurrentLayout(state->layout);
     auto content = mRvImage->readContent(readParams);
     if (!content) return {};
-    gpuStates.set(name, TextureGpuImageState::ImageState::TRANSFER_SRC());
     return contentToImage(content);
 }
 
@@ -153,9 +150,7 @@ bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
             sc.area.d     = 1;
             sc.pitch      = (size_t) plane.pitch;
             sc.pixels     = image.at(pc);
-            if (mRvImage->setContent(sc)) {
-                gpuStates.set(name, TextureGpuImageState::ImageState::TRANSFER_DST(), GpuResourceView::SubresourceRange {{l, f}, {1, 1}});
-            }
+            mRvImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
         }
     }
     return true;
@@ -190,7 +185,6 @@ public:
         rv::setVkHandleName(dev->gi()->device, mOwnedImage->handle(), name.c_str());
 
         setVulkanHandles(mOwnedImage.get());
-        gpuStates.reset(pixelFormatToVkFormat(mDescriptor.format), mDescriptor.levels, mDescriptor.faces, TextureGpuImageState::ImageState::UNDEFINED());
         return true;
     }
 
@@ -229,7 +223,6 @@ public:
         mOwnedImage->setName(path.c_str());
 
         setVulkanHandles(mOwnedImage.get());
-
         rv::CommandQueue * gq = dev->graphics();
         if (!gq) {
             GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: no graphics queue");
@@ -252,9 +245,8 @@ public:
                 sc.area.d                 = 1;
                 sc.pitch                  = (size_t) plane.pitch;
                 sc.pixels                 = image.at(pc);
-                mOwnedImage->setContent(sc);
+                mOwnedImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
             }
-        gpuStates.reset(pixelFormatToVkFormat(mDescriptor.format), mDescriptor.levels, mDescriptor.faces, TextureGpuImageState::ImageState::TRANSFER_DST());
         return true;
     }
 
@@ -266,7 +258,6 @@ private:
         setVulkanHandles(nullptr);
         mDescriptor = {};
         mGpu.clear();
-        gpuStates.clear();
     }
 };
 

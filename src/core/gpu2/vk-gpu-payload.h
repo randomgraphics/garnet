@@ -3,7 +3,6 @@
 #include <garnet/GNgpu2.h>
 
 #include "vk-buffer-state.h"
-#include "vk-gpu-image-state.h"
 #include "vk-texture.h"
 
 #include <optional>
@@ -21,9 +20,9 @@ struct GpuPayloadVulkan : GpuPayload {
     /// Carries the full per-subresource image state at the start of the payload's work,
     /// plus an ordered list of state transitions applied during execution.
     struct TextureRef {
-        AutoRef<TextureVulkanBase>          texture;
-        TextureGpuImageState                stateBefore; ///< full per-subresource state snapshot before the payload runs
-        std::optional<TextureGpuImageState> stateAfter;  ///< if empty, after state equals before state
+        AutoRef<TextureVulkanBase>      texture;
+        rv::Image::State                stateBefore; ///< full per-subresource state snapshot before the payload runs
+        std::optional<rv::Image::State> stateAfter;  ///< if empty, after state equals before state
     };
 
     /// One buffer referenced by the payload.

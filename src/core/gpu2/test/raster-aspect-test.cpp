@@ -14,8 +14,8 @@ using namespace GN::gpu2;
 
 namespace {
 
-TextureGpuImageState::ImageState sampledShaderRead() {
-    TextureGpuImageState::ImageState s;
+rv::Image::State::PlaneState sampledShaderRead() {
+    rv::Image::State::PlaneState s;
     s.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
     s.access = vk::AccessFlagBits::eShaderRead;
     s.stages = vk::PipelineStageFlagBits::eFragmentShader;
@@ -23,8 +23,8 @@ TextureGpuImageState::ImageState sampledShaderRead() {
     return s;
 }
 
-TextureGpuImageState::ImageState storageWrite() {
-    TextureGpuImageState::ImageState s;
+rv::Image::State::PlaneState storageWrite() {
+    rv::Image::State::PlaneState s;
     s.layout = vk::ImageLayout::eGeneral;
     s.access = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
     s.stages = vk::PipelineStageFlagBits::eFragmentShader;

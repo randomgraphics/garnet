@@ -2,7 +2,6 @@
 
 #include <garnet/GNgpu2.h>
 #include "vk-gpu-context.h"
-#include "vk-gpu-image-state.h"
 #include "vk-format-utils.h"
 
 namespace GN::gpu2 {
@@ -24,14 +23,28 @@ public:
     /// internally by rapid-vulkan so repeated calls with the same parameters are cheap.
     vk::ImageView nativeView(const GpuResourceView::ImageView & v) const {
         if (!mRvImage) GN_UNLIKELY return vk::ImageView {};
+        const auto                   viewFmt = (v.format != gfx::img::PixelFormat::UNKNOWN()) ? v.format : mDescriptor.format;
+        const auto                   aspect  = aspectFromViewFormat(viewFmt, mDescriptor.format);
         rv::Image::GetViewParameters vp;
-        vp.type   = getTypeFromSubresourceRange(v.range);
-        vp.format = pixelFormatToVkFormat(v.format != gfx::img::PixelFormat::UNKNOWN() ? v.format : mDescriptor.format);
-        vp.range  = toVkSubresourceRange(vp.format, v.range);
+        vp.type  = getTypeFromSubresourceRange(v.range);
+        vp.range = toVkSubresourceRange(aspect, v.range);
+        // Vulkan requires DS view format == image format; channel selection is via aspect, not format.
+        const bool isDs = (aspect & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil)) != vk::ImageAspectFlags {};
+        vp.format       = pixelFormatToVkFormat(isDs ? mDescriptor.format : viewFmt);
         return mRvImage->getView(vp);
     }
 
-    mutable TextureGpuImageState gpuStates {};
+    /// Returns a snapshot-by-reference of the image's current per-subresource GPU state.
+    /// Valid only when nativeImage() is non-null; returns an empty default state otherwise.
+    const rv::Image::State & getState() const {
+        if (mRvImage) return mRvImage->getState();
+        static const rv::Image::State sEmpty {};
+        return sEmpty;
+    }
+
+    void setState(const rv::Image::State::PlaneState & newState, const vk::ImageSubresourceRange & range = {}) {
+        if (mRvImage) mRvImage->setState(newState, range);
+    }
 
 protected:
     /// \p leafType must be the concrete class \c TYPE_INFO() (so \c Entity stores the leaf type for \c RuntimeType::cast).
@@ -60,11 +73,7 @@ private:
         return vk::ImageViewType::e2DArray;
     }
 
-    /// Converts a GpuResourceView subresource range to a VkImageSubresourceRange.
-    /// The aspect is derived from the image's native VkFormat so depth/stencil images
-    /// automatically get the correct aspect flags.
-    static inline vk::ImageSubresourceRange toVkSubresourceRange(vk::Format format, const GpuResourceView::SubresourceRange & r) {
-        vk::ImageAspectFlags aspect = rv::Image::determineImageAspect(format);
+    static inline vk::ImageSubresourceRange toVkSubresourceRange(vk::ImageAspectFlags aspect, const GpuResourceView::SubresourceRange & r) {
         return vk::ImageSubresourceRange(aspect, r.i.mip, r.e.numMipLevels, r.i.face, r.e.numArrayLayers);
     }
 };

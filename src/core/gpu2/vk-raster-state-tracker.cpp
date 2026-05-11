@@ -3,6 +3,19 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
+namespace {
+// Iterate each set bit in aspects, calling fn(vk::ImageAspectFlagBits).
+template<typename Fn>
+void forEachAspectBit(vk::ImageAspectFlags aspects, Fn && fn) {
+    auto remaining = static_cast<vk::ImageAspectFlags::MaskType>(aspects);
+    while (remaining) {
+        auto lowBit = remaining & (~remaining + 1u);
+        fn(static_cast<vk::ImageAspectFlagBits>(lowBit));
+        remaining ^= lowBit;
+    }
+}
+} // namespace
+
 namespace GN::gpu2 {
 
 namespace {
@@ -12,26 +25,9 @@ inline uint64_t packPlaneKey(uint32_t mip, uint32_t face, vk::ImageAspectFlagBit
     return (uint64_t(mip) << 48) | (uint64_t(face) << 16) | uint64_t(uint32_t(aspect));
 }
 
-/// Derive the aspect mask from the view's format.
 inline vk::ImageAspectFlags aspectFromView(const GpuResourceView::ImageView & view, const Texture::Descriptor & d) {
-    using PF              = gfx::img::PixelFormat;
-    const auto texFormat  = d.format;
-    const auto viewFormat = (view.format == PF::UNKNOWN()) ? d.format : view.format;
-    if (texFormat == PF::RG_24_UNORM_8_UINT()) {
-        if (viewFormat == PF::RX_24_8_UNORM()) return vk::ImageAspectFlagBits::eDepth;                           // depth-only view of D24S8
-        if (viewFormat == PF::R_8_UINT()) return vk::ImageAspectFlagBits::eStencil;                              // stencil-only view of D24S8
-        if (viewFormat == texFormat) return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil; // combined view of D24S8
-        GN_ERROR(sLogger)("aspectFromView: view format {} is incompatible with texture format {}", viewFormat.toString(), texFormat.toString());
-        return {};
-    } else if (texFormat == PF::RGX_32_FLOAT_8_UINT_24()) {
-        if (viewFormat == PF::R_32_FLOAT()) return vk::ImageAspectFlagBits::eDepth;                              // depth-only view of D32S8
-        if (viewFormat == PF::R_8_UINT()) return vk::ImageAspectFlagBits::eStencil;                              // stencil-only view of D32S8
-        if (viewFormat == texFormat) return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil; // combined view of D32S8
-        GN_ERROR(sLogger)("aspectFromView: view format {} is incompatible with texture format {}", viewFormat.toString(), texFormat.toString());
-        return {};
-    } else {
-        return vk::ImageAspectFlagBits::eColor; // color texture — treat whole view as color aspect, ignore any depth/stencil bits in the format
-    }
+    const auto viewFormat = (view.format == gfx::img::PixelFormat::UNKNOWN()) ? d.format : view.format;
+    return aspectFromViewFormat(viewFormat, d.format);
 }
 
 inline GpuResourceView::SubresourceRange resolveRange(GpuResourceView::SubresourceRange range, const Texture::Descriptor & d) {
@@ -46,13 +42,13 @@ inline GpuResourceView::SubresourceRange resolveRange(GpuResourceView::Subresour
 
 } // namespace
 
-bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const TextureGpuImageState::ImageState & state) {
+bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state) {
     auto & tracked = mAttachments[tex->id];
     if (!tracked.tex) {
         // First time this pass touches \p tex: snapshot its per-plane state. The snapshot is the
         // "from" side of any barrier this pass emits, and stays untouched until flush.
         tracked.tex      = tex;
-        tracked.incoming = tex->gpuStates;
+        tracked.incoming = tex->getState();
     }
 
     const auto & desc = tex->descriptor();
@@ -61,7 +57,7 @@ bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuR
     // Intersect with validAspects() so any bit that isn't actually a plane on this texture's
     // format gets dropped silently — this also guarantees every remaining bit is present in
     // \c incoming, so subsequent \c incoming.get(...) calls always succeed.
-    auto aspects = aspectFromView(view, desc) & tracked.incoming.validAspects();
+    auto aspects = aspectFromView(view, desc) & tracked.incoming.validAspects;
     if (!aspects) GN_UNLIKELY {
             GN_ERROR(sLogger)("RasterStateTrackerVulkan: view of texture '{}' references no aspect plane the texture has", tex->name);
             return false;
@@ -91,9 +87,8 @@ bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuR
                 const char * hazardKind = (existing.isWrite() && state.isWrite()) ? "write/write" : "read/write";
                 GN_ERROR(sLogger)("RasterStateTrackerVulkan: {} hazard on texture '{}' aspect=0x{:x} — '{}' ({}) and '{}' ({}) "
                                   "both access subresource [mip={} face={}]",
-                                  hazardKind, tracked.tex->name, static_cast<uint32_t>(bit), existing.usage.data ? existing.usage.data : "?",
-                                  existing.isWrite() ? "write" : "read", state.usage.data ? state.usage.data : "?", state.isWrite() ? "write" : "read", mip,
-                                  face);
+                                  hazardKind, tracked.tex->name, static_cast<uint32_t>(bit), existing.usage ? existing.usage : "?",
+                                  existing.isWrite() ? "write" : "read", state.usage ? state.usage : "?", state.isWrite() ? "write" : "read", mip, face);
                 hazardFound = true;
             });
         }
@@ -111,7 +106,7 @@ bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuR
 
 bool RasterStateTrackerVulkan::addColorTarget(TextureVulkanBase * tex, const GpuResourceView & view) {
     if (!tex) GN_UNLIKELY return true;
-    TextureGpuImageState::ImageState state;
+    rv::Image::State::PlaneState state;
     state.layout = vk::ImageLayout::eColorAttachmentOptimal;
     state.access = vk::AccessFlagBits::eColorAttachmentWrite;
     state.stages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
@@ -121,18 +116,18 @@ bool RasterStateTrackerVulkan::addColorTarget(TextureVulkanBase * tex, const Gpu
 
 bool RasterStateTrackerVulkan::addDepthStencilTarget(TextureVulkanBase * tex, const GpuResourceView & view, bool readOnly) {
     if (!tex) GN_UNLIKELY return true;
-    TextureGpuImageState::ImageState state;
+    rv::Image::State::PlaneState state;
     state.layout = readOnly ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eDepthStencilAttachmentOptimal;
     state.access = vk::AccessFlagBits::eDepthStencilAttachmentRead;
     if (!readOnly) state.access |= vk::AccessFlagBits::eDepthStencilAttachmentWrite;
     state.stages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
-    state.usage  = readOnly ? StringLiteral("depth-stencil target (read-only)") : StringLiteral("depth-stencil target");
+    state.usage  = readOnly ? "depth-stencil target (read-only)" : "depth-stencil target";
     return addAttachment(tex, view.imageView, state);
 }
 
 bool RasterStateTrackerVulkan::addSampledTexture(TextureVulkanBase * tex, const GpuResourceView & view, vk::PipelineStageFlags stages) {
     if (!tex) GN_UNLIKELY return true;
-    TextureGpuImageState::ImageState state;
+    rv::Image::State::PlaneState state;
     state.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
     state.access = vk::AccessFlagBits::eShaderRead;
     state.stages = stages;
@@ -142,7 +137,7 @@ bool RasterStateTrackerVulkan::addSampledTexture(TextureVulkanBase * tex, const 
 
 bool RasterStateTrackerVulkan::addStorageTexture(TextureVulkanBase * tex, const GpuResourceView & view, vk::PipelineStageFlags stages) {
     if (!tex) GN_UNLIKELY return true;
-    TextureGpuImageState::ImageState state;
+    rv::Image::State::PlaneState state;
     state.layout = vk::ImageLayout::eGeneral;
     state.access = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
     state.stages = stages;
@@ -193,7 +188,7 @@ bool RasterStateTrackerVulkan::addStorageBuffer(BufferVulkan * buf, bool write, 
     b.passAccess = vk::AccessFlagBits::eShaderRead | (write ? vk::AccessFlagBits::eShaderWrite : vk::AccessFlags {});
     b.passStages = stages;
     b.isWrite    = write;
-    b.usageName  = write ? StringLiteral("storage buffer (read-write)") : StringLiteral("storage buffer (read-only)");
+    b.usageName  = write ? "storage buffer (read-write)" : "storage buffer (read-only)";
     return addBuffer(std::move(b));
 }
 
@@ -295,7 +290,7 @@ void RasterStateTrackerVulkan::upgradeForDrawRasterState(const RasterState & dra
     bool needsStencilWrite = drawState.stencilState && drawState.stencilState->enabled();
     if (!needsDepthWrite && !needsStencilWrite) return;
 
-    TextureGpuImageState::ImageState promoted;
+    rv::Image::State::PlaneState promoted;
     promoted.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     promoted.access = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
     promoted.stages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
@@ -325,7 +320,7 @@ vk::ImageLayout RasterStateTrackerVulkan::attachmentPassLayout(const TextureVulk
     // is unique; for combined depth-stencil textures the depth plane wins, which matches how
     // dynamic-rendering attachments expect a single layout.
     vk::ImageLayout result = vk::ImageLayout::eUndefined;
-    forEachAspectBit(it->second.incoming.validAspects(), [&](vk::ImageAspectFlagBits bit) {
+    forEachAspectBit(it->second.incoming.validAspects, [&](vk::ImageAspectFlagBits bit) {
         if (result != vk::ImageLayout::eUndefined) return;
         auto pit = it->second.registered.find(packPlaneKey(0, 0, bit));
         if (pit != it->second.registered.end()) result = pit->second.layout;
@@ -410,7 +405,7 @@ void RasterStateTrackerVulkan::flushStatesToResources() {
             uint32_t                mip    = uint32_t((key >> 48) & 0xffffu);
             uint32_t                face   = uint32_t((key >> 16) & 0xffffu);
             vk::ImageAspectFlagBits aspect = static_cast<vk::ImageAspectFlagBits>(uint32_t(key & 0xffffu));
-            tracked.tex->gpuStates.set(tracked.tex->name, intended, {{mip, face}, {1, 1}}, aspect);
+            tracked.tex->setState(intended, vk::ImageSubresourceRange(aspect, mip, 1, face, 1));
         }
     }
     for (const auto & [id, b] : mBuffers) {

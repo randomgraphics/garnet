@@ -1,7 +1,6 @@
 #include "vk-swapchain.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-context.h"
-#include "vk-gpu-image-state.h"
 #include "vk-gpu-payload.h"
 #include "vk-texture.h"
 
@@ -11,8 +10,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
 namespace {
-
-using GpuImageState = TextureGpuImageState::ImageState;
 
 /// One stable \c Texture per swapchain backbuffer \c Image (non-owning view of rapid-vulkan swapchain memory).
 class SwapchainBackbufferTextureVulkan final : public TextureVulkanBase {
@@ -27,13 +24,12 @@ public:
     void bindToSwapchainBackbuffer(rv::Image * image, uint32_t w, uint32_t h, gfx::img::PixelFormat format) {
         setVulkanHandles(image);
         mDescriptor = Texture::Descriptor {}.setFormat(format).setDimensions(w, h, 1).setFaces(1).setLevels(1).setSamples(1);
-        gpuStates.reset(pixelFormatToVkFormat(format), 1, 1, GpuImageState::UNDEFINED());
+        // No manual state reset: rapid-vulkan tracks the image layout internally after acquire.
     }
 
     void clearAcquiredBinding() {
         setVulkanHandles(nullptr);
         mDescriptor = {};
-        gpuStates.clear();
     }
 
     /// stable per-backbuffer payload; returned as frame.ready from prepare()
@@ -181,17 +177,12 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
         return;
     }
 
-    // Get the latest state of the backbuffer image directly from the back buffer texture. This assumes all pending
-    // GpuPayloads have been submitted to the GPU already. Backbuffer is always color-format → eColor plane.
-    const auto *  trackedPtr = backbufferTex->gpuStates.get(0, 0, vk::ImageAspectFlagBits::eColor);
-    GpuImageState tracked    = trackedPtr ? *trackedPtr : GpuImageState::UNDEFINED();
-
     auto &        vkWaitFor      = static_cast<GpuPayloadVulkan &>(waitFor);
     vk::Semaphore renderFinished = vkWaitFor.semaphore;
 
     rv::Swapchain::PresentResult result;
     try {
-        auto pp = rv::Swapchain::PresentParameters({tracked.layout, tracked.access, tracked.stages});
+        rv::Swapchain::PresentParameters pp;
         pp.setRenderFinished(vk::ArrayProxy<const vk::Semaphore>(renderFinished ? 1u : 0u, &renderFinished));
         result = mRvSwapchain->present(pp);
     } catch (const std::exception & e) {
@@ -204,10 +195,7 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
         return;
     }
 
-    if (backbufferTex) {
-        auto & bs = result.backbufferStatus;
-        backbufferTex->gpuStates.set(backbufferTex->name, {bs.layout, bs.access, bs.stages});
-    }
+    // rapid-vulkan updates the image's internal state after present; no manual setState needed.
 
     // clear active frame
     mActiveBackbufferTexture = nullptr;

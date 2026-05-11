@@ -3,7 +3,6 @@
 #include <garnet/GNgpu2.h>
 #include "vk-buffer.h"
 #include "vk-buffer-state.h"
-#include "vk-gpu-image-state.h"
 #include "vk-texture.h"
 
 #include <unordered_map>
@@ -84,20 +83,20 @@ public:
     ///
     /// Most callers should use the higher-level \c add*Target / \c add*Texture methods; this
     /// entry point is exposed for callers (and tests) that build the state record themselves.
-    bool addAttachment(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const TextureGpuImageState::ImageState & state);
+    bool addAttachment(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state);
 
 private:
     struct TrackedAttachment {
         TextureVulkanBase * tex = nullptr;
         /// Snapshot of the texture's per-plane state when this pass first registered it. Used as
         /// the "old" side of barrier transitions and never mutated by the tracker after the snapshot.
-        TextureGpuImageState incoming;
+        rv::Image::State incoming;
         /// Planes the pass has registered, mapping each (mip, face, aspect) tuple to its intended
         /// post-pass state. Untouched planes are absent — flush leaves them as incoming, and emit
         /// produces no barrier for them. The map serves both as the per-plane "intended" state and
         /// the "touched-by-this-pass" marker; storing both as one structure removes the need for a
-        /// second full TextureGpuImageState snapshot.
-        std::unordered_map<uint64_t, TextureGpuImageState::ImageState> registered;
+        /// second full state snapshot.
+        std::unordered_map<uint64_t, rv::Image::State::PlaneState> registered;
     };
 
     // Keyed by tex->id; one entry per texture this pass touches.
@@ -108,7 +107,7 @@ private:
         vk::AccessFlags        passAccess = vk::AccessFlagBits::eNone;
         vk::PipelineStageFlags passStages = vk::PipelineStageFlagBits::eBottomOfPipe;
         bool                   isWrite    = false;
-        StringLiteral          usageName  = StringLiteral("<unspecified>");
+        const char *           usageName  = "<unspecified>";
     };
 
     bool checkBufferHazard(const TrackedBuffer & incoming) const;

@@ -3,7 +3,6 @@
 #include "vk-format-utils.h"
 #include "gpu-context.h"
 #include "vk-gpu-context.h"
-#include "vk-gpu-image-state.h"
 #include "vk-gpu-payload.h"
 #include "vk-gpu-shader.h"
 #include "vk-raster-state-tracker.h"

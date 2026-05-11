@@ -1,6 +1,8 @@
 #include "vk-format-utils.h"
 #include <unordered_map>
 
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
+
 namespace GN::gpu2 {
 
 namespace {
@@ -345,4 +347,34 @@ vk::Format vertexAttributeFormatToVk(RasterGeometry::AttributeFormat f) {
         return vk::Format::eR32G32B32Sfloat;
     }
 }
+
+vk::ImageAspectFlags aspectFromViewFormat(gfx::img::PixelFormat viewFmt, gfx::img::PixelFormat textureFmt) {
+    using PF = gfx::img::PixelFormat;
+
+    if (textureFmt == PF::RG_24_UNORM_8_UINT() || textureFmt == PF::DS_24_UNORM_8_UINT()) {
+        // D24S8 combined format
+        if (viewFmt == PF::RX_24_8_UNORM() || viewFmt == PF::DX_24_8_UNORM()) return vk::ImageAspectFlagBits::eDepth;
+        if (viewFmt == PF::R_8_UINT() || viewFmt == PF::S_8_UNORM()) return vk::ImageAspectFlagBits::eStencil;
+        if (viewFmt == PF::RG_24_UNORM_8_UINT() || viewFmt == PF::DS_24_UNORM_8_UINT())
+            return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+        GN_ERROR(sLogger)("aspectFromViewFormat: view format {} incompatible with D24S8 texture", viewFmt.toString());
+        return {};
+    }
+
+    if (textureFmt == PF::RGX_32_FLOAT_8_UINT_24() || textureFmt == PF::DSX_32_FLOAT_8_UINT_24()) {
+        // D32S8 combined format
+        if (viewFmt == PF::R_32_FLOAT() || viewFmt == PF::D_32_FLOAT()) return vk::ImageAspectFlagBits::eDepth;
+        if (viewFmt == PF::R_8_UINT() || viewFmt == PF::S_8_UNORM()) return vk::ImageAspectFlagBits::eStencil;
+        if (viewFmt == PF::RGX_32_FLOAT_8_UINT_24() || viewFmt == PF::DSX_32_FLOAT_8_UINT_24())
+            return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+        GN_ERROR(sLogger)("aspectFromViewFormat: view format {} incompatible with D32S8 texture", viewFmt.toString());
+        return {};
+    }
+
+    // Depth-only formats (no stencil plane)
+    if (textureFmt == PF::D_16_UNORM() || textureFmt == PF::DX_24_8_UNORM() || textureFmt == PF::D_32_FLOAT()) { return vk::ImageAspectFlagBits::eDepth; }
+
+    return vk::ImageAspectFlagBits::eColor;
+}
+
 } // namespace GN::gpu2
