@@ -19,23 +19,23 @@
     #endif
     #define RAPID_VULKAN_NAMESPACE          GN::gpu2::rv
     #define RAPID_VULKAN_ENABLE_DEBUG_BUILD GN_BUILD_DEBUG_ENABLED
-    #define RAPID_VULKAN_LOG(severity, prefix, message)                                                                                      \
-        do {                                                                                                                                 \
-            GN::Logger::LogLevel logLevel = GN::Logger::LogLevel::INFO;                                                                      \
-            if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::FATAL) {                                                                    \
-                logLevel = GN::Logger::LogLevel::FATAL;                                                                                      \
-            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::ERROR_) {                                                            \
-                logLevel = GN::Logger::LogLevel::ERROR_;                                                                                     \
-            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::WARNING) {                                                           \
-                logLevel = GN::Logger::LogLevel::WARN;                                                                                       \
-            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::INFO) {                                                              \
-                logLevel = GN::Logger::LogLevel::INFO;                                                                                       \
-            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::VERBOSE) {                                                           \
-                logLevel = GN::Logger::LogLevel::VERBOSE;                                                                                    \
-            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::DEBUG) {                                                             \
-                logLevel = GN::Logger::LogLevel::INFO;                                                                                       \
-            }                                                                                                                                \
-            GN::Logger::LogHelper(GN::getLogger("GN.gpu2.vk"), logLevel, __FUNCTION__, __FILE__, __LINE__).format("{} {}", prefix, message); \
+    #define RAPID_VULKAN_LOG(severity, prefix, message)                                                                   \
+        do {                                                                                                              \
+            GN::Logger::LogLevel logLevel = GN::Logger::LogLevel::INFO;                                                   \
+            if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::FATAL) {                                                 \
+                logLevel = GN::Logger::LogLevel::FATAL;                                                                   \
+            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::ERROR_) {                                         \
+                logLevel = GN::Logger::LogLevel::ERROR_;                                                                  \
+            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::WARNING) {                                        \
+                logLevel = GN::Logger::LogLevel::WARN;                                                                    \
+            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::INFO) {                                           \
+                logLevel = GN::Logger::LogLevel::INFO;                                                                    \
+            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::VERBOSE) {                                        \
+                logLevel = GN::Logger::LogLevel::VERBOSE;                                                                 \
+            } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::BABBLE) {                                         \
+                logLevel = GN::Logger::LogLevel::BABBLE;                                                                  \
+            }                                                                                                             \
+            GN_LOG_EX(GN::getLogger("GN.gpu2.vk"), logLevel, __FUNCTION__, __FILE__, __LINE__)("{} {}", prefix, message); \
         } while (false)
     #include <rapid-vulkan/rapid-vulkan.h>
 #else
@@ -44,6 +44,8 @@
 #endif // !RAPID_VULKAN_H_
 
 namespace GN::gpu2 {
+
+class RasterPsoFactory; // defined in vk-raster-pso-factory.h
 
 /// Vulkan-backed \c GpuContext (rapid-vulkan Instance + Device). Mirrors v1 \c GpuContextVulkan.
 class GpuContextVulkan2 : public GpuContextCommon2 {
@@ -59,14 +61,17 @@ public:
     /// True when Instance and Device are both created successfully (for factory; mirrors v1 success checks).
     bool ready() const;
 
-    /// Vulkan device for rdg2 factories (swapchain, etc.). Null when not ready.
-    const rv::Device * vulkanDevice() const;
+    /// Vulkan device for rdg2 factories (swapchain, etc.). Only valid when ready().
+    const rv::Device & vulkanDevice() const;
+
+    /// PSO cache for raster pipelines. Only valid when ready().
+    RasterPsoFactory & psoFactory() const;
 
     GpuContext::Caps caps() const override;
     intptr_t         getVulkanInstanceHandle() const override;
     void             submit(const SubmitParameters &) override;
     void             pump() override { pumpInternal(false); }
-    void             waitIdle() override { pumpInternal(true); }
+    void             waitForIdle() override { pumpInternal(true); }
 
 private:
     void pumpInternal(bool waitForIdle);

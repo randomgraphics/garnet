@@ -1,6 +1,7 @@
 #define RAPID_VULKAN_IMPLEMENTATION
 #define RAPID_VULKAN_EXTERNAL_C_IMPL
 #include "vk-gpu-context.h"
+#include "vk-raster-pso-factory.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-payload.h"
 
@@ -50,9 +51,10 @@ static rv::Device::Verbosity getVkDeviceVerbosity(GpuContext::Verbosity verbosit
 // =============================================================================
 
 struct GpuContextVulkan2::Impl {
-    std::optional<rv::Instance> mInstance;
-    std::optional<rv::Device>   mDevice;
-    GpuContext::Caps            mCaps;
+    std::optional<rv::Instance>       mInstance;
+    std::optional<rv::Device>         mDevice;
+    GpuContext::Caps                  mCaps;
+    std::unique_ptr<RasterPsoFactory> mPsoFactory;
 
     struct PendingSubmission {
         StrA                                   name;
@@ -83,6 +85,9 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     dp.addDeviceExtension("VK_KHR_dynamic_rendering");
 #endif
     dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
+    // Allow depth and stencil planes of a D+S image to be transitioned independently;
+    // without this, separate-aspect barriers on D+S formats are a validation error.
+    dp.addFeature(vk::PhysicalDeviceVulkan12Features().setSeparateDepthStencilLayouts(true));
     dp.setInstance(mImpl->mInstance->handle());
     mImpl->mDevice.emplace(dp);
     if (mImpl->mDevice->handle()) {
@@ -96,6 +101,7 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
         } else {
             GN_WARN(sLoggerVk)("GpuContextVulkan2: no depth/stencil format from queryDepthFormat; caps.defaultDepthFormat stays UNKNOWN");
         }
+        mImpl->mPsoFactory = std::make_unique<RasterPsoFactory>(*this);
     }
 }
 
@@ -122,14 +128,18 @@ bool GpuContextVulkan2::ready() const {
     return true;
 }
 
-const rv::Device * GpuContextVulkan2::vulkanDevice() const {
-    if (!ready()) return nullptr;
-    return &mImpl->mDevice.value();
+const rv::Device & GpuContextVulkan2::vulkanDevice() const {
+    GN_ASSERT(ready());
+    return mImpl->mDevice.value();
+}
+
+RasterPsoFactory & GpuContextVulkan2::psoFactory() const {
+    GN_ASSERT(mImpl && mImpl->mPsoFactory);
+    return *mImpl->mPsoFactory;
 }
 
 void GpuContextVulkan2::submit(const SubmitParameters & sp) {
-    const rv::Device * dev = vulkanDevice();
-    if (!dev) GN_UNLIKELY {
+    if (!ready()) GN_UNLIKELY {
             GN_ERROR(sLoggerVk)("GpuContextVulkan2::submit failed: device not ready, name='{}'", sp.name);
             return;
         }
@@ -140,7 +150,8 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
             return;
         }
 
-    rv::CommandQueue * queue = dev->graphics(); // TODO: support sp.queue
+    const rv::Device & dev   = vulkanDevice();
+    rv::CommandQueue * queue = dev.graphics(); // TODO: support sp.queue
     if (!queue) GN_UNLIKELY {
             GN_ERROR(sLoggerVk)("GpuContextVulkan2::submit failed: graphics queue not available, name='{}'", sp.name);
             return;
@@ -148,7 +159,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
 
     // construct a record context.
     GpuPayloadVulkan::RecordContext recordCtx;
-    recordCtx.dev   = dev;
+    recordCtx.dev   = &dev;
     recordCtx.queue = queue;
     recordCtx.cmd   = queue->begin(sp.name.empty() ? "rdg2_cmd" : sp.name.c_str());
     if (recordCtx.cmd.empty()) {
@@ -233,6 +244,12 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
             GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw exception: {}", cb.first, e.what());
         } catch (...) { GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw unknown exception", cb.first); }
     }
+
+    // Our pending list does not represent all submitted and pending GPU works, since we currently only track
+    // submissions with completion callbacks. If waitForIdle is requested, on top of making sure all pending callbacks are flushed, we also need to call
+    // device.waitIdle() to ensure all GPU works are done before returning. we also need to call device.waitIdle() to ensure all GPU works are done before
+    // returning.
+    if (waitForIdle) device.waitIdle();
 }
 
 // =============================================================================

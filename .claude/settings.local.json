@@ -58,7 +58,11 @@
       "Bash(echo \"exit:$?\")",
       "Bash(awk '{print $9, \"\\(\" $5 \"\\)\"}')",
       "WebSearch",
-      "Bash(gh pr *)"
+      "Bash(gh pr *)",
+      "Bash(pip3 install *)",
+      "Bash(/tmp/imgenv/bin/pip install *)",
+      "Bash(/tmp/imgenv/bin/python3 -c \"from PIL import Image; print\\('ok'\\)\")",
+      "Bash(/tmp/imgenv/bin/python3 *)"
     ]
   }
 }

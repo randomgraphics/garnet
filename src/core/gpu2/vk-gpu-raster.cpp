@@ -2,9 +2,8 @@
 #include <garnet/GNrdg2.h>
 #include "vk-format-utils.h"
 #include "gpu-context.h"
-#include "vk-gpu-context.h"
+#include "vk-raster-pso-factory.h" // includes vk-gpu-context.h + vk-gpu-shader.h
 #include "vk-gpu-payload.h"
-#include "vk-gpu-shader.h"
 #include "vk-raster-state-tracker.h"
 #include "vk-texture.h"
 
@@ -29,12 +28,7 @@ struct StoredDraw {
     bool                  geometryHazard = false; ///< true if any vertex/index buffer was rejected; skip the draw
 };
 
-// Color formats for every attachment slot + depth format; built in buildAndBeginRendering,
-// then forwarded to recordDraw so each pipeline matches the active dynamic rendering state.
-struct PassFormats {
-    std::vector<vk::Format> colors;
-    vk::Format              depth = vk::Format::eUndefined;
-};
+// PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
 
 static inline bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
                                           vk::Format * outVkFormat) {
@@ -86,28 +80,12 @@ static vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2
                       vk::Extent2D((sr.width == (~0u)) ? ext.width : (uint32_t) sr.width, (sr.height == (~0u)) ? ext.height : (uint32_t) sr.height));
 }
 
-static void applyRasterPipelineState(rv::GraphicsPipeline::ConstructParameters & gcp, const RasterState & rs) {
-    if (rs.fillMode && *rs.fillMode == RasterState::FILL_WIREFRAME) gcp.rast.setPolygonMode(vk::PolygonMode::eLine);
-    if (rs.cullMode) {
-        switch (*rs.cullMode) {
-        case RasterState::CULL_NONE:
-            gcp.rast.setCullMode(vk::CullModeFlagBits::eNone);
-            break;
-        case RasterState::CULL_FRONT:
-            gcp.rast.setCullMode(vk::CullModeFlagBits::eFront);
-            break;
-        case RasterState::CULL_BACK:
-            gcp.rast.setCullMode(vk::CullModeFlagBits::eBack);
-            break;
-        }
-    }
-    if (rs.frontFace && *rs.frontFace == RasterState::FRONT_CW) gcp.rast.setFrontFace(vk::FrontFace::eClockwise);
-}
+// State → Vulkan conversion helpers are in vk-raster-pso-factory.cpp (single authoritative source).
 
 class GpuRasterPayloadVulkan final : public GpuPayloadVulkan {
 public:
-    GpuRasterPayloadVulkan(const StrA & name, RasterTarget rt, ArrayContainer<StoredDraw> draws)
-        : GpuPayloadVulkan(name), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {}
+    GpuRasterPayloadVulkan(const StrA & name, RasterPsoFactory * factory, RasterTarget rt, ArrayContainer<StoredDraw> draws)
+        : GpuPayloadVulkan(name), mPsoFactory(factory), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
     void onSubmitComplete() override {
@@ -115,6 +93,7 @@ public:
     }
 
 private:
+    RasterPsoFactory *         mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
     RasterTarget               mRenderTarget;
     ArrayContainer<StoredDraw> mDraws;
     RasterStateTrackerVulkan   mStateTracker;
@@ -253,28 +232,20 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
         vkcb.setScissor(0, 1, &sc);
     }
 
-    // --- Pipeline ---
-    rv::GraphicsPipeline::ConstructParameters gcp;
-    gcp.setName(std::string(StrA::format("rdg2_gfx_{}", di).c_str()));
-    gcp.setDynamicRendering(vk::ArrayProxy<const vk::Format>(formats.colors.size(), formats.colors.data()), formats.depth);
-    gcp.setVS(vsVk->rvShader());
-    if (psVk && psVk->rvShader()) gcp.setFS(psVk->rvShader());
-    gcp.dynamicViewport(1).dynamicScissor(1);
-
-    // Vertex bindings first, then instance bindings (determines Vulkan binding indices).
-    for (const auto & vb : geom.vertices) gcp.addVertexBuffer(vb.stride);
-    for (const auto & ib : geom.instances) gcp.addInstanceBuffer(ib.stride);
-    for (const auto & a : geom.format.attributes) gcp.addVertexAttribute(a.location, (uint32_t) a.offset, vertexAttributeFormatToVk(a.format));
-
-    applyRasterPipelineState(gcp, d.states);
-
-    rv::Ref<const rv::GraphicsPipeline> pipeline;
-    try {
-        pipeline = rv::Ref<const rv::GraphicsPipeline>::make(gcp);
-    } catch (const std::exception & ex) {
-        GN_ERROR(sLogger)("RasterPassPayload: GraphicsPipeline creation failed: {}", ex.what());
-        return;
-    }
+    // --- Pipeline (get-or-create from factory) ---
+    if (!mPsoFactory) GN_UNLIKELY {
+            GN_ERROR(sLogger)("RasterPassPayload: draw {} has no PSO factory", di);
+            return;
+        }
+    Gpu2RasterPsoCreateParams psoParams {
+        .vs           = vsVk,
+        .ps           = psVk,
+        .state        = d.states,
+        .geometry     = geom,
+        .formats      = formats,
+        .colorTargets = mRenderTarget.colorTargets,
+    };
+    rv::Ref<const rv::GraphicsPipeline> pipeline = mPsoFactory->getOrCreate(psoParams);
     if (!pipeline || !pipeline->handle()) GN_UNLIKELY return;
 
     rv::Drawable::ConstructParameters dcp;
@@ -286,7 +257,8 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
         if (d.immediates.size() > 128) GN_UNLIKELY {
                 GN_ERROR(sLogger)("RasterPassPayload: immediates size {} exceeds 128", d.immediates.size());
             }
-        else { drawable.c(0, d.immediates.size(), d.immediates.data(), vk::ShaderStageFlagBits::eVertex); }
+        // eAllGraphics so fragment shaders can also declare layout(push_constant) blocks.
+        else { drawable.c(0, d.immediates.size(), d.immediates.data(), vk::ShaderStageFlagBits::eAllGraphics); }
     }
 
     // --- Descriptor binding from resource table ---
@@ -451,8 +423,10 @@ public:
             GN_ERROR(sLogger)("GpuRasterVulkan2::seal: double seal");
             return {};
         }
-        mSealed = true;
-        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", std::move(mCreateParams.target), std::move(mDraws)));
+        mSealed        = true;
+        auto   vkGpu   = mCreateParams.gpu.staticCastTo<GpuContextVulkan2>();
+        auto * factory = (vkGpu && vkGpu->ready()) ? &vkGpu->psoFactory() : nullptr;
+        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", factory, std::move(mCreateParams.target), std::move(mDraws)));
     }
 
 private:

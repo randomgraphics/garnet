@@ -117,6 +117,10 @@ struct GpuContext : public RootEntity {
             if (w) work.append(w);
             return *this;
         }
+        SubmitParameters & appendWorks(const ArrayProxy<AutoRef<GpuPayload>> & ws) {
+            for (const auto & w : ws) appendWork(w);
+            return *this;
+        }
         SubmitParameters & waitFor(AutoRef<GpuPayload> w) {
             if (w) waitForGpu.append(w);
             return *this;
@@ -137,7 +141,7 @@ struct GpuContext : public RootEntity {
     virtual void pump() = 0;
 
     /// Wait for GPU idle.
-    virtual void waitIdle() = 0;
+    virtual void waitForIdle() = 0;
 
 protected:
     using RootEntity::RootEntity;

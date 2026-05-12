@@ -77,14 +77,8 @@ GpuCommandBuffer::Fence * GpuCommandBufferVulkan2::submitVk(const SubmitParamete
         releaseAllJobs();
         return nullptr;
     }
-    const rv::Device * dev = gpu->vulkanDevice();
-    if (!dev || !dev->handle()) {
-        GN_ERROR(sLogger)("GpuCommandBufferVulkan2::submit: no device");
-        releaseAllJobs();
-        return nullptr;
-    }
-
-    rv::CommandQueue * queue = dev->graphics();
+    const rv::Device & dev   = gpu->vulkanDevice();
+    rv::CommandQueue * queue = dev.graphics();
     if (!queue) {
         GN_ERROR(sLogger)("GpuCommandBufferVulkan2::submit: no graphics queue");
         releaseAllJobs();

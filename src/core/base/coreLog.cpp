@@ -487,6 +487,22 @@ class LoggerContainer {
     LocalMutex      mMutex;
     LoggerMap       mLoggers;
 
+    // Per-logger level override parsed from GN_LOG_LEVEL when the value is in the
+    // form "<name>:<level>". Empty mEnvLoggerName means no per-logger override is
+    // active (either env var is unset, parses as a plain integer, or is malformed).
+    std::string mEnvLoggerName;
+    int         mEnvLoggerLevel = 0;
+
+    // Apply env-var override to a newly created logger if its name matches.
+    // Called from getLogger() right after the logger is attached to the tree, so
+    // any subsequent children created under it will inherit the overridden level
+    // through the normal parent reapply path. Match is case-insensitive — same
+    // policy as the "ROOT" shortcut in getLogger().
+    void applyEnvOverride(LoggerImpl & logger) {
+        if (mEnvLoggerName.empty()) return;
+        if (0 == str::compareI(logger.getName(), mEnvLoggerName.data())) { logger.setLevel(mEnvLoggerLevel); }
+    }
+
     LoggerImpl * findParent(const std::string & name) {
         // get parent name
         size_t n = name.find_last_of(".");
@@ -512,9 +528,45 @@ class LoggerContainer {
 
 public:
     LoggerContainer(): mRootLogger("ROOT", mMutex) {
-        // config root logger
-        mRootLogger.setLevel(getEnvInteger("GN_LOG_LEVEL", (int) Logger::INFO));
-        mRootLogger.setEnabled(getEnvBoolean("GN_LOG_ENABLED", true));
+        // GN_LOG_LEVEL supports two forms:
+        //   1. "<integer>"        -> initial level for the root logger (legacy)
+        //   2. "<name>:<integer>" -> initial level for the named logger only;
+        //                            root keeps its default. The override is
+        //                            applied when the matching logger is created.
+        int  rootLevel = (int) Logger::INFO;
+        StrA raw       = getEnv("GN_LOG_LEVEL");
+        if (!raw.empty()) {
+            const char * colon = strchr(raw.data(), ':');
+            if (colon) {
+                int level;
+                if (str::toInteger(level, colon + 1) > 0) {
+                    std::string nm(raw.data(), colon - raw.data());
+                    // trim whitespace around the name so "  GN.core : 50" works
+                    auto notSpace = [](unsigned char c) { return !std::isspace(c); };
+                    nm.erase(nm.begin(), std::find_if(nm.begin(), nm.end(), notSpace));
+                    nm.erase(std::find_if(nm.rbegin(), nm.rend(), notSpace).base(), nm.end());
+                    if (!nm.empty()) {
+                        mEnvLoggerName  = std::move(nm);
+                        mEnvLoggerLevel = level;
+                    }
+                }
+                // Malformed (no parsable integer, or empty name) silently falls
+                // through with the default root level — same forgiving behavior
+                // as the legacy integer-only path.
+            } else {
+                int level;
+                if (str::toInteger(level, raw.data()) > 0) rootLevel = level;
+            }
+        }
+
+        auto enabled = getEnvBoolean("GN_LOG_ENABLED", true);
+        mRootLogger.setLevel(rootLevel);
+        mRootLogger.setEnabled(enabled);
+
+        // "ROOT" is the canonical name for the root logger (see getLogger());
+        // honor it case-insensitively in the env override too.
+        if (!mEnvLoggerName.empty() && 0 == str::compareI("ROOT", mEnvLoggerName.data())) { mRootLogger.setLevel(mEnvLoggerLevel); }
+
 #if !GN_XBOX2
         mRootLogger.addReceiver(&mCr);
 #endif
@@ -563,6 +615,10 @@ public:
         GN_ASSERT(parent);
         newLogger->setParent(parent);
         parent->reapplyAttributes();
+
+        // Apply GN_LOG_LEVEL=<name>:<level> override after the parent reapply,
+        // otherwise reapplyAttributes() would clobber the level we just set.
+        applyEnvOverride(*newLogger);
 
         // sucess
         return newLogger.get();

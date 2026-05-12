@@ -4,20 +4,6 @@
 
 namespace GN::rdg2 {
 
-// #define GN_RDG2_STAMPED_DATA_FIELD(type, name, initialValue) \
-//     private: type m##name = initialValue; \
-//     public: void set##name {const type & newValue) { \
-//         if (newValue == m##name) return; /* No update if the value is the same, to avoid unnecessary stamp increments. */ \
-//         m##name = newValue; \
-//         ++mWriteStamp; \
-//     } \
-//     public: const type & get##name() const { return m##name; }
-
-// #define GN_RDG2_DEFINE_STAMPED_STRUCT() \
-//     private: uint64_t mWriteStamp = 0; \
-//     private: uint64_t mReadStamp = 0; \
-//     public: bool checkAndReset() { bool dirty = (mReadStamp != mWriteStamp); mReadStamp = mWriteStamp; return dirty; }
-
 struct SharedShaderConstants2 : public Entity {
 
     using FrameConstants               = GN::rdg::SharedShaderConstants::FrameInformation;

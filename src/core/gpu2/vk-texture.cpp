@@ -102,14 +102,13 @@ gfx::img::Image TextureVulkanBase::readback() const {
         GN_ERROR(sLogger)("TextureVulkanBase::readback: no GpuContext, name='{}'", name);
         return gfx::img::Image();
     }
-    const rv::Device * dev = mGpu->vulkanDevice();
-    if (!dev) return gfx::img::Image();
-    rv::CommandQueue * gq = dev->graphics();
+    const rv::Device & dev = mGpu->vulkanDevice();
+    rv::CommandQueue * gq  = dev.graphics();
     if (!gq) {
         GN_ERROR(sLogger)("TextureVulkanBase::readback: no graphics queue, name='{}'", name);
         return gfx::img::Image();
     }
-    mGpu->waitIdle(); // Ensure all submitted GPU operations are complete before readback.
+    mGpu->waitForIdle(); // Ensure all submitted GPU operations are complete before readback.
     rv::Image::ReadContentParameters readParams;
     readParams.setQueue(*gq);
     auto content = mRvImage->readContent(readParams);
@@ -127,11 +126,11 @@ bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
         return false;
     }
     if (!mGpu || !mGpu->ready()) return false;
-    const rv::Device * dev = mGpu->vulkanDevice();
-    if (!dev || !dev->gi()) return false;
-    rv::CommandQueue * gq = dev->graphics();
+    const rv::Device & dev = mGpu->vulkanDevice();
+    if (!dev.gi()) return false;
+    rv::CommandQueue * gq = dev.graphics();
     if (!gq) return false;
-    mGpu->waitIdle(); // Ensure all submitted GPU operations are complete before setting new content.
+    mGpu->waitForIdle(); // Ensure all submitted GPU operations are complete before setting new content.
     for (uint32_t f = 0; f < mDescriptor.faces; ++f) {
         for (uint32_t l = 0; l < mDescriptor.levels; ++l) {
             gfx::img::PlaneCoord pc {};
@@ -175,14 +174,14 @@ public:
         mGpu        = params.context.staticCastTo<GpuContextVulkan2>();
         mDescriptor = validateDesc(params.descriptor);
         if (0 == mDescriptor.width) return false;
-        const rv::Device * dev = mGpu->vulkanDevice();
-        if (!dev || !dev->gi()) {
+        const rv::Device & dev = mGpu->vulkanDevice();
+        if (!dev.gi()) {
             GN_ERROR(sLogger)("OwnedTextureVulkan::initOwned: invalid Vulkan device, name='{}'", name);
             return false;
         }
-        mOwnedImage = createVkImage(mDescriptor, *dev->gi());
+        mOwnedImage = createVkImage(mDescriptor, *dev.gi());
         if (!mOwnedImage || !mOwnedImage->handle()) return false;
-        rv::setVkHandleName(dev->gi()->device, mOwnedImage->handle(), name.c_str());
+        rv::setVkHandleName(dev.gi()->device, mOwnedImage->handle(), name.c_str());
 
         setVulkanHandles(mOwnedImage.get());
         return true;
@@ -216,14 +215,14 @@ public:
         mDescriptor = validateDesc(descriptorFromImageDesc(image.desc()));
         if (0 == mDescriptor.width) return false;
 
-        const rv::Device * dev = mGpu->vulkanDevice();
-        if (!dev || !dev->gi()) return false;
-        mOwnedImage = createVkImage(mDescriptor, *dev->gi());
+        const rv::Device & dev = mGpu->vulkanDevice();
+        if (!dev.gi()) return false;
+        mOwnedImage = createVkImage(mDescriptor, *dev.gi());
         if (!mOwnedImage || !mOwnedImage->handle()) return false;
         mOwnedImage->setName(path.c_str());
 
         setVulkanHandles(mOwnedImage.get());
-        rv::CommandQueue * gq = dev->graphics();
+        rv::CommandQueue * gq = dev.graphics();
         if (!gq) {
             GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: no graphics queue");
             return false;
@@ -247,6 +246,8 @@ public:
                 sc.pixels                 = image.at(pc);
                 mOwnedImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
             }
+
+        GN_INFO(sLogger)("Loaded texture '{}'", path);
         return true;
     }
 

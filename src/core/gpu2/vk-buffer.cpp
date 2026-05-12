@@ -25,8 +25,8 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
         GN_ERROR(sLogger)("BufferVulkan::init: invalid GpuContext, name='{}'", name);
         return false;
     }
-    const rv::Device * dev = mGpu->vulkanDevice();
-    if (!dev || !dev->gi()) {
+    const rv::Device & dev = mGpu->vulkanDevice();
+    if (!dev.gi()) {
         GN_ERROR(sLogger)("BufferVulkan::init: invalid Vulkan device, name='{}'", name);
         return false;
     }
@@ -41,7 +41,7 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
                                                 vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer;
 
     rv::Buffer::ConstructParameters cp;
-    cp.gi    = dev->gi();
+    cp.gi    = dev.gi();
     cp.size  = params.size;
     cp.usage = kAllUsages;
     cp.memory =
@@ -53,7 +53,7 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
         reset();
         return false;
     }
-    rv::setVkHandleName(dev->gi()->device, mRvBuffer->handle(), name.c_str());
+    rv::setVkHandleName(dev.gi()->device, mRvBuffer->handle(), name.c_str());
 
     gpuState = BufferStateVulkan::UNDEFINED();
     return true;
@@ -95,14 +95,13 @@ bool BufferVulkan::setContent(ArrayProxy<const uint8_t> data, size_t offset) {
     }
     if (data.empty()) return true;
     if (!mGpu || !mGpu->ready()) return false;
-    const rv::Device * dev = mGpu->vulkanDevice();
-    if (!dev) return false;
-    rv::CommandQueue * gq = dev->graphics();
+    const rv::Device & dev = mGpu->vulkanDevice();
+    rv::CommandQueue * gq  = dev.graphics();
     if (!gq) {
         GN_ERROR(sLogger)("BufferVulkan::setContent: no graphics queue, name='{}'", name);
         return false;
     }
-    mGpu->waitIdle();
+    mGpu->waitForIdle();
     rv::Buffer::SetContentParameters sc;
     sc.setQueue(*gq).setData(data.data(), data.size()).setOffset((vk::DeviceSize) offset);
     mRvBuffer->setContent(sc);
@@ -117,14 +116,13 @@ std::vector<uint8_t> BufferVulkan::readContent(size_t offset, size_t size) const
         return {};
     }
     if (!mGpu || !mGpu->ready()) return {};
-    const rv::Device * dev = mGpu->vulkanDevice();
-    if (!dev) return {};
-    rv::CommandQueue * gq = dev->graphics();
+    const rv::Device & dev = mGpu->vulkanDevice();
+    rv::CommandQueue * gq  = dev.graphics();
     if (!gq) {
         GN_ERROR(sLogger)("BufferVulkan::readContent: no graphics queue, name='{}'", name);
         return {};
     }
-    mGpu->waitIdle();
+    mGpu->waitForIdle();
     rv::Buffer::ReadParameters rp;
     rp.setQueue(*gq).setRange((vk::DeviceSize) offset, size == (size_t) -1 ? vk::DeviceSize(-1) : (vk::DeviceSize) size);
     auto result     = mRvBuffer->readContent(rp);

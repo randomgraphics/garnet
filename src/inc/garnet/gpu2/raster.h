@@ -3,6 +3,8 @@
     #error "Do not include <garnet/gpu2/raster.h> directly. Include <garnet/GNgpu2.h> instead."
 #endif
 
+#include <optional>
+
 namespace GN::gpu2 {
 
 // -----------------------------
@@ -229,12 +231,14 @@ struct RasterTarget {
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
 
-    StackArray<ColorTarget, 8> colorTargets;
-    GpuResourceView            depthStencilTarget;
-    ClearColorValue            clearColor   = {{0.0f, 0.0f, 0.0f, 1.0f}};
-    float                      clearDepth   = 1.0f;
-    uint32_t                   clearStencil = 0;
-    RasterState                states       = RasterState::WithDefaults {}; ///< full render state baseline; every field has a value
+    typedef StackArray<ColorTarget, 8> ColorTargetArray;
+
+    ColorTargetArray colorTargets;
+    GpuResourceView  depthStencilTarget;
+    ClearColorValue  clearColor   = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    float            clearDepth   = 1.0f;
+    uint32_t         clearStencil = 0;
+    RasterState      states       = RasterState::WithDefaults {}; ///< full render state baseline; every field has a value
 
     RasterTarget & setColorTarget(size_t index, const GpuResourceView & target) {
         if (index >= colorTargets.MAX_SIZE) GN_UNLIKELY {
@@ -315,11 +319,29 @@ struct RasterGeometry {
     };
 
     struct VertexAttribute {
-        uint32_t        location = 0;
-        uint32_t        offset   = 0;
-        AttributeFormat format   = AttributeFormat::F32_3;
+        /// Location is the "slot" index inside the shader where this attribute is consumed. The shader defines the
+        /// expected location for each attribute, and the raster matches them by location.
+        uint32_t location = 0;
 
-        bool operator==(const VertexAttribute & other) const { return location == other.location && format == other.format && offset == other.offset; }
+        /// Binding is the index of the vertex buffer feeding this attribute. The shader does not see this index; it's
+        /// only used to match attributes to vertex buffers in RasterGeometry::vertices. For example, if an attribute has
+        /// binding=2, it will consume data from the vertex buffer at vertices[2].buffer with the specified offset and stride.
+        uint32_t binding = 0;
+
+        /// Offset in bytes from the start of the vertex to the first byte of this attribute. This is used to specify
+        /// interleaved attributes on same vertex buffer. For example, if a vertex buffer contains interleaved position and
+        /// normal data, the position attribute may have offset=0 and the normal attribute may have offset=12 (assuming 3 floats for position).
+        uint32_t offset = 0;
+
+        /// The format of the attribute data. This is used to interpret the raw bytes in the vertex buffer and convert them
+        /// to the shader's expected format. For example, if the shader expects a vec3 position, the attribute may have
+        /// format=F32_3 to indicate that each vertex has 3 floats for this attribute. This also determines the valid size
+        /// of this arribute.
+        AttributeFormat format = AttributeFormat::F32_3;
+
+        bool operator==(const VertexAttribute & other) const {
+            return location == other.location && offset == other.offset && format == other.format && binding == other.binding;
+        }
         bool operator!=(const VertexAttribute & other) const { return !operator==(other); }
     };
 

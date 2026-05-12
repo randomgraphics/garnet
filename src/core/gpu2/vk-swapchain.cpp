@@ -86,8 +86,7 @@ bool SwapchainVulkan2::init(const Swapchain::CreateDesc & desc) {
         return false;
     }
 
-    const rv::Device * dev = mGpu->vulkanDevice();
-    GN_ASSERT(dev);
+    const rv::Device & dev = mGpu->vulkanDevice();
 
     if (desc.width == 0 || desc.height == 0) {
         GN_ERROR(sLogger)("SwapchainVulkan2::init: invalid dimensions {}x{}, name='{}'", desc.width, desc.height, name);
@@ -95,7 +94,7 @@ bool SwapchainVulkan2::init(const Swapchain::CreateDesc & desc) {
     }
 
     rv::Swapchain::ConstructParameters scp;
-    scp.setDevice(*dev);
+    scp.setDevice(dev);
     scp.setDimensions(desc.width, desc.height);
     scp.setSurface(vk::SurfaceKHR((VkSurfaceKHR) (void *) desc.window));
     scp.depthStencilFormat.mode = rv::Swapchain::DepthStencilFormat::DISABLED;

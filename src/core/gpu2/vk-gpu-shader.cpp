@@ -27,8 +27,8 @@ AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & p)
         GN_ERROR(sLogger)("createGpuShaderVulkan2: GpuContext is not a ready Vulkan context");
         return {};
     }
-    const rv::Device * dev = vkctx->vulkanDevice();
-    if (!dev || !dev->handle()) {
+    const rv::Device & dev = vkctx->vulkanDevice();
+    if (!dev.handle()) {
         GN_ERROR(sLogger)("createGpuShaderVulkan2: no Vulkan device");
         return {};
     }
@@ -42,7 +42,7 @@ AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & p)
     }
 
     rv::Shader::ConstructParameters scp;
-    scp.setGi(dev->gi());
+    scp.setGi(dev.gi());
     scp.setSpirv(p.size / sizeof(uint32_t), static_cast<const uint32_t *>(p.binary));
     scp.entry = shaderEntryCStr(p);
 
