@@ -4,7 +4,7 @@
 
 namespace GN::rdg2 {
 
-struct SharedShaderConstants2 : public Entity {
+struct SharedShaderConstants : public Entity {
 
     using FrameConstants               = GN::rdg::SharedShaderConstants::FrameInformation;
     using DirectLight                  = GN::rdg::SharedShaderConstants::DirectLight;
@@ -29,10 +29,10 @@ struct SharedShaderConstants2 : public Entity {
 
     struct Content : RefCounter {
         Set0Parameters set0Parameters; ///< A copy of the set0 parameters when the snapshot is taken. It can be retrieved later inside a Node action via
-                                       ///< SharedShaderConstants2::getContent.
+                                       ///< SharedShaderConstants::getContent.
         GN::gpu2::GpuResourceSet set0Resources; ///< GPU resource set matching the set0 parameters. It can be used directly in shaders without rebinding, and it
                                                 ///< is updated every frame to match the current set0 parameters. It can also be retrieved later inside a Node
-                                                ///< action via SharedShaderConstants2::getContent.
+                                                ///< action via SharedShaderConstants::getContent.
     };
 
     Set0Parameters set0;
@@ -49,7 +49,7 @@ struct SharedShaderConstants2 : public Entity {
         AutoRef<GN::gpu2::GpuContext> gpu;
         AutoRef<Graph>                graph;
     };
-    GN_API static AutoRef<SharedShaderConstants2> create(const CreateParameters & params);
+    GN_API static AutoRef<SharedShaderConstants> create(const CreateParameters & params);
 
 private:
     using Entity::Entity; // inherit constructor

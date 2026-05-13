@@ -576,21 +576,18 @@ int main(int argc, const char ** argv) {
         graph->waitForToken(graph->getNodeCompletionToken(presentNode));
 
         // ── GPU submission ─────────────────────────────────────────────────────
-        // Cubemap: wait for the previous frame's write to finish (WAW guard).
-        // Present:  wait for swapchain acquisition and for the cubemap to be flushed.
+        // Single submit: cubemap work followed by the cube draw. Ordering between
+        // them is implicit (shared command buffer). We wait for prevPayload (WAW
+        // guard against the previous frame's cubemap write) and frame.ready
+        // (swapchain image acquisition).
         {
-            GpuContext::SubmitParameters sp(StrA::format("frame {} cubemap", frameCounter));
+            GpuContext::SubmitParameters sp(StrA::format("frame {}", frameCounter));
             if (cubemapRenderer.prevPayload) sp.waitFor(cubemapRenderer.prevPayload);
-            sp.appendWorks(cubemapPayloads);
-            gpuContext->submit(sp);
-            if (!cubemapPayloads.empty()) cubemapRenderer.prevPayload = cubemapPayloads.back();
-        }
-        {
-            GpuContext::SubmitParameters sp(StrA::format("frame {} present", frameCounter));
-            if (cubemapRenderer.prevPayload) sp.waitFor(cubemapRenderer.prevPayload); // GPU ordering: cube draw after cubemap
             sp.waitFor(frame.ready);
+            sp.appendWorks(cubemapPayloads);
             sp.appendWork(presentPayload);
             gpuContext->submit(sp);
+            if (!cubemapPayloads.empty()) cubemapRenderer.prevPayload = cubemapPayloads.back();
         }
         swapchain->present(*presentPayload);
 

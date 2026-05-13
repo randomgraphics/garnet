@@ -6,7 +6,7 @@
 //
 // Missing pieces assumed to be implemented:
 //   - pbr-mesh-vert.spv.h / pbr-mesh-frag.spv.h (shader build step)
-//   - SharedShaderConstants2::EnvironmentLightingConstants uses gpu2::Texture
+//   - SharedShaderConstants::EnvironmentLightingConstants uses gpu2::Texture
 //     (current alias still points at rdg::Texture from the v1 header)
 
 #include <garnet/GNrdg2.h>
@@ -21,7 +21,7 @@
 
 // Pre-compiled SPIR-V for the PBR mesh shaders. These shaders are expected to
 // be authored alongside this sample with descriptor-set layouts that match
-// SharedShaderConstants2: set 0 = SSC resources, set 1 = material textures.
+// SharedShaderConstants: set 0 = SSC resources, set 1 = material textures.
 #include "pbr-mesh-vert.spv.h"
 #include "pbr-mesh-frag.spv.h"
 
@@ -309,7 +309,7 @@ int main(int argc, const char ** argv) {
     if (!graph) return -1;
 
     // ── Shared shader constants ───────────────────────────────────────────────
-    auto ssc = SharedShaderConstants2::create({gpuContext, graph});
+    auto ssc = SharedShaderConstants::create({gpuContext, graph});
     if (!ssc) return -1;
 
     // ── Swapchain ─────────────────────────────────────────────────────────────
@@ -360,17 +360,17 @@ int main(int argc, const char ** argv) {
 
     // ── Initial lighting + environment constants ───────────────────────────────
     {
-        SharedShaderConstants2::DirectLight light;
-        light.type                    = SharedShaderConstants2::DirectLight::DIRECTIONAL;
+        SharedShaderConstants::DirectLight light;
+        light.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
         light.directional.orientation = Orientation(1.f, 0.f, 0.f, 0.f); // faces -Z
         light.directional.irradiance  = {1.0f, 0.95f, 0.9f, {600.0f}};   // warm white, 600 lux
         ssc->set0.directLighting.append(light);
     }
     {
-        // NOTE: SharedShaderConstants2::EnvironmentLightingConstants currently aliases
+        // NOTE: SharedShaderConstants::EnvironmentLightingConstants currently aliases
         // the v1 struct which uses rdg::Texture. A future update should migrate it to
         // gpu2::Texture so the assignments below compile without a cast.
-        SharedShaderConstants2::EnvironmentLightingConstants env;
+        SharedShaderConstants::EnvironmentLightingConstants env;
         env.skyboxCubemap             = skyboxCubemap;
         env.irradianceMap             = irradianceMap;
         env.prefilteredEnvMap         = prefilteredEnvMap;

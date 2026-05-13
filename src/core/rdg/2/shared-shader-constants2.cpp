@@ -4,15 +4,15 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg2");
 
 namespace GN::rdg2 {
 
-class SharedShaderConstants2Impl : public SharedShaderConstants2 {
+class SharedShaderConstants2Impl : public SharedShaderConstants {
 
     AutoRef<GN::gpu2::GpuContext> mGpu;
     AutoRef<Graph>                mGraph;
 
 public:
-    GN_REGISTER_RUNTIME_TYPE(SharedShaderConstants2);
+    GN_REGISTER_RUNTIME_TYPE(SharedShaderConstants);
 
-    SharedShaderConstants2Impl(): SharedShaderConstants2(TYPE_INFO(), name) {}
+    SharedShaderConstants2Impl(): SharedShaderConstants(TYPE_INFO(), name) {}
 
     bool init(const CreateParameters & params) {
         if (!params.gpu || !params.graph) {
@@ -33,7 +33,7 @@ public:
     }
 };
 
-GN_API AutoRef<SharedShaderConstants2> SharedShaderConstants2::create(const CreateParameters & params) {
+GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const CreateParameters & params) {
     auto ret = AutoRef<SharedShaderConstants2Impl>(new SharedShaderConstants2Impl());
     if (!ret->init(params)) {
         GN_ERROR(sLogger)("Failed to initialize SharedShaderConstants2Impl");
