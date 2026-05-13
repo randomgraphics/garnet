@@ -58,6 +58,7 @@ struct GpuContextVulkan2::Impl {
 
     struct PendingSubmission {
         StrA                                   name;
+        rv::Ref<rv::CommandQueue>              queue;
         vk::UniqueFence                        fence;
         std::function<void()>                  onComplete;
         std::vector<AutoRef<GpuPayloadVulkan>> works;
@@ -197,7 +198,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
             if (w) w->onSubmitComplete();
         }
         std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
-        mImpl->mPending.push_back({sp.name, std::move(fence), sp.onComplete, std::move(works), submissionId});
+        mImpl->mPending.push_back({sp.name, queue, std::move(fence), sp.onComplete, std::move(works), submissionId});
     } else {
         queue->submit(qsp);
         for (auto & w : works) {
@@ -209,7 +210,6 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
 void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
     if (!mImpl || !mImpl->mDevice || !mImpl->mDevice->handle()) return;
     vk::Device         device = mImpl->mDevice->gi()->device;
-    rv::CommandQueue * queue  = mImpl->mDevice->graphics();
 
     // Collect completed callbacks outside the lock so they can safely call submit() or pump() themselves.
     std::vector<std::pair<StrA, std::function<void()>>> readyCallbacks;
@@ -228,7 +228,8 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
                 // Flush rv::CommandQueue's InternalSubmission for this fence BEFORE erasing (which destroys the fence).
                 // Without this, rv::CommandQueue::waitIdle() in the destructor would try to vkWaitForFences on an
                 // already-destroyed handle, triggering a validation error and SIGTRAP.
-                if (queue) queue->wait({it->submissionId});
+                GN_ASSERT(it->queue);
+                it->queue->wait({it->submissionId});
                 readyCallbacks.push_back({std::move(it->name), std::move(it->onComplete)});
                 it = mImpl->mPending.erase(it);
             } else {
