@@ -9,8 +9,6 @@ class Shader;
 
 namespace GN::gpu2 {
 
-class GpuShaderVulkan;
-
 /// Vulkan \c GpuShader: owns a \c rv::Shader (SPIR-V module + entry).
 class GpuShaderVulkan final : public GpuShader {
 public:

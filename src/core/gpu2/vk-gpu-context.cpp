@@ -47,15 +47,48 @@ static rv::Device::Verbosity getVkDeviceVerbosity(GpuContext::Verbosity verbosit
 }
 
 // =============================================================================
+// Resource pool traits
+// =============================================================================
+
+struct SemaphoreTraits final : ResourcePoolVulkan<vk::Semaphore>::Traits {
+    const rv::GlobalInfo & gi;
+
+    explicit SemaphoreTraits(const rv::GlobalInfo & gi_): gi(gi_) {}
+
+    vk::Semaphore create() override { return gi.device.createSemaphore({}, gi.allocator); }
+
+    void destroy(vk::Semaphore & s) override {
+        gi.device.destroySemaphore(s, gi.allocator);
+        s = nullptr;
+    }
+
+    void onAcquire(vk::Semaphore & s, const char * name) override { rv::setVkHandleName(gi.device, s, name); }
+};
+
+struct FenceTraits final : ResourcePoolVulkan<vk::Fence>::Traits {
+    const rv::GlobalInfo & gi;
+
+    explicit FenceTraits(const rv::GlobalInfo & gi_): gi(gi_) {}
+
+    vk::Fence create() override { return gi.device.createFence({}, gi.allocator); } // unsignaled by default
+
+    void destroy(vk::Fence & f) override {
+        gi.device.destroyFence(f, gi.allocator);
+        f = nullptr;
+    }
+
+    void onAcquire(vk::Fence & f, const char * name) override {
+        rv::setVkHandleName(gi.device, f, name);
+        // Reset to unsignaled before returning to caller so every re-use starts clean.
+        gi.device.resetFences({f});
+    }
+};
+
+// =============================================================================
 // GpuContextVulkan2
 // =============================================================================
 
 struct GpuContextVulkan2::Impl {
-    std::optional<rv::Instance>       mInstance;
-    std::optional<rv::Device>         mDevice;
-    GpuContext::Caps                  mCaps;
-    std::unique_ptr<RasterPsoFactory> mPsoFactory;
-
     struct PendingSubmission {
         StrA                                   name;
         rv::Ref<rv::CommandQueue>              queue;
@@ -70,16 +103,20 @@ struct GpuContextVulkan2::Impl {
 
 GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters & params)
     : GpuContextCommon2(name, GpuContextCommon2::Api::VULKAN), mImpl(std::make_unique<Impl>()) {
+
+    // Create instance
     rv::Instance::ConstructParameters ip;
     ip.apiVersion = VK_API_VERSION_1_3;
     ip.backtrace  = []() -> std::string { return GN::backtrace().c_str(); };
     ip.setValidation(getVkInstanceValidation(params.debug));
     ip.setPrintVkInfo(getVkDeviceVerbosity(params.howToPrintDeviceCaps));
-    mImpl->mInstance.emplace(ip);
-    if (!mImpl->mInstance->handle()) {
+    mInstance.emplace(ip);
+    if (!mInstance->handle()) {
         GN_ERROR(sLoggerVk)("GpuContextVulkan2: failed to create Vulkan instance, name='{}'", name);
         return;
     }
+
+    // Create device
     rv::Device::ConstructParameters dp;
     dp.setPrintVkInfo(ip.printVkInfo);
 #if GN_DARWIN
@@ -89,54 +126,35 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     // Allow depth and stencil planes of a D+S image to be transitioned independently;
     // without this, separate-aspect barriers on D+S formats are a validation error.
     dp.addFeature(vk::PhysicalDeviceVulkan12Features().setSeparateDepthStencilLayouts(true));
-    dp.setInstance(mImpl->mInstance->handle());
-    mImpl->mDevice.emplace(dp);
-    if (mImpl->mDevice->handle()) {
-        vk::Format depthVk = rv::queryDepthFormat(mImpl->mDevice->gi()->physical, 1);
-        if (depthVk != vk::Format::eUndefined) {
-            mImpl->mCaps.defaultDepthFormat = vkFormatToPixelFormat(depthVk);
-            if (mImpl->mCaps.defaultDepthFormat == gfx::img::PixelFormat::UNKNOWN()) {
-                GN_WARN(sLoggerVk)("GpuContextVulkan2: vkFormatToPixelFormat({}) returned UNKNOWN; caps.defaultDepthFormat stays UNKNOWN",
-                                   rv::vkFormat2String(depthVk));
-            }
-        } else {
-            GN_WARN(sLoggerVk)("GpuContextVulkan2: no depth/stencil format from queryDepthFormat; caps.defaultDepthFormat stays UNKNOWN");
+    dp.setInstance(mInstance->handle());
+    mDevice.emplace(dp);
+    if (!mDevice->handle()) return;
+
+    // Initialize caps
+    vk::Format depthVk = rv::queryDepthFormat(mDevice->gi()->physical, 1);
+    if (depthVk != vk::Format::eUndefined) {
+        mCaps.defaultDepthFormat = vkFormatToPixelFormat(depthVk);
+        if (mCaps.defaultDepthFormat == gfx::img::PixelFormat::UNKNOWN()) {
+            GN_WARN(sLoggerVk)("GpuContextVulkan2: vkFormatToPixelFormat({}) returned UNKNOWN; caps.defaultDepthFormat stays UNKNOWN",
+                               rv::vkFormat2String(depthVk));
         }
-        mImpl->mPsoFactory = std::make_unique<RasterPsoFactory>(*this);
+    } else {
+        GN_WARN(sLoggerVk)("GpuContextVulkan2: no depth/stencil format from queryDepthFormat; caps.defaultDepthFormat stays UNKNOWN");
     }
+
+    // Create sub objects
+    mPsoFactory = std::make_unique<RasterPsoFactory>(*this);
+    mSemaphorePool.emplace(std::make_unique<SemaphoreTraits>(*mDevice->gi()));
+    mFencePool.emplace(std::make_unique<FenceTraits>(*mDevice->gi()));
+
+    // All done
+    mReady = true; // must be last; inline ready() is called throughout this TU
 }
 
 GpuContextVulkan2::~GpuContextVulkan2() {
     GN_INFO(sLoggerVk)("Wait for GPU idle ...");
     pumpInternal(true);
     GN_INFO(sLoggerVk)("Destroying Vulkan GPU context");
-}
-
-GpuContext::Caps GpuContextVulkan2::caps() const {
-    if (!mImpl) return {};
-    return mImpl->mCaps;
-}
-
-intptr_t GpuContextVulkan2::getVulkanInstanceHandle() const {
-    if (!mImpl || !mImpl->mInstance || !mImpl->mInstance->handle()) return 0;
-    return (intptr_t) (void *) mImpl->mInstance->handle();
-}
-
-bool GpuContextVulkan2::ready() const {
-    if (!mImpl) return false;
-    if (!mImpl->mInstance.has_value() || !mImpl->mInstance->handle()) return false;
-    if (!mImpl->mDevice.has_value() || !mImpl->mDevice->handle()) return false;
-    return true;
-}
-
-const rv::Device & GpuContextVulkan2::vulkanDevice() const {
-    GN_ASSERT(ready());
-    return mImpl->mDevice.value();
-}
-
-RasterPsoFactory & GpuContextVulkan2::psoFactory() const {
-    GN_ASSERT(mImpl && mImpl->mPsoFactory);
-    return *mImpl->mPsoFactory;
 }
 
 void GpuContextVulkan2::submit(const SubmitParameters & sp) {
@@ -191,7 +209,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     qsp.signalSemaphores = {(uint32_t) signalSems.size(), signalSems.data()};
 
     if (sp.onComplete) {
-        vk::UniqueFence fence = mImpl->mDevice->gi()->device.createFenceUnique({});
+        vk::UniqueFence fence = mDevice->gi()->device.createFenceUnique({});
         qsp.signalFence       = fence.get();
         auto submissionId     = queue->submit(qsp);
         for (auto & w : works) {
@@ -208,8 +226,8 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
 }
 
 void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
-    if (!mImpl || !mImpl->mDevice || !mImpl->mDevice->handle()) return;
-    vk::Device         device = mImpl->mDevice->gi()->device;
+    if (!mDevice.has_value() || !mDevice->handle()) return;
+    vk::Device device = mDevice->gi()->device;
 
     // Collect completed callbacks outside the lock so they can safely call submit() or pump() themselves.
     std::vector<std::pair<StrA, std::function<void()>>> readyCallbacks;

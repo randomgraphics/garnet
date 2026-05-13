@@ -43,38 +43,79 @@
         "vk-gpu-context.h included after another TU already included rapid-vulkan; this may cause ODR violations. Please include vk-gpu-context.h before any other TU that may include rapid-vulkan."
 #endif // !RAPID_VULKAN_H_
 
+#include "vk-resource-pool.h"
+
 namespace GN::gpu2 {
 
 class RasterPsoFactory; // defined in vk-raster-pso-factory.h
+
+typedef ResourcePoolVulkan<vk::Semaphore> SemaphorePoolVulkan;
+typedef SemaphorePoolVulkan::Entry        PooledSemaphoreVulkan;
+
+typedef ResourcePoolVulkan<vk::Fence> FencePoolVulkan;
+typedef FencePoolVulkan               PooledFenceVulkan;
 
 /// Vulkan-backed \c GpuContext (rapid-vulkan Instance + Device). Mirrors v1 \c GpuContextVulkan.
 class GpuContextVulkan2 : public GpuContextCommon2 {
 public:
     GN_API GN_REGISTER_RUNTIME_TYPE(GpuContextCommon2);
 
-    struct Impl;
-    std::unique_ptr<Impl> mImpl;
-
     GpuContextVulkan2(const StrA & name, const CreateParameters & params);
     ~GpuContextVulkan2() override;
 
-    /// True when Instance and Device are both created successfully (for factory; mirrors v1 success checks).
-    bool ready() const;
+    bool ready() const { return mReady; }
 
     /// Vulkan device for rdg2 factories (swapchain, etc.). Only valid when ready().
-    const rv::Device & vulkanDevice() const;
+    const rv::Device & vulkanDevice() const {
+        GN_ASSERT(ready());
+        return mDevice.value();
+    }
 
     /// PSO cache for raster pipelines. Only valid when ready().
-    RasterPsoFactory & psoFactory() const;
+    RasterPsoFactory & psoFactory() const {
+        GN_ASSERT(mPsoFactory);
+        return *mPsoFactory;
+    }
 
-    GpuContext::Caps caps() const override;
-    intptr_t         getVulkanInstanceHandle() const override;
-    void             submit(const SubmitParameters &) override;
-    void             pump() override { pumpInternal(false); }
-    void             waitForIdle() override { pumpInternal(true); }
+    // resource pool
+    ResourcePoolVulkan<vk::Semaphore> & semaphorePool() const {
+        GN_ASSERT(mSemaphorePool.has_value());
+        return mSemaphorePool.value();
+    }
+
+    ResourcePoolVulkan<vk::Fence> & fencePool() const {
+        GN_ASSERT(mFencePool.has_value());
+        return mFencePool.value();
+    }
+
+    GpuContext::Caps caps() const override { return mCaps; }
+
+    intptr_t getVulkanInstanceHandle() const override {
+        if (!mInstance.has_value() || !mInstance->handle()) return 0;
+        return (intptr_t) (void *) mInstance->handle();
+    }
+
+    void submit(const SubmitParameters &) override;
+    void pump() override { pumpInternal(false); }
+    void waitForIdle() override { pumpInternal(true); }
 
 private:
     void pumpInternal(bool waitForIdle);
+
+    // Frequently queried items live directly on the class so their accessors above can be inlined.
+    bool                        mReady = false;
+    std::optional<rv::Instance> mInstance;
+    std::optional<rv::Device>   mDevice;
+    GpuContext::Caps            mCaps;
+
+    // mutable factories and pools: may change even on logically const paths.
+    mutable std::unique_ptr<RasterPsoFactory>  mPsoFactory; // incomplete type; can't use std::optional
+    mutable std::optional<SemaphorePoolVulkan> mSemaphorePool;
+    mutable std::optional<FencePoolVulkan>     mFencePool;
+
+    // Other internal impl details that we'd like to hide from public context header.
+    struct Impl;
+    std::unique_ptr<Impl> mImpl;
 };
 
 /// Create a Vulkan-backed rdg2 \c GpuContext. Used from \c GpuContext::create when API is "vulkan".

@@ -62,7 +62,8 @@
       "Bash(pip3 install *)",
       "Bash(/tmp/imgenv/bin/pip install *)",
       "Bash(/tmp/imgenv/bin/python3 -c \"from PIL import Image; print\\('ok'\\)\")",
-      "Bash(/tmp/imgenv/bin/python3 *)"
+      "Bash(/tmp/imgenv/bin/python3 *)",
+      "Bash(xargs ls *)"
     ]
   }
 }
