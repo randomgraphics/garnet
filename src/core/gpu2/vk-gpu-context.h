@@ -49,11 +49,11 @@ namespace GN::gpu2 {
 
 class RasterPsoFactory; // defined in vk-raster-pso-factory.h
 
-typedef ResourcePoolVulkan<vk::Semaphore> SemaphorePoolVulkan;
-typedef SemaphorePoolVulkan::Entry        PooledSemaphoreVulkan;
+typedef ResourcePoolVulkan<vk::Semaphore>   SemaphorePoolVulkan;
+typedef AutoRef<SemaphorePoolVulkan::Entry> PooledSemaphoreVulkan;
 
-typedef ResourcePoolVulkan<vk::Fence> FencePoolVulkan;
-typedef FencePoolVulkan               PooledFenceVulkan;
+typedef ResourcePoolVulkan<vk::Fence>   FencePoolVulkan;
+typedef AutoRef<FencePoolVulkan::Entry> PooledFenceVulkan;
 
 /// Vulkan-backed \c GpuContext (rapid-vulkan Instance + Device). Mirrors v1 \c GpuContextVulkan.
 class GpuContextVulkan2 : public GpuContextCommon2 {

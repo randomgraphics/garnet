@@ -89,11 +89,13 @@ struct FenceTraits final : ResourcePoolVulkan<vk::Fence>::Traits {
 // =============================================================================
 
 struct GpuContextVulkan2::Impl {
-    struct PendingSubmission {
+    struct 
+     {
         StrA                                   name;
         rv::Ref<rv::CommandQueue>              queue;
-        vk::UniqueFence                        fence;
-        std::function<void()>                  onComplete;
+        PooledSemaphore                        semaphore;
+        PooledFence                            fence;
+        std::function<void()>                  onComplete; ///< the user provided completion function. might be empty.
         std::vector<AutoRef<GpuPayloadVulkan>> works;
         rv::CommandQueue::SubmissionID         submissionId; ///< ID returned by queue->submit(); used to flush rv::CommandQueue before fence is destroyed.
     };
@@ -176,6 +178,32 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
             return;
         }
 
+    // collect semaphores to wait from dependencies
+    std::vector<vk::Semaphore> waitSems;
+    for (size_t i = 0; i < sp.dependencies.size(); ++i) {
+        auto d = sp.dependencies[i];
+        if (!d) GN_UNLIKELY continue;
+        auto w = RuntimeType::cast<GpuPayloadVulkan>(d);
+        if (!w) GN_UNLIKELY {
+            GN_ERROR(sLogger)("Unrecoginized payload type: {}({})", d->name, d->id);
+            continue;
+        }
+        auto s = w->semaphore();
+        if (!s) GN_UNLIKELY {
+            GN_ERROR(sLogger)("Can't depends on un-submitted payload: {}({})", d->name, d->id);
+            continue;
+        }
+        waitSems.push_back(s);
+    }
+
+    // allocate the main fence and semaphore for this submission.
+    auto fence = fencePool().acquire(sp.name);
+    auto sem   = semaphorePool().acquire(sp.name);
+    if (!fence || !sem) {
+        GN_ERROR(sLogger)("failed to acquire fence and semaphore for the submission.");
+        return;
+    }
+
     // construct a record context.
     GpuPayloadVulkan::RecordContext recordCtx;
     recordCtx.dev   = &dev;
@@ -186,43 +214,38 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         return;
     }
 
-    // collect semaphores to wait for from dependencies
-    std::vector<vk::Semaphore>             waitSems;
-    std::vector<vk::Semaphore>             signalSems;
+    // record everthing to the command buffer.
     std::vector<AutoRef<GpuPayloadVulkan>> works;
-    for (size_t i = 0; i < sp.waitForGpu.size(); ++i) {
-        auto w = RuntimeType::cast<GpuPayloadVulkan>(sp.waitForGpu[i]);
-        if (w && w->semaphore) waitSems.push_back(w->semaphore);
-    }
-    for (size_t i = 0; i < sp.work.size(); ++i) {
-        auto s = RuntimeType::cast<GpuPayloadVulkan>(sp.work[i]);
-        if (s) {
-            works.push_back(s);
-            s->recordForVulkanSubmit(recordCtx);
-            if (s->semaphore) signalSems.push_back(s->semaphore);
+    for (auto & i : works) {
+        if (!i) GN_UNLIKELY continue;
+        auto w = RuntimeType::cast<GpuPayloadVulkan>(i);
+        if (!w) GN_UNLIKELY {
+            GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", i->name, i->id);
+            continue;
         }
+        if (w->semaphore()) GN_UNLIKELY {
+            GN_ERROR(sLoggerVk)("Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
+            continue;
+        }
+        w->recordForVulkanSubmit(recordCtx);
+        works.add(w);
     }
 
+    // Submit everything to GPU.
     rv::CommandQueue::SubmitParameters qsp;
     qsp.commandBuffers   = {recordCtx.cmd};
     qsp.waitSemaphores   = {(uint32_t) waitSems.size(), waitSems.data()};
-    qsp.signalSemaphores = {(uint32_t) signalSems.size(), signalSems.data()};
-
-    if (sp.onComplete) {
-        vk::UniqueFence fence = mDevice->gi()->device.createFenceUnique({});
-        qsp.signalFence       = fence.get();
-        auto submissionId     = queue->submit(qsp);
-        for (auto & w : works) {
-            if (w) w->onSubmitComplete();
-        }
-        std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
-        mImpl->mPending.push_back({sp.name, queue, std::move(fence), sp.onComplete, std::move(works), submissionId});
-    } else {
-        queue->submit(qsp);
-        for (auto & w : works) {
-            if (w) w->onSubmitComplete();
-        }
+    qsp.signalSemaphores = {1, &sem->value};
+    qsp.signalFence       = fence->value
+    auto submissionId     = queue->submit(qsp);
+    for (auto & w : works) {
+        w->setSemaphore(sem); // mark the payload as "submitted".
+        w->onSubmitComplete();
     }
+
+    // Add the submission to pending list.
+    std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
+    mImpl->mPending.push_back({sp.name, queue, sem, fence, sp.onComplete, std::move(works), submissionId});
 }
 
 void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
@@ -248,7 +271,7 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
                 // already-destroyed handle, triggering a validation error and SIGTRAP.
                 GN_ASSERT(it->queue);
                 it->queue->wait({it->submissionId});
-                readyCallbacks.push_back({std::move(it->name), std::move(it->onComplete)});
+                if (it->onComplete) readyCallbacks.push_back({std::move(it->name), std::move(it->onComplete)});
                 it = mImpl->mPending.erase(it);
             } else {
                 ++it;

@@ -38,6 +38,8 @@ public:
         T                    mValue;
     };
 
+    typedef AutoRef<Entry> PooledResource;
+
     // Non-movable: Entry holds a raw address into this pool.
     GN_NO_MOVE(ResourcePoolVulkan);
     GN_NO_COPY(ResourcePoolVulkan);
@@ -51,8 +53,7 @@ public:
         mPool.clear();
     }
 
-    /// Dequeue an idle handle (or create a fresh one on a miss).
-    AutoRef<Entry> acquire(const char * name) {
+    PooledResource acquire(const char * name) {
         std::lock_guard lock(mMutex);
         T               value {};
         if (!mPool.empty()) {

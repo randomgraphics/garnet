@@ -107,9 +107,9 @@ struct GpuContext : public RootEntity {
     struct SubmitParameters {
         StrA                                name;
         Queue                               queue = Queue::GRAPHICS; ///< Target queue tier for this submission.
-        ArrayContainer<AutoRef<GpuPayload>> work;                    ///< Sealed GPU payloads to execute.
-        ArrayContainer<AutoRef<GpuPayload>> waitForGpu; ///< GPU-side dependencies. Backend inserts semaphore (cross-queue) or barrier (same-queue) as needed.
-        std::function<void()>               onComplete; ///< CPU callback fired (from any thread) when the GPU fence signals.
+        ArrayContainer<AutoRef<GpuPayload>> work;                    ///< Sealed GPU payloads to execute (in order)
+        ArrayContainer<AutoRef<GpuPayload>> dependencies;            ///< GPU-side dependencies. Backend inserts semaphore as needed.
+        std::function<void()>               onComplete;              ///< Optional CPU callback fired (from any thread) when the GPU fence signals.
 
         SubmitParameters(const StrA & name_): name(name_) {}
 
@@ -122,7 +122,7 @@ struct GpuContext : public RootEntity {
             return *this;
         }
         SubmitParameters & waitFor(AutoRef<GpuPayload> w) {
-            if (w) waitForGpu.append(w);
+            if (w) dependencies.append(w);
             return *this;
         }
         SubmitParameters & setOnComplete(std::function<void()> f) {

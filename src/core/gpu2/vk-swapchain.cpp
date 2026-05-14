@@ -11,6 +11,19 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 namespace GN::gpu2 {
 namespace {
 
+/// Swapchain-specific payload that exposes the protected setSemaphore() hook publicly,
+/// so the swapchain can inject the rapid-vulkan-owned imageAvailable handle into the
+/// "ready" payload after each acquire.
+class SwapchainReadyPayloadVulkan final : public GpuPayloadVulkan {
+public:
+    GN_REGISTER_RUNTIME_TYPE(GpuPayloadVulkan);
+
+    using GpuPayloadVulkan::GpuPayloadVulkan;
+
+    // makes setSemaphore() public.
+    using GpuPayloadVulkan::setSemaphore;
+};
+
 /// One stable \c Texture per swapchain backbuffer \c Image (non-owning view of rapid-vulkan swapchain memory).
 class SwapchainBackbufferTextureVulkan final : public TextureVulkanBase {
 public:
@@ -33,7 +46,7 @@ public:
     }
 
     /// stable per-backbuffer payload; returned as frame.ready from prepare()
-    AutoRef<GpuPayloadVulkan> readyPayload = AutoRef<GpuPayloadVulkan>::make(name + "/ready");
+    AutoRef<SwapchainReadyPayloadVulkan> readyPayload = AutoRef<SwapchainReadyPayloadVulkan>::make(name + "/ready");
 };
 
 } // namespace
@@ -152,8 +165,10 @@ Swapchain::Frame SwapchainVulkan2::prepare() {
     }
     it->second->bindToSwapchainBackbuffer(bb.image, w, h, mSurfaceFormat); // this will reset the texture's GPU state to UNDEFINED,
                                                                            // which matches the swapchain image state after acquire and before any rendering
-    mActiveBackbufferTexture                          = it->second.get();
-    mActiveBackbufferTexture->readyPayload->semaphore = mActiveFrame.imageAvailable;
+    mActiveBackbufferTexture = it->second.get();
+
+    // set the semaphore. This also marks this payload as "submitted".
+    mActiveBackbufferTexture->readyPayload->setSemaphore(mActiveFrame.imageAvailable);
 
     return Swapchain::Frame {makeFrameColorView(), mActiveBackbufferTexture->readyPayload};
 }
@@ -176,8 +191,16 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
         return;
     }
 
-    auto &        vkWaitFor      = static_cast<GpuPayloadVulkan &>(waitFor);
-    vk::Semaphore renderFinished = vkWaitFor.semaphore;
+    vk::Semaphore renderFinished = nullptr;
+    auto          vkWaitFor      = RuntimeType::cast<GpuPayloadVulkan>(waitFor);
+    if (vkWaitFor) GN_LIKELY {
+        renderFinished = vkWaitFor->semaphore();
+        if (!renderFinished) {
+            GN_ERROR(sLogger)("Present() function must depends on already-submitted payload.")
+        }
+    } else {
+        GN_ERROR(sLogger)("waitFor parameter is not a valid pointer to GpuPayloadVulkan object.")
+    }
 
     rv::Swapchain::PresentResult result;
     try {

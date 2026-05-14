@@ -1,12 +1,8 @@
 #pragma once
 
-#include <garnet/GNgpu2.h>
+#include "vk-gpu-context.h"
 
-#include "vk-buffer-state.h"
-#include "vk-texture.h"
-
-#include <optional>
-#include <unordered_map>
+#include <variant>
 
 namespace GN::gpu2 {
 
@@ -16,35 +12,53 @@ struct GpuPayloadVulkan : GpuPayload {
 
     explicit GpuPayloadVulkan(const StrA & name): GpuPayload(TYPE_INFO(), name) {}
 
-    /// One texture referenced by the payload.
-    /// Carries the full per-subresource image state at the start of the payload's work,
-    /// plus an ordered list of state transitions applied during execution.
-    struct TextureRef {
-        AutoRef<TextureVulkanBase>      texture;
-        rv::Image::State                stateBefore; ///< full per-subresource state snapshot before the payload runs
-        std::optional<rv::Image::State> stateAfter;  ///< if empty, after state equals before state
-    };
+    /// The semaphore that will be triggered by GPU when the payload is processed.
+    /// This is non-empty if and only if the payload has been submitted to GPU.
+    /// Used internally to prevent a payload to be submitted multiple times.
+    vk::Semaphore semaphore() const {
+        if (auto pooled = std::get_if<PooledSemaphoreVulkan>(mSemaphore)) {
+            return pooled.get();
+        } else if (auto native = std::get_if<vk::Semaphore>(mSempahore)) {
+            return native;
+        } else return nullptr;
+    }
 
-    /// One buffer referenced by the payload.
-    struct BufferRef {
-        AutoRef<Buffer>                  buffer;
-        BufferStateVulkan                stateBefore;
-        std::optional<BufferStateVulkan> stateAfter; ///< if empty, after state equals before state
-    };
-
-    vk::Semaphore                                       semaphore = {};
-    vk::Fence                                           fence     = {};
-    std::unordered_map<TextureVulkanBase *, TextureRef> textures;
-    std::unordered_map<Buffer *, BufferRef>             buffers;
-
+    /// Context handed to recordForVulkanSubmit(). Owned by the caller (GpuContextVulkan2);
+    /// the payload borrows it for the duration of the record call and must not retain
+    /// pointers beyond that.
     struct RecordContext {
-        const rv::Device * dev   = nullptr;
-        rv::CommandQueue * queue = nullptr;
-        rv::CommandBuffer  cmd;
+        const rv::Device * dev   = nullptr; ///< rapid-vulkan device — gives access to device handle, queues, gi(), etc.
+        rv::CommandQueue * queue = nullptr; ///< target queue for this submission; informs queue-family ownership decisions
+        rv::CommandBuffer  cmd;             ///< open command buffer that the payload encodes its work into
     };
 
+    /// Encode this payload's GPU work into ctx.cmd. Invoked once at submit time, in the
+    /// order payloads were listed in SubmitParameters::work. Subclasses override; base
+    /// is a no-op so an empty payload (e.g. swapchain "ready" sentinel) is valid.
     virtual void recordForVulkanSubmit(const RecordContext &) {}
-    virtual void onSubmitComplete() {}
+
+    /// Host-side hook fired right after the submission's vkQueueSubmit returns
+    /// (i.e. work is in flight, not yet completed on the GPU). Subclasses use this to
+    /// flush tracked GPU state back to the source resources so that subsequent payloads
+    /// see the post-submit state immediately.
+    virtual void onSubmitComplete() {};
+
+protected:
+
+    friend class GpuContextVulkan2; // allow the main context to update the semaphore
+
+    void setSemaphore(vk::Semaphore s) {
+        GN_ASSERT(!semaphore());
+        mSemaphore = s;
+    }
+
+    void setSemaphore(PooledSemaphoreVulkan s) {
+        GN_ASSERT(!semaphore);
+        mSemaphore = s;
+    }
+
+private:
+    std::variant<PooledSemaphoreVulkan, vk::Semaphore> mSemaphore;
 };
 
 } // namespace GN::gpu2
