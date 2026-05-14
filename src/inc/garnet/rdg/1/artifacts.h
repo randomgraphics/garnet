@@ -794,41 +794,4 @@ enum class GpuShaderStageBits : uint32_t {
 
 typedef BitFlags<GpuShaderStageBits> GpuShaderStageFlags;
 
-// GpuResourceGroup commented out: we use GpuResourceTable (set/binding/view) + rapid_vulkan Drawable/DrawPack instead.
-#if 0
-/// A group of bindable GPU shader resources.
-/// Conceptually, it matches Vulkan's descriptor set.
-struct GpuResourceGroup : public GpuResource {
-    GN_API GN_REGISTER_RUNTIME_TYPE(GpuResource);
-
-    struct SlotDescription {
-        enum Type {
-            UNIFORM_BUFFER,
-            STORAGE_BUFFER,
-            SAMPLED_TEXTURE,
-            STORAGE_TEXTURE,
-            SAMPLER,
-        };
-
-        Type                type  = UNIFORM_BUFFER;
-        size_t              count = 1; ///< 1: single resource, >1: fixed sized resource array.
-        GpuShaderStageFlags stages;    ///< shader stages that can access this resource or resource array.
-    };
-
-    struct CreateParameters {
-        AutoRef<GpuContext>        context;
-        DynaArray<SlotDescription> slots;
-    };
-
-    virtual void setResourceViews(size_t slot, size_t offset, SafeArrayAccessor<const GpuResourceView> views) = 0;
-
-    virtual void addToReadWriteList(Arguments::ArtifactReadWriteList & list) const = 0;
-
-    static GN_API AutoRef<GpuResourceGroup> create(const StrA & name, const CreateParameters & params);
-
-protected:
-    using GpuResource::GpuResource;
-};
-#endif
-
 } // namespace GN::rdg

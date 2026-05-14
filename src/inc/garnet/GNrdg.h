@@ -10,7 +10,7 @@
 ///    Artifact, Action, Arguments, Workflow, RenderGraph, Submission.
 ///
 ///  Level 2 — GPU Render Graph IR (artifacts.h, actions.h)
-///    API-agnostic GPU abstraction. Buffer, Texture, GpuDraw, GpuBufferUpload, etc.
+///    API-agnostic GPU abstraction. Buffer, Texture, GpuDraw, GpuCopy, etc.
 ///    Mechanism, not policy. No scene, effect, or rendering-strategy concepts.
 ///
 ///  Level 3 — Pipeline / Effect Library (pipeline.h, physical.h, transform.h)

@@ -90,8 +90,6 @@ scene, effect, or pipeline policy.
 - `GpuDraw` — generic indexed/instanced draw call with shader binaries and resource
   bindings. The building block for all render effects.
 - `GpuCompute` — generic dispatch for compute shaders.
-- `GpuBufferUpload` — uploads CPU data into a GPU buffer (legacy ring-slot model).
-  See *Dynamic Data Upload* below.
 - `CopyBuffer` — stateless buffer-to-buffer copy.  The preferred building block
   for CPU→GPU uploads when combined with a `TransientBuffer`.
 - `CopyBufferToImage` — stateless buffer-to-image copy (stub, future work).
@@ -104,104 +102,11 @@ a future refactor to make the level boundary visually obvious.
 - No API-specific types in public headers (`VkBuffer`, `ID3D12Resource`, etc.).
 - The interface expresses *what* to do, not *how* the backend does it.
 
-### Dynamic Data Upload — Level 2 Design
+### CPU→GPU Uploads: Transient Buffers + Copy Actions
 
-GPU buffers holding per-frame data (camera matrices, light positions, per-draw
-transforms, etc.) must be updated by the CPU every frame, without stalling the CPU
-waiting for the GPU to finish the previous frame. `GpuBufferUpload` provides three
-upload mechanisms with different trade-offs. **The choice of mechanism belongs to
-Level 3** — Level 2 just defines them and documents the trade-offs.
-
-#### Mechanism A: BLOB
-
-```
-CPU data  ──copy──▶  owned blob  ──copy──▶  GPU buffer
-             (at action-build time)   (at execute time)
-```
-
-- CPU data is copied into an owned blob when the action's arguments are built.
-  The original pointer is not retained.
-- The blob is kept alive until the GPU finishes reading it.
-- The GPU buffer is written from the blob at execute time (a second copy).
-- **Pros:** Data lifetime is fully automatic. Caller can discard the source
-  immediately after building the arguments. Simple to reason about.
-- **Cons:** Two copies — potentially wasteful for large or frequently-updated data.
-- **Best for:** Small, infrequently changing data where simplicity matters more
-  than throughput.
-
-#### Mechanism B: HOST_MAP (host-mapped direct write)
-
-```
-CPU data  ──write──▶  host-visible GPU buffer   (read directly by GPU)
-             (1 copy, or 0 with write-callback)
-```
-
-- The backend allocates a ring of N host-visible GPU buffers.
-- At execute time, the backend maps the next available slot and either:
-  - calls `memcpy(slot, data, size)` (raw-pointer path: 1 copy), or
-  - calls `writeFn(slot, capacity)` (callback path: 0 copies if the user writes
-    directly into the mapped memory).
-- The slot is ring-managed: before reuse, the backend verifies the GPU is no
-  longer reading it (via a per-slot GPU-completion token, internal to the backend).
-- **Pros:** Minimum CPU-side copies. Write-callback path is zero-copy. Simple
-  execution model — no GPU-side copy command needed.
-- **Cons:** Host-visible memory (PCI-E aperture or shared system memory) may be
-  slower for GPU reads than device-local memory, especially for large buffers or
-  memory-bandwidth-bound shaders.
-- **Best for:** Small, frequently-updated data (e.g., per-frame UBOs) where GPU
-  read bandwidth is not the bottleneck.
-
-#### Mechanism C: STAGED (staging + device-local)
-
-```
-CPU data ──write──▶ host-visible staging  ──GPU copy──▶  device-local GPU buffer
-           (1 copy, or 0 with callback)        (1 GPU copy)
-```
-
-- The backend maintains a ring of N host-visible *staging* buffers and a single
-  device-local destination buffer.
-- CPU writes into the staging slot (1 copy or 0 with callback, same as HOST_MAP).
-- A GPU buffer-copy command transfers data from staging to device-local at execute
-  time. A memory barrier ensures the copy completes before shader reads.
-- The staging slot is protected by a per-slot GPU-completion token until the copy
-  command finishes.
-- **Pros:** Device-local memory delivers the fastest GPU read bandwidth. Works on
-  platforms where host-visible memory has no coherence or is uncached.
-- **Cons:** Two copies total (CPU→staging, staging→GPU-local). Requires recording
-  a copy command in the command buffer. The destination buffer is not available
-  for shader reads until the copy barrier resolves.
-- **Best for:** Large buffers that change occasionally and are read by many shaders
-  or in memory-bandwidth-bound passes.
-
-#### Ring-Slot Lifetime Management
-
-All three mechanisms share the same slot-lifecycle model for safe CPU/GPU
-pipelining (implemented internally in the backend):
-
-```
-before write:  wait if slot's GPU-completion token is still pending (rare)
-               release slot's keepAlive list (drop old data)
-write:         copy/callback into slot
-after submit:  record GPU-completion token into slot
-               add any transient resources to slot's keepAlive list
-```
-
-The `keepAlive` list holds any transient resource (staging buffer, data blob) that
-must remain valid until the GPU completes the slot. Resources are released lazily
-at the start of the *next* use of that slot — after the token confirms completion.
-
-This model is the foundation for:
-- **Ring-buffered UBOs** (HOST_MAP, N=2 slots) — per-frame camera/lights.
-- **Staged uploads** (STAGED, N=2 staging slots) — per-frame mesh data updates.
-- **Dynamic-offset sub-allocation** (`GpuUploadPool`, future) — one large ring
-  buffer sub-allocated per draw call, each draw uses a dynamic buffer offset.
-
-### Preferred Model: Transient Buffers + Copy Actions
-
-The above `GpuBufferUpload` mechanisms remain functional, but the **preferred**
-approach for new code is the *transient buffer + copy action* model.  It cleanly
-separates the per-submission lifetime (transient buffer) from the stateless
-transfer operation (copy action) and requires zero user-side lifetime management.
+The **preferred** model for CPU→GPU uploads is the *transient buffer + copy action*
+pattern.  It cleanly separates the per-submission lifetime (transient buffer) from the
+stateless transfer operation (copy action) and requires zero user-side lifetime management.
 
 ```
 Caller thread                            Submission worker
@@ -351,7 +256,7 @@ src/inc/garnet/rdg/
   README.md              ← you are here
   dependency-graph.h     ← Level 1: Artifact, Action, Arguments, Workflow, RenderGraph
   artifacts.h            ← Level 2: GpuContext, Buffer, Texture, GpuResourceGroup, ...
-  actions.h              ← Level 2: GpuDraw, GpuCompute, GpuBufferUpload, ...
+  actions.h              ← Level 2: GpuDraw, GpuCompute, GpuCopy, ...
   pipeline.h             ← Level 3: SharedShaderConstants, PbrShading, ...
   physical.h             ← Level 3: transform/physics helpers for rendering
   transform.h            ← Level 3: spatial transform types for rendering
