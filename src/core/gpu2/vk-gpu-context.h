@@ -49,9 +49,6 @@ namespace GN::gpu2 {
 
 class RasterPsoFactory; // defined in vk-raster-pso-factory.h
 
-typedef ResourcePoolVulkan<vk::Semaphore>   SemaphorePoolVulkan;
-typedef AutoRef<SemaphorePoolVulkan::Entry> PooledSemaphoreVulkan;
-
 typedef ResourcePoolVulkan<vk::Fence>   FencePoolVulkan;
 typedef AutoRef<FencePoolVulkan::Entry> PooledFenceVulkan;
 
@@ -77,12 +74,7 @@ public:
         return *mPsoFactory;
     }
 
-    // resource pool
-    ResourcePoolVulkan<vk::Semaphore> & semaphorePool() const {
-        GN_ASSERT(mSemaphorePool.has_value());
-        return mSemaphorePool.value();
-    }
-
+    // Fence pool
     ResourcePoolVulkan<vk::Fence> & fencePool() const {
         GN_ASSERT(mFencePool.has_value());
         return mFencePool.value();
@@ -109,9 +101,8 @@ private:
     GpuContext::Caps            mCaps;
 
     // mutable factories and pools: may change even on logically const paths.
-    mutable std::unique_ptr<RasterPsoFactory>  mPsoFactory; // incomplete type; can't use std::optional
-    mutable std::optional<SemaphorePoolVulkan> mSemaphorePool;
-    mutable std::optional<FencePoolVulkan>     mFencePool;
+    mutable std::unique_ptr<RasterPsoFactory> mPsoFactory; // incomplete type; can't use std::optional
+    mutable std::optional<FencePoolVulkan>    mFencePool;
 
     // Other internal impl details that we'd like to hide from public context header.
     struct Impl;

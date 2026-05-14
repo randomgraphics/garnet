@@ -27,7 +27,7 @@ public:
 
     /// RAII handle returned by acquire(). Returns the resource to the pool on last release.
     struct Entry : RefCounter {
-        Entry(ResourcePoolVulkan & pool, T & value): mPool(pool), mValue(std::move(value)) {}
+        Entry(ResourcePoolVulkan & pool, T && value): mPool(pool), mValue(std::move(value)) {}
         ~Entry() override { mPool.recycle(std::move(mValue)); }
 
         const T & get() const { return mValue; }
@@ -70,7 +70,7 @@ public:
         }
         GN_ASSERT(value);
         mTraits->onAcquire(value, name);
-        return new Entry(*this, std::move(value));
+        return PooledResource(new Entry(*this, std::move(value)));
     }
 
 private:

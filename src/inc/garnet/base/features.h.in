@@ -30,3 +30,6 @@
 
 // Has xnamath.h (legacy flag for Xbox only)
 #cmakedefine01 GN_BUILD_HAS_XNAMATH
+
+// Has Vukan support or not.
+#cmakedefine01 GN_BUILD_HAS_VULKAN

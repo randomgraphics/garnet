@@ -58,7 +58,7 @@ GpuContextVulkan::GpuContextVulkan(const StrA & name, const CreateParameters & p
     // However, MoltenVK requires it to be enabled explicitly.
     dp.addDeviceExtension("VK_KHR_dynamic_rendering");
 #endif
-    dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
+    dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true).setSynchronization2(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
     if (mDevice->handle()) {

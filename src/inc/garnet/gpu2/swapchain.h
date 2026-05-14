@@ -13,10 +13,10 @@ struct Swapchain : RootEntity {
         AutoRef<GpuContext> gpu;
         StrA                name = "swapchain";
         /// Native surface handle (e.g. VkSurfaceKHR as intptr_t). Zero is valid for headless swapchains.
-        intptr_t              window = 0;
-        gfx::img::PixelFormat format = gfx::img::PixelFormat::UNKNOWN();
-        uint32_t              width  = 1280;
-        uint32_t              height = 720;
+        intptr_t              surface = 0;
+        gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
+        uint32_t              width   = 1280;
+        uint32_t              height  = 720;
 
         CreateDesc & setGpu(AutoRef<GpuContext> g) {
             gpu = std::move(g);
@@ -26,8 +26,8 @@ struct Swapchain : RootEntity {
             name = n;
             return *this;
         }
-        CreateDesc & setWindow(intptr_t handle) {
-            window = handle;
+        CreateDesc & setSurface(intptr_t handle) {
+            surface = handle;
             return *this;
         }
         CreateDesc & setFormat(gfx::img::PixelFormat f) {

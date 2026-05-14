@@ -47,6 +47,10 @@ public:
 
     /// stable per-backbuffer payload; returned as frame.ready from prepare()
     AutoRef<SwapchainReadyPayloadVulkan> readyPayload = AutoRef<SwapchainReadyPayloadVulkan>::make(name + "/ready");
+
+    /// Binary semaphore used to bridge a timeline render-done point into a form vkQueuePresentKHR can wait on.
+    /// One per backbuffer: the swapchain won't recycle the same image until present consumed the previous signal.
+    vk::UniqueSemaphore bridgeSemaphore;
 };
 
 } // namespace
@@ -75,6 +79,9 @@ private:
 
     GpuResourceView makeFrameColorView() const;
     void            clearAcquiredFrameBindings();
+    /// Submit an empty command buffer that waits on \p tp and signals a per-backbuffer binary semaphore.
+    /// Returns the binary semaphore handle for use with vkQueuePresentKHR.
+    vk::Semaphore bridgeTimelineToBinary(const rv::CommandQueue::SyncPoint & tp);
 };
 
 GpuResourceView SwapchainVulkan2::makeFrameColorView() const {
@@ -109,7 +116,7 @@ bool SwapchainVulkan2::init(const Swapchain::CreateDesc & desc) {
     rv::Swapchain::ConstructParameters scp;
     scp.setDevice(dev);
     scp.setDimensions(desc.width, desc.height);
-    scp.setSurface(vk::SurfaceKHR((VkSurfaceKHR) (void *) desc.window));
+    scp.setSurface(vk::SurfaceKHR((VkSurfaceKHR) (void *) desc.surface));
     scp.depthStencilFormat.mode = rv::Swapchain::DepthStencilFormat::DISABLED;
     scp.backbufferFormat        = pixelFormatToVkFormat(desc.format);
 
@@ -169,6 +176,7 @@ Swapchain::Frame SwapchainVulkan2::prepare() {
 
     // set the semaphore. This also marks this payload as "submitted".
     mActiveBackbufferTexture->readyPayload->setSemaphore(mActiveFrame.imageAvailable);
+    GN_ASSERT(mActiveBackbufferTexture->readyPayload->syncpoint());
 
     return Swapchain::Frame {makeFrameColorView(), mActiveBackbufferTexture->readyPayload};
 }
@@ -194,13 +202,18 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
     vk::Semaphore renderFinished = nullptr;
     auto          vkWaitFor      = RuntimeType::cast<GpuPayloadVulkan>(waitFor);
     if (vkWaitFor) GN_LIKELY {
-        renderFinished = vkWaitFor->semaphore();
-        if (!renderFinished) {
-            GN_ERROR(sLogger)("Present() function must depends on already-submitted payload.")
+            const auto & sp = vkWaitFor->syncpoint();
+            if (const auto * b = sp.asBinarySemaphore()) {
+                renderFinished = *b;
+            } else if (const auto * t = sp.asTimelinePoint()) {
+                // vkQueuePresentKHR only accepts binary semaphores; bridge via an empty submit
+                // that waits on the timeline and signals a per-backbuffer binary semaphore.
+                renderFinished = bridgeTimelineToBinary(*t);
+            } else {
+                GN_ERROR(sLogger)("present() must wait on an already-submitted payload: {}({})", waitFor.name, waitFor.id);
+            }
         }
-    } else {
-        GN_ERROR(sLogger)("waitFor parameter is not a valid pointer to GpuPayloadVulkan object.")
-    }
+    else { GN_ERROR(sLogger)("waitFor is not a GpuPayloadVulkan: {}({})", waitFor.name, waitFor.id); }
 
     rv::Swapchain::PresentResult result;
     try {
@@ -222,6 +235,41 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
     // clear active frame
     mActiveBackbufferTexture = nullptr;
     mActiveFrame             = {};
+}
+
+vk::Semaphore SwapchainVulkan2::bridgeTimelineToBinary(const rv::CommandQueue::SyncPoint & tp) {
+    if (!mActiveBackbufferTexture) return {};
+
+    auto & bridgeSem = mActiveBackbufferTexture->bridgeSemaphore;
+    if (!bridgeSem) {
+        const auto & gi = *mGpu->vulkanDevice().gi();
+        bridgeSem       = gi.device.createSemaphoreUnique({}, gi.allocator);
+    }
+
+    rv::CommandQueue * queue = mGpu->vulkanDevice().graphics();
+    if (!queue) {
+        GN_ERROR(sLogger)("SwapchainVulkan2: no graphics queue for timeline bridge submit");
+        return {};
+    }
+
+    // An empty command buffer is needed because rapid-vulkan's submit() rejects empty cmd lists.
+    rv::CommandBuffer emptyCmd = queue->begin("bridge_timeline_to_binary");
+    if (emptyCmd.empty()) {
+        GN_ERROR(sLogger)("SwapchainVulkan2: failed to begin bridge command buffer");
+        return {};
+    }
+
+    // Ensure stage flags are set; caller usually sets eAllCommands already.
+    rv::CommandQueue::SyncPoint waitTp = tp;
+    if (!waitTp.stages) waitTp.stages = vk::PipelineStageFlagBits::eAllCommands;
+
+    rv::CommandQueue::SyncPoint        signalSp = {bridgeSem.get(), 0, vk::PipelineStageFlagBits::eAllCommands};
+    rv::CommandQueue::SubmitParameters bsp;
+    bsp.commandBuffers = {emptyCmd};
+    bsp.waitPoints     = {1, &waitTp};
+    bsp.signalBinaries = {1, &signalSp};
+    queue->submit2(bsp);
+    return signalSp.semaphore;
 }
 
 AutoRef<Swapchain> createSwapchainVulkan2(const Swapchain::CreateDesc & desc) {

@@ -96,7 +96,7 @@ void CommandBufferManagerVulkan::submit(const TaskInfo & taskInfo, const Command
     for (auto & [buf, transition] : cb.bufferStates) {
         if (buf) assignBufferState(buf, transition);
     }
-    auto   submissionID = cb.queue->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
+    auto   submissionID = cb.queue->submit2(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb.commandBuffer}});
     auto & ids          = mSubmissionIDs[cb.queue.get()];
     ids.append(submissionID);
 }

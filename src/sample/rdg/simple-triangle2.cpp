@@ -112,7 +112,7 @@ int main(int argc, const char ** argv) {
 
     // Create swapchain for presentation.
     Swapchain::CreateDesc scDesc {.gpu = gpuContext, .width = windowWidth, .height = windowHeight};
-    if (surface) scDesc.setWindow(surface);
+    if (surface) scDesc.setSurface(surface);
     auto swapchain = Swapchain::create(scDesc);
     if (!swapchain) return -1;
 

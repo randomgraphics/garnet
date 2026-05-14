@@ -6,6 +6,7 @@
 #include "vk-gpu-payload.h"
 
 #include <functional>
+#include <list>
 #include <mutex>
 #include <utility>
 #include <vector>
@@ -50,21 +51,6 @@ static rv::Device::Verbosity getVkDeviceVerbosity(GpuContext::Verbosity verbosit
 // Resource pool traits
 // =============================================================================
 
-struct SemaphoreTraits final : ResourcePoolVulkan<vk::Semaphore>::Traits {
-    const rv::GlobalInfo & gi;
-
-    explicit SemaphoreTraits(const rv::GlobalInfo & gi_): gi(gi_) {}
-
-    vk::Semaphore create() override { return gi.device.createSemaphore({}, gi.allocator); }
-
-    void destroy(vk::Semaphore & s) override {
-        gi.device.destroySemaphore(s, gi.allocator);
-        s = nullptr;
-    }
-
-    void onAcquire(vk::Semaphore & s, const char * name) override { rv::setVkHandleName(gi.device, s, name); }
-};
-
 struct FenceTraits final : ResourcePoolVulkan<vk::Fence>::Traits {
     const rv::GlobalInfo & gi;
 
@@ -88,19 +74,42 @@ struct FenceTraits final : ResourcePoolVulkan<vk::Fence>::Traits {
 // GpuContextVulkan2
 // =============================================================================
 
+struct GpuQueueTimeline {
+    vk::UniqueSemaphore semaphore = {};
+    uint64_t            counter   = {};
+
+    operator bool() const { return !!semaphore; }
+};
+
 struct GpuContextVulkan2::Impl {
-    struct 
-     {
+    struct PendingSubmission {
         StrA                                   name;
         rv::Ref<rv::CommandQueue>              queue;
-        PooledSemaphore                        semaphore;
-        PooledFence                            fence;
+        rv::CommandQueue::SyncPoint            timelinePoint;
+        PooledFenceVulkan                      fence;
         std::function<void()>                  onComplete; ///< the user provided completion function. might be empty.
         std::vector<AutoRef<GpuPayloadVulkan>> works;
         rv::CommandQueue::SubmissionID         submissionId; ///< ID returned by queue->submit(); used to flush rv::CommandQueue before fence is destroyed.
     };
-    std::mutex                     mPendingMutex;
-    std::vector<PendingSubmission> mPending;
+    std::mutex                   mPendingMutex;
+    std::list<PendingSubmission> mPending;
+
+    std::map<rv::CommandQueue *, GpuQueueTimeline> queueTimelines;
+
+    rv::CommandQueue::SyncPoint getNextTimelinePoint(rv::CommandQueue * queue) {
+        GN_ASSERT(queue);
+        auto & timeline = queueTimelines[queue];
+        if (!timeline.semaphore) GN_UNLIKELY {
+                vk::SemaphoreTypeCreateInfo timelineInfo {
+                    vk::SemaphoreType::eTimeline,
+                    0 // initial value
+                };
+                vk::SemaphoreCreateInfo semaphoreInfo {};
+                semaphoreInfo.setPNext(&timelineInfo);
+                timeline.semaphore = queue->desc().gi->device.createSemaphoreUnique(semaphoreInfo);
+            }
+        return {timeline.semaphore.get(), ++timeline.counter, vk::PipelineStageFlagBits::eAllCommands};
+    }
 };
 
 GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters & params)
@@ -124,10 +133,10 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
 #if GN_DARWIN
     dp.addDeviceExtension("VK_KHR_dynamic_rendering");
 #endif
-    dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true));
+    dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true).setSynchronization2(true));
     // Allow depth and stencil planes of a D+S image to be transitioned independently;
     // without this, separate-aspect barriers on D+S formats are a validation error.
-    dp.addFeature(vk::PhysicalDeviceVulkan12Features().setSeparateDepthStencilLayouts(true));
+    dp.addFeature(vk::PhysicalDeviceVulkan12Features().setSeparateDepthStencilLayouts(true).setTimelineSemaphore(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
     if (!mDevice->handle()) return;
@@ -146,7 +155,6 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
 
     // Create sub objects
     mPsoFactory = std::make_unique<RasterPsoFactory>(*this);
-    mSemaphorePool.emplace(std::make_unique<SemaphoreTraits>(*mDevice->gi()));
     mFencePool.emplace(std::make_unique<FenceTraits>(*mDevice->gi()));
 
     // All done
@@ -179,28 +187,32 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         }
 
     // collect semaphores to wait from dependencies
-    std::vector<vk::Semaphore> waitSems;
+    std::vector<rv::CommandQueue::SyncPoint> waitPoints;   // timeline dependencies
+    std::vector<rv::CommandQueue::SyncPoint> waitBinaries; // binary dependencies
     for (size_t i = 0; i < sp.dependencies.size(); ++i) {
         auto d = sp.dependencies[i];
         if (!d) GN_UNLIKELY continue;
-        auto w = RuntimeType::cast<GpuPayloadVulkan>(d);
+        auto w = RuntimeType::cast<GpuPayloadVulkan>(*d);
         if (!w) GN_UNLIKELY {
-            GN_ERROR(sLogger)("Unrecoginized payload type: {}({})", d->name, d->id);
+                GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", d->name, d->id);
+                continue;
+            }
+        const auto & s = w->syncpoint();
+        if (const auto * t = s.asTimelinePoint()) {
+            waitPoints.push_back(*t);
+        } else if (const auto * b = s.asBinarySemaphore()) {
+            waitBinaries.push_back({*b, 0, vk::PipelineStageFlagBits::eAllCommands});
+        } else {
+            GN_ERROR(sLoggerVk)("Can't depend on un-submitted payload: {}({})", d->name, d->id);
             continue;
         }
-        auto s = w->semaphore();
-        if (!s) GN_UNLIKELY {
-            GN_ERROR(sLogger)("Can't depends on un-submitted payload: {}({})", d->name, d->id);
-            continue;
-        }
-        waitSems.push_back(s);
     }
 
-    // allocate the main fence and semaphore for this submission.
-    auto fence = fencePool().acquire(sp.name);
-    auto sem   = semaphorePool().acquire(sp.name);
-    if (!fence || !sem) {
-        GN_ERROR(sLogger)("failed to acquire fence and semaphore for the submission.");
+    // allocate the main fence and sync point for this submission.
+    auto mainFence = fencePool().acquire(sp.name);
+    auto mainPoint = mImpl->getNextTimelinePoint(queue); // stages already set to eAllCommands
+    if (!mainFence || !mainPoint) {
+        GN_ERROR(sLoggerVk)("failed to acquire the main fence and semaphore for the submission.");
         return;
     }
 
@@ -214,56 +226,62 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         return;
     }
 
-    // record everthing to the command buffer.
+    // Record everything to the command buffer, skipping payloads that were already submitted.
     std::vector<AutoRef<GpuPayloadVulkan>> works;
-    for (auto & i : works) {
-        if (!i) GN_UNLIKELY continue;
-        auto w = RuntimeType::cast<GpuPayloadVulkan>(i);
+    for (size_t i = 0; i < sp.work.size(); ++i) {
+        auto & item = sp.work[i];
+        if (!item) GN_UNLIKELY continue;
+        auto w = RuntimeType::cast<GpuPayloadVulkan>(item);
         if (!w) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", i->name, i->id);
-            continue;
-        }
-        if (w->semaphore()) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
-            continue;
-        }
+                GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", item->name, item->id);
+                continue;
+            }
+        if (w->syncpoint()) GN_UNLIKELY {
+                // This payload has a sync point already. it means it has been submit to GPU already. Reject it.
+                GN_ERROR(sLoggerVk)("Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
+                continue;
+            }
         w->recordForVulkanSubmit(recordCtx);
-        works.add(w);
+        works.push_back(w);
     }
 
-    // Submit everything to GPU.
+    // Submit to GPU.
     rv::CommandQueue::SubmitParameters qsp;
-    qsp.commandBuffers   = {recordCtx.cmd};
-    qsp.waitSemaphores   = {(uint32_t) waitSems.size(), waitSems.data()};
-    qsp.signalSemaphores = {1, &sem->value};
-    qsp.signalFence       = fence->value
-    auto submissionId     = queue->submit(qsp);
+    qsp.commandBuffers = {recordCtx.cmd};
+    qsp.waitBinaries   = {(uint32_t) waitBinaries.size(), waitBinaries.data()};
+    qsp.waitPoints     = {(uint32_t) waitPoints.size(), waitPoints.data()};
+    qsp.signalPoints   = {1, &mainPoint};
+    qsp.signalFence    = mainFence->get();
+    auto submissionId  = queue->submit2(qsp);
+    if (!submissionId) return; // submission failed somehow. bail out.
+
+    // Mark all workload as "submitted"
     for (auto & w : works) {
-        w->setSemaphore(sem); // mark the payload as "submitted".
+        w->setTimelinePoint(mainPoint);
         w->onSubmitComplete();
     }
 
     // Add the submission to pending list.
     std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
-    mImpl->mPending.push_back({sp.name, queue, sem, fence, sp.onComplete, std::move(works), submissionId});
+    mImpl->mPending.push_back({sp.name, queue, mainPoint, mainFence, sp.onComplete, std::move(works), submissionId});
 }
 
 void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
     if (!mDevice.has_value() || !mDevice->handle()) return;
     vk::Device device = mDevice->gi()->device;
 
-    // Collect completed callbacks outside the lock so they can safely call submit() or pump() themselves.
-    std::vector<std::pair<StrA, std::function<void()>>> readyCallbacks;
+    // Collect finished submissions
+    std::list<Impl::PendingSubmission> finishedSubmissions;
     {
         std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
         auto                        it = mImpl->mPending.begin();
         while (it != mImpl->mPending.end()) {
             bool fenceReady = false;
             if (waitForIdle) {
-                (void) device.waitForFences({it->fence.get()}, true, std::numeric_limits<uint64_t>::max());
+                (void) device.waitForFences({it->fence->get()}, true, std::numeric_limits<uint64_t>::max());
                 fenceReady = true;
             } else {
-                fenceReady = device.getFenceStatus(it->fence.get()) == vk::Result::eSuccess;
+                fenceReady = device.getFenceStatus(it->fence->get()) == vk::Result::eSuccess;
             }
             if (fenceReady) {
                 // Flush rv::CommandQueue's InternalSubmission for this fence BEFORE erasing (which destroys the fence).
@@ -271,26 +289,27 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
                 // already-destroyed handle, triggering a validation error and SIGTRAP.
                 GN_ASSERT(it->queue);
                 it->queue->wait({it->submissionId});
-                if (it->onComplete) readyCallbacks.push_back({std::move(it->name), std::move(it->onComplete)});
-                it = mImpl->mPending.erase(it);
+                auto curr = it;
+                ++it;
+                finishedSubmissions.splice(finishedSubmissions.end(), mImpl->mPending, curr);
             } else {
                 ++it;
             }
         }
-    }
-    GN_ASSERT(!waitForIdle || mImpl->mPending.empty());
-    for (auto & cb : readyCallbacks) {
-        try {
-            cb.second();
-        } catch (const std::exception & e) {
-            GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw exception: {}", cb.first, e.what());
-        } catch (...) { GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw unknown exception", cb.first); }
+        GN_ASSERT(!waitForIdle || mImpl->mPending.empty());
     }
 
-    // Our pending list does not represent all submitted and pending GPU works, since we currently only track
-    // submissions with completion callbacks. If waitForIdle is requested, on top of making sure all pending callbacks are flushed, we also need to call
-    // device.waitIdle() to ensure all GPU works are done before returning. we also need to call device.waitIdle() to ensure all GPU works are done before
-    // returning.
+    // Invoke completion callbacks, outside of the pending lock.
+    for (auto & s : finishedSubmissions) {
+        try {
+            if (s.onComplete) s.onComplete();
+        } catch (const std::exception & e) {
+            GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw exception: {}", s.name, e.what());
+        } catch (...) { GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw unknown exception", s.name); }
+    }
+
+    // Our pending list doesn't cover all in-flight work (e.g. bridge submits in the swapchain
+    // that have no completion callback). A device-level idle wait covers those too.
     if (waitForIdle) device.waitIdle();
 }
 

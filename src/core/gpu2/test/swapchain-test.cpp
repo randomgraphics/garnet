@@ -8,7 +8,7 @@ using namespace GN;
 using namespace GN::gpu2;
 using namespace GN::win;
 
-TEST_CASE("GPU2: Vulkan swapchain prepare and present", "[gpu2][swapchain][gpu][vulkan]") {
+TEST_CASE("GPU2: swapchain prepare and present", "[gpu2][swapchain][gpu]") {
     auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!gpuContext) SKIP("No GPU context available");
 
@@ -24,11 +24,12 @@ TEST_CASE("GPU2: Vulkan swapchain prepare and present", "[gpu2][swapchain][gpu][
 
     window->show();
 
+    // TODO: make it work for other APIs.
     intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
     if (!surface) SKIP("No Vulkan surface for window");
 
     Swapchain::CreateDesc scDesc;
-    scDesc.setGpu(gpuContext).setName("test_swapchain").setWindow(surface).setDimensions(windowWidth, windowHeight);
+    scDesc.setGpu(gpuContext).setName("test_swapchain").setSurface(surface).setDimensions(windowWidth, windowHeight);
     AutoRef<Swapchain> swapchain = Swapchain::create(scDesc);
     if (!swapchain) SKIP("Swapchain creation failed (Vulkan surface or device?)");
 
@@ -44,7 +45,7 @@ TEST_CASE("GPU2: Vulkan swapchain prepare and present", "[gpu2][swapchain][gpu][
     }
 }
 
-TEST_CASE("GPU2: headless Vulkan swapchain prepare and present", "[gpu2][swapchain][gpu][vulkan][headless]") {
+TEST_CASE("GPU2: headless swapchain prepare and present", "[gpu2][swapchain][gpu][headless]") {
     auto gpuContext = GpuContext::create("gpu_context_headless", GpuContext::CreateParameters {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!gpuContext) SKIP("No GPU context available");
 

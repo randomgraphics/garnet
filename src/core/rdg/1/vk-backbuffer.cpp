@@ -114,7 +114,7 @@ gfx::img::Image BackbufferVulkan::readbackOutsideRenderPass() const {
             .s(vk::PipelineStageFlagBits::eTransfer, restoreState.stages);
         logBarrierBatchVerbose(sLogger, "backbuffer readback restore layout", restoreLayout);
         restoreLayout.cmdWrite(cb.handle());
-        gq->submit(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb}});
+        gq->submit2(rapid_vulkan::CommandQueue::SubmitParameters {.commandBuffers = {cb}});
         // Tell rapid-vulkan about the manual layout transition we just issued.
         img->setState({restoreState.layout, restoreState.access, restoreState.stages});
     }

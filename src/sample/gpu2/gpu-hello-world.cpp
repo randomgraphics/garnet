@@ -50,7 +50,7 @@ int main(int argc, const char ** argv) {
     // offscreen (no VkSurfaceKHR), which is enough for correctness tests.
     Swapchain::CreateDesc scDesc;
     scDesc.setGpu(gpu).setName("swapchain").setDimensions(W, H);
-    if (surface) scDesc.setWindow(surface);
+    if (surface) scDesc.setSurface(surface);
     auto swapchain = Swapchain::create(scDesc);
     if (!swapchain) {
         std::fprintf(stderr, "Failed to create swapchain\n");

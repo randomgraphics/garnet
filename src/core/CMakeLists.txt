@@ -237,7 +237,6 @@ endif()
 
 # Vulkan
 if(VULKAN_FOUND)
-    target_compile_definitions(GNcore-objects PRIVATE HAS_VULKAN=1)
     # only include Vulkan headers. Do not link to Vulkan libraries. We'll use a loader to load all Vulkan functions.
     target_include_directories(GNcore-objects PUBLIC ${Vulkan_INCLUDE_DIRS})
     # rapid-vulkan (randomgraphics/rapid-vulkan) for Vulkan instance/device setup
