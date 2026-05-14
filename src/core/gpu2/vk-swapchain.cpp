@@ -252,20 +252,15 @@ vk::Semaphore SwapchainVulkan2::bridgeTimelineToBinary(const rv::CommandQueue::S
         return {};
     }
 
-    // An empty command buffer is needed because rapid-vulkan's submit() rejects empty cmd lists.
-    rv::CommandBuffer emptyCmd = queue->begin("bridge_timeline_to_binary");
-    if (emptyCmd.empty()) {
-        GN_ERROR(sLogger)("SwapchainVulkan2: failed to begin bridge command buffer");
-        return {};
-    }
-
     // Ensure stage flags are set; caller usually sets eAllCommands already.
     rv::CommandQueue::SyncPoint waitTp = tp;
     if (!waitTp.stages) waitTp.stages = vk::PipelineStageFlagBits::eAllCommands;
 
+    // Bridge-only: no command buffer needed; rapid-vulkan accepts empty cmd list when semaphore
+    // operations are present. vkQueuePresentKHR requires a binary semaphore, so we convert the
+    // completed timeline point into one here.
     rv::CommandQueue::SyncPoint        signalSp = {bridgeSem.get(), 0, vk::PipelineStageFlagBits::eAllCommands};
     rv::CommandQueue::SubmitParameters bsp;
-    bsp.commandBuffers = {emptyCmd};
     bsp.waitPoints     = {1, &waitTp};
     bsp.signalBinaries = {1, &signalSp};
     queue->submit2(bsp);
