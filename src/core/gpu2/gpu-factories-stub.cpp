@@ -1,5 +1,6 @@
 #include "gpu-context.h"
 #include "vk-buffer.h"
+#include "vk-gpu-cnc.h"
 #include "vk-gpu-raster.h"
 #include "vk-gpu-shader.h"
 #include "vk-texture.h"
@@ -134,6 +135,29 @@ AutoRef<GpuRaster> GpuRaster::create(const CreateParameters & params) {
         return {};
     default:
         GN_ERROR(sLogger)("GpuRaster::create: unknown GpuContext::Api");
+        return {};
+    }
+}
+
+AutoRef<GpuCnC> GpuCnC::create(const CreateParameters & params) {
+    if (!params.gpu) {
+        GN_ERROR(sLogger)("GpuCnC::create: GpuContext is null");
+        return {};
+    }
+    AutoRef<GpuContextCommon2> common = params.gpu.staticCastTo<GpuContextCommon2>();
+    if (!common) {
+        GN_ERROR(sLogger)("GpuCnC::create: GpuContext is not GpuContextCommon2");
+        return {};
+    }
+    switch (common->api()) {
+    case GpuContextCommon2::Api::VULKAN:
+        return createGpuCncVulkan2(params);
+    case GpuContextCommon2::Api::D3D12:
+    case GpuContextCommon2::Api::METAL:
+        GN_ERROR(sLogger)("GpuCnC::create: backend not implemented");
+        return {};
+    default:
+        GN_ERROR(sLogger)("GpuCnC::create: unknown GpuContext::Api");
         return {};
     }
 }

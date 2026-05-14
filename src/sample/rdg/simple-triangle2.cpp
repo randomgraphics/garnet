@@ -12,6 +12,48 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.rdg");
 
+/// Read back the freshly rendered backbuffer and verify the corner pixel matches
+/// the clear color (blue) and the center pixel matches the triangle color (red).
+/// The triangle covers the central ~1/3 of the screen in NDC (see solid-triangle.vert),
+/// so the screen center is inside it. Must be called before swapchain->present(), since
+/// present releases the active backbuffer and invalidates the frame view for readback.
+/// Returns true on success.
+static bool verifyBackbuffer(const GpuResourceView & view, uint32_t width, uint32_t height) {
+    auto tex = view.texture();
+    if (!tex) {
+        GN_ERROR(sLogger)("verifyBackbuffer: could not get backbuffer texture");
+        return false;
+    }
+    gfx::img::Image image = tex->readback();
+    if (image.empty()) {
+        GN_ERROR(sLogger)("verifyBackbuffer: readback returned empty image");
+        return false;
+    }
+    auto         pixels   = image.plane().toRGBA8(image.data());
+    const size_t expected = (size_t) width * (size_t) height;
+    if (pixels.size() != expected) {
+        GN_ERROR(sLogger)("verifyBackbuffer: unexpected pixel count {} (expected {})", pixels.size(), expected);
+        return false;
+    }
+    // Expectations: clear color (0,0,1,1) → blue background, frag shader → red triangle.
+    const auto & corner   = pixels[0];
+    const auto & center   = pixels[(size_t) (height / 2) * width + width / 2];
+    const bool   cornerOk = corner.r == 0 && corner.g == 0 && corner.b == 255;
+    const bool   centerOk = center.r == 255 && center.g == 0 && center.b == 0;
+    if (!cornerOk) {
+        GN_ERROR(sLogger)("verifyBackbuffer: corner pixel mismatch — got ({},{},{},{}), expected (0,0,255,*) [background blue]", corner.r, corner.g, corner.b,
+                          corner.a);
+    }
+    if (!centerOk) {
+        GN_ERROR(sLogger)("verifyBackbuffer: center pixel mismatch — got ({},{},{},{}), expected (255,0,0,*) [triangle red]", center.r, center.g, center.b,
+                          center.a);
+    }
+    if (!cornerOk || !centerOk) return false;
+    GN_INFO(sLogger)("verifyBackbuffer: PASSED — corner=({},{},{},{}) center=({},{},{},{})", corner.r, corner.g, corner.b, corner.a, center.r, center.g,
+                     center.b, center.a);
+    return true;
+}
+
 int main(int argc, const char ** argv) {
 
     bool testMode = (argc > 1) && (argv[1][0] == 't');
@@ -120,6 +162,11 @@ int main(int argc, const char ** argv) {
 
         // Submit the payload to GPU, waiting on swapchain image ready.
         gpuContext->submit(GpuContext::SubmitParameters(StrA::format("frame {}", frameCounter)).appendWork(colorPassWork).waitFor(frame.ready));
+
+        // In test mode, verify the rendered output on the last frame.
+        if (testMode && frameCounter > totalFrames) {
+            if (!verifyBackbuffer(frame.view, windowWidth, windowHeight)) return -1;
+        }
 
         // Present the frame, after the color pass payload
         swapchain->present(*colorPassWork);

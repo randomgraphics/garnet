@@ -28,13 +28,23 @@ struct SharedShaderConstants : public Entity {
     };
 
     struct Content : RefCounter {
-        Set0Parameters set0Parameters; ///< A copy of the set0 parameters when the snapshot is taken. It can be retrieved later inside a Node action via
-                                       ///< SharedShaderConstants::getContent.
-        GN::gpu2::GpuResourceSet set0Resources; ///< GPU resource set matching the set0 parameters. It can be used directly in shaders without rebinding, and it
-                                                ///< is updated every frame to match the current set0 parameters. It can also be retrieved later inside a Node
-                                                ///< action via SharedShaderConstants::getContent.
+        /// A copy of the set0 parameters when the snapshot is taken. It can be retrieved later inside a Node action via
+        /// SharedShaderConstants::getContent.
+        Set0Parameters set0Parameters;
+
+        /// GPU resource set matching the set0 parameters. It can be used directly in shaders without rebinding, and it
+        /// is updated every frame to match the current set0 parameters. It can also be retrieved later inside a Node
+        /// action via SharedShaderConstants::getContent.
+        GN::gpu2::GpuResourceSet set0Resources;
+
+        /// The GPU payload. If it not empty, it must be sumitted to GPU to actually update
+        /// set0Resources to match the value of set0Parameters.
+        AutoRef<GN::gpu2::GpuPayload> set0Payload;
     };
 
+    /// The CPU accessible and modifiable set0 parameters. Can be read and write
+    /// at any give time. But the change won't affect GPU resources, until snapshot
+    /// is taken, content is get and GPU workload is submitted.
     Set0Parameters set0;
 
     // Create a token that represents the current snapshot of set0's content. It can be used later to retrieve

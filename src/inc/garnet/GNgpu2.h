@@ -18,6 +18,7 @@ namespace Gpu2 = GN::gpu2;
 #include "gpu2/gpu2.h"
 #include "gpu2/swapchain.h"
 #include "gpu2/raster.h"
+#include "gpu2/cnc.h"
 #undef __GN_INSIDE_GPU2_H__
 
 #endif
