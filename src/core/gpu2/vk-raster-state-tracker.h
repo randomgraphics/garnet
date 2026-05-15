@@ -44,8 +44,12 @@ public:
 
     void upgradeForDrawRasterState(const RasterState & drawState);
 
-    /// Returns the pass-time layout for a tracked attachment, or eUndefined if not tracked.
-    vk::ImageLayout attachmentPassLayout(const TextureVulkanBase * tex) const;
+    /// Returns the currently-tracked layout for a single subresource (mip, face) of a tracked
+    /// attachment by querying the incoming (post-barrier) state. For depth-stencil textures whose
+    /// depth and stencil planes have diverged, combines them into the canonical Vulkan split layout.
+    /// Returns eUndefined if the texture is not tracked or the subresource has no recorded state.
+    /// Must be called after emitPrePassBarriers() — incoming is undefined before the first call.
+    vk::ImageLayout attachmentPassLayout(const TextureVulkanBase * tex, uint32_t mip = 0, uint32_t face = 0) const;
 
     /// Emit pipeline barriers for all resources registered since the last call to this method.
     /// For each resource whose state changed, the barrier "from" side is the current incoming state

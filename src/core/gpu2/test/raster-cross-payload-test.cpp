@@ -1,9 +1,9 @@
 #if GN_BUILD_HAS_VULKAN
 
-// Include vk-gpu-payload.h first — it pulls in rapid-vulkan before any other TU can do so.
-#include "../vk-gpu-payload.h"
-#include <catch2/catch_test_macros.hpp>
-#include <atomic>
+    // Include vk-gpu-payload.h first — it pulls in rapid-vulkan before any other TU can do so.
+    #include "../vk-gpu-payload.h"
+    #include <catch2/catch_test_macros.hpp>
+    #include <atomic>
 
 using namespace GN;
 using namespace GN::gpu2;
@@ -22,15 +22,14 @@ struct TrackerPayload : GpuPayloadVulkan {
     AutoRef<Texture> texture;
     Usage            usage;
 
-    TrackerPayload(const StrA & name, AutoRef<Texture> t, Usage u)
-        : GpuPayloadVulkan(name), texture(std::move(t)), usage(u) {}
+    TrackerPayload(const StrA & name, AutoRef<Texture> t, Usage u): GpuPayloadVulkan(name), texture(std::move(t)), usage(u) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override {
         if (!ctx.batchTracker || !texture) return;
         auto * vkTex = RuntimeType::cast<TextureVulkanBase>(texture.get());
         if (!vkTex) return;
 
-        auto & tracker = *ctx.batchTracker;
+        auto &          tracker = *ctx.batchTracker;
         GpuResourceView view; // default range = full mip/face extent
 
         if (usage == Usage::COLOR_TARGET)
@@ -49,9 +48,9 @@ static AutoRef<GpuContext> makeGpu() {
 
 static AutoRef<Texture> makeColorTex(const AutoRef<GpuContext> & gpu, const char * name = "tex") {
     return Texture::create(name, {
-        .context    = gpu,
-        .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(8, 8),
-    });
+                                     .context    = gpu,
+                                     .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(8, 8),
+                                 });
 }
 
 // Submit a batch of payloads and block until the GPU fence fires.
@@ -89,7 +88,7 @@ TEST_CASE("RasterStateTracker: cross-payload color-attachment to sampled transit
     auto tex = makeColorTex(gpu);
     if (!tex) SKIP("RGBA8 texture unavailable");
 
-    auto p1 = AutoRef<TrackerPayload>::make("p1-color",   tex, TrackerPayload::Usage::COLOR_TARGET);
+    auto p1 = AutoRef<TrackerPayload>::make("p1-color", tex, TrackerPayload::Usage::COLOR_TARGET);
     auto p2 = AutoRef<TrackerPayload>::make("p2-sampled", tex, TrackerPayload::Usage::SAMPLED_TEXTURE);
     submitAndWait(gpu, p1, p2);
 

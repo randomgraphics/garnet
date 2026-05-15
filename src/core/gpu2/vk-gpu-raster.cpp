@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <string>
 
-static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.raster");
 
 namespace GN::gpu2 {
 
@@ -140,17 +140,22 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, Rast
     outFormats.colors.reserve(mRenderTarget.colorTargets.size());
 
     for (size_t i = 0; i < mRenderTarget.colorTargets.size(); ++i) {
-        vk::Image     img {};
-        vk::ImageView view {};
-        vk::Extent2D  ext {};
-        vk::Format    fmt = vk::Format::eUndefined;
-        if (!resolveColorAttachment(mRenderTarget.colorTargets[i].target, &img, &view, &ext, &fmt)) {
+        vk::Image               img {};
+        vk::ImageView           view {};
+        vk::Extent2D            ext {};
+        vk::Format              fmt    = vk::Format::eUndefined;
+        const GpuResourceView & ctView = mRenderTarget.colorTargets[i].target;
+        if (!resolveColorAttachment(ctView, &img, &view, &ext, &fmt)) {
             GN_ERROR(sLogger)("RasterPassPayload: could not resolve color attachment {}", i);
             return false;
         }
         outExt.width  = std::min(outExt.width, ext.width);
         outExt.height = std::min(outExt.height, ext.height);
         outFormats.colors.push_back(fmt);
+
+        // Verify the pre-pass barrier landed the attachment in the expected layout.
+        GN_ASSERT(tracker.attachmentPassLayout(RuntimeType::cast<TextureVulkanBase>(ctView.texture().get()), ctView.imageView.range.i.mip,
+                                               ctView.imageView.range.i.face) == vk::ImageLayout::eColorAttachmentOptimal);
 
         vk::RenderingAttachmentInfo att;
         att.setImageView(view)
@@ -177,7 +182,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, Rast
             gfx::img::PixelFormat dpf = dst.imageView.format;
             if (dpf == gfx::img::PixelFormat::UNKNOWN()) dpf = depthTex->descriptor().format;
             outFormats.depth            = pixelFormatToVkFormat(dpf);
-            vk::ImageLayout depthLayout = tracker.attachmentPassLayout(depthTex);
+            vk::ImageLayout depthLayout = tracker.attachmentPassLayout(depthTex, dst.imageView.range.i.mip, dst.imageView.range.i.face);
             depthAtt.setImageView(depthView)
                 .setImageLayout(depthLayout)
                 .setLoadOp(vk::AttachmentLoadOp::eClear)

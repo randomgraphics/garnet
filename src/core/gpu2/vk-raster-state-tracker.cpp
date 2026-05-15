@@ -1,7 +1,7 @@
 #include "vk-raster-state-tracker.h"
 #include "vk-gpu-context.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
+static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.tracker");
 
 namespace {
 // Iterate each set bit in aspects, calling fn(vk::ImageAspectFlagBits).
@@ -50,6 +50,8 @@ bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuR
         // payloads in the same command buffer see the correct "from" layout.
         tracked.tex      = tex;
         tracked.incoming = tex->getState();
+        GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: image '{}' incoming initialized ({} mips, {} faces)", tex->name, tracked.incoming.numMips,
+                            tracked.incoming.numLayers);
     }
 
     const auto & desc = tex->descriptor();
@@ -96,10 +98,26 @@ bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuR
     }
     if (hazardFound) return false;
 
+    // Lazy: only compute the representative incoming layout if verbose logging is actually active.
+    [[maybe_unused]] auto firstIncomingLayout = [&]() -> vk::ImageLayout {
+        vk::ImageLayout layout = vk::ImageLayout::eUndefined;
+        forEachAspectBit(aspects, [&](vk::ImageAspectFlagBits bit) {
+            if (layout != vk::ImageLayout::eUndefined) return;
+            if (const auto * ps = tracked.incoming.get(resolved.i.mip, resolved.i.face, bit)) layout = ps->layout;
+        });
+        return layout;
+    };
+    GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: register image '{}' [mip={}-{} face={}-{}] as '{}' (incoming: {})", tex->name, resolved.i.mip, mipEnd - 1,
+                        resolved.i.face, faceEnd - 1, state.usage ? state.usage : "?", vk::to_string(firstIncomingLayout()));
+
     // No hazard — record each (mip, face, plane) → intended state.
     for (uint32_t mip = resolved.i.mip; mip < mipEnd; ++mip) {
         for (uint32_t face = resolved.i.face; face < faceEnd; ++face) {
-            forEachAspectBit(aspects, [&](vk::ImageAspectFlagBits bit) { tracked.registered[packPlaneKey(mip, face, bit)] = state; });
+            forEachAspectBit(aspects, [&](vk::ImageAspectFlagBits bit) {
+                tracked.registered[packPlaneKey(mip, face, bit)] = state;
+                GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: image '{}' [mip={} face={} {}] registered layout={}", tex->name, mip, face, vk::to_string(bit),
+                                    vk::to_string(state.layout));
+            });
         }
     }
     return true;
@@ -165,6 +183,8 @@ bool RasterStateTrackerVulkan::addBuffer(TrackedBuffer b) {
         b.committedAccess = b.buf->gpuState.access;
         b.committedStages = b.buf->gpuState.stages;
         b.activeThisPass  = true;
+        GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: register buffer '{}' as '{}' committed={} pass={}", b.buf->name, b.usageName,
+                            vk::to_string(b.committedAccess), vk::to_string(b.passAccess));
         mBuffers.emplace(b.buf->id, std::move(b));
         return true;
     }
@@ -172,10 +192,16 @@ bool RasterStateTrackerVulkan::addBuffer(TrackedBuffer b) {
     // Only flag hazards for same-pass re-registrations; cross-payload re-use is expected and handled
     // by emitPrePassBarriers() via committedAccess.
     if (existing.activeThisPass && !checkBufferHazard(b)) return false;
+    if (!existing.activeThisPass) {
+        // Cross-payload re-registration: log the committed state this payload inherits.
+        GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: re-register buffer '{}' as '{}' committed={} pass={}", b.buf->name, b.usageName,
+                            vk::to_string(existing.committedAccess), vk::to_string(b.passAccess));
+    }
     existing.passAccess |= b.passAccess;
     existing.passStages |= b.passStages;
     existing.isWrite |= b.isWrite;
     existing.activeThisPass = true;
+    GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: buffer '{}' pass access merged to {}", existing.buf->name, vk::to_string(existing.passAccess));
     return true;
 }
 
@@ -321,19 +347,68 @@ void RasterStateTrackerVulkan::upgradeForDrawRasterState(const RasterState & dra
     }
 }
 
-vk::ImageLayout RasterStateTrackerVulkan::attachmentPassLayout(const TextureVulkanBase * tex) const {
+namespace {
+// Given per-plane layouts of a combined depth-stencil subresource, return the single canonical
+// Vulkan layout that covers both aspects — required because VkRenderingAttachmentInfo takes one
+// layout for the whole subresource.
+static vk::ImageLayout combineDepthStencilLayouts(vk::ImageLayout depth, vk::ImageLayout stencil) {
+    if (depth == stencil) return depth;
+    // Classify writable vs. read-only for each plane and pick the Vulkan split layout.
+    const bool depthRW   = depth == vk::ImageLayout::eDepthStencilAttachmentOptimal || depth == vk::ImageLayout::eDepthAttachmentOptimal ||
+                           depth == vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal || depth == vk::ImageLayout::eGeneral;
+    const bool stencilRW = stencil == vk::ImageLayout::eDepthStencilAttachmentOptimal || stencil == vk::ImageLayout::eStencilAttachmentOptimal ||
+                           stencil == vk::ImageLayout::eDepthReadOnlyStencilAttachmentOptimal || stencil == vk::ImageLayout::eGeneral;
+    if (depthRW && stencilRW) return vk::ImageLayout::eDepthStencilAttachmentOptimal;
+    if (!depthRW && !stencilRW) return vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+    if (!depthRW && stencilRW) return vk::ImageLayout::eDepthReadOnlyStencilAttachmentOptimal;
+    return vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal;
+}
+} // namespace
+
+vk::ImageLayout RasterStateTrackerVulkan::attachmentPassLayout(const TextureVulkanBase * tex, uint32_t mip, uint32_t face) const {
     auto it = mAttachments.find(tex->id);
-    if (it == mAttachments.end()) return vk::ImageLayout::eUndefined;
-    // Return the layout of whichever plane at (0, 0) was registered first (in low-to-high aspect-bit
-    // order). For most callers the texture only has one plane (eColor or eDepth), so the first hit
-    // is unique; for combined depth-stencil textures the depth plane wins, which matches how
-    // dynamic-rendering attachments expect a single layout.
-    vk::ImageLayout result = vk::ImageLayout::eUndefined;
-    forEachAspectBit(it->second.incoming.validAspects, [&](vk::ImageAspectFlagBits bit) {
-        if (result != vk::ImageLayout::eUndefined) return;
-        auto pit = it->second.registered.find(packPlaneKey(0, 0, bit));
-        if (pit != it->second.registered.end()) result = pit->second.layout;
+    if (it == mAttachments.end()) {
+        GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: attachmentPassLayout('{}' mip={} face={}) -> eUndefined (not tracked)", tex->name, mip, face);
+        return vk::ImageLayout::eUndefined;
+    }
+    const auto & tracked = it->second;
+
+    // Query incoming (post-barrier authoritative state) — registered is cleared by emitPrePassBarriers
+    // before this function is ever called, so querying registered would always return eUndefined.
+    vk::ImageLayout colorLayout   = vk::ImageLayout::eUndefined;
+    vk::ImageLayout depthLayout   = vk::ImageLayout::eUndefined;
+    vk::ImageLayout stencilLayout = vk::ImageLayout::eUndefined;
+    forEachAspectBit(tracked.incoming.validAspects, [&](vk::ImageAspectFlagBits bit) {
+        const auto * ps = tracked.incoming.get(mip, face, bit);
+        if (!ps) return;
+        if (bit == vk::ImageAspectFlagBits::eColor)
+            colorLayout = ps->layout;
+        else if (bit == vk::ImageAspectFlagBits::eDepth)
+            depthLayout = ps->layout;
+        else if (bit == vk::ImageAspectFlagBits::eStencil)
+            stencilLayout = ps->layout;
     });
+
+    vk::ImageLayout result;
+    const char *    reason;
+    if (colorLayout != vk::ImageLayout::eUndefined) {
+        result = colorLayout;
+        reason = "color";
+    } else if (depthLayout != vk::ImageLayout::eUndefined && stencilLayout != vk::ImageLayout::eUndefined) {
+        result = combineDepthStencilLayouts(depthLayout, stencilLayout);
+        reason = "depth+stencil combined";
+    } else if (depthLayout != vk::ImageLayout::eUndefined) {
+        result = depthLayout;
+        reason = "depth only";
+    } else if (stencilLayout != vk::ImageLayout::eUndefined) {
+        result = stencilLayout;
+        reason = "stencil only";
+    } else {
+        result = vk::ImageLayout::eUndefined;
+        reason = "no plane at this subresource";
+    }
+
+    GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: attachmentPassLayout('{}' mip={} face={}) -> {} ({})", tex->name, mip, face, vk::to_string(result), reason);
     return result;
 }
 
@@ -352,6 +427,8 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                     GN_WARN(sLogger)("RasterStateTrackerVulkan: buffer '{}' has no VkBuffer handle; skipping barrier", b.buf->name);
                 }
             else {
+                GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: buffer barrier '{}' [{}] : access {} -> {}", b.buf->name, b.usageName,
+                                    vk::to_string(b.committedAccess), vk::to_string(b.passAccess));
                 vk::BufferMemoryBarrier barrier;
                 barrier.setSrcAccessMask(b.committedAccess)
                     .setDstAccessMask(b.passAccess)
@@ -365,6 +442,7 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                 dstStages |= b.passStages;
                 b.committedAccess = b.passAccess;
                 b.committedStages = b.passStages;
+                GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: buffer '{}' committed updated to {}", b.buf->name, vk::to_string(b.committedAccess));
             }
         }
 
@@ -373,6 +451,7 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
         b.passStages     = vk::PipelineStageFlagBits::eBottomOfPipe;
         b.isWrite        = false;
         b.activeThisPass = false;
+        GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: buffer '{}' pass state reset", b.buf->name);
     }
 
     for (auto & [id, tracked] : mAttachments) {
@@ -392,6 +471,8 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
             if (!prev) GN_UNLIKELY continue; // incoming should always have the plane (snapshot from gpuStates)
             if (*prev == next) continue;
 
+            GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: image barrier '{}' [mip={} face={} {}] : {} -> {} ({})", tracked.tex->name, mip, face,
+                                vk::to_string(aspect), vk::to_string(prev->layout), vk::to_string(next.layout), next.usage ? next.usage : "?");
             vk::ImageMemoryBarrier b;
             b.setOldLayout(prev->layout)
                 .setNewLayout(next.layout)
@@ -410,11 +491,16 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
             if (mip < tracked.incoming.numMips && face < tracked.incoming.numLayers) {
                 auto & sr = tracked.incoming.subresources[tracked.incoming.subresourceIndex(mip, face)];
                 auto   it = sr.planes.find(aspect);
-                if (it != sr.planes.end()) it->second = next;
+                if (it != sr.planes.end()) {
+                    it->second = next;
+                    GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: image '{}' [mip={} face={} {}] incoming updated to {}", tracked.tex->name, mip, face,
+                                        vk::to_string(aspect), vk::to_string(next.layout));
+                }
             }
         }
 
-        // the registered state are baked into barrier already. we can clear it now.
+        // Registered states are baked into barriers; clear so the next payload starts fresh.
+        GN_VERBOSE(sLogger)("RasterStateTrackerVulkan: image '{}' registered cleared ({} planes)", tracked.tex->name, tracked.registered.size());
         tracked.registered.clear();
     }
 
