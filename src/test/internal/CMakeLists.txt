@@ -55,5 +55,7 @@ if (VULKAN_FOUND)
     )
     add_custom_target(gpu2-mixed-cnc-raster-shaders DEPENDS ${_mixed_comp_hdr})
     add_dependencies(GNtest-internal gpu2-mixed-cnc-raster-shaders)
+    # Note: target_include_directories for ${CMAKE_CURRENT_BINARY_DIR} was already set by the
+    # rtt-test block above; the generated mixed-cnc-raster-comp.spv.h lands in the same directory.
 endif()
 # add_test(NAME GNtest-internal COMMAND GNtest-internal)

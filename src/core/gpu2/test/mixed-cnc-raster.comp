@@ -1,12 +1,12 @@
 #version 450
 layout(local_size_x = 8, local_size_y = 8) in;
-// Reads from render target (location 0) and writes identity copy to output texture (location 1).
-// Both bindings use rgba8 format: VK_FORMAT_R8G8B8A8_UNORM with GENERAL layout.
+// GENERAL layout is required by Vulkan for storage images accessed via imageLoad/imageStore.
 layout(set = 0, binding = 0, rgba8) uniform readonly image2D inputImg;
 layout(set = 0, binding = 1, rgba8) uniform writeonly image2D outputImg;
 
 void main() {
+    ivec2 size  = imageSize(inputImg);
     ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
-    if (coord.x >= imageSize(inputImg).x || coord.y >= imageSize(inputImg).y) return;
+    if (coord.x >= size.x || coord.y >= size.y) return;
     imageStore(outputImg, coord, imageLoad(inputImg, coord));
 }

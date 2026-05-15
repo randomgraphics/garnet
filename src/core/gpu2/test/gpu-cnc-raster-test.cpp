@@ -16,27 +16,7 @@
 using namespace GN;
 using namespace GN::gpu2;
 
-static AutoRef<GpuContext> makeGpu() {
-    return GpuContext::create("gpu", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE, .debug = GpuContext::DebugMode::ENABLED});
-}
-
-static AutoRef<Texture> makeRgba8Tex(const AutoRef<GpuContext> & gpu, const char * name, uint32_t w, uint32_t h) {
-    return Texture::create(name, {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(w, h).setLevels(1)});
-}
-
-static AutoRef<GpuShader> makeShader(const AutoRef<GpuContext> & gpu, const char * name, const void * binary, size_t byteSize) {
-    return GpuShader::create({.context = gpu, .name = name, .binary = binary, .size = byteSize});
-}
-
-template<typename... Payloads>
-static void submitAndWait(const AutoRef<GpuContext> & gpu, Payloads &&... payloads) {
-    std::atomic<bool> done = false;
-    auto              sp   = GpuContext::SubmitParameters("mixed-cnc-raster");
-    (sp.appendWork(payloads), ...);
-    sp.setOnComplete([&done] { done = true; });
-    gpu->submit(sp);
-    while (!done) gpu->pump();
-}
+#include "gpu2-test-helpers.h"
 
 // ---------------------------------------------------------------------------
 // Test: CnC upload → raster sample → compute copy → readback
@@ -48,9 +28,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     if (!gpu) SKIP("No GPU context available");
 
     constexpr uint32_t W            = 8, H = 8;
-    constexpr uint32_t PIXEL_COUNT  = W * H;
-    constexpr uint32_t BYTES_PER_PIXEL = 4;
-    constexpr uint64_t SIZE         = PIXEL_COUNT * BYTES_PER_PIXEL;
+    constexpr uint32_t PIXEL_COUNT = W * H;
 
     // Create all three textures
     auto sourceTex    = makeRgba8Tex(gpu, "source", W, H); // upload destination
@@ -59,16 +37,17 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     if (!sourceTex || !renderTarget || !outputTex) SKIP("RGBA8 textures unavailable");
 
     // Staging buffer: solid red (R=255, G=0, B=0, A=255) for every pixel.
-    auto staging = Buffer::create("staging", {.context = gpu, .size = SIZE, .mappable = true});
+    auto staging = Buffer::create("staging", {.context = gpu, .size = PIXEL_COUNT * 4u, .mappable = true});
     if (!staging) SKIP("Mappable buffer unavailable");
     {
         auto   m = staging->map();
         auto * p = static_cast<uint8_t *>(m.data());
         for (uint32_t i = 0; i < PIXEL_COUNT; ++i) {
-            p[i * 4 + 0] = 255; // R
-            p[i * 4 + 1] = 0;   // G
-            p[i * 4 + 2] = 0;   // B
-            p[i * 4 + 3] = 255; // A
+            // solid red: R=255, G=0, B=0, A=255
+            p[i * 4 + 0] = 255;
+            p[i * 4 + 1] = 0;
+            p[i * 4 + 2] = 0;
+            p[i * 4 + 3] = 255;
         }
     }
 
@@ -151,7 +130,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     AutoRef<GpuPayload> p3 = cnc2->seal();
 
     // ── Submit all three payloads in one batch ────────────────────────────
-    submitAndWait(gpu, p1, p2, p3);
+    submitAndWait(gpu, "mixed-cnc-raster", p1, p2, p3);
 
     // ── Verify: outputTex should be solid red ────────────────────────────
     gfx::img::Image image = outputTex->readback();

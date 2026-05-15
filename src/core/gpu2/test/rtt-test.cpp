@@ -17,36 +17,7 @@
 using namespace GN;
 using namespace GN::gpu2;
 
-// ---------------------------------------------------------------------------
-// Helpers shared across test cases
-// ---------------------------------------------------------------------------
-
-static AutoRef<GpuContext> makeGpu() {
-    return GpuContext::create("gpu", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE, .debug = GpuContext::DebugMode::ENABLED});
-}
-
-static AutoRef<Texture> makeRgba8Tex(const AutoRef<GpuContext> & gpu, const char * name, uint32_t w, uint32_t h) {
-    // Single mip level: Vulkan requires render-attachment image views to have levelCount=1,
-    // and sampling a solid-color texture needs no mip chain.
-    return Texture::create(name,
-                           {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(w, h).setLevels(1)});
-}
-
-template<typename... Payloads>
-static void submitAndWait(const AutoRef<GpuContext> & gpu, Payloads &&... payloads) {
-    std::atomic<bool> done = false;
-    auto              sp   = GpuContext::SubmitParameters("rtt-test");
-    (sp.appendWork(payloads), ...);
-    sp.setOnComplete([&done] { done = true; });
-    gpu->submit(sp);
-    while (!done) gpu->pump();
-}
-
-// Create a GpuShader from one of the pre-compiled SPIR-V blobs embedded in the .spv.h headers.
-// `binary` is the uint32_t array; `byteSize` is sizeof(that array).
-static AutoRef<GpuShader> makeShader(const AutoRef<GpuContext> & gpu, const char * name, const void * binary, size_t byteSize) {
-    return GpuShader::create({.context = gpu, .name = name, .binary = binary, .size = byteSize});
-}
+#include "gpu2-test-helpers.h"
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -109,7 +80,7 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
 
     // Submit both passes as one batch. The batch tracker transitions rtt from
     // COLOR_ATTACHMENT_OPTIMAL (after p1) to SHADER_READ_ONLY_OPTIMAL (for p2).
-    submitAndWait(gpu, p1, p2);
+    submitAndWait(gpu, "rtt-test", p1, p2);
 
     // Verify every pixel of the backbuffer is red (R=255, G=0, B=0, A=255).
     gfx::img::Image image = backbuffer->readback();
@@ -178,7 +149,7 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     raster2->draw(dp);
     AutoRef<GpuPayload> p2 = raster2->seal();
 
-    submitAndWait(gpu, p1, p2);
+    submitAndWait(gpu, "rtt-test", p1, p2);
 
     gfx::img::Image image = backbuffer->readback();
     REQUIRE_FALSE(image.empty());
@@ -230,7 +201,7 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     raster->draw(dp);
     AutoRef<GpuPayload> p = raster->seal();
 
-    submitAndWait(gpu, p);
+    submitAndWait(gpu, "rtt-test", p);
 
     {
         gfx::img::Image img    = tex0->readback();
