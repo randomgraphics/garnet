@@ -1,4 +1,4 @@
-// Must be included first so rapid-vulkan defines/includes happen before any other vk-*.h
+// vk-gpu-context.h must precede any other rapid-vulkan include in this TU (ODR guard).
 #include "vk-gpu-cnc.h"
 #include "vk-gpu-context.h"
 #include "vk-gpu-payload.h"
@@ -122,7 +122,6 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
             return;
         }
 
-    // Build drawable for descriptor binding and push constants.
     rv::Drawable::ConstructParameters dcp;
     dcp.setPipeline(pipeline);
     rv::Drawable drawable(dcp);
@@ -235,7 +234,8 @@ void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::Com
         }
 
     tracker.addTransferSrcBuffer(srcVk);
-    // Default ImageView covers all mips and all array layers (SubresourceRange defaults).
+    // Transition the whole image: vkCmdCopyBufferToImage can target any mip/face per region,
+    // so the barrier must cover all subresources to be conservative.
     GpuResourceView::ImageView fullRange;
     tracker.addTransferDstImage(dstVk, fullRange);
     tracker.emitPrePassBarriers(cb);
@@ -289,7 +289,7 @@ class GpuCncVulkan2 final : public GpuCnC {
 public:
     GN_REGISTER_RUNTIME_TYPE(GpuCnC);
 
-    GpuCncVulkan2(const StrA & entityName, const CreateParameters & cp): GpuCnC(TYPE_INFO(), entityName), mCreateParams(cp) {}
+    GpuCncVulkan2(const StrA & entityName, const CreateParameters &): GpuCnC(TYPE_INFO(), entityName) {}
 
     void compute(const ComputeParameters & cp) override {
         if (mSealed) GN_UNLIKELY {
@@ -336,7 +336,6 @@ public:
     }
 
 private:
-    CreateParameters      mCreateParams;
     bool                  mSealed = false;
     std::vector<StoredOp> mOps;
 };
