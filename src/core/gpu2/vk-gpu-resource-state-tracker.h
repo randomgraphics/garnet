@@ -37,6 +37,9 @@ public:
     bool addStorageBuffer(BufferVulkan * buf, bool write = false, vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eFragmentShader);
     bool addVertexBuffer(BufferVulkan * buf);
     bool addIndexBuffer(BufferVulkan * buf);
+    bool addTransferSrcBuffer(BufferVulkan * buf);
+    bool addTransferDstBuffer(BufferVulkan * buf);
+    bool addTransferDstImage(TextureVulkanBase * tex, const GpuResourceView::ImageView & view);
 
     std::vector<uint64_t> addGpuResourceTable(const GpuResourceTable & table);
     bool                  addRasterGeometry(const RasterGeometry & geom);

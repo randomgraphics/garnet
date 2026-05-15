@@ -249,6 +249,38 @@ bool GpuResourceStateTrackerVulkan::addIndexBuffer(BufferVulkan * buf) {
     return addBuffer(std::move(b));
 }
 
+bool GpuResourceStateTrackerVulkan::addTransferSrcBuffer(BufferVulkan * buf) {
+    if (!buf) GN_UNLIKELY return true;
+    TrackedBuffer b;
+    b.buf        = buf;
+    b.passAccess = vk::AccessFlagBits::eTransferRead;
+    b.passStages = vk::PipelineStageFlagBits::eTransfer;
+    b.isWrite    = false;
+    b.usageName  = "transfer source buffer";
+    return addBuffer(std::move(b));
+}
+
+bool GpuResourceStateTrackerVulkan::addTransferDstBuffer(BufferVulkan * buf) {
+    if (!buf) GN_UNLIKELY return true;
+    TrackedBuffer b;
+    b.buf        = buf;
+    b.passAccess = vk::AccessFlagBits::eTransferWrite;
+    b.passStages = vk::PipelineStageFlagBits::eTransfer;
+    b.isWrite    = true;
+    b.usageName  = "transfer destination buffer";
+    return addBuffer(std::move(b));
+}
+
+bool GpuResourceStateTrackerVulkan::addTransferDstImage(TextureVulkanBase * tex, const GpuResourceView::ImageView & view) {
+    if (!tex) GN_UNLIKELY return true;
+    rv::Image::State::PlaneState state;
+    state.layout = vk::ImageLayout::eTransferDstOptimal;
+    state.access = vk::AccessFlagBits::eTransferWrite;
+    state.stages = vk::PipelineStageFlagBits::eTransfer;
+    state.usage  = "transfer destination image";
+    return addTexture(tex, view, state);
+}
+
 std::vector<uint64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
     std::vector<uint64_t> invalid;
     for (size_t setIdx = 0; setIdx < table.size(); ++setIdx) {
