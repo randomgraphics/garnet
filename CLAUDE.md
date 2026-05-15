@@ -170,6 +170,17 @@ GPU v2 is the go-to GPU model for future code; v1 (`src/core/gpu/`) will retire 
 
 New backends go under `src/core/gpu2/<api>/`. Follow the D3D12 implementation pattern: add a feature flag in `features.h.in`, guard with `#if GN_BUILD_HAS_<API>`, and register the new target in `src/core/CMakeLists.txt`.
 
+## Superpowers Docs Location
+
+All superpowers-generated documents (plans, specs, designs) must be saved under `agent/superpower/`:
+
+| Type | Path |
+|---|---|
+| Implementation plans | `agent/superpower/plans/YYYY-MM-DD-<topic>.md` |
+| Design specs | `agent/superpower/specs/YYYY-MM-DD-<topic>-design.md` |
+
+Do **not** use `docs/superpowers/` — that path is not used in this project.
+
 ## Module Rule Files
 
 Per-module guidance lives in `.claude/rules/` as path-scoped rule files. Each file has a YAML frontmatter `paths:` field listing glob patterns; Claude loads the file automatically when editing any matching file.
