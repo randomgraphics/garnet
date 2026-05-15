@@ -20,7 +20,8 @@
       "Bash(echo *)",
       "Bash(awk *)",
       "Bash(gh pr *)",
-      "Bash(ninja *)"
+      "Bash(ninja *)",
+      "Bash(gh api *)"
     ]
   }
 }

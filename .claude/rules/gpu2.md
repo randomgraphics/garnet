@@ -95,6 +95,28 @@ GpuContext::pump()           → fire onComplete callbacks
 - `GN_REGISTER_RUNTIME_TYPE` must pass the **direct** parent class, not a grandparent.
 - Stub backends in `gpu-factories-stub.cpp` log a warning and return `{}` — do not remove stubs; add the real impl alongside them when implementing a new backend.
 
+## Branching Workflow
+
+`feature/rdg/main` is the staging branch for gpu2 and rdg development — treat it as this module's "main".
+
+### Day-to-day development
+
+- **Feature work**: branch off `feature/rdg/main` as `wip/gpu2/<topic>` (gpu2 work) or `wip/rdg2/<topic>` (rdg2 work). Develop there; squash-merge back to `feature/rdg/main` when done; delete the wip branch.
+- **Small fixes**: commit directly to `feature/rdg/main`.
+- Never branch wip branches off `master` for gpu2/rdg work.
+
+### Submodule discipline
+
+- Submodules we own or actively modify (e.g. `rapid-vulkan`, other `rapid-*` repos) must live on their own `wip/<topic>` branch during development — never on their `main`/`master` directly.
+- `garnet master` must only ever reference a submodule's `main`/`master` commit, never a wip commit. This invariant must hold at all times on `master`.
+
+### Promoting feature/rdg/main → garnet master
+
+1. For every modified submodule, open a PR and land all changes to that submodule's own `main`/`master` first.
+2. Update `feature/rdg/main`'s submodule pointers to the new `main`/`master` commits and verify everything builds and tests pass.
+3. Open a PR from `feature/rdg/main` → `master`. **Do not delete `feature/rdg/main` after the PR lands** — it is a permanent staging branch.
+4. After the PR lands, do a one-way merge from `master` → `feature/rdg/main` to pull in any master-side changes (CI fixups, version bumps, etc.) and keep the staging branch fully in sync.
+
 ## Known Stubs / Missing Pieces
 
 - D3D12 and Metal `GpuContext`, `Texture`, `Buffer`, `Swapchain` factories — all in `gpu-factories-stub.cpp`.
