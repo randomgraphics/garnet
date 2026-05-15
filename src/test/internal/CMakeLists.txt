@@ -41,5 +41,19 @@ if (VULKAN_FOUND)
     add_custom_target(gpu2-rtt-test-shaders DEPENDS ${_rtt_vert_hdr} ${_rtt_frag_hdr} ${_rtt_mrt_frag_hdr})
     add_dependencies(GNtest-internal gpu2-rtt-test-shaders)
     target_include_directories(GNtest-internal PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+    # Compile mixed-cnc-raster test compute shader
+    set(_mixed_comp_hdr ${CMAKE_CURRENT_BINARY_DIR}/mixed-cnc-raster-comp.spv.h)
+    add_custom_command(
+        OUTPUT ${_mixed_comp_hdr}
+        COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
+                ${_rtt_shader_dir}/mixed-cnc-raster.comp
+                --out-dir ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS ${_rtt_shader_dir}/mixed-cnc-raster.comp
+                ${_compile_tool}
+        COMMENT "Compiling mixed-cnc-raster compute shader to SPIR-V header"
+    )
+    add_custom_target(gpu2-mixed-cnc-raster-shaders DEPENDS ${_mixed_comp_hdr})
+    add_dependencies(GNtest-internal gpu2-mixed-cnc-raster-shaders)
 endif()
 # add_test(NAME GNtest-internal COMMAND GNtest-internal)

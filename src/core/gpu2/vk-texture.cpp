@@ -57,6 +57,8 @@ rv::Ref<rv::Image> createVkImage(const Texture::Descriptor & descriptor, const r
     vk::FormatFeatureFlags optimalFeatures = props.optimalTilingFeatures;
     if (optimalFeatures & vk::FormatFeatureFlagBits::eColorAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eColorAttachment;
     if (optimalFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) cp.info.usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+    // Storage usage is needed for compute dispatch reads/writes; add it whenever the format supports it.
+    if (optimalFeatures & vk::FormatFeatureFlagBits::eStorageImage) cp.info.usage |= vk::ImageUsageFlagBits::eStorage;
 
     if (descriptor.faces == 6 && descriptor.depth == 1)
         cp.setCube(descriptor.width).setLevels(descriptor.levels).setFormat(cp.info.format);

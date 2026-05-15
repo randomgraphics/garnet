@@ -150,9 +150,13 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
                     vk::ImageLayout layout =
                         (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral : vk::ImageLayout::eShaderReadOnlyOptimal;
                     rv::ImageSampler is;
-                    is.view    = tex->nativeView(view.imageView);
-                    is.layout  = layout;
-                    is.sampler = rv::Ref<const rv::Sampler>(ensureDefaultSampler(ctx.dev, defaultSampler));
+                    is.view   = tex->nativeView(view.imageView);
+                    is.layout = layout;
+                    // Storage images are bound as plain image views (no sampler).
+                    // Adding a sampler would change the rapid-vulkan ImageArgs type to COMBINED,
+                    // which is incompatible with eStorageImage and fails pipeline validation.
+                    if (view.imageView.type != GpuResourceView::ImageView::STORAGE)
+                        is.sampler = rv::Ref<const rv::Sampler>(ensureDefaultSampler(ctx.dev, defaultSampler));
                     imgs.push_back(is);
                 }
                 if (!imgs.empty()) drawable.t(descId, vk::ArrayProxy<const rv::ImageSampler>((uint32_t) imgs.size(), imgs.data()));
