@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vk-gpu-context.h"
+#include "vk-raster-state-tracker.h"
 
 #include <variant>
 
@@ -12,12 +13,9 @@ struct GpuSyncPoint : rv::CommandQueue::SyncPoint {
     enum class Type { BINARY, TIMELINE };
     Type type = Type::BINARY; // default; only meaningful when semaphore != null
 
-    /// Returns non-null when this is a submitted timeline sync point.
     const rv::CommandQueue::SyncPoint * asTimelinePoint() const {
         return (semaphore && type == Type::TIMELINE) ? static_cast<const rv::CommandQueue::SyncPoint *>(this) : nullptr;
     }
-
-    /// Returns the binary semaphore handle when this is a submitted binary sync point.
     const vk::Semaphore * asBinarySemaphore() const { return (semaphore && type == Type::BINARY) ? &semaphore : nullptr; }
 
     bool empty() const { return !semaphore; }
@@ -30,38 +28,28 @@ struct GpuPayloadVulkan : GpuPayload {
 
     explicit GpuPayloadVulkan(const StrA & name): GpuPayload(TYPE_INFO(), name) {}
 
-    /// The sync point that will be triggered by GPU when the payload is processed.
-    /// This is non-empty if and only if the payload has been submitted to GPU.
-    /// Used internally to prevent a payload to be submitted multiple times.
     const GpuSyncPoint & syncpoint() const { return mSyncPoint; }
+    vk::Semaphore        semaphore() const { return mSyncPoint.semaphore; }
 
-    /// Returns the underlying vk::Semaphore handle (timeline or binary); non-null iff submitted.
-    vk::Semaphore semaphore() const { return mSyncPoint.semaphore; }
-
-    /// Context handed to recordForVulkanSubmit(). Owned by the caller (GpuContextVulkan2);
-    /// the payload borrows it for the duration of the record call and must not retain
-    /// pointers beyond that.
+    /// Context handed to recordForVulkanSubmit(). Owned by GpuContextVulkan2; payloads must
+    /// not retain any pointers from it beyond the duration of the record call.
     struct RecordContext {
-        const rv::Device * dev   = nullptr; ///< rapid-vulkan device — gives access to device handle, queues, gi(), etc.
-        rv::CommandQueue * queue = nullptr; ///< target queue for this submission; informs queue-family ownership decisions
-        rv::CommandBuffer  cmd;             ///< open command buffer that the payload encodes its work into
+        const rv::Device *         dev   = nullptr;        ///< rapid-vulkan device
+        rv::CommandQueue *         queue = nullptr;        ///< target queue for this submission
+        rv::CommandBuffer          cmd;                    ///< open command buffer
+        RasterStateTrackerVulkan * batchTracker = nullptr; ///< the shared resource state tracker for the entire batch.
     };
 
-    /// Encode this payload's GPU work into ctx.cmd. Invoked once at submit time, in the
-    /// order payloads were listed in SubmitParameters::work. Subclasses override; base
-    /// is a no-op so an empty payload (e.g. swapchain "ready" sentinel) is valid.
+    /// Encode this payload's GPU work into ctx.cmd. Invoked once at submit time, in order.
     virtual void recordForVulkanSubmit(const RecordContext &) {}
 
-    /// Host-side hook fired right after the submission's vkQueueSubmit returns
-    /// (i.e. work is in flight, not yet completed on the GPU). Subclasses use this to
-    /// flush tracked GPU state back to the source resources so that subsequent payloads
-    /// see the post-submit state immediately.
-    virtual void onSubmitComplete() {};
+    /// Hook fired right after vkQueueSubmit returns. Available for any post-submit bookkeeping;
+    /// resource state flushing is handled by submit() via batchTracker->flushToResources().
+    virtual void onSubmitComplete() {}
 
 protected:
-    friend class GpuContextVulkan2; // allow the main context to update the semaphore
+    friend class GpuContextVulkan2;
 
-    // Called by the swapchain to inject an imageAvailable handle as the binary sync point.
     void setSemaphore(vk::Semaphore s) {
         mSyncPoint.semaphore = s;
         mSyncPoint.stages    = vk::PipelineStageFlagBits::eAllCommands;

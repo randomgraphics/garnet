@@ -216,11 +216,17 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         return;
     }
 
+    // Shared resource-state tracker for this entire submit batch. All payloads use it to
+    // compute barriers (reading state committed by prior payloads).
+    // Flushed to actual resource objects after successful vkQueueSubmit.
+    RasterStateTrackerVulkan batchTracker;
+
     // construct a record context.
     GpuPayloadVulkan::RecordContext recordCtx;
-    recordCtx.dev   = &dev;
-    recordCtx.queue = queue;
-    recordCtx.cmd   = queue->begin(sp.name.empty() ? "rdg2_cmd" : sp.name.c_str());
+    recordCtx.dev          = &dev;
+    recordCtx.queue        = queue;
+    recordCtx.batchTracker = &batchTracker;
+    recordCtx.cmd          = queue->begin(sp.name.empty() ? "rdg2_cmd" : sp.name.c_str());
     if (recordCtx.cmd.empty()) {
         GN_ERROR(sLoggerVk)("GpuContextVulkan2::submit: failed to begin command buffer, name='{}'", sp.name);
         return;
@@ -254,6 +260,10 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     qsp.signalFence    = mainFence->get();
     auto submissionId  = queue->submit2(qsp);
     if (!submissionId) return; // submission failed somehow. bail out.
+
+    // The GPU has accepted the commands. Update CPU-side resource state now so subsequent
+    // submissions compute correct "from" layouts for their barriers.
+    batchTracker.flushToResources();
 
     // Mark all workload as "submitted"
     for (auto & w : works) {

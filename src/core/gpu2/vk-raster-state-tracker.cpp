@@ -45,8 +45,9 @@ inline GpuResourceView::SubresourceRange resolveRange(GpuResourceView::Subresour
 bool RasterStateTrackerVulkan::addAttachment(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state) {
     auto & tracked = mAttachments[tex->id];
     if (!tracked.tex) {
-        // First time this pass touches \p tex: snapshot its per-plane state. The snapshot is the
-        // "from" side of any barrier this pass emits, and stays untouched until flush.
+        // First registration of this texture in the batch. Initialize incoming from the actual
+        // resource state; emit barrier method keeps it up-to-date after each payload so subsequent
+        // payloads in the same command buffer see the correct "from" layout.
         tracked.tex      = tex;
         tracked.incoming = tex->getState();
     }
@@ -158,15 +159,23 @@ bool RasterStateTrackerVulkan::checkBufferHazard(const TrackedBuffer & incoming)
 
 bool RasterStateTrackerVulkan::addBuffer(TrackedBuffer b) {
     auto it = mBuffers.find(b.buf->id);
-    if (it != mBuffers.end()) {
-        if (!checkBufferHazard(b)) return false; // hazard: reject, existing entry unchanged
-        // Compatible re-registration: merge access flags so the single barrier covers all usages.
-        it->second.passAccess |= b.passAccess;
-        it->second.passStages |= b.passStages;
-        it->second.isWrite |= b.isWrite;
+    if (it == mBuffers.end()) {
+        // First registration in this batch: snapshot the actual resource state as the baseline
+        // so emitPrePassBarriers() computes the correct "from" side of the first barrier.
+        b.committedAccess = b.buf->gpuState.access;
+        b.committedStages = b.buf->gpuState.stages;
+        b.activeThisPass  = true;
+        mBuffers.emplace(b.buf->id, std::move(b));
         return true;
     }
-    mBuffers.emplace(b.buf->id, std::move(b));
+    auto & existing = it->second;
+    // Only flag hazards for same-pass re-registrations; cross-payload re-use is expected and handled
+    // by emitPrePassBarriers() via committedAccess.
+    if (existing.activeThisPass && !checkBufferHazard(b)) return false;
+    existing.passAccess |= b.passAccess;
+    existing.passStages |= b.passStages;
+    existing.isWrite |= b.isWrite;
+    existing.activeThisPass = true;
     return true;
 }
 
@@ -334,29 +343,39 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
     vk::PipelineStageFlags             srcStages = {};
     vk::PipelineStageFlags             dstStages = {};
 
-    for (const auto & [id, b] : mBuffers) {
-        vk::Buffer vkBuf = b.buf->nativeBuffer();
-        if (!vkBuf) GN_UNLIKELY {
-                GN_WARN(sLogger)("RasterStateTrackerVulkan: buffer '{}' has no VkBuffer handle; skipping barrier", b.buf->name);
-                continue;
-            }
-        const BufferStateVulkan & cur = b.buf->gpuState;
-        if (cur.access == b.passAccess && cur.stages == b.passStages) continue;
+    for (auto & [id, b] : mBuffers) {
+        if (!b.activeThisPass) continue; // not registered this pass; skip
 
-        vk::BufferMemoryBarrier barrier;
-        barrier.setSrcAccessMask(cur.access)
-            .setDstAccessMask(b.passAccess)
-            .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-            .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-            .setBuffer(vkBuf)
-            .setOffset(0)
-            .setSize(VK_WHOLE_SIZE);
-        bufferBarriers.append(barrier);
-        srcStages |= cur.stages;
-        dstStages |= b.passStages;
+        if (b.committedAccess != b.passAccess || b.committedStages != b.passStages) {
+            vk::Buffer vkBuf = b.buf->nativeBuffer();
+            if (!vkBuf) GN_UNLIKELY {
+                    GN_WARN(sLogger)("RasterStateTrackerVulkan: buffer '{}' has no VkBuffer handle; skipping barrier", b.buf->name);
+                }
+            else {
+                vk::BufferMemoryBarrier barrier;
+                barrier.setSrcAccessMask(b.committedAccess)
+                    .setDstAccessMask(b.passAccess)
+                    .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                    .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                    .setBuffer(vkBuf)
+                    .setOffset(0)
+                    .setSize(VK_WHOLE_SIZE);
+                bufferBarriers.append(barrier);
+                srcStages |= b.committedStages;
+                dstStages |= b.passStages;
+                b.committedAccess = b.passAccess;
+                b.committedStages = b.passStages;
+            }
+        }
+
+        // Commit: reset per-pass fields regardless of whether a barrier was emitted.
+        b.passAccess     = {};
+        b.passStages     = vk::PipelineStageFlagBits::eBottomOfPipe;
+        b.isWrite        = false;
+        b.activeThisPass = false;
     }
 
-    for (const auto & [id, tracked] : mAttachments) {
+    for (auto & [id, tracked] : mAttachments) {
         vk::Image vkImg = tracked.tex->nativeImage();
         if (!vkImg) GN_UNLIKELY {
                 GN_WARN(sLogger)("RasterStateTrackerVulkan: texture '{}' has no VkImage handle; skipping barrier", tracked.tex->name);
@@ -385,7 +404,18 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
             barriers.append(b);
             srcStages |= prev->stages;
             dstStages |= next.stages;
+
+            // Advance the running incoming state so the next payload's add*() calls see the
+            // correct post-barrier layout without any extra bookkeeping.
+            if (mip < tracked.incoming.numMips && face < tracked.incoming.numLayers) {
+                auto & sr = tracked.incoming.subresources[tracked.incoming.subresourceIndex(mip, face)];
+                auto   it = sr.planes.find(aspect);
+                if (it != sr.planes.end()) it->second = next;
+            }
         }
+
+        // the registered state are baked into barrier already. we can clear it now.
+        tracked.registered.clear();
     }
 
     if (bufferBarriers.empty() && barriers.empty()) return;
@@ -397,20 +427,26 @@ void RasterStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                        vk::ArrayProxy<const vk::ImageMemoryBarrier>(barriers.size(), barriers.data()));
 }
 
-void RasterStateTrackerVulkan::flushStatesToResources() {
-    for (auto & [id, tracked] : mAttachments) {
-        // Apply the post-pass state of each touched plane. Untouched planes are not in
-        // \c registered, so their state on the resource stays unchanged.
-        for (const auto & [key, intended] : tracked.registered) {
-            uint32_t                mip    = uint32_t((key >> 48) & 0xffffu);
-            uint32_t                face   = uint32_t((key >> 16) & 0xffffu);
-            vk::ImageAspectFlagBits aspect = static_cast<vk::ImageAspectFlagBits>(uint32_t(key & 0xffffu));
-            tracked.tex->setState(intended, vk::ImageSubresourceRange(aspect, mip, 1, face, 1));
+void RasterStateTrackerVulkan::flushToResources() {
+    // Write the batch-final image layout for every tracked subresource back to each texture so
+    // the next submit's barriers use the correct "from" layout.
+    for (const auto & [id, tracked] : mAttachments) {
+        if (!tracked.tex) continue;
+        for (uint32_t mip = 0; mip < tracked.incoming.numMips; ++mip) {
+            for (uint32_t face = 0; face < tracked.incoming.numLayers; ++face) {
+                forEachAspectBit(tracked.incoming.validAspects, [&](vk::ImageAspectFlagBits aspect) {
+                    const auto * ps = tracked.incoming.get(mip, face, aspect);
+                    if (!ps) return;
+                    tracked.tex->setState(*ps, vk::ImageSubresourceRange(aspect, mip, 1, face, 1));
+                });
+            }
         }
     }
+    // Write the batch-final buffer access/stage back to each buffer.
     for (const auto & [id, b] : mBuffers) {
-        b.buf->gpuState.access = b.passAccess;
-        b.buf->gpuState.stages = b.passStages;
+        if (!b.buf) continue;
+        b.buf->gpuState.access = b.committedAccess;
+        b.buf->gpuState.stages = b.committedStages;
     }
 }
 

@@ -88,56 +88,47 @@ public:
         : GpuPayloadVulkan(name), mPsoFactory(factory), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
-    void onSubmitComplete() override {
-        if (mRenderPassRecorded) mStateTracker.flushStatesToResources();
-    }
 
 private:
     RasterPsoFactory *         mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
     RasterTarget               mRenderTarget;
     ArrayContainer<StoredDraw> mDraws;
-    RasterStateTrackerVulkan   mStateTracker;
-    bool                       mRenderPassRecorded = false;
 
-    // Pass 1: register the render target attachments and, for each draw, upgrade any
-    // read-only attachment that the draw's merged state requires as read-write, then
-    // register the draw's shader resources and geometry buffers. Must be called before
-    // emitPrePassBarriers() so the single barrier uses the most permissive layout.
-    // Returns false if any render target texture has a hazard; the caller should skip
-    // the entire render pass in that case.
-    bool collectPassResources();
+    // Pass 1: register render targets and per-draw resources into the batch tracker.
+    // Returns false if any render target has a hazard; the caller should skip the pass.
+    bool collectPassResources(RasterStateTrackerVulkan & tracker);
 
-    // Resolve all color and depth attachments, build vk::RenderingInfo, and call
-    // beginRendering. Writes the render extent and PassFormats used in pass 2.
+    // Resolve attachments, build vk::RenderingInfo, and call beginRendering.
     // Returns false on failure.
-    bool buildAndBeginRendering(vk::CommandBuffer vkcb, vk::Extent2D & outExt, PassFormats & outFormats);
+    bool buildAndBeginRendering(vk::CommandBuffer vkcb, RasterStateTrackerVulkan & tracker, vk::Extent2D & outExt, PassFormats & outFormats);
 
     // Record one draw call into the already-active dynamic render pass.
     void recordDraw(size_t di, const StoredDraw & d, const RecordContext & ctx, rv::Ref<rv::Sampler> & defaultSampler, vk::Extent2D ext,
                     const PassFormats & formats);
 };
 
-bool GpuRasterPayloadVulkan::collectPassResources() {
-    if (!mStateTracker.addRasterTarget(mRenderTarget)) return false;
+bool GpuRasterPayloadVulkan::collectPassResources(RasterStateTrackerVulkan & tracker) {
+    if (!tracker.addRasterTarget(mRenderTarget)) return false;
     for (size_t di = 0; di < mDraws.size(); ++di) {
         StoredDraw & d = mDraws[di];
         // Promote any read-only depth-stencil attachment to read-write if this draw's
         // merged state requires writes. Must happen before registering other resources
         // so the barrier covers the promoted layout from the start.
-        mStateTracker.upgradeForDrawRasterState(d.states);
-        d.invalidResourceIds = mStateTracker.addGpuResourceTable(d.resources);
+        tracker.upgradeForDrawRasterState(d.states);
+        d.invalidResourceIds = tracker.addGpuResourceTable(d.resources);
         if (!d.invalidResourceIds.empty()) {
             GN_ERROR(sLogger)("RasterPassPayload: draw {} has {} shader resource(s) with layout hazards; "
                               "those bindings will be skipped during recording",
                               di, d.invalidResourceIds.size());
         }
-        d.geometryHazard = !mStateTracker.addRasterGeometry(d.geometry);
+        d.geometryHazard = !tracker.addRasterGeometry(d.geometry);
         if (d.geometryHazard) { GN_ERROR(sLogger)("RasterPassPayload: draw {} has vertex/index buffer layout hazard; draw will be skipped", di); }
     }
     return true;
 }
 
-bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, vk::Extent2D & outExt, PassFormats & outFormats) {
+bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, RasterStateTrackerVulkan & tracker, vk::Extent2D & outExt,
+                                                    PassFormats & outFormats) {
     outExt = vk::Extent2D(~0u, ~0u);
 
     // --- Color attachments ---
@@ -186,7 +177,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, vk::
             gfx::img::PixelFormat dpf = dst.imageView.format;
             if (dpf == gfx::img::PixelFormat::UNKNOWN()) dpf = depthTex->descriptor().format;
             outFormats.depth            = pixelFormatToVkFormat(dpf);
-            vk::ImageLayout depthLayout = mStateTracker.attachmentPassLayout(depthTex);
+            vk::ImageLayout depthLayout = tracker.attachmentPassLayout(depthTex);
             depthAtt.setImageView(depthView)
                 .setImageLayout(depthLayout)
                 .setLoadOp(vk::AttachmentLoadOp::eClear)
@@ -357,26 +348,24 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
 }
 
 void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
-    if (!ctx.dev || ctx.cmd.empty()) return;
+    if (!ctx.dev || ctx.cmd.empty() || !ctx.batchTracker) return;
 
-    vk::CommandBuffer vkcb = ctx.cmd.handle();
+    RasterStateTrackerVulkan & tracker = *ctx.batchTracker;
+    vk::CommandBuffer          vkcb    = ctx.cmd.handle();
 
-    // Pass 1: collect all resource usages from every draw into the state tracker.
-    // Abort if any render target texture has a hazard (same texture bound to multiple slots).
-    if (!collectPassResources()) return;
+    // Pass 1: register this pass's resources into the shared batch tracker.
+    // The tracker already holds committed state from prior payloads, so it produces
+    // correct "from" layouts for all barriers without any extra bookkeeping.
+    if (!collectPassResources(tracker)) return;
 
-    // Single pre-pass barrier: transitions all attachments, shader resources, and
-    // geometry buffers into their required layouts / access masks in one call.
-    mStateTracker.emitPrePassBarriers(vkcb);
+    // Single pre-pass barrier covering all attachments and shader resources.
+    tracker.emitPrePassBarriers(vkcb);
 
     // Begin the dynamic render pass.
     vk::Extent2D ext {};
     PassFormats  formats;
-    if (!buildAndBeginRendering(vkcb, ext, formats)) return;
+    if (!buildAndBeginRendering(vkcb, tracker, ext, formats)) return;
 
-    // Pass 2: record each draw into the active render pass. Attachment layouts were
-    // already resolved to the most permissive state needed by any draw in pass 1, so
-    // no per-draw barriers are required.
     rv::Ref<rv::Sampler> defaultSampler;
     for (size_t di = 0; di < mDraws.size(); ++di) {
         const StoredDraw & d = mDraws[di];
@@ -385,7 +374,6 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     }
 
     vkcb.endRendering();
-    mRenderPassRecorded = true;
 }
 
 class GpuRasterVulkan2 final : public GpuRaster {
