@@ -8,6 +8,7 @@
     // src/test/internal/CMakeLists.txt and land in the binary dir on the include path.
     #include "rtt-fullscreen-vert.spv.h"
     #include "rtt-fullscreen-frag.spv.h"
+    #include "rtt-mrt-frag.spv.h"
 
     #include <catch2/catch_test_macros.hpp>
     #include <garnet/GNgpu2.h>
@@ -190,6 +191,72 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
         CHECK(px.g == 255u);
         CHECK(px.b == 0u);
         CHECK(px.a == 255u);
+    }
+}
+
+// Render to two color attachments in one pass: location 0 receives blue, location 1 receives red.
+// Verifies that MRT output routing works correctly end-to-end.
+TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneously", "[gpu2][rtt][gpu]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    constexpr uint32_t W = 8, H = 8;
+
+    auto tex0 = makeRgba8Tex(gpu, "mrt-0", W, H); // receives blue (location 0)
+    auto tex1 = makeRgba8Tex(gpu, "mrt-1", W, H); // receives red  (location 1)
+    if (!tex0 || !tex1) SKIP("RGBA8 textures unavailable");
+
+    auto vs = makeShader(gpu, "rtt-vert", kRttFullscreenVertSpv, sizeof(kRttFullscreenVertSpv));
+    auto ps = makeShader(gpu, "rtt-mrt-frag", kRttMrtFragSpv, sizeof(kRttMrtFragSpv));
+    REQUIRE(vs);
+    REQUIRE(ps);
+
+    GpuResourceView view0, view1;
+    view0.resource = tex0;
+    view1.resource = tex1;
+
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget {.target = view0}); // location 0 → blue
+    rt.colorTargets.append(RasterTarget::ColorTarget {.target = view1}); // location 1 → red
+    rt.setClearColor(0.0f, 0.0f, 0.0f);
+
+    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    REQUIRE(raster);
+
+    GpuRaster::DrawParameters dp;
+    dp.vs                   = vs;
+    dp.ps                   = ps;
+    dp.geometry.vertexCount = 3;
+    raster->draw(dp);
+    AutoRef<GpuPayload> p = raster->seal();
+
+    submitAndWait(gpu, p);
+
+    {
+        gfx::img::Image img    = tex0->readback();
+        auto            pixels = img.plane().toRGBA8(img.data());
+        REQUIRE(pixels.size() == (size_t)(W * H));
+        for (size_t i = 0; i < pixels.size(); ++i) {
+            const auto & px = pixels[i];
+            INFO("tex0 pixel[" << i << "] = (" << (int)px.r << "," << (int)px.g << "," << (int)px.b << "," << (int)px.a << ")");
+            CHECK(px.r == 0u);
+            CHECK(px.g == 0u);
+            CHECK(px.b == 255u);
+            CHECK(px.a == 255u);
+        }
+    }
+    {
+        gfx::img::Image img    = tex1->readback();
+        auto            pixels = img.plane().toRGBA8(img.data());
+        REQUIRE(pixels.size() == (size_t)(W * H));
+        for (size_t i = 0; i < pixels.size(); ++i) {
+            const auto & px = pixels[i];
+            INFO("tex1 pixel[" << i << "] = (" << (int)px.r << "," << (int)px.g << "," << (int)px.b << "," << (int)px.a << ")");
+            CHECK(px.r == 255u);
+            CHECK(px.g == 0u);
+            CHECK(px.b == 0u);
+            CHECK(px.a == 255u);
+        }
     }
 }
 

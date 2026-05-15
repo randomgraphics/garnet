@@ -24,18 +24,21 @@ if (VULKAN_FOUND)
     set(_rtt_shader_dir ${CMAKE_SOURCE_DIR}/src/core/gpu2/test)
     set(_rtt_vert_hdr ${CMAKE_CURRENT_BINARY_DIR}/rtt-fullscreen-vert.spv.h)
     set(_rtt_frag_hdr ${CMAKE_CURRENT_BINARY_DIR}/rtt-fullscreen-frag.spv.h)
+    set(_rtt_mrt_frag_hdr ${CMAKE_CURRENT_BINARY_DIR}/rtt-mrt-frag.spv.h)
     add_custom_command(
-        OUTPUT ${_rtt_vert_hdr} ${_rtt_frag_hdr}
+        OUTPUT ${_rtt_vert_hdr} ${_rtt_frag_hdr} ${_rtt_mrt_frag_hdr}
         COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
                 ${_rtt_shader_dir}/rtt-fullscreen.vert
                 ${_rtt_shader_dir}/rtt-fullscreen.frag
+                ${_rtt_shader_dir}/rtt-mrt.frag
                 --out-dir ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${_rtt_shader_dir}/rtt-fullscreen.vert
                 ${_rtt_shader_dir}/rtt-fullscreen.frag
+                ${_rtt_shader_dir}/rtt-mrt.frag
                 ${_compile_tool}
         COMMENT "Compiling gpu2 rtt-test GLSL shaders to SPIR-V headers"
     )
-    add_custom_target(gpu2-rtt-test-shaders DEPENDS ${_rtt_vert_hdr} ${_rtt_frag_hdr})
+    add_custom_target(gpu2-rtt-test-shaders DEPENDS ${_rtt_vert_hdr} ${_rtt_frag_hdr} ${_rtt_mrt_frag_hdr})
     add_dependencies(GNtest-internal gpu2-rtt-test-shaders)
     target_include_directories(GNtest-internal PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 endif()
