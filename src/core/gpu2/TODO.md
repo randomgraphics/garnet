@@ -1,10 +1,11 @@
-Optimize GpuRaster Payload
+Optimize GpuRaster and GpuCnc Payload
 ===
-Need to move majority of work to draw() and seal(). Leave only minimal amount of work in the final record function,since draw() and seal() are thread safe and can be called in parallel. The record method of the Payload, on the other hand, must run in serialized manner.
+Need to move majority of work to draw/dispatch/copy() and seal(). Leave only minimal amount of work in the final record function,since draw/dispatch/copy/() and seal() are thread safe and can be called in parallel. The record method of the Payload, on the other hand, must run in serialized manner.
 
 Transient Buffer and Texture Arena
 ===
-Need to figure out how to manage transient data life time. To avoid wasting GPU memory, transient GPU data life time need to be minimized:
+Need to figure out how to manage transient data life time. To avoid wasting GPU memory, transient GPU data life time need to be minimized.
+- Current plan is not supporting this behavior at GPU2 level. Leave it to higher level code.
 - Delay GPU memory allocation as much as possible.
 - Released/Recycled automatically after the command buffer that references it is finished by GPU.
 - Typical user scenarios:
