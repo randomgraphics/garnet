@@ -3,12 +3,12 @@
 #include "vk-gpu-context.h"
 #include "vk-gpu-payload.h"
 #include "vk-gpu-shader.h"
+#include "vk-gpu-resource-state-tracker.h"
 #include "vk-buffer.h"
 #include "vk-texture.h"
 #include "vk-format-utils.h"
 #include "gpu-context.h"
 
-#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -43,18 +43,6 @@ struct StoredBufferToImage {
 
 using StoredOp = std::variant<StoredCompute, StoredBufferToBuffer, StoredBufferToImage>;
 
-// ── Per-resource state trackers ──────────────────────────────────────────────────────
-
-struct TrackedBuf {
-    BufferVulkan *    buf;
-    BufferStateVulkan state; // current Vulkan access/stage state, updated after each barrier
-};
-
-struct TrackedTex {
-    TextureVulkanBase *          tex;
-    rv::Image::State::PlaneState state; // whole-image state (same layout for all subresources)
-};
-
 // ── GpuCncPayloadVulkan ──────────────────────────────────────────────────────────────
 
 class GpuCncPayloadVulkan final : public GpuPayloadVulkan {
@@ -62,108 +50,14 @@ public:
     GpuCncPayloadVulkan(const StrA & name, std::vector<StoredOp> ops): GpuPayloadVulkan(name), mOps(std::move(ops)) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
-    void onSubmitComplete() override;
 
 private:
     std::vector<StoredOp> mOps;
 
-    // State maps populated lazily (on first access) during recordForVulkanSubmit.
-    std::unordered_map<uint64_t, TrackedBuf> mBufs;
-    std::unordered_map<uint64_t, TrackedTex> mTexs;
-
-    // Snapshot the current GPU state of a buffer on first access.
-    TrackedBuf & getBuf(BufferVulkan * buf) {
-        auto [it, inserted] = mBufs.try_emplace(buf->id, TrackedBuf {buf, buf->gpuState});
-        return it->second;
-    }
-
-    // Snapshot the GPU state of a texture on first access.  Uses the first non-UNDEFINED plane
-    // found at subresource (mip=0, face=0) as the representative whole-image state.
-    TrackedTex & getTex(TextureVulkanBase * tex) {
-        auto [it, inserted] = mTexs.try_emplace(tex->id, TrackedTex {});
-        if (inserted) {
-            it->second.tex   = tex;
-            const auto & s   = tex->getState();
-            it->second.state = rv::Image::State::PlaneState::UNDEFINED();
-            if (!s.subresources.empty()) {
-                for (const auto & [aspect, ps] : s.subresources[0].planes) {
-                    if (ps.layout != vk::ImageLayout::eUndefined) {
-                        it->second.state = ps;
-                        break;
-                    }
-                }
-            }
-        }
-        return it->second;
-    }
-
-    void transitionBuf(vk::CommandBuffer cb, BufferVulkan * buf, vk::AccessFlags newAccess, vk::PipelineStageFlags newStage);
-    void transitionTex(vk::CommandBuffer cb, TextureVulkanBase * tex, const rv::Image::State::PlaneState & newState);
-
     void recordCompute(const StoredCompute & op, const RecordContext & ctx);
-    void recordBufToBuf(const StoredBufferToBuffer & op, vk::CommandBuffer cb);
-    void recordBufToImg(const StoredBufferToImage & op, vk::CommandBuffer cb);
+    void recordBufToBuf(const StoredBufferToBuffer & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker);
+    void recordBufToImg(const StoredBufferToImage & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker);
 };
-
-// ── Barrier helpers ──────────────────────────────────────────────────────────────────
-
-void GpuCncPayloadVulkan::transitionBuf(vk::CommandBuffer cb, BufferVulkan * buf, vk::AccessFlags newAccess, vk::PipelineStageFlags newStage) {
-    TrackedBuf & tb = getBuf(buf);
-    if (tb.state.access == newAccess && tb.state.stages == newStage) return;
-
-    vk::Buffer vkBuf = buf->nativeBuffer();
-    if (!vkBuf) GN_UNLIKELY {
-            GN_WARN(sLogger)("GpuCncPayloadVulkan: buffer '{}' has no Vulkan handle; skipping barrier", buf->name);
-            return;
-        }
-
-    auto srcStages = tb.state.stages;
-    if (!srcStages) srcStages = vk::PipelineStageFlagBits::eTopOfPipe;
-
-    vk::BufferMemoryBarrier b;
-    b.setSrcAccessMask(tb.state.access)
-        .setDstAccessMask(newAccess)
-        .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-        .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-        .setBuffer(vkBuf)
-        .setOffset(0)
-        .setSize(VK_WHOLE_SIZE);
-    cb.pipelineBarrier(srcStages, newStage, {}, nullptr, b, nullptr);
-
-    tb.state.access = newAccess;
-    tb.state.stages = newStage;
-}
-
-void GpuCncPayloadVulkan::transitionTex(vk::CommandBuffer cb, TextureVulkanBase * tex, const rv::Image::State::PlaneState & newState) {
-    TrackedTex & tt = getTex(tex);
-    if (tt.state == newState) return;
-
-    vk::Image vkImg = tex->nativeImage();
-    if (!vkImg) GN_UNLIKELY {
-            GN_WARN(sLogger)("GpuCncPayloadVulkan: texture '{}' has no Vulkan handle; skipping barrier", tex->name);
-            return;
-        }
-
-    // Use the texture's valid aspect flags; fall back to color as a safe default.
-    auto aspects = tex->getState().validAspects;
-    if (!aspects) aspects = vk::ImageAspectFlagBits::eColor;
-
-    auto srcStages = tt.state.stages;
-    if (!srcStages) srcStages = vk::PipelineStageFlagBits::eTopOfPipe;
-
-    vk::ImageMemoryBarrier b;
-    b.setOldLayout(tt.state.layout)
-        .setNewLayout(newState.layout)
-        .setImage(vkImg)
-        .setSubresourceRange({aspects, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS})
-        .setSrcAccessMask(tt.state.access)
-        .setDstAccessMask(newState.access)
-        .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-        .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-    cb.pipelineBarrier(srcStages, newState.stages, {}, nullptr, nullptr, b);
-
-    tt.state = newState;
-}
 
 // ── Compute dispatch ─────────────────────────────────────────────────────────────────
 
@@ -183,9 +77,12 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
             return;
         }
 
-    vk::CommandBuffer vkcb = ctx.cmd.handle();
+    vk::CommandBuffer               vkcb    = ctx.cmd.handle();
+    GpuResourceStateTrackerVulkan & tracker = *ctx.batchTracker;
 
-    // Pre-dispatch barriers: transition all shader resources to their required Vulkan states.
+    // Register all shader resources with compute-stage pipeline flags, then emit a single
+    // pre-dispatch barrier. Using one batch barrier (rather than per-resource barriers) keeps
+    // the pattern consistent with how raster passes work via the same tracker.
     for (size_t setIdx = 0; setIdx < op.resources.size(); ++setIdx) {
         const auto & set = op.resources[setIdx];
         for (size_t bindIdx = 0; bindIdx < set.size(); ++bindIdx) {
@@ -195,32 +92,24 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
                 if (view.isTexture()) {
                     auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
                     if (!tex) continue;
-                    rv::Image::State::PlaneState required;
-                    if (view.imageView.type == GpuResourceView::ImageView::STORAGE) {
-                        required.layout = vk::ImageLayout::eGeneral;
-                        required.access = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
-                        required.stages = vk::PipelineStageFlagBits::eComputeShader;
-                        required.usage  = "compute storage image";
-                    } else {
-                        required.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
-                        required.access = vk::AccessFlagBits::eShaderRead;
-                        required.stages = vk::PipelineStageFlagBits::eComputeShader;
-                        required.usage  = "compute sampled image";
-                    }
-                    transitionTex(vkcb, tex, required);
+                    if (view.imageView.type == GpuResourceView::ImageView::STORAGE)
+                        tracker.addStorageTexture(tex, view, vk::PipelineStageFlagBits::eComputeShader);
+                    else
+                        tracker.addSampledTexture(tex, view, vk::PipelineStageFlagBits::eComputeShader);
                 } else if (view.isBuffer()) {
                     auto * buf = RuntimeType::cast<BufferVulkan>(view.buffer().get());
                     if (!buf) continue;
-                    if (view.bufferView.type == GpuResourceView::BufferView::STORAGE) {
-                        // Storage buffer: may be both read and written by the shader.
-                        transitionBuf(vkcb, buf, vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite, vk::PipelineStageFlagBits::eComputeShader);
-                    } else {
-                        transitionBuf(vkcb, buf, vk::AccessFlagBits::eUniformRead, vk::PipelineStageFlagBits::eComputeShader);
-                    }
+                    if (view.bufferView.type == GpuResourceView::BufferView::STORAGE)
+                        // Treat storage buffers as read-write; the shader may write without
+                        // declaring it in the resource table, so be conservative.
+                        tracker.addStorageBuffer(buf, /*write=*/true, vk::PipelineStageFlagBits::eComputeShader);
+                    else
+                        tracker.addUniformBuffer(buf, vk::PipelineStageFlagBits::eComputeShader);
                 }
             }
         }
     }
+    tracker.emitPrePassBarriers(vkcb);
 
     // Build compute pipeline. No PSO cache yet; create fresh per-dispatch.
     // TODO: add a compute PSO factory (keyed on shader ID) if per-frame dispatch overhead shows up in profiles.
@@ -298,7 +187,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
 
 // ── Buffer-to-buffer copy ────────────────────────────────────────────────────────────
 
-void GpuCncPayloadVulkan::recordBufToBuf(const StoredBufferToBuffer & op, vk::CommandBuffer cb) {
+void GpuCncPayloadVulkan::recordBufToBuf(const StoredBufferToBuffer & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
     if (op.size == 0) return;
 
     auto * srcVk = RuntimeType::cast<BufferVulkan>(op.src.get());
@@ -319,15 +208,16 @@ void GpuCncPayloadVulkan::recordBufToBuf(const StoredBufferToBuffer & op, vk::Co
             return;
         }
 
-    transitionBuf(cb, srcVk, vk::AccessFlagBits::eTransferRead, vk::PipelineStageFlagBits::eTransfer);
-    transitionBuf(cb, dstVk, vk::AccessFlagBits::eTransferWrite, vk::PipelineStageFlagBits::eTransfer);
+    tracker.addTransferSrcBuffer(srcVk);
+    tracker.addTransferDstBuffer(dstVk);
+    tracker.emitPrePassBarriers(cb);
 
     cb.copyBuffer(srcBuf, dstBuf, vk::BufferCopy(op.srcOffset, op.dstOffset, op.size));
 }
 
 // ── Buffer-to-image copy ─────────────────────────────────────────────────────────────
 
-void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::CommandBuffer cb) {
+void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
     if (op.regions.empty()) return;
 
     auto * srcVk = RuntimeType::cast<BufferVulkan>(op.src.get());
@@ -344,14 +234,11 @@ void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::Com
             return;
         }
 
-    transitionBuf(cb, srcVk, vk::AccessFlagBits::eTransferRead, vk::PipelineStageFlagBits::eTransfer);
-
-    rv::Image::State::PlaneState transferDst;
-    transferDst.layout = vk::ImageLayout::eTransferDstOptimal;
-    transferDst.access = vk::AccessFlagBits::eTransferWrite;
-    transferDst.stages = vk::PipelineStageFlagBits::eTransfer;
-    transferDst.usage  = "buffer-to-image copy destination";
-    transitionTex(cb, dstVk, transferDst);
+    tracker.addTransferSrcBuffer(srcVk);
+    // Default ImageView covers all mips and all array layers (SubresourceRange defaults).
+    GpuResourceView::ImageView fullRange;
+    tracker.addTransferDstImage(dstVk, fullRange);
+    tracker.emitPrePassBarriers(cb);
 
     // Derive the aspect flags from the destination texture's format.
     const auto & desc    = dstVk->descriptor();
@@ -377,8 +264,9 @@ void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::Com
 // ── recordForVulkanSubmit ────────────────────────────────────────────────────────────
 
 void GpuCncPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
-    if (!ctx.dev || ctx.cmd.empty()) return;
-    vk::CommandBuffer vkcb = ctx.cmd.handle();
+    if (!ctx.dev || ctx.cmd.empty() || !ctx.batchTracker) return;
+    GpuResourceStateTrackerVulkan & tracker = *ctx.batchTracker;
+    vk::CommandBuffer               vkcb    = ctx.cmd.handle();
 
     for (const auto & op : mOps) {
         std::visit(
@@ -387,24 +275,11 @@ void GpuCncPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
                 if constexpr (std::is_same_v<T, StoredCompute>)
                     recordCompute(o, ctx);
                 else if constexpr (std::is_same_v<T, StoredBufferToBuffer>)
-                    recordBufToBuf(o, vkcb);
+                    recordBufToBuf(o, vkcb, tracker);
                 else if constexpr (std::is_same_v<T, StoredBufferToImage>)
-                    recordBufToImg(o, vkcb);
+                    recordBufToImg(o, vkcb, tracker);
             },
             op);
-    }
-}
-
-// ── onSubmitComplete ─────────────────────────────────────────────────────────────────
-
-void GpuCncPayloadVulkan::onSubmitComplete() {
-    // Flush final resource states back so subsequent payloads see the correct "incoming" state.
-    for (auto & [id, tb] : mBufs) tb.buf->gpuState = tb.state;
-    for (auto & [id, tt] : mTexs) {
-        auto aspects = tt.tex->getState().validAspects;
-        if (!aspects) aspects = vk::ImageAspectFlagBits::eColor;
-        vk::ImageSubresourceRange range(aspects, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS);
-        tt.tex->setState(tt.state, range);
     }
 }
 
