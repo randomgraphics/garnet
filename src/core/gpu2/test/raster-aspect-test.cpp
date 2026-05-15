@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNgpu2.h>
 
-#include "../vk-raster-state-tracker.h"
+#include "../vk-gpu-resource-state-tracker.h"
 #include "../vk-texture.h"
 
 using namespace GN;
@@ -86,33 +86,33 @@ TEST_CASE("GPU2: per-aspect tracking — depth-stencil texture with depth-only a
         // Pre-refactor the tracker had a single layout per (mip, face) and couldn't represent
         // a depth view in one layout while stencil sat in another. Post-refactor, depth and
         // stencil are independent planes in the per-subresource map and don't collide.
-        RasterStateTrackerVulkan tracker;
-        REQUIRE(tracker.addAttachment(vkTex, depthView, sampledShaderRead()));
-        REQUIRE(tracker.addAttachment(vkTex, stencilView, sampledShaderRead()));
+        GpuResourceStateTrackerVulkan tracker;
+        REQUIRE(tracker.addTexture(vkTex, depthView, sampledShaderRead()));
+        REQUIRE(tracker.addTexture(vkTex, stencilView, sampledShaderRead()));
     }
 
     SECTION("depth-write + stencil-write same subresource => no hazard (independent aspects)") {
         // Writing both aspects at the same time is legal under separate depth/stencil layouts —
         // the depth and stencil planes are tracked independently and neither write conflicts with
         // the other.
-        RasterStateTrackerVulkan tracker;
-        REQUIRE(tracker.addAttachment(vkTex, depthView, storageWrite()));
-        REQUIRE(tracker.addAttachment(vkTex, stencilView, storageWrite()));
+        GpuResourceStateTrackerVulkan tracker;
+        REQUIRE(tracker.addTexture(vkTex, depthView, storageWrite()));
+        REQUIRE(tracker.addTexture(vkTex, stencilView, storageWrite()));
     }
 
     SECTION("two writes on the same aspect => hazard") {
         // Sanity check that we still flag a real conflict: two write bindings via the same depth
         // view must produce a write/write hazard on the depth plane.
-        RasterStateTrackerVulkan tracker;
-        REQUIRE(tracker.addAttachment(vkTex, depthView, storageWrite()));
-        REQUIRE_FALSE(tracker.addAttachment(vkTex, depthView, storageWrite()));
+        GpuResourceStateTrackerVulkan tracker;
+        REQUIRE(tracker.addTexture(vkTex, depthView, storageWrite()));
+        REQUIRE_FALSE(tracker.addTexture(vkTex, depthView, storageWrite()));
     }
 
     SECTION("depth-write + stencil-read => no hazard; depth-write + depth-read => hazard") {
         // Cross-aspect read/write is fine; same-aspect read/write is the classic hazard.
-        RasterStateTrackerVulkan tracker;
-        REQUIRE(tracker.addAttachment(vkTex, depthView, storageWrite()));
-        REQUIRE(tracker.addAttachment(vkTex, stencilView, sampledShaderRead()));
-        REQUIRE_FALSE(tracker.addAttachment(vkTex, depthView, sampledShaderRead()));
+        GpuResourceStateTrackerVulkan tracker;
+        REQUIRE(tracker.addTexture(vkTex, depthView, storageWrite()));
+        REQUIRE(tracker.addTexture(vkTex, stencilView, sampledShaderRead()));
+        REQUIRE_FALSE(tracker.addTexture(vkTex, depthView, sampledShaderRead()));
     }
 }

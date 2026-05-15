@@ -235,10 +235,10 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     {
         gfx::img::Image img    = tex0->readback();
         auto            pixels = img.plane().toRGBA8(img.data());
-        REQUIRE(pixels.size() == (size_t)(W * H));
+        REQUIRE(pixels.size() == (size_t) (W * H));
         for (size_t i = 0; i < pixels.size(); ++i) {
             const auto & px = pixels[i];
-            INFO("tex0 pixel[" << i << "] = (" << (int)px.r << "," << (int)px.g << "," << (int)px.b << "," << (int)px.a << ")");
+            INFO("tex0 pixel[" << i << "] = (" << (int) px.r << "," << (int) px.g << "," << (int) px.b << "," << (int) px.a << ")");
             CHECK(px.r == 0u);
             CHECK(px.g == 0u);
             CHECK(px.b == 255u);
@@ -248,10 +248,10 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     {
         gfx::img::Image img    = tex1->readback();
         auto            pixels = img.plane().toRGBA8(img.data());
-        REQUIRE(pixels.size() == (size_t)(W * H));
+        REQUIRE(pixels.size() == (size_t) (W * H));
         for (size_t i = 0; i < pixels.size(); ++i) {
             const auto & px = pixels[i];
-            INFO("tex1 pixel[" << i << "] = (" << (int)px.r << "," << (int)px.g << "," << (int)px.b << "," << (int)px.a << ")");
+            INFO("tex1 pixel[" << i << "] = (" << (int) px.r << "," << (int) px.g << "," << (int) px.b << "," << (int) px.a << ")");
             CHECK(px.r == 255u);
             CHECK(px.g == 0u);
             CHECK(px.b == 0u);

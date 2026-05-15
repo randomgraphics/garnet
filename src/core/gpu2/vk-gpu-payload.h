@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vk-gpu-context.h"
-#include "vk-raster-state-tracker.h"
+#include "vk-gpu-resource-state-tracker.h"
 
 #include <variant>
 
@@ -34,10 +34,10 @@ struct GpuPayloadVulkan : GpuPayload {
     /// Context handed to recordForVulkanSubmit(). Owned by GpuContextVulkan2; payloads must
     /// not retain any pointers from it beyond the duration of the record call.
     struct RecordContext {
-        const rv::Device *         dev   = nullptr;        ///< rapid-vulkan device
-        rv::CommandQueue *         queue = nullptr;        ///< target queue for this submission
-        rv::CommandBuffer          cmd;                    ///< open command buffer
-        RasterStateTrackerVulkan * batchTracker = nullptr; ///< the shared resource state tracker for the entire batch.
+        const rv::Device *              dev   = nullptr;        ///< rapid-vulkan device
+        rv::CommandQueue *              queue = nullptr;        ///< target queue for this submission
+        rv::CommandBuffer               cmd;                    ///< open command buffer
+        GpuResourceStateTrackerVulkan * batchTracker = nullptr; ///< the shared resource state tracker for the entire batch.
     };
 
     /// Encode this payload's GPU work into ctx.cmd. Invoked once at submit time, in order.

@@ -4,7 +4,7 @@
 #include "gpu-context.h"
 #include "vk-raster-pso-factory.h" // includes vk-gpu-context.h + vk-gpu-shader.h
 #include "vk-gpu-payload.h"
-#include "vk-raster-state-tracker.h"
+#include "vk-gpu-resource-state-tracker.h"
 #include "vk-texture.h"
 
 #include <algorithm>
@@ -96,18 +96,18 @@ private:
 
     // Pass 1: register render targets and per-draw resources into the batch tracker.
     // Returns false if any render target has a hazard; the caller should skip the pass.
-    bool collectPassResources(RasterStateTrackerVulkan & tracker);
+    bool collectPassResources(GpuResourceStateTrackerVulkan & tracker);
 
     // Resolve attachments, build vk::RenderingInfo, and call beginRendering.
     // Returns false on failure.
-    bool buildAndBeginRendering(vk::CommandBuffer vkcb, RasterStateTrackerVulkan & tracker, vk::Extent2D & outExt, PassFormats & outFormats);
+    bool buildAndBeginRendering(vk::CommandBuffer vkcb, GpuResourceStateTrackerVulkan & tracker, vk::Extent2D & outExt, PassFormats & outFormats);
 
     // Record one draw call into the already-active dynamic render pass.
     void recordDraw(size_t di, const StoredDraw & d, const RecordContext & ctx, rv::Ref<rv::Sampler> & defaultSampler, vk::Extent2D ext,
                     const PassFormats & formats);
 };
 
-bool GpuRasterPayloadVulkan::collectPassResources(RasterStateTrackerVulkan & tracker) {
+bool GpuRasterPayloadVulkan::collectPassResources(GpuResourceStateTrackerVulkan & tracker) {
     if (!tracker.addRasterTarget(mRenderTarget)) return false;
     for (size_t di = 0; di < mDraws.size(); ++di) {
         StoredDraw & d = mDraws[di];
@@ -127,7 +127,7 @@ bool GpuRasterPayloadVulkan::collectPassResources(RasterStateTrackerVulkan & tra
     return true;
 }
 
-bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, RasterStateTrackerVulkan & tracker, vk::Extent2D & outExt,
+bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuResourceStateTrackerVulkan & tracker, vk::Extent2D & outExt,
                                                     PassFormats & outFormats) {
     outExt = vk::Extent2D(~0u, ~0u);
 
@@ -154,8 +154,8 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, Rast
         outFormats.colors.push_back(fmt);
 
         // Verify the pre-pass barrier landed the attachment in the expected layout.
-        GN_ASSERT(tracker.attachmentPassLayout(RuntimeType::cast<TextureVulkanBase>(ctView.texture().get()), ctView.imageView.range.i.mip,
-                                               ctView.imageView.range.i.face) == vk::ImageLayout::eColorAttachmentOptimal);
+        GN_ASSERT(tracker.texturePassLayout(RuntimeType::cast<TextureVulkanBase>(ctView.texture().get()), ctView.imageView.range.i.mip,
+                                            ctView.imageView.range.i.face) == vk::ImageLayout::eColorAttachmentOptimal);
 
         vk::RenderingAttachmentInfo att;
         att.setImageView(view)
@@ -182,7 +182,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, Rast
             gfx::img::PixelFormat dpf = dst.imageView.format;
             if (dpf == gfx::img::PixelFormat::UNKNOWN()) dpf = depthTex->descriptor().format;
             outFormats.depth            = pixelFormatToVkFormat(dpf);
-            vk::ImageLayout depthLayout = tracker.attachmentPassLayout(depthTex, dst.imageView.range.i.mip, dst.imageView.range.i.face);
+            vk::ImageLayout depthLayout = tracker.texturePassLayout(depthTex, dst.imageView.range.i.mip, dst.imageView.range.i.face);
             depthAtt.setImageView(depthView)
                 .setImageLayout(depthLayout)
                 .setLoadOp(vk::AttachmentLoadOp::eClear)
@@ -355,8 +355,8 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
 void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     if (!ctx.dev || ctx.cmd.empty() || !ctx.batchTracker) return;
 
-    RasterStateTrackerVulkan & tracker = *ctx.batchTracker;
-    vk::CommandBuffer          vkcb    = ctx.cmd.handle();
+    GpuResourceStateTrackerVulkan & tracker = *ctx.batchTracker;
+    vk::CommandBuffer               vkcb    = ctx.cmd.handle();
 
     // Pass 1: register this pass's resources into the shared batch tracker.
     // The tracker already holds committed state from prior payloads, so it produces

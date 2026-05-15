@@ -219,7 +219,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     // Shared resource-state tracker for this entire submit batch. All payloads use it to
     // compute barriers (reading state committed by prior payloads).
     // Flushed to actual resource objects after successful vkQueueSubmit.
-    RasterStateTrackerVulkan batchTracker;
+    GpuResourceStateTrackerVulkan batchTracker;
 
     // construct a record context.
     GpuPayloadVulkan::RecordContext recordCtx;

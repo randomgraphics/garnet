@@ -23,7 +23,7 @@ GPU abstraction layer v2. Namespace: `GN::gpu2`. Active Vulkan backend; D3D12 an
 | `src/core/gpu2/vk-buffer.h` | `BufferVulkan` |
 | `src/core/gpu2/vk-buffer-state.h` | `BufferStateVulkan` — whole-buffer Vulkan access/stage tracking |
 | `src/core/gpu2/vk-gpu-image-state.h` | `TextureGpuImageState` — per-subresource layout/access/stage tracking |
-| `src/core/gpu2/vk-raster-state-tracker.h` | `RasterStateTrackerVulkan` — batches pre-pass image+buffer barriers |
+| `src/core/gpu2/vk-gpu-resource-state-tracker.h` | `GpuResourceStateTrackerVulkan` — batches pre-pass image+buffer barriers |
 | `src/core/gpu2/vk-gpu-raster.h/cpp` | `GpuRasterVulkan` — records draws, `seal()` → `VkCommandBuffer` |
 | `src/core/gpu2/vk-gpu-shader.h/cpp` | SPIR-V shader module wrapper |
 | `src/core/gpu2/vk-gpu-command-buffer.h/cpp` | `GpuCommandBufferVulkan` — submission + fence tracking |
@@ -78,8 +78,8 @@ GpuContext::pump()           → fire onComplete callbacks
 - `RasterState{RasterState::WithDefaults{}}` — every field set to its logical default; used as the baseline in `RasterTarget::states`.
 - Draw-level overrides are **persistent** within a `GpuRaster` pass until overridden again.
 
-**Barrier management** (`RasterStateTrackerVulkan`):
-1. Register all attachments and resource bindings via `add*()` methods.
+**Barrier management** (`GpuResourceStateTrackerVulkan`):
+1. Register all textures and resource bindings via `add*()` methods.
 2. Call `emitPrePassBarriers(cb)` before `beginRendering`.
 3. After GPU completion, call `flushStatesToResources()` to write final states back.
 - Texture state is per-subresource (`TextureGpuImageState`, indexed by mip × arrayLayer).

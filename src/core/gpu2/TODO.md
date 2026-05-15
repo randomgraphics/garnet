@@ -5,27 +5,26 @@ Need to move majority of work to draw() and seal(). Leave only minimal amount of
 Transient Buffer and Texture Arena
 ===
 Need to figure out how to manage transient data life time. To avoid wasting GPU memory, transient GPU data life time need to be minimized:
-- Delay-allocated right before it is being using by rendering
-- Released/Recycled right after the command buffer that references it is finished by GPU.
-- A natual place is the playload class: it can be the one to allocate transcient buffer
-- instead of generic transcient buffer, define dedicated classes for particular usage of transient data. such as:
-  - upload buffer: upload data from CPU to GPU, mean to be read no more than once by GPU. common case is to copy data to another more permanent resource (texture or buffer).
+- Delay GPU memory allocation as much as possible.
+- Released/Recycled automatically after the command buffer that references it is finished by GPU.
+- Typical user scenarios:
+  - Upload/stream data via map/unmap, one CPU copy cost (to host visible GPU memory), one GPU read cost. Buffer life time is from when buffer is mapped to rendering is done:
     ```c++
-        auto uploadBuffer = gpu->createUploadBuffer();
-        auto mapped = uploadBufer->map();
+        // .
+        auto mappableUploadBuffer = gpu->createStreamingBuffer();
+        auto mapped = uploadBufer->map(); // this is where the GPU buffer is actually allocated and mapped.
         mapped.data = ...;
         mapped.unmap();
         gpu->copyBufferToSomething(uploadBuffer, something);
     ```
-  - one time streaming data:
+  - Upload/Stream data via callback. One CPU copy cost (to host visible GPU memory), one GPU read cost. GPU buffer time is from when rendering starts to rendering finished (minimized).
     ```c++
-        auto streamingTexture = gpu->createStreamingTexture();
-        auto mapped = streamingTexture->map();
-        mapped.data = ...;
-        mapped.unmap();
+        auto streamingTexture = gpu->createStreamingTexture([](void * gpuBuffer, ...){
+          // Copy content to gpuBuffer. Will be called right before drawTexture()
+        });
         gpu->drawTexture(streamingTexture, ...);
     ```
-  - download buffer. copy GPU data back to CPU w/o pipeline stalling:
+  - Download buffer. copy GPU data back to CPU w/o pipeline stalling:
     ```c++
         auto downloadBuffer = createDownloadBuffer();
         auto id = gpu->copySomthingToBuffer(source_sources, downloadBuffer);
@@ -33,5 +32,4 @@ Need to figure out how to manage transient data life time. To avoid wasting GPU 
             auto data = downloadBuffer->map();
             // read data here
         });
-        gpu->pump();
     ```

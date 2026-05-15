@@ -23,7 +23,7 @@ namespace GN::gpu2 {
 ///
 /// After all payloads are recorded and vkQueueSubmit succeeds, call flushToResources() once to
 /// write the batch's final resource states back to actual texture/buffer objects.
-class RasterStateTrackerVulkan {
+class GpuResourceStateTrackerVulkan {
 public:
     /// Returns false if a hazard was detected; the caller should abort the render pass.
     bool addColorTarget(TextureVulkanBase * tex, const GpuResourceView & view);
@@ -45,11 +45,11 @@ public:
     void upgradeForDrawRasterState(const RasterState & drawState);
 
     /// Returns the currently-tracked layout for a single subresource (mip, face) of a tracked
-    /// attachment by querying the incoming (post-barrier) state. For depth-stencil textures whose
+    /// texture by querying the incoming (post-barrier) state. For depth-stencil textures whose
     /// depth and stencil planes have diverged, combines them into the canonical Vulkan split layout.
     /// Returns eUndefined if the texture is not tracked or the subresource has no recorded state.
     /// Must be called after emitPrePassBarriers() — incoming is undefined before the first call.
-    vk::ImageLayout attachmentPassLayout(const TextureVulkanBase * tex, uint32_t mip = 0, uint32_t face = 0) const;
+    vk::ImageLayout texturePassLayout(const TextureVulkanBase * tex, uint32_t mip = 0, uint32_t face = 0) const;
 
     /// Emit pipeline barriers for all resources registered since the last call to this method.
     /// For each resource whose state changed, the barrier "from" side is the current incoming state
@@ -63,10 +63,10 @@ public:
     /// incoming state. For buffers: writes the committed access/stage accumulated this batch.
     void flushToResources();
 
-    bool addAttachment(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state);
+    bool addTexture(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state);
 
 private:
-    struct TrackedAttachment {
+    struct TrackedTexture {
         TextureVulkanBase * tex = nullptr;
         /// Running batch baseline. Initialized from tex->getState() on first registration.
         /// Updated in-place by emitPrePassBarriers() whenever a barrier is emitted for a plane,
@@ -75,11 +75,11 @@ private:
         /// Per-pass intended states. Cleared by emitPrePassBarriers() between payloads.
         std::unordered_map<uint64_t, rv::Image::State::PlaneState> registered;
     };
-    std::unordered_map<uint64_t, TrackedAttachment> mAttachments;
+    std::unordered_map<uint64_t, TrackedTexture> mTextures;
 
     struct TrackedBuffer {
         BufferVulkan * buf = nullptr;
-        /// Running committed state (analogous to TrackedAttachment::incoming for images).
+        /// Running committed state (analogous to TrackedTexture::incoming for images).
         /// Initialized from buf->gpuState on first registration; updated by emitPrePassBarriers().
         vk::AccessFlags        committedAccess = {};
         vk::PipelineStageFlags committedStages = vk::PipelineStageFlagBits::eTopOfPipe;
