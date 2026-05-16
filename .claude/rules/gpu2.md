@@ -87,6 +87,10 @@ GpuContext::pump()           → fire onComplete callbacks
 
 **`GpuPayload`** is the currency for GPU-side ordering: `submit().waitForGpu` takes payloads; `Swapchain::Frame::ready` and `Swapchain::present()` also use payloads.
 
+**`Texture::setContent()` / `Buffer::setContent()`** — convenience helpers that allocate an internal staging buffer, upload, submit a GPU copy, and **block the CPU until the GPU copy completes**. Intended only for unit tests and one-shot initialisation (e.g. loading a static mesh offline). Never call them on the render-critical path or in any per-frame code. For per-frame uploads (UBOs, streaming data), create a mappable staging buffer, write via `buffer->map()`, then record a `GpuCnC::copyBufferToBuffer` and submit the resulting `GpuPayload` explicitly.
+
+**`Texture::readback()` / `Buffer::readContent()`** — same caveat as `setContent()`; stall CPU + GPU and are only for debugging or offline readback.
+
 ## Conventions Specific to This Module
 
 - Vulkan types live behind `vk::` (Vulkan-Hpp). `rv::` is the `rapid-vulkan` namespace aliased to `GN::gpu2::rv`.
