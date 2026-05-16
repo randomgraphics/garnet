@@ -207,18 +207,20 @@ struct Texture : RootEntity {
             false; ///< If false, return existing texture if the file has been loaded before. If true, always load a new texture instance from file.
     };
 
-    /// Load texture from file. Returns a texture named after the file name.
-    static GN_API AutoRef<Texture> load(const LoadParameters & params);
-
     virtual const Descriptor & descriptor() const = 0;
 
-    /// Convenience method to read the texture content into an image. Stalls CPU and GPU. Slow. Do NOT use in performance-sensitive code or render loop.
+    /// Convenience method to read the texture content into an image. Stalls CPU and GPU.
+    /// Slow. Do NOT use in performance-sensitive code or render loop.
     virtual gfx::img::Image readback() const = 0;
 
     /// Convenience method to set content of the whole texture from an image. Stalls CPU and GPU. Slow. Do NOT use in performance-sensitive code or render loop.
     /// The method assumes the input image has the same format and dimensions as the texture. It'll simply reject the image and fail,
     /// if the input image does not completely match the texture's format and dimensions.
     virtual bool setContent(const gfx::img::Image & image) = 0;
+
+    /// Convenience method to load texture from file. Returns a texture named after the file name.
+    /// Slow. Do NOT use in production code.
+    static GN_API AutoRef<Texture> load(const LoadParameters & params);
 
 protected:
     using RootEntity::RootEntity;
