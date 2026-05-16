@@ -17,7 +17,7 @@
 using namespace GN;
 using namespace GN::gpu2;
 
-#include "gpu2-test-helpers.h"
+    #include "gpu2-test-helpers.h"
 
 // ---------------------------------------------------------------------------
 // Tests

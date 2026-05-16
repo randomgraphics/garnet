@@ -15,7 +15,8 @@ inline AutoRef<GpuContext> makeGpu() {
 inline AutoRef<Texture> makeRgba8Tex(const AutoRef<GpuContext> & gpu, const char * name, uint32_t w, uint32_t h) {
     // Vulkan render-attachment image views require levelCount=1; single mip also avoids
     // mip-chain allocation for these small test textures.
-    return Texture::create(name, {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(w, h).setLevels(1)});
+    return Texture::create(name,
+                           {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(w, h).setLevels(1)});
 }
 
 inline AutoRef<GpuShader> makeShader(const AutoRef<GpuContext> & gpu, const char * name, const void * binary, size_t byteSize) {

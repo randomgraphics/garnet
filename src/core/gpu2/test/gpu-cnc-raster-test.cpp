@@ -1,22 +1,22 @@
 #if GN_BUILD_HAS_VULKAN
 
-// Include the Vulkan context header first — it pulls in rapid-vulkan before any other TU can
-// do so (ODR risk enforced by a #error guard in vk-gpu-context.h).
-#include "../vk-gpu-context.h"
-#include "mixed-cnc-raster-comp.spv.h"
-#include "rtt-fullscreen-vert.spv.h"
-#include "rtt-fullscreen-frag.spv.h"
+    // Include the Vulkan context header first — it pulls in rapid-vulkan before any other TU can
+    // do so (ODR risk enforced by a #error guard in vk-gpu-context.h).
+    #include "../vk-gpu-context.h"
+    #include "mixed-cnc-raster-comp.spv.h"
+    #include "rtt-fullscreen-vert.spv.h"
+    #include "rtt-fullscreen-frag.spv.h"
 
-#include <catch2/catch_test_macros.hpp>
-#include <garnet/GNgpu2.h>
-#include <atomic>
-#include <cstring>
-#include <vector>
+    #include <catch2/catch_test_macros.hpp>
+    #include <garnet/GNgpu2.h>
+    #include <atomic>
+    #include <cstring>
+    #include <vector>
 
 using namespace GN;
 using namespace GN::gpu2;
 
-#include "gpu2-test-helpers.h"
+    #include "gpu2-test-helpers.h"
 
 // ---------------------------------------------------------------------------
 // Test: CnC upload → raster sample → compute copy → readback
@@ -27,12 +27,12 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    constexpr uint32_t W            = 8, H = 8;
+    constexpr uint32_t W = 8, H = 8;
     constexpr uint32_t PIXEL_COUNT = W * H;
 
     // Create all three textures
     auto sourceTex    = makeRgba8Tex(gpu, "source", W, H); // upload destination
-    auto renderTarget = makeRgba8Tex(gpu, "rt",     W, H); // raster color attachment
+    auto renderTarget = makeRgba8Tex(gpu, "rt", W, H);     // raster color attachment
     auto outputTex    = makeRgba8Tex(gpu, "output", W, H); // compute output
     if (!sourceTex || !renderTarget || !outputTex) SKIP("RGBA8 textures unavailable");
 

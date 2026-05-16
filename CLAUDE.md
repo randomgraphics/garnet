@@ -71,6 +71,30 @@ Guidelines:
 
 This rule overrides the default "write no comments" stance.
 
+### Doxygen Style
+
+Use Doxygen-style doc comments for all public API declarations (classes, structs, functions, enums, and non-obvious members). Use `///` for single-line doc comments and `/** ... */` for multi-line blocks.
+
+```cpp
+/// Brief one-line description.
+/// @param x Meaning of x, including units or constraints if non-obvious.
+/// @return What the return value represents; omit if void or obvious.
+/// @note Use for important caveats (thread safety, ownership, lifetime).
+void foo(int x);
+
+/**
+ * Longer description when a single line isn't enough.
+ *
+ * Explain the non-obvious contract, invariants, or usage pattern here.
+ * @param a ...
+ */
+class Bar { ... };
+```
+
+Prefer `@param` / `@return` / `@note` over `\param` / `\return` / `\note` (Qt-style `@` tag prefix is consistent across this codebase).
+
+Do **not** add doc comments to private implementation details, local variables, or trivial getters whose names are self-explanatory.
+
 ## Architecture
 
 ### Module Map

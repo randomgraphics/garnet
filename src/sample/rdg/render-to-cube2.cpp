@@ -61,9 +61,10 @@ static constexpr uint32_t kCubemapSize = 512;
 //
 // Resources common to all renderer classes, passed by const reference.
 struct SharedCtx {
-    AutoRef<Graph>      graph;
-    AutoRef<GpuContext> gpu;
-    uint32_t            width, height;
+    AutoRef<Graph>                       graph;
+    AutoRef<GpuContext>                  gpu;
+    AutoRef<rdg2::SharedShaderConstants> ssc;
+    uint32_t                             width, height;
 };
 
 // Build a view that addresses exactly one face (one mip, one array layer).
@@ -330,13 +331,13 @@ public:
 
     // Adds the per-frame draw-cube node. outPayload is filled when the node executes.
     // Returns the node handle to wait on.
-    NodePtr addFrameNode(const TokenPtr & cubemapToken, const AutoRef<Texture> & cubemap, const GpuResourceView & swapView, float elapsed,
-                         AutoRef<GpuPayload> & outPayload) {
+    NodePtr addFrameNode(const TokenPtr & cubemapToken, const TokenPtr & sscToken, const AutoRef<Texture> & cubemap, const GpuResourceView & swapView,
+                         float elapsed, AutoRef<GpuPayload> & outPayload) {
         return mCtx.graph->addNode(
             NodeDesc("draw cube")
                 .setAction(Action::createFromLambda(
                                "render rotating cube",
-                               [this, cubemap, swapView, elapsed, &outPayload]() {
+                               [this, cubemap, swapView, elapsed, sscToken, &outPayload]() {
                                    auto vs = mCtx.graph->getTypedArtifactContent<AutoRef<GpuShader>>(mVsArtifact);
                                    auto ps = mCtx.graph->getTypedArtifactContent<AutoRef<GpuShader>>(mPsArtifact);
                                    if (!vs || !ps) {
@@ -344,13 +345,13 @@ public:
                                        return;
                                    }
 
-                                   const float     aspect = (float) mCtx.width / (float) mCtx.height;
-                                   const glm::mat4 model  = glm::rotate(glm::mat4(1.0f), elapsed * 0.5f, glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f)));
-                                   const glm::mat4 view   = glm::lookAtRH(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-                                   // perspectiveRH_ZO matches Vulkan depth range [0,1]; flip Y for Vulkan's Y-down NDC.
-                                   glm::mat4 proj = glm::perspectiveRH_ZO(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-                                   proj[1][1] *= -1.0f;
-                                   glm::mat4 mvp = proj * view * model;
+                                   auto sscContent = mCtx.ssc->getContent(sscToken);
+                                   if (!sscContent) {
+                                       GN_ERROR(sLogger)("CubeDraw: SSC content unavailable");
+                                       return;
+                                   }
+
+                                   glm::mat4 model = glm::rotate(glm::mat4(1.f), elapsed * 0.5f, glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f)));
 
                                    GpuResourceView depthView;
                                    depthView.resource = mDepthTex;
@@ -373,21 +374,26 @@ public:
                                    geom.indices    = RasterGeometry::GeometryBuffer {.buffer = mIb, .offset = 0, .stride = sizeof(uint16_t)};
                                    geom.indexCount = kIndexCount;
 
-                                   // Bind the cubemap at set=0, binding=0 for the fragment shader's samplerCube.
+                                   // set=0 → SSC resources (camera + scene UBOs + env textures)
+                                   // set=1, binding=0 → assembled cubemap
                                    GpuResourceView cubeView;
                                    cubeView.resource = cubemap;
+                                   GpuResourceSet cubeSet;
+                                   cubeSet.resize(1);
+                                   cubeSet[0].resize(1);
+                                   cubeSet[0][0] = cubeView;
+
                                    GpuResourceTable resources;
-                                   resources.resize(1);
-                                   resources[0].resize(1);
-                                   resources[0][0].resize(1);
-                                   resources[0][0][0] = cubeView;
+                                   resources.append(sscContent->set0Resources); // set 0
+                                   resources.append(cubeSet);                   // set 1
 
                                    GpuRaster::DrawParameters dp;
-                                   dp.vs         = vs;
-                                   dp.ps         = ps;
-                                   dp.geometry   = geom;
-                                   dp.resources  = resources;
-                                   dp.immediates = gpu2::ArrayProxy<uint8_t>(reinterpret_cast<uint8_t *>(&mvp), sizeof(mvp));
+                                   dp.vs        = vs;
+                                   dp.ps        = ps;
+                                   dp.geometry  = geom;
+                                   dp.resources = resources;
+                                   // Push constant: model matrix only (view+proj come from camera UBO)
+                                   dp.immediates = gpu2::ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(&model), sizeof(model));
 
                                    auto rast = GpuRaster::create(rcp);
                                    rast->draw(dp);
@@ -395,6 +401,7 @@ public:
                                }),
                            nullptr)
                 .dependsOn(cubemapToken)
+                .dependsOn(sscToken)
                 .dependsOn(mVsReady)
                 .dependsOn(mPsReady));
     }
@@ -529,7 +536,10 @@ int main(int argc, const char ** argv) {
     auto graph = Graph::create();
     if (!graph) return -1;
 
-    SharedCtx ctx {.graph = graph, .gpu = gpuContext, .width = windowWidth, .height = windowHeight};
+    auto ssc = rdg2::SharedShaderConstants::create({.gpu = gpuContext, .graph = graph});
+    if (!ssc) return -1;
+
+    SharedCtx ctx {.graph = graph, .gpu = gpuContext, .ssc = ssc, .width = windowWidth, .height = windowHeight};
 
     // ── Swapchain ──────────────────────────────────────────────────────────────
     Swapchain::CreateDesc scDesc {.gpu = gpuContext, .width = windowWidth, .height = windowHeight};
@@ -543,6 +553,9 @@ int main(int argc, const char ** argv) {
 
     auto cubeDraw = CubeDraw::create(ctx);
     if (!cubeDraw.valid()) return -1;
+
+    // Pre-allocate slot 0 so per-frame setColorTarget(0, ...) is an update, not an append.
+    ssc->set0.renderTarget.colorTargets.append(RasterTarget::ColorTarget {});
 
     GN_INFO(sLogger)("Starting render loop...");
 
@@ -560,6 +573,23 @@ int main(int argc, const char ** argv) {
 
         const float elapsed = std::chrono::duration<float>(std::chrono::steady_clock::now() - startTime).count();
 
+        // Camera: fixed at +Z looking at origin.
+        // Build camToWorld from the lookAt view inverse so the orientation quaternion
+        // that SSC's UBO packer expects is consistent with the view matrix it will derive.
+        {
+            static const glm::vec3 kEye(0.f, 0.f, 3.f), kTarget(0.f), kUp(0.f, 1.f, 0.f);
+            glm::mat4              camToWorld     = glm::inverse(glm::lookAtRH(kEye, kTarget, kUp));
+            ssc->set0.camera.cameraPosition       = kEye;
+            ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
+            ssc->set0.camera.cameraFov            = Degree(45.f);
+            ssc->set0.camera.aspectRatio          = (float) windowWidth / (float) windowHeight;
+            ssc->set0.camera.nearPlane            = 0.1f;
+            ssc->set0.camera.farPlane             = 100.f;
+            ssc->set0.frameConstants.frameCounter = (uint32_t) frameCounter;
+            ssc->set0.renderTarget.setColorTarget(0, frame.view);
+        }
+        TokenPtr sscToken = ssc->takeSnapshot();
+
         std::vector<AutoRef<GpuPayload>> cubemapPayloads;
         AutoRef<GpuPayload>              presentPayload;
 
@@ -571,7 +601,7 @@ int main(int argc, const char ** argv) {
 
         // The draw-cube node depends on cubemapThisFrame so it only runs after this
         // frame's cubemap has been published.
-        NodePtr presentNode = cubeDraw.addFrameNode(cubemapThisFrame, cubemapRenderer.cubemap(), frame.view, elapsed, presentPayload);
+        NodePtr presentNode = cubeDraw.addFrameNode(cubemapThisFrame, sscToken, cubemapRenderer.cubemap(), frame.view, elapsed, presentPayload);
 
         graph->waitForToken(graph->getNodeCompletionToken(presentNode));
 
@@ -581,9 +611,12 @@ int main(int argc, const char ** argv) {
         // guard against the previous frame's cubemap write) and frame.ready
         // (swapchain image acquisition).
         {
+            // Chain UBO upload as a GPU-side dependency so UBO data lands before the draw.
+            auto                         sscContent = ssc->getContent(sscToken);
             GpuContext::SubmitParameters sp(StrA::format("frame {}", frameCounter));
             if (cubemapRenderer.prevPayload) sp.waitFor(cubemapRenderer.prevPayload);
             sp.waitFor(frame.ready);
+            if (sscContent && sscContent->set0Payload) sp.waitFor(sscContent->set0Payload);
             sp.appendWorks(cubemapPayloads);
             sp.appendWork(presentPayload);
             gpuContext->submit(sp);

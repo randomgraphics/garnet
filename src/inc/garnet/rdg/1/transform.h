@@ -48,6 +48,10 @@ struct Radian {
 
     constexpr Radian(Degree degree);
 
+    // Explicit copy constructor required to suppress -Wdeprecated-copy-with-user-provided-copy
+    // (the user-provided copy assignment operator below would otherwise suppress the implicit copy constructor).
+    constexpr Radian(const Radian &) = default;
+
     constexpr Radian & operator=(const Radian & other) {
         value = other.value;
         return *this;

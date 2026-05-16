@@ -80,6 +80,7 @@ add_custom_command(
   COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
           ${_cube_draw_vert_src} ${_cube_draw_frag_src}
           --out-dir ${CMAKE_CURRENT_BINARY_DIR}
+          -I ${CMAKE_SOURCE_DIR}/src/core/rdg/2/vk-shaders
   DEPENDS ${_cube_draw_vert_src} ${_cube_draw_frag_src} ${_compile_tool}
   COMMENT "Compiling cube-draw GLSL to SPIR-V headers"
 )

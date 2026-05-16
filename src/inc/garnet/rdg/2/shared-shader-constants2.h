@@ -1,14 +1,22 @@
 #if !defined(__GN_INSIDE_RDG2_H__)
-    #error "Do not include <garnet/rdg/2/open-graph.h> directly. Include <garnet/GNrdg2.h> instead."
+    #error "Do not include <garnet/rdg/2/shared-shader-constants2.h> directly. Include <garnet/GNrdg2.h> instead."
 #endif
 
 namespace GN::rdg2 {
 
 struct SharedShaderConstants : public Entity {
 
-    using FrameConstants               = GN::rdg::SharedShaderConstants::FrameInformation;
-    using DirectLight                  = GN::rdg::SharedShaderConstants::DirectLight;
-    using EnvironmentLightingConstants = GN::rdg::SharedShaderConstants::EnvironmentLightingInformation;
+    using FrameConstants = GN::rdg::SharedShaderConstants::FrameInformation;
+    using DirectLight    = GN::rdg::SharedShaderConstants::DirectLight;
+    /// Environment lighting textures and uniform scale. Fields default to fallback
+    /// 1×1 textures created at SSC construction; assign real textures to replace them.
+    struct EnvironmentLightingConstants {
+        AutoRef<GN::gpu2::Texture> skyboxCubemap;     ///< env cubemap rendered as background
+        AutoRef<GN::gpu2::Texture> irradianceMap;     ///< pre-convolved diffuse-IBL cubemap
+        AutoRef<GN::gpu2::Texture> prefilteredEnvMap; ///< mip-mapped specular-IBL cubemap
+        AutoRef<GN::gpu2::Texture> brdfLut;           ///< split-sum BRDF LUT
+        float                      environmentRadianceScale = 1.f;
+    };
 
     struct CameraConstants {
         Location    cameraPosition    = {0, 0, 0};            ///< camera position in world space
@@ -37,7 +45,7 @@ struct SharedShaderConstants : public Entity {
         /// action via SharedShaderConstants::getContent.
         GN::gpu2::GpuResourceSet set0Resources;
 
-        /// The GPU payload. If it not empty, it must be sumitted to GPU to actually update
+        /// The GPU payload. If it not empty, it is user's responsibility to submit it to GPU to actually update
         /// set0Resources to match the value of set0Parameters.
         AutoRef<GN::gpu2::GpuPayload> set0Payload;
     };
@@ -51,9 +59,9 @@ struct SharedShaderConstants : public Entity {
     // this snapshot inside a Node action.
     virtual TokenPtr takeSnapshot() const = 0;
 
-    // Retrieve the content of set0 when to token is created.
+    // Retrieve the constant content of set0 when to token is created.
     // This method should only be called inside an Node action. Calling it from outside of a Node action is considered undefined behavior.
-    virtual AutoRef<Content> getContent(TokenPtr) const = 0;
+    virtual AutoRef<const Content> getContent(TokenPtr) const = 0;
 
     struct CreateParameters {
         AutoRef<GN::gpu2::GpuContext> gpu;

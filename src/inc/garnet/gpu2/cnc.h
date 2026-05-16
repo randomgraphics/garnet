@@ -18,12 +18,12 @@ public:
     GN_API static AutoRef<GpuCnC> create(const CreateParameters &);
 
     struct ComputeParameters {
-        AutoRef<GpuShader>      cs;
-        GpuResourceTable        resources;  ///< shader resources
-        ArrayContainer<uint8_t> immediates; ///< immediate constants. Backend copies to GPU when non-empty.
-        uint32_t                x = 1;
-        uint32_t                y = 1;
-        uint32_t                z = 1;
+        AutoRef<GpuShader>        cs;
+        GpuResourceTable          resources;  ///< shader resources
+        ArrayProxy<const uint8_t> immediates; ///< immediate constants (non-owning view). Backend copies to GPU when non-empty.
+        uint32_t                  x = 1;
+        uint32_t                  y = 1;
+        uint32_t                  z = 1;
     };
     virtual void compute(const ComputeParameters &) = 0;
 
