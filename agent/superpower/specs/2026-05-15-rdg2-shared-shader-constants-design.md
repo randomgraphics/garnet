@@ -142,6 +142,23 @@ mMutex                mutable std::mutex      // guards mContentMap
 
 Lock `mMutex`; look up `mContentMap[t]`; return content (empty ref if not found).
 
+### Content map lifetime / eviction
+
+Entries are evicted lazily at the top of each `takeSnapshot()` call. With the single-worker graph and the `waitForToken(renderNodeCompletion)` blocking pattern used by callers, frame N's render node is guaranteed to have called `getContent()` and released its local ref before frame N+1 calls `takeSnapshot()`. Therefore, any map entry whose upload token is already satisfied is safe to remove:
+
+```cpp
+// At the top of takeSnapshot(), before inserting the new entry:
+for (auto it = mContentMap.begin(); it != mContentMap.end(); ) {
+    // waitForToken returns IDLE immediately (non-blocking) if already satisfied.
+    if (mGraph->waitForToken(it->first) == Graph::WaitResult::IDLE)
+        it = mContentMap.erase(it);
+    else
+        ++it;
+}
+```
+
+Map size stays bounded by the number of concurrently in-flight frames (typically 2–3).
+
 ### Camera matrix packing
 
 Same as v1: `viewMatrix = inverse(translate(pos) * mat4_cast(orientation))`, `projMatrix = perspectiveRH_ZO(fov, aspect, near, far)` with Y-flip for Vulkan NDC, `viewProjMatrix = proj * view`. Render-target size deduced from first valid color target or depth target in `snapshot.renderTarget`.
