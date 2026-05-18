@@ -1,5 +1,5 @@
+#include "pch.h"
 #define RAPID_VULKAN_IMPLEMENTATION
-#define RAPID_VULKAN_EXTERNAL_C_IMPL
 #include "vk-gpu-context.h"
 #include "vk-raster-pso-factory.h"
 #include "vk-format-utils.h"

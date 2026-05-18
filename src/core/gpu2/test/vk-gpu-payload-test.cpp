@@ -35,7 +35,7 @@ TEST_CASE("GpuPayloadVulkan: semaphore() is null before any setSemaphore call", 
 
 TEST_CASE("GpuPayloadVulkan: setSemaphore(vk::Semaphore) sets semaphore()", "[gpu2][payload]") {
     auto          p = AutoRef<InstrumentedPayload>::make("native-sem");
-    vk::Semaphore fake {(VkSemaphore) 0xDEAD0001};
+    vk::Semaphore fake {(VkSemaphore) (intptr_t) 0xDEAD0001};
     p->setSemaphore(fake);
     CHECK(p->semaphore() == fake);
 }

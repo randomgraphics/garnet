@@ -1,3 +1,4 @@
+#include "pch.h"
 // vk-gpu-context.h must precede any other rapid-vulkan include in this TU (ODR guard).
 #include "vk-gpu-cnc.h"
 #include "vk-gpu-context.h"
@@ -21,10 +22,10 @@ namespace {
 // ── Stored operation records (built during compute/copy calls, consumed by seal/record) ──
 
 struct StoredCompute {
-    AutoRef<GpuShader> cs;
-    GpuResourceTable   resources;
-    DynaArray<uint8_t> immediates;
-    uint32_t           x = 1, y = 1, z = 1;
+    AutoRef<GpuShader>  cs;
+    GpuResourceTable    resources;
+    AutoRef<const Blob> immediates;
+    uint32_t            x = 1, y = 1, z = 1;
 };
 
 struct StoredBufferToBuffer {
@@ -36,9 +37,9 @@ struct StoredBufferToBuffer {
 };
 
 struct StoredBufferToImage {
-    AutoRef<Buffer>           src;
-    AutoRef<Texture>          dst;
-    DynaArray<GpuCnC::Region> regions;
+    AutoRef<Buffer>                          src;
+    AutoRef<Texture>                         dst;
+    DynaArray<Buffer::StagedTexture::Region> regions;
 };
 
 using StoredOp = std::variant<StoredCompute, StoredBufferToBuffer, StoredBufferToImage>;
@@ -126,11 +127,11 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
     dcp.setPipeline(pipeline);
     rv::Drawable drawable(dcp);
 
-    if (!op.immediates.empty()) {
-        if (op.immediates.size() > 128) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncPayloadVulkan: immediates size {} exceeds 128 bytes", op.immediates.size());
+    if (op.immediates && !op.immediates->empty()) {
+        if (op.immediates->size() > 128) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GpuCncPayloadVulkan: immediates size {} exceeds 128 bytes", op.immediates->size());
             }
-        else { drawable.c(0, op.immediates.size(), op.immediates.data(), vk::ShaderStageFlagBits::eCompute); }
+        else { drawable.c(0, op.immediates->size(), op.immediates->data(), vk::ShaderStageFlagBits::eCompute); }
     }
 
     rv::Ref<rv::Sampler> defaultSampler;
@@ -256,7 +257,7 @@ void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::Com
         c.setBufferOffset(r.bufferOffset)
             .setBufferRowLength(r.bufferRowLength)
             .setBufferImageHeight(r.bufferHeight)
-            .setImageSubresource({aspects, r.imageSubresource.mip, r.imageSubresource.face, 1})
+            .setImageSubresource({aspects, r.mip, r.face, 1})
             .setImageOffset({(int32_t) r.imageOffset.x, (int32_t) r.imageOffset.y, (int32_t) r.imageOffset.z})
             .setImageExtent({r.imageExtent.x, r.imageExtent.y, r.imageExtent.z});
         copies.push_back(c);
@@ -301,12 +302,12 @@ public:
                 return;
             }
         StoredCompute op;
-        op.cs        = cp.cs;
-        op.resources = cp.resources;
-        op.x         = cp.x;
-        op.y         = cp.y;
-        op.z         = cp.z;
-        if (cp.immediates.data() && cp.immediates.size() > 0) op.immediates.append(cp.immediates.data(), (size_t) cp.immediates.size());
+        op.cs         = cp.cs;
+        op.resources  = cp.resources;
+        op.x          = cp.x;
+        op.y          = cp.y;
+        op.z          = cp.z;
+        op.immediates = cp.immediates;
         mOps.emplace_back(std::move(op));
     }
 

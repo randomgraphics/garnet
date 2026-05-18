@@ -18,12 +18,12 @@ public:
     GN_API static AutoRef<GpuCnC> create(const CreateParameters &);
 
     struct ComputeParameters {
-        AutoRef<GpuShader>        cs;
-        GpuResourceTable          resources;  ///< shader resources
-        ArrayProxy<const uint8_t> immediates; ///< immediate constants (non-owning view). Backend copies to GPU when non-empty.
-        uint32_t                  x = 1;
-        uint32_t                  y = 1;
-        uint32_t                  z = 1;
+        AutoRef<GpuShader>  cs;
+        GpuResourceTable    resources;  ///< shader resources
+        AutoRef<const Blob> immediates; ///< reference counted immediate constants.
+        uint32_t            x = 1;
+        uint32_t            y = 1;
+        uint32_t            z = 1;
     };
     virtual void compute(const ComputeParameters &) = 0;
 
@@ -37,29 +37,23 @@ public:
 
     virtual void copyBufferToBuffer(const BufferToBuffer &) = 0;
 
-    struct Region {
-        GpuResourceView::SubresourceIndex imageSubresource;
-        Vector3<uint32_t>                 imageOffset;
-        Vector3<uint32_t>                 imageExtent;
-
-        /// Byte offset from the start of the source buffer to the first texel of this region.
-        uint64_t bufferOffset = 0;
-
-        /// Row length in pixels of the image data in the buffer. 0 = use imageExtent.x.
-        uint32_t bufferRowLength = 0;
-
-        /// Image height in pixels of the image data in the buffer. 0 = use imageExtent.y.
-        uint32_t bufferHeight = 0;
-    };
+    /// Describes one buffer→image copy region. Reuses Buffer::StagedTexture::Region
+    /// to allow direct pass-through from loadTextureToStagingBuffer() without conversion.
+    using Region = Buffer::StagedTexture::Region;
 
     /// Upload pixel data from a CPU-visible (mappable) staging buffer into a texture.
     struct BufferToImage {
-        AutoRef<Buffer>    src; ///< CPU-visible staging buffer.
-        AutoRef<Texture>   dst;
-        ArrayProxy<Region> regions;
+        AutoRef<Buffer>          src; ///< CPU-visible staging buffer.
+        AutoRef<Texture>         dst;
+        ArrayProxy<const Region> regions;
     };
 
     virtual void copyBufferToImage(const BufferToImage &) = 0;
+
+    /// Convenience: upload all regions from a StagedTexture into dst without any conversion.
+    void copyBufferToImage(const Buffer::StagedTexture & staged, AutoRef<Texture> dst) {
+        copyBufferToImage({.src = staged.staging, .dst = std::move(dst), .regions = staged.regions});
+    }
 
     /// Seal the object. Generate payload for all enqueued operations.
     virtual AutoRef<GpuPayload> seal() = 0;

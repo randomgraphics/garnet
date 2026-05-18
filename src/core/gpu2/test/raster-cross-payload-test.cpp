@@ -43,7 +43,7 @@ struct TrackerPayload : GpuPayloadVulkan {
 
 static AutoRef<GpuContext> makeGpu() {
     // Enable Vulkan validation in debug builds; a wrong oldLayout triggers a break there.
-    return GpuContext::create("gpu", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE, .debug = GpuContext::DebugMode::ENABLED});
+    return GpuContext::create("gpu", {.debug = GpuContext::DebugMode::ENABLED, .howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
 }
 
 static AutoRef<Texture> makeColorTex(const AutoRef<GpuContext> & gpu, const char * name = "tex") {

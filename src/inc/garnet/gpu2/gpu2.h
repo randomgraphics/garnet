@@ -320,6 +320,31 @@ struct Buffer : public RootEntity {
     /// \return The bytes read, or an empty vector on failure.
     virtual std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const = 0;
 
+    /// Result of loading a texture image file into a CPU-visible staging buffer.
+    /// Pass to GpuCnC::copyBufferToImage() and Texture::create(); keep staging alive
+    /// until the GPU copy payload completes.
+    struct StagedTexture {
+        struct Region {
+            uint32_t          mip             = 0;
+            uint32_t          face            = 0;
+            Vector3<uint32_t> imageOffset     = {};
+            Vector3<uint32_t> imageExtent     = {};
+            uint64_t          bufferOffset    = 0;
+            uint32_t          bufferRowLength = 0; ///< 0 = tight (same as imageExtent.x)
+            uint32_t          bufferHeight    = 0; ///< 0 = tight (same as imageExtent.y)
+        };
+        AutoRef<Buffer>        staging;    ///< host-visible; keep alive until GPU copy completes
+        Texture::Descriptor    descriptor; ///< use with Texture::create() for the GPU-side texture
+        ArrayContainer<Region> regions;    ///< one entry per face×mip
+        bool                   empty() const { return !staging; }
+    };
+
+    /// Load a texture image file into a CPU-visible staging buffer. No GPU operations.
+    /// Thread-safe; call from any worker thread without affecting the render loop.
+    /// Uses rapid-image to decode; supports DDS, KTX, and common formats.
+    /// @return StagedTexture with empty()==true on failure.
+    static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, const StrA & path);
+
 protected:
     virtual void unmap(const Mapped &) = 0;
 

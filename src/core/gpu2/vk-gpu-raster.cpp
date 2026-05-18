@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "vk-gpu-raster.h"
-#include <garnet/GNrdg2.h>
 #include "vk-format-utils.h"
 #include "gpu-context.h"
 #include "vk-raster-pso-factory.h" // includes vk-gpu-context.h + vk-gpu-shader.h
@@ -17,11 +17,11 @@ namespace GN::gpu2 {
 namespace {
 
 struct StoredDraw {
-    AutoRef<GpuShader> vs, hs, ds, gs, ps;
-    RasterState        states;
-    RasterGeometry     geometry;
-    GpuResourceTable   resources;
-    DynaArray<uint8_t> immediates;
+    AutoRef<GpuShader>  vs, hs, ds, gs, ps;
+    RasterState         states;
+    RasterGeometry      geometry;
+    GpuResourceTable    resources;
+    AutoRef<const Blob> immediates;
 
     // Populated during pass 1 (collectPassResources); read during pass 2 (recordDraw).
     std::vector<uint64_t> invalidResourceIds;     ///< resource IDs rejected by tracker; skip their bindings
@@ -249,12 +249,12 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
     rv::Drawable drawable(dcp);
 
     // Push constants.
-    if (!d.immediates.empty()) {
-        if (d.immediates.size() > 128) GN_UNLIKELY {
-                GN_ERROR(sLogger)("RasterPassPayload: immediates size {} exceeds 128", d.immediates.size());
+    if (d.immediates && !d.immediates->empty()) {
+        if (d.immediates->size() > 128) GN_UNLIKELY {
+                GN_ERROR(sLogger)("RasterPassPayload: immediates size {} exceeds 128", d.immediates->size());
             }
         // eAllGraphics so fragment shaders can also declare layout(push_constant) blocks.
-        else { drawable.c(0, d.immediates.size(), d.immediates.data(), vk::ShaderStageFlagBits::eAllGraphics); }
+        else { drawable.c(0, d.immediates->size(), d.immediates->data(), vk::ShaderStageFlagBits::eAllGraphics); }
     }
 
     // --- Descriptor binding from resource table ---
@@ -407,8 +407,7 @@ public:
         s.resources    = dp.resources;
         s.states       = mCreateParams.target.states;
         mergeRenderState(s.states, dp.states);
-        s.immediates.clear();
-        if (dp.immediates.data() && dp.immediates.size() > 0) { s.immediates.append(dp.immediates.data(), (size_t) dp.immediates.size()); }
+        s.immediates = dp.immediates;
     }
 
     AutoRef<GpuPayload> seal() override {

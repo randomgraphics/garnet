@@ -1,10 +1,10 @@
+#include "pch.h"
 #include "gpu-context.h"
 #include "vk-buffer.h"
 #include "vk-gpu-cnc.h"
 #include "vk-gpu-raster.h"
 #include "vk-gpu-shader.h"
 #include "vk-texture.h"
-#include <garnet/GNrdg2.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
 

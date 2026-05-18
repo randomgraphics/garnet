@@ -1,7 +1,7 @@
+#include "pch.h"
 // DISABLED: superseded by GpuPayloadVulkan::recordForVulkanSubmit. See vk-gpu-command-buffer.h.
 #if 0
     #include "vk-gpu-command-buffer.h"
-    #include <garnet/GNrdg2.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 

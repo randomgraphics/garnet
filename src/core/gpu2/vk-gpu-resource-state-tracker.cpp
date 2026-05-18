@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "vk-gpu-resource-state-tracker.h"
 #include "vk-gpu-context.h"
 
@@ -542,8 +543,9 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
     if (!srcStages) srcStages = vk::PipelineStageFlagBits::eTopOfPipe;
     if (!dstStages) dstStages = vk::PipelineStageFlagBits::eBottomOfPipe;
 
-    cb.pipelineBarrier(srcStages, dstStages, {}, nullptr, vk::ArrayProxy<const vk::BufferMemoryBarrier>(bufferBarriers.size(), bufferBarriers.data()),
-                       vk::ArrayProxy<const vk::ImageMemoryBarrier>(barriers.size(), barriers.data()));
+    cb.pipelineBarrier(srcStages, dstStages, {}, nullptr,
+                       vk::ArrayProxy<const vk::BufferMemoryBarrier>((uint32_t) bufferBarriers.size(), bufferBarriers.data()),
+                       vk::ArrayProxy<const vk::ImageMemoryBarrier>((uint32_t) barriers.size(), barriers.data()));
 }
 
 void GpuResourceStateTrackerVulkan::flushToResources() {

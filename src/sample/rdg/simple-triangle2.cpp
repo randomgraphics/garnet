@@ -12,6 +12,14 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.rdg");
 
+struct ShaderArtifactContent final : public Entity {
+    GN_REGISTER_RUNTIME_TYPE(Entity);
+
+    AutoRef<GpuShader> shader;
+
+    explicit ShaderArtifactContent(AutoRef<GpuShader> shader_): Entity(TYPE_INFO(), "ShaderArtifactContent"), shader(std::move(shader_)) {}
+};
+
 /// Read back the freshly rendered backbuffer and verify the corner pixel matches
 /// the clear color (blue) and the center pixel matches the triangle color (red).
 /// The triangle covers the central ~1/3 of the screen in NDC (see solid-triangle.vert),
@@ -103,8 +111,8 @@ int main(int argc, const char ** argv) {
                             auto ps = GpuShader::create(
                                 {.context = gpuContext, .name = "solid triangle PS", .binary = fragBlob->data(), .size = fragBlob->size(), .entry = "main"});
                             if (!vs || !ps) return;
-                            graph->publishArtifact(solidVs, vs);
-                            graph->publishArtifact(solidPs, ps);
+                            graph->publishArtifact(solidVs, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
+                            graph->publishArtifact(solidPs, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(ps)));
                         }),
                     nullptr))) {
         return -1;
@@ -134,9 +142,9 @@ int main(int argc, const char ** argv) {
         // create the main rendering node.
         AutoRef<GpuPayload> colorPassWork;
         auto                colorPassAction = [&]() {
-            auto vs = graph->getTypedArtifactContent<AutoRef<GpuShader>>(solidVs);
-            auto ps = graph->getTypedArtifactContent<AutoRef<GpuShader>>(solidPs);
-            if (!vs || !ps) return;
+            auto vsContent = graph->getTypedArtifactContent<ShaderArtifactContent>(solidVs);
+            auto psContent = graph->getTypedArtifactContent<ShaderArtifactContent>(solidPs);
+            if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) return;
 
             GpuRaster::CreateParameters rcp;
             rcp.gpu = gpuContext;
@@ -144,8 +152,8 @@ int main(int argc, const char ** argv) {
             rcp.target.setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
 
             GpuRaster::DrawParameters drawParams;
-            drawParams.vs                   = vs;
-            drawParams.ps                   = ps;
+            drawParams.vs                   = vsContent->shader;
+            drawParams.ps                   = psContent->shader;
             drawParams.geometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
 
             auto r = GpuRaster::create(rcp);

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "vk-buffer.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
@@ -84,7 +85,9 @@ Buffer::Mapped BufferVulkan::map() {
 void BufferVulkan::unmap(const Mapped &) {
     if (mRvBuffer && mIsMapped) {
         mRvBuffer->unmap();
-        mIsMapped = false;
+        mIsMapped       = false;
+        gpuState.access = vk::AccessFlagBits::eHostWrite;
+        gpuState.stages = vk::PipelineStageFlagBits::eHost;
     }
 }
 

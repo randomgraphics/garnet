@@ -20,6 +20,7 @@ disable_warning(CMAKE_CXX_FLAGS)
 OPTION( ASSIMP_BUILD_TESTS "" OFF)
 OPTION( ASSIMP_INSTALL "" OFF)
 OPTION( ASSIMP_WARNINGS_AS_ERRORS "" OFF)
+OPTION( ASSIMP_BUILD_ZLIB "" OFF)
 add_subdirectory(assimp)
 
 # Build FreeType as static library

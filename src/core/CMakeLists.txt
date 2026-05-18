@@ -72,19 +72,16 @@ GN_add_source_folder(sources gfx/misc PCH_SOURCE gfx/misc/pch.cpp)
 GN_add_source_folder(sources gfx/rt PCH_SOURCE gfx/rt/pch.cpp)
 GN_add_source_folder(sources gpu/common PCH_SOURCE gpu/common/pch.cpp)
 GN_add_source_folder(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.cpp)
-GN_add_source_folder(sources gpu2)
+GN_add_source_folder(sources gpu2 PCH_SOURCE gpu2/pch.cpp)
 GN_add_source_folder(sources input PCH_SOURCE input/pch.cpp)
 GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
-# Build RDG
-add_subdirectory(rdg)
-GN_add_source_folder(rdg_sources rdg/1
-    PCH_SOURCE rdg/1/pch.cpp EXTRA_SOURCES rdg/1/vk-shaders/*.*)
-set_source_files_properties(${rdg_sources} PROPERTIES
-    COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg/1")
-GN_add_source_folder(rdg_sources rdg/2)
-list(APPEND sources ${rdg_sources})
+# Keep RDG2 source setup in this directory scope. GN_setup_pch and generated
+# shader include paths are source-file properties on GNcore-objects; if RDG2 is
+# added with add_subdirectory(), those properties are scoped to the child dir and
+# do not apply to this parent target.
+include(rdg2/CMakeLists.txt)
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
@@ -119,6 +116,9 @@ add_library(GNcore-objects OBJECT ${sources} ${garnet_headers})
 set_target_properties(GNcore-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if(TARGET GNcore-rdg-shaders)
     add_dependencies(GNcore-objects GNcore-rdg-shaders)
+endif()
+if(TARGET GNcore-rdg2-shaders)
+    add_dependencies(GNcore-objects GNcore-rdg2-shaders)
 endif()
 
 # =======================

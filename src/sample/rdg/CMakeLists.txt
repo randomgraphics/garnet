@@ -15,25 +15,6 @@ add_custom_command(
 )
 add_custom_target(rdg-simple-triangle-shaders DEPENDS ${_vert_hdr} ${_frag_hdr})
 
-# Regenerate skybox SPIR-V headers from the shared vk-shaders source.
-set(_skybox_vert_src ${CMAKE_SOURCE_DIR}/src/core/rdg/1/vk-shaders/skybox.vert)
-set(_skybox_frag_src ${CMAKE_SOURCE_DIR}/src/core/rdg/1/vk-shaders/skybox.frag)
-set(_skybox_vert_hdr ${CMAKE_CURRENT_BINARY_DIR}/skybox-vert.spv.h)
-set(_skybox_frag_hdr ${CMAKE_CURRENT_BINARY_DIR}/skybox-frag.spv.h)
-add_custom_command(
-  OUTPUT ${_skybox_vert_hdr} ${_skybox_frag_hdr}
-  COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
-          ${_skybox_vert_src} ${_skybox_frag_src}
-          --out-dir ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ${_skybox_vert_src} ${_skybox_frag_src} ${_compile_tool}
-  COMMENT "Compiling skybox GLSL to SPIR-V headers"
-)
-add_custom_target(rdg-skybox-shaders DEPENDS ${_skybox_vert_hdr} ${_skybox_frag_hdr})
-
-# PBR / draw-mesh sample (uses PbrShading, SharedShaderConstants, Material::load)
-add_executable(GNsample-rdg-draw-mesh draw-mesh.cpp)
-target_link_libraries(GNsample-rdg-draw-mesh GNcore)
-
 add_executable(GNsample-rdg2-open-graph-hello-world open-graph-hello-world.cpp)
 target_link_libraries(GNsample-rdg2-open-graph-hello-world GNcore)
 
@@ -41,11 +22,6 @@ add_executable(GNsample-rdg2-simple-triangle simple-triangle2.cpp)
 target_include_directories(GNsample-rdg2-simple-triangle PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GNsample-rdg2-simple-triangle GNcore)
 add_dependencies(GNsample-rdg2-simple-triangle rdg-simple-triangle-shaders)
-
-# add_executable(GNsample-rdg2-draw-mesh2 draw-mesh2.cpp)
-# target_include_directories(GNsample-rdg2-draw-mesh2 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-# target_link_libraries(GNsample-rdg2-draw-mesh2 GNcore)
-# add_dependencies(GNsample-rdg2-draw-mesh2 rdg-skybox-shaders)
 
 # render-to-cube2: solid-color cube-face shaders (impl 1 push-constant, impl 2 MRT).
 set(_cube_face_vert_src ${CMAKE_CURRENT_SOURCE_DIR}/cube-face.vert)
@@ -80,7 +56,7 @@ add_custom_command(
   COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
           ${_cube_draw_vert_src} ${_cube_draw_frag_src}
           --out-dir ${CMAKE_CURRENT_BINARY_DIR}
-          -I ${CMAKE_SOURCE_DIR}/src/core/rdg/2/vk-shaders
+          -I ${CMAKE_SOURCE_DIR}/src/core/rdg2/vk-shaders
   DEPENDS ${_cube_draw_vert_src} ${_cube_draw_frag_src} ${_compile_tool}
   COMMENT "Compiling cube-draw GLSL to SPIR-V headers"
 )
@@ -93,3 +69,8 @@ add_executable(GNsample-rdg2-render-to-cube render-to-cube2.cpp)
 target_include_directories(GNsample-rdg2-render-to-cube PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GNsample-rdg2-render-to-cube GNcore)
 add_dependencies(GNsample-rdg2-render-to-cube rdg2-render-to-cube-shaders)
+
+# simple-pbr2: rdg2 PBR + skybox demo using SharedShaderConstants, PbrShading, SkyBox.
+# No per-sample shader compile step — PBR/skybox shaders are part of GNcore-rdg2-shaders.
+add_executable(GNsample-rdg2-pbr simple-pbr2.cpp)
+target_link_libraries(GNsample-rdg2-pbr GNcore)

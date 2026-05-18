@@ -161,13 +161,12 @@ TEST_CASE("GPU2/CnC: copyBufferToImage uploads pixel data", "[gpu2][cnc][gpu]") 
     if (!tex) SKIP("RGBA8 texture unavailable");
 
     GpuCnC::Region region;
-    region.imageSubresource = {};
-    region.imageOffset      = {0, 0, 0};
-    region.imageExtent      = {W, H, 1};
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {W, H, 1};
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    cnc->copyBufferToImage({.src = staging, .dst = tex, .regions = ArrayProxy<GpuCnC::Region>(&region, 1)});
+    cnc->copyBufferToImage({.src = staging, .dst = tex, .regions = ArrayProxy<const GpuCnC::Region>(&region, 1)});
     submitAndWait(gpu.get(), cnc->seal());
 
     // Transition the texture to shader-read so readback can sample it.

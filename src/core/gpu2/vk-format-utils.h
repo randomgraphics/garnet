@@ -1,6 +1,5 @@
 #pragma once
 #include "vk-gpu-context.h"
-#include <garnet/GNrdg.h>
 
 namespace GN::gpu2 {
 

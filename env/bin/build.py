@@ -28,7 +28,7 @@ def get_cmake_build_info(args):
         build_dir = utils.get_root_folder() / build_dir
 
     # check for platform and compiler
-    system = utils.BuildSystem(android = args.android_build, use_clang = args.use_clang, use_xcode = args.use_xcode)
+    system = utils.BuildSystem(android = args.android_build, use_clang = args.use_clang)
     build_dir = build_dir / f"{system.build_dir()}{suffix}"
 
     #done
@@ -165,7 +165,6 @@ ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake c
 ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
 ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")
 ap.add_argument("--clang", dest="use_clang", action="store_true", help="Use CLANG instead of GCC as the compiler. This option is only valid on Linux.")
-ap.add_argument("--xcode", dest="use_xcode", action="store_true", help="Use XCode instead of GCC as the compiler. This option is only valid on Mac.")
 ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(lean). "
                                          "Note that all parameters alert this one will be considered \"extra\" and passed to CMake directly.")
 ap.add_argument("extra", nargs=argparse.REMAINDER, help="Extra arguments passing to cmake.")

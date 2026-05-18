@@ -389,9 +389,9 @@ public:
         AutoRef<GpuShader> vs, hs, ds, gs, ps;
         RasterState states; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
                             ///< RasterTarget's baseline state.
-        RasterGeometry            geometry;
-        GpuResourceTable          resources;
-        ArrayProxy<const uint8_t> immediates;
+        RasterGeometry      geometry;
+        GpuResourceTable    resources;
+        AutoRef<const Blob> immediates; ///< reference counted immediate constants.
     };
     virtual void draw(const DrawParameters &) = 0;
 

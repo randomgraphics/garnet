@@ -9,7 +9,7 @@
 namespace GN::gpu2::test {
 
 inline AutoRef<GpuContext> makeGpu() {
-    return GpuContext::create("gpu", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE, .debug = GpuContext::DebugMode::ENABLED});
+    return GpuContext::create("gpu", {.debug = GpuContext::DebugMode::ENABLED, .howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
 }
 
 inline AutoRef<Texture> makeRgba8Tex(const AutoRef<GpuContext> & gpu, const char * name, uint32_t w, uint32_t h) {
