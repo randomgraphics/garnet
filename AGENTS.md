@@ -195,6 +195,7 @@ their own `wip/<topic>` branches. `garnet master` must only reference submodule
 Repo-local Codex skill conversions live under `codex/skills/`:
 
 - `garnet-build-test`
+- `garnet-feature-workflow`
 - `garnet-assignment-tracking`
 - `garnet-cpp-style`
 - `garnet-rdg-gpu2`
