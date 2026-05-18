@@ -77,7 +77,7 @@ static constexpr uint32_t kCubemapSize = 512;
 //
 // Resources common to all renderer classes, passed by const reference.
 struct SharedCtx {
-    AutoRef<Graph>                       graph;
+    GraphPtr                             graph;
     AutoRef<GpuContext>                  gpu;
     AutoRef<rdg2::SharedShaderConstants> ssc;
     uint32_t                             width, height;

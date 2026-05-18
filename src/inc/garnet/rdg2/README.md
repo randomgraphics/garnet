@@ -90,6 +90,7 @@ queue submission) are encoded by L2 on top of L1 primitives — L1 never sees th
 #### Node
 
 The fundamental unit of work. A node holds:
+
 - An **action** — a general function/lambda, the logic to execute
 - An **argument pack** — data/parameters passed to the action at execution time
 - A **completion mode** — auto or manual (see below)
@@ -107,6 +108,9 @@ slot with a monotonic revision counter.
 - A newly created artifact is always at **revision 0** (no content published yet).
 - Any **publish** action increments the revision by one and unblocks any node or
   waiter depending on that revision.
+- The artifact keeps only the latest published content. Publishing a newer
+  version releases the artifact's reference to the previous content; callers
+  that need older content must hold their own reference.
 - Child nodes may publish artifact revisions. The artifact is the intended escape
   hatch for observing data produced inside a parent scope without exposing internal
   task structure.
@@ -126,6 +130,7 @@ token. The graph never distinguishes "waiting for a task" from "waiting for data
 at the edge level.
 
 Tokens are produced by:
+
 - `graph.push(...)` — returns a token for the pushed node's completion
 - `artifact.publish(...)` — returns a token for the new revision
 
@@ -282,6 +287,7 @@ Both are just `wait()` calls. L1 has no concept of "frame."
 | `completeNode()` may be called from any thread | Required for external async completion |
 | Execution is single-threaded, driven by `wait()` | Simplicity; real parallelism is GPU-side |
 | Artifact content is opaque to L1 | L1 only tracks revision numbers |
+| Artifact, token, and node handles are refcounted | Public handles can outlive their creating graph; graph operations reject stale or cross-graph handles |
 
 ---
 

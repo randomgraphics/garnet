@@ -158,19 +158,47 @@ protected:
 using ActionPtr = AutoRef<Action>;
 
 // ============================================================
-// Declare opaque types managed by the graph
+// Graph handles
 // ============================================================
 
-/// Opaque dependency handle; satisfied when the conditions the graph associates with it are met.
-struct Token;
-/// Opaque handle to a node in the graph (placement in the DAG, completion, tokens).
-struct Node;
-/// Opaque versioned payload slot; nodes publish and wait on artifact versions via the graph.
-struct Artifact;
+/// Dependency handle; satisfied when the conditions the graph associates with it are met.
+///
+/// The public type intentionally exposes only Entity identity/name/type. Concrete graph state
+/// remains private to the open-graph implementation.
+struct Token : public Entity {
+    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
 
-typedef struct Token *    TokenPtr;
-typedef struct Node *     NodePtr;
-typedef struct Artifact * ArtifactPtr;
+protected:
+    using Entity::Entity;
+};
+using TokenPtr = AutoRef<Token>;
+
+/// Handle to a node in the graph (placement in the DAG, completion, tokens).
+///
+/// The public type intentionally exposes only Entity identity/name/type. Concrete graph state
+/// remains private to the open-graph implementation.
+struct Node : public Entity {
+    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
+
+protected:
+    using Entity::Entity;
+};
+using NodePtr = AutoRef<Node>;
+
+/// Versioned payload slot; nodes publish and wait on artifact versions via the graph.
+///
+/// The public type intentionally exposes only Entity identity/name/type. Concrete graph state
+/// remains private to the open-graph implementation.
+struct Artifact : public Entity {
+    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
+
+protected:
+    using Entity::Entity;
+};
+using ArtifactPtr = AutoRef<Artifact>;
+
+class Graph;
+using GraphPtr = AutoRef<Graph>;
 
 // ============================================================
 // Scheduling
@@ -241,7 +269,7 @@ struct NodeDesc {
         return *this;
     }
 
-    NodeDesc & dependsOn(TokenPtr t) {
+    NodeDesc & dependsOn(const TokenPtr & t) {
         if (t) (void) dependencies.append(t);
         return *this;
     }
@@ -259,7 +287,7 @@ public:
     Graph(const Graph &)             = delete;
     Graph & operator=(const Graph &) = delete;
 
-    GN_API static AutoRef<Graph> create();
+    GN_API static GraphPtr create();
 
     // --------------------------------------------------------
     // Graph status query
@@ -280,7 +308,7 @@ public:
 
     /// Wait until \p token is satisfied. Outside node execution this blocks until satisfied or graph shutdown.
     /// From inside an executing node, does not block: returns IDLE if already satisfied, otherwise BUSY.
-    virtual WaitResult waitForToken(TokenPtr token) const = 0;
+    virtual WaitResult waitForToken(const TokenPtr & token) const = 0;
 
     // --------------------------------------------------------
     // Artifact management
@@ -290,15 +318,15 @@ public:
     virtual ArtifactPtr createArtifact(const StrA & name = StrA::EMPTYSTR()) = 0;
 
     /// Publish new content for an artifact, increase artifact version number by 1.
-    virtual void publishArtifact(ArtifactPtr artifact, AutoRef<Entity> content) = 0;
+    virtual void publishArtifact(const ArtifactPtr & artifact, AutoRef<Entity> content) = 0;
 
     /// Get a reference to the latest published content of an artifact.
     /// \param artifact The artifact to get the content of.
     /// \return The latest published content of the artifact. Or nullptr if no content is published yet.
-    virtual AutoRef<Entity> getArtifactContent(ArtifactPtr artifact) = 0;
+    virtual AutoRef<Entity> getArtifactContent(const ArtifactPtr & artifact) = 0;
 
     template<typename T>
-    AutoRef<T> getTypedArtifactContent(ArtifactPtr artifact) {
+    AutoRef<T> getTypedArtifactContent(const ArtifactPtr & artifact) {
         auto e = getArtifactContent(artifact);
         if (!e) {
             static auto * logger = GN::getLogger("GN.rdg2");
@@ -322,7 +350,7 @@ public:
     virtual NodePtr addNode(const NodeDesc & desc) = 0;
 
     /// Mark a node as complete. Trigger all completion tokens associated with the given node.
-    virtual void satisfyNode(NodePtr node) = 0;
+    virtual void satisfyNode(const NodePtr & node) = 0;
 
     // --------------------------------------------------------
     // Token management
@@ -331,23 +359,25 @@ public:
     /// Get a token satisfied by certain node completes.
     /// \param node The node to wait for
     /// \return The token will be satisfied when the given node completes.
-    virtual TokenPtr getNodeCompletionToken(NodePtr node) = 0;
+    virtual TokenPtr getNodeCompletionToken(const NodePtr & node) = 0;
 
     /// Get an token satisfied when the given artifact version is published.
     /// \param artifact The artifact to wait for.
     /// \param version The version of the artifact to wait for. If set to OOO, then the next published version is used.
     /// \return The token satisfied when the given artifact version is published. Note that if you are asking an
     ///         an version that has been published, the returned token is satisfied immediately.
-    virtual TokenPtr getArtifactVersionToken(ArtifactPtr artifact, NeverOverflowingCounter version) = 0;
+    virtual TokenPtr getArtifactVersionToken(const ArtifactPtr & artifact, NeverOverflowingCounter version) = 0;
 
     /// Get a token that will be satisfied when the next version of the given artifact is published.
     /// This is a convenience method for getArtifactVersionToken() with version set to OOO.
-    TokenPtr getTokenForNextArtifactVersion(ArtifactPtr artifact) { return getArtifactVersionToken(artifact, NeverOverflowingCounter::OOO()); }
+    TokenPtr getTokenForNextArtifactVersion(const ArtifactPtr & artifact) { return getArtifactVersionToken(artifact, NeverOverflowingCounter::OOO()); }
 
     /// Get an token that is satisfied when the given artifact is published at least once.
     /// This is a convenience method for getArtifactVersionToken() with version set to ONE.
     /// After this token is satisfied, it is safe to call getArtifactContent() to retrieve the latest content of the artifact.
-    TokenPtr getTokenToEnsureArtifactIsPublishedAtLeastOnce(ArtifactPtr artifact) { return getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE()); }
+    TokenPtr getTokenToEnsureArtifactIsPublishedAtLeastOnce(const ArtifactPtr & artifact) {
+        return getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE());
+    }
 
 protected:
     Graph() = default;

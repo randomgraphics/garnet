@@ -270,7 +270,7 @@ struct PbrAssetContent final : public PbrShading::Content {
 // PbrShading static members
 // ─────────────────────────────────────────────────────────────────────────────
 
-GN_API VersionedArtifact PbrShading::load(AutoRef<gpu2::GpuContext> gpu, AutoRef<Graph> graph, const LoadParameters & params) {
+GN_API VersionedArtifact PbrShading::load(AutoRef<gpu2::GpuContext> gpu, GraphPtr graph, const LoadParameters & params) {
     if (!gpu || !graph) {
         GN_ERROR(sLogger)("PbrShading::load: null gpu or graph");
         return {};
@@ -356,7 +356,7 @@ GN_API VersionedArtifact PbrShading::load(AutoRef<gpu2::GpuContext> gpu, AutoRef
     return {artifact, ready};
 }
 
-GN_API AutoRef<PbrShading::Content> PbrShading::getContent(AutoRef<Graph> graph, ArtifactPtr assetArtifact) {
+GN_API AutoRef<PbrShading::Content> PbrShading::getContent(GraphPtr graph, const ArtifactPtr & assetArtifact) {
     return graph->getTypedArtifactContent<Content>(assetArtifact);
 }
 

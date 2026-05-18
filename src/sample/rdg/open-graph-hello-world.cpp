@@ -35,7 +35,7 @@ struct StartMark final : public Entity {
 int main() {
     using namespace GN::rdg2;
 
-    AutoRef<Graph> g = Graph::create();
+    GraphPtr g = Graph::create();
 
     // Unblock the graph by publishing a new artifact version after the node is scheduled.
     ArtifactPtr art = g->createArtifact("start");

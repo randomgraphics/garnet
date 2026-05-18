@@ -96,7 +96,7 @@ static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2
 
 class SharedShaderConstants2Impl : public SharedShaderConstants {
     AutoRef<gpu2::GpuContext> mGpu;
-    AutoRef<Graph>            mGraph;
+    GraphPtr                  mGraph;
     AutoRef<gpu2::Buffer>     mSceneBuffer;
     AutoRef<gpu2::Buffer>     mCameraBuffer;
 
@@ -236,7 +236,7 @@ public:
         return {mContentArtifact, version};
     }
 
-    AutoRef<Content> getContent(ArtifactPtr artifact) const override { return mGraph->getTypedArtifactContent<Content>(artifact); }
+    AutoRef<Content> getContent(const ArtifactPtr & artifact) const override { return mGraph->getTypedArtifactContent<Content>(artifact); }
 
     gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet & set0Resources) const override {
         gpu2::GpuRaster::DrawParameters dp;

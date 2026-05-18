@@ -30,10 +30,10 @@ struct PbrShading {
     /// before returning.
     /// Async IO loads real textures/geometry and publishes v2 when done.
     /// Call multiple times to create independent per-object artifacts.
-    static GN_API VersionedArtifact load(AutoRef<gpu2::GpuContext> gpu, AutoRef<Graph> graph, const LoadParameters & params);
+    static GN_API VersionedArtifact load(AutoRef<gpu2::GpuContext> gpu, GraphPtr graph, const LoadParameters & params);
 
     /// Get the latest public content of the PBR asset artifact.
-    static GN_API AutoRef<Content> getContent(AutoRef<Graph> graph, ArtifactPtr assetArtifact);
+    static GN_API AutoRef<Content> getContent(GraphPtr graph, const ArtifactPtr & assetArtifact);
 
     /// Build DrawParameters for one PBR mesh draw.
     /// Must be called after the artifact's ready token is satisfied.
