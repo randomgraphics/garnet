@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "gpu-context.h"
-#include "gpu-payload-group.h"
+#include "gpu-payload-impl.h"
 #include "vk-gpu-context.h"
 #include <mutex>
 #include <utility>
@@ -22,31 +22,61 @@ static uint64_t nextRootEntityId() {
 
 GN_API RootEntity::RootEntity(const RuntimeType::TypeInfo & type, const StrA & name_): RefCounter(), RuntimeType(type), id(nextRootEntityId()), name(name_) {}
 
-GN_API AutoRef<GpuPayload> GpuPayload::combine(const StrA & name, const ArrayProxy<AutoRef<GpuPayload>> & payloads) {
-    ArrayContainer<AutoRef<GpuPayload>> children;
+static bool groupContains(GpuPayloadGroup & group, const GpuPayloadImpl & payload) {
+    for (auto child = group.firstChild(); child; child = child->nextPayloadInGroup()) {
+        if (child == &payload) return true;
+    }
+    return false;
+}
+
+AutoRef<GpuPayload> combineGpuPayloads(const StrA & name, const ArrayProxy<AutoRef<GpuPayload>> & payloads) {
+    AutoRef<GpuPayloadImpl>  single;
+    AutoRef<GpuPayloadGroup> group;
+
     for (size_t i = 0; i < payloads.size(); ++i) {
         auto payload = payloads[i];
         if (!payload) continue;
 
-        if (payload->mPayloadGroupOwner) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuPayload::combine('{}'): payload '{}'({}) already belongs to group '{}'({})", name, payload->name, payload->id,
-                                  payload->mPayloadGroupOwner->name, payload->mPayloadGroupOwner->id);
+        auto impl = RuntimeType::cast<GpuPayloadImpl>((GpuPayload *) payload);
+        if (!impl) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GpuPayload::combine('{}'): payload '{}'({}) is not an internal gpu2 payload implementation", name, payload->name,
+                                  payload->id);
                 return {};
             }
 
-        for (size_t j = 0; j < children.size(); ++j) {
-            if (children[j].get() == payload.get()) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("GpuPayload::combine('{}'): duplicate payload '{}'({})", name, payload->name, payload->id);
-                    return {};
-                }
+        if (impl->isPayloadInGroup()) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GpuPayload::combine('{}'): payload '{}'({}) already belongs to a group", name, payload->name, payload->id);
+                return {};
+            }
+
+        if (!single) {
+            single = impl;
+            continue;
         }
 
-        children.append(payload);
+        if (impl == (GpuPayloadImpl *) single) GN_UNLIKELY {
+                GN_ERROR(sLogger)("GpuPayload::combine('{}'): duplicate payload '{}'({})", name, payload->name, payload->id);
+                return {};
+            }
+
+        if (!group) {
+            group = AutoRef<GpuPayloadGroup>::make(name);
+            group->appendChild(single);
+        } else if (groupContains(*group, *impl))
+            GN_UNLIKELY {
+                GN_ERROR(sLogger)("GpuPayload::combine('{}'): duplicate payload '{}'({})", name, payload->name, payload->id);
+                return {};
+            }
+
+        group->appendChild(AutoRef<GpuPayloadImpl>(impl));
     }
 
-    if (children.empty()) return {};
-    if (1 == children.size()) return children[0];
-    return AutoRef<GpuPayload>(new GpuPayloadGroup(name, std::move(children)));
+    if (group) return group;
+    return single;
+}
+
+GN_API AutoRef<GpuPayload> GpuPayload::combine(const StrA & name, const ArrayProxy<AutoRef<GpuPayload>> & payloads) {
+    return combineGpuPayloads(name, payloads);
 }
 
 // =============================================================================

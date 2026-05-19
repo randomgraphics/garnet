@@ -6,8 +6,6 @@
 
 namespace GN::gpu2 {
 
-class GpuPayloadGroup;
-
 // -----------------------------
 // Array container and proxy
 // -----------------------------
@@ -61,11 +59,6 @@ struct GpuPayload : public RootEntity {
 
 protected:
     using RootEntity::RootEntity;
-
-private:
-    friend class GpuPayloadGroup;
-
-    GpuPayloadGroup * mPayloadGroupOwner = nullptr;
 };
 
 // -----------------------------

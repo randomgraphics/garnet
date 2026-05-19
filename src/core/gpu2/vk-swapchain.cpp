@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "vk-swapchain.h"
-#include "gpu-payload-group.h"
+#include "gpu-payload-impl.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-context.h"
 #include "vk-gpu-payload.h"
@@ -27,14 +27,7 @@ static GpuPayloadVulkan * resolvePresentPayload(GpuPayload & payload, std::vecto
         }
     seen.push_back(&payload);
 
-    if (auto group = RuntimeType::cast<GpuPayloadGroup>(payload)) {
-        const auto & children = group->children();
-        for (size_t i = children.size(); i > 0; --i) {
-            if (!children[i - 1]) continue;
-            if (auto p = resolvePresentPayload(*children[i - 1], seen)) return p;
-        }
-        return nullptr;
-    }
+    if (auto group = RuntimeType::cast<GpuPayloadGroup>(payload)) { return group->lastChild() ? resolvePresentPayload(*group->lastChild(), seen) : nullptr; }
     return RuntimeType::cast<GpuPayloadVulkan>(payload);
 }
 namespace {

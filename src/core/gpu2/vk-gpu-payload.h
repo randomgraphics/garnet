@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vk-gpu-context.h"
+#include "gpu-payload-impl.h"
 #include "vk-gpu-resource-state-tracker.h"
 
 #include <variant>
@@ -23,10 +24,10 @@ struct GpuSyncPoint : rv::CommandQueue::SyncPoint {
 };
 
 /// Vulkan-specific GPU payload.
-struct GpuPayloadVulkan : GpuPayload {
-    GN_REGISTER_RUNTIME_TYPE(GpuPayload);
+struct GpuPayloadVulkan : GpuPayloadImpl {
+    GN_REGISTER_RUNTIME_TYPE(GpuPayloadImpl);
 
-    explicit GpuPayloadVulkan(const StrA & name): GpuPayload(TYPE_INFO(), name) {}
+    explicit GpuPayloadVulkan(const StrA & name): GpuPayloadImpl(TYPE_INFO(), name) {}
 
     const GpuSyncPoint & syncpoint() const { return mSyncPoint; }
     vk::Semaphore        semaphore() const { return mSyncPoint.semaphore; }
