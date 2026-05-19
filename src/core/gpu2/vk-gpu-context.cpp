@@ -1,7 +1,7 @@
 #include "pch.h"
 #define RAPID_VULKAN_IMPLEMENTATION
 #include "vk-gpu-context.h"
-#include "gpu-payload-impl.h"
+#include "gpu-payload-group.h"
 #include "vk-raster-pso-factory.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-payload.h"
@@ -33,9 +33,7 @@ static void collectDependencyWaits(const AutoRef<GpuPayload> & payload, std::vec
     seen.push_back(payload.get());
 
     if (auto group = RuntimeType::cast<GpuPayloadGroup>(payload)) {
-        for (auto child = group->firstChild(); child; child = child->nextPayloadInGroup()) {
-            collectDependencyWaits(AutoRef<GpuPayload>(child), waitPoints, waitBinaries, seen);
-        }
+        for (const auto & child : group->children()) collectDependencyWaits(child, waitPoints, waitBinaries, seen);
         return;
     }
 
@@ -63,7 +61,7 @@ static void collectWorkLeaves(const AutoRef<GpuPayload> & payload, std::vector<A
     seen.push_back(payload.get());
 
     if (auto group = RuntimeType::cast<GpuPayloadGroup>(payload)) {
-        for (auto child = group->firstChild(); child; child = child->nextPayloadInGroup()) { collectWorkLeaves(AutoRef<GpuPayload>(child), works, seen); }
+        for (const auto & child : group->children()) collectWorkLeaves(child, works, seen);
         return;
     }
 
