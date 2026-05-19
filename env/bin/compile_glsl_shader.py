@@ -19,6 +19,7 @@ For each source file <name>.<ext>:
 import argparse
 import os
 import pathlib
+import shutil
 import struct
 import subprocess
 import sys
@@ -33,7 +34,11 @@ def find_glslc() -> str:
                 return str(exe)
         print("VULKAN_SDK not set or glslc.exe not found.", file=sys.stderr)
         sys.exit(1)
-    return "glslc"
+    glslc = shutil.which("glslc")
+    if not glslc:
+        print("glslc not found on PATH.", file=sys.stderr)
+        sys.exit(1)
+    return glslc
 
 
 def derive_var_name(src: pathlib.Path) -> str:
@@ -85,14 +90,24 @@ def compile_one(
     cmd = [glslc, str(src), "-o", str(spv), "-O", "-g"]
     for d in include_dirs:
         cmd += [f"-I{d}"]
-    print(" ".join(cmd))
-    r = subprocess.run(cmd)
+    print(" ".join(cmd), flush=True)
+    try:
+        r = subprocess.run(cmd)
+    except OSError as e:
+        print(f"failed to run glslc: {e}", file=sys.stderr)
+        sys.exit(1)
     if r.returncode != 0:
         print(f"glslc failed: {' '.join(cmd)}", file=sys.stderr)
         sys.exit(r.returncode)
+    if not spv.is_file():
+        print(f"glslc succeeded but did not create output: {spv}", file=sys.stderr)
+        sys.exit(1)
     spv_to_header(spv, var_name, header)
+    if not header.is_file():
+        print(f"failed to create shader header: {header}", file=sys.stderr)
+        sys.exit(1)
     spv.unlink(missing_ok=True)
-    print(f"  -> {header}")
+    print(f"  -> {header}", flush=True)
 
 
 def main() -> None:
