@@ -38,8 +38,6 @@ struct EnvTextureSetContent final : public Entity {
 struct SscContent final : public SharedShaderConstants::Content {
     GN_REGISTER_RUNTIME_TYPE(Content);
 
-    gpu2::ArrayContainer<AutoRef<gpu2::GpuPayload>> pendingSet0Payloads;
-
     SscContent(): Content(TYPE_INFO(), "SharedShaderConstants::Content") {}
 };
 
@@ -108,7 +106,7 @@ class SharedShaderConstants2Impl : public SharedShaderConstants {
     // Fallback textures used in buildSet0Resources() when env slots are null.
     AutoRef<gpu2::Texture> mFallbackCubemap;
     AutoRef<gpu2::Texture> mFallbackBrdfLut;
-    // Upload for the fallback textures; appended to set0Payload on the first snapshot only.
+    // Upload for the fallback textures; appended to set0Payloads on the first snapshot only.
     AutoRef<gpu2::GpuPayload> mFallbackInitPayload;
 
     ArtifactPtr mContentArtifact = nullptr;
@@ -210,13 +208,13 @@ public:
             if (!envContent) GN_UNLIKELY return {};
             EnvTextureSet envSnap = envContent->textures;
             if (envSnap.uploadPayload.get() != mLastEnvPayload.get()) {
-                if (envSnap.uploadPayload) content->pendingSet0Payloads.append(envSnap.uploadPayload);
+                if (envSnap.uploadPayload) content->set0Payloads.append(envSnap.uploadPayload);
                 const_cast<SharedShaderConstants2Impl *>(this)->mLastEnvPayload = envSnap.uploadPayload;
             }
 
             // Include fallback upload only on the very first snapshot, then clear.
             if (mFallbackInitPayload) {
-                content->pendingSet0Payloads.append(mFallbackInitPayload);
+                content->set0Payloads.append(mFallbackInitPayload);
                 const_cast<SharedShaderConstants2Impl *>(this)->mFallbackInitPayload = {};
             }
 
@@ -227,8 +225,6 @@ public:
                                            .setAction(Action::createFromLambda("pack+upload UBOs",
                                                                                [this, content]() {
                                                                                    uploadSnapshot(content);
-                                                                                   content->set0Payload =
-                                                                                       gpu2::GpuPayload::combine("ssc2.set0", content->pendingSet0Payloads);
                                                                                    mGraph->publishArtifact(mContentArtifact, content);
                                                                                }),
                                                       nullptr));
@@ -318,7 +314,7 @@ private:
         bindTex(5, env.brdfLut, mFallbackBrdfLut);
     }
 
-    void uploadSnapshot(const AutoRef<SscContent> & content) const {
+    void uploadSnapshot(const AutoRef<Content> & content) const {
         const Set0Parameters & snap = content->set0Parameters;
 
         shader::SceneUBO scene {};
@@ -391,7 +387,7 @@ private:
         if (!cnc) GN_UNLIKELY return;
         cnc->copyBufferToBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
         cnc->copyBufferToBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
-        content->pendingSet0Payloads.append(cnc->seal());
+        content->set0Payloads.append(cnc->seal());
     }
 };
 

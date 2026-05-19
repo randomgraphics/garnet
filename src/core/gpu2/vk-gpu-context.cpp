@@ -1,7 +1,6 @@
 #include "pch.h"
 #define RAPID_VULKAN_IMPLEMENTATION
 #include "vk-gpu-context.h"
-#include "gpu-payload-group.h"
 #include "vk-raster-pso-factory.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-payload.h"
@@ -15,68 +14,6 @@
 static GN::Logger * sLoggerVk = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
-
-static bool containsPayload(const std::vector<const GpuPayload *> & payloads, const GpuPayload * payload) {
-    for (auto * p : payloads) {
-        if (p == payload) return true;
-    }
-    return false;
-}
-
-static void collectDependencyWaits(const AutoRef<GpuPayload> & payload, std::vector<rv::CommandQueue::SyncPoint> & waitPoints,
-                                   std::vector<rv::CommandQueue::SyncPoint> & waitBinaries, std::vector<const GpuPayload *> & seen) {
-    if (!payload) GN_UNLIKELY return;
-    if (containsPayload(seen, payload.get())) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("Duplicate dependency payload ignored: {}({})", payload->name, payload->id);
-            return;
-        }
-    seen.push_back(payload.get());
-
-    if (auto group = RuntimeType::cast<GpuPayloadGroup>(payload)) {
-        for (const auto & child : group->children()) collectDependencyWaits(child, waitPoints, waitBinaries, seen);
-        return;
-    }
-
-    auto w = RuntimeType::cast<GpuPayloadVulkan>(*payload);
-    if (!w) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", payload->name, payload->id);
-            return;
-        }
-    const auto & s = w->syncpoint();
-    if (const auto * t = s.asTimelinePoint()) {
-        waitPoints.push_back(*t);
-    } else if (const auto * b = s.asBinarySemaphore()) {
-        waitBinaries.push_back({*b, 0, vk::PipelineStageFlagBits::eAllCommands});
-    } else {
-        GN_ERROR(sLoggerVk)("Can't depend on un-submitted payload: {}({})", payload->name, payload->id);
-    }
-}
-
-static void collectWorkLeaves(const AutoRef<GpuPayload> & payload, std::vector<AutoRef<GpuPayloadVulkan>> & works, std::vector<const GpuPayload *> & seen) {
-    if (!payload) GN_UNLIKELY return;
-    if (containsPayload(seen, payload.get())) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("Duplicate work payload ignored: {}({})", payload->name, payload->id);
-            return;
-        }
-    seen.push_back(payload.get());
-
-    if (auto group = RuntimeType::cast<GpuPayloadGroup>(payload)) {
-        for (const auto & child : group->children()) collectWorkLeaves(child, works, seen);
-        return;
-    }
-
-    auto w = RuntimeType::cast<GpuPayloadVulkan>(payload);
-    if (!w) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", payload->name, payload->id);
-            return;
-        }
-    if (w->syncpoint()) GN_UNLIKELY {
-            // This payload has a sync point already. it means it has been submit to GPU already. Reject it.
-            GN_ERROR(sLoggerVk)("Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
-            return;
-        }
-    works.push_back(w);
-}
 
 // =============================================================================
 // Validation / verbosity (duplicated from vk-gpu-context.cpp; v2 uses enum class)
@@ -252,8 +189,24 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     // collect semaphores to wait from dependencies
     std::vector<rv::CommandQueue::SyncPoint> waitPoints;   // timeline dependencies
     std::vector<rv::CommandQueue::SyncPoint> waitBinaries; // binary dependencies
-    std::vector<const GpuPayload *>          seenDependencies;
-    for (size_t i = 0; i < sp.dependencies.size(); ++i) { collectDependencyWaits(sp.dependencies[i], waitPoints, waitBinaries, seenDependencies); }
+    for (size_t i = 0; i < sp.dependencies.size(); ++i) {
+        auto d = sp.dependencies[i];
+        if (!d) GN_UNLIKELY continue;
+        auto w = RuntimeType::cast<GpuPayloadVulkan>(*d);
+        if (!w) GN_UNLIKELY {
+                GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", d->name, d->id);
+                continue;
+            }
+        const auto & s = w->syncpoint();
+        if (const auto * t = s.asTimelinePoint()) {
+            waitPoints.push_back(*t);
+        } else if (const auto * b = s.asBinarySemaphore()) {
+            waitBinaries.push_back({*b, 0, vk::PipelineStageFlagBits::eAllCommands});
+        } else {
+            GN_ERROR(sLoggerVk)("Can't depend on un-submitted payload: {}({})", d->name, d->id);
+            continue;
+        }
+    }
 
     // allocate the main fence and sync point for this submission.
     auto mainFence = fencePool().acquire(sp.name);
@@ -281,9 +234,22 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
 
     // Record everything to the command buffer, skipping payloads that were already submitted.
     std::vector<AutoRef<GpuPayloadVulkan>> works;
-    std::vector<const GpuPayload *>        seenWorks;
-    for (size_t i = 0; i < sp.work.size(); ++i) { collectWorkLeaves(sp.work[i], works, seenWorks); }
-    for (auto & w : works) { w->recordForVulkanSubmit(recordCtx); }
+    for (size_t i = 0; i < sp.work.size(); ++i) {
+        auto & item = sp.work[i];
+        if (!item) GN_UNLIKELY continue;
+        auto w = RuntimeType::cast<GpuPayloadVulkan>(item);
+        if (!w) GN_UNLIKELY {
+                GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", item->name, item->id);
+                continue;
+            }
+        if (w->syncpoint()) GN_UNLIKELY {
+                // This payload has a sync point already. it means it has been submit to GPU already. Reject it.
+                GN_ERROR(sLoggerVk)("Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
+                continue;
+            }
+        w->recordForVulkanSubmit(recordCtx);
+        works.push_back(w);
+    }
 
     // Submit to GPU.
     rv::CommandQueue::SubmitParameters qsp;

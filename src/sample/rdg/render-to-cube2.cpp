@@ -634,7 +634,9 @@ int main(int argc, const char ** argv) {
             GpuContext::SubmitParameters sp(StrA::format("frame {}", frameCounter));
             if (cubemapRenderer.prevPayload) sp.waitFor(cubemapRenderer.prevPayload);
             // Submit UBO + env uploads before the draw that samples them.
-            if (sscContent) sp.appendWork(sscContent->set0Payload);
+            if (sscContent) {
+                for (const auto & p : sscContent->set0Payloads) sp.appendWork(p);
+            }
             sp.waitFor(frame.ready);
             sp.appendWorks(cubemapPayloads);
             sp.appendWork(presentPayload);

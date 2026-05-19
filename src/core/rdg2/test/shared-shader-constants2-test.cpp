@@ -60,8 +60,8 @@ TEST_CASE("rdg2::SharedShaderConstants: first snapshot includes fallback + env u
 
     auto content = ssc->getContent(snapshot.artifact);
     REQUIRE(content);
-    // First snapshot must carry fallback/env uploads plus UBO upload behind one representative payload.
-    CHECK(content->set0Payload);
+    // First snapshot must carry at least two uploads: fallback textures + env v1 blue-sky.
+    CHECK(content->set0Payloads.size() >= 2u);
 }
 
 TEST_CASE("rdg2::SharedShaderConstants: takeSnapshot() returns non-null token", "[rdg2][ssc][gpu]") {
@@ -98,8 +98,8 @@ TEST_CASE("rdg2::SharedShaderConstants: getContent() returns valid content after
     REQUIRE(content);
     // set0Resources must have 6 bindings: scene UBO, camera UBO, 4 env textures.
     CHECK(content->set0Resources.size() == 6u);
-    // set0Payload carries UBO + any pending texture uploads.
-    CHECK(content->set0Payload);
+    // set0Payloads must be non-empty — it carries UBO + any pending texture uploads.
+    CHECK(!content->set0Payloads.empty());
 }
 
 TEST_CASE("rdg2::SharedShaderConstants: two snapshots evict stale map entries", "[rdg2][ssc][gpu]") {

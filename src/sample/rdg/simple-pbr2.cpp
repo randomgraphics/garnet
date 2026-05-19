@@ -99,7 +99,7 @@ int main(int argc, const char ** argv) {
 
     // ─── Per-artifact setup state ─────────────────────────────────────────────
     // PBR asset upload is submitted once per version change (v1 on frame 1, v2 after async IO).
-    // SSC upload payloads (env textures + UBO) are managed internally and emitted via set0Payload.
+    // SSC upload payloads (env textures + UBO) are managed internally and emitted via set0Payloads.
     AutoRef<GpuPayload> lastHelmetPayload;
 
     int totalFrames = testMode ? 5 : 0;
@@ -116,7 +116,7 @@ int main(int argc, const char ** argv) {
         auto                                      drawScene = [&]() {
             auto sc = ssc->getContent(sscSnapshot.artifact);
             if (!sc) return;
-            renderWorks.append(sc->set0Payload);
+            renderWorks.append(sc->set0Payloads);
             auto pbrContent = PbrShading::getContent(graph, helmet.artifact);
             if (!pbrContent) return;
 
