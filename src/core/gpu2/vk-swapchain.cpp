@@ -1,15 +1,42 @@
 #include "pch.h"
 #include "vk-swapchain.h"
+#include "gpu-payload-group.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-context.h"
 #include "vk-gpu-payload.h"
 #include "vk-texture.h"
 
 #include <unordered_map>
+#include <vector>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
 namespace GN::gpu2 {
+
+static bool containsPayload(const std::vector<const GpuPayload *> & payloads, const GpuPayload * payload) {
+    for (auto * p : payloads) {
+        if (p == payload) return true;
+    }
+    return false;
+}
+
+static GpuPayloadVulkan * resolvePresentPayload(GpuPayload & payload, std::vector<const GpuPayload *> & seen) {
+    if (containsPayload(seen, &payload)) GN_UNLIKELY {
+            GN_ERROR(sLogger)("present(): duplicate/cyclic payload ignored: {}({})", payload.name, payload.id);
+            return nullptr;
+        }
+    seen.push_back(&payload);
+
+    if (auto group = RuntimeType::cast<GpuPayloadGroup>(payload)) {
+        const auto & children = group->children();
+        for (size_t i = children.size(); i > 0; --i) {
+            if (!children[i - 1]) continue;
+            if (auto p = resolvePresentPayload(*children[i - 1], seen)) return p;
+        }
+        return nullptr;
+    }
+    return RuntimeType::cast<GpuPayloadVulkan>(payload);
+}
 namespace {
 
 /// Swapchain-specific payload that exposes the protected setSemaphore() hook publicly,
@@ -200,8 +227,9 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
         return;
     }
 
-    vk::Semaphore renderFinished = nullptr;
-    auto          vkWaitFor      = RuntimeType::cast<GpuPayloadVulkan>(waitFor);
+    vk::Semaphore                   renderFinished = nullptr;
+    std::vector<const GpuPayload *> seenPayloads;
+    auto                            vkWaitFor = resolvePresentPayload(waitFor, seenPayloads);
     if (vkWaitFor) GN_LIKELY {
             const auto & sp = vkWaitFor->syncpoint();
             if (const auto * b = sp.asBinarySemaphore()) {

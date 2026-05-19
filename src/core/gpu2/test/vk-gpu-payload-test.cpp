@@ -4,6 +4,7 @@
     #include "../vk-gpu-payload.h"
 
     #include <atomic>
+    #include <vector>
 
 using namespace GN;
 using namespace GN::gpu2;
@@ -16,8 +17,14 @@ struct InstrumentedPayload : GpuPayloadVulkan {
     using GpuPayloadVulkan::GpuPayloadVulkan;
     using GpuPayloadVulkan::setSemaphore;
 
-    int  recordCallCount = 0;
-    void recordForVulkanSubmit(const RecordContext &) override { ++recordCallCount; }
+    int                recordCallCount = 0;
+    int                orderId         = 0;
+    std::vector<int> * recordOrder     = nullptr;
+
+    void recordForVulkanSubmit(const RecordContext &) override {
+        ++recordCallCount;
+        if (recordOrder) recordOrder->push_back(orderId);
+    }
 };
 
 static AutoRef<GpuContext> makeGpu() {
@@ -52,9 +59,131 @@ TEST_CASE("GpuPayloadVulkan: setSemaphore(vk::Semaphore) can overwrite each fram
     CHECK(p->semaphore() == s2);
 }
 
+TEST_CASE("GpuPayload: combine empty and single payload cases", "[gpu2][payload]") {
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> empty;
+    CHECK(!GpuPayload::combine("empty", empty));
+
+    auto                                      p = AutoRef<InstrumentedPayload>::make("single");
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> single;
+    single.append(p);
+
+    auto combined = GpuPayload::combine("single-group", single);
+    CHECK(combined.get() == p.get());
+}
+
+TEST_CASE("GpuPayload: combine rejects duplicate input payloads", "[gpu2][payload]") {
+    auto p = AutoRef<InstrumentedPayload>::make("duplicate");
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> payloads;
+    payloads.append(p);
+    payloads.append(p);
+
+    CHECK(!GpuPayload::combine("bad-duplicate", payloads));
+}
+
+TEST_CASE("GpuPayload: combine rejects payload already owned by another group", "[gpu2][payload]") {
+    auto p1 = AutoRef<InstrumentedPayload>::make("p1");
+    auto p2 = AutoRef<InstrumentedPayload>::make("p2");
+    auto p3 = AutoRef<InstrumentedPayload>::make("p3");
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> first;
+    first.append(p1);
+    first.append(p2);
+    auto group = GpuPayload::combine("group", first);
+    REQUIRE(group);
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> second;
+    second.append(p2);
+    second.append(p3);
+    CHECK(!GpuPayload::combine("bad-shared", second));
+}
+
+TEST_CASE("GpuPayload: combine rejects sharing a leaf from a nested group", "[gpu2][payload]") {
+    auto p1 = AutoRef<InstrumentedPayload>::make("p1");
+    auto p2 = AutoRef<InstrumentedPayload>::make("p2");
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> first;
+    first.append(p1);
+    first.append(p2);
+    auto group = GpuPayload::combine("group", first);
+    REQUIRE(group);
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> parent;
+    parent.append(group);
+    parent.append(p1);
+    CHECK(!GpuPayload::combine("bad-parent", parent));
+}
+
+TEST_CASE("GpuPayload: group destruction releases child membership", "[gpu2][payload]") {
+    auto p1 = AutoRef<InstrumentedPayload>::make("p1");
+    auto p2 = AutoRef<InstrumentedPayload>::make("p2");
+
+    {
+        gpu2::ArrayContainer<AutoRef<GpuPayload>> payloads;
+        payloads.append(p1);
+        payloads.append(p2);
+        REQUIRE(GpuPayload::combine("temporary", payloads));
+    }
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> payloads;
+    payloads.append(p1);
+    payloads.append(p2);
+    CHECK(GpuPayload::combine("regrouped", payloads));
+}
+
 // ---------------------------------------------------------------------------
 // GPU integration tests
 // ---------------------------------------------------------------------------
+
+TEST_CASE("GpuPayloadVulkan: grouped payloads record leaves in order", "[gpu2][payload][gpu]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    std::vector<int> order;
+    auto             p1 = AutoRef<InstrumentedPayload>::make("p1");
+    auto             p2 = AutoRef<InstrumentedPayload>::make("p2");
+    p1->orderId         = 1;
+    p2->orderId         = 2;
+    p1->recordOrder     = &order;
+    p2->recordOrder     = &order;
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> payloads;
+    payloads.append(p1);
+    payloads.append(p2);
+    auto group = GpuPayload::combine("ordered-group", payloads);
+    REQUIRE(group);
+
+    std::atomic<bool> done = false;
+    gpu->submit(GpuContext::SubmitParameters("grouped").appendWork(group).setOnComplete([&] { done = true; }));
+    while (!done) gpu->pump();
+
+    CHECK(p1->recordCallCount == 1);
+    CHECK(p2->recordCallCount == 1);
+    REQUIRE(order.size() == 2u);
+    CHECK(order[0] == 1);
+    CHECK(order[1] == 2);
+}
+
+TEST_CASE("GpuPayloadVulkan: duplicate work through group and leaf is skipped", "[gpu2][payload][gpu]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    auto p1 = AutoRef<InstrumentedPayload>::make("p1");
+    auto p2 = AutoRef<InstrumentedPayload>::make("p2");
+
+    gpu2::ArrayContainer<AutoRef<GpuPayload>> payloads;
+    payloads.append(p1);
+    payloads.append(p2);
+    auto group = GpuPayload::combine("group", payloads);
+    REQUIRE(group);
+
+    std::atomic<bool> done = false;
+    gpu->submit(GpuContext::SubmitParameters("duplicate-work").appendWork(group).appendWork(p1).setOnComplete([&] { done = true; }));
+    while (!done) gpu->pump();
+
+    CHECK(p1->recordCallCount == 1);
+    CHECK(p2->recordCallCount == 1);
+}
 
 TEST_CASE("GpuPayloadVulkan: double-submit is detected and skipped", "[gpu2][payload][gpu]") {
     auto gpu = makeGpu();

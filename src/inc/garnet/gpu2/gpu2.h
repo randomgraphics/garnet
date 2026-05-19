@@ -6,6 +6,8 @@
 
 namespace GN::gpu2 {
 
+class GpuPayloadGroup;
+
 // -----------------------------
 // Array container and proxy
 // -----------------------------
@@ -50,8 +52,20 @@ protected:
 struct GpuPayload : public RootEntity {
     GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
 
+    /// Combine ordered GPU payloads into one representative payload.
+    ///
+    /// Empty/null-only input returns an empty reference. A single non-null payload is returned unchanged.
+    /// Multiple payloads are grouped and submitted in array order. A payload may belong to at most
+    /// one group at a time; invalid sharing returns an empty reference and logs an error.
+    static GN_API AutoRef<GpuPayload> combine(const StrA & name, const ArrayProxy<AutoRef<GpuPayload>> & payloads);
+
 protected:
     using RootEntity::RootEntity;
+
+private:
+    friend class GpuPayloadGroup;
+
+    GpuPayloadGroup * mPayloadGroupOwner = nullptr;
 };
 
 // -----------------------------
