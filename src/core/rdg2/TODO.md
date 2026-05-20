@@ -1,7 +1,14 @@
 # RDG v2 — Implementation TODOs
 
-## Typed artifact content
-using std::any as part of public interface is not stable across DLL boundary. Consider using runtime type as the content.
+## Sprite and Text
+
+Migrate Sprite and Text renderer of gpu v1.
+
+## Optimize RasterTarget related memory copy
+
+RasterTarget structure size is about 1K. There are several places it is declared as value type that involves a memory copy.
+
+Either compress its size or maybe convert it to an Entity that has to be allocated and created on heap.
 
 ## Transient Resource Aliasing
 

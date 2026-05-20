@@ -1,5 +1,5 @@
 #if !defined(__GN_INSIDE_RDG2_H__)
-    #error "Do not include <garnet/rdg2/shared-shader-constants2.h> directly. Include <garnet/GNrdg2.h> instead."
+    #error "Do not include <garnet/rdg2/shared-shader-constants.h> directly. Include <garnet/GNrdg2.h> instead."
 #endif
 
 namespace GN::rdg2 {

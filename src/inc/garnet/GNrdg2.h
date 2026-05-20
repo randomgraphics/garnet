@@ -11,6 +11,6 @@ namespace GN::rdg2 {};
 #include "rdg2/open-graph.h"
 #include "rdg2/physical.h"
 #include "rdg2/transform.h"
-#include "rdg2/shared-shader-constants2.h"
-#include "rdg2/simple-effect.h"
+#include "rdg2/shared-shader-constants.h"
+#include "rdg2/pbr.h"
 #undef __GN_INSIDE_RDG2_H__
