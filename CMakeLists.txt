@@ -116,6 +116,72 @@ function(GN_add_source_folder result folder)
     set(${result} ${input} ${sources} ${headers} ${arg_PCH_SOURCE} ${extra_sources} PARENT_SCOPE)
 endfunction()
 
+# Compile GLSL source files to generated SPIR-V C++ headers.
+#
+# Usage:
+#     GN_compile_glsl_shaders(out_headers
+#         SOURCES shader.vert shader.frag
+#         OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+#         INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
+#         DEPENDS extra-header.h
+#         COMMENT "Compiling shaders")
+# ------------------------------------------------------------------------------
+function(GN_compile_glsl_shaders result)
+    set(oneValueArgs OUT_DIR COMMENT)
+    set(multiValueArgs SOURCES INCLUDE_DIRS DEPENDS)
+    cmake_parse_arguments(arg "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if (NOT arg_SOURCES)
+        message(FATAL_ERROR "GN_compile_glsl_shaders requires SOURCES")
+    endif()
+
+    if (NOT arg_OUT_DIR)
+        set(arg_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+
+    if (NOT arg_COMMENT)
+        set(arg_COMMENT "Compiling GLSL shaders to SPIR-V headers")
+    endif()
+
+    find_package(Python3 REQUIRED)
+
+    set(compile_tool ${CMAKE_SOURCE_DIR}/env/bin/compile_glsl_shader.py)
+    set(outputs)
+    set(sources)
+    foreach(source ${arg_SOURCES})
+        if (IS_ABSOLUTE "${source}")
+            set(source_path "${source}")
+        else()
+            set(source_path "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
+        endif()
+
+        get_filename_component(source_name "${source_path}" NAME)
+        string(REGEX REPLACE "\\.[^.]*$" "" source_stem "${source_name}")
+        string(REGEX MATCH "[^.]*$" source_ext "${source_name}")
+        list(APPEND outputs "${arg_OUT_DIR}/${source_stem}-${source_ext}.spv.h")
+        list(APPEND sources "${source_path}")
+    endforeach()
+
+    set(include_args)
+    foreach(include_dir ${arg_INCLUDE_DIRS})
+        list(APPEND include_args -I "${include_dir}")
+    endforeach()
+
+    add_custom_command(
+        OUTPUT ${outputs}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${arg_OUT_DIR}"
+        COMMAND ${Python3_EXECUTABLE} "${compile_tool}"
+                ${sources}
+                --out-dir "${arg_OUT_DIR}"
+                ${include_args}
+        DEPENDS ${compile_tool} ${sources} ${arg_DEPENDS}
+        COMMENT "${arg_COMMENT}"
+        VERBATIM
+    )
+
+    set(${result} ${outputs} PARENT_SCOPE)
+endfunction()
+
 # =======================
 # Detect current compiler
 # =======================

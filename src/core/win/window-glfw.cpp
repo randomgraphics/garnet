@@ -34,7 +34,7 @@ bool GN::win::WindowGlfw::init(const WindowAttachingParameters &) {
 void GN::win::WindowGlfw::quit() {
     GN_GUARD;
 
-    #if HAS_VULKAN
+    #if GN_BUILD_HAS_VULKAN
     for (const auto & kv : mVulkanSurfaces) {
         if (kv.second.pfnDestroy && kv.second.surface) kv.second.pfnDestroy((VkInstance) kv.first, kv.second.surface, nullptr);
     }
@@ -68,7 +68,7 @@ intptr_t GN::win::WindowGlfw::getMonitorHandle() const { return (intptr_t) mMoni
 intptr_t GN::win::WindowGlfw::getWindowHandle() const { return (intptr_t) mWindow; }
 
 intptr_t GN::win::WindowGlfw::getVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const {
-    #if HAS_VULKAN
+    #if GN_BUILD_HAS_VULKAN
     if (!mWindow) {
         GN_ERROR(sLogger)("getVulkanSurfaceHandle: window not created");
         return 0;

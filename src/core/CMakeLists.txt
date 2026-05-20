@@ -72,17 +72,16 @@ GN_add_source_folder(sources gfx/misc PCH_SOURCE gfx/misc/pch.cpp)
 GN_add_source_folder(sources gfx/rt PCH_SOURCE gfx/rt/pch.cpp)
 GN_add_source_folder(sources gpu/common PCH_SOURCE gpu/common/pch.cpp)
 GN_add_source_folder(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.cpp)
-GN_add_source_folder(sources gpu2)
+GN_add_source_folder(sources gpu2 PCH_SOURCE gpu2/pch.cpp)
 GN_add_source_folder(sources input PCH_SOURCE input/pch.cpp)
 GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
-# Build RDG
-
-GN_add_source_folder(rdg_sources rdg PCH_SOURCE rdg/pch.cpp EXTRA_SOURCES rdg/vk-shaders/*.*)
-add_subdirectory(rdg)
-set_source_files_properties(${rdg_sources} PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/rdg")
-list(APPEND sources ${rdg_sources})
+# Keep RDG2 source setup in this directory scope. GN_setup_pch and generated
+# shader include paths are source-file properties on GNcore-objects; if RDG2 is
+# added with add_subdirectory(), those properties are scoped to the child dir and
+# do not apply to this parent target.
+include(rdg2/CMakeLists.txt)
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
@@ -95,10 +94,7 @@ if(D3D11_FOUND)
     GN_add_source_folder(sources gpu/d3d11 PCH_SOURCE gpu/d3d11/pch.cpp)
 endif()
 
-# D3D12 GPU Sources
-if(D3D12_FOUND)
-    GN_add_source_folder(sources gpu2/d3d12 PCH_SOURCE gpu2/d3d12/pch.cpp)
-endif()
+# (D3D12 gpu2 backend removed; gpu2 sources are compiled via the unconditional GN_add_source_folder above)
 
 # if(VULKAN_FOUND)
 #     GN_add_source_folder(sources vulkan RECURSIVE PCH_SOURCE vulkan/pch.cpp)
@@ -120,6 +116,9 @@ add_library(GNcore-objects OBJECT ${sources} ${garnet_headers})
 set_target_properties(GNcore-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if(TARGET GNcore-rdg-shaders)
     add_dependencies(GNcore-objects GNcore-rdg-shaders)
+endif()
+if(TARGET GNcore-rdg2-shaders)
+    add_dependencies(GNcore-objects GNcore-rdg2-shaders)
 endif()
 
 # =======================
@@ -238,7 +237,6 @@ endif()
 
 # Vulkan
 if(VULKAN_FOUND)
-    target_compile_definitions(GNcore-objects PRIVATE HAS_VULKAN=1)
     # only include Vulkan headers. Do not link to Vulkan libraries. We'll use a loader to load all Vulkan functions.
     target_include_directories(GNcore-objects PUBLIC ${Vulkan_INCLUDE_DIRS})
     # rapid-vulkan (randomgraphics/rapid-vulkan) for Vulkan instance/device setup

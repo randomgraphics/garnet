@@ -856,7 +856,7 @@ public:
     friend bool operator<(const Str & s1, const Str & s2) { return -1 == str::compare(s1.mPtr, s2.mPtr); }
 
     ///
-    /// concatnate operator(1)
+    /// concatenate operator(1)
     ///
     friend Str operator+(const CharType * s1, const Str & s2) {
         Str r(s1);
@@ -865,7 +865,7 @@ public:
     }
 
     ///
-    /// concatnate operator(2)
+    /// concatenate operator(2)
     ///
     friend Str operator+(const Str & s1, const CharType * s2) {
         Str r(s1);
@@ -874,7 +874,7 @@ public:
     }
 
     ///
-    /// concatnate operator(3)
+    /// concatenate operator(3)
     ///
     friend Str operator+(const Str & s1, const Str & s2) {
         Str r(s1);
@@ -883,7 +883,7 @@ public:
     }
 
     ///
-    /// concatnate operator(4)
+    /// concatenate operator(4)
     ///
     friend Str operator+(const Str & s1, const std::basic_string<CharType> & s2) {
         Str r(s1);
@@ -892,7 +892,7 @@ public:
     }
 
     ///
-    /// concatnate operator(5)
+    /// concatenate operator(5)
     ///
     friend Str operator+(const std::basic_string<CharType> & s1, const Str & s2) {
         Str r(s2);
@@ -991,11 +991,13 @@ private:
 /// multi-byte string class
 ///
 typedef Str<char> StrA;
+static_assert(sizeof(StrA) == sizeof(char *), "StrA size must be the same as char pointer size");
 
 ///
 /// wide-char string class
 ///
 typedef Str<wchar_t> StrW;
+static_assert(sizeof(StrW) == sizeof(wchar_t *), "StrW size must be the same as wchar_t pointer size");
 
 ///
 /// Define custom string literal operator
@@ -1014,7 +1016,7 @@ template<size_t N, typename CHAR>
 class StackStr {
     typedef CHAR CharType;
 
-    size_t mCount;      ///< How many charecters in the string, not including null end.
+    size_t mCount;      ///< How many characters in the string, not including null end.
     CHAR   mBuf[N + 1]; ///< Pre-allocated string buffer
 
     static size_t sValidateLength(size_t len) { return len < N ? len : N; }

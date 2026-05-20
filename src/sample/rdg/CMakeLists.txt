@@ -1,19 +1,33 @@
-# Optional: regenerate solid-triangle SPIR-V headers via the general compile tool.
-set(_compile_tool ${CMAKE_SOURCE_DIR}/env/bin/compile_glsl_shader.py)
-add_custom_target(rdg-simple-triangle-shaders
-  COMMAND ${Python3_EXECUTABLE} ${_compile_tool}
-          ${CMAKE_CURRENT_SOURCE_DIR}/solid-triangle.vert
-          ${CMAKE_CURRENT_SOURCE_DIR}/solid-triangle.frag
-          --out-dir ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ${_compile_tool}
-  COMMENT "Compiling solid-triangle GLSL to SPIR-V headers"
+# Regenerate sample SPIR-V headers only when shader sources change.
+GN_compile_glsl_shaders(spv_headers
+  SOURCES solid-triangle.vert
+          solid-triangle.frag
+          cube-face.vert
+          cube-face.frag
+          cube-all-faces.frag
+          cube-draw.vert
+          cube-draw.frag
+  INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/core/rdg2/vk-shaders
+  COMMENT "Compiling RDG sample GLSL to SPIR-V headers"
 )
+add_custom_target(rdg-sample-shaders DEPENDS ${spv_headers})
 
-add_executable(GNsample-rdg-simple-triangle simple-triangle.cpp)
-target_include_directories(GNsample-rdg-simple-triangle PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(GNsample-rdg-simple-triangle GNcore)
+add_executable(GNsample-rdg2-open-graph-hello-world open-graph-hello-world.cpp)
+target_link_libraries(GNsample-rdg2-open-graph-hello-world GNcore)
 
-# PBR / draw-mesh sample (uses PbrShading, SharedShaderConstants, Material::load)
-add_executable(GNsample-rdg-draw-mesh draw-mesh.cpp)
-target_include_directories(GNsample-rdg-draw-mesh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(GNsample-rdg-draw-mesh GNcore)
+add_executable(GNsample-rdg2-simple-triangle simple-triangle2.cpp)
+target_include_directories(GNsample-rdg2-simple-triangle PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(GNsample-rdg2-simple-triangle GNcore)
+add_dependencies(GNsample-rdg2-simple-triangle rdg-sample-shaders)
+
+add_custom_target(rdg2-render-to-cube-shaders DEPENDS ${_rdg_sample_shader_hdrs})
+
+add_executable(GNsample-rdg2-render-to-cube render-to-cube2.cpp)
+target_include_directories(GNsample-rdg2-render-to-cube PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(GNsample-rdg2-render-to-cube GNcore)
+add_dependencies(GNsample-rdg2-render-to-cube rdg2-render-to-cube-shaders)
+
+# simple-pbr2: rdg2 PBR + skybox demo using SharedShaderConstants, PbrShading, SkyBox.
+# No per-sample shader compile step — PBR/skybox shaders are part of GNcore-rdg2-shaders.
+add_executable(GNsample-rdg2-pbr simple-pbr2.cpp)
+target_link_libraries(GNsample-rdg2-pbr GNcore)

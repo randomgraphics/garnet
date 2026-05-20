@@ -152,7 +152,10 @@ static bool sIsAbsPath(const StrA & path) {
 
 class NativeFileSystem : public FileSystem {
 public:
-    bool exist(const StrA & path) { return sNativeExist(FileSystem::toNativeDiskFilePath(path)); }
+    bool exist(const StrA & path) {
+        GN_VERBOSE(sLogger)("Checking existence of path '{}'", path.data());
+        return sNativeExist(FileSystem::toNativeDiskFilePath(path));
+    }
 
     bool isDir(const StrA & path) { return sNativeIsDir(FileSystem::toNativeDiskFilePath(path)); }
 
@@ -371,7 +374,8 @@ class MultiRootsFileSystem : public FileSystem {
 
     const StrA * findRoot(const StrA & path) {
         for (size_t i = 0; i < mRoots.size(); ++i) {
-            if (GN::fs::pathExist(joinPath(mRoots[i], path))) return &mRoots[i];
+            auto fullPath = joinPath(mRoots[i], path);
+            if (GN::fs::pathExist(fullPath)) return &mRoots[i];
         }
         return 0;
     }
@@ -453,7 +457,13 @@ public:
         if (!gnroot.empty()) {
             addRoot(StrA::format("native::{}/media", gnroot.data()));
         } else {
+#if GN_WINPC
+            // On Windows, build output is build/<compiler>/bin/<variant>. So we need to go up 4 levels to reach garnet root.
             addRoot("app::../../../../media");
+#else
+            // On other platforms, build output is build/<compiler>/bin. So we need to go up 3 levels to reach garnet root.
+            addRoot("app::../../../media");
+#endif
         }
     }
 };

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "mtgpu.h"
-#include <garnet/GNgfx2.h>
+#include <garnet/GNgpu2.h>
 
 using namespace GN;
 using namespace GN::gfx;

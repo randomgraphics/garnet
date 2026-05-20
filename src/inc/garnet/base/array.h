@@ -220,7 +220,7 @@ class StackArray {
 public:
     typedef T ElementType; ///< element type
 
-    static const SIZE_TYPE MAX_SIZE = (SIZE_TYPE) N; ///< maximum size
+    inline static constexpr SIZE_TYPE MAX_SIZE = (SIZE_TYPE) N; ///< maximum size
 
     ///
     /// default constructor

@@ -1,0 +1,257 @@
+# Assignment: Refactor Open Graph Opaque Handles to Refcounted Entities
+
+---
+
+## Goals
+
+Replace the raw opaque pointer handles used by RDG2 open graph (`ArtifactPtr`,
+`TokenPtr`, and `NodePtr`) with typed refcounted entity handles. The new public
+types should still hide implementation details: each handle type is a small
+public interface, normally a pure virtual `Entity` subclass with only the
+minimal utility/query methods that callers need.
+
+The refactor should make handle lifetime management natural and explicit.
+Graph-created artifacts, tokens, and nodes should stay alive while callers hold
+references. The graph implementation should no longer depend on raw opaque
+pointers plus FOURCC validation alone for lifetime safety.
+
+Artifact handles should remember the graph that created them with
+`WeakRef<Graph>`. Graph methods should reject artifacts, tokens, and nodes that
+belong to a different graph. Token and node handles should follow the same
+ownership/misuse detection rule unless we agree on a narrower scope.
+
+Artifacts should keep only the latest published content. Publishing new content
+releases the graph's reference to the previous content immediately. Callers that
+need older content are responsible for holding their own `AutoRef<Entity>` to
+that older content.
+
+---
+
+## Design
+
+The feature spec is maintained separately next to this plan:
+
+- `agent/SPEC_OPEN_GRAPH_REFCOUNTED_HANDLES.md`
+
+Use that spec as the source of truth for proposed API shape, ownership model,
+artifact content semantics, misuse detection, and resolved design decisions.
+
+### Resolved Decisions
+
+Agreed:
+
+- Keep `ArtifactPtr`, `TokenPtr`, and `NodePtr` names, but make them aliases to
+  `AutoRef<Artifact>`, `AutoRef<Token>`, and `AutoRef<Node>`.
+- Make `Artifact`, `Token`, and `Node` public `Entity` subclasses.
+- Use `WeakRef<Graph>` as each handle's graph back-reference.
+- Handles do not keep their graph alive. After graph destruction, operations
+  that need graph access fail when weak-ref promotion fails.
+- Reject cross-graph handles; no cross-graph handle use case is currently known.
+- Expose no additional public utility methods on `Artifact`, `Token`, or `Node`
+  initially.
+- Keep FOURCC as a pure implementation detail in private concrete handle
+  classes.
+- Use `AutoRef` internally only where ownership/lifetime requires it. Prefer raw
+  pointers/references for hot graph-internal links when another owner guarantees
+  the handle cannot be deleted while the link is used.
+- Prefer references or const references over pointers for internal function
+  parameters when the caller has already handled null and the callee does not
+  accept null.
+- Defer moving selected graph methods onto handle classes to a possible second
+  phase. The `WeakRef<Graph>` stored in each handle makes that possible later,
+  but this first phase keeps behavior on `Graph`.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 5 — docs updated for refcounted handle lifetime model
+  Phase 0: assignment plan created; implementation not started
+  Phase 1: public handle aliases changed to AutoRef-backed Entity interfaces
+  Phase 2: open-graph private handle impls and ownership registries refactored
+  Phase 3: weak graph validation and focused lifetime/misuse tests added
+  Phase 5: README updated for latest-content retention and refcounted handles
+In progress: none — implementation slice verified; future handle convenience API remains deferred
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Primary files:
+
+- `agent/SPEC_OPEN_GRAPH_REFCOUNTED_HANDLES.md` — feature specification and resolved decisions.
+- `src/inc/garnet/rdg2/open-graph.h` — public graph, node, token, and artifact API.
+- `src/core/rdg2/open-graph.cpp` — open graph implementation with private concrete handle classes.
+
+Known call sites:
+
+- `src/inc/garnet/rdg2/shared-shader-constants2.h`
+- `src/inc/garnet/rdg2/simple-effect.h`
+- `src/core/rdg2/shared-shader-constants2.cpp`
+- `src/core/rdg2/simple-effect.cpp`
+- `src/core/rdg2/test/shared-shader-constants2-test.cpp`
+- `src/sample/rdg/open-graph-hello-world.cpp`
+- `src/sample/rdg/simple-triangle2.cpp`
+- `src/sample/rdg/simple-pbr2.cpp`
+- `src/sample/rdg/render-to-cube2.cpp`
+
+Supporting repo guidance:
+
+- `AGENTS.md`
+- `codex/skills/garnet-feature-workflow/SKILL.md`
+- `codex/skills/garnet-rdg-gpu2/SKILL.md`
+- `codex/skills/garnet-build-test/SKILL.md`
+
+--- BUILD / CI ---
+
+Plan validation:
+
+```bash
+python3 agent/progress-monitor.py
+```
+
+Implementation verification, once coding starts:
+
+```bash
+env/bin/format-all-sources.py -dqn
+env/bin/build.py d
+```
+
+Targeted tests/samples to consider after implementation:
+
+```bash
+build/darwin.gcc.d/bin/GNtest-internal
+build/darwin.gcc.d/bin/GNsample-rdg2-pbr
+```
+
+If graphics runtime tests cannot run in the local environment, record the exact
+failure mode and rely on compile plus narrower unit tests where possible.
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Do not start coding until the plan and open questions are agreed.
+- Use `feature/rdg/main` as the base branch unless told otherwise.
+- Use a `wip/rdg2/<topic>` branch for implementation after plan approval.
+- Keep public API changes and call-site updates in explicit verified steps.
+- Preserve existing user/manual changes.
+- Use `AutoRef<T>` for RDG/gpu2 ownership.
+- Use `RuntimeType::cast<T>()`; do not use `dynamic_cast`.
+- Prefer references/const references for required internal parameters after
+  null validation at public entry points.
+- Keep comments meaningful and durable. Use them to explain why a lifetime,
+  ownership, validation, or ordering choice is necessary; record assumptions,
+  invariants, and purpose. Avoid comments that merely restate what the next line
+  does.
+- Prefer focused tests for misuse detection and lifetime behavior.
+
+--- TASK BREAKDOWN ---
+
+Phase 0: Plan and API Agreement
+─────────────────────────────────────────────────────────────────────
+  Task 0.1: Draft the assignment plan and collect open API/lifetime questions
+    Verify: Assignment file exists and `python3 agent/progress-monitor.py` can parse it
+    Commit: "docs(rdg2): plan open graph refcounted handles (Phase 0.1)"
+
+Phase 1: Public Handle API
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Replace raw handle typedefs with refcounted public handle interfaces
+    - Define `Artifact`, `Token`, and `Node` as public refcounted interfaces.
+    - Update `ArtifactPtr`, `TokenPtr`, and `NodePtr` aliases to `AutoRef`.
+    - Keep public methods minimal according to agreed answers.
+    Verify: `env/bin/build.py d` reaches compile errors only in implementation/call-site code expected by the API change, or fully builds if all dependent code is adjusted in this step
+    Commit: "rdg2(open-graph): declare refcounted handle interfaces (Phase 1.1)"
+
+  Task 1.2: Update public dependent structs and helper APIs for `AutoRef` handles
+    - Update `NodeDesc::dependencies`, `NodeDesc::parent`, and convenience helpers.
+    - Update `VersionedArtifact` and public RDG2 effect headers.
+    Verify: `env/bin/build.py d`
+    Commit: "rdg2(open-graph): update public handle users (Phase 1.2)"
+
+Phase 2: Private Implementation Handles
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Move `OpaqueBase`/FOURCC validation into private implementation handles
+    - Add `ArtifactImpl`, `TokenImpl`, and `NodeImpl`.
+    - Move implementation state from public handle names into private impl classes.
+    - Keep FOURCC validation internally as an early guard for incoming handles.
+    Verify: `env/bin/build.py d`
+    Commit: "rdg2(open-graph): move handles to refcounted impl entities (Phase 2.1)"
+
+  Task 2.2: Refactor graph registries and internal ownership around refcounted handles
+    - Replace raw owning registries with `AutoRef` containers or remove registries that only existed for deletion.
+    - Review each internal handle link and keep it raw when an owning registry or nearby owner already guarantees lifetime.
+    - Use `AutoRef` only for internal ownership edges and async/lifetime boundaries that need it.
+    Verify: `env/bin/build.py d`
+    Commit: "rdg2(open-graph): refactor handle ownership registries (Phase 2.2)"
+
+Phase 3: Graph Ownership and Misuse Detection
+─────────────────────────────────────────────────────────────────────
+  Task 3.1: Add graph identity/back-reference validation to artifacts, tokens, and nodes
+    - Implement the agreed weak/strong/raw graph association.
+    - Reject handles passed to the wrong graph with clear errors.
+    Verify: Add or update unit tests for cross-graph misuse; run `env/bin/build.py d`
+    Commit: "rdg2(open-graph): validate handle graph ownership (Phase 3.1)"
+
+  Task 3.2: Define and test handle behavior across graph destruction
+    - Implement the agreed post-destruction behavior.
+    - Add lifetime tests for content retention and stale handle behavior.
+    Verify: Targeted RDG2 tests plus `env/bin/build.py d`
+    Commit: "rdg2(open-graph): test refcounted handle lifetimes (Phase 3.2)"
+
+Phase 4: Call Sites and Samples
+─────────────────────────────────────────────────────────────────────
+  Task 4.1: Update RDG2 library call sites to use refcounted handles idiomatically
+    - Update SSC and PBR internals.
+    - Remove raw pointer assumptions from helper structs.
+    Verify: `env/bin/build.py d`
+    Commit: "rdg2: update library call sites for refcounted graph handles (Phase 4.1)"
+
+  Task 4.2: Update samples and tests to use refcounted handles
+    - Update open graph hello world, triangle, PBR, render-to-cube, and targeted tests.
+    Verify: `env/bin/build.py d` and runnable samples/tests where environment permits
+    Commit: "sample(rdg2): update graph handle usage (Phase 4.2)"
+
+Phase 5: Cleanup and Documentation
+─────────────────────────────────────────────────────────────────────
+  Task 5.1: Remove obsolete opaque-pointer comments and update RDG2 docs
+    - Remove references to raw opaque public handles.
+    - Document FOURCC as an internal diagnostic guard rather than the lifetime model.
+    - Document latest-content retention and caller-owned old content.
+    Verify: `env/bin/format-all-sources.py -dqn` and `env/bin/build.py d`
+    Commit: "docs(rdg2): document refcounted graph handles (Phase 5.1)"
+
+Phase 6: Handle Convenience API — FUTURE
+─────────────────────────────────────────────────────────────────────
+  Defer until after the refcounted handle lifetime refactor is complete. Evaluate
+  whether selected `Graph` methods should move or mirror onto `Artifact`,
+  `Token`, or `Node` by promoting each handle's `WeakRef<Graph>`.
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 0 (plan):
+  agent/ASSIGNMENT_OPEN_GRAPH_REFCOUNTED_HANDLES.txt — NEW: feature plan and open questions
+  agent/SPEC_OPEN_GRAPH_REFCOUNTED_HANDLES.md — NEW: proposed feature specification
+
+Phase 1 (public API):
+  src/inc/garnet/rdg2/open-graph.h — replace raw opaque pointer typedefs with refcounted interfaces
+  src/inc/garnet/rdg2/shared-shader-constants2.h — update public artifact/token handle usage
+  src/inc/garnet/rdg2/simple-effect.h — update public artifact/token handle usage
+
+Phase 2 (implementation):
+  src/core/rdg2/open-graph.cpp — move `OpaqueBase`/FOURCC validation into private impl handles and replace raw ownership registries
+
+Phase 3 (tests):
+  src/core/rdg2/test/shared-shader-constants2-test.cpp — adjust existing graph-handle tests
+  src/core/rdg2/test/open-graph-test.cpp — NEW: likely location for focused lifetime/misuse tests if no existing open-graph test file is found
+
+Phase 4 (call sites):
+  src/core/rdg2/shared-shader-constants2.cpp — update internal handle storage and queries
+  src/core/rdg2/simple-effect.cpp — update load/content handle usage
+  src/sample/rdg/open-graph-hello-world.cpp — update simple graph handle usage
+  src/sample/rdg/simple-triangle2.cpp — update sample graph handle usage
+  src/sample/rdg/simple-pbr2.cpp — update PBR sample graph handle usage
+  src/sample/rdg/render-to-cube2.cpp — update render-to-cube graph handle usage
+
+Phase 5 (docs):
+  src/inc/garnet/rdg2/README.md — update terminology and lifetime model
+
+Phase 6 (future handle API):
+  src/inc/garnet/rdg2/open-graph.h — possible future convenience methods on handle interfaces
+  src/core/rdg2/open-graph.cpp — possible future implementations that promote `WeakRef<Graph>`

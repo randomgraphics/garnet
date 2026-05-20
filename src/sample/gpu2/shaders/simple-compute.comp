@@ -1,0 +1,17 @@
+#version 450
+// Adds `increment` to each element of `data`, up to `count` elements.
+layout(local_size_x = 64) in;
+
+layout(set = 0, binding = 0) buffer SSBO { float data[]; }
+ssbo;
+
+layout(push_constant) uniform PC {
+    uint  count;
+    float increment;
+}
+pc;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx < pc.count) ssbo.data[idx] += pc.increment;
+}
