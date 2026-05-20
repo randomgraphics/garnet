@@ -555,10 +555,10 @@ void GpuResourceStateTrackerVulkan::flushToResources() {
         if (!tracked.tex) continue;
         for (uint32_t mip = 0; mip < tracked.incoming.numMips; ++mip) {
             for (uint32_t face = 0; face < tracked.incoming.numLayers; ++face) {
-                forEachAspectBit(tracked.incoming.validAspects, [&](vk::ImageAspectFlagBits aspect) {
-                    const auto * ps = tracked.incoming.get(mip, face, aspect);
+                forEachAspectBit(tracked.incoming.validAspects, [t = tracked, m = mip, f = face](vk::ImageAspectFlagBits aspect) {
+                    const auto * ps = t.incoming.get(m, f, aspect);
                     if (!ps) return;
-                    tracked.tex->setState(*ps, vk::ImageSubresourceRange(aspect, mip, 1, face, 1));
+                    t.tex->setState(*ps, vk::ImageSubresourceRange(aspect, m, 1, f, 1));
                 });
             }
         }
