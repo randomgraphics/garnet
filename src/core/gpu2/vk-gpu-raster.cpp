@@ -140,11 +140,11 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
     outFormats.colors.reserve(mRenderTarget.colorTargets.size());
 
     for (size_t i = 0; i < mRenderTarget.colorTargets.size(); ++i) {
-        vk::Image               img {};
-        vk::ImageView           view {};
-        vk::Extent2D            ext {};
-        vk::Format              fmt    = vk::Format::eUndefined;
-        const GpuResourceView & ctView = mRenderTarget.colorTargets[i].target;
+        vk::Image             img {};
+        vk::ImageView         view {};
+        vk::Extent2D          ext {};
+        vk::Format            fmt    = vk::Format::eUndefined;
+        const GpuResourceView ctView = mRenderTarget.colorTargets[i].view();
         if (!resolveColorAttachment(ctView, &img, &view, &ext, &fmt)) {
             GN_ERROR(sLogger)("RasterPassPayload: could not resolve color attachment {}", i);
             return false;

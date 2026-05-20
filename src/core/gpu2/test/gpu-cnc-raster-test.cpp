@@ -74,7 +74,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     rtView.resource = renderTarget;
 
     RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget {.target = rtView});
+    rt.colorTargets.append(RasterTarget::ColorTarget(rtView));
     rt.setClearColor(0.0f, 0.0f, 0.0f);
 
     auto raster = GpuRaster::create({.gpu = gpu, .target = rt});

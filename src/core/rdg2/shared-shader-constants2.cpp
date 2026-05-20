@@ -47,7 +47,7 @@ struct SscContent final : public SharedShaderConstants::Content {
 // Falls back to 1×1 to avoid a zero-size projection when no target is set.
 static std::pair<uint32_t, uint32_t> getRenderTargetSize(const gpu2::RasterTarget & rt) {
     for (const auto & c : rt.colorTargets) {
-        if (auto tex = c.target.texture()) return {tex->descriptor().width, tex->descriptor().height};
+        if (c.texture) return {c.texture->descriptor().width, c.texture->descriptor().height};
     }
     if (auto tex = rt.depthStencilTarget.texture()) return {tex->descriptor().width, tex->descriptor().height};
     return {1u, 1u};

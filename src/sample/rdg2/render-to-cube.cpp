@@ -195,7 +195,7 @@ public:
                                                         for (uint32_t f = 0; f < 6; ++f) {
                                                             GpuRaster::CreateParameters rcp;
                                                             rcp.gpu = mCtx.gpu;
-                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = makeFaceView(mCubemap, f)});
+                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
                                                             rcp.target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
                                                             // Bind the face's source image at set=0, binding=0 for the fragment sampler2D.
@@ -237,7 +237,7 @@ public:
                                                         GpuRaster::CreateParameters rcp;
                                                         rcp.gpu = mCtx.gpu;
                                                         for (uint32_t f = 0; f < 6; ++f) {
-                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = makeFaceView(mCubemap, f)});
+                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
                                                         }
                                                         rcp.target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -377,7 +377,7 @@ public:
 
                                    GpuRaster::CreateParameters rcp;
                                    rcp.gpu = mCtx.gpu;
-                                   rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = swapView});
+                                   rcp.target.colorTargets.append(RasterTarget::ColorTarget(swapView));
                                    rcp.target.setDepthStencilTarget(depthView);
                                    rcp.target.setClearColor(0.05f, 0.05f, 0.1f, 1.0f);
                                    rcp.target.setClearDepth(1.0f);

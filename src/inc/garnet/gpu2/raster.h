@@ -21,7 +21,7 @@ namespace GN::gpu2 {
 struct RasterState {
     // ---- nested types ----
 
-    enum class Compare {
+    enum class Compare : uint8_t {
         NEVER = 0,     // no read, no write
         LESS,          // read and write
         LESS_EQUAL,    // read and write
@@ -33,8 +33,8 @@ struct RasterState {
     };
 
     struct DepthState {
-        Compare func  = Compare::ALWAYS; // depth disabled by default
-        bool    write = false;
+        Compare func  : 3 = Compare::ALWAYS; // depth disabled by default
+        bool    write : 1 = false;
 
         constexpr bool testEnabled() const { return Compare::NEVER != func && Compare::ALWAYS != func; }
         constexpr bool writeEnabled() const { return Compare::NEVER != func && write; }
@@ -43,7 +43,7 @@ struct RasterState {
     };
 
     struct StencilState {
-        enum Op {
+        enum Op : uint8_t {
             KEEP = 0, // no read, no write
             ZERO,     // write only
             REPLACE,  // write only
@@ -54,13 +54,13 @@ struct RasterState {
             DEC,      // read and write
         };
 
-        Compare compare   = Compare::ALWAYS; ///< stencil comparison function; disabled by default
-        Op      pass      = KEEP;            ///< stencil operation on pass
-        Op      fail      = KEEP;            ///< stencil operation on fail
-        Op      zFail     = KEEP;            ///< stencil operation on depth fail
-        uint8_t ref       = 0;
-        uint8_t readMask  = 0xFF;
-        uint8_t writeMask = 0xFF;
+        uint8_t ref         = 0;
+        uint8_t readMask    = 0xFF;
+        uint8_t writeMask   = 0xFF;
+        Compare compare : 3 = Compare::ALWAYS; ///< stencil comparison function; disabled by default
+        Op      pass    : 3 = KEEP;            ///< stencil operation on pass
+        Op      fail    : 3 = KEEP;            ///< stencil operation on fail
+        Op      zFail   : 3 = KEEP;            ///< stencil operation on depth fail
 
         constexpr bool enabled() const {
             bool read  = (0 != readMask) && (Compare::NEVER != compare) && (Compare::ALWAYS != compare);
@@ -103,9 +103,9 @@ struct RasterState {
         constexpr bool operator!=(const ScissorRect & o) const { return !operator==(o); }
     };
 
-    enum FillMode { FILL_SOLID = 0, FILL_WIREFRAME, FILL_POINT };
-    enum CullMode { CULL_NONE = 0, CULL_FRONT, CULL_BACK };
-    enum FrontFace { FRONT_CCW = 0, FRONT_CW };
+    enum FillMode : uint8_t { FILL_SOLID = 0, FILL_WIREFRAME, FILL_POINT };
+    enum CullMode : uint8_t { CULL_NONE = 0, CULL_FRONT, CULL_BACK };
+    enum FrontFace : uint8_t { FRONT_CCW = 0, FRONT_CW };
 
     // ---- construction ----
 
@@ -174,7 +174,7 @@ struct RasterState {
 
 struct RasterTarget {
     struct BlendState {
-        enum Arg {
+        enum Arg : uint8_t {
             ZERO = 0,
             ONE,
             SRC_COLOR,
@@ -189,7 +189,7 @@ struct RasterTarget {
             INV_BLEND_FACTOR,
         };
 
-        enum Op {
+        enum Op : uint8_t {
             ADD,
             SUB,
             REV_SUB,
@@ -198,13 +198,13 @@ struct RasterTarget {
         };
 
         // Default blend mode is disabled.
-        Op       colorOp  = Op::ADD;
-        Arg      colorSrc = Arg::ONE;
-        Arg      colorDst = Arg::ZERO;
-        Op       alphaOp  = Op::ADD;
-        Arg      alphaSrc = Arg::ONE;
-        Arg      alphaDst = Arg::ZERO;
-        Vector4f factors  = {0.0f, 0.0f, 0.0f, 0.0f};
+        Vector4f factors      = {0.0f, 0.0f, 0.0f, 0.0f};
+        Op       colorOp  : 3 = Op::ADD;
+        Arg      colorSrc : 4 = Arg::ONE;
+        Arg      colorDst : 4 = Arg::ZERO;
+        Op       alphaOp  : 3 = Op::ADD;
+        Arg      alphaSrc : 4 = Arg::ONE;
+        Arg      alphaDst : 4 = Arg::ZERO;
 
         constexpr bool enabled() const {
             return colorOp != Op::ADD || colorSrc != Arg::ONE || colorDst != Arg::ZERO || alphaOp != Op::ADD || alphaSrc != Arg::ONE || alphaDst != Arg::ZERO;
@@ -223,11 +223,37 @@ struct RasterTarget {
     };
 
     struct ColorTarget {
-        GpuResourceView target     = {};
-        BlendState      blendState = {};
-        uint8_t         writeMask  = 0xFF; // 4 lower bits: write mask for R, G, B, A
+        AutoRef<Texture>      texture        = {};
+        gfx::img::PixelFormat format         = gfx::img::PixelFormat::UNKNOWN();
+        BlendState            blendState     = {};
+        uint32_t              mip       : 16 = 0;
+        uint32_t              face      : 16 = 0;
+        uint8_t               writeMask : 4  = 0xF; // write mask for R, G, B, A
 
-        bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
+        ColorTarget() = default;
+        explicit ColorTarget(const GpuResourceView & view) { setView(view); }
+
+        GpuResourceView view() const {
+            GpuResourceView v;
+            v.resource = texture;
+            v.setSubresourceIndex(GpuResourceView::SubresourceIndex {.mip = mip, .face = face})
+                .setSubresourceExtent(GpuResourceView::SubresourceExtent {.numMipLevels = 1, .numArrayLayers = 1})
+                .setImageViewFormat(format);
+            return v;
+        }
+
+        ColorTarget & setView(const GpuResourceView & view) {
+            texture = view.texture();
+            mip     = view.imageView.range.i.mip;
+            face    = view.imageView.range.i.face;
+            format  = view.imageView.format;
+            return *this;
+        }
+
+        bool operator==(const ColorTarget & other) const {
+            return texture == other.texture && mip == other.mip && face == other.face && format == other.format && blendState == other.blendState &&
+                   writeMask == other.writeMask;
+        }
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
 
@@ -248,7 +274,7 @@ struct RasterTarget {
         if (index >= colorTargets.size()) GN_UNLIKELY {
                 colorTargets.resize(index + 1);
             }
-        colorTargets[index].target = target;
+        colorTargets[index].setView(target);
         return *this;
     }
 

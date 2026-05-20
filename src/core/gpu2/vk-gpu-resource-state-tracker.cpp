@@ -332,9 +332,10 @@ bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
     bool ok = true;
     for (size_t i = 0; i < rt.colorTargets.size(); ++i) {
         const auto & ct = rt.colorTargets[i];
-        if (!ct.target.isTexture() || !ct.target.texture()) continue;
-        auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture().get());
-        if (tex && !addColorTarget(tex, ct.target)) {
+        if (!ct.texture) continue;
+        auto *                tex  = RuntimeType::cast<TextureVulkanBase>(ct.texture.get());
+        const GpuResourceView view = ct.view();
+        if (tex && !addColorTarget(tex, view)) {
             GN_ERROR(sLogger)("GpuResourceStateTrackerVulkan: render target hazard on color target slot {}; aborting render pass", i);
             ok = false;
         }

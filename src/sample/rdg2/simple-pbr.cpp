@@ -22,7 +22,7 @@ static VersionedArtifact updateSsc(SharedShaderConstants * ssc, const Swapchain:
 
     // Update per-frame SSC data before takeSnapshot() freezes it into the UBO.
     gpu2::RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget {.target = frame.view});
+    rt.colorTargets.append(RasterTarget::ColorTarget(frame.view));
     rt.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
 
     ssc->set0.renderTarget                = rt;

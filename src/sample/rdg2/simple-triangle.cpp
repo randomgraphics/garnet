@@ -148,7 +148,7 @@ int main(int argc, const char ** argv) {
 
             GpuRaster::CreateParameters rcp;
             rcp.gpu = gpuContext;
-            rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = frame.view});
+            rcp.target.colorTargets.append(RasterTarget::ColorTarget(frame.view));
             rcp.target.setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
 
             GpuRaster::DrawParameters drawParams;
