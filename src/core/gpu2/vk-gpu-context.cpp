@@ -253,7 +253,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
 
     // Submit to GPU.
     rv::CommandQueue::SubmitParameters qsp;
-    qsp.commandBuffers = {recordCtx.cmd};
+    qsp.commandBuffers = {1, &recordCtx.cmd};
     qsp.waitBinaries   = {(uint32_t) waitBinaries.size(), waitBinaries.data()};
     qsp.waitPoints     = {(uint32_t) waitPoints.size(), waitPoints.data()};
     qsp.signalPoints   = {1, &mainPoint};
