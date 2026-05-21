@@ -21,9 +21,9 @@ static VersionedArtifact updateSsc(SharedShaderConstants * ssc, const Swapchain:
     const glm::mat4        camToWorld = glm::inverse(glm::lookAtRH(eye, kTarget, kUp));
 
     // Update per-frame SSC data before takeSnapshot() freezes it into the UBO.
-    gpu2::RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget(frame.view));
-    rt.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
+    auto rt = AutoRef<gpu2::RasterTarget>::make("simple-pbr-target");
+    rt->colorTargets.append(RasterTarget::ColorTarget(frame.view));
+    rt->setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
 
     ssc->set0.renderTarget                = rt;
     ssc->set0.camera.cameraPosition       = eye;

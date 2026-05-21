@@ -194,9 +194,10 @@ public:
 
                                                         for (uint32_t f = 0; f < 6; ++f) {
                                                             GpuRaster::CreateParameters rcp;
-                                                            rcp.gpu = mCtx.gpu;
-                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
-                                                            rcp.target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                                                            rcp.gpu    = mCtx.gpu;
+                                                            rcp.target = AutoRef<RasterTarget>::make("cubemap-face-target");
+                                                            rcp.target->colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
+                                                            rcp.target->setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
                                                             // Bind the face's source image at set=0, binding=0 for the fragment sampler2D.
                                                             GpuResourceView faceView;
@@ -235,11 +236,12 @@ public:
                                                         }
 
                                                         GpuRaster::CreateParameters rcp;
-                                                        rcp.gpu = mCtx.gpu;
+                                                        rcp.gpu    = mCtx.gpu;
+                                                        rcp.target = AutoRef<RasterTarget>::make("cubemap-all-faces-target");
                                                         for (uint32_t f = 0; f < 6; ++f) {
-                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
+                                                            rcp.target->colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
                                                         }
-                                                        rcp.target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                                                        rcp.target->setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
                                                         // Bind all 6 face textures at set=0, binding=0..5 for the fragment shader.
                                                         GpuResourceTable resources;
@@ -376,13 +378,14 @@ public:
                                    depthView.resource = mDepthTex;
 
                                    GpuRaster::CreateParameters rcp;
-                                   rcp.gpu = mCtx.gpu;
-                                   rcp.target.colorTargets.append(RasterTarget::ColorTarget(swapView));
-                                   rcp.target.setDepthStencilTarget(depthView);
-                                   rcp.target.setClearColor(0.05f, 0.05f, 0.1f, 1.0f);
-                                   rcp.target.setClearDepth(1.0f);
-                                   rcp.target.states.setCullMode(RasterState::CULL_NONE);
-                                   rcp.target.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
+                                   rcp.gpu    = mCtx.gpu;
+                                   rcp.target = AutoRef<RasterTarget>::make("cube-display-target");
+                                   rcp.target->colorTargets.append(RasterTarget::ColorTarget(swapView));
+                                   rcp.target->setDepthStencilTarget(depthView);
+                                   rcp.target->setClearColor(0.05f, 0.05f, 0.1f, 1.0f);
+                                   rcp.target->setClearDepth(1.0f);
+                                   rcp.target->states.setCullMode(RasterState::CULL_NONE);
+                                   rcp.target->states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
 
                                    RasterGeometry geom;
                                    geom.format.attributes.append(
@@ -574,7 +577,8 @@ int main(int argc, const char ** argv) {
     if (!cubeDraw.valid()) return -1;
 
     // Pre-allocate slot 0 so per-frame setColorTarget(0, ...) is an update, not an append.
-    ssc->set0.renderTarget.colorTargets.append(RasterTarget::ColorTarget {});
+    ssc->set0.renderTarget = AutoRef<RasterTarget>::make("render-to-cube-ssc-target");
+    ssc->set0.renderTarget->colorTargets.append(RasterTarget::ColorTarget {});
 
     GN_INFO(sLogger)("Starting render loop...");
 
@@ -605,7 +609,7 @@ int main(int argc, const char ** argv) {
             ssc->set0.camera.nearPlane            = 0.1f;
             ssc->set0.camera.farPlane             = 100.f;
             ssc->set0.frameConstants.frameCounter = frameCounter;
-            ssc->set0.renderTarget.setColorTarget(0, frame.view);
+            ssc->set0.renderTarget->setColorTarget(0, frame.view);
         }
         VersionedArtifact sscSnapshot = ssc->takeSnapshot();
 

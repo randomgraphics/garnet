@@ -136,6 +136,12 @@ struct RasterState {
     std::optional<Viewport>     viewport;
     std::optional<ScissorRect>  scissorRect;
 
+    bool operator==(const RasterState & other) const {
+        return fillMode == other.fillMode && cullMode == other.cullMode && frontFace == other.frontFace && depthState == other.depthState &&
+               stencilState == other.stencilState && viewport == other.viewport && scissorRect == other.scissorRect;
+    }
+    bool operator!=(const RasterState & other) const { return !operator==(other); }
+
     // ---- setters (chainable) ----
 
     RasterState & setFillMode(FillMode v) {
@@ -172,7 +178,9 @@ struct RasterState {
 // Raster target
 // -----------------------------
 
-struct RasterTarget {
+struct RasterTarget : public RootEntity {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+
     struct BlendState {
         enum Arg : uint8_t {
             ZERO = 0,
@@ -266,6 +274,8 @@ struct RasterTarget {
     uint32_t         clearStencil = 0;
     RasterState      states       = RasterState::WithDefaults {}; ///< full render state baseline; every field has a value
 
+    explicit RasterTarget(const StrA & entityName = "raster_target"): RootEntity(TYPE_INFO(), entityName) {}
+
     RasterTarget & setColorTarget(size_t index, const GpuResourceView & target) {
         if (index >= colorTargets.MAX_SIZE) GN_UNLIKELY {
                 GN_ERROR(getLogger("GN.gpu2"))("Invalid color target index: %zu. Max supported is %zu.", index, colorTargets.MAX_SIZE);
@@ -300,7 +310,20 @@ struct RasterTarget {
         clearStencil = clearStencil_;
         return *this;
     }
+
+    bool operator==(const RasterTarget & other) const {
+        return colorTargets == other.colorTargets && depthStencilTarget == other.depthStencilTarget && clearColor.u4[0] == other.clearColor.u4[0] &&
+               clearColor.u4[1] == other.clearColor.u4[1] && clearColor.u4[2] == other.clearColor.u4[2] && clearColor.u4[3] == other.clearColor.u4[3] &&
+               clearDepth == other.clearDepth && clearStencil == other.clearStencil && states == other.states;
+    }
+    bool operator!=(const RasterTarget & other) const { return !operator==(other); }
 };
+
+inline bool rasterTargetsEqual(const AutoRef<RasterTarget> & a, const AutoRef<RasterTarget> & b) {
+    if (a.get() == b.get()) return true;
+    if (!a || !b) return false;
+    return *a == *b;
+}
 
 // -----------------------------
 // RasterGeometry
@@ -404,9 +427,9 @@ public:
     GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
 
     struct CreateParameters {
-        AutoRef<GpuContext> gpu;
-        RasterTarget        target;
-        size_t              numberOfDrawsHint =
+        AutoRef<GpuContext>   gpu;
+        AutoRef<RasterTarget> target;
+        size_t                numberOfDrawsHint =
             1000; ///< optional hint for expected number of draw calls, used to minimize internal allocations. The number of draws can exceed this hint.
     };
     GN_API static AutoRef<GpuRaster> create(const CreateParameters &);

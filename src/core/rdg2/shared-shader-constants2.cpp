@@ -45,11 +45,12 @@ struct SscContent final : public SharedShaderConstants::Content {
 
 // Deduce render-target pixel dimensions from the first valid attachment.
 // Falls back to 1×1 to avoid a zero-size projection when no target is set.
-static std::pair<uint32_t, uint32_t> getRenderTargetSize(const gpu2::RasterTarget & rt) {
-    for (const auto & c : rt.colorTargets) {
+static std::pair<uint32_t, uint32_t> getRenderTargetSize(const AutoRef<gpu2::RasterTarget> & rt) {
+    if (!rt) return {1u, 1u};
+    for (const auto & c : rt->colorTargets) {
         if (c.texture) return {c.texture->descriptor().width, c.texture->descriptor().height};
     }
-    if (auto tex = rt.depthStencilTarget.texture()) return {tex->descriptor().width, tex->descriptor().height};
+    if (auto tex = rt->depthStencilTarget.texture()) return {tex->descriptor().width, tex->descriptor().height};
     return {1u, 1u};
 }
 
@@ -236,7 +237,7 @@ public:
         return {mContentArtifact, version};
     }
 
-    AutoRef<Content> getContent(const ArtifactPtr & artifact) const override { return mGraph->getTypedArtifactContent<Content>(artifact); }
+    AutoRef<const Content> getContent(const ArtifactPtr & artifact) const override { return mGraph->getTypedArtifactContent<Content>(artifact); }
 
     gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet & set0Resources) const override {
         gpu2::GpuRaster::DrawParameters dp;

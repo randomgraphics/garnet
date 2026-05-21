@@ -147,9 +147,10 @@ int main(int argc, const char ** argv) {
             if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) return;
 
             GpuRaster::CreateParameters rcp;
-            rcp.gpu = gpuContext;
-            rcp.target.colorTargets.append(RasterTarget::ColorTarget(frame.view));
-            rcp.target.setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
+            rcp.gpu    = gpuContext;
+            rcp.target = AutoRef<RasterTarget>::make("simple-triangle-target");
+            rcp.target->colorTargets.append(RasterTarget::ColorTarget(frame.view));
+            rcp.target->setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
 
             GpuRaster::DrawParameters drawParams;
             drawParams.vs                   = vsContent->shader;

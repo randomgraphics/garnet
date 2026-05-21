@@ -58,11 +58,11 @@ struct SharedShaderConstants : public Entity {
     };
 
     struct Set0Parameters {
-        FrameConstants         frameConstants;
-        GN::gpu2::RasterTarget renderTarget;
-        CameraConstants        camera;
-        DynaArray<DirectLight> directLighting;
-        EnvLightingParameters  envLighting;
+        FrameConstants                  frameConstants;
+        AutoRef<GN::gpu2::RasterTarget> renderTarget;
+        CameraConstants                 camera;
+        DynaArray<DirectLight>          directLighting;
+        EnvLightingParameters           envLighting;
     };
 
     struct Content : Entity {
@@ -83,7 +83,7 @@ struct SharedShaderConstants : public Entity {
     virtual VersionedArtifact takeSnapshot() const = 0;
 
     /// Get the latest content of the ssc artifact.
-    virtual AutoRef<Content> getContent(const ArtifactPtr &) const = 0;
+    virtual AutoRef<const Content> getContent(const ArtifactPtr &) const = 0;
 
     /// Build DrawParameters for a fullscreen skybox pass using the snapshot's set0 resources.
     virtual GN::gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet &) const = 0;
