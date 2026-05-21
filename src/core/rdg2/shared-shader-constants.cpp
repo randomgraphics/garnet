@@ -43,17 +43,6 @@ struct SscContent final : public SharedShaderConstants::Content {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-// Deduce render-target pixel dimensions from the first valid attachment.
-// Falls back to 1×1 to avoid a zero-size projection when no target is set.
-static std::pair<uint32_t, uint32_t> getRenderTargetSize(const AutoRef<gpu2::RasterTarget> & rt) {
-    if (!rt) return {1u, 1u};
-    for (const auto & c : rt->colorTargets) {
-        if (c.texture) return {c.texture->descriptor().width, c.texture->descriptor().height};
-    }
-    if (auto tex = rt->depthStencilTarget.texture()) return {tex->descriptor().width, tex->descriptor().height};
-    return {1u, 1u};
-}
-
 /// Create a 1×1 solid-color texture and record the staging→device copy into cnc.
 /// The staging buffer is captured by the CnC and kept alive inside the sealed payload.
 static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & cnc, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a,
@@ -363,8 +352,7 @@ private:
             cam.projMatrix[1][1] *= -1.f; // Vulkan Y-inversion
             cam.projViewMatrix   = cam.projMatrix * cam.viewMatrix;
             cam.cameraPosition   = glm::vec4(pos, 1.f);
-            auto [w, h]          = getRenderTargetSize(snap.renderTarget);
-            cam.renderTargetSize = glm::vec2((float) w, (float) h);
+            cam.renderTargetSize = glm::vec2((float) snap.camera.viewWidthInPixel, (float) snap.camera.viewHeightInPixel);
             cam.nearPlane        = snap.camera.nearPlane;
             cam.farPlane         = snap.camera.farPlane;
         }

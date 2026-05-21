@@ -46,6 +46,8 @@ struct SharedShaderConstants : public Entity {
         float       aspectRatio       = 16.f / 9.f;
         Distance    nearPlane         = 0.01f;
         Distance    farPlane          = 10000.f;
+        uint32_t    viewWidthInPixel  = 1;
+        uint32_t    viewHeightInPixel = 1;
     };
 
     struct EnvLightingParameters {
@@ -58,11 +60,10 @@ struct SharedShaderConstants : public Entity {
     };
 
     struct Set0Parameters {
-        FrameConstants                  frameConstants;
-        AutoRef<GN::gpu2::RasterTarget> renderTarget;
-        CameraConstants                 camera;
-        DynaArray<DirectLight>          directLighting;
-        EnvLightingParameters           envLighting;
+        FrameConstants         frameConstants;
+        CameraConstants        camera;
+        DynaArray<DirectLight> directLighting;
+        EnvLightingParameters  envLighting;
     };
 
     struct Content : Entity {

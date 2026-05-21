@@ -116,7 +116,7 @@ AutoRef<Texture> Texture::load(const LoadParameters & params) {
 // -----------------------------------------------------------------------
 namespace GN::gpu2 {
 
-AutoRef<GpuRaster> GpuRaster::create(const CreateParameters & params) {
+AutoRef<GpuRaster> GpuRaster::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) {
         GN_ERROR(sLogger)("GpuRaster::create: GpuContext is null");
         return {};
@@ -128,7 +128,7 @@ AutoRef<GpuRaster> GpuRaster::create(const CreateParameters & params) {
     }
     switch (common->api()) {
     case GN::gpu2::GpuContextCommon2::Api::VULKAN:
-        return createGpuRasterVulkan2(params);
+        return createGpuRasterVulkan2(name, params);
     case GN::gpu2::GpuContextCommon2::Api::D3D12:
     case GN::gpu2::GpuContextCommon2::Api::METAL:
         GN_ERROR(sLogger)("GpuRaster::create: backend not implemented");

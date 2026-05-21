@@ -73,11 +73,11 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     GpuResourceView rtView;
     rtView.resource = renderTarget;
 
-    auto rt = AutoRef<RasterTarget>::make("cnc-raster-target");
-    rt->colorTargets.append(RasterTarget::ColorTarget(rtView));
-    rt->setClearColor(0.0f, 0.0f, 0.0f);
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget(rtView));
+    rt.setClearColor(0.0f, 0.0f, 0.0f);
 
-    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    auto raster = GpuRaster::create("cnc-raster", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
 
     // Bind sourceTex at set=0, binding=0 (matches rtt-fullscreen.frag's sampler2D)

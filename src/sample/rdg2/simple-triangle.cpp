@@ -124,6 +124,10 @@ int main(int argc, const char ** argv) {
     auto swapchain = Swapchain::create(scDesc);
     if (!swapchain) return -1;
 
+    RasterTarget rasterTarget;
+    rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
+    rasterTarget.setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
+
     // Capture "shaders published at least once" tokens before the loop so they remain
     // satisfied on frame 2+ (getArtifactVersionToken with OOO() means "next version after
     // current" — calling it each frame would target a version the shader node never publishes).
@@ -138,6 +142,7 @@ int main(int argc, const char ** argv) {
 
         Swapchain::Frame frame = swapchain->prepare();
         if (frame.view.empty()) return -1;
+        rasterTarget.setColorTarget(0, frame.view);
 
         // create the main rendering node.
         AutoRef<GpuPayload> colorPassWork;
@@ -148,16 +153,14 @@ int main(int argc, const char ** argv) {
 
             GpuRaster::CreateParameters rcp;
             rcp.gpu    = gpuContext;
-            rcp.target = AutoRef<RasterTarget>::make("simple-triangle-target");
-            rcp.target->colorTargets.append(RasterTarget::ColorTarget(frame.view));
-            rcp.target->setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
+            rcp.target = &rasterTarget;
 
             GpuRaster::DrawParameters drawParams;
             drawParams.vs                   = vsContent->shader;
             drawParams.ps                   = psContent->shader;
             drawParams.geometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
 
-            auto r = GpuRaster::create(rcp);
+            auto r = GpuRaster::create("simple-triangle", rcp);
             r->draw(drawParams);
             colorPassWork = r->seal();
         };

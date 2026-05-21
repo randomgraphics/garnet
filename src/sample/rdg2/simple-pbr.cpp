@@ -11,8 +11,7 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.rdg2.pbr");
 
-static VersionedArtifact updateSsc(SharedShaderConstants * ssc, const Swapchain::Frame & frame, const GpuResourceView & depthView, uint32_t width,
-                                   uint32_t height, int frameIdx) {
+static VersionedArtifact updateSsc(SharedShaderConstants * ssc, const RasterTarget & target, int frameIdx) {
     // Orbit camera around Y axis; helmet stays fixed at origin.
     const float            orbitAngle = static_cast<float>(frameIdx) * 0.001f;
     constexpr float        kRadius    = 3.f;
@@ -21,14 +20,13 @@ static VersionedArtifact updateSsc(SharedShaderConstants * ssc, const Swapchain:
     const glm::mat4        camToWorld = glm::inverse(glm::lookAtRH(eye, kTarget, kUp));
 
     // Update per-frame SSC data before takeSnapshot() freezes it into the UBO.
-    auto rt = AutoRef<gpu2::RasterTarget>::make("simple-pbr-target");
-    rt->colorTargets.append(RasterTarget::ColorTarget(frame.view));
-    rt->setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
+    const auto rasterSize = target.calcRasterSizeInPixel();
 
-    ssc->set0.renderTarget                = rt;
     ssc->set0.camera.cameraPosition       = eye;
     ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
-    ssc->set0.camera.aspectRatio          = static_cast<float>(width) / static_cast<float>(height);
+    ssc->set0.camera.aspectRatio          = static_cast<float>(rasterSize.x) / static_cast<float>(rasterSize.y);
+    ssc->set0.camera.viewWidthInPixel     = rasterSize.x;
+    ssc->set0.camera.viewHeightInPixel    = rasterSize.y;
     ssc->set0.frameConstants.frameCounter = frameIdx;
 
     // Packs current set0 into a staging buffer via a CPU-only graph node.
@@ -97,6 +95,10 @@ int main(int argc, const char ** argv) {
     GpuResourceView depthView;
     depthView.resource = depthTex;
 
+    RasterTarget rasterTarget;
+    rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
+    rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
+
     // ─── Per-artifact setup state ─────────────────────────────────────────────
     // PBR asset upload is submitted once per version change (v1 on frame 1, v2 after async IO).
     // SSC upload payloads (env textures + UBO) are managed internally and emitted via set0Payloads.
@@ -111,7 +113,8 @@ int main(int argc, const char ** argv) {
         Swapchain::Frame frame = swapchain->prepare();
         if (frame.view.empty()) return -1;
 
-        VersionedArtifact                         sscSnapshot = updateSsc(ssc, frame, depthView, W, H, frameIdx);
+        rasterTarget.setColorTarget(0, frame.view);
+        VersionedArtifact                         sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
         gpu2::ArrayContainer<AutoRef<GpuPayload>> renderWorks;
         auto                                      drawScene = [&]() {
             auto sc = ssc->getContent(sscSnapshot.artifact);
@@ -122,9 +125,9 @@ int main(int argc, const char ** argv) {
 
             GpuRaster::CreateParameters rcp;
             rcp.gpu    = gpuContext;
-            rcp.target = sc->set0Parameters.renderTarget;
+            rcp.target = &rasterTarget;
 
-            auto r = GpuRaster::create(rcp);
+            auto r = GpuRaster::create("simple-pbr", rcp);
             if (!r) return;
             glm::mat4 helmetMat = glm::mat4(1.f);
             r->draw(PbrShading::getDrawParams(sc, pbrContent, helmetMat));

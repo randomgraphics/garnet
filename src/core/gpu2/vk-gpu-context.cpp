@@ -113,7 +113,7 @@ struct GpuContextVulkan2::Impl {
 };
 
 GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters & params)
-    : GpuContextCommon2(name, GpuContextCommon2::Api::VULKAN), mImpl(std::make_unique<Impl>()) {
+    : GpuContextCommon2(TYPE_INFO(), name, GpuContextCommon2::Api::VULKAN), mImpl(std::make_unique<Impl>()) {
 
     // Create instance
     rv::Instance::ConstructParameters ip;

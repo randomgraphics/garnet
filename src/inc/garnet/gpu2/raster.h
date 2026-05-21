@@ -178,9 +178,7 @@ struct RasterState {
 // Raster target
 // -----------------------------
 
-struct RasterTarget : public RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
-
+struct RasterTarget {
     struct BlendState {
         enum Arg : uint8_t {
             ZERO = 0,
@@ -230,16 +228,15 @@ struct RasterTarget : public RootEntity {
         int32_t  i4[4];
     };
 
-    struct ColorTarget {
-        AutoRef<Texture>      texture        = {};
-        gfx::img::PixelFormat format         = gfx::img::PixelFormat::UNKNOWN();
-        BlendState            blendState     = {};
-        uint32_t              mip       : 16 = 0;
-        uint32_t              face      : 16 = 0;
-        uint8_t               writeMask : 4  = 0xF; // write mask for R, G, B, A
+    /// Generic render target. Can be used as either color or depth-stencil attachment.
+    struct GenericTarget {
+        AutoRef<Texture>      texture   = {};
+        gfx::img::PixelFormat format    = gfx::img::PixelFormat::UNKNOWN();
+        uint32_t              mip  : 16 = 0;
+        uint32_t              face : 16 = 0;
 
-        ColorTarget() = default;
-        explicit ColorTarget(const GpuResourceView & view) { setView(view); }
+        GenericTarget() = default;
+        explicit GenericTarget(const GpuResourceView & view) { setView(view); }
 
         GpuResourceView view() const {
             GpuResourceView v;
@@ -250,7 +247,7 @@ struct RasterTarget : public RootEntity {
             return v;
         }
 
-        ColorTarget & setView(const GpuResourceView & view) {
+        GenericTarget & setView(const GpuResourceView & view) {
             texture = view.texture();
             mip     = view.imageView.range.i.mip;
             face    = view.imageView.range.i.face;
@@ -258,23 +255,39 @@ struct RasterTarget : public RootEntity {
             return *this;
         }
 
-        bool operator==(const ColorTarget & other) const {
-            return texture == other.texture && mip == other.mip && face == other.face && format == other.format && blendState == other.blendState &&
-                   writeMask == other.writeMask;
+        bool operator==(const GenericTarget & other) const {
+            return texture == other.texture && mip == other.mip && face == other.face && format == other.format;
         }
+        bool operator!=(const GenericTarget & other) const { return !operator==(other); }
+    };
+
+    struct ColorTarget {
+        GenericTarget target        = {};
+        BlendState    blendState    = {};
+        uint8_t       writeMask : 4 = 0xF; // write mask for R, G, B, A
+
+        ColorTarget() = default;
+        explicit ColorTarget(const GpuResourceView & view) { setView(view); }
+
+        GpuResourceView view() const { return target.view(); }
+
+        ColorTarget & setView(const GpuResourceView & view) {
+            target.setView(view);
+            return *this;
+        }
+
+        bool operator==(const ColorTarget & other) const { return target == other.target && blendState == other.blendState && writeMask == other.writeMask; }
         bool operator!=(const ColorTarget & other) const { return !operator==(other); }
     };
 
     typedef StackArray<ColorTarget, 8> ColorTargetArray;
 
     ColorTargetArray colorTargets;
-    GpuResourceView  depthStencilTarget;
+    GenericTarget    depthStencilTarget;
     ClearColorValue  clearColor   = {{0.0f, 0.0f, 0.0f, 1.0f}};
     float            clearDepth   = 1.0f;
     uint32_t         clearStencil = 0;
     RasterState      states       = RasterState::WithDefaults {}; ///< full render state baseline; every field has a value
-
-    explicit RasterTarget(const StrA & entityName = "raster_target"): RootEntity(TYPE_INFO(), entityName) {}
 
     RasterTarget & setColorTarget(size_t index, const GpuResourceView & target) {
         if (index >= colorTargets.MAX_SIZE) GN_UNLIKELY {
@@ -297,7 +310,7 @@ struct RasterTarget : public RootEntity {
     }
 
     RasterTarget & setDepthStencilTarget(GpuResourceView target) {
-        depthStencilTarget = target;
+        depthStencilTarget.setView(target);
         return *this;
     }
 
@@ -311,6 +324,43 @@ struct RasterTarget : public RootEntity {
         return *this;
     }
 
+    /// Returns true if neither color nor depth target is defined.
+    bool empty() const {
+        for (const auto & c : colorTargets) {
+            if (c.target.texture) return false;
+        }
+        return depthStencilTarget.texture.empty();
+    }
+
+    /// Calculate the active raster size from the smallest attached color or depth target mip.
+    Vector2<uint32_t> calcRasterSizeInPixel() const {
+        auto mipSize = [](const GenericTarget & target) -> Vector2<uint32_t> {
+            if (!target.texture) return {~0u, ~0u}; // return (MAX_UINT, MAX_UINT) indicating size is undefined for empty target.
+            const auto & desc = target.texture->descriptor();
+            return {std::max(1u, desc.width >> target.mip), std::max(1u, desc.height >> target.mip)};
+        };
+        // get minimal size of each color buffer.
+        Vector2<uint32_t> result(~0u, ~0u);
+        for (const auto & c : colorTargets) {
+            auto size = mipSize(c.target);
+            result.x  = std::min(size.x, result.x);
+            result.y  = std::min(size.y, result.y);
+        }
+        // then compare it with the size of depth buffer.
+        auto depthSize = mipSize(depthStencilTarget);
+        result.x       = std::min(depthSize.x, result.x);
+        result.y       = std::min(depthSize.y, result.y);
+
+        // If the raster target has no target defined at all. we set the size to 1x1.
+        if (~0u == result.x) {
+            result.x = 1;
+            result.y = 1;
+        }
+
+        // done
+        return result;
+    }
+
     bool operator==(const RasterTarget & other) const {
         return colorTargets == other.colorTargets && depthStencilTarget == other.depthStencilTarget && clearColor.u4[0] == other.clearColor.u4[0] &&
                clearColor.u4[1] == other.clearColor.u4[1] && clearColor.u4[2] == other.clearColor.u4[2] && clearColor.u4[3] == other.clearColor.u4[3] &&
@@ -318,12 +368,6 @@ struct RasterTarget : public RootEntity {
     }
     bool operator!=(const RasterTarget & other) const { return !operator==(other); }
 };
-
-inline bool rasterTargetsEqual(const AutoRef<RasterTarget> & a, const AutoRef<RasterTarget> & b) {
-    if (a.get() == b.get()) return true;
-    if (!a || !b) return false;
-    return *a == *b;
-}
 
 // -----------------------------
 // RasterGeometry
@@ -427,12 +471,13 @@ public:
     GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
 
     struct CreateParameters {
-        AutoRef<GpuContext>   gpu;
-        AutoRef<RasterTarget> target;
-        size_t                numberOfDrawsHint =
-            1000; ///< optional hint for expected number of draw calls, used to minimize internal allocations. The number of draws can exceed this hint.
+        AutoRef<GpuContext>  gpu;
+        const RasterTarget * target = nullptr; ///< borrowed for creation only; GpuRaster stores its own copy
+
+        //< optional hint for expected number of draw calls, used to minimize internal allocations. The number of draws can exceed this hint.
+        size_t numberOfDrawsHint = 1000;
     };
-    GN_API static AutoRef<GpuRaster> create(const CreateParameters &);
+    GN_API static AutoRef<GpuRaster> create(const StrA & name, const CreateParameters &);
 
     struct DrawParameters {
         AutoRef<GpuShader> vs, hs, ds, gs, ps;

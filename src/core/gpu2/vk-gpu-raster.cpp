@@ -82,18 +82,34 @@ static vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2
 
 // State → Vulkan conversion helpers are in vk-raster-pso-factory.cpp (single authoritative source).
 
+static AutoRef<GpuContextVulkan2> checkGpu(const AutoRef<GpuContext> & gpu) {
+    AutoRef<GpuContextVulkan2> vkGpu = RuntimeType::cast<GpuContextVulkan2>(gpu);
+    if (!vkGpu || !vkGpu->ready()) { GN_ERROR(sLogger)("Failed to create raster object: null/invalid GPU pointer."); }
+    return vkGpu;
+}
+
+static RasterTarget checkRasterTarget(const RasterTarget * target) {
+    if (!target) {
+        GN_ERROR(sLogger)("GpuRasterVulkan2: no valid raster target provided");
+        return {};
+    }
+    if (target->empty()) {
+        GN_ERROR(sLogger)("GpuRasterVulkan2: no color/depth target defined.");
+        return {};
+    }
+    return *target;
+}
+
 class GpuRasterPayloadVulkan final : public GpuPayloadVulkan {
 public:
-    GpuRasterPayloadVulkan(const StrA & name, RasterPsoFactory * factory, AutoRef<RasterTarget> rt, ArrayContainer<StoredDraw> draws)
-        : GpuPayloadVulkan(name), mPsoFactory(factory), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {
-        if (!mRenderTarget) { GN_ERROR(sLogger)("GpuRasterPayloadVulkan: no valid render target provided"); }
-    }
+    GpuRasterPayloadVulkan(const StrA & name, RasterPsoFactory * factory, RasterTarget rt, ArrayContainer<StoredDraw> draws)
+        : GpuPayloadVulkan(name), mPsoFactory(factory), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
 
 private:
     RasterPsoFactory *         mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
-    AutoRef<RasterTarget>      mRenderTarget;
+    RasterTarget               mRenderTarget;
     ArrayContainer<StoredDraw> mDraws;
 
     // Pass 1: register render targets and per-draw resources into the batch tracker.
@@ -110,11 +126,7 @@ private:
 };
 
 bool GpuRasterPayloadVulkan::collectPassResources(GpuResourceStateTrackerVulkan & tracker) {
-    if (!mRenderTarget) {
-        GN_ERROR(sLogger)("GpuRasterPayloadVulkan: no valid render target provided");
-        return false;
-    }
-    if (!tracker.addRasterTarget(*mRenderTarget)) return false;
+    if (!tracker.addRasterTarget(mRenderTarget)) return false;
     for (size_t di = 0; di < mDraws.size(); ++di) {
         StoredDraw & d = mDraws[di];
         // Promote any read-only depth-stencil attachment to read-write if this draw's
@@ -138,20 +150,19 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
     outExt = vk::Extent2D(~0u, ~0u);
 
     // --- Color attachments ---
-    if (!mRenderTarget) GN_UNLIKELY return false;
-    const auto &        cc = mRenderTarget->clearColor;
+    const auto &        cc = mRenderTarget.clearColor;
     vk::ClearColorValue clearCv(std::array<float, 4> {cc.f4[0], cc.f4[1], cc.f4[2], cc.f4[3]});
 
     std::vector<vk::RenderingAttachmentInfo> colorAtts;
-    colorAtts.reserve(mRenderTarget->colorTargets.size());
-    outFormats.colors.reserve(mRenderTarget->colorTargets.size());
+    colorAtts.reserve(mRenderTarget.colorTargets.size());
+    outFormats.colors.reserve(mRenderTarget.colorTargets.size());
 
-    for (size_t i = 0; i < mRenderTarget->colorTargets.size(); ++i) {
+    for (size_t i = 0; i < mRenderTarget.colorTargets.size(); ++i) {
         vk::Image             img {};
         vk::ImageView         view {};
         vk::Extent2D          ext {};
         vk::Format            fmt    = vk::Format::eUndefined;
-        const GpuResourceView ctView = mRenderTarget->colorTargets[i].view();
+        const GpuResourceView ctView = mRenderTarget.colorTargets[i].view();
         if (!resolveColorAttachment(ctView, &img, &view, &ext, &fmt)) {
             GN_ERROR(sLogger)("RasterPassPayload: could not resolve color attachment {}", i);
             return false;
@@ -181,7 +192,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
     // --- Depth/stencil attachment ---
     vk::RenderingAttachmentInfo depthAtt;
     bool                        hasDepth = false;
-    const auto &                dst      = mRenderTarget->depthStencilTarget;
+    const GpuResourceView       dst      = mRenderTarget.depthStencilTarget.view();
     if (dst.isTexture() && dst.texture()) {
         auto *        depthTex  = RuntimeType::cast<TextureVulkanBase>(dst.texture().get());
         vk::ImageView depthView = depthTex ? depthTex->nativeView(dst.imageView) : vk::ImageView {};
@@ -194,7 +205,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
                 .setImageLayout(depthLayout)
                 .setLoadOp(vk::AttachmentLoadOp::eClear)
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
-                .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(mRenderTarget->clearDepth, mRenderTarget->clearStencil)));
+                .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(mRenderTarget.clearDepth, mRenderTarget.clearStencil)));
             outExt.width  = std::min(outExt.width, depthTex->descriptor().width);
             outExt.height = std::min(outExt.height, depthTex->descriptor().height);
             hasDepth      = true;
@@ -246,7 +257,7 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
         .state        = d.states,
         .geometry     = geom,
         .formats      = formats,
-        .colorTargets = mRenderTarget->colorTargets,
+        .colorTargets = mRenderTarget.colorTargets,
     };
     rv::Ref<const rv::GraphicsPipeline> pipeline = mPsoFactory->getOrCreate(psoParams);
     if (!pipeline || !pipeline->handle()) GN_UNLIKELY return;
@@ -392,11 +403,17 @@ class GpuRasterVulkan2 final : public GpuRaster {
 public:
     GN_REGISTER_RUNTIME_TYPE(GpuRaster);
 
-    GpuRasterVulkan2(const StrA & entityName, CreateParameters cp): GpuRaster(TYPE_INFO(), entityName), mCreateParams(std::move(cp)) {
-        mDraws.reserve(mCreateParams.numberOfDrawsHint);
+    GpuRasterVulkan2(const StrA & entityName, const CreateParameters & cp)
+        : GpuRaster(TYPE_INFO(), entityName), mGpu(checkGpu(cp.gpu)), mRenderTarget(checkRasterTarget(cp.target)) {
+        if (!mGpu) return;
+        if (mRenderTarget.empty()) return;
+        mDraws.reserve(cp.numberOfDrawsHint);
+        mValid = true;
     }
 
-    const RasterTarget & target() const override { return *mCreateParams.target; }
+    bool valid() const { return mValid; }
+
+    const RasterTarget & target() const override { return mRenderTarget; }
 
     void draw(const DrawParameters & dp) override {
         if (mSealed) {
@@ -412,7 +429,7 @@ public:
         s.ps           = dp.ps;
         s.geometry     = dp.geometry;
         s.resources    = dp.resources;
-        s.states       = mCreateParams.target->states;
+        s.states       = mRenderTarget.states;
         mergeRenderState(s.states, dp.states);
         s.immediates = dp.immediates;
     }
@@ -423,25 +440,25 @@ public:
             return {};
         }
         mSealed        = true;
-        auto   vkGpu   = mCreateParams.gpu.staticCastTo<GpuContextVulkan2>();
+        auto   vkGpu   = mGpu.staticCastTo<GpuContextVulkan2>();
         auto * factory = (vkGpu && vkGpu->ready()) ? &vkGpu->psoFactory() : nullptr;
-        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", factory, std::move(mCreateParams.target), std::move(mDraws)));
+        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", factory, std::move(mRenderTarget), std::move(mDraws)));
     }
 
 private:
-    CreateParameters           mCreateParams;
+    AutoRef<GpuContextVulkan2> mGpu;
+    RasterTarget               mRenderTarget;
+    bool                       mValid  = false;
     bool                       mSealed = false;
     ArrayContainer<StoredDraw> mDraws;
 };
 
 } // namespace
 
-AutoRef<GpuRaster> createGpuRasterVulkan2(const GpuRaster::CreateParameters & params) {
-    if (!params.gpu || !params.target) return {};
-    AutoRef<GpuContextVulkan2> vkGpu = params.gpu.staticCastTo<GpuContextVulkan2>();
-    if (!vkGpu || !vkGpu->ready()) return {};
-    StrA n = params.gpu->name.empty() ? StrA("raster_pass") : params.gpu->name + "/raster";
-    return AutoRef<GpuRaster>(new GpuRasterVulkan2(n, params));
+AutoRef<GpuRaster> createGpuRasterVulkan2(const StrA & name, const GpuRaster::CreateParameters & params) {
+    AutoRef<GpuRasterVulkan2> raster(new GpuRasterVulkan2(name, params));
+    if (!raster->valid()) return {};
+    return raster;
 }
 
 } // namespace GN::gpu2

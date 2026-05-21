@@ -55,6 +55,13 @@ struct RuntimeType {
     }
 
     template<typename TO, typename FROM>
+    static ::GN::AutoRef<TO> cast(const ::GN::AutoRef<FROM> & from) {
+        if (!from) return {};
+        if (!from->typeInfo().isDerivedFrom(TO::TYPE_INFO())) return {};
+        return from.template staticCastTo<TO>();
+    }
+
+    template<typename TO, typename FROM>
     static TO * cast(FROM * from) {
         if (!from) return nullptr;
         if (!from->typeInfo().isDerivedFrom(TO::TYPE_INFO())) return nullptr;
@@ -78,13 +85,6 @@ struct RuntimeType {
     static const TO * cast(const FROM & from) {
         if (!from.typeInfo().isDerivedFrom(TO::TYPE_INFO())) return nullptr;
         return static_cast<const TO *>(&from);
-    }
-
-    template<typename TO, typename FROM>
-    static ::GN::AutoRef<TO> cast(const ::GN::AutoRef<FROM> & from) {
-        if (!from) return {};
-        if (!from->typeInfo().isDerivedFrom(TO::TYPE_INFO())) return {};
-        return from.template staticCastTo<TO>();
     }
 
     /// Returns a new unique 64-bit type ID each call. Thread-safe. Defined in one TU and exported
@@ -125,6 +125,7 @@ struct RttiBaseTypeIds<> {
 
 // The main entry point for registering a runtime type. Uses GN::RttiBaseTypeIds so this expands
 // correctly in any namespace (e.g. GN::rdg2) without a local `using` for RttiBaseTypeIds.
+// The macro takes list of direct ancestors of the class to be registered.
 #define GN_REGISTER_RUNTIME_TYPE(...)                                                                                          \
     inline static const uint64_t             TYPE_ID = GN::RuntimeType::getNextUniqueTypeId();                                 \
     static const GN::RuntimeType::TypeInfo & TYPE_INFO() {                                                                     \

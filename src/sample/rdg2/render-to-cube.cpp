@@ -193,11 +193,13 @@ public:
                                                         }
 
                                                         for (uint32_t f = 0; f < 6; ++f) {
+                                                            RasterTarget rt;
+                                                            rt.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
+                                                            rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
                                                             GpuRaster::CreateParameters rcp;
                                                             rcp.gpu    = mCtx.gpu;
-                                                            rcp.target = AutoRef<RasterTarget>::make("cubemap-face-target");
-                                                            rcp.target->colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
-                                                            rcp.target->setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                                                            rcp.target = &rt;
 
                                                             // Bind the face's source image at set=0, binding=0 for the fragment sampler2D.
                                                             GpuResourceView faceView;
@@ -214,7 +216,7 @@ public:
                                                             dp.geometry.vertexCount = 3; // fullscreen triangle, no VBO
                                                             dp.resources            = resources;
 
-                                                            auto rast = GpuRaster::create(rcp);
+                                                            auto rast = GpuRaster::create("cubemap-face", rcp);
                                                             rast->draw(dp);
                                                             outPayloads.push_back(rast->seal());
                                                         }
@@ -236,12 +238,13 @@ public:
                                                         }
 
                                                         GpuRaster::CreateParameters rcp;
-                                                        rcp.gpu    = mCtx.gpu;
-                                                        rcp.target = AutoRef<RasterTarget>::make("cubemap-all-faces-target");
+                                                        rcp.gpu = mCtx.gpu;
+                                                        RasterTarget rt;
                                                         for (uint32_t f = 0; f < 6; ++f) {
-                                                            rcp.target->colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
+                                                            rt.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
                                                         }
-                                                        rcp.target->setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                                                        rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                                                        rcp.target = &rt;
 
                                                         // Bind all 6 face textures at set=0, binding=0..5 for the fragment shader.
                                                         GpuResourceTable resources;
@@ -260,7 +263,7 @@ public:
                                                         dp.geometry.vertexCount = 3;
                                                         dp.resources            = resources;
 
-                                                        auto rast = GpuRaster::create(rcp);
+                                                        auto rast = GpuRaster::create("cubemap-all-faces", rcp);
                                                         rast->draw(dp);
                                                         outPayloads.push_back(rast->seal());
                                                         mCtx.graph->publishArtifact(mCubemapReady,
@@ -312,6 +315,15 @@ public:
             return {};
         }
 
+        GpuResourceView depthView;
+        depthView.resource = cd.mDepthTex;
+        cd.mRenderTarget.colorTargets.append(RasterTarget::ColorTarget {});
+        cd.mRenderTarget.setDepthStencilTarget(depthView);
+        cd.mRenderTarget.setClearColor(0.05f, 0.05f, 0.1f, 1.0f);
+        cd.mRenderTarget.setClearDepth(1.0f);
+        cd.mRenderTarget.states.setCullMode(RasterState::CULL_NONE);
+        cd.mRenderTarget.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
+
         // Upload cube vertex and index data synchronously; no need for graph-node machinery
         // since the data is static and the upload completes before any frame node runs.
         if (!cd.uploadGeometry()) return {};
@@ -350,15 +362,17 @@ public:
 
     bool valid() const { return mDepthTex && mVb && mIb && mVsArtifact && mPsArtifact; }
 
+    RasterTarget & rasterTarget() { return mRenderTarget; }
+
     // Adds the per-frame draw-cube node. outPayload is filled when the node executes.
     // Returns the node handle to wait on.
-    NodePtr addFrameNode(const TokenPtr & cubemapToken, const VersionedArtifact & sscSnapshot, const AutoRef<Texture> & cubemap,
-                         const GpuResourceView & swapView, float elapsed, AutoRef<GpuPayload> & outPayload) {
+    NodePtr addFrameNode(const TokenPtr & cubemapToken, const VersionedArtifact & sscSnapshot, const AutoRef<Texture> & cubemap, float elapsed,
+                         AutoRef<GpuPayload> & outPayload) {
         return mCtx.graph->addNode(
             NodeDesc("draw cube")
                 .setAction(Action::createFromLambda(
                                "render rotating cube",
-                               [this, cubemap, swapView, elapsed, sscSnapshot, &outPayload]() {
+                               [this, cubemap, elapsed, sscSnapshot, &outPayload]() {
                                    auto vsContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mVsArtifact);
                                    auto psContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mPsArtifact);
                                    if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
@@ -374,18 +388,9 @@ public:
 
                                    glm::mat4 model = glm::rotate(glm::mat4(1.f), elapsed * 0.5f, glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f)));
 
-                                   GpuResourceView depthView;
-                                   depthView.resource = mDepthTex;
-
                                    GpuRaster::CreateParameters rcp;
                                    rcp.gpu    = mCtx.gpu;
-                                   rcp.target = AutoRef<RasterTarget>::make("cube-display-target");
-                                   rcp.target->colorTargets.append(RasterTarget::ColorTarget(swapView));
-                                   rcp.target->setDepthStencilTarget(depthView);
-                                   rcp.target->setClearColor(0.05f, 0.05f, 0.1f, 1.0f);
-                                   rcp.target->setClearDepth(1.0f);
-                                   rcp.target->states.setCullMode(RasterState::CULL_NONE);
-                                   rcp.target->states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
+                                   rcp.target = &mRenderTarget;
 
                                    RasterGeometry geom;
                                    geom.format.attributes.append(
@@ -417,7 +422,7 @@ public:
                                    // Push constant: model matrix only (view+proj come from camera UBO)
                                    dp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(model), reinterpret_cast<const uint8_t *>(&model)));
 
-                                   auto rast = GpuRaster::create(rcp);
+                                   auto rast = GpuRaster::create("cube-display", rcp);
                                    rast->draw(dp);
                                    outPayload = rast->seal();
                                }),
@@ -483,6 +488,7 @@ private:
 
     SharedCtx        mCtx;
     AutoRef<Texture> mDepthTex;
+    RasterTarget     mRenderTarget;
     AutoRef<Buffer>  mVb, mIb;
     ArtifactPtr      mVsArtifact, mPsArtifact;
     TokenPtr         mVsReady, mPsReady;
@@ -576,10 +582,6 @@ int main(int argc, const char ** argv) {
     auto cubeDraw = CubeDraw::create(ctx);
     if (!cubeDraw.valid()) return -1;
 
-    // Pre-allocate slot 0 so per-frame setColorTarget(0, ...) is an update, not an append.
-    ssc->set0.renderTarget = AutoRef<RasterTarget>::make("render-to-cube-ssc-target");
-    ssc->set0.renderTarget->colorTargets.append(RasterTarget::ColorTarget {});
-
     GN_INFO(sLogger)("Starting render loop...");
 
     const auto startTime    = std::chrono::steady_clock::now();
@@ -605,11 +607,14 @@ int main(int argc, const char ** argv) {
             ssc->set0.camera.cameraPosition       = kEye;
             ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
             ssc->set0.camera.cameraFov            = Degree(45.f);
-            ssc->set0.camera.aspectRatio          = (float) windowWidth / (float) windowHeight;
             ssc->set0.camera.nearPlane            = 0.1f;
             ssc->set0.camera.farPlane             = 100.f;
             ssc->set0.frameConstants.frameCounter = frameCounter;
-            ssc->set0.renderTarget->setColorTarget(0, frame.view);
+            cubeDraw.rasterTarget().setColorTarget(0, frame.view);
+            const auto rasterSize              = cubeDraw.rasterTarget().calcRasterSizeInPixel();
+            ssc->set0.camera.aspectRatio       = (float) rasterSize.x / (float) rasterSize.y;
+            ssc->set0.camera.viewWidthInPixel  = rasterSize.x;
+            ssc->set0.camera.viewHeightInPixel = rasterSize.y;
         }
         VersionedArtifact sscSnapshot = ssc->takeSnapshot();
 
@@ -624,7 +629,7 @@ int main(int argc, const char ** argv) {
 
         // The draw-cube node depends on cubemapThisFrame so it only runs after this
         // frame's cubemap has been published.
-        NodePtr presentNode = cubeDraw.addFrameNode(cubemapThisFrame, sscSnapshot, cubemapRenderer.cubemap(), frame.view, elapsed, presentPayload);
+        NodePtr presentNode = cubeDraw.addFrameNode(cubemapThisFrame, sscSnapshot, cubemapRenderer.cubemap(), elapsed, presentPayload);
 
         graph->waitForToken(graph->getNodeCompletionToken(presentNode));
 

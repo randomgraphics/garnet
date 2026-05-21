@@ -21,10 +21,10 @@ void submitAndWait(const AutoRef<GpuContext> & gpu, const AutoRef<GpuPayload> & 
 bool clearToColor(const AutoRef<GpuContext> & gpu, const AutoRef<Texture> & tex, float r, float g, float b) {
     GpuResourceView view;
     view.resource = tex;
-    auto rt       = AutoRef<RasterTarget>::make("clear-target");
-    rt->colorTargets.append(RasterTarget::ColorTarget(view));
-    rt->setClearColor(r, g, b);
-    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget(view));
+    rt.setClearColor(r, g, b);
+    auto raster = GpuRaster::create("clear-target", {.gpu = gpu, .target = &rt});
     if (!raster) return false;
     auto payload = raster->seal();
     if (!payload) return false;
@@ -64,11 +64,11 @@ TEST_CASE("GPU2: render target hazard — same texture on two color slots aborts
     // Hazardous render: same view on slot 0 AND slot 1 (clear to blue — must be skipped).
     GpuResourceView view;
     view.resource = tex;
-    auto rt       = AutoRef<RasterTarget>::make("hazard-two-color-slots");
-    rt->colorTargets.append(RasterTarget::ColorTarget(view));
-    rt->colorTargets.append(RasterTarget::ColorTarget(view));
-    rt->setClearColor(0.0f, 0.0f, 1.0f);
-    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget(view));
+    rt.colorTargets.append(RasterTarget::ColorTarget(view));
+    rt.setClearColor(0.0f, 0.0f, 1.0f);
+    auto raster = GpuRaster::create("hazard-two-color-slots", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
     submitAndWait(gpu, raster->seal());
 
@@ -109,12 +109,12 @@ TEST_CASE("GPU2: render target no hazard — distinct cubemap faces on separate 
 
     // Face 0 → slot 0, face 1 → slot 1. Same texture object, non-overlapping subresource
     // ranges ([face=0,layers=1) vs [face=1,layers=1)) — this is not a hazard.
-    auto rt = AutoRef<RasterTarget>::make("cubemap-faces-target");
-    rt->colorTargets.append(RasterTarget::ColorTarget(faceView(0)));
-    rt->colorTargets.append(RasterTarget::ColorTarget(faceView(1)));
-    rt->setClearColor(0.0f, 0.0f, 1.0f);
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget(faceView(0)));
+    rt.colorTargets.append(RasterTarget::ColorTarget(faceView(1)));
+    rt.setClearColor(0.0f, 0.0f, 1.0f);
 
-    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    auto raster = GpuRaster::create("cubemap-faces-target", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
 
     // The render pass should execute (no hazard). Submission must complete without error.
@@ -149,13 +149,13 @@ TEST_CASE("GPU2: render target hazard — same texture as both color and depth-s
     colorView.resource = colorTex;
     depthView.resource = depthTex;
 
-    auto rt = AutoRef<RasterTarget>::make("color-depth-hazard-target");
-    rt->colorTargets.append(RasterTarget::ColorTarget(colorView));
-    rt->colorTargets.append(RasterTarget::ColorTarget(depthView)); // slot 1: depth tex as color
-    rt->setDepthStencilTarget(depthView);                          // also as depth: hazard
-    rt->setClearColor(0.0f, 0.0f, 1.0f);
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget(colorView));
+    rt.colorTargets.append(RasterTarget::ColorTarget(depthView)); // slot 1: depth tex as color
+    rt.setDepthStencilTarget(depthView);                          // also as depth: hazard
+    rt.setClearColor(0.0f, 0.0f, 1.0f);
 
-    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    auto raster = GpuRaster::create("color-depth-hazard-target", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
     submitAndWait(gpu, raster->seal());
 

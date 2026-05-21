@@ -4,12 +4,6 @@
 
 Migrate Sprite and Text renderer of gpu v1.
 
-## Optimize RasterTarget related memory copy
-
-RasterTarget structure size is about 1K. There are several places it is declared as value type that involves a memory copy.
-
-Either compress its size or maybe convert it to an Entity that has to be allocated and created on heap.
-
 ## Transient Resource Aliasing
 
 Defer actual GPU buffer/texture allocation to node execution time. A transient
