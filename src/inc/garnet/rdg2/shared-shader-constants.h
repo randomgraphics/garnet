@@ -4,9 +4,12 @@
 
 namespace GN::rdg2 {
 
+/// Artifact and token pair used to observe one published artifact version.
 struct VersionedArtifact {
     ArtifactPtr artifact;
     TokenPtr    version;
+
+    bool empty() const { return !artifact; }
 };
 
 struct SharedShaderConstants : public Entity {
@@ -84,10 +87,14 @@ struct SharedShaderConstants : public Entity {
     virtual VersionedArtifact takeSnapshot() const = 0;
 
     /// Get the latest content of the ssc artifact.
-    virtual AutoRef<const Content> getContent(const ArtifactPtr &) const = 0;
 
     /// Build DrawParameters for a fullscreen skybox pass using the snapshot's set0 resources.
     virtual GN::gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet &) const = 0;
+
+    static AutoRef<const Content> getContent(const ArtifactPtr & a) {
+        if (!a) return {};
+        return a->content<Content>();
+    }
 
     struct CreateParameters {
         AutoRef<GN::gpu2::GpuContext> gpu;

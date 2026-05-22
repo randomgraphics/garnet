@@ -98,23 +98,17 @@ int main(int argc, const char ** argv) {
     ArtifactPtr solidPs = graph->createArtifact("solid triangle PS");
 
     // add node to create shaders.
-    if (!graph->addNode(
-            NodeDesc("create solid triangle shaders")
-                .setAction(
-                    Action::createFromLambda(
-                        "build solid triangle shaders",
-                        [&]() {
-                            auto vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
-                            auto fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
-                            auto vs       = GpuShader::create(
-                                {.context = gpuContext, .name = "solid triangle VS", .binary = vertBlob->data(), .size = vertBlob->size(), .entry = "main"});
-                            auto ps = GpuShader::create(
-                                {.context = gpuContext, .name = "solid triangle PS", .binary = fragBlob->data(), .size = fragBlob->size(), .entry = "main"});
-                            if (!vs || !ps) return;
-                            graph->publishArtifact(solidVs, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
-                            graph->publishArtifact(solidPs, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(ps)));
-                        }),
-                    nullptr))) {
+    if (!graph->addNode(NodeDesc("create solid triangle shaders", [&]() {
+            auto vertBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleVertSpvSize, kSolidTriangleVertSpv));
+            auto fragBlob = referenceTo(new SimpleBlob<unsigned int>(kSolidTriangleFragSpvSize, kSolidTriangleFragSpv));
+            auto vs =
+                GpuShader::create({.context = gpuContext, .name = "solid triangle VS", .binary = vertBlob->data(), .size = vertBlob->size(), .entry = "main"});
+            auto ps =
+                GpuShader::create({.context = gpuContext, .name = "solid triangle PS", .binary = fragBlob->data(), .size = fragBlob->size(), .entry = "main"});
+            if (!vs || !ps) return;
+            graph->publishArtifact(solidVs, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
+            graph->publishArtifact(solidPs, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(ps)));
+        }))) {
         return -1;
     }
 
@@ -147,8 +141,8 @@ int main(int argc, const char ** argv) {
         // create the main rendering node.
         AutoRef<GpuPayload> colorPassWork;
         auto                colorPassAction = [&]() {
-            auto vsContent = graph->getTypedArtifactContent<ShaderArtifactContent>(solidVs);
-            auto psContent = graph->getTypedArtifactContent<ShaderArtifactContent>(solidPs);
+            auto vsContent = solidVs->content<ShaderArtifactContent>();
+            auto psContent = solidPs->content<ShaderArtifactContent>();
             if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) return;
 
             GpuRaster::CreateParameters rcp;
@@ -164,10 +158,7 @@ int main(int argc, const char ** argv) {
             r->draw(drawParams);
             colorPassWork = r->seal();
         };
-        auto colorPassNode = graph->addNode(NodeDesc("main color pass")
-                                                .setAction(Action::createFromLambda("main color pass", colorPassAction), nullptr)
-                                                .dependsOn(solidVsReady)
-                                                .dependsOn(solidPsReady));
+        auto colorPassNode = graph->addNode(NodeDesc("main color pass", colorPassAction).dependsOn(solidVsReady).dependsOn(solidPsReady));
 
         // Wait for the color pass node to generate GPU payload.
         graph->waitForToken(graph->getNodeCompletionToken(colorPassNode));

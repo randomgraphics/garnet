@@ -429,7 +429,7 @@ struct RasterGeometry {
         /// The format of the attribute data. This is used to interpret the raw bytes in the vertex buffer and convert them
         /// to the shader's expected format. For example, if the shader expects a vec3 position, the attribute may have
         /// format=F32_3 to indicate that each vertex has 3 floats for this attribute. This also determines the valid size
-        /// of this arribute.
+        /// of this attribute.
         AttributeFormat format = AttributeFormat::F32_3;
 
         bool operator==(const VertexAttribute & other) const {

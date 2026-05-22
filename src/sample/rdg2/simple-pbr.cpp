@@ -117,10 +117,10 @@ int main(int argc, const char ** argv) {
         VersionedArtifact                         sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
         gpu2::ArrayContainer<AutoRef<GpuPayload>> renderWorks;
         auto                                      drawScene = [&]() {
-            auto sc = ssc->getContent(sscSnapshot.artifact);
+            auto sc = SharedShaderConstants::getContent(sscSnapshot.artifact);
             if (!sc) return;
             renderWorks.append(sc->set0Payloads);
-            auto pbrContent = PbrShading::getContent(graph, helmet.artifact);
+            auto pbrContent = PbrShading::getContent(helmet.artifact);
             if (!pbrContent) return;
 
             GpuRaster::CreateParameters rcp;
@@ -137,8 +137,7 @@ int main(int argc, const char ** argv) {
 
         // Draw node: pure CPU — records raster commands and seals GpuPayloads.
         // No gpu->submit() here; the single per-frame submit happens below.
-        auto drawNode = graph->addNode(
-            NodeDesc("draw").dependsOn(sscSnapshot.version).dependsOn(helmet.version).setAction(Action::createFromLambda("draw", drawScene), nullptr));
+        auto drawNode = graph->addNode(NodeDesc("draw", drawScene).dependsOn(sscSnapshot.version).dependsOn(helmet.version));
         graph->waitForToken(graph->getNodeCompletionToken(drawNode));
 
         // ─── Single frame submit ──────────────────────────────────────────────
@@ -146,7 +145,7 @@ int main(int argc, const char ** argv) {
         GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
 
         // PBR asset: submit upload once per version change.
-        auto pbrContent    = PbrShading::getContent(graph, helmet.artifact);
+        auto pbrContent    = helmet.artifact->content<PbrShading::Content>();
         auto helmetPayload = pbrContent ? pbrContent->gpuPayload : AutoRef<GpuPayload>();
         if (helmetPayload.get() != lastHelmetPayload.get()) {
             if (helmetPayload) submit.appendWork(helmetPayload);

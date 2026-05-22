@@ -356,10 +356,6 @@ GN_API VersionedArtifact PbrShading::load(AutoRef<gpu2::GpuContext> gpu, GraphPt
     return {artifact, ready};
 }
 
-GN_API AutoRef<PbrShading::Content> PbrShading::getContent(GraphPtr graph, const ArtifactPtr & assetArtifact) {
-    return graph->getTypedArtifactContent<Content>(assetArtifact);
-}
-
 GN_API gpu2::GpuRaster::DrawParameters PbrShading::getDrawParams(AutoRef<const SharedShaderConstants::Content> sscContent, AutoRef<const Content> pbrContent,
                                                                  const glm::mat4 & worldTransform) {
     auto * content = RuntimeType::cast<PbrAssetContent>(pbrContent.get());

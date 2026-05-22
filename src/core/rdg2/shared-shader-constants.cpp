@@ -194,7 +194,7 @@ public:
             }
 
             // Read current env version; append upload payload once per version change.
-            auto envContent = mGraph->getTypedArtifactContent<EnvTextureSetContent>(mEnvArtifact);
+            auto envContent = mEnvArtifact->content<EnvTextureSetContent>();
             if (!envContent) GN_UNLIKELY return {};
             EnvTextureSet envSnap = envContent->textures;
             if (envSnap.uploadPayload.get() != mLastEnvPayload.get()) {
@@ -211,13 +211,10 @@ public:
             buildSet0Resources(envSnap, content->set0Resources);
         }
 
-        NodePtr node = mGraph->addNode(NodeDesc("ssc2 upload")
-                                           .setAction(Action::createFromLambda("pack+upload UBOs",
-                                                                               [this, content]() {
-                                                                                   uploadSnapshot(content);
-                                                                                   mGraph->publishArtifact(mContentArtifact, content);
-                                                                               }),
-                                                      nullptr));
+        NodePtr node = mGraph->addNode(NodeDesc("ssc2 upload", [this, content]() {
+            uploadSnapshot(content);
+            mGraph->publishArtifact(mContentArtifact, content);
+        }));
         if (!node) GN_UNLIKELY {
                 GN_ERROR(sLogger)("SharedShaderConstants2: addNode failed");
                 return {};
@@ -225,8 +222,6 @@ public:
 
         return {mContentArtifact, version};
     }
-
-    AutoRef<const Content> getContent(const ArtifactPtr & artifact) const override { return mGraph->getTypedArtifactContent<Content>(artifact); }
 
     gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet & set0Resources) const override {
         gpu2::GpuRaster::DrawParameters dp;

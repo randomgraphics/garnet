@@ -33,7 +33,10 @@ struct PbrShading {
     static GN_API VersionedArtifact load(AutoRef<gpu2::GpuContext> gpu, GraphPtr graph, const LoadParameters & params);
 
     /// Get the latest public content of the PBR asset artifact.
-    static GN_API AutoRef<Content> getContent(GraphPtr graph, const ArtifactPtr & assetArtifact);
+    static AutoRef<Content> getContent(const ArtifactPtr & assetArtifact) {
+        if (!assetArtifact) return {};
+        return assetArtifact->content<Content>();
+    }
 
     /// Build DrawParameters for one PBR mesh draw.
     /// Must be called after the artifact's ready token is satisfied.

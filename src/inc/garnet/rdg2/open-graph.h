@@ -109,36 +109,26 @@ protected:
 };
 
 // ============================================================
-// Arguments. Parameters passed to an action. Usually a collection of artifacts.
-//
-// The arguments are usually passed to the action as a single entity, but they can be
-// split into multiple artifacts. For example, a shader action may have a vertex shader
-// and a pixel shader as arguments.
-// ============================================================
-
-/// Parameters passed into an action when it runs, usually as one or more artifacts (e.g. separate VS/PS shader objects).
-struct Arguments : public Entity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
-
-protected:
-    using Entity::Entity;
-};
-using ArgumentsPtr = AutoRef<Arguments>;
-
-// ============================================================
 // Action. Represents an operation that can be executed.
 // ============================================================
+
+namespace detail {
+
+template<typename FUNC>
+concept ZeroArgumentCallable = std::is_invocable_v<std::decay_t<FUNC> &>;
+
+} // namespace detail
 
 /// Unit of work the graph executes; implementations own how success, failure, and retries are represented.
 struct Action : public Entity {
     GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
 
-    template<typename FUNC>
+    template<detail::ZeroArgumentCallable FUNC>
     static AutoRef<Action> createFromLambda(const StrA & name, FUNC && f) {
         using F = std::decay_t<FUNC>;
         struct LambdaAction : public Action {
             F    func;
-            void execute(Arguments *) override { func(); }
+            void execute() override { func(); }
             LambdaAction(const StrA & n, F && fn): Action(Action::TYPE_INFO(), n), func(std::move(fn)) {}
         };
         return GN::referenceTo(static_cast<Action *>(new LambdaAction(name, F(std::forward<FUNC>(f)))));
@@ -150,7 +140,7 @@ struct Action : public Entity {
     /// For example, if an action failed on its first attempt, it may elect to
     /// retry by adding a child node to itself and re-execute it. Or it may elect to
     /// store the failed result somewhere and let its dependents to respond to the failure.
-    virtual void execute(Arguments *) = 0;
+    virtual void execute() = 0;
 
 protected:
     using Entity::Entity;
@@ -192,13 +182,30 @@ using NodePtr = AutoRef<Node>;
 struct Artifact : public Entity {
     GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
 
+    /// Get the latest published content of the artifact. Could be null if the artifact has not been published.
+    virtual AutoRef<Entity> content() = 0;
+
+    template<typename T>
+    AutoRef<T> content() {
+        auto e = content();
+        if (!e) {
+            static auto * logger = GN::getLogger("GN.rdg2");
+            GN_ERROR(logger)("Artifact::content: artifact content is empty");
+            return {};
+        };
+        auto typed = RuntimeType::cast<T>(e.get());
+        if (!typed) {
+            static auto * logger = GN::getLogger("GN.rdg2");
+            GN_ERROR(logger)("Artifact::content: stored='{}' requested='{}'", e->typeInfo().name, T::TYPE_INFO().name);
+            return {};
+        }
+        return GN::referenceTo(typed);
+    }
+
 protected:
     using Entity::Entity;
 };
 using ArtifactPtr = AutoRef<Artifact>;
-
-class Graph;
-using GraphPtr = AutoRef<Graph>;
 
 // ============================================================
 // Scheduling
@@ -242,9 +249,6 @@ struct NodeDesc {
     /// (Optional) action invoked when this node runs.
     ActionPtr action = nullptr;
 
-    /// Inputs/parameters bound for this invocation of the action.
-    ArgumentsPtr arguments = nullptr;
-
     /// Tokens that must be satisfied before this node may run.
     ArrayContainer<TokenPtr> dependencies = {};
 
@@ -257,15 +261,19 @@ struct NodeDesc {
     /// If true, the node does not complete until completeNode() is called after its action finishes.
     bool manualComplete = false;
 
-    NodeDesc(const StrA & name_): name(name_) {};
+    NodeDesc(const StrA & name_): name(name_) {}
+
+    /// Create a node and wrap a zero-argument callable as its action.
+    template<detail::ZeroArgumentCallable FUNC>
+    NodeDesc(const StrA & name_, FUNC && f): name(name_), action(Action::createFromLambda(name_, std::forward<FUNC>(f))) {}
+
     NodeDesc(const NodeDesc & other)             = default;
     NodeDesc(NodeDesc && other)                  = default;
     NodeDesc & operator=(const NodeDesc & other) = default;
     NodeDesc & operator=(NodeDesc && other)      = default;
 
-    NodeDesc & setAction(ActionPtr act, ArgumentsPtr arg) {
-        action    = act;
-        arguments = arg;
+    NodeDesc & setAction(ActionPtr act) {
+        action = act;
         return *this;
     }
 
@@ -287,7 +295,7 @@ public:
     Graph(const Graph &)             = delete;
     Graph & operator=(const Graph &) = delete;
 
-    GN_API static GraphPtr create();
+    GN_API static AutoRef<Graph> create();
 
     // --------------------------------------------------------
     // Graph status query
@@ -319,28 +327,6 @@ public:
 
     /// Publish new content for an artifact, increase artifact version number by 1.
     virtual void publishArtifact(const ArtifactPtr & artifact, AutoRef<Entity> content) = 0;
-
-    /// Get a reference to the latest published content of an artifact.
-    /// \param artifact The artifact to get the content of.
-    /// \return The latest published content of the artifact. Or nullptr if no content is published yet.
-    virtual AutoRef<Entity> getArtifactContent(const ArtifactPtr & artifact) = 0;
-
-    template<typename T>
-    AutoRef<T> getTypedArtifactContent(const ArtifactPtr & artifact) {
-        auto e = getArtifactContent(artifact);
-        if (!e) {
-            static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("getTypedArtifactContent: artifact content is empty");
-            return {};
-        };
-        auto typed = RuntimeType::cast<T>(e.get());
-        if (!typed) {
-            static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("getTypedArtifactContent: stored='{}' requested='{}'", e->typeInfo().name, T::TYPE_INFO().name);
-            return {};
-        }
-        return GN::referenceTo(typed);
-    }
 
     // --------------------------------------------------------
     // Node management
@@ -377,7 +363,7 @@ public:
 
     /// Get an token that is satisfied when the given artifact is published at least once.
     /// This is a convenience method for getArtifactVersionToken() with version set to ONE.
-    /// After this token is satisfied, it is safe to call getArtifactContent() to retrieve the latest content of the artifact.
+    /// After this token is satisfied, it is safe to call Artifact::content() to retrieve the latest content of the artifact.
     TokenPtr getTokenToEnsureArtifactIsPublishedAtLeastOnce(const ArtifactPtr & artifact) {
         return getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE());
     }
@@ -385,5 +371,6 @@ public:
 protected:
     Graph() = default;
 };
+using GraphPtr = AutoRef<Graph>;
 
 } // namespace GN::rdg2

@@ -35,26 +35,27 @@ TEST_CASE("rdg2::OpenGraph: artifact keeps only latest published content", "[rdg
 
     graph->publishArtifact(artifact, AutoRef<Entity>(new TestContent(1)));
     CHECK(TestContent::alive.load() == 1);
-    auto first = graph->getTypedArtifactContent<TestContent>(artifact);
+    auto first = artifact->content<TestContent>();
     REQUIRE(first);
     CHECK(first->value == 1);
 
     graph->publishArtifact(artifact, AutoRef<Entity>(new TestContent(2)));
-    CHECK(TestContent::alive.load() == 2);
-    auto second = graph->getTypedArtifactContent<TestContent>(artifact);
+    CHECK(TestContent::alive.load() == 2); // artifact holds content#2, first holds the content#1
+    auto second = artifact->content<TestContent>();
     REQUIRE(second);
     CHECK(second->value == 2);
 
     first.clear();
-    CHECK(TestContent::alive.load() == 1);
+    CHECK(TestContent::alive.load() == 1); // content#1 is released, content#2 is alive.
     second.clear();
-    CHECK(TestContent::alive.load() == 1);
+    CHECK(TestContent::alive.load() == 1); // content#2 is still alive (referenced by artifact)
 
     graph.clear();
-    CHECK(TestContent::alive.load() == 1);
+    CHECK(artifact->content());
+    CHECK(TestContent::alive.load() == 1); // content#2 is still hold by artifact
 
     artifact.clear();
-    CHECK(TestContent::alive.load() == 0);
+    CHECK(TestContent::alive.load() == 0); // all released.
 }
 
 TEST_CASE("rdg2::OpenGraph: cross-graph handles are rejected", "[rdg2][open-graph]") {
@@ -66,7 +67,6 @@ TEST_CASE("rdg2::OpenGraph: cross-graph handles are rejected", "[rdg2][open-grap
     auto artifact = graph1->createArtifact("artifact from graph1");
     REQUIRE(artifact);
     CHECK(!graph2->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE()));
-    CHECK(!graph2->getArtifactContent(artifact));
 
     auto token = graph1->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE());
     REQUIRE(token);
@@ -86,21 +86,19 @@ TEST_CASE("rdg2::OpenGraph: manual node ignores completeNode while action is run
     int     downstreamRan = 0;
     NodePtr manual;
 
-    NodeDesc desc("manual node");
-    desc.manualComplete = true;
-    desc.action         = Action::createFromLambda("try to complete while running", [&] {
+    NodeDesc desc("manual node", [&] {
         manualRan = true;
         graph->completeNode(manual);
     });
+    desc.manualComplete = true;
     manual              = graph->addNode(desc);
     REQUIRE(manual);
 
     auto token = graph->getNodeCompletionToken(manual);
     REQUIRE(token);
 
-    NodeDesc downstreamDesc("downstream");
+    NodeDesc downstreamDesc("downstream", [&] { ++downstreamRan; });
     downstreamDesc.dependsOn(token);
-    downstreamDesc.action = Action::createFromLambda("downstream", [&] { ++downstreamRan; });
     REQUIRE(graph->addNode(downstreamDesc));
 
     CHECK(graph->waitForIdle(std::chrono::milliseconds::zero()) == Graph::WaitResult::BUSY);
@@ -120,16 +118,14 @@ TEST_CASE("rdg2::OpenGraph: manual parent waits for completeNode after children 
     int childRan      = 0;
     int downstreamRan = 0;
 
-    NodeDesc parentDesc("manual parent");
+    NodeDesc parentDesc("manual parent", [&] { ++parentRan; });
     parentDesc.manualComplete = true;
-    parentDesc.action         = Action::createFromLambda("parent", [&] { ++parentRan; });
 
     auto parent = graph->addNode(parentDesc);
     REQUIRE(parent);
 
-    NodeDesc childDesc("child");
+    NodeDesc childDesc("child", [&] { ++childRan; });
     childDesc.parent = parent;
-    childDesc.action = Action::createFromLambda("child", [&] { ++childRan; });
 
     auto child = graph->addNode(childDesc);
     REQUIRE(child);
@@ -137,9 +133,8 @@ TEST_CASE("rdg2::OpenGraph: manual parent waits for completeNode after children 
     auto token = graph->getNodeCompletionToken(parent);
     REQUIRE(token);
 
-    NodeDesc downstreamDesc("downstream");
+    NodeDesc downstreamDesc("downstream", [&] { ++downstreamRan; });
     downstreamDesc.dependsOn(token);
-    downstreamDesc.action = Action::createFromLambda("downstream", [&] { ++downstreamRan; });
     REQUIRE(graph->addNode(downstreamDesc));
 
     CHECK(graph->waitForIdle(std::chrono::milliseconds::zero()) == Graph::WaitResult::BUSY);
@@ -165,25 +160,22 @@ TEST_CASE("rdg2::OpenGraph: completeNode before children complete has no side ef
     auto childBlocker = graph->getArtifactVersionToken(blockerArtifact, NeverOverflowingCounter::ONE());
     REQUIRE(childBlocker);
 
-    NodeDesc parentDesc("manual parent");
+    NodeDesc parentDesc("manual parent", [&] { ++parentRan; });
     parentDesc.manualComplete = true;
-    parentDesc.action         = Action::createFromLambda("parent", [&] { ++parentRan; });
 
     auto parent = graph->addNode(parentDesc);
     REQUIRE(parent);
 
-    NodeDesc childDesc("blocked child");
+    NodeDesc childDesc("blocked child", [&] { ++childRan; });
     childDesc.parent = parent;
     childDesc.dependsOn(childBlocker);
-    childDesc.action = Action::createFromLambda("child", [&] { ++childRan; });
     REQUIRE(graph->addNode(childDesc));
 
     auto parentToken = graph->getNodeCompletionToken(parent);
     REQUIRE(parentToken);
 
-    NodeDesc downstreamDesc("downstream");
+    NodeDesc downstreamDesc("downstream", [&] { ++downstreamRan; });
     downstreamDesc.dependsOn(parentToken);
-    downstreamDesc.action = Action::createFromLambda("downstream", [&] { ++downstreamRan; });
     REQUIRE(graph->addNode(downstreamDesc));
 
     CHECK(graph->waitForIdle(std::chrono::milliseconds::zero()) == Graph::WaitResult::BUSY);
@@ -217,9 +209,8 @@ TEST_CASE("rdg2::OpenGraph: completeNode on completed node is ignored", "[rdg2][
     auto token = graph->getNodeCompletionToken(manual);
     REQUIRE(token);
 
-    NodeDesc downstreamDesc("downstream");
+    NodeDesc downstreamDesc("downstream", [&] { ++downstreamRan; });
     downstreamDesc.dependsOn(token);
-    downstreamDesc.action = Action::createFromLambda("downstream", [&] { ++downstreamRan; });
     REQUIRE(graph->addNode(downstreamDesc));
 
     CHECK(graph->waitForIdle(std::chrono::milliseconds::zero()) == Graph::WaitResult::BUSY);
@@ -241,8 +232,7 @@ TEST_CASE("rdg2::OpenGraph: completeNode on auto-complete node is ignored", "[rd
     int     downstreamRan = 0;
     NodePtr automatic;
 
-    NodeDesc autoDesc("auto node");
-    autoDesc.action = Action::createFromLambda("auto", [&] {
+    NodeDesc autoDesc("auto node", [&] {
         ++autoRan;
         graph->completeNode(automatic);
     });
@@ -253,9 +243,8 @@ TEST_CASE("rdg2::OpenGraph: completeNode on auto-complete node is ignored", "[rd
     auto token = graph->getNodeCompletionToken(automatic);
     REQUIRE(token);
 
-    NodeDesc downstreamDesc("downstream");
+    NodeDesc downstreamDesc("downstream", [&] { ++downstreamRan; });
     downstreamDesc.dependsOn(token);
-    downstreamDesc.action = Action::createFromLambda("downstream", [&] { ++downstreamRan; });
     REQUIRE(graph->addNode(downstreamDesc));
 
     graph->completeNode(automatic);
@@ -296,7 +285,7 @@ TEST_CASE("rdg2::OpenGraph: handles survive graph destruction but graph operatio
     auto graph = Graph::create();
     REQUIRE(graph);
     CHECK(!graph->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE()));
-    CHECK(!graph->getArtifactContent(artifact));
+    CHECK(!artifact->content());
     CHECK(graph->waitForToken(token) == Graph::WaitResult::FAILED);
     CHECK(!graph->getNodeCompletionToken(node));
 }

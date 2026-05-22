@@ -92,7 +92,6 @@ queue submission) are encoded by L2 on top of L1 primitives — L1 never sees th
 The fundamental unit of work. A node holds:
 
 - An **action** — a general function/lambda, the logic to execute
-- An **argument pack** — data/parameters passed to the action at execution time
 - A **completion mode** — auto or manual (see below)
 - An optional **parent** node
 
