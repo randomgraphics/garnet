@@ -201,7 +201,10 @@ struct NodeImpl final : public Node, private OpaqueBase<NodeImpl> {
 private:
     friend class OpenGraphImpl;
 
-    // Lazily created; satisfied by satisfyNode / pump.
+    /// True once completeNode() has been accepted for a manual-complete node.
+    bool manualCompletionRequested = false;
+
+    // Lazily created; satisfied by completeNode / pump.
     /// Token satisfied when the node reaches Completed (created on demand).
     TokenImpl * mCompletion = nullptr;
 
@@ -244,8 +247,8 @@ public:
 
     /// Adds a node, collects dependency edges, and enqueues it if ready.
     NodePtr addNode(const NodeDesc & desc) override;
-    /// Attempts to complete the node and/or drive execution forward.
-    void satisfyNode(const NodePtr & node) override;
+    /// Completes a manual node after its action has finished.
+    void completeNode(const NodePtr & node) override;
 
     /// Returns a token that is satisfied when the given node completes.
     TokenPtr getNodeCompletionToken(const NodePtr & node) override;
@@ -359,6 +362,7 @@ void OpenGraphImpl::satisfyToken_(TokenImpl & t, std::unique_lock<std::mutex> & 
 ///
 /// A node becomes Completed iff:
 /// - its own action has finished (state == FinishedAction), and
+/// - manual completion has been requested when desc.manualComplete is true, and
 /// - all of its children are Completed (incompleteChildren == 0).
 ///
 /// Returns true if the node is now completed (already completed counts as true).
@@ -366,6 +370,7 @@ bool OpenGraphImpl::tryCompleteNode_(NodeImpl & n, std::unique_lock<std::mutex> 
     (void) lock;
     if (n.state == NodeImpl::State::Completed) { return true; }
     if (n.state != NodeImpl::State::FinishedAction) { return false; }
+    if (n.desc.manualComplete && !n.manualCompletionRequested) { return false; }
     if (n.incompleteChildren != 0) { return false; }
     n.state = NodeImpl::State::Completed;
     if (mNonTerminalNodes > 0) { --mNonTerminalNodes; }
@@ -611,20 +616,30 @@ NodePtr OpenGraphImpl::addNode(const NodeDesc & desc) {
     return n.staticCastTo<Node>();
 }
 
-/// Signals that a node may be complete and attempts to advance execution.
+/// Manually completes a node after its action and child nodes have finished.
 ///
-/// This does not directly satisfy dependencies; it ensures completion state is applied and may
-/// run ready nodes if the worker is idle.
-void OpenGraphImpl::satisfyNode(const NodePtr & node) {
-    NodeImpl * n = validateNode_(node, "satisfyNode");
+/// completeNode() never treats a running action as finished. The action return path is the only
+/// place that may transition Running -> FinishedAction.
+void OpenGraphImpl::completeNode(const NodePtr & node) {
+    NodeImpl * n = validateNode_(node, "completeNode");
     if (!n) { return; }
     std::unique_lock lock(mMutex);
     if (mStopping) { return; }
     if (n->state == NodeImpl::State::Completed) { return; }
-    // Treat this as "node's own action is finished". Completion still waits for children.
-    if (n->state == NodeImpl::State::Running) { n->state = NodeImpl::State::FinishedAction; }
+    if (!n->desc.manualComplete) { return; }
+
+    if (n->state != NodeImpl::State::FinishedAction) GN_UNLIKELY {
+            GN_ERROR(GN::getLogger("GN.rdg2"))("completeNode: node '{}' action has not finished", n->name);
+            return;
+        }
+
+    if (n->incompleteChildren != 0) GN_UNLIKELY {
+            GN_ERROR(GN::getLogger("GN.rdg2"))("completeNode: node '{}' still has incomplete children", n->name);
+            return;
+        }
+
+    n->manualCompletionRequested = true;
     (void) tryCompleteNode_(*n, lock);
-    if (mRunning == 0) { pump_(lock); }
     notifyAll_();
 }
 

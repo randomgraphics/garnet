@@ -254,7 +254,7 @@ struct NodeDesc {
     /// Optional parent node for hierarchical grouping or lifetime relationships.
     NodePtr parent = nullptr;
 
-    /// If true, the node does not complete until satisfyNode() is called (e.g. waiting on external I/O or a GPU fence).
+    /// If true, the node does not complete until completeNode() is called after its action finishes.
     bool manualComplete = false;
 
     NodeDesc(const StrA & name_): name(name_) {};
@@ -349,16 +349,19 @@ public:
     /// Add a new node to the graph for execution.
     virtual NodePtr addNode(const NodeDesc & desc) = 0;
 
-    /// Mark a node as complete. Trigger all completion tokens associated with the given node.
-    virtual void satisfyNode(const NodePtr & node) = 0;
+    /// Manually complete a node whose action has already finished.
+    ///
+    /// This call is only needed for nodes with \c manualComplete set to true. Calling it before the node's action has
+    /// finished, or before all of its children complete, is an error and does not complete the node.
+    virtual void completeNode(const NodePtr & node) = 0;
 
     // --------------------------------------------------------
     // Token management
     // --------------------------------------------------------
 
-    /// Get a token satisfied by certain node completes.
-    /// \param node The node to wait for
-    /// \return The token will be satisfied when the given node completes.
+    /// Get a token satisfied when a node completes.
+    /// \param node The node to wait for.
+    /// \return The token will be satisfied when the given node completes, automatically or manually.
     virtual TokenPtr getNodeCompletionToken(const NodePtr & node) = 0;
 
     /// Get an token satisfied when the given artifact version is published.

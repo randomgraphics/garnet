@@ -449,7 +449,7 @@ node 1 (auto-complete):   allocate command buffer, record payloads, submit to qu
 
 node 2 (manual-complete): registers onComplete as the fence-wait callback
                           action returns immediately; GPU fence fires
-                          → onComplete called from pump() → satisfyNode(node2)
+                          → onComplete called from pump() → completeNode(node2)
                           → unblocks downstream L1 nodes
 ```
 
