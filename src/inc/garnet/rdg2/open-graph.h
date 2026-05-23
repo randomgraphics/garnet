@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <chrono>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -13,100 +12,6 @@
 #include <vector>
 
 namespace GN::rdg2 {
-
-/// A counter that never overflows.
-///
-/// This is internally a 128-bit counter. Even if you increment it a billion times per second,
-/// it'll take over 5 sextillion (10^21) years to overflow, which is 700 billion times longer than
-/// the age of our universe.
-///
-/// It is overkill for almost all practical use cases. Just create this class for fun and learning purposes.
-struct NeverOverflowingCounter {
-    /// Low 64 bits of the 128-bit counter.
-    uint64_t value0 = 0;
-    /// High 64 bits of the 128-bit counter.
-    uint64_t value1 = 0;
-
-    /// Zero: default for fresh counters (e.g. artifact version before the first publish).
-    /// The same value is also used as a sentinel in APIs such as `Graph::getArtifactVersionToken`
-    /// to mean "wait for the next published version" rather than a fixed version number.
-    static inline constexpr NeverOverflowingCounter OOO() { return NeverOverflowingCounter {0, 0}; }
-
-    /// Smallest positive value: use when you need an explicit first version (1) after zero,
-    /// or a minimal non-zero bound in version logic.
-    static inline constexpr NeverOverflowingCounter ONE() { return NeverOverflowingCounter {1, 0}; }
-
-    /// Saturated maximum: use as an upper sentinel so this compares greater than any realistic
-    /// version, e.g. open-ended ranges or "no ceiling" in ordering.
-    static inline constexpr NeverOverflowingCounter INF() {
-        return NeverOverflowingCounter {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()};
-    }
-
-    /// hash function for this counter, so it can be used as a key in hash-based containers.
-    static inline size_t hash(const NeverOverflowingCounter & c) {
-        auto h = std::hash<uint64_t>()(c.value0);
-        combineHash(h, c.value1);
-        return h;
-    }
-
-    NeverOverflowingCounter & increment() {
-        if (++value0 == 0) { ++value1; }
-        return *this;
-    }
-
-    NeverOverflowingCounter & decrement() {
-        if (--value0 == std::numeric_limits<uint64_t>::max()) { --value1; }
-        return *this;
-    }
-
-    NeverOverflowingCounter & reset() {
-        value0 = 0;
-        value1 = 0;
-        return *this;
-    }
-
-    bool operator==(const NeverOverflowingCounter & other) const { return value0 == other.value0 && value1 == other.value1; }
-
-    bool operator!=(const NeverOverflowingCounter & other) const { return !(*this == other); }
-
-    bool operator<(const NeverOverflowingCounter & other) const {
-        if (value1 != other.value1) return value1 < other.value1;
-        return value0 < other.value0;
-    }
-
-    bool operator>(const NeverOverflowingCounter & other) const { return other < *this; }
-
-    bool operator<=(const NeverOverflowingCounter & other) const { return !(*this > other); }
-
-    bool operator>=(const NeverOverflowingCounter & other) const { return !(*this < other); }
-};
-
-// ============================================================
-// Base class of everything with a ID and name.
-// ============================================================
-
-/// The basic building block of the render graph module. Base class of everything that
-/// needs reference counting and runtime type information.
-struct Entity : public RefCounter, public RuntimeType {
-    GN_API GN_REGISTER_RUNTIME_TYPE();
-
-    /// ID of the entity. Guaranteed to be unique within the process.
-    const NeverOverflowingCounter id;
-
-    /// Name of the entity. Optional. No uniqueness requirement.
-    const StrA name;
-
-    virtual ~Entity() {
-#if GN_BUILD_DEBUG_ENABLED
-        static auto * logger = GN::getLogger("GN.rdg2");
-        GN_VVTRACE(logger)("Destroying RDG2 entity: name='{}', type = {}, id={}.{}", name, typeInfo().name, id.value0, id.value1);
-#endif
-    }
-
-protected:
-    /// Constructor
-    GN_API Entity(const RuntimeType::TypeInfo & type, const StrA & name);
-};
 
 // ============================================================
 // Action. Represents an operation that can be executed.
@@ -174,38 +79,6 @@ protected:
     using Entity::Entity;
 };
 using NodePtr = AutoRef<Node>;
-
-/// Versioned payload slot; nodes publish and wait on artifact versions via the graph.
-///
-/// The public type intentionally exposes only Entity identity/name/type. Concrete graph state
-/// remains private to the open-graph implementation.
-struct Artifact : public Entity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
-
-    /// Get the latest published content of the artifact. Could be null if the artifact has not been published.
-    virtual AutoRef<Entity> content() = 0;
-
-    template<typename T>
-    AutoRef<T> content() {
-        auto e = content();
-        if (!e) {
-            static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("Artifact::content: artifact content is empty");
-            return {};
-        };
-        auto typed = RuntimeType::cast<T>(e.get());
-        if (!typed) {
-            static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("Artifact::content: stored='{}' requested='{}'", e->typeInfo().name, T::TYPE_INFO().name);
-            return {};
-        }
-        return GN::referenceTo(typed);
-    }
-
-protected:
-    using Entity::Entity;
-};
-using ArtifactPtr = AutoRef<Artifact>;
 
 // ============================================================
 // Scheduling

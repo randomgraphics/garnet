@@ -24,6 +24,48 @@ std::atomic<int> TestContent::alive = 0;
 
 } // namespace
 
+TEST_CASE("rdg2::Artifact: publish and wait are graph independent", "[rdg2][artifact]") {
+    auto artifact = Artifact::create("content");
+    REQUIRE(artifact);
+    CHECK(artifact->version() == NeverOverflowingCounter::OOO());
+    CHECK(artifact->publish({}) == NeverOverflowingCounter::OOO());
+    CHECK(artifact->version() == NeverOverflowingCounter::OOO());
+
+    auto beforePublish = artifact->wait(NeverOverflowingCounter::ONE(), std::chrono::milliseconds::zero());
+    CHECK(beforePublish.status == Artifact::WaitStatus::BUSY);
+
+    TypedArtifact<TestContent> typed(artifact);
+    int                        publishSignals = 0;
+    NeverOverflowingCounter    signaledVersion;
+    auto                       onPublish = [&](const Artifact::Snapshot & snapshot) {
+        ++publishSignals;
+        signaledVersion = snapshot.version;
+    };
+    auto signalTether = artifact->sigPublished.connect(onPublish);
+
+    CHECK(typed.publish(AutoRef<TestContent>(new TestContent(7))) == NeverOverflowingCounter::ONE());
+    CHECK(publishSignals == 1);
+    CHECK(signaledVersion == NeverOverflowingCounter::ONE());
+
+    auto afterPublish = typed.wait(NeverOverflowingCounter::ONE(), std::chrono::milliseconds::zero());
+    CHECK(afterPublish.status == Artifact::WaitStatus::READY);
+    CHECK(afterPublish.version == NeverOverflowingCounter::ONE());
+    REQUIRE(afterPublish.content);
+    CHECK(afterPublish.content->value == 7);
+
+    auto secondVersion = NeverOverflowingCounter::ONE();
+    ++secondVersion;
+    CHECK(typed.publish(AutoRef<TestContent>(new TestContent(8))) == secondVersion);
+    CHECK(publishSignals == 2);
+    CHECK(signaledVersion == secondVersion);
+
+    auto oldVersionWait = typed.wait(NeverOverflowingCounter::ONE(), std::chrono::milliseconds::zero());
+    CHECK(oldVersionWait.status == Artifact::WaitStatus::READY);
+    CHECK(oldVersionWait.version == secondVersion);
+    REQUIRE(oldVersionWait.content);
+    CHECK(oldVersionWait.content->value == 8);
+}
+
 TEST_CASE("rdg2::OpenGraph: artifact keeps only latest published content", "[rdg2][open-graph]") {
     TestContent::alive = 0;
 
@@ -58,7 +100,7 @@ TEST_CASE("rdg2::OpenGraph: artifact keeps only latest published content", "[rdg
     CHECK(TestContent::alive.load() == 0); // all released.
 }
 
-TEST_CASE("rdg2::OpenGraph: cross-graph handles are rejected", "[rdg2][open-graph]") {
+TEST_CASE("rdg2::OpenGraph: artifacts are graph independent while nodes and tokens are graph-owned", "[rdg2][open-graph]") {
     auto graph1 = Graph::create();
     auto graph2 = Graph::create();
     REQUIRE(graph1);
@@ -66,7 +108,10 @@ TEST_CASE("rdg2::OpenGraph: cross-graph handles are rejected", "[rdg2][open-grap
 
     auto artifact = graph1->createArtifact("artifact from graph1");
     REQUIRE(artifact);
-    CHECK(!graph2->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE()));
+    auto artifactToken = graph2->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE());
+    REQUIRE(artifactToken);
+    graph1->publishArtifact(artifact, AutoRef<Entity>(new TestContent(1)));
+    CHECK(graph2->waitForToken(artifactToken) == Graph::WaitResult::IDLE);
 
     auto token = graph1->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE());
     REQUIRE(token);
@@ -284,8 +329,11 @@ TEST_CASE("rdg2::OpenGraph: handles survive graph destruction but graph operatio
 
     auto graph = Graph::create();
     REQUIRE(graph);
-    CHECK(!graph->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE()));
     CHECK(!artifact->content());
+    auto artifactToken = graph->getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE());
+    REQUIRE(artifactToken);
+    graph->publishArtifact(artifact, AutoRef<Entity>(new TestContent(1)));
+    CHECK(graph->waitForToken(artifactToken) == Graph::WaitResult::IDLE);
     CHECK(graph->waitForToken(token) == Graph::WaitResult::FAILED);
     CHECK(!graph->getNodeCompletionToken(node));
 }

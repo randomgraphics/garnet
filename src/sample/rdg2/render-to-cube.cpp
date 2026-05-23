@@ -338,7 +338,7 @@ public:
 
     // Adds the per-frame draw-cube node. outPayload is filled when the node executes.
     // Returns the node handle to wait on.
-    NodePtr addFrameNode(const TokenPtr & cubemapToken, const VersionedArtifact & sscSnapshot, const AutoRef<Texture> & cubemap, float elapsed,
+    NodePtr addFrameNode(const TokenPtr & cubemapToken, const SharedShaderConstants::Snapshot & sscSnapshot, const AutoRef<Texture> & cubemap, float elapsed,
                          AutoRef<GpuPayload> & outPayload) {
         return mCtx.graph->addNode(
             NodeDesc("draw cube",
@@ -347,12 +347,6 @@ public:
                          auto psContent = mPsArtifact->content<ShaderArtifactContent>();
                          if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
                              GN_ERROR(sLogger)("CubeDraw: missing shaders");
-                             return;
-                         }
-
-                         auto sscContent = mCtx.ssc->getContent(sscSnapshot.artifact);
-                         if (!sscContent) {
-                             GN_ERROR(sLogger)("CubeDraw: SSC content unavailable");
                              return;
                          }
 
@@ -381,7 +375,7 @@ public:
                          cubeSet[0][0] = cubeView;
 
                          GpuResourceTable resources;
-                         resources.append(sscContent->set0Resources); // set 0
+                         resources.append(sscSnapshot.set0Resources); // set 0
                          resources.append(cubeSet);                   // set 1
 
                          GpuRaster::DrawParameters dp;
@@ -397,7 +391,6 @@ public:
                          outPayload = rast->seal();
                      })
                 .dependsOn(cubemapToken)
-                .dependsOn(sscSnapshot.version)
                 .dependsOn(mVsReady)
                 .dependsOn(mPsReady));
     }
@@ -533,7 +526,7 @@ int main(int argc, const char ** argv) {
     auto graph = Graph::create();
     if (!graph) return -1;
 
-    auto ssc = rdg2::SharedShaderConstants::create({.gpu = gpuContext, .graph = graph});
+    auto ssc = rdg2::SharedShaderConstants::create({.gpu = gpuContext});
     if (!ssc) return -1;
 
     SharedCtx ctx {.graph = graph, .gpu = gpuContext, .ssc = ssc, .width = windowWidth, .height = windowHeight};
@@ -585,7 +578,7 @@ int main(int argc, const char ** argv) {
             ssc->set0.camera.viewWidthInPixel  = rasterSize.x;
             ssc->set0.camera.viewHeightInPixel = rasterSize.y;
         }
-        VersionedArtifact sscSnapshot = ssc->takeSnapshot();
+        SharedShaderConstants::Snapshot sscSnapshot = ssc->takeSnapshot();
 
         std::vector<AutoRef<GpuPayload>> cubemapPayloads;
         AutoRef<GpuPayload>              presentPayload;
@@ -608,13 +601,10 @@ int main(int argc, const char ** argv) {
         // guard against the previous frame's cubemap write) and frame.ready
         // (swapchain image acquisition).
         {
-            auto                         sscContent = ssc->getContent(sscSnapshot.artifact);
             GpuContext::SubmitParameters sp(StrA::format("frame {}", frameCounter));
             if (cubemapRenderer.prevPayload) sp.waitFor(cubemapRenderer.prevPayload);
             // Submit UBO + env uploads before the draw that samples them.
-            if (sscContent) {
-                for (const auto & p : sscContent->set0Payloads) sp.appendWork(p);
-            }
+            for (const auto & p : sscSnapshot.set0Payloads) sp.appendWork(p);
             sp.waitFor(frame.ready);
             sp.appendWorks(cubemapPayloads);
             sp.appendWork(presentPayload);

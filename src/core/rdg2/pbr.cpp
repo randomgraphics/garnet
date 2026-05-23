@@ -6,7 +6,6 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <glm/gtc/matrix_inverse.hpp>
-#include <thread>
 #include <cstring>
 #include <vector>
 
@@ -14,9 +13,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg2");
 
 namespace GN::rdg2 {
 
-/// Private artifact payload for one renderable PBR object: shaders + material textures + mesh.
-/// v1 is a synchronous default; v2+ may contain asynchronously loaded texture and mesh data.
-struct PbrAsset {
+/// Private payload for one renderable PBR object: shaders + material textures + mesh.
+struct PbrAssetData {
     AutoRef<gpu2::GpuShader>  vs;
     AutoRef<gpu2::GpuShader>  ps;
     AutoRef<gpu2::Texture>    albedo;
@@ -258,28 +256,24 @@ static gpu2::RasterGeometry loadGltfGeometryStaged(AutoRef<gpu2::GpuContext> gpu
     return geom;
 }
 
-struct PbrAssetContent final : public PbrShading::Content {
-    GN_REGISTER_RUNTIME_TYPE(Content);
+struct PbrAssetImpl final : public PbrShading::Asset {
+    GN_REGISTER_RUNTIME_TYPE(Asset);
 
-    PbrAsset asset;
+    PbrAssetData asset;
 
-    explicit PbrAssetContent(PbrAsset value): Content(TYPE_INFO(), "PbrAssetContent"), asset(std::move(value)) { gpuPayload = asset.uploadPayload; }
+    explicit PbrAssetImpl(PbrAssetData value): Asset(TYPE_INFO(), "PbrAssetImpl"), asset(std::move(value)) { gpuPayload = asset.uploadPayload; }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PbrShading static members
 // ─────────────────────────────────────────────────────────────────────────────
 
-GN_API VersionedArtifact PbrShading::load(AutoRef<gpu2::GpuContext> gpu, GraphPtr graph, const LoadParameters & params) {
-    if (!gpu || !graph) {
-        GN_ERROR(sLogger)("PbrShading::load: null gpu or graph");
+GN_API AutoRef<PbrShading::Asset> PbrShading::load(AutoRef<gpu2::GpuContext> gpu, const LoadParameters & params) {
+    if (!gpu) {
+        GN_ERROR(sLogger)("PbrShading::load: null gpu");
         return {};
     }
 
-    auto artifact = graph->createArtifact("pbr_asset");
-    auto ready    = graph->getArtifactVersionToken(artifact, NeverOverflowingCounter::OOO());
-
-    // Compile shaders once per artifact; inherited by v2+ async updates.
     auto vs = gpu2::GpuShader::create({.context = gpu, .name = "pbr.vert", .binary = kPbrVertSpv, .size = sizeof(kPbrVertSpv)});
     auto ps = gpu2::GpuShader::create({.context = gpu, .name = "pbr.frag", .binary = kPbrFragSpv, .size = sizeof(kPbrFragSpv)});
     if (!vs || !ps) {
@@ -298,67 +292,49 @@ GN_API VersionedArtifact PbrShading::load(AutoRef<gpu2::GpuContext> gpu, GraphPt
     auto metalRough = make1x1Tex(gpu, *cnc, "pbr.metalrough_def", 0, 128, 0, 255, 1);
     auto [vb, ib]   = makeUnitCubeStaged(gpu, *cnc);
 
-    PbrAsset defaults;
-    defaults.vs         = vs;
-    defaults.ps         = ps;
-    defaults.albedo     = albedo;
-    defaults.normal     = normal;
-    defaults.emissive   = emissive;
-    defaults.occlusion  = occlusion;
-    defaults.metalRough = metalRough;
+    PbrAssetData asset;
+    asset.vs         = vs;
+    asset.ps         = ps;
+    asset.albedo     = albedo;
+    asset.normal     = normal;
+    asset.emissive   = emissive;
+    asset.occlusion  = occlusion;
+    asset.metalRough = metalRough;
     if (vb && ib) {
-        defaults.geometry.format = stdVertexFormat();
-        defaults.geometry.vertices.append({.buffer = vb, .offset = 0, .stride = 32});
-        defaults.geometry.vertexCount = 24;
-        defaults.geometry.indices     = {.buffer = ib, .offset = 0, .stride = sizeof(uint16_t)};
-        defaults.geometry.indexCount  = 36;
+        asset.geometry.format = stdVertexFormat();
+        asset.geometry.vertices.append({.buffer = vb, .offset = 0, .stride = 32});
+        asset.geometry.vertexCount = 24;
+        asset.geometry.indices     = {.buffer = ib, .offset = 0, .stride = sizeof(uint16_t)};
+        asset.geometry.indexCount  = 36;
     }
-    defaults.uploadPayload = cnc->seal();
 
-    graph->publishArtifact(artifact, AutoRef<PbrAssetContent>(new PbrAssetContent(defaults)));
+    auto geom = loadGltfGeometryStaged(gpu, *cnc, params.gltfPath);
+    if (geom.vertexCount > 0 && geom.indexCount > 0) asset.geometry = std::move(geom);
 
-    // Async: load real textures from files, publish v2.
-    // NO gpu->submit() in the thread — render loop handles all GPU submission.
-    bool simulate = params.simulateSlowLoading;
-    std::thread([=, gpu = gpu, graph = graph, gltfPath = params.gltfPath, albedoPath = params.albedoPath, normalPath = params.normalPath,
-                 emissivePath = params.emissivePath, occlusionPath = params.occlusionPath, mrPath = params.metalRoughPath, defAsset = defaults]() mutable {
-        auto cnc = gpu2::GpuCnC::create({.gpu = gpu});
-        if (!cnc) return;
+    auto tryLoad = [&](const StrA & path, const StrA & name, AutoRef<gpu2::Texture> & outTex) {
+        if (path.empty()) return;
+        auto stg = gpu2::Buffer::loadTextureToStagingBuffer(name, gpu, path);
+        if (stg.empty()) return;
+        auto tex = gpu2::Texture::create(name, {.context = gpu, .descriptor = stg.descriptor});
+        if (!tex) return;
+        cnc->copyBufferToImage(stg, tex);
+        outTex = tex;
+    };
+    tryLoad(params.albedoPath, "pbr.albedo", asset.albedo);
+    tryLoad(params.normalPath, "pbr.normal", asset.normal);
+    tryLoad(params.emissivePath, "pbr.emissive", asset.emissive);
+    tryLoad(params.occlusionPath, "pbr.occlusion", asset.occlusion);
+    tryLoad(params.metalRoughPath, "pbr.metalrough", asset.metalRough);
 
-        PbrAsset real      = defAsset;
-        real.uploadPayload = {};
+    asset.uploadPayload = cnc->seal();
+    if (!asset.uploadPayload || asset.geometry.vertexCount == 0 || asset.geometry.indexCount == 0) GN_UNLIKELY return {};
 
-        auto geom = loadGltfGeometryStaged(gpu, *cnc, gltfPath);
-        if (geom.vertexCount > 0 && geom.indexCount > 0) real.geometry = std::move(geom);
-
-        auto tryLoad = [&](const StrA & path, const StrA & name, AutoRef<gpu2::Texture> & outTex) {
-            if (path.empty()) return;
-            auto stg = gpu2::Buffer::loadTextureToStagingBuffer(name, gpu, path);
-            if (stg.empty()) return;
-            auto tex = gpu2::Texture::create(name, {.context = gpu, .descriptor = stg.descriptor});
-            if (!tex) return;
-            cnc->copyBufferToImage(stg, tex);
-            outTex = tex;
-        };
-        tryLoad(albedoPath, "pbr.albedo", real.albedo);
-        tryLoad(normalPath, "pbr.normal", real.normal);
-        tryLoad(emissivePath, "pbr.emissive", real.emissive);
-        tryLoad(occlusionPath, "pbr.occlusion", real.occlusion);
-        tryLoad(mrPath, "pbr.metalrough", real.metalRough);
-
-        if (simulate) std::this_thread::sleep_for(std::chrono::seconds(5));
-
-        real.uploadPayload = cnc->seal(); // null if no textures loaded
-
-        graph->publishArtifact(artifact, AutoRef<PbrAssetContent>(new PbrAssetContent(std::move(real))));
-    }).detach();
-
-    return {artifact, ready};
+    return AutoRef<PbrAssetImpl>(new PbrAssetImpl(std::move(asset)));
 }
 
-GN_API gpu2::GpuRaster::DrawParameters PbrShading::getDrawParams(AutoRef<const SharedShaderConstants::Content> sscContent, AutoRef<const Content> pbrContent,
+GN_API gpu2::GpuRaster::DrawParameters PbrShading::getDrawParams(const SharedShaderConstants::Snapshot & sscSnapshot, AutoRef<const Asset> pbrAsset,
                                                                  const glm::mat4 & worldTransform) {
-    auto * content = RuntimeType::cast<PbrAssetContent>(pbrContent.get());
+    auto * content = RuntimeType::cast<PbrAssetImpl>(pbrAsset.get());
     if (!content) GN_UNLIKELY return {};
     const auto & asset = content->asset;
 
@@ -379,7 +355,7 @@ GN_API gpu2::GpuRaster::DrawParameters PbrShading::getDrawParams(AutoRef<const S
     dp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(pc), reinterpret_cast<const uint8_t *>(&pc)));
 
     dp.resources.resize(2);
-    dp.resources[0] = sscContent->set0Resources;
+    dp.resources[0] = sscSnapshot.set0Resources;
 
     auto & set1 = dp.resources[1];
     set1.resize(5);

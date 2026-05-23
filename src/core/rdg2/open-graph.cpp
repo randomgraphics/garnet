@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 #include <queue>
 
@@ -8,18 +9,6 @@ namespace GN::rdg2 {
 static GN::Logger * sLogger = GN::getLogger("GN.rdg2.open-graph");
 
 class OpenGraphImpl;
-
-/// Generates a process-wide unique entity id.
-///
-/// Thread-safe and monotonic, using NeverOverflowingCounter to avoid wraparound.
-static NeverOverflowingCounter nextEntityNeverOverflowingId() {
-    static std::mutex              m;
-    static NeverOverflowingCounter counter = NeverOverflowingCounter::OOO();
-    std::lock_guard<std::mutex>    lock(m);
-    auto                           out = counter;
-    counter.increment();
-    return out;
-}
 
 /// Re-entrancy guard for calls that originate from inside node actions.
 ///
@@ -112,78 +101,14 @@ struct TokenImpl final : public Token, private OpaqueBase<TokenImpl> {
 
     bool hasValidTag() const { return tag == kTag; }
 
+    /// Callable storage for artifact publish signal connections; sigslot keeps a pointer to this object.
+    std::function<void(const Artifact::Snapshot &)> artifactPublished;
+    /// Disconnects the artifact signal when this token is destroyed or reused.
+    Tether artifactPublishedTether;
+
 private:
     /// Non-owning graph association. Handles outlive graphs; graph operations promote this before use.
     WeakRef<Graph> mGraph;
-};
-
-// ============================================================
-// Artifact
-// ============================================================
-
-/// A named piece of data published into the graph with a monotonically increasing version.
-///
-/// Nodes can wait for "artifact reaches version >= X" via a token produced by
-/// `getArtifactVersionToken`.
-struct ArtifactImpl final : public Artifact, private OpaqueBase<ArtifactImpl> {
-    GN_REGISTER_RUNTIME_TYPE(Artifact);
-
-    /// Opaque pointer validation tag for Artifact.
-    static constexpr FOURCC kTag {"ARTI"};
-
-    /// Debug/display name for the artifact.
-    const StrA name;
-
-    /// Creates an artifact with a human-readable name.
-    ArtifactImpl(const StrA & n, Graph * graph): Artifact(TYPE_INFO(), n), name(n), mGraph(graph) {}
-
-    /// Protects latest published content. Content reads do not need the graph mutex.
-    mutable std::mutex contentMutex;
-
-    /// Current version counter (increments on every publish).
-    NeverOverflowingCounter version = NeverOverflowingCounter::OOO();
-
-    /// Latest published content for this artifact.
-    AutoRef<Entity> latestContent;
-
-    /// Non-owning graph association. Handles outlive graphs; graph operations promote this before use.
-    WeakRef<Graph> mGraph;
-
-    // Pending: wait until version (after a publish) >= targetVersion.
-    /// A pending waiter for a specific target version.
-    struct Pending {
-        /// Version threshold that must be reached (inclusive).
-        NeverOverflowingCounter target;
-        /// Token to satisfy when the version threshold is met.
-        TokenImpl * token;
-    };
-
-    /// Wait list of version-threshold requests that haven't been satisfied yet.
-    std::list<Pending> pending;
-
-    AutoRef<Entity> content() override {
-        std::lock_guard lock(contentMutex);
-        return latestContent;
-    }
-
-    bool hasValidTag() const { return tag == kTag; }
-
-    std::vector<AutoRef<TokenImpl>> publish(AutoRef<Entity> & content) {
-        std::vector<AutoRef<TokenImpl>> toBeSatisfied;
-        std::lock_guard                 contentLock(contentMutex);
-        version.increment();
-        latestContent = std::move(content);
-        for (auto iter = pending.begin(); iter != pending.end();) {
-            if (version >= iter->target) {
-                auto pendingToken = iter->token;
-                iter              = pending.erase(iter);
-                if (pendingToken) toBeSatisfied.emplace_back(pendingToken);
-            } else {
-                ++iter;
-            }
-        }
-        return toBeSatisfied;
-    }
 };
 
 // ============================================================
@@ -255,7 +180,6 @@ public:
         }
         mReady = {};
         mNodeRegistry.clear();
-        mArtifactRegistry.clear();
         mAllTokens.clear();
     }
 
@@ -264,9 +188,9 @@ public:
     /// Blocks until a token becomes satisfied (or the graph is stopping).
     Graph::WaitResult waitForToken(const TokenPtr & token) const override;
 
-    /// Creates a new artifact instance tracked by this graph.
+    /// Creates a standalone artifact instance.
     ArtifactPtr createArtifact(const StrA & name) override;
-    /// Publishes new content, increments version, and satisfies any pending version waiters.
+    /// Publishes new content through the standalone artifact API.
     void publishArtifact(const ArtifactPtr & artifact, AutoRef<Entity> content) override;
 
     /// Adds a node, collects dependency edges, and enqueues it if ready.
@@ -292,14 +216,15 @@ private:
     bool collectDeps_(NodeImpl & n, const NodeDesc & d);
     /// Marks a token satisfied and potentially unblocks dependent nodes.
     void satisfyToken_(TokenImpl & t);
+    /// Satisfies an artifact-version token from an artifact callback.
+    void satisfyArtifactToken_(const AutoRef<TokenImpl> & t);
     /// Transitions a running node to completed and satisfies its completion token.
     bool tryCompleteNode_(NodeImpl & n, std::unique_lock<std::mutex> & lock);
 
-    TokenImpl *    validateToken_(const TokenPtr & token, const char * api) const;
-    NodeImpl *     validateNode_(const NodePtr & node, const char * api) const;
-    ArtifactImpl * validateArtifact_(const ArtifactPtr & artifact, const char * api) const;
+    TokenImpl * validateToken_(const TokenPtr & token, const char * api) const;
+    NodeImpl *  validateNode_(const NodePtr & node, const char * api) const;
 
-    /// Protects all state below (nodes, tokens, queues, versions).
+    /// Protects all state below (nodes, tokens, queues).
     mutable std::mutex mMutex;
     /// Waiters sleep on this for token satisfaction, queue changes, or stopping.
     mutable std::condition_variable mCv;
@@ -311,11 +236,9 @@ private:
     mutable size_t mNonTerminalNodes = 0;
     /// Monotonic enqueue ordinal used as a stable tie-breaker in the ready queue.
     mutable uint64_t mEnqueueOrdinal = 0;
-    // Ownership of heap nodes / artifacts; tokens on nodes/artifacts and in mArtifactOrphans.
+    // Ownership of heap nodes and tokens.
     /// Owns all heap-allocated nodes for this graph instance.
     ArrayContainer<AutoRef<NodeImpl>> mNodeRegistry;
-    /// Owns all heap-allocated artifacts for this graph instance.
-    ArrayContainer<AutoRef<ArtifactImpl>> mArtifactRegistry;
     /// Owns all heap Token objects; freed in ~OpenGraphImpl (dep tokens, completion, artifact version).
     ArrayContainer<AutoRef<TokenImpl>> mAllTokens;
     // Ready queue: lower SchedulingClass and higher int priority first; stable tie-breaker.
@@ -374,6 +297,14 @@ void OpenGraphImpl::satisfyToken_(TokenImpl & t) {
         }
     }
     notifyAll_();
+}
+
+/// Bridges standalone artifact notifications back into this graph's token dependency state.
+void OpenGraphImpl::satisfyArtifactToken_(const AutoRef<TokenImpl> & t) {
+    if (!t) { return; }
+    std::unique_lock lock(mMutex);
+    if (mStopping) { return; }
+    satisfyToken_(*t);
 }
 
 /// Finalizes a node that has finished its own action, if possible.
@@ -486,29 +417,6 @@ NodeImpl * OpenGraphImpl::validateNode_(const NodePtr & node, const char * api) 
     return impl;
 }
 
-ArtifactImpl * OpenGraphImpl::validateArtifact_(const ArtifactPtr & artifact, const char * api) const {
-    static auto * logger = GN::getLogger("GN.rdg2");
-    if (!artifact) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: artifact is null", api);
-            return nullptr;
-        }
-    auto * impl = RuntimeType::cast<ArtifactImpl>(artifact.get());
-    if (!impl || !impl->hasValidTag()) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: artifact is not an open-graph artifact", api);
-            return nullptr;
-        }
-    auto graph = impl->mGraph.promote();
-    if (!graph) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: artifact's graph is already destroyed", api);
-            return nullptr;
-        }
-    if (graph.get() != this) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: artifact belongs to a different graph", api);
-            return nullptr;
-        }
-    return impl;
-}
-
 // ============================================================
 // OpenGraphImpl — Graph
 // ============================================================
@@ -560,26 +468,16 @@ Graph::WaitResult OpenGraphImpl::waitForToken(const TokenPtr & token) const {
     }
 }
 
-/// Allocates and registers an artifact owned by this graph.
-ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) {
-    std::lock_guard g(mMutex);
-    auto            a = AutoRef<ArtifactImpl>(new ArtifactImpl(name, this));
-    (void) mArtifactRegistry.append(a);
-    return a.staticCastTo<Artifact>();
-}
+/// Creates an artifact that is not owned by the graph runtime.
+ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) { return Artifact::create(name); }
 
-/// Publishes new artifact content, bumps the version, and satisfies pending version tokens.
+/// Publishes new artifact content through the standalone artifact primitive.
 void OpenGraphImpl::publishArtifact(const ArtifactPtr & ap, AutoRef<Entity> content) {
-    if (!content) GN_UNLIKELY {
-            GN_ERROR(sLogger)("publishArtifact: publishing empty content is prohibited.");
+    if (!ap) GN_UNLIKELY {
+            GN_ERROR(sLogger)("publishArtifact: artifact is null.");
             return;
         }
-
-    auto * a = validateArtifact_(ap, "publishArtifact");
-    if (!a) GN_UNLIKELY return;
-
-    auto satisfiedTokens = a->publish(content);
-    for (auto & t : satisfiedTokens) satisfyToken_(*t);
+    (void) ap->publish(std::move(content));
     notifyAll_();
 }
 
@@ -664,31 +562,34 @@ TokenPtr OpenGraphImpl::getNodeCompletionToken(const NodePtr & node) {
 ///
 /// `version == OOO()` is treated as "next version after current".
 TokenPtr OpenGraphImpl::getArtifactVersionToken(const ArtifactPtr & ap, NeverOverflowingCounter version) {
-    auto * a = validateArtifact_(ap, "getArtifactVersionToken");
-    if (!a) { return nullptr; }
-    std::unique_lock lock(mMutex);
-    const bool       isNext = (version == NeverOverflowingCounter::OOO());
-    auto             t      = AutoRef<TokenImpl>(new TokenImpl("artifact version", this));
-    (void) mAllTokens.append(t);
+    if (!ap) GN_UNLIKELY {
+            GN_ERROR(sLogger)("getArtifactVersionToken: artifact is null.");
+            return nullptr;
+        }
+
+    auto t = AutoRef<TokenImpl>(new TokenImpl("artifact version", this));
+    {
+        std::unique_lock lock(mMutex);
+        if (mStopping) { return nullptr; }
+        (void) mAllTokens.append(t);
+    }
+
     NeverOverflowingCounter target = version;
-    if (isNext) {
-        target = a->version;
-        target.increment();
+    if (target == NeverOverflowingCounter::OOO()) {
+        target = ap->version();
+        ++target;
     }
-    if (a->version >= target) {
-        satisfyToken_(*t);
-    } else {
-        ArtifactImpl::Pending p;
-        p.target = target;
-        p.token  = t.get();
-        a->pending.insert(a->pending.end(), p);
-    }
+
+    t->artifactPublished = [token = t.get(), target](const Artifact::Snapshot & snapshot) {
+        if (snapshot.version < target) { return; }
+        auto graph = token->graph().promote();
+        if (!graph) { return; }
+        static_cast<OpenGraphImpl *>(graph.get())->satisfyArtifactToken_(GN::referenceTo(token));
+    };
+    t->artifactPublishedTether = ap->sigPublished.connect(t->artifactPublished);
+    if (ap->version() >= target) { satisfyArtifactToken_(t); }
     return t.staticCastTo<Token>();
 }
-
-/// Constructs an RDG entity with a unique id and human-readable name.
-GN_API Entity::Entity(const GN::RuntimeType::TypeInfo & type, const StrA & name)
-    : RefCounter(), RuntimeType(type), id(nextEntityNeverOverflowingId()), name(name) {}
 
 /// Factory for creating a new open-graph implementation.
 GN_API GraphPtr Graph::create() { return GraphPtr(new OpenGraphImpl()); }

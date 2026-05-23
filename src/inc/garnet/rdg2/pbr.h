@@ -12,11 +12,10 @@ struct PbrShading {
     struct LoadParameters {
         StrA gltfPath;
         StrA albedoPath, normalPath, emissivePath, occlusionPath, metalRoughPath;
-        bool simulateSlowLoading = false; ///< sleep ~5 s on worker during staging writes
     };
 
-    /// Public content of the loaded PBR asset.
-    struct Content : Entity {
+    /// Opaque loaded PBR asset. Implementation keeps shaders, material textures, and mesh data private.
+    struct Asset : Entity {
         GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
 
         AutoRef<gpu2::GpuPayload> gpuPayload;
@@ -25,22 +24,12 @@ struct PbrShading {
         using Entity::Entity;
     };
 
-    /// Start loading a PBR asset asynchronously.
-    /// Compiles shaders and publishes a default opaque asset (if it is the very fist time to load this particular asset)
-    /// before returning.
-    /// Async IO loads real textures/geometry and publishes v2 when done.
-    /// Call multiple times to create independent per-object artifacts.
-    static GN_API VersionedArtifact load(AutoRef<gpu2::GpuContext> gpu, GraphPtr graph, const LoadParameters & params);
-
-    /// Get the latest public content of the PBR asset artifact.
-    static AutoRef<Content> getContent(const ArtifactPtr & assetArtifact) {
-        if (!assetArtifact) return {};
-        return assetArtifact->content<Content>();
-    }
+    /// Load one PBR asset synchronously. Missing files fall back per-slot to built-in defaults.
+    static GN_API AutoRef<Asset> load(AutoRef<gpu2::GpuContext> gpu, const LoadParameters & params);
 
     /// Build DrawParameters for one PBR mesh draw.
-    /// Must be called after the artifact's ready token is satisfied.
-    static GN_API gpu2::GpuRaster::DrawParameters getDrawParams(AutoRef<const SharedShaderConstants::Content> sscContent, AutoRef<const Content> pbrContent,
+    /// The asset's gpuPayload must be submitted before the first draw that uses it.
+    static GN_API gpu2::GpuRaster::DrawParameters getDrawParams(const SharedShaderConstants::Snapshot & sscSnapshot, AutoRef<const Asset> pbrAsset,
                                                                 const glm::mat4 & worldTransform);
 };
 

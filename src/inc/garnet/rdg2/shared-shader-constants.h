@@ -4,14 +4,6 @@
 
 namespace GN::rdg2 {
 
-/// Artifact and token pair used to observe one published artifact version.
-struct VersionedArtifact {
-    ArtifactPtr artifact;
-    TokenPtr    version;
-
-    bool empty() const { return !artifact; }
-};
-
 struct SharedShaderConstants : public Entity {
     struct FrameConstants {
         int          frameCounter  = 0;
@@ -59,7 +51,6 @@ struct SharedShaderConstants : public Entity {
         StrA  prefilteredPath;
         StrA  brdfLutPath;
         float environmentRadianceScale = 1.f;
-        bool  simulateSlowLoading      = false;
     };
 
     struct Set0Parameters {
@@ -69,36 +60,22 @@ struct SharedShaderConstants : public Entity {
         EnvLightingParameters  envLighting;
     };
 
-    struct Content : Entity {
-        GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
-
-        Set0Parameters           set0Parameters;
+    struct Snapshot {
         GN::gpu2::GpuResourceSet set0Resources;
         /// All GPU work for this snapshot: any one-time inits (first frame only) followed by
-        /// the per-frame UBO upload Submit all entries every frame.
+        /// the per-frame UBO upload. Submit all entries every frame.
         ArrayContainer<AutoRef<GN::gpu2::GpuPayload>> set0Payloads;
-
-    protected:
-        using Entity::Entity;
     };
 
     Set0Parameters set0;
 
-    virtual VersionedArtifact takeSnapshot() const = 0;
-
-    /// Get the latest content of the ssc artifact.
+    virtual Snapshot takeSnapshot() const = 0;
 
     /// Build DrawParameters for a fullscreen skybox pass using the snapshot's set0 resources.
     virtual GN::gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet &) const = 0;
 
-    static AutoRef<const Content> getContent(const ArtifactPtr & a) {
-        if (!a) return {};
-        return a->content<Content>();
-    }
-
     struct CreateParameters {
         AutoRef<GN::gpu2::GpuContext> gpu;
-        GraphPtr                      graph;
     };
     GN_API static AutoRef<SharedShaderConstants> create(const CreateParameters & params);
 
