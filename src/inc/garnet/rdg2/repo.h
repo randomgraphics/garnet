@@ -86,9 +86,9 @@ template<typename HANDLE, typename LOAD_DESC>
 struct Repo : Entity {
     GN_REGISTER_RUNTIME_TYPE(Entity);
 
-    typedef HANDLE         Handle;
-    typedef LOAD_DESC      LoadDesc;
-    typedef LOAD_DESC::Key Key;
+    typedef HANDLE                  Handle;
+    typedef LOAD_DESC               LoadDesc;
+    typedef typename LOAD_DESC::Key Key;
 
     struct Ref {
         Handle      handle;
