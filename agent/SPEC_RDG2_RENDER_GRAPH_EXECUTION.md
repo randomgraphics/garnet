@@ -41,6 +41,9 @@ know what a skybox, PBR material, scene constants, or postprocess effect means.
   `gpu2::GpuPayload` values.
 - Gather produced GPU payloads and submit them through `gpu2::GpuContext` in a
   single ordered submit for the first implementation.
+- Let feature authors see all graph data as artifacts with declared usage, while
+  the compiler/planner internally optimizes short-lived physical resources and
+  potential aliasing.
 - Let background producers publish relics over time so frame rendering can
   consume stable relics without blocking on a full recompute.
 - Keep SCC, PBR, skybox, and future effects as ordinary clients/adapters used to
@@ -53,7 +56,9 @@ know what a skybox, PBR material, scene constants, or postprocess effect means.
   models, cameras, scene constants, or glTF.
 - Do not replace `SharedShaderConstants` or `PbrShading` in the first phase.
 - Do not require async compute or transfer queue splitting in the first version.
-- Do not implement full transient GPU memory aliasing in the first version.
+- Do not expose transient allocation or aliasing as a feature-author concern.
+  The first version may allocate conservatively, but the plan should still keep
+  enough internal lifetime information to optimize physical resources later.
 - Do not require speculative execution before an explicit execution request.
 
 ## Layering
@@ -97,6 +102,13 @@ plans, and executions.
 - **Relic selector**: A symbolic version request such as current-known-good,
   next-published, or latest-at-execution-start. Outside execution, code should
   use selectors rather than concrete version numbers.
+- **Execution-local resource**: An internal planner classification for physical
+  GPU storage whose contents are only needed for a bounded interval inside one
+  execution. Feature authors still see ordinary artifacts.
+- **Physical GPU resource alias**: A plan/backend decision that maps multiple
+  non-overlapping execution-local artifacts to the same compatible gpu2
+  allocation. Alias decisions are not visible to quests; quests only name
+  logical artifacts.
 - **GPU resource**: A gpu2-owned resource such as a texture, buffer, shader,
   resource set, or render target view.
 - **GPU payload**: A sealed gpu2 unit of GPU work submitted through
@@ -140,6 +152,17 @@ be revisited later only if refcounted public objects become a real problem. Keep
 internal compile bookkeeping such as dependency edges, topological indices, and
 ready queues as lightweight value structs rather than `Entity` objects.
 
+Public RDG2 interfaces should remain pure virtual wherever that is reasonable,
+matching the existing RDG2 style. Concrete implementations should live behind
+factories and internal implementation classes so callers see stable abstract
+interfaces rather than backend or scheduler details.
+
+The core render graph implementation should be API agnostic. It may gather and
+submit `gpu2::GpuPayload` values, but it should not branch on Vulkan, D3D12,
+Metal, OpenGL, or any concrete rendering effect. Backend-specific optimization
+belongs in concrete client adapters or gpu2 backend code, not in artifact,
+quest, plan, or execution dependency analysis.
+
 ## Artifact Discipline
 
 For the first implementation, using `Artifact` directly in multithreaded code is
@@ -166,13 +189,12 @@ enum class RelicSelector {
     LATEST_AT_COMPILE,
     LATEST_AT_EXECUTION_START,
     NEXT_PUBLISHED,
-    REQUIRED_VERSION,
 };
 ```
 
 Concrete versions are resolved at the synchronization point chosen by execution.
 Frame executions should usually capture stable relics before crossing to the
-execution thread. Background executions may use latest/required selectors when
+execution thread. Background executions may use latest or next-published selectors when
 their producer/consumer policy needs that behavior.
 
 ## Phase 1: Quest Declaration
@@ -188,28 +210,30 @@ A quest should be able to declare:
 - artifact writes;
 - optional explicit before/after quest dependencies;
 - optional external GPU dependencies, such as swapchain acquire payloads;
-- whether it is required as a final output root or can be culled if unused.
+- whether its outputs are required output roots that must be preserved even when
+  not referenced by another quest in the same execution.
 
 The public shape can start with working names like:
 
 ```cpp
 enum class ArtifactAccess {
-    READ,
-    WRITE,
-    READ_WRITE,
+    READ_ONLY,     // read an existing relic selected by selector
+    DISCARD_WRITE, // discard old contents, then write a complete replacement
+    READ_WRITE,    // read existing relic, then publish an updated relic
 };
 
 struct ArtifactUse {
-    ArtifactRef   artifact;
-    ArtifactAccess access = ArtifactAccess::READ;
-    RelicSelector selector = RelicSelector::CURRENT_KNOWN_GOOD;
+    ArrayContainer<ArtifactRef> artifacts;
+    ArtifactAccess              access = ArtifactAccess::READ_ONLY;
+    RelicSelector               selector = RelicSelector::CURRENT_KNOWN_GOOD;
 };
 
 struct QuestDeclaration {
     StrA name;
     SchedulingHints scheduling;
-    ArrayContainer<ArtifactUse> artifacts;
+    ArrayContainer<ArtifactUse> artifactUses;
     ArrayContainer<QuestRef> explicitDependencies;
+    // Root outputs are retained even when no other quest in this execution reads them.
     bool outputRoot = false;
 };
 
@@ -221,6 +245,25 @@ struct Quest : Entity {
 
 Exact type names may change during implementation, but the split between
 declaration and execution should remain.
+
+Each `ArtifactUse` groups artifacts with the same access policy. This keeps
+declarations compact for common cases such as a quest reading many input
+textures with the same selector.
+
+`DISCARD_WRITE` means write-only/full replacement. The quest promises it does
+not need the prior contents of the artifact and will publish a complete
+replacement. This creates no dependency on previous contents of the same
+artifact.
+
+`READ_WRITE` means the quest needs the existing relic and publishes an updated
+relic. Use this for partial updates, accumulation, blending, append/update
+operations, preserving parts of a render target, or any operation where old
+artifact content affects the result.
+
+Quest declarations should not expose physical lifetime policy. A feature author
+declares reads and writes; the compiler decides which produced artifacts are
+needed by downstream quests, which outputs must be preserved because they are
+roots, and which physical resources can be recycled or aliased internally.
 
 `QuestBuilder` may exist as an optional local helper for constructing
 `QuestDeclaration`, but it is not part of the core quest lifecycle and should not
@@ -235,6 +278,111 @@ QuestDeclaration MyQuest::declare() const {
 }
 ```
 
+### Typed Feature Declarations Over The Generic Core
+
+The core render graph API stays generic so the framework can compile, schedule,
+validate, alias, and submit any graph shape. That does not mean feature authors
+should normally hand-author anonymous arrays, maps, or string-keyed containers.
+Engine layers built on top of RDG should provide strongly typed declaration
+adapters that lower into the generic `QuestDeclaration` format.
+
+In that model, `ArtifactUse` is the interchange representation consumed by the
+compiler. A feature-specific declaration struct is the author-facing
+representation. Each typed field describes one logical input or output, including
+access mode, selector, multiplicity, and resource requirements. The framework
+binds those fields to actual artifacts and relics when it builds and executes a
+plan.
+
+The bridge has three parts:
+
+- **Typed declaration fields**: a feature declares named fields such as
+  `sceneConstants`, `models`, `depth`, and `shadowMap`. These fields carry
+  `READ_ONLY`, `DISCARD_WRITE`, or `READ_WRITE`, selector policy, and optional
+  descriptor constraints. They do not need to contain concrete artifact
+  instances when authored.
+- **Lowering to generic uses**: the engine adapter enumerates the typed fields
+  and emits `QuestDeclaration::artifactUses` for the core compiler. This is where
+  descriptor constraints become planner-visible requirements for resource
+  allocation and aliasing.
+- **Bound execution view**: during execution the framework provides the same
+  typed declaration shape, but with each field resolved to usable relics,
+  provisional output resources, and helper methods such as `getRelic()` or
+  `getRelics()`. The feature code reads named fields rather than searching a
+  generic container.
+
+Illustrative shadow-map feature:
+
+```cpp
+class ShadowMapFeature {
+public:
+    struct Declaration {
+        TypedArtifactUse<SceneConstantsRelic> sceneConstants = {
+            .access   = ArtifactAccess::READ_ONLY,
+            .selector = RelicSelector::CURRENT_KNOWN_GOOD,
+        };
+
+        int lightIndex = 0;
+
+        TypedArtifactUse<ModelRelicList> models = {
+            .access   = ArtifactAccess::READ_ONLY,
+            .selector = RelicSelector::CURRENT_KNOWN_GOOD,
+        };
+
+        TypedArtifactUse<DepthTargetRelic> depth = {
+            .access       = ArtifactAccess::DISCARD_WRITE,
+            .width        = 1024,
+            .height       = 1024,
+            .minDepthBits = 24,
+        };
+
+        TypedArtifactUse<ShadowMapRelic> shadowMap = {
+            .access = ArtifactAccess::DISCARD_WRITE,
+            .width  = 1024,
+            .height = 1024,
+            .format = ShadowMapFormat::FLOAT32,
+        };
+    };
+
+    ArrayContainer<AutoRef<gpu2::GpuPayload>> execute(BoundDeclaration<Declaration> & decl) {
+        auto sceneConstants = decl.sceneConstants.getRelic();
+        auto models         = decl.models.getRelics();
+        auto depth          = decl.depth.getRelic();
+        auto shadowMap      = decl.shadowMap.getRelic();
+
+        auto raster = decl.gpu()->createRasterPayload("shadow map");
+        raster->begin({.color = shadowMap, .depth = depth});
+        raster->setLight(sceneConstants, decl.lightIndex);
+
+        for (auto model : models) {
+            raster->draw(model);
+        }
+
+        return {raster->seal()};
+    }
+};
+```
+
+The sample above is intentionally feature-facing pseudo-code, not a required
+core API. The key design target is that the feature author only names typed
+inputs and outputs and writes the rendering logic. The framework performs the
+generic work:
+
+- resolve `READ_ONLY` fields to the selected relics;
+- allocate or bind `DISCARD_WRITE` fields to fresh output relic/resource
+  placeholders whose old contents are irrelevant;
+- resolve `READ_WRITE` fields to prior contents plus a publishable update target;
+- validate that execution only touches declared fields;
+- lower typed fields to generic artifact dependencies and resource lifetime
+  intervals;
+- commit output relic publication only when the retained GPU work that produces
+  those relics is accepted and reaches the policy-defined completion point.
+
+Manual publication from feature code should be uncommon in this typed layer.
+For GPU-produced outputs, publication is usually tied to gathered payload
+submission/completion rather than the CPU moment when the payload is sealed. If a
+payload is culled or dropped by policy, its provisional output relics are dropped
+or recycled instead of being made visible as completed data.
+
 ## Phase 2: Compile / Build
 
 Compile consumes quest declarations and produces a plan.
@@ -243,6 +391,9 @@ Responsibilities:
 
 - validate declarations;
 - map artifact reads/writes to relic producers and consumers;
+- infer internal physical resource lifetimes from first use to last use;
+- identify execution-local artifacts whose lifetimes do not overlap and whose
+  framework-provided resource descriptors are alias-compatible;
 - detect missing producers for required reads unless the artifact is imported;
 - reject ambiguous artifact use that cannot be ordered safely;
 - detect cycles from artifact dependencies and explicit dependencies;
@@ -255,13 +406,44 @@ Responsibilities:
 Initial dependency rules:
 
 - A read depends on the latest prior write to the same artifact.
-- A write depends on all prior reads and writes of that artifact unless the
-  writer explicitly declares it discards previous relics.
+- A discard-write access publishes a complete replacement relic for that
+  artifact and does not depend on the previous relic.
+- A read-write access depends on the latest prior write to the same artifact and
+  publishes an updated relic.
+- The planner preserves a published relic only when it is read by another
+  retained quest, selected by an execution policy, imported/exported, or
+  produced by an output root.
 - Multiple writes to the same artifact are ordered by declaration order unless
   explicit dependencies impose a stronger order.
 - Explicit dependencies always add edges, even when no artifact dependency
   requires them.
 - Imported artifacts start with already-published relics.
+
+Internal resource lifetime and alias planning rules:
+
+- Feature authors do not declare artifacts as transient. They declare ordinary
+  artifacts and their intended reads/writes; the compiler classifies
+  execution-local physical storage internally.
+- Logical artifacts stay distinct even when their physical resources may alias.
+  For example, shadow-pass depth and main-pass depth should be separate
+  artifacts even if the allocator later maps both to the same image allocation.
+- Lifetime intervals are derived from the compiled order and all retained
+  artifact reads and writes. One execution-local artifact can only alias another
+  when their GPU lifetimes do not overlap.
+- Resource descriptors are supplied by the artifact instance, framework factory,
+  or concrete adapter rather than by every quest use. Descriptors must be
+  compatible before aliasing. For textures this includes dimensions or
+  allocation size, format/aspect, usage flags, sample count, tiling, memory
+  class, and alignment. For buffers it includes size, usage flags, memory class,
+  mapping/coherency requirements, and alignment.
+- Aliasing must respect queue ownership and GPU-side execution overlap. If
+  async queue splitting or overlapping submissions make two lifetimes ambiguous,
+  the compiler/backend must keep them separate.
+- Imported, exported, externally retained, cross-frame, selected latest-relic,
+  or output-root artifacts are not alias candidates unless the framework can
+  prove their physical storage is execution-local.
+- Debug/validation modes may disable aliasing while preserving the same logical
+  artifact behavior.
 
 Compile should produce enough information for a dedicated render-quest executor.
 It may borrow concepts from the current open graph, such as artifacts, tokens,
@@ -331,6 +513,13 @@ For the first implementation:
 
 This single-submit model intentionally relies on `gpu2` submit-time resource
 state tracking to emit barriers across payloads in the same batch.
+
+The gathered submission also owns the physical lifetime of execution-local GPU
+resources. The first backend implementation may allocate one physical resource
+per logical artifact, but the plan must expose enough internal lifetime and
+descriptor information for an allocator to alias non-overlapping artifacts. A
+later backend optimization can then bind multiple logical artifacts to one
+physical image or buffer without changing quest declarations.
 
 Future versions may split gathered payloads by queue class, then submit multiple
 batches with GPU-side dependencies. That is explicitly deferred until the single
@@ -421,6 +610,73 @@ Potential relic entity types include:
 Do not bake these concrete relic types into core dependency analysis. They are
 ordinary `Entity` subclasses carried by artifact relics.
 
+## Internal Resource Lifetime And Aliasing
+
+Feature authors should not manage transient lifetimes. From their point of view,
+all data is an artifact with intended usage: a quest declares the artifacts it
+reads and writes, and execution provides usable instances when the quest runs.
+The compiler and backend decide which artifacts are execution-local, how long
+their physical resources must live, and whether memory can be reused.
+
+This applies to pass-local depth buffers, temporary color targets, shadow-map
+depth attachments, upload staging buffers, readback staging buffers, per-draw
+scratch data, and other one-shot resources.
+
+Two different logical needs should remain two different artifacts even when they
+could reuse memory. For example:
+
+```text
+shadowDepthBuffer
+  used only by the shadow pass
+
+mainDepthBuffer
+  used only by the main scene pass
+```
+
+These artifacts may have different descriptors. The shadow depth buffer might be
+2048x2048 while the main depth buffer might match the backbuffer size. Because
+their lifetimes do not overlap, the compiled plan may allow the backend to place
+both artifacts in the same physical allocation if the allocation satisfies both
+requirements.
+
+The feature author does not request that aliasing. They simply declare writes to
+`shadowDepthBuffer` and `mainDepthBuffer`. The planner sees that neither is an
+output root, neither escapes the execution, and their physical lifetimes do not
+overlap.
+
+The same model applies to staging resources:
+
+```text
+meshUploadScratch
+  host-visible buffer used by an upload quest
+
+readbackScratch
+  host-visible or readback buffer used by a later download quest
+```
+
+If their lifetimes and memory requirements are compatible, the internal
+execution-local allocator may alias them. If not, it allocates separate
+resources. Quest code must not observe or depend on the aliasing decision.
+
+Aliasing is therefore a plan/backend optimization over logical artifacts:
+
+```text
+Logical artifact A  -> physical transient resource 7
+Logical artifact B  -> physical transient resource 7
+Logical artifact C  -> physical transient resource 8
+```
+
+The invariant is that artifacts describe meaning and dependencies, while gpu2
+resources implement storage. Quests declare artifact requirements and use the
+resources provided by execution. They do not manually pool, recycle, or share
+temporary GPU resources.
+
+Output roots are the user-facing preservation mechanism. If a quest produces an
+artifact that must survive even when no retained quest reads it in the same
+execution, the quest or caller marks that output as a root. Non-root writes can
+be culled or have their physical storage recycled once the planner proves no
+retained consumer needs them.
+
 ## Error Handling
 
 Compile should fail before running quests when declarations are invalid.
@@ -459,10 +715,21 @@ Useful first adapters:
 These adapters prove the graph is usable, but the render graph execution layer
 must not depend on their types.
 
+Concrete action/effect implementations may specialize per graphics API when that
+is useful. Store those implementations in files prefixed with the API shorthand,
+such as `vk-pbr-quest.cpp`, and name implementation classes with the full API
+suffix, such as `PbrQuestVulkan`. Keep the public adapter interfaces abstract
+and API neutral; the API-specific classes are private implementation choices.
+
 ## Resolved Decisions
 
 - Build the generic RDG-to-gpu2 execution layer before moving SCC or PBR between
   modules.
+- Keep public RDG2 APIs as pure virtual abstract interfaces where practical,
+  with concrete implementations hidden behind factories.
+- Keep the render graph execution implementation API agnostic; put
+  Vulkan/D3D12/Metal-specific effect implementations in API-prefixed files and
+  full-API-suffixed classes.
 - Use a declaration/compile/execute/gather flow.
 - Treat this as render graph take 2, not as an extension of the current open
   graph implementation.
@@ -479,6 +746,11 @@ must not depend on their types.
   APIs.
 - Use artifact relics as the synchronization/data handoff between background
   producers and frame renderers.
-- Defer async queue splitting and transient memory aliasing.
+- Keep transient/aliasing decisions inside the compiler and planner; feature
+  authors declare artifacts and root outputs, not physical resource lifetimes.
+- Keep the core declaration API generic, while allowing engine/framework layers
+  to expose strongly typed feature declaration structs that lower into generic
+  artifact uses.
+- Defer async queue splitting.
 - Prefer a small, testable implementation that can later grow into a fuller
   mini-engine.

@@ -102,7 +102,7 @@ struct TokenImpl final : public Token, private OpaqueBase<TokenImpl> {
     bool hasValidTag() const { return tag == kTag; }
 
     /// Callable storage for artifact publish signal connections; sigslot keeps a pointer to this object.
-    std::function<void(const Artifact::Snapshot &)> artifactPublished;
+    std::function<void(const Artifact::Content<> &)> artifactPublished;
     /// Disconnects the artifact signal when this token is destroyed or reused.
     Tether artifactPublishedTether;
 
@@ -580,8 +580,8 @@ TokenPtr OpenGraphImpl::getArtifactVersionToken(const ArtifactPtr & ap, NeverOve
         ++target;
     }
 
-    t->artifactPublished = [token = t.get(), target](const Artifact::Snapshot & snapshot) {
-        if (snapshot.version < target) { return; }
+    t->artifactPublished = [token = t.get(), target](const Artifact::Content<> & content) {
+        if (content.version < target) { return; }
         auto graph = token->graph().promote();
         if (!graph) { return; }
         static_cast<OpenGraphImpl *>(graph.get())->satisfyArtifactToken_(GN::referenceTo(token));

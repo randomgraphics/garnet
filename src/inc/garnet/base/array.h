@@ -381,6 +381,22 @@ class DynaArray {
         return true;
     }
 
+    template<typename... ARGS>
+    bool doEmplaceAppend(ARGS &&... args) {
+        // reserve memory
+        if (!doReserve(GetCount() + 1)) return false;
+
+        // in-place-construct new elements
+        auto & h   = GetHeader();
+        T *    dst = mElements + h.count;
+        OBJECT_ALLOCATOR::sConstruct(dst, std::forward<ARGS>(args)...);
+
+        // update count
+        h.count += 1;
+
+        return true;
+    }
+
     void doClear() {
         // Destruct all objects, but do not free memory.
         if (!mElements) return;
@@ -639,11 +655,17 @@ public:
     /// \name Common array operations.
     ///
     //@{
-    bool      append(const T & t) { return doAppend(&t, 1); }
-    bool      append(T && t) { return doMoveAppend(&t, 1); }
-    bool      append(const T * p, SIZE_TYPE count) { return doAppend(p, count); }
-    bool      append(const DynaArray & a) { return doAppend(a.mElements, a.size()); }
-    bool      append(const std::vector<T> & a) { return doAppend(a.data(), (SIZE_TYPE) a.size()); }
+    bool append(const T & t) { return doAppend(&t, 1); }
+    bool append(T && t) { return doMoveAppend(&t, 1); }
+    bool append(const T * p, SIZE_TYPE count) { return doAppend(p, count); }
+    bool append(const DynaArray & a) { return doAppend(a.mElements, a.size()); }
+    bool append(const std::vector<T> & a) { return doAppend(a.data(), (SIZE_TYPE) a.size()); }
+
+    template<typename... ARGS>
+    bool emplace(ARGS &&... args) {
+        return doEmplaceAppend(std::forward<ARGS>(args)...);
+    }
+
     const T & back() const {
         auto & h = GetHeader();
         GN_ASSERT(h.count > 0);

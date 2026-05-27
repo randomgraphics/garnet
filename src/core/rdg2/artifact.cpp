@@ -28,9 +28,9 @@ public:
     explicit ArtifactImpl(const StrA & name): Artifact(TYPE_INFO(), name) {}
 
 public:
-    AutoRef<Entity> content() const override {
+    Content<> content() const override {
         std::lock_guard lock(mMutex);
-        return mLatestContent;
+        return {mLatestContent, mVersion};
     }
 
     NeverOverflowingCounter version() const override {
@@ -44,19 +44,19 @@ public:
                 return NeverOverflowingCounter::OOO();
             }
 
-        Snapshot                snapshot;
+        Content<>               publishedContent;
         NeverOverflowingCounter publishedVersion;
         {
             std::lock_guard lock(mMutex);
             ++mVersion;
             mLatestContent   = std::move(content);
-            snapshot         = snapshotLocked_(WaitStatus::READY);
+            publishedContent = contentLocked_();
             publishedVersion = mVersion;
         }
 
         // Signal handlers may bridge into graph runtimes that take their own locks.
         mCv.notify_all();
-        sigPublished(snapshot);
+        sigPublished(publishedContent);
         return publishedVersion;
     }
 
@@ -92,6 +92,8 @@ private:
         ++target;
         return target;
     }
+
+    Content<> contentLocked_() const { return {mLatestContent, mVersion}; }
 
     Snapshot snapshotLocked_(WaitStatus status) const { return {status, mVersion, mLatestContent}; }
 };

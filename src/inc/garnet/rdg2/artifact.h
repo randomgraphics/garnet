@@ -8,6 +8,7 @@
 #include <limits>
 #include <type_traits>
 #include <utility>
+#include <variant>
 
 namespace GN::rdg2 {
 
@@ -87,6 +88,16 @@ struct NeverOverflowingCounter {
 };
 
 // ============================================================
+// Array container and proxy
+// ============================================================
+
+template<typename T>
+using ArrayContainer = DynaArray<T, size_t>;
+
+template<typename T>
+using ArrayProxy = SafeArrayAccessor<T>;
+
+// ============================================================
 // Base class of everything with a ID and name.
 // ============================================================
 
@@ -117,70 +128,144 @@ protected:
 struct Artifact : public Entity {
     GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
 
+    typedef NeverOverflowingCounter Version;
+
     /// Result of waiting on an artifact version.
     enum class WaitStatus : uint8_t {
         READY, /// The requested version has been published.
         BUSY,  /// The requested version was not reached before the timeout.
     };
 
+    template<typename C = Entity>
+    struct Content {
+        // Value of the content.
+        AutoRef<C> value = {};
+
+        // The actual version of the content.
+        Version version = Version::OOO();
+
+        bool empty() const { return value.empty() || version == Version::OOO(); }
+        void clear() {
+            value.clear();
+            version = Version::OOO();
+        }
+        explicit operator bool() const { return !empty(); }
+        bool     operator!() const { return empty(); }
+                 operator AutoRef<C>() const { return value; }
+        C *      operator->() const { return value.get(); }
+    };
+
     /// Content captured atomically with the actual retained content version.
     struct Snapshot {
         WaitStatus status = WaitStatus::BUSY;
+
         /// Actual version of the returned content. This may be newer than the version passed to wait().
-        NeverOverflowingCounter version = NeverOverflowingCounter::OOO();
-        AutoRef<Entity>         content = {};
+        Version version = Version::OOO();
+
+        /// Content returned by the wait.
+        AutoRef<Entity> content = {};
+    };
+
+    struct SubCollection {
+        ArrayContainer<std::variant<AutoRef<Artifact>, SubCollection>> elements;
+
+        bool empty() const { return elements.empty(); }
+
+        // SubCollection & append(SubArray && a) {
+        //     if (!a.empty()) elements.emplace_back(std::move(a));
+        //     return *this;
+        // }
+
+        SubCollection & append(SubCollection && c) {
+            if (!c.empty()) elements.append(std::move(c));
+            return *this;
+        }
+
+        template<typename ARTIFACT_TYPE>
+        SubCollection & append(const AutoRef<ARTIFACT_TYPE> & a) {
+            static_assert(std::is_base_of_v<Artifact, ARTIFACT_TYPE>);
+            if (!a) return *this;
+
+            auto s = a->sub();
+            if (s.empty()) {
+                elements.append(AutoRef<Artifact>(a));
+            } else {
+                append(std::move(s));
+            }
+            return *this;
+        }
+
+        /// @brief Iterate through all sub artifacts, recursively.
+        template<typename PROC>
+        void forEach(PROC proc) const {
+            for (const auto & e : elements) {
+                auto a = std::get_if<AutoRef<Artifact>>(&e);
+                if (a) {
+                    if (*a) proc(*a);
+                } else {
+                    auto c = std::get_if<SubCollection>(&e);
+                    GN_ASSERT(c);
+                    c->forEach(proc);
+                }
+            }
+        }
     };
 
     /// Fired whenever a new version is published.
-    Signal<void(const Snapshot &)> sigPublished;
+    Signal<void(const Content<> &)> sigPublished;
 
-    /// Create a standalone artifact with no content and version equal to 0.
-    GN_API static AutoRef<Artifact> create(const StrA & name = StrA::EMPTYSTR());
+    /// Get collection of sub artifacts.
+    virtual SubCollection sub() const { return {}; };
 
-    /// Get the latest published content. Could be null if the artifact has not been published.
-    virtual AutoRef<Entity> content() const = 0;
+    /// Get the latest published content. Could be empty if the artifact has not been published.
+    virtual Content<> content() const = 0;
 
     template<typename T>
-    AutoRef<T> content() const {
+    Content<T> content() const {
         auto e = content();
-        if (!e) {
+        if (e.empty()) {
             static auto * logger = GN::getLogger("GN.rdg2");
             GN_ERROR(logger)("Artifact::content: artifact content is empty");
             return {};
         };
-        auto typed = RuntimeType::cast<T>(e.get());
+        GN_ASSERT(e.value);
+        auto typed = RuntimeType::cast<T>(e.value.get());
         if (!typed) {
             static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("Artifact::content: stored='{}' requested='{}'", e->typeInfo().name, T::TYPE_INFO().name);
+            GN_ERROR(logger)("Artifact::content: stored='{}' requested='{}'", e.value->typeInfo().name, T::TYPE_INFO().name);
             return {};
         }
-        return GN::referenceTo(typed);
+        return {GN::referenceTo(typed), e.version};
     }
 
     /// Get the latest published version. Zero means nothing has been published yet.
-    virtual NeverOverflowingCounter version() const = 0;
+    virtual Version version() const = 0;
 
     /// Publish non-empty content and return the new version. Empty content is rejected and returns zero.
-    virtual NeverOverflowingCounter publish(AutoRef<Entity> content) = 0;
+    virtual Version publish(AutoRef<Entity> content) = 0;
 
     /// Wait for \p version to be published and return the content snapshot that satisfied the wait.
-    ///
     /// Passing OOO() waits for the next publish relative to the version observed inside this call.
-    virtual Snapshot wait(NeverOverflowingCounter version, std::chrono::milliseconds timeout = std::chrono::milliseconds::max()) const = 0;
+    virtual Snapshot wait(Version version, std::chrono::milliseconds timeout = std::chrono::milliseconds::max()) const = 0;
+
+    /// Create a standalone artifact with no content and version equal to 0.
+    GN_API static AutoRef<Artifact> create(const StrA & name = StrA::EMPTYSTR());
 
 protected:
     using Entity::Entity;
 };
-using ArtifactPtr = AutoRef<Artifact>;
+using ArtifactRef      = AutoRef<Artifact>;
+using ConstArtifactRef = AutoRef<const Artifact>;
 
 /// Strongly typed view over an artifact. Publishes are limited to T or derived content types.
-template<typename T>
+template<typename T, typename A = Artifact>
 struct TypedArtifact {
     static_assert(std::is_base_of_v<Entity, T>);
 
     using Content = T;
+    using Ref     = AutoRef<A>;
 
-    ArtifactPtr artifact;
+    Ref artifact;
 
     struct Snapshot {
         Artifact::WaitStatus    status  = Artifact::WaitStatus::BUSY;
@@ -190,13 +275,16 @@ struct TypedArtifact {
 
     TypedArtifact() = default;
 
-    explicit TypedArtifact(ArtifactPtr artifact_): artifact(std::move(artifact_)) {}
-
-    static TypedArtifact create(const StrA & name = StrA::EMPTYSTR()) { return TypedArtifact(Artifact::create(name)); }
+    explicit TypedArtifact(Ref artifact_): artifact(std::move(artifact_)) {}
 
     bool empty() const { return !artifact; }
 
-    AutoRef<T> content() const { return artifact ? artifact->content<T>() : AutoRef<T>(); }
+    Artifact::Content<T> content() const {
+        if (artifact)
+            GN_LIKELY return artifact->template content<T>();
+        else
+            return {};
+    }
 
     NeverOverflowingCounter version() const { return artifact ? artifact->version() : NeverOverflowingCounter::OOO(); }
 

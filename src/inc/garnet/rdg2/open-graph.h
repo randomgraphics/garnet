@@ -101,16 +101,6 @@ struct SchedulingHints {
 };
 
 // ============================================================
-// Array container and proxy
-// ============================================================
-
-template<typename T>
-using ArrayContainer = DynaArray<T, size_t>;
-
-template<typename T>
-using ArrayProxy = SafeArrayAccessor<T>;
-
-// ============================================================
 // Node description
 // ============================================================
 
@@ -159,6 +149,8 @@ struct NodeDesc {
 // ============================================================
 // Graph (abstract)
 // ============================================================
+
+using ArtifactPtr = AutoRef<Artifact>;
 
 /// Abstract render-graph executor: artifacts, nodes, tokens, and completion/wait APIs.
 class Graph : public RefCounter {

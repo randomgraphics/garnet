@@ -12,6 +12,11 @@ The new layer should let callers declare quest inputs and outputs, compile those
 declarations into dependency order, execute independent quests in parallel where
 possible, gather outputs from all quests, and submit produced GPU payloads in one
 ordered `gpu2::GpuContext::submit()` call for the first implementation.
+Feature authors should see all graph data as artifacts with declared usage.
+Transient GPU storage, physical resource lifetime, and aliasing are compiler /
+planner implementation details. The compiled plan must support conservative
+allocation first and physical gpu2 resource aliasing when non-overlapping
+execution-local artifacts are descriptor-compatible.
 
 The design must support both frame-scoped executions and long-lived background
 executions. Background producers, such as compute-shader lightmap updates, should
@@ -78,19 +83,29 @@ or next-published instead of concrete version numbers.
 
 - `rdg2` render graph code handles artifacts, relics, quests, plans,
   executions, dependencies, scheduling, and gathered outputs.
+- Plans also describe internal physical resource lifetimes and alias candidates.
+  Quests name logical artifacts only; physical gpu2 resource reuse is a
+  plan/backend decision.
+- Public RDG2 APIs should remain pure virtual abstract interfaces wherever
+  reasonable, with concrete implementations hidden behind factories or internal
+  implementation classes.
 - The current open graph is reference material only. Borrow useful concepts, but
   do not force this design to reuse open graph APIs or internals.
 - `gpu2` continues to own GPU resources, GPU payloads, state tracking, submit,
   pump, and idle waits. Keep gpu2 vocabulary as-is.
+- The core render graph implementation should stay graphics-API agnostic.
+  Backend-specific optimization belongs in concrete effect/action adapters or
+  gpu2 backend code.
 - SCC/PBR/skybox adapters may be added as tests or sample clients, but the core
   API must not depend on them.
 
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 0 — render graph execution spec and assignment plan created
+Last completed: Phase 1.1 — public declaration API added and verified
   Phase 0: spec and resumable assignment drafted
-In progress: none — ready to start Phase 1 declaration API
+  Phase 1.1: abstract render graph API, public refs, API mock-shape test, and API sketch sample added (1 test / 30 assertions)
+In progress: none — ready to review public API shape before Phase 1.2 validation tests
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -154,6 +169,13 @@ compile plus non-device unit tests passing.
 
 - Keep the core render graph API free of SCC/PBR/skybox terminology.
 - Treat this as render graph take 2, not an extension of the current open graph.
+- Keep public API classes pure virtual as much as reasonably possible, matching
+  the current RDG2 module style.
+- Keep implementation classes API agnostic unless they are explicitly
+  API-specific concrete adapters for a concept/effect.
+- Name API-specific implementation files with an API prefix such as `vk-xxx`,
+  and append the full API name to implementation class names, such as
+  `MyImplVulkan`.
 - Keep gpu2 vocabulary as-is: use GPU resource and GPU payload for concepts
   inherited from gpu2.
 - Use `Entity` plus `AutoRef` references for retained public objects: Artifact,
@@ -168,6 +190,10 @@ compile plus non-device unit tests passing.
   ordering constraints.
 - Treat artifacts as opaque immutable identities outside execution.
 - Use relics as the data handoff from background producers to frame consumers.
+- Model all graph data as artifacts from the feature author's point of view.
+  Separate logical needs, such as shadow-pass depth and main-pass depth, should
+  be separate artifacts even when their physical GPU resources may alias
+  internally.
 - Keep artifact/relic API method names short, such as `publish`, `latest`, and
   `wait`, inside execution-owned APIs.
 - Preserve user/manual changes and avoid unrelated refactors.
@@ -186,7 +212,10 @@ Phase 1: Declaration API
   Task 1.1: Add public declaration types for render quests and artifacts
     - Add neutral quest/artifact/access/result types under `rdg2`.
     - Add `XxxRef = AutoRef<Xxx>` public references for Artifact, Relic, Quest, Plan, and Execution.
+    - Let each `ArtifactUse` group multiple artifacts with the same access/selector policy.
+    - Define READ_ONLY as a pure read, DISCARD_WRITE as full replacement with old contents discarded, and READ_WRITE as preserve/read previous contents before publishing an update.
     - Include symbolic relic selector concepts without exposing ordinary concrete version reads outside execution.
+    - Keep transient lifetime and physical resource aliasing out of the public quest declaration API.
     Verify: `env/bin/build.py d`
     Commit: "rdg2(render-graph): add quest declaration API (Phase 1.1)"
 
@@ -201,6 +230,8 @@ Phase 2: Compile / Build
 ─────────────────────────────────────────────────────────────────────
   Task 2.1: Compile declarations into artifact dependency edges
     - Map artifact reads/writes to relic producers and consumers.
+    - Ensure discard-write accesses do not depend on prior artifact contents.
+    - Ensure read-write accesses depend on the selected prior relic and preserve partial-update semantics.
     - Resolve symbolic relic selectors only at the compile/execution boundary chosen by policy.
     - Detect missing producers, unknown explicit dependencies, and cycles.
     Verify: Unit tests for read-after-write, write-after-read/write, missing input, selector policy, and cycle cases
@@ -211,6 +242,14 @@ Phase 2: Compile / Build
     - Mark independent ready groups or equivalent scheduling data for execution-time parallelism.
     Verify: Unit tests for ordering, tie-breaking, and dead-quest culling
     Commit: "rdg2(render-graph): build deterministic execution plan (Phase 2.2)"
+
+  Task 2.3: Infer execution-local lifetimes and alias candidates
+    - Keep all feature-authored data as ordinary artifacts with read/write/root intent.
+    - Compute first/last use intervals from compiled artifact reads/writes.
+    - Mark non-overlapping, descriptor-compatible execution-local artifacts as alias candidates.
+    - Keep logical artifacts distinct even when they can share one physical gpu2 resource.
+    Verify: Unit tests with shadow-depth/main-depth artifacts and upload/readback scratch buffers showing aliasable and non-aliasable cases
+    Commit: "rdg2(render-graph): plan transient resource aliasing (Phase 2.3)"
 
 Phase 3: Quest Execution
 ─────────────────────────────────────────────────────────────────────
@@ -241,6 +280,13 @@ Phase 4: GPU Payload Gathering
     - Wire completion callback/manual completion for execution status.
     Verify: GPU-capable test or sample path that submits multiple payloads in one execution
     Commit: "rdg2(render-graph): submit gathered gpu payloads (Phase 4.2)"
+
+  Task 4.3: Bind execution-local artifacts to physical gpu2 resources
+    - Start with conservative one-physical-resource-per-execution-local-artifact allocation when needed.
+    - Add the allocator boundary that can map multiple alias-compatible execution-local artifacts to one physical resource.
+    - Ensure quest execution observes only logical artifact bindings, never the aliasing decision.
+    Verify: Unit tests or a GPU-capable sample where non-overlapping execution-local depth/scratch artifacts execute correctly with aliasing disabled and enabled
+    Commit: "rdg2(render-graph): allocate transient gpu resources (Phase 4.3)"
 
 Phase 5: Background Producers
 ─────────────────────────────────────────────────────────────────────
@@ -287,9 +333,9 @@ Phase 7: Documentation And Cleanup
 
 Phase 8: Future Extensions — FUTURE
 ─────────────────────────────────────────────────────────────────────
-  Deferred ideas: transient memory aliasing, async compute/transfer queue
-  splitting, richer artifact descriptors, pass merging, cross-frame caching,
-  hot-reload integration, and explicit render-graph visualization.
+  Deferred ideas: async compute/transfer queue splitting, pass merging,
+  cross-frame caching, hot-reload integration, and explicit render-graph
+  visualization.
 
 --- SUMMARY OF FILES TO TOUCH ---
 
@@ -300,13 +346,14 @@ Phase 0 (plan):
 Phase 1 (declaration API):
   src/inc/garnet/GNrdg2.h — include new public render graph header
   src/inc/garnet/rdg2/render-graph.h — NEW: public declaration/quest/result API
-  src/core/rdg2/render-graph.cpp — NEW: initial implementation shell
-  src/core/rdg2/test/render-graph-test.cpp — NEW: declaration tests
+  src/core/rdg2/test/render-graph-api-mock-test.cpp — NEW: API-only mock shape test
+  src/sample/rdg2/render-graph-api-sketch.cpp — NEW: concrete API sketch sample before real implementation
 
 Phase 2 (compile/build):
   src/inc/garnet/rdg2/render-graph.h — plan and selector policy types
   src/core/rdg2/render-graph.cpp — dependency analysis and ordering
   src/core/rdg2/test/render-graph-test.cpp — compile/order/culling tests
+  src/core/rdg2/test/render-graph-transient-test.cpp — internal execution-local lifetime and alias-candidate tests
 
 Phase 3 (execution):
   src/inc/garnet/rdg2/render-graph.h — quest context/result API
@@ -316,6 +363,7 @@ Phase 3 (execution):
 Phase 4 (GPU gather/submit):
   src/inc/garnet/rdg2/render-graph.h — execution result API
   src/core/rdg2/render-graph.cpp — payload gathering and submit integration
+  src/core/rdg2/transient-resource-planner.cpp — optional transient allocation planner implementation
   src/core/rdg2/test/render-graph-test.cpp — payload gathering tests
 
 Phase 5 (background producers):

@@ -37,9 +37,9 @@ TEST_CASE("rdg2::Artifact: publish and wait are graph independent", "[rdg2][arti
     TypedArtifact<TestContent> typed(artifact);
     int                        publishSignals = 0;
     NeverOverflowingCounter    signaledVersion;
-    auto                       onPublish = [&](const Artifact::Snapshot & snapshot) {
+    auto                       onPublish = [&](const Artifact::Content<> & content) {
         ++publishSignals;
-        signaledVersion = snapshot.version;
+        signaledVersion = content.version;
     };
     auto signalTether = artifact->sigPublished.connect(onPublish);
 
