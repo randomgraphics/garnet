@@ -132,127 +132,127 @@ struct RepoContent : Entity {
     RepoContent(const RuntimeType::TypeInfo & type, const StrA & name, T value_ = {}): Entity(type, name), value(std::move(value_)) {}
 };
 
-struct TextureResource {
-    // Declare unique type to prevent misuse of handles of other resource.
-    struct Handle : RepoHandle64 {};
+// struct TextureResource {
+//     // Declare unique type to prevent misuse of handles of other resource.
+//     struct Handle : RepoHandle64 {};
 
-    struct Key : RepoKey {
-        // Can add more fields, if needed.
+//     struct Key : RepoKey {
+//         // Can add more fields, if needed.
 
-        // must provide less operator
-        using RepoKey::operator<;
-    };
+//         // must provide less operator
+//         using RepoKey::operator<;
+//     };
 
-    struct Content : RepoContent<AutoRef<gpu2::Texture>> {
-        Content(const StrA & name, AutoRef<gpu2::Texture> value_ = {}): RepoContent(TYPE_INFO(), name, std::move(value_)) {}
-    };
+//     struct Content : RepoContent<AutoRef<gpu2::Texture>> {
+//         Content(const StrA & name, AutoRef<gpu2::Texture> value_ = {}): RepoContent(TYPE_INFO(), name, std::move(value_)) {}
+//     };
 
-    struct LoadDesc : RepoLoadDesc<Content, Key> {
-        // Can add more fields, if needed.
-    };
+//     struct LoadDesc : RepoLoadDesc<Content, Key> {
+//         // Can add more fields, if needed.
+//     };
 
-    using RepoBase = Repo<Handle, LoadDesc>;
+//     using RepoBase = Repo<Handle, LoadDesc>;
 
-    using Ref = Repo<Handle, LoadDesc>::Ref;
+//     using Ref = Repo<Handle, LoadDesc>::Ref;
 
-    struct Repo : RepoBase {
-        GN_REGISTER_RUNTIME_TYPE(RepoBase);
+//     struct Repo : RepoBase {
+//         GN_REGISTER_RUNTIME_TYPE(RepoBase);
 
-        AutoRef<Content> getContent(const Ref & ref) const {
-            if (!ref.artifact) GN_UNLIKELY return {};
-            return ref.artifact->content<Content>();
-        }
+//         AutoRef<Content> getContent(const Ref & ref) const {
+//             if (!ref.artifact) GN_UNLIKELY return {};
+//             return ref.artifact->content<Content>();
+//         }
 
-        /// Parameters for creating a texture repository.
-        struct CreateParameters {
-            AutoRef<gpu2::GpuContext> gpu;
-            GraphPtr                  graph;
-        };
+//         /// Parameters for creating a texture repository.
+//         struct CreateParameters {
+//             AutoRef<gpu2::GpuContext> gpu;
+//             GraphPtr                  graph;
+//         };
 
-        /// Create a texture repository.
-        GN_API static AutoRef<Repo> create(const StrA & name, const CreateParameters &);
+//         /// Create a texture repository.
+//         GN_API static AutoRef<Repo> create(const StrA & name, const CreateParameters &);
 
-    protected:
-        using RepoBase::RepoBase;
-    };
-};
+//     protected:
+//         using RepoBase::RepoBase;
+//     };
+// };
 
-struct GpuGeometryResource {
-    // Declare unique type to prevent misuse of handles of other resource.
-    struct Handle : RepoHandle64 {};
+// struct GpuGeometryResource {
+//     // Declare unique type to prevent misuse of handles of other resource.
+//     struct Handle : RepoHandle64 {};
 
-    struct Content : RepoContent<gpu2::RasterGeometry> {
-        Content(const StrA & name, gpu2::RasterGeometry value_ = {}): RepoContent(TYPE_INFO(), name, std::move(value_)) {}
-    };
+//     struct Content : RepoContent<gpu2::RasterGeometry> {
+//         Content(const StrA & name, gpu2::RasterGeometry value_ = {}): RepoContent(TYPE_INFO(), name, std::move(value_)) {}
+//     };
 
-    struct LoadDesc : RepoLoadDesc<Content> {
-        // Can add more fields, if needed.
-    };
+//     struct LoadDesc : RepoLoadDesc<Content> {
+//         // Can add more fields, if needed.
+//     };
 
-    using RepoBase = Repo<Handle, LoadDesc>;
+//     using RepoBase = Repo<Handle, LoadDesc>;
 
-    using Ref = RepoBase::Ref;
+//     using Ref = RepoBase::Ref;
 
-    /// Repository for GPU renderable geometry.
-    struct Repo : RepoBase {
-        GN_REGISTER_RUNTIME_TYPE(RepoBase);
+//     /// Repository for GPU renderable geometry.
+//     struct Repo : RepoBase {
+//         GN_REGISTER_RUNTIME_TYPE(RepoBase);
 
-        AutoRef<Content> getContent(const Ref & ref) const {
-            if (!ref.artifact) GN_UNLIKELY return {};
-            return ref.artifact->content<Content>();
-        }
+//         AutoRef<Content> getContent(const Ref & ref) const {
+//             if (!ref.artifact) GN_UNLIKELY return {};
+//             return ref.artifact->content<Content>();
+//         }
 
-        /// Parameters for creating a geometry repository.
-        struct CreateParameters {
-            AutoRef<gpu2::GpuContext> gpu;
-            GraphPtr                  graph;
-        };
+//         /// Parameters for creating a geometry repository.
+//         struct CreateParameters {
+//             AutoRef<gpu2::GpuContext> gpu;
+//             GraphPtr                  graph;
+//         };
 
-        /// Create a geometry repository.
-        GN_API static AutoRef<Repo> create(const CreateParameters &);
+//         /// Create a geometry repository.
+//         GN_API static AutoRef<Repo> create(const CreateParameters &);
 
-    protected:
-        Repo(const RuntimeType::TypeInfo & type, const StrA & name, Graph &): RepoBase(type, name) {}
-    };
-};
+//     protected:
+//         Repo(const RuntimeType::TypeInfo & type, const StrA & name, Graph &): RepoBase(type, name) {}
+//     };
+// };
 
-struct ShaderResource {
-    // Declare unique type to prevent misuse of handles of other resource.
-    struct Handle : RepoHandle64 {};
+// struct ShaderResource {
+//     // Declare unique type to prevent misuse of handles of other resource.
+//     struct Handle : RepoHandle64 {};
 
-    struct Content : RepoContent<AutoRef<gpu2::GpuShader>> {
-        Content(const StrA & name, AutoRef<gpu2::GpuShader> value_ = {}): RepoContent(TYPE_INFO(), name, std::move(value_)) {}
-    };
+//     struct Content : RepoContent<AutoRef<gpu2::GpuShader>> {
+//         Content(const StrA & name, AutoRef<gpu2::GpuShader> value_ = {}): RepoContent(TYPE_INFO(), name, std::move(value_)) {}
+//     };
 
-    struct LoadDesc : RepoLoadDesc<Content> {
-        // Can add more fields, if needed.
-    };
+//     struct LoadDesc : RepoLoadDesc<Content> {
+//         // Can add more fields, if needed.
+//     };
 
-    using RepoBase = Repo<Handle, LoadDesc>;
+//     using RepoBase = Repo<Handle, LoadDesc>;
 
-    using Ref = RepoBase::Ref;
+//     using Ref = RepoBase::Ref;
 
-    /// Repository for GPU shaders.
-    struct Repo : RepoBase {
-        GN_REGISTER_RUNTIME_TYPE(RepoBase);
+//     /// Repository for GPU shaders.
+//     struct Repo : RepoBase {
+//         GN_REGISTER_RUNTIME_TYPE(RepoBase);
 
-        AutoRef<Content> getContent(const Ref & ref) const {
-            if (!ref.artifact) GN_UNLIKELY return {};
-            return ref.artifact->content<Content>();
-        }
+//         AutoRef<Content> getContent(const Ref & ref) const {
+//             if (!ref.artifact) GN_UNLIKELY return {};
+//             return ref.artifact->content<Content>();
+//         }
 
-        /// Parameters for creating a shader repository.
-        struct CreateParameters {
-            AutoRef<gpu2::GpuContext> gpu;
-            GraphPtr                  graph;
-        };
+//         /// Parameters for creating a shader repository.
+//         struct CreateParameters {
+//             AutoRef<gpu2::GpuContext> gpu;
+//             GraphPtr                  graph;
+//         };
 
-        /// Create a shader repository.
-        GN_API static AutoRef<Repo> create(const CreateParameters &);
+//         /// Create a shader repository.
+//         GN_API static AutoRef<Repo> create(const CreateParameters &);
 
-    protected:
-        Repo(const RuntimeType::TypeInfo & type, const StrA & name, Graph &): RepoBase(type, name) {}
-    };
-};
+//     protected:
+//         Repo(const RuntimeType::TypeInfo & type, const StrA & name, Graph &): RepoBase(type, name) {}
+//     };
+// };
 
 } // namespace GN::rdg2

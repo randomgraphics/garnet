@@ -198,72 +198,72 @@ private:
     }
 };
 
-class TextureRepo final : public TextureResource::Repo {
-public:
-    GN_REGISTER_RUNTIME_TYPE(TextureResource::Repo);
+// class TextureRepo final : public TextureResource::Repo {
+// public:
+//     GN_REGISTER_RUNTIME_TYPE(TextureResource::Repo);
 
-    explicit TextureRepo(const StrA & name): TextureResource::Repo(TYPE_INFO(), name) {}
+//     explicit TextureRepo(const StrA & name): TextureResource::Repo(TYPE_INFO(), name) {}
 
-    ~TextureRepo() override { clear(); }
+//     ~TextureRepo() override { clear(); }
 
-    bool init(const CreateParameters & cp) {
-        mGpu = cp.gpu;
-        return mImpl.init(name, cp.graph);
-    }
+//     bool init(const CreateParameters & cp) {
+//         mGpu = cp.gpu;
+//         return mImpl.init(name, cp.graph);
+//     }
 
-    Ref find(const Key & key) const override { return mImpl.find(key); }
+//     Ref find(const Key & key) const override { return mImpl.find(key); }
 
-    Ref load(const LoadDesc & desc) override {
-        auto gpu = mGpu;
-        return mImpl.load(desc, [gpu](const Key & key) -> AutoRef<TextureResource::Content> {
-            if (!gpu) return {};
-            auto texture = gpu2::Texture::load({.context = gpu, .filename = key.uri});
-            if (!texture) return {};
-            return AutoRef<TextureResource::Content>(new TextureResource::Content(key.uri, std::move(texture)));
-        });
-    }
+//     Ref load(const LoadDesc & desc) override {
+//         auto gpu = mGpu;
+//         return mImpl.load(desc, [gpu](const Key & key) -> AutoRef<TextureResource::Content> {
+//             if (!gpu) return {};
+//             auto texture = gpu2::Texture::load({.context = gpu, .filename = key.uri});
+//             if (!texture) return {};
+//             return AutoRef<TextureResource::Content>(new TextureResource::Content(key.uri, std::move(texture)));
+//         });
+//     }
 
-    bool reload(Handle handle) override { return mImpl.reload(handle); }
+//     bool reload(Handle handle) override { return mImpl.reload(handle); }
 
-    void pollHotReload() override { mImpl.pollHotReload(); }
+//     void pollHotReload() override { mImpl.pollHotReload(); }
 
-    bool remove(Handle handle) override { return mImpl.remove(handle); }
+//     bool remove(Handle handle) override { return mImpl.remove(handle); }
 
-    size_t size() const override { return mImpl.size(); }
+//     size_t size() const override { return mImpl.size(); }
 
-private:
-    void clear() {
-        mImpl.clear();
-        mGpu.clear();
-    }
+// private:
+//     void clear() {
+//         mImpl.clear();
+//         mGpu.clear();
+//     }
 
-    AutoRef<gpu2::GpuContext>     mGpu;
-    RepoImplBase<TextureResource> mImpl;
-};
+//     AutoRef<gpu2::GpuContext>     mGpu;
+//     RepoImplBase<TextureResource> mImpl;
+// };
 
 } // namespace
 
-/// Create a texture repository.
-GN_API AutoRef<TextureResource::Repo> TextureResource::Repo::create(const StrA & name, const TextureResource::Repo::CreateParameters & cp) {
-    if (!cp.graph) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TextureResource::Repo::create: graph is null");
-            return {};
-        }
-    auto p = AutoRef<TextureRepo>(new TextureRepo(name));
-    if (!p || !p->init(cp)) return {};
-    return p;
-}
+// /// Create a texture repository.
+// GN_API AutoRef<TextureResource::Repo> TextureResource::Repo::create(const StrA & name, const TextureResource::Repo::CreateParameters & cp) {
+//     if (!cp.graph) GN_UNLIKELY {
+//             GN_ERROR(sLogger)("TextureResource::Repo::create: graph is null");
+//             return {};
+//         }
+//     auto p = AutoRef<TextureRepo>(new TextureRepo(name));
+//     if (!p || !p->init(cp)) return {};
+//     return p;
+// }
 
-/// Create a geometry repository.
-GN_API AutoRef<GpuGeometryResource::Repo> GpuGeometryResource::Repo::create(const GpuGeometryResource::Repo::CreateParameters & cp) {
-    GN_UNUSED_PARAM(cp);
-    return {};
-}
+// /// Create a geometry repository.
+// GN_API AutoRef<GpuGeometryResource::Repo> GpuGeometryResource::Repo::create(const GpuGeometryResource::Repo::CreateParameters & cp) {
+//     GN_UNUSED_PARAM(cp);
+//     return {};
+// }
 
-/// Create a shader repository.
-GN_API AutoRef<ShaderResource::Repo> ShaderResource::Repo::create(const ShaderResource::Repo::CreateParameters & cp) {
-    GN_UNUSED_PARAM(cp);
-    return {};
-}
+// /// Create a shader repository.
+// GN_API AutoRef<ShaderResource::Repo> ShaderResource::Repo::create(const ShaderResource::Repo::CreateParameters & cp) {
+//     GN_UNUSED_PARAM(cp);
+//     return {};
+// }
 
 } // namespace GN::rdg2
