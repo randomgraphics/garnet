@@ -24,7 +24,7 @@ using ArrayView = SafeArrayAccessor<T>;
 
 /// Strongly-typed unit of length used in this world. Defined here for future
 /// use; current aliases (Location, Distance) use plain float meters for simplicity.
-struct UnifOfLength {
+struct UnitOfLength {
     int64_t _value = 0;
 
     constexpr UnitOfLength() = default;
@@ -50,6 +50,8 @@ struct Position {
 // };
 
 typedef int64_t UniqueIdentifier;
+
+struct Universe;
 
 /// @brief The very basic/root type of everything in this world.
 struct Thing : RefCounter, RuntimeType {
@@ -123,7 +125,7 @@ struct AudioMoment : Thing {
 /// The main class that represents a presence in the world that could affect the state of the world and could
 /// interact with other forms.
 struct Form : Thing {
-    GN_E2_DEFINE_A_THING(Form);
+    GN_E2_DEFINE_A_THING(Thing);
 
     /// update this form's internal state. called by the world, usually with an fixed interval.
     virtual bool update() = 0;
@@ -148,6 +150,8 @@ struct World : Thing {
     virtual void run() = 0;
 
     virtual AutoRef<VisualMoment> captureVisualMoment() = 0;
+
+    GN_API AutoRef<World> create(const CreateParameters &);
 };
 
 // This is the single largest container of everything that is always initialized first
@@ -166,6 +170,9 @@ struct Universe {
             }
         }
     };
+protected:
+    Universe() = default;
+    virtual ~Universe() = default;
 
 private:
     std::atomic<UniqueIdentifier> mNextID = {};

@@ -1,2 +1,2 @@
 target_sources(${GN_INTERNAL_TEST_TARGET} PRIVATE
-    ${GN_INTERNAL_TEST_SOURCE_DIR}/e2-smoke.cpp)
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/e2-mock.cpp)
