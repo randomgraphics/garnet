@@ -21,8 +21,25 @@ struct MockWorld : World {
     auto captureVisualMoment() -> AutoRef<VisualMoment> override { return {}; }
 };
 
+struct MockForm : Form {
+    GN_REGISTER_RUNTIME_TYPE(Form);
+
+    MockForm(Universe & u) : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "the first life form") {}
+
+    /// update this form's internal state. called by the world, usually with an fixed interval.
+    bool update() override { return true; }
+
+    /// update the visual part of the form.
+    AutoRef<VisualMoment> captureVisualMoment() override { return {}; }
+
+    /// update the audio part of the form.
+    AutoRef<AudioMoment> captureAudioMoment() override { return {}; }
+};
+
 TEST_CASE("E2: smoke test") {
     MockUniverse u;
-    MockWorld w(u);
-    w.run();
+    auto w = referenceTo(new MockWorld(u));
+    auto f = referenceTo(new MockForm(u));
+    w->populate({&f.cast<Form>(), 1});
+    w->run();
 }
