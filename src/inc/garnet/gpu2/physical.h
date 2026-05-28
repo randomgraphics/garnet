@@ -6,10 +6,6 @@
 
 namespace GN::gpu2 {
 
-/// Time units
-using Nanoseconds  = std::chrono::nanoseconds;
-using Microseconds = std::chrono::microseconds;
-
 ///< Intensity unit [cd].
 struct Candela {
     float value;
