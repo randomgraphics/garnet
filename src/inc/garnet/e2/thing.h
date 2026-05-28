@@ -70,8 +70,20 @@ protected:
     Thing(const RuntimeType::TypeInfo & type, UniqueIdentifier id_, const StrA & name_): RuntimeType(type), id(id_), name(name_) {}
 };
 
-/// Smart reference to a thing.
+namespace detail {
+
 template<typename T>
+concept CompleteType = requires { sizeof(T); };
+
+// Ref<T> appears in declarations that mention the class currently being defined
+// and forward-declared E2 types, so derivation can only be checked for complete types.
+template<typename T>
+concept ThingRefTarget = (!CompleteType<T>) || std::derived_from<T, Thing>;
+
+} // namespace detail
+
+/// Smart reference to a thing.
+template<detail::ThingRefTarget T>
 using Ref = AutoRef<T>;
 
 /// Abstraction of host operating system, providing cross platform abstraction to Window, keyboard, mouse support.
