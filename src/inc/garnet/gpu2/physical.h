@@ -1,10 +1,10 @@
-#if !defined(__GN_INSIDE_RDG2_H__)
-    #error "Do not include <garnet/rdg2/physical.h> directly. Include <garnet/GNrdg2.h> instead."
+#if !defined(__GN_INSIDE_GPU2_H__)
+    #error "Do not include <garnet/gpu2/physical.h> directly. Include <garnet/GNgpu2.h> instead."
 #endif
 
 #include <chrono>
 
-namespace GN::rdg2 {
+namespace GN::gpu2 {
 
 /// Time units
 using Nanoseconds  = std::chrono::nanoseconds;
@@ -56,4 +56,4 @@ struct RadianceRGB {
     Nit   luminance; // luminance in cd/m^2.
 };
 
-} // namespace GN::rdg2
+} // namespace GN::gpu2
