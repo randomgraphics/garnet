@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <chrono>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -14,131 +13,27 @@
 
 namespace GN::rdg2 {
 
-/// A counter that never overflows.
-///
-/// This is internally a 128-bit counter. Even if you increment it a billion times per second,
-/// it'll take over 5 sextillion (10^21) years to overflow, which is 700 billion times longer than
-/// the age of our universe.
-///
-/// It is overkill for almost all practical use cases. Just create this class for fun and learning purposes.
-struct NeverOverflowingCounter {
-    /// Low 64 bits of the 128-bit counter.
-    uint64_t value0 = 0;
-    /// High 64 bits of the 128-bit counter.
-    uint64_t value1 = 0;
-
-    /// Zero: default for fresh counters (e.g. artifact version before the first publish).
-    /// The same value is also used as a sentinel in APIs such as `Graph::getArtifactVersionToken`
-    /// to mean "wait for the next published version" rather than a fixed version number.
-    static inline constexpr NeverOverflowingCounter OOO() { return NeverOverflowingCounter {0, 0}; }
-
-    /// Smallest positive value: use when you need an explicit first version (1) after zero,
-    /// or a minimal non-zero bound in version logic.
-    static inline constexpr NeverOverflowingCounter ONE() { return NeverOverflowingCounter {1, 0}; }
-
-    /// Saturated maximum: use as an upper sentinel so this compares greater than any realistic
-    /// version, e.g. open-ended ranges or "no ceiling" in ordering.
-    static inline constexpr NeverOverflowingCounter INF() {
-        return NeverOverflowingCounter {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()};
-    }
-
-    /// hash function for this counter, so it can be used as a key in hash-based containers.
-    static inline size_t hash(const NeverOverflowingCounter & c) {
-        auto h = std::hash<uint64_t>()(c.value0);
-        combineHash(h, c.value1);
-        return h;
-    }
-
-    NeverOverflowingCounter & increment() {
-        if (++value0 == 0) { ++value1; }
-        return *this;
-    }
-
-    NeverOverflowingCounter & decrement() {
-        if (--value0 == std::numeric_limits<uint64_t>::max()) { --value1; }
-        return *this;
-    }
-
-    NeverOverflowingCounter & reset() {
-        value0 = 0;
-        value1 = 0;
-        return *this;
-    }
-
-    bool operator==(const NeverOverflowingCounter & other) const { return value0 == other.value0 && value1 == other.value1; }
-
-    bool operator!=(const NeverOverflowingCounter & other) const { return !(*this == other); }
-
-    bool operator<(const NeverOverflowingCounter & other) const {
-        if (value1 != other.value1) return value1 < other.value1;
-        return value0 < other.value0;
-    }
-
-    bool operator>(const NeverOverflowingCounter & other) const { return other < *this; }
-
-    bool operator<=(const NeverOverflowingCounter & other) const { return !(*this > other); }
-
-    bool operator>=(const NeverOverflowingCounter & other) const { return !(*this < other); }
-};
-
-// ============================================================
-// Base class of everything with a ID and name.
-// ============================================================
-
-/// The basic building block of the render graph module. Base class of everything that
-/// needs reference counting and runtime type information.
-struct Entity : public RefCounter, public RuntimeType {
-    GN_API GN_REGISTER_RUNTIME_TYPE();
-
-    /// ID of the entity. Guaranteed to be unique within the process.
-    const NeverOverflowingCounter id;
-
-    /// Name of the entity. Optional. No uniqueness requirement.
-    const StrA name;
-
-    virtual ~Entity() {
-#if GN_BUILD_DEBUG_ENABLED
-        static auto * logger = GN::getLogger("GN.rdg2");
-        GN_VVTRACE(logger)("Destroying RDG2 entity: name='{}', type = {}, id={}.{}", name, typeInfo().name, id.value0, id.value1);
-#endif
-    }
-
-protected:
-    /// Constructor
-    GN_API Entity(const RuntimeType::TypeInfo & type, const StrA & name);
-};
-
-// ============================================================
-// Arguments. Parameters passed to an action. Usually a collection of artifacts.
-//
-// The arguments are usually passed to the action as a single entity, but they can be
-// split into multiple artifacts. For example, a shader action may have a vertex shader
-// and a pixel shader as arguments.
-// ============================================================
-
-/// Parameters passed into an action when it runs, usually as one or more artifacts (e.g. separate VS/PS shader objects).
-struct Arguments : public Entity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
-
-protected:
-    using Entity::Entity;
-};
-using ArgumentsPtr = AutoRef<Arguments>;
-
 // ============================================================
 // Action. Represents an operation that can be executed.
 // ============================================================
+
+namespace detail {
+
+template<typename FUNC>
+concept ZeroArgumentCallable = std::is_invocable_v<std::decay_t<FUNC> &>;
+
+} // namespace detail
 
 /// Unit of work the graph executes; implementations own how success, failure, and retries are represented.
 struct Action : public Entity {
     GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
 
-    template<typename FUNC>
+    template<detail::ZeroArgumentCallable FUNC>
     static AutoRef<Action> createFromLambda(const StrA & name, FUNC && f) {
         using F = std::decay_t<FUNC>;
         struct LambdaAction : public Action {
             F    func;
-            void execute(Arguments *) override { func(); }
+            void execute() override { func(); }
             LambdaAction(const StrA & n, F && fn): Action(Action::TYPE_INFO(), n), func(std::move(fn)) {}
         };
         return GN::referenceTo(static_cast<Action *>(new LambdaAction(name, F(std::forward<FUNC>(f)))));
@@ -150,7 +45,7 @@ struct Action : public Entity {
     /// For example, if an action failed on its first attempt, it may elect to
     /// retry by adding a child node to itself and re-execute it. Or it may elect to
     /// store the failed result somewhere and let its dependents to respond to the failure.
-    virtual void execute(Arguments *) = 0;
+    virtual void execute() = 0;
 
 protected:
     using Entity::Entity;
@@ -185,21 +80,6 @@ protected:
 };
 using NodePtr = AutoRef<Node>;
 
-/// Versioned payload slot; nodes publish and wait on artifact versions via the graph.
-///
-/// The public type intentionally exposes only Entity identity/name/type. Concrete graph state
-/// remains private to the open-graph implementation.
-struct Artifact : public Entity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
-
-protected:
-    using Entity::Entity;
-};
-using ArtifactPtr = AutoRef<Artifact>;
-
-class Graph;
-using GraphPtr = AutoRef<Graph>;
-
 // ============================================================
 // Scheduling
 // ============================================================
@@ -221,16 +101,6 @@ struct SchedulingHints {
 };
 
 // ============================================================
-// Array container and proxy
-// ============================================================
-
-template<typename T>
-using ArrayContainer = DynaArray<T, size_t>;
-
-template<typename T>
-using ArrayProxy = SafeArrayAccessor<T>;
-
-// ============================================================
 // Node description
 // ============================================================
 
@@ -242,9 +112,6 @@ struct NodeDesc {
     /// (Optional) action invoked when this node runs.
     ActionPtr action = nullptr;
 
-    /// Inputs/parameters bound for this invocation of the action.
-    ArgumentsPtr arguments = nullptr;
-
     /// Tokens that must be satisfied before this node may run.
     ArrayContainer<TokenPtr> dependencies = {};
 
@@ -254,18 +121,22 @@ struct NodeDesc {
     /// Optional parent node for hierarchical grouping or lifetime relationships.
     NodePtr parent = nullptr;
 
-    /// If true, the node does not complete until satisfyNode() is called (e.g. waiting on external I/O or a GPU fence).
+    /// If true, the node does not complete until completeNode() is called after its action finishes.
     bool manualComplete = false;
 
-    NodeDesc(const StrA & name_): name(name_) {};
+    NodeDesc(const StrA & name_): name(name_) {}
+
+    /// Create a node and wrap a zero-argument callable as its action.
+    template<detail::ZeroArgumentCallable FUNC>
+    NodeDesc(const StrA & name_, FUNC && f): name(name_), action(Action::createFromLambda(name_, std::forward<FUNC>(f))) {}
+
     NodeDesc(const NodeDesc & other)             = default;
     NodeDesc(NodeDesc && other)                  = default;
     NodeDesc & operator=(const NodeDesc & other) = default;
     NodeDesc & operator=(NodeDesc && other)      = default;
 
-    NodeDesc & setAction(ActionPtr act, ArgumentsPtr arg) {
-        action    = act;
-        arguments = arg;
+    NodeDesc & setAction(ActionPtr act) {
+        action = act;
         return *this;
     }
 
@@ -279,6 +150,8 @@ struct NodeDesc {
 // Graph (abstract)
 // ============================================================
 
+using ArtifactPtr = AutoRef<Artifact>;
+
 /// Abstract render-graph executor: artifacts, nodes, tokens, and completion/wait APIs.
 class Graph : public RefCounter {
 public:
@@ -287,7 +160,7 @@ public:
     Graph(const Graph &)             = delete;
     Graph & operator=(const Graph &) = delete;
 
-    GN_API static GraphPtr create();
+    GN_API static AutoRef<Graph> create();
 
     // --------------------------------------------------------
     // Graph status query
@@ -320,28 +193,6 @@ public:
     /// Publish new content for an artifact, increase artifact version number by 1.
     virtual void publishArtifact(const ArtifactPtr & artifact, AutoRef<Entity> content) = 0;
 
-    /// Get a reference to the latest published content of an artifact.
-    /// \param artifact The artifact to get the content of.
-    /// \return The latest published content of the artifact. Or nullptr if no content is published yet.
-    virtual AutoRef<Entity> getArtifactContent(const ArtifactPtr & artifact) = 0;
-
-    template<typename T>
-    AutoRef<T> getTypedArtifactContent(const ArtifactPtr & artifact) {
-        auto e = getArtifactContent(artifact);
-        if (!e) {
-            static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("getTypedArtifactContent: artifact content is empty");
-            return {};
-        };
-        auto typed = RuntimeType::cast<T>(e.get());
-        if (!typed) {
-            static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("getTypedArtifactContent: stored='{}' requested='{}'", e->typeInfo().name, T::TYPE_INFO().name);
-            return {};
-        }
-        return GN::referenceTo(typed);
-    }
-
     // --------------------------------------------------------
     // Node management
     // --------------------------------------------------------
@@ -349,16 +200,19 @@ public:
     /// Add a new node to the graph for execution.
     virtual NodePtr addNode(const NodeDesc & desc) = 0;
 
-    /// Mark a node as complete. Trigger all completion tokens associated with the given node.
-    virtual void satisfyNode(const NodePtr & node) = 0;
+    /// Manually complete a node whose action has already finished.
+    ///
+    /// This call is only needed for nodes with \c manualComplete set to true. Calling it before the node's action has
+    /// finished, or before all of its children complete, is an error and does not complete the node.
+    virtual void completeNode(const NodePtr & node) = 0;
 
     // --------------------------------------------------------
     // Token management
     // --------------------------------------------------------
 
-    /// Get a token satisfied by certain node completes.
-    /// \param node The node to wait for
-    /// \return The token will be satisfied when the given node completes.
+    /// Get a token satisfied when a node completes.
+    /// \param node The node to wait for.
+    /// \return The token will be satisfied when the given node completes, automatically or manually.
     virtual TokenPtr getNodeCompletionToken(const NodePtr & node) = 0;
 
     /// Get an token satisfied when the given artifact version is published.
@@ -374,7 +228,7 @@ public:
 
     /// Get an token that is satisfied when the given artifact is published at least once.
     /// This is a convenience method for getArtifactVersionToken() with version set to ONE.
-    /// After this token is satisfied, it is safe to call getArtifactContent() to retrieve the latest content of the artifact.
+    /// After this token is satisfied, it is safe to call Artifact::content() to retrieve the latest content of the artifact.
     TokenPtr getTokenToEnsureArtifactIsPublishedAtLeastOnce(const ArtifactPtr & artifact) {
         return getArtifactVersionToken(artifact, NeverOverflowingCounter::ONE());
     }
@@ -382,5 +236,6 @@ public:
 protected:
     Graph() = default;
 };
+using GraphPtr = AutoRef<Graph>;
 
 } // namespace GN::rdg2

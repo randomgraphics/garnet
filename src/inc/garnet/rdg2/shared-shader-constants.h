@@ -1,13 +1,8 @@
 #if !defined(__GN_INSIDE_RDG2_H__)
-    #error "Do not include <garnet/rdg2/shared-shader-constants2.h> directly. Include <garnet/GNrdg2.h> instead."
+    #error "Do not include <garnet/rdg2/shared-shader-constants.h> directly. Include <garnet/GNrdg2.h> instead."
 #endif
 
 namespace GN::rdg2 {
-
-struct VersionedArtifact {
-    ArtifactPtr artifact;
-    TokenPtr    version;
-};
 
 struct SharedShaderConstants : public Entity {
     struct FrameConstants {
@@ -46,6 +41,8 @@ struct SharedShaderConstants : public Entity {
         float       aspectRatio       = 16.f / 9.f;
         Distance    nearPlane         = 0.01f;
         Distance    farPlane          = 10000.f;
+        uint32_t    viewWidthInPixel  = 1;
+        uint32_t    viewHeightInPixel = 1;
     };
 
     struct EnvLightingParameters {
@@ -54,43 +51,31 @@ struct SharedShaderConstants : public Entity {
         StrA  prefilteredPath;
         StrA  brdfLutPath;
         float environmentRadianceScale = 1.f;
-        bool  simulateSlowLoading      = false;
     };
 
     struct Set0Parameters {
         FrameConstants         frameConstants;
-        GN::gpu2::RasterTarget renderTarget;
         CameraConstants        camera;
         DynaArray<DirectLight> directLighting;
         EnvLightingParameters  envLighting;
     };
 
-    struct Content : Entity {
-        GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
-
-        Set0Parameters           set0Parameters;
+    struct Snapshot {
         GN::gpu2::GpuResourceSet set0Resources;
         /// All GPU work for this snapshot: any one-time inits (first frame only) followed by
-        /// the per-frame UBO upload Submit all entries every frame.
+        /// the per-frame UBO upload. Submit all entries every frame.
         ArrayContainer<AutoRef<GN::gpu2::GpuPayload>> set0Payloads;
-
-    protected:
-        using Entity::Entity;
     };
 
     Set0Parameters set0;
 
-    virtual VersionedArtifact takeSnapshot() const = 0;
-
-    /// Get the latest content of the ssc artifact.
-    virtual AutoRef<Content> getContent(const ArtifactPtr &) const = 0;
+    virtual Snapshot takeSnapshot() const = 0;
 
     /// Build DrawParameters for a fullscreen skybox pass using the snapshot's set0 resources.
     virtual GN::gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet &) const = 0;
 
     struct CreateParameters {
         AutoRef<GN::gpu2::GpuContext> gpu;
-        GraphPtr                      graph;
     };
     GN_API static AutoRef<SharedShaderConstants> create(const CreateParameters & params);
 

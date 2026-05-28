@@ -21,9 +21,9 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
     GpuResourceView view;
     view.resource = texture; // AutoRef<Texture> implicitly widens to AutoRef<Entity>
     RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget {.target = view});
+    rt.colorTargets.append(RasterTarget::ColorTarget(view));
     rt.setClearColor(0.0f, 0.0f, 1.0f);
-    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    auto raster = GpuRaster::create("clear-blue", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
     REQUIRE(raster->target().clearColor.f4[3] == 1.0f);
     AutoRef<GpuPayload> rasterPayload = raster->seal();

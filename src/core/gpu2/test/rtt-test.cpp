@@ -43,9 +43,9 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
     GpuResourceView rttView;
     rttView.resource = rtt;
     RasterTarget rt1;
-    rt1.colorTargets.append(RasterTarget::ColorTarget {.target = rttView});
+    rt1.colorTargets.append(RasterTarget::ColorTarget(rttView));
     rt1.setClearColor(1.0f, 0.0f, 0.0f); // red
-    auto raster1 = GpuRaster::create({.gpu = gpu, .target = rt1});
+    auto raster1 = GpuRaster::create("rtt-source", {.gpu = gpu, .target = &rt1});
     REQUIRE(raster1);
     AutoRef<GpuPayload> p1 = raster1->seal();
 
@@ -58,9 +58,9 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
     GpuResourceView bbView;
     bbView.resource = backbuffer;
     RasterTarget rt2;
-    rt2.colorTargets.append(RasterTarget::ColorTarget {.target = bbView});
+    rt2.colorTargets.append(RasterTarget::ColorTarget(bbView));
     rt2.setClearColor(0.0f, 0.0f, 0.0f); // black clear, overwritten by the sample draw
-    auto raster2 = GpuRaster::create({.gpu = gpu, .target = rt2});
+    auto raster2 = GpuRaster::create("rtt-backbuffer", {.gpu = gpu, .target = &rt2});
     REQUIRE(raster2);
 
     // Bind rtt at set=0, binding=0 — matches the fragment shader's sampler2D declaration.
@@ -117,9 +117,9 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
 
     // Pass 1: clear rtt to green.
     RasterTarget rt1;
-    rt1.colorTargets.append(RasterTarget::ColorTarget {.target = rttView});
+    rt1.colorTargets.append(RasterTarget::ColorTarget(rttView));
     rt1.setClearColor(0.0f, 1.0f, 0.0f);
-    auto                raster1 = GpuRaster::create({.gpu = gpu, .target = rt1});
+    auto                raster1 = GpuRaster::create("rtt-green-source", {.gpu = gpu, .target = &rt1});
     AutoRef<GpuPayload> p1      = raster1->seal();
 
     // Pass 2: sample rtt into backbuffer.
@@ -131,9 +131,9 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     GpuResourceView bbView;
     bbView.resource = backbuffer;
     RasterTarget rt2;
-    rt2.colorTargets.append(RasterTarget::ColorTarget {.target = bbView});
+    rt2.colorTargets.append(RasterTarget::ColorTarget(bbView));
     rt2.setClearColor(0.0f, 0.0f, 0.0f);
-    auto raster2 = GpuRaster::create({.gpu = gpu, .target = rt2});
+    auto raster2 = GpuRaster::create("rtt-green-backbuffer", {.gpu = gpu, .target = &rt2});
 
     GpuResourceTable resources;
     resources.resize(1);
@@ -187,11 +187,11 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     view1.resource = tex1;
 
     RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget {.target = view0}); // location 0 → blue
-    rt.colorTargets.append(RasterTarget::ColorTarget {.target = view1}); // location 1 → red
+    rt.colorTargets.append(RasterTarget::ColorTarget(view0)); // location 0 → blue
+    rt.colorTargets.append(RasterTarget::ColorTarget(view1)); // location 1 → red
     rt.setClearColor(0.0f, 0.0f, 0.0f);
 
-    auto raster = GpuRaster::create({.gpu = gpu, .target = rt});
+    auto raster = GpuRaster::create("rtt-mrt", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
 
     GpuRaster::DrawParameters dp;

@@ -92,7 +92,6 @@ queue submission) are encoded by L2 on top of L1 primitives — L1 never sees th
 The fundamental unit of work. A node holds:
 
 - An **action** — a general function/lambda, the logic to execute
-- An **argument pack** — data/parameters passed to the action at execution time
 - A **completion mode** — auto or manual (see below)
 - An optional **parent** node
 
@@ -449,7 +448,7 @@ node 1 (auto-complete):   allocate command buffer, record payloads, submit to qu
 
 node 2 (manual-complete): registers onComplete as the fence-wait callback
                           action returns immediately; GPU fence fires
-                          → onComplete called from pump() → satisfyNode(node2)
+                          → onComplete called from pump() → completeNode(node2)
                           → unblocks downstream L1 nodes
 ```
 

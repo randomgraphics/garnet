@@ -331,20 +331,22 @@ bool GpuResourceStateTrackerVulkan::addRasterGeometry(const RasterGeometry & geo
 bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
     bool ok = true;
     for (size_t i = 0; i < rt.colorTargets.size(); ++i) {
-        const auto & ct = rt.colorTargets[i];
-        if (!ct.target.isTexture() || !ct.target.texture()) continue;
-        auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture().get());
-        if (tex && !addColorTarget(tex, ct.target)) {
+        const auto &          ct   = rt.colorTargets[i];
+        const GpuResourceView view = ct.view();
+        if (!view.texture()) continue;
+        auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
+        if (tex && !addColorTarget(tex, view)) {
             GN_ERROR(sLogger)("GpuResourceStateTrackerVulkan: render target hazard on color target slot {}; aborting render pass", i);
             ok = false;
         }
     }
-    if (rt.depthStencilTarget.isTexture() && rt.depthStencilTarget.texture()) {
-        auto * tex = RuntimeType::cast<TextureVulkanBase>(rt.depthStencilTarget.texture().get());
+    const GpuResourceView depthStencilView = rt.depthStencilTarget.view();
+    if (depthStencilView.isTexture() && depthStencilView.texture()) {
+        auto * tex = RuntimeType::cast<TextureVulkanBase>(depthStencilView.texture().get());
         if (tex) {
             const auto & ds = rt.states;
             bool         ro = ds.depthState && !ds.depthState->writeEnabled() && !(ds.stencilState && ds.stencilState->enabled());
-            if (!addDepthStencilTarget(tex, rt.depthStencilTarget, ro)) {
+            if (!addDepthStencilTarget(tex, depthStencilView, ro)) {
                 GN_ERROR(sLogger)("GpuResourceStateTrackerVulkan: render target hazard on depth-stencil target; aborting render pass");
                 ok = false;
             }

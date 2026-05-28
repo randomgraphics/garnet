@@ -15,19 +15,19 @@ add_custom_target(rdg-sample-shaders DEPENDS ${spv_headers})
 add_executable(GNsample-rdg2-open-graph-hello-world open-graph-hello-world.cpp)
 target_link_libraries(GNsample-rdg2-open-graph-hello-world GNcore)
 
-add_executable(GNsample-rdg2-simple-triangle simple-triangle2.cpp)
+add_executable(GNsample-rdg2-simple-triangle simple-triangle.cpp)
 target_include_directories(GNsample-rdg2-simple-triangle PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GNsample-rdg2-simple-triangle GNcore)
 add_dependencies(GNsample-rdg2-simple-triangle rdg-sample-shaders)
 
 add_custom_target(rdg2-render-to-cube-shaders DEPENDS ${_rdg_sample_shader_hdrs})
 
-add_executable(GNsample-rdg2-render-to-cube render-to-cube2.cpp)
+add_executable(GNsample-rdg2-render-to-cube render-to-cube.cpp)
 target_include_directories(GNsample-rdg2-render-to-cube PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GNsample-rdg2-render-to-cube GNcore)
 add_dependencies(GNsample-rdg2-render-to-cube rdg2-render-to-cube-shaders)
 
-# simple-pbr2: rdg2 PBR + skybox demo using SharedShaderConstants, PbrShading, SkyBox.
+# simple-pbr: rdg2 PBR + skybox demo using SharedShaderConstants, PbrShading, SkyBox.
 # No per-sample shader compile step — PBR/skybox shaders are part of GNcore-rdg2-shaders.
-add_executable(GNsample-rdg2-pbr simple-pbr2.cpp)
+add_executable(GNsample-rdg2-pbr simple-pbr.cpp)
 target_link_libraries(GNsample-rdg2-pbr GNcore)

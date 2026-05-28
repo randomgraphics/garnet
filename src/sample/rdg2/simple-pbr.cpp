@@ -11,8 +11,7 @@ using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.rdg2.pbr");
 
-static VersionedArtifact updateSsc(SharedShaderConstants * ssc, const Swapchain::Frame & frame, const GpuResourceView & depthView, uint32_t width,
-                                   uint32_t height, int frameIdx) {
+static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, const RasterTarget & target, int frameIdx) {
     // Orbit camera around Y axis; helmet stays fixed at origin.
     const float            orbitAngle = static_cast<float>(frameIdx) * 0.001f;
     constexpr float        kRadius    = 3.f;
@@ -21,17 +20,16 @@ static VersionedArtifact updateSsc(SharedShaderConstants * ssc, const Swapchain:
     const glm::mat4        camToWorld = glm::inverse(glm::lookAtRH(eye, kTarget, kUp));
 
     // Update per-frame SSC data before takeSnapshot() freezes it into the UBO.
-    gpu2::RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget {.target = frame.view});
-    rt.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
+    const auto rasterSize = target.calcRasterSizeInPixel();
 
-    ssc->set0.renderTarget                = rt;
     ssc->set0.camera.cameraPosition       = eye;
     ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
-    ssc->set0.camera.aspectRatio          = static_cast<float>(width) / static_cast<float>(height);
+    ssc->set0.camera.aspectRatio          = static_cast<float>(rasterSize.x) / static_cast<float>(rasterSize.y);
+    ssc->set0.camera.viewWidthInPixel     = rasterSize.x;
+    ssc->set0.camera.viewHeightInPixel    = rasterSize.y;
     ssc->set0.frameConstants.frameCounter = frameIdx;
 
-    // Packs current set0 into a staging buffer via a CPU-only graph node.
+    // Packs current set0 into staging buffers and returns the GPU upload payloads.
     return ssc->takeSnapshot();
 }
 
@@ -43,16 +41,14 @@ int main(int argc, const char ** argv) {
 
     const uint32_t W = 1280, H = 720;
 
-    // ─── GPU + graph ──────────────────────────────────────────────────────────
+    // ─── GPU ──────────────────────────────────────────────────────────────────
     auto gpuContext = GpuContext::create("gpu", GpuContext::CreateParameters {});
     if (!gpuContext) return -1;
-    auto graph = Graph::create();
-    if (!graph) return -1;
 
     // ─── Shared shader constants ──────────────────────────────────────────────
     // SSC owns the skybox shaders and env texture loading. Set envLighting paths
-    // before the first takeSnapshot(); async IO starts automatically.
-    auto ssc = SharedShaderConstants::create({.gpu = gpuContext, .graph = graph});
+    // before the first takeSnapshot(); path changes are loaded synchronously by takeSnapshot().
+    auto ssc = SharedShaderConstants::create({.gpu = gpuContext});
     if (!ssc) return -1;
 
     ssc->set0.envLighting = {
@@ -63,17 +59,15 @@ int main(int argc, const char ** argv) {
         .environmentRadianceScale = 3500.f,
     };
 
-    // Kick off async PBR asset loading. v1 defaults (unit cube + 1×1 matte textures) are
-    // published synchronously before this returns; helmetReady is satisfied on frame 1.
-    auto helmet = PbrShading::load(gpuContext, graph,
-                                   {
-                                       .gltfPath       = "media::pbr/DamagedHelmet/DamagedHelmet.gltf",
-                                       .albedoPath     = "media::pbr/DamagedHelmet/baseColor_1.jpg",
-                                       .normalPath     = "media::pbr/DamagedHelmet/normal_1-gl.jpg",
-                                       .emissivePath   = "media::pbr/DamagedHelmet/emissive_1.jpg",
-                                       .occlusionPath  = "media::pbr/DamagedHelmet/occlusion_1.jpg",
-                                       .metalRoughPath = "media::pbr/DamagedHelmet/metallicRoughness_1.jpg",
-                                   });
+    auto helmet = PbrShading::load(gpuContext, {
+                                                   .gltfPath       = "media::pbr/DamagedHelmet/DamagedHelmet.gltf",
+                                                   .albedoPath     = "media::pbr/DamagedHelmet/baseColor_1.jpg",
+                                                   .normalPath     = "media::pbr/DamagedHelmet/normal_1-gl.jpg",
+                                                   .emissivePath   = "media::pbr/DamagedHelmet/emissive_1.jpg",
+                                                   .occlusionPath  = "media::pbr/DamagedHelmet/occlusion_1.jpg",
+                                                   .metalRoughPath = "media::pbr/DamagedHelmet/metallicRoughness_1.jpg",
+                                               });
+    if (!helmet) return -1;
 
     // ─── Window + swapchain ───────────────────────────────────────────────────
     std::unique_ptr<win::Window> window;
@@ -97,10 +91,11 @@ int main(int argc, const char ** argv) {
     GpuResourceView depthView;
     depthView.resource = depthTex;
 
-    // ─── Per-artifact setup state ─────────────────────────────────────────────
-    // PBR asset upload is submitted once per version change (v1 on frame 1, v2 after async IO).
-    // SSC upload payloads (env textures + UBO) are managed internally and emitted via set0Payloads.
-    AutoRef<GpuPayload> lastHelmetPayload;
+    RasterTarget rasterTarget;
+    rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
+    rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
+
+    bool helmetUploadSubmitted = false;
 
     int totalFrames = testMode ? 5 : 0;
     int frameIdx    = 0;
@@ -111,43 +106,32 @@ int main(int argc, const char ** argv) {
         Swapchain::Frame frame = swapchain->prepare();
         if (frame.view.empty()) return -1;
 
-        VersionedArtifact                         sscSnapshot = updateSsc(ssc, frame, depthView, W, H, frameIdx);
+        rasterTarget.setColorTarget(0, frame.view);
+        SharedShaderConstants::Snapshot           sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
         gpu2::ArrayContainer<AutoRef<GpuPayload>> renderWorks;
         auto                                      drawScene = [&]() {
-            auto sc = ssc->getContent(sscSnapshot.artifact);
-            if (!sc) return;
-            renderWorks.append(sc->set0Payloads);
-            auto pbrContent = PbrShading::getContent(graph, helmet.artifact);
-            if (!pbrContent) return;
+            renderWorks.append(sscSnapshot.set0Payloads);
 
             GpuRaster::CreateParameters rcp;
             rcp.gpu    = gpuContext;
-            rcp.target = sc->set0Parameters.renderTarget;
+            rcp.target = &rasterTarget;
 
-            auto r = GpuRaster::create(rcp);
+            auto r = GpuRaster::create("simple-pbr", rcp);
             if (!r) return;
             glm::mat4 helmetMat = glm::mat4(1.f);
-            r->draw(PbrShading::getDrawParams(sc, pbrContent, helmetMat));
-            r->draw(ssc->getSkyboxDrawParams(sc->set0Resources));
+            r->draw(PbrShading::getDrawParams(sscSnapshot, helmet, helmetMat));
+            r->draw(ssc->getSkyboxDrawParams(sscSnapshot.set0Resources));
             renderWorks.append(r->seal());
         };
-
-        // Draw node: pure CPU — records raster commands and seals GpuPayloads.
-        // No gpu->submit() here; the single per-frame submit happens below.
-        auto drawNode = graph->addNode(
-            NodeDesc("draw").dependsOn(sscSnapshot.version).dependsOn(helmet.version).setAction(Action::createFromLambda("draw", drawScene), nullptr));
-        graph->waitForToken(graph->getNodeCompletionToken(drawNode));
+        drawScene();
 
         // ─── Single frame submit ──────────────────────────────────────────────
         // Payloads ordered: PBR asset upload → set0 (env + UBO) → render work.
         GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
 
-        // PBR asset: submit upload once per version change.
-        auto pbrContent    = PbrShading::getContent(graph, helmet.artifact);
-        auto helmetPayload = pbrContent ? pbrContent->gpuPayload : AutoRef<GpuPayload>();
-        if (helmetPayload.get() != lastHelmetPayload.get()) {
-            if (helmetPayload) submit.appendWork(helmetPayload);
-            lastHelmetPayload = helmetPayload;
+        if (!helmetUploadSubmitted) {
+            submit.appendWork(helmet->gpuPayload);
+            helmetUploadSubmitted = true;
         }
 
         // set0 payloads (env uploads + UBO) then render work; last payload waits for frame.ready.

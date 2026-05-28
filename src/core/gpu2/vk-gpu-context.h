@@ -55,7 +55,7 @@ typedef AutoRef<FencePoolVulkan::Entry> PooledFenceVulkan;
 /// Vulkan-backed \c GpuContext (rapid-vulkan Instance + Device). Mirrors v1 \c GpuContextVulkan.
 class GpuContextVulkan2 : public GpuContextCommon2 {
 public:
-    GN_API GN_REGISTER_RUNTIME_TYPE(GpuContextCommon2);
+    GN_REGISTER_RUNTIME_TYPE(GpuContextCommon2);
 
     GpuContextVulkan2(const StrA & name, const CreateParameters & params);
     ~GpuContextVulkan2() override;

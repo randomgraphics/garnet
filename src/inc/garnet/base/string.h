@@ -1025,6 +1025,7 @@ public:
     /// \name ctor and dtor
     //@{
     StackStr(): mCount(0) { mBuf[0] = 0; }
+    consteval StackStr(const CHAR (&str)[N]) { std::copy_n(str, N, mBuf); }
     StackStr(const CHAR * s, size_t l = 0): mCount(l) {
         if (0 == s) {
             mCount  = 0;
@@ -1034,7 +1035,7 @@ public:
             memcpy(mBuf, s, sValidateLength(l) * sizeof(CHAR));
         }
     }
-    StackStr(const StackStr & s): mCount(s.mCount) { memcpy(mBuf, s.mBuf, sizeof(CHAR) * s.mCount); }
+    constexpr StackStr(const StackStr & s): mCount(s.mCount) { memcpy(mBuf, s.mBuf, sizeof(CHAR) * s.mCount); }
     StackStr(const std::basic_string<CHAR> & s) { memcpy(mBuf, s.data(), sizeof(CHAR) * sValidateLength(s.size())); }
     StackStr(const Str<CHAR> & s) { memcpy(mBuf, s.data(), sizeof(CHAR) * sValidateLength(s.size())); }
     //@}

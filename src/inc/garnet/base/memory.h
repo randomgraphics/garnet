@@ -186,6 +186,13 @@ struct CxxObjectAllocator {
             }
     }
 
+    template<typename... ARGS>
+    static inline void sConstruc(T * ptr, ARGS &&... args) {
+        if (ptr) GN_LIKELY {
+                new (ptr) T(std::forward<ARGS>(args)...);
+            }
+    }
+
     /// Inplace destruct a single object. No memory freeing.
     static inline void sDestruct(T * ptr) {
         if constexpr (!std::is_trivially_destructible<T>()) {

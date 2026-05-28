@@ -9,16 +9,12 @@
 #include <glm/ext/matrix_clip_space.hpp>
 
 #include <mutex>
-#include <thread>
-#include <unordered_map>
 #include <algorithm>
 
 static GN::Logger * sLogger = GN::getLogger("GN.rdg2");
 
 namespace GN::rdg2 {
 
-// ─── Internal env texture bundle ────────────────────────────────────────────
-// Not in the public header; published through a local RDG2 entity wrapper.
 struct EnvTextureSet {
     AutoRef<gpu2::Texture>    skyboxCubemap;
     AutoRef<gpu2::Texture>    irradianceMap;
@@ -27,31 +23,7 @@ struct EnvTextureSet {
     AutoRef<gpu2::GpuPayload> uploadPayload;
 };
 
-struct EnvTextureSetContent final : public Entity {
-    GN_REGISTER_RUNTIME_TYPE(Entity);
-
-    EnvTextureSet textures;
-
-    explicit EnvTextureSetContent(EnvTextureSet value): Entity(TYPE_INFO(), "EnvTextureSetContent"), textures(std::move(value)) {}
-};
-
-struct SscContent final : public SharedShaderConstants::Content {
-    GN_REGISTER_RUNTIME_TYPE(Content);
-
-    SscContent(): Content(TYPE_INFO(), "SharedShaderConstants::Content") {}
-};
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-// Deduce render-target pixel dimensions from the first valid attachment.
-// Falls back to 1×1 to avoid a zero-size projection when no target is set.
-static std::pair<uint32_t, uint32_t> getRenderTargetSize(const gpu2::RasterTarget & rt) {
-    for (const auto & c : rt.colorTargets) {
-        if (auto tex = c.target.texture()) return {tex->descriptor().width, tex->descriptor().height};
-    }
-    if (auto tex = rt.depthStencilTarget.texture()) return {tex->descriptor().width, tex->descriptor().height};
-    return {1u, 1u};
-}
 
 /// Create a 1×1 solid-color texture and record the staging→device copy into cnc.
 /// The staging buffer is captured by the CnC and kept alive inside the sealed payload.
@@ -96,7 +68,6 @@ static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2
 
 class SharedShaderConstants2Impl : public SharedShaderConstants {
     AutoRef<gpu2::GpuContext> mGpu;
-    GraphPtr                  mGraph;
     AutoRef<gpu2::Buffer>     mSceneBuffer;
     AutoRef<gpu2::Buffer>     mCameraBuffer;
 
@@ -107,16 +78,11 @@ class SharedShaderConstants2Impl : public SharedShaderConstants {
     AutoRef<gpu2::Texture> mFallbackCubemap;
     AutoRef<gpu2::Texture> mFallbackBrdfLut;
     // Upload for the fallback textures; appended to set0Payloads on the first snapshot only.
-    AutoRef<gpu2::GpuPayload> mFallbackInitPayload;
+    mutable AutoRef<gpu2::GpuPayload> mFallbackInitPayload;
 
-    ArtifactPtr mContentArtifact = nullptr;
-
-    // Internal env artifact. Created at init() with 1×1 blue-sky defaults (v1).
-    // Async IO triggered by triggerEnvLoad() publishes v2+ on success.
-    ArtifactPtr               mEnvArtifact = nullptr;
-    EnvTextureSet             mEnvDefaults;    // blue-sky refs saved before v1 move
-    AutoRef<gpu2::GpuPayload> mLastEnvPayload; // dedup: only append upload on version change
-    EnvLightingParameters     mLastEnvParams;  // detect user-side path changes
+    mutable EnvTextureSet             mEnvKnownGood;
+    mutable AutoRef<gpu2::GpuPayload> mPendingEnvUploadPayload;
+    mutable EnvLightingParameters     mLastEnvParams; // detect user-side path changes
 
     mutable std::mutex mMutex;
 
@@ -126,13 +92,11 @@ public:
     SharedShaderConstants2Impl(): SharedShaderConstants(TYPE_INFO(), "SharedShaderConstants2") {}
 
     bool init(const CreateParameters & params) {
-        if (!params.gpu || !params.graph) {
+        if (!params.gpu) {
             GN_ERROR(sLogger)("SharedShaderConstants2: invalid create parameters");
             return false;
         }
-        mGpu             = params.gpu;
-        mGraph           = params.graph;
-        mContentArtifact = mGraph->createArtifact("ssc2.content");
+        mGpu = params.gpu;
 
         mSceneBuffer  = gpu2::Buffer::create("ssc2.scene_ubo", {.context = mGpu, .size = sizeof(shader::SceneUBO)});
         mCameraBuffer = gpu2::Buffer::create("ssc2.camera_ubo", {.context = mGpu, .size = sizeof(shader::CameraUBO)});
@@ -161,8 +125,7 @@ public:
             mFallbackInitPayload = cnc->seal();
         }
 
-        // Create env artifact and publish 1×1 blue-sky defaults as v1.
-        // triggerEnvLoad() publishes v2+ when the caller sets non-empty paths in set0.envLighting.
+        // Create 1x1 blue-sky defaults. Path changes replace these cached pointers only after a load succeeds.
         {
             auto cnc = gpu2::GpuCnC::create({.gpu = mGpu});
             if (!cnc) GN_UNLIKELY return false;
@@ -171,72 +134,50 @@ public:
             auto prefiltered = make1x1Texture(mGpu, *cnc, "ssc2.prefilter_default", 34, 68, 102, 255, 6);
             auto defBrdf     = make1x1Texture(mGpu, *cnc, "ssc2.brdf_default", 255, 255, 0, 0, 1);
 
-            // Save refs so triggerEnvLoad() can fall back to them per-slot on load failure.
-            mEnvDefaults.skyboxCubemap     = skyCubemap;
-            mEnvDefaults.irradianceMap     = irradiance;
-            mEnvDefaults.prefilteredEnvMap = prefiltered;
-            mEnvDefaults.brdfLut           = defBrdf;
-
-            mEnvArtifact = mGraph->createArtifact("ssc2.env_textures");
-
-            EnvTextureSet v1 = mEnvDefaults;
-            v1.uploadPayload = cnc->seal();
-            mGraph->publishArtifact(mEnvArtifact, AutoRef<EnvTextureSetContent>(new EnvTextureSetContent(std::move(v1))));
+            mEnvKnownGood.skyboxCubemap     = skyCubemap;
+            mEnvKnownGood.irradianceMap     = irradiance;
+            mEnvKnownGood.prefilteredEnvMap = prefiltered;
+            mEnvKnownGood.brdfLut           = defBrdf;
+            mEnvKnownGood.uploadPayload     = cnc->seal();
+            mPendingEnvUploadPayload        = mEnvKnownGood.uploadPayload;
         }
 
         return true;
     }
 
-    VersionedArtifact takeSnapshot() const override {
-        TokenPtr version = mGraph->getArtifactVersionToken(mContentArtifact, NeverOverflowingCounter::OOO());
-        auto     content = AutoRef<SscContent>(new SscContent());
+    Snapshot takeSnapshot() const override {
+        Snapshot       snapshot;
+        Set0Parameters parameters;
         {
             std::lock_guard<std::mutex> lock(mMutex);
-            content->set0Parameters = set0;
+            parameters = set0;
 
-            // Check for path changes and start async env loading if needed.
+            // Check for path changes and synchronously update cached known-good env textures on successful load.
             bool pathsChanged = set0.envLighting.skyboxPath != mLastEnvParams.skyboxPath || set0.envLighting.irradiancePath != mLastEnvParams.irradiancePath ||
                                 set0.envLighting.prefilteredPath != mLastEnvParams.prefilteredPath ||
                                 set0.envLighting.brdfLutPath != mLastEnvParams.brdfLutPath;
             if (pathsChanged) {
-                const_cast<SharedShaderConstants2Impl *>(this)->triggerEnvLoad(set0.envLighting);
-                const_cast<SharedShaderConstants2Impl *>(this)->mLastEnvParams = set0.envLighting;
+                loadEnvTextures_(set0.envLighting);
+                mLastEnvParams = set0.envLighting;
             }
 
-            // Read current env version; append upload payload once per version change.
-            auto envContent = mGraph->getTypedArtifactContent<EnvTextureSetContent>(mEnvArtifact);
-            if (!envContent) GN_UNLIKELY return {};
-            EnvTextureSet envSnap = envContent->textures;
-            if (envSnap.uploadPayload.get() != mLastEnvPayload.get()) {
-                if (envSnap.uploadPayload) content->set0Payloads.append(envSnap.uploadPayload);
-                const_cast<SharedShaderConstants2Impl *>(this)->mLastEnvPayload = envSnap.uploadPayload;
+            if (mPendingEnvUploadPayload) {
+                snapshot.set0Payloads.append(mPendingEnvUploadPayload);
+                mPendingEnvUploadPayload = {};
             }
 
             // Include fallback upload only on the very first snapshot, then clear.
             if (mFallbackInitPayload) {
-                content->set0Payloads.append(mFallbackInitPayload);
-                const_cast<SharedShaderConstants2Impl *>(this)->mFallbackInitPayload = {};
+                snapshot.set0Payloads.append(mFallbackInitPayload);
+                mFallbackInitPayload = {};
             }
 
-            buildSet0Resources(envSnap, content->set0Resources);
+            buildSet0Resources(mEnvKnownGood, snapshot.set0Resources);
         }
 
-        NodePtr node = mGraph->addNode(NodeDesc("ssc2 upload")
-                                           .setAction(Action::createFromLambda("pack+upload UBOs",
-                                                                               [this, content]() {
-                                                                                   uploadSnapshot(content);
-                                                                                   mGraph->publishArtifact(mContentArtifact, content);
-                                                                               }),
-                                                      nullptr));
-        if (!node) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstants2: addNode failed");
-                return {};
-            }
-
-        return {mContentArtifact, version};
+        uploadSnapshot(parameters, snapshot);
+        return snapshot;
     }
-
-    AutoRef<Content> getContent(const ArtifactPtr & artifact) const override { return mGraph->getTypedArtifactContent<Content>(artifact); }
 
     gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet & set0Resources) const override {
         gpu2::GpuRaster::DrawParameters dp;
@@ -251,44 +192,40 @@ public:
     }
 
 private:
-    // Start async IO for env textures. Publishes v2+ to mEnvArtifact when any file loads.
     // Called only when set0.envLighting paths change, under mMutex.
-    void triggerEnvLoad(const EnvLightingParameters & params) {
+    void loadEnvTextures_(const EnvLightingParameters & params) const {
         bool anyPath = !params.skyboxPath.empty() || !params.irradiancePath.empty() || !params.prefilteredPath.empty() || !params.brdfLutPath.empty();
         if (!anyPath) return;
 
-        EnvTextureSet defEnv = mEnvDefaults;
+        auto cnc = gpu2::GpuCnC::create({.gpu = mGpu});
+        if (!cnc) return;
 
-        std::thread([=, gpu = mGpu, graph = mGraph, artifact = mEnvArtifact, skyPath = params.skyboxPath, irrPath = params.irradiancePath,
-                     prefilPath = params.prefilteredPath, brdfPath = params.brdfLutPath, simulate = params.simulateSlowLoading,
-                     defEnv = std::move(defEnv)]() mutable {
-            auto cnc = gpu2::GpuCnC::create({.gpu = gpu});
-            if (!cnc) return;
+        EnvTextureSet real       = mEnvKnownGood;
+        real.uploadPayload       = {};
+        bool loadedAnyEnvTexture = false;
 
-            EnvTextureSet real = defEnv;
-            real.uploadPayload = {};
+        auto tryLoad = [&](const StrA & path, const StrA & texName, AutoRef<gpu2::Texture> & outTex) {
+            if (path.empty()) return;
+            auto stg = gpu2::Buffer::loadTextureToStagingBuffer(texName, mGpu, path);
+            if (stg.empty()) return;
+            auto tex = gpu2::Texture::create(texName, {.context = mGpu, .descriptor = stg.descriptor});
+            if (!tex) return;
+            cnc->copyBufferToImage(stg, tex);
+            outTex              = tex;
+            loadedAnyEnvTexture = true;
+        };
+        tryLoad(params.skyboxPath, "env.skybox", real.skyboxCubemap);
+        tryLoad(params.irradiancePath, "env.irradiance", real.irradianceMap);
+        tryLoad(params.prefilteredPath, "env.prefiltered", real.prefilteredEnvMap);
+        tryLoad(params.brdfLutPath, "env.brdf_lut", real.brdfLut);
 
-            auto tryLoad = [&](const StrA & path, const StrA & texName, AutoRef<gpu2::Texture> & outTex) {
-                if (path.empty()) return;
-                auto stg = gpu2::Buffer::loadTextureToStagingBuffer(texName, gpu, path);
-                if (stg.empty()) return;
-                auto tex = gpu2::Texture::create(texName, {.context = gpu, .descriptor = stg.descriptor});
-                if (!tex) return;
-                cnc->copyBufferToImage(stg, tex);
-                outTex = tex;
-            };
-            tryLoad(skyPath, "env.skybox", real.skyboxCubemap);
-            tryLoad(irrPath, "env.irradiance", real.irradianceMap);
-            tryLoad(prefilPath, "env.prefiltered", real.prefilteredEnvMap);
-            tryLoad(brdfPath, "env.brdf_lut", real.brdfLut);
+        if (!loadedAnyEnvTexture) return;
+        auto payload = cnc->seal();
+        if (!payload) return;
 
-            auto payload = cnc->seal();
-            if (!payload) return; // nothing loaded; keep v1 blue-sky defaults
-
-            real.uploadPayload = std::move(payload);
-            if (simulate) std::this_thread::sleep_for(std::chrono::seconds(5));
-            graph->publishArtifact(artifact, AutoRef<EnvTextureSetContent>(new EnvTextureSetContent(std::move(real))));
-        }).detach();
+        real.uploadPayload       = payload;
+        mEnvKnownGood            = std::move(real);
+        mPendingEnvUploadPayload = payload;
     }
 
     void buildSet0Resources(const EnvTextureSet & env, gpu2::GpuResourceSet & out) const {
@@ -314,9 +251,7 @@ private:
         bindTex(5, env.brdfLut, mFallbackBrdfLut);
     }
 
-    void uploadSnapshot(const AutoRef<Content> & content) const {
-        const Set0Parameters & snap = content->set0Parameters;
-
+    void uploadSnapshot(const Set0Parameters & snap, Snapshot & snapshot) const {
         shader::SceneUBO scene {};
         scene.frameCounter             = snap.frameConstants.frameCounter;
         scene.frameDurationMs          = (float) ((double) snap.frameConstants.frameDuration.count() * 1e-3);
@@ -362,8 +297,7 @@ private:
             cam.projMatrix[1][1] *= -1.f; // Vulkan Y-inversion
             cam.projViewMatrix   = cam.projMatrix * cam.viewMatrix;
             cam.cameraPosition   = glm::vec4(pos, 1.f);
-            auto [w, h]          = getRenderTargetSize(snap.renderTarget);
-            cam.renderTargetSize = glm::vec2((float) w, (float) h);
+            cam.renderTargetSize = glm::vec2((float) snap.camera.viewWidthInPixel, (float) snap.camera.viewHeightInPixel);
             cam.nearPlane        = snap.camera.nearPlane;
             cam.farPlane         = snap.camera.farPlane;
         }
@@ -387,7 +321,7 @@ private:
         if (!cnc) GN_UNLIKELY return;
         cnc->copyBufferToBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
         cnc->copyBufferToBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
-        content->set0Payloads.append(cnc->seal());
+        snapshot.set0Payloads.append(cnc->seal());
     }
 };
 

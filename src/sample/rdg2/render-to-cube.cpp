@@ -1,4 +1,4 @@
-// render-to-cube2.cpp — RDG v2 render-to-cubemap demo
+// render-to-cube.cpp — RDG v2 render-to-cubemap demo
 //
 // Loads 6 images from media/texture/cube1/ and renders each to one face of a
 // 512×512 RGBA8 cubemap using the RDG v2 / gpu2 open-graph API. A rotating 3D cube
@@ -20,7 +20,7 @@
 //   [render cubemap]  ──depends on──> shader ONE() tokens ──publishes──> cubemapReadyArtifact
 //   [draw cube]       ──depends on──> cubemapReadyArtifact (OOO) + cubeDrawVsArtifact + cubeDrawPsArtifact
 //
-// Usage: render-to-cube2 [t] [--impl 1|2]
+// Usage: render-to-cube [t] [--impl 1|2]
 //   t        — headless test mode: 10 frames, readback face 0, log verification
 //   --impl N — 1 = face-by-face (default), 2 = single-pass MRT
 
@@ -46,7 +46,7 @@ using namespace GN::rdg2;
 using namespace GN::gpu2;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.render-to-cube2");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.render-to-cube");
 
 struct ShaderArtifactContent final : public Entity {
     GN_REGISTER_RUNTIME_TYPE(Entity);
@@ -130,35 +130,25 @@ public:
         r.mAllFacesPsArtifact = ctx.graph->createArtifact("cube-all-faces PS");
         r.mCubemapReady       = ctx.graph->createArtifact("cubemap ready");
 
-        ctx.graph->addNode(
-            NodeDesc("create cubemap shaders")
-                .setAction(Action::createFromLambda(
-                               "compile cubemap shaders",
-                               [graph = ctx.graph, gpu = ctx.gpu, vsArt = r.mFaceVsArtifact, psArt = r.mFacePsArtifact, allArt = r.mAllFacesPsArtifact]() {
-                                   auto vs         = GpuShader::create({.context = gpu,
-                                                                        .name    = "cube-face VS",
-                                                                        .binary  = kCubeFaceVertSpv,
-                                                                        .size    = kCubeFaceVertSpvSize * sizeof(unsigned int),
-                                                                        .entry   = "main"});
-                                   auto facePs     = GpuShader::create({.context = gpu,
-                                                                        .name    = "cube-face PS",
-                                                                        .binary  = kCubeFaceFragSpv,
-                                                                        .size    = kCubeFaceFragSpvSize * sizeof(unsigned int),
-                                                                        .entry   = "main"});
-                                   auto allFacesPs = GpuShader::create({.context = gpu,
-                                                                        .name    = "cube-all-faces PS",
-                                                                        .binary  = kCubeAllFacesFragSpv,
-                                                                        .size    = kCubeAllFacesFragSpvSize * sizeof(unsigned int),
-                                                                        .entry   = "main"});
-                                   if (!vs || !facePs || !allFacesPs) {
-                                       GN_ERROR(sLogger)("CubemapRenderer: failed to create one or more shaders");
-                                       return;
-                                   }
-                                   graph->publishArtifact(vsArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
-                                   graph->publishArtifact(psArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(facePs)));
-                                   graph->publishArtifact(allArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(allFacesPs)));
-                               }),
-                           nullptr));
+        ctx.graph->addNode(NodeDesc("create cubemap shaders", [graph = ctx.graph, gpu = ctx.gpu, vsArt = r.mFaceVsArtifact, psArt = r.mFacePsArtifact,
+                                                               allArt = r.mAllFacesPsArtifact]() {
+            auto vs = GpuShader::create(
+                {.context = gpu, .name = "cube-face VS", .binary = kCubeFaceVertSpv, .size = kCubeFaceVertSpvSize * sizeof(unsigned int), .entry = "main"});
+            auto facePs = GpuShader::create(
+                {.context = gpu, .name = "cube-face PS", .binary = kCubeFaceFragSpv, .size = kCubeFaceFragSpvSize * sizeof(unsigned int), .entry = "main"});
+            auto allFacesPs = GpuShader::create({.context = gpu,
+                                                 .name    = "cube-all-faces PS",
+                                                 .binary  = kCubeAllFacesFragSpv,
+                                                 .size    = kCubeAllFacesFragSpvSize * sizeof(unsigned int),
+                                                 .entry   = "main"});
+            if (!vs || !facePs || !allFacesPs) {
+                GN_ERROR(sLogger)("CubemapRenderer: failed to create one or more shaders");
+                return;
+            }
+            graph->publishArtifact(vsArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
+            graph->publishArtifact(psArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(facePs)));
+            graph->publishArtifact(allArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(allFacesPs)));
+        }));
 
         // Pre-capture ONE() tokens so per-frame nodes can safely wait on a version that
         // will always be satisfied once the shader node runs once.
@@ -180,94 +170,91 @@ public:
 
     // Adds the cubemap render node. outPayloads receives the command buffer(s) to submit.
     NodePtr addFrameNode(int frameCounter, std::vector<AutoRef<GpuPayload>> & outPayloads) {
-        NodeDesc desc("render cubemap");
         if (mImpl == 1) {
-            desc.setAction(Action::createFromLambda("6 passes — one per face",
-                                                    [this, frameCounter, &outPayloads]() {
-                                                        GN_VVTRACE(sLogger)("frame {}: rendering cubemap (impl 1)", frameCounter);
-                                                        auto vsContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mFaceVsArtifact);
-                                                        auto psContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mFacePsArtifact);
-                                                        if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
-                                                            GN_ERROR(sLogger)("Impl 1: missing shaders");
-                                                            return;
-                                                        }
+            NodeDesc desc("render cubemap", [this, frameCounter, &outPayloads]() {
+                GN_VVTRACE(sLogger)("frame {}: rendering cubemap (impl 1)", frameCounter);
+                auto vsContent = mFaceVsArtifact->content<ShaderArtifactContent>();
+                auto psContent = mFacePsArtifact->content<ShaderArtifactContent>();
+                if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
+                    GN_ERROR(sLogger)("Impl 1: missing shaders");
+                    return;
+                }
 
-                                                        for (uint32_t f = 0; f < 6; ++f) {
-                                                            GpuRaster::CreateParameters rcp;
-                                                            rcp.gpu = mCtx.gpu;
-                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = makeFaceView(mCubemap, f)});
-                                                            rcp.target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                for (uint32_t f = 0; f < 6; ++f) {
+                    RasterTarget rt;
+                    rt.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
+                    rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-                                                            // Bind the face's source image at set=0, binding=0 for the fragment sampler2D.
-                                                            GpuResourceView faceView;
-                                                            faceView.resource = mFaceTextures[f];
-                                                            GpuResourceTable resources;
-                                                            resources.resize(1);
-                                                            resources[0].resize(1);
-                                                            resources[0][0].resize(1);
-                                                            resources[0][0][0] = faceView;
+                    GpuRaster::CreateParameters rcp;
+                    rcp.gpu    = mCtx.gpu;
+                    rcp.target = &rt;
 
-                                                            GpuRaster::DrawParameters dp;
-                                                            dp.vs                   = vsContent->shader;
-                                                            dp.ps                   = psContent->shader;
-                                                            dp.geometry.vertexCount = 3; // fullscreen triangle, no VBO
-                                                            dp.resources            = resources;
+                    // Bind the face's source image at set=0, binding=0 for the fragment sampler2D.
+                    GpuResourceView faceView;
+                    faceView.resource = mFaceTextures[f];
+                    GpuResourceTable resources;
+                    resources.resize(1);
+                    resources[0].resize(1);
+                    resources[0][0].resize(1);
+                    resources[0][0][0] = faceView;
 
-                                                            auto rast = GpuRaster::create(rcp);
-                                                            rast->draw(dp);
-                                                            outPayloads.push_back(rast->seal());
-                                                        }
-                                                        mCtx.graph->publishArtifact(mCubemapReady,
-                                                                                    AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
-                                                    }),
-                           nullptr);
+                    GpuRaster::DrawParameters dp;
+                    dp.vs                   = vsContent->shader;
+                    dp.ps                   = psContent->shader;
+                    dp.geometry.vertexCount = 3; // fullscreen triangle, no VBO
+                    dp.resources            = resources;
+
+                    auto rast = GpuRaster::create("cubemap-face", rcp);
+                    rast->draw(dp);
+                    outPayloads.push_back(rast->seal());
+                }
+                mCtx.graph->publishArtifact(mCubemapReady, AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
+            });
             desc.dependsOn(mFaceVsReady).dependsOn(mFacePsReady);
+            return mCtx.graph->addNode(desc);
         } else {
             // Single pass: 6 color targets simultaneously, fragment shader writes all 6 faces.
-            desc.setAction(Action::createFromLambda("1 pass — 6 MRT color targets",
-                                                    [this, frameCounter, &outPayloads]() {
-                                                        GN_VVTRACE(sLogger)("frame {}: rendering cubemap (impl 2)", frameCounter);
-                                                        auto vsContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mFaceVsArtifact);
-                                                        auto psContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mAllFacesPsArtifact);
-                                                        if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
-                                                            GN_ERROR(sLogger)("Impl 2: missing shaders");
-                                                            return;
-                                                        }
+            NodeDesc desc("render cubemap", [this, frameCounter, &outPayloads]() {
+                GN_VVTRACE(sLogger)("frame {}: rendering cubemap (impl 2)", frameCounter);
+                auto vsContent = mFaceVsArtifact->content<ShaderArtifactContent>();
+                auto psContent = mAllFacesPsArtifact->content<ShaderArtifactContent>();
+                if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
+                    GN_ERROR(sLogger)("Impl 2: missing shaders");
+                    return;
+                }
 
-                                                        GpuRaster::CreateParameters rcp;
-                                                        rcp.gpu = mCtx.gpu;
-                                                        for (uint32_t f = 0; f < 6; ++f) {
-                                                            rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = makeFaceView(mCubemap, f)});
-                                                        }
-                                                        rcp.target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                GpuRaster::CreateParameters rcp;
+                rcp.gpu = mCtx.gpu;
+                RasterTarget rt;
+                for (uint32_t f = 0; f < 6; ++f) { rt.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f))); }
+                rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                rcp.target = &rt;
 
-                                                        // Bind all 6 face textures at set=0, binding=0..5 for the fragment shader.
-                                                        GpuResourceTable resources;
-                                                        resources.resize(1);
-                                                        resources[0].resize(6);
-                                                        for (uint32_t f = 0; f < 6; ++f) {
-                                                            resources[0][f].resize(1);
-                                                            GpuResourceView v;
-                                                            v.resource         = mFaceTextures[f];
-                                                            resources[0][f][0] = v;
-                                                        }
+                // Bind all 6 face textures at set=0, binding=0..5 for the fragment shader.
+                GpuResourceTable resources;
+                resources.resize(1);
+                resources[0].resize(6);
+                for (uint32_t f = 0; f < 6; ++f) {
+                    resources[0][f].resize(1);
+                    GpuResourceView v;
+                    v.resource         = mFaceTextures[f];
+                    resources[0][f][0] = v;
+                }
 
-                                                        GpuRaster::DrawParameters dp;
-                                                        dp.vs                   = vsContent->shader;
-                                                        dp.ps                   = psContent->shader;
-                                                        dp.geometry.vertexCount = 3;
-                                                        dp.resources            = resources;
+                GpuRaster::DrawParameters dp;
+                dp.vs                   = vsContent->shader;
+                dp.ps                   = psContent->shader;
+                dp.geometry.vertexCount = 3;
+                dp.resources            = resources;
 
-                                                        auto rast = GpuRaster::create(rcp);
-                                                        rast->draw(dp);
-                                                        outPayloads.push_back(rast->seal());
-                                                        mCtx.graph->publishArtifact(mCubemapReady,
-                                                                                    AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
-                                                    }),
-                           nullptr);
+                auto rast = GpuRaster::create("cubemap-all-faces", rcp);
+                rast->draw(dp);
+                outPayloads.push_back(rast->seal());
+                mCtx.graph->publishArtifact(mCubemapReady, AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
+            });
             desc.dependsOn(mFaceVsReady).dependsOn(mAllFacesPsReady);
+            return mCtx.graph->addNode(desc);
         }
-        return mCtx.graph->addNode(desc);
     }
 
     // Tracks the last payload of the previous frame's cubemap render.
@@ -310,6 +297,15 @@ public:
             return {};
         }
 
+        GpuResourceView depthView;
+        depthView.resource = cd.mDepthTex;
+        cd.mRenderTarget.colorTargets.append(RasterTarget::ColorTarget {});
+        cd.mRenderTarget.setDepthStencilTarget(depthView);
+        cd.mRenderTarget.setClearColor(0.05f, 0.05f, 0.1f, 1.0f);
+        cd.mRenderTarget.setClearDepth(1.0f);
+        cd.mRenderTarget.states.setCullMode(RasterState::CULL_NONE);
+        cd.mRenderTarget.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
+
         // Upload cube vertex and index data synchronously; no need for graph-node machinery
         // since the data is static and the upload completes before any frame node runs.
         if (!cd.uploadGeometry()) return {};
@@ -317,28 +313,18 @@ public:
         cd.mVsArtifact = ctx.graph->createArtifact("cube-draw VS");
         cd.mPsArtifact = ctx.graph->createArtifact("cube-draw PS");
 
-        ctx.graph->addNode(
-            NodeDesc("create cube-draw shaders")
-                .setAction(Action::createFromLambda("compile cube-draw shaders",
-                                                    [graph = ctx.graph, gpu = ctx.gpu, vsArt = cd.mVsArtifact, psArt = cd.mPsArtifact]() {
-                                                        auto vs = GpuShader::create({.context = gpu,
-                                                                                     .name    = "cube-draw VS",
-                                                                                     .binary  = kCubeDrawVertSpv,
-                                                                                     .size    = kCubeDrawVertSpvSize * sizeof(unsigned int),
-                                                                                     .entry   = "main"});
-                                                        auto ps = GpuShader::create({.context = gpu,
-                                                                                     .name    = "cube-draw PS",
-                                                                                     .binary  = kCubeDrawFragSpv,
-                                                                                     .size    = kCubeDrawFragSpvSize * sizeof(unsigned int),
-                                                                                     .entry   = "main"});
-                                                        if (!vs || !ps) {
-                                                            GN_ERROR(sLogger)("CubeDraw: failed to create shaders");
-                                                            return;
-                                                        }
-                                                        graph->publishArtifact(vsArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
-                                                        graph->publishArtifact(psArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(ps)));
-                                                    }),
-                           nullptr));
+        ctx.graph->addNode(NodeDesc("create cube-draw shaders", [graph = ctx.graph, gpu = ctx.gpu, vsArt = cd.mVsArtifact, psArt = cd.mPsArtifact]() {
+            auto vs = GpuShader::create(
+                {.context = gpu, .name = "cube-draw VS", .binary = kCubeDrawVertSpv, .size = kCubeDrawVertSpvSize * sizeof(unsigned int), .entry = "main"});
+            auto ps = GpuShader::create(
+                {.context = gpu, .name = "cube-draw PS", .binary = kCubeDrawFragSpv, .size = kCubeDrawFragSpvSize * sizeof(unsigned int), .entry = "main"});
+            if (!vs || !ps) {
+                GN_ERROR(sLogger)("CubeDraw: failed to create shaders");
+                return;
+            }
+            graph->publishArtifact(vsArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
+            graph->publishArtifact(psArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(ps)));
+        }));
 
         cd.mVsReady = ctx.graph->getArtifactVersionToken(cd.mVsArtifact, NeverOverflowingCounter::ONE());
         cd.mPsReady = ctx.graph->getArtifactVersionToken(cd.mPsArtifact, NeverOverflowingCounter::ONE());
@@ -348,79 +334,63 @@ public:
 
     bool valid() const { return mDepthTex && mVb && mIb && mVsArtifact && mPsArtifact; }
 
+    RasterTarget & rasterTarget() { return mRenderTarget; }
+
     // Adds the per-frame draw-cube node. outPayload is filled when the node executes.
     // Returns the node handle to wait on.
-    NodePtr addFrameNode(const TokenPtr & cubemapToken, const VersionedArtifact & sscSnapshot, const AutoRef<Texture> & cubemap,
-                         const GpuResourceView & swapView, float elapsed, AutoRef<GpuPayload> & outPayload) {
+    NodePtr addFrameNode(const TokenPtr & cubemapToken, const SharedShaderConstants::Snapshot & sscSnapshot, const AutoRef<Texture> & cubemap, float elapsed,
+                         AutoRef<GpuPayload> & outPayload) {
         return mCtx.graph->addNode(
-            NodeDesc("draw cube")
-                .setAction(Action::createFromLambda(
-                               "render rotating cube",
-                               [this, cubemap, swapView, elapsed, sscSnapshot, &outPayload]() {
-                                   auto vsContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mVsArtifact);
-                                   auto psContent = mCtx.graph->getTypedArtifactContent<ShaderArtifactContent>(mPsArtifact);
-                                   if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
-                                       GN_ERROR(sLogger)("CubeDraw: missing shaders");
-                                       return;
-                                   }
+            NodeDesc("draw cube",
+                     [this, cubemap, elapsed, sscSnapshot, &outPayload]() {
+                         auto vsContent = mVsArtifact->content<ShaderArtifactContent>();
+                         auto psContent = mPsArtifact->content<ShaderArtifactContent>();
+                         if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
+                             GN_ERROR(sLogger)("CubeDraw: missing shaders");
+                             return;
+                         }
 
-                                   auto sscContent = mCtx.ssc->getContent(sscSnapshot.artifact);
-                                   if (!sscContent) {
-                                       GN_ERROR(sLogger)("CubeDraw: SSC content unavailable");
-                                       return;
-                                   }
+                         glm::mat4 model = glm::rotate(glm::mat4(1.f), elapsed * 0.5f, glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f)));
 
-                                   glm::mat4 model = glm::rotate(glm::mat4(1.f), elapsed * 0.5f, glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f)));
+                         GpuRaster::CreateParameters rcp;
+                         rcp.gpu    = mCtx.gpu;
+                         rcp.target = &mRenderTarget;
 
-                                   GpuResourceView depthView;
-                                   depthView.resource = mDepthTex;
+                         RasterGeometry geom;
+                         geom.format.attributes.append(
+                             RasterGeometry::VertexAttribute {.location = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+                         geom.format.attributes.append(
+                             RasterGeometry::VertexAttribute {.location = 1, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_1});
+                         geom.vertices.append(RasterGeometry::GeometryBuffer {.buffer = mVb, .offset = 0, .stride = kVertexStride});
+                         geom.indices    = RasterGeometry::GeometryBuffer {.buffer = mIb, .offset = 0, .stride = sizeof(uint16_t)};
+                         geom.indexCount = kIndexCount;
 
-                                   GpuRaster::CreateParameters rcp;
-                                   rcp.gpu = mCtx.gpu;
-                                   rcp.target.colorTargets.append(RasterTarget::ColorTarget {.target = swapView});
-                                   rcp.target.setDepthStencilTarget(depthView);
-                                   rcp.target.setClearColor(0.05f, 0.05f, 0.1f, 1.0f);
-                                   rcp.target.setClearDepth(1.0f);
-                                   rcp.target.states.setCullMode(RasterState::CULL_NONE);
-                                   rcp.target.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
+                         // set=0 → SSC resources (camera + scene UBOs + env textures)
+                         // set=1, binding=0 → assembled cubemap
+                         GpuResourceView cubeView;
+                         cubeView.resource = cubemap;
+                         GpuResourceSet cubeSet;
+                         cubeSet.resize(1);
+                         cubeSet[0].resize(1);
+                         cubeSet[0][0] = cubeView;
 
-                                   RasterGeometry geom;
-                                   geom.format.attributes.append(
-                                       RasterGeometry::VertexAttribute {.location = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-                                   geom.format.attributes.append(
-                                       RasterGeometry::VertexAttribute {.location = 1, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_1});
-                                   geom.vertices.append(RasterGeometry::GeometryBuffer {.buffer = mVb, .offset = 0, .stride = kVertexStride});
-                                   geom.indices    = RasterGeometry::GeometryBuffer {.buffer = mIb, .offset = 0, .stride = sizeof(uint16_t)};
-                                   geom.indexCount = kIndexCount;
+                         GpuResourceTable resources;
+                         resources.append(sscSnapshot.set0Resources); // set 0
+                         resources.append(cubeSet);                   // set 1
 
-                                   // set=0 → SSC resources (camera + scene UBOs + env textures)
-                                   // set=1, binding=0 → assembled cubemap
-                                   GpuResourceView cubeView;
-                                   cubeView.resource = cubemap;
-                                   GpuResourceSet cubeSet;
-                                   cubeSet.resize(1);
-                                   cubeSet[0].resize(1);
-                                   cubeSet[0][0] = cubeView;
+                         GpuRaster::DrawParameters dp;
+                         dp.vs        = vsContent->shader;
+                         dp.ps        = psContent->shader;
+                         dp.geometry  = geom;
+                         dp.resources = resources;
+                         // Push constant: model matrix only (view+proj come from camera UBO)
+                         dp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(model), reinterpret_cast<const uint8_t *>(&model)));
 
-                                   GpuResourceTable resources;
-                                   resources.append(sscContent->set0Resources); // set 0
-                                   resources.append(cubeSet);                   // set 1
-
-                                   GpuRaster::DrawParameters dp;
-                                   dp.vs        = vsContent->shader;
-                                   dp.ps        = psContent->shader;
-                                   dp.geometry  = geom;
-                                   dp.resources = resources;
-                                   // Push constant: model matrix only (view+proj come from camera UBO)
-                                   dp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(model), reinterpret_cast<const uint8_t *>(&model)));
-
-                                   auto rast = GpuRaster::create(rcp);
-                                   rast->draw(dp);
-                                   outPayload = rast->seal();
-                               }),
-                           nullptr)
+                         auto rast = GpuRaster::create("cube-display", rcp);
+                         rast->draw(dp);
+                         outPayload = rast->seal();
+                     })
                 .dependsOn(cubemapToken)
-                .dependsOn(sscSnapshot.version)
                 .dependsOn(mVsReady)
                 .dependsOn(mPsReady));
     }
@@ -480,6 +450,7 @@ private:
 
     SharedCtx        mCtx;
     AutoRef<Texture> mDepthTex;
+    RasterTarget     mRenderTarget;
     AutoRef<Buffer>  mVb, mIb;
     ArtifactPtr      mVsArtifact, mPsArtifact;
     TokenPtr         mVsReady, mPsReady;
@@ -524,7 +495,7 @@ int main(int argc, const char ** argv) {
     }
 
     enableCRTMemoryCheck();
-    GN_INFO(sLogger)("render-to-cube2  impl={}  testMode={}", impl, testMode);
+    GN_INFO(sLogger)("render-to-cube  impl={}  testMode={}", impl, testMode);
 
     // ── GPU context ────────────────────────────────────────────────────────────
     auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
@@ -555,7 +526,7 @@ int main(int argc, const char ** argv) {
     auto graph = Graph::create();
     if (!graph) return -1;
 
-    auto ssc = rdg2::SharedShaderConstants::create({.gpu = gpuContext, .graph = graph});
+    auto ssc = rdg2::SharedShaderConstants::create({.gpu = gpuContext});
     if (!ssc) return -1;
 
     SharedCtx ctx {.graph = graph, .gpu = gpuContext, .ssc = ssc, .width = windowWidth, .height = windowHeight};
@@ -572,9 +543,6 @@ int main(int argc, const char ** argv) {
 
     auto cubeDraw = CubeDraw::create(ctx);
     if (!cubeDraw.valid()) return -1;
-
-    // Pre-allocate slot 0 so per-frame setColorTarget(0, ...) is an update, not an append.
-    ssc->set0.renderTarget.colorTargets.append(RasterTarget::ColorTarget {});
 
     GN_INFO(sLogger)("Starting render loop...");
 
@@ -601,13 +569,16 @@ int main(int argc, const char ** argv) {
             ssc->set0.camera.cameraPosition       = kEye;
             ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
             ssc->set0.camera.cameraFov            = Degree(45.f);
-            ssc->set0.camera.aspectRatio          = (float) windowWidth / (float) windowHeight;
             ssc->set0.camera.nearPlane            = 0.1f;
             ssc->set0.camera.farPlane             = 100.f;
             ssc->set0.frameConstants.frameCounter = frameCounter;
-            ssc->set0.renderTarget.setColorTarget(0, frame.view);
+            cubeDraw.rasterTarget().setColorTarget(0, frame.view);
+            const auto rasterSize              = cubeDraw.rasterTarget().calcRasterSizeInPixel();
+            ssc->set0.camera.aspectRatio       = (float) rasterSize.x / (float) rasterSize.y;
+            ssc->set0.camera.viewWidthInPixel  = rasterSize.x;
+            ssc->set0.camera.viewHeightInPixel = rasterSize.y;
         }
-        VersionedArtifact sscSnapshot = ssc->takeSnapshot();
+        SharedShaderConstants::Snapshot sscSnapshot = ssc->takeSnapshot();
 
         std::vector<AutoRef<GpuPayload>> cubemapPayloads;
         AutoRef<GpuPayload>              presentPayload;
@@ -620,7 +591,7 @@ int main(int argc, const char ** argv) {
 
         // The draw-cube node depends on cubemapThisFrame so it only runs after this
         // frame's cubemap has been published.
-        NodePtr presentNode = cubeDraw.addFrameNode(cubemapThisFrame, sscSnapshot, cubemapRenderer.cubemap(), frame.view, elapsed, presentPayload);
+        NodePtr presentNode = cubeDraw.addFrameNode(cubemapThisFrame, sscSnapshot, cubemapRenderer.cubemap(), elapsed, presentPayload);
 
         graph->waitForToken(graph->getNodeCompletionToken(presentNode));
 
@@ -630,13 +601,10 @@ int main(int argc, const char ** argv) {
         // guard against the previous frame's cubemap write) and frame.ready
         // (swapchain image acquisition).
         {
-            auto                         sscContent = ssc->getContent(sscSnapshot.artifact);
             GpuContext::SubmitParameters sp(StrA::format("frame {}", frameCounter));
             if (cubemapRenderer.prevPayload) sp.waitFor(cubemapRenderer.prevPayload);
             // Submit UBO + env uploads before the draw that samples them.
-            if (sscContent) {
-                for (const auto & p : sscContent->set0Payloads) sp.appendWork(p);
-            }
+            for (const auto & p : sscSnapshot.set0Payloads) sp.appendWork(p);
             sp.waitFor(frame.ready);
             sp.appendWorks(cubemapPayloads);
             sp.appendWork(presentPayload);
@@ -650,6 +618,6 @@ int main(int argc, const char ** argv) {
 
     graph->waitForIdle();
     gpuContext->waitForIdle();
-    GN_INFO(sLogger)("render-to-cube2 finished.");
+    GN_INFO(sLogger)("render-to-cube finished.");
     return 0;
 }
