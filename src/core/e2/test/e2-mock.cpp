@@ -23,12 +23,6 @@ struct MockForm : Form {
     GN_REGISTER_RUNTIME_TYPE(Form);
 
     MockForm(Universe & u): Form(TYPE_INFO(), u.generateUniqueIdentifier(), "the first life form") {}
-
-    /// update this form's internal state. called by the world, usually with an fixed interval.
-    bool update() override { return true; }
-
-    /// update the visual part of the form.
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override { return {}; }
 };
 
 TEST_CASE("E2: smoke test") {

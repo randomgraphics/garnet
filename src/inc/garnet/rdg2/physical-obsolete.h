@@ -10,11 +10,11 @@ namespace GN::rdg2 {
 
 using Nanoseconds   = std::chrono::nanoseconds;
 using Microseconds  = std::chrono::microseconds;
-using Candela       = GN::gpu2::Candela;
-using Lux           = GN::gpu2::Lux;
-using Nit           = GN::gpu2::Nit;
-using IntensityRGB  = GN::gpu2::IntensityRGB;
-using IrradianceRGB = GN::gpu2::IrradianceRGB;
-using RadianceRGB   = GN::gpu2::RadianceRGB;
+using Candela       = GN::e2::Candela;
+using Lux           = GN::e2::Lux;
+using Nit           = GN::e2::Nit;
+using IntensityRGB  = GN::e2::IntensityRGB;
+using IrradianceRGB = GN::e2::IrradianceRGB;
+using RadianceRGB   = GN::e2::RadianceRGB;
 
 } // namespace GN::rdg2

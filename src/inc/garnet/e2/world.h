@@ -15,10 +15,11 @@ struct Form : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
     /// update this form's internal state. called by the world, usually with an fixed interval.
-    virtual bool update() = 0;
+    virtual void update() {}
 
-    /// capture the visual part of a form for rendering.
-    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
+    /// capture the visual part of a form for rendering. The defalt implementation returns nullptr, which means
+    /// this form is not renderable.
+    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) { return {}; }
 
     // /// update the audio part of the form.
     // virtual Ref<AudioMoment> captureAudioMoment() = 0;
@@ -40,9 +41,6 @@ struct World : Thing {
 
     /// Briefly freeze the world, snap a visual moment, then continue. Can be called from any thread.
     virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
-
-    /// Create a new empty world with nothing in it.
-    GN_API Ref<World> create(const CreateParameters &);
 };
 
 } // namespace GN::e2

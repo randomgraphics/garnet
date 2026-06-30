@@ -19,7 +19,6 @@ namespace Gpu2 = GN::gpu2;
 #include "gpu2/swapchain.h"
 #include "gpu2/raster.h"
 #include "gpu2/cnc.h"
-#include "gpu2/physical.h" // common physical definitions used by physcal based rendering.
 #undef __GN_INSIDE_GPU2_H__
 
 #endif

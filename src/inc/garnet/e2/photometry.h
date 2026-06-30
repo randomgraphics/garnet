@@ -1,10 +1,10 @@
-#if !defined(__GN_INSIDE_GPU2_H__)
-    #error "Do not include <garnet/gpu2/physical.h> directly. Include <garnet/GNgpu2.h> instead."
+#if !defined(__GN_INSIDE_ENGINE2_H__)
+    #error "Do not include <garnet/e2/photometry.h> directly. Include <garnet/GNengine2.h> instead."
 #endif
 
 #include <chrono>
 
-namespace GN::gpu2 {
+namespace GN::e2 {
 
 ///< Intensity unit [cd].
 struct Candela {
@@ -52,4 +52,4 @@ struct RadianceRGB {
     Nit   luminance; // luminance in cd/m^2.
 };
 
-} // namespace GN::gpu2
+} // namespace GN::e2
