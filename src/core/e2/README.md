@@ -202,17 +202,34 @@ sharing simulation state or visual moments.
 
 ## Current Implementation Status
 
-As of this README, `src/core/e2/` contains only a smoke test:
+`src/core/e2/` now contains a first concrete vertical slice that exercises the
+whole world → visual-moment → render path:
 
-- `test/e2-mock.cpp`
+- `simple-world.cpp`: the `Simple` namespace world. A `World` that advances its
+  forms on a dedicated background simulation thread at a fixed timestep, plus two
+  trivial forms — a slowly spinning box mesh and a point light. `populate()` and
+  `captureVisualMoment()` are guarded by a single world mutex, which is the
+  synchronization boundary between live simulation and snapshot capture.
+- `os.cpp`: the official `OperatingDomain`, wrapping `GN::win` for the window,
+  render surface, and event pump.
+- `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
+  the gpu2 swapchain, depth buffer, box shaders, a per-frame uniform buffer, and a
+  geometry cache; `render()` consumes a self-contained snapshot and draws it.
+- `e2-internal.h`: private types shared across the implementation, most notably
+  `VisualMomentImpl`, the concrete self-contained snapshot (cameras + renderables
+  + lights) that worlds produce and the visual domain consumes.
+- `vk-shaders/box.{vert,frag}`: a minimal lit shader (per-frame camera/light UBO,
+  per-draw model/color push constants).
 
-The test creates mock `Universe`, `World`, and `Form` types, verifies that the
-runtime type and reference patterns compile, then exercises `populate()` and
-`run()` through the public interfaces.
+The factory functions `Simple::createWorld/createBox/createPointLight`,
+`OperatingDomain::create`, `Camera::create`, and `VisualDomain::create` are all
+implemented here. The matching sample lives in `src/sample/e2/simple-world.cpp`,
+and `test/simple-world-test.cpp` covers the CPU-side workflow (population, capture
+contents, and independent-cadence advancement) headlessly.
 
-Concrete factories such as `World::create()`, `VisualDomain::create()`, and
-`OperatingDomain::create()` are declared in headers but are not represented by a
-substantial implementation in this directory yet.
+The original smoke test, `test/e2-mock.cpp`, remains: it creates mock `Universe`,
+`World`, and `Form` types to verify the runtime-type and reference patterns
+compile and that `populate()`/`run()` are callable through the public interfaces.
 
 ## Development Notes
 

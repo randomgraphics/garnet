@@ -83,6 +83,9 @@ GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 # do not apply to this parent target.
 include(rdg2/CMakeLists.txt)
 
+# engine2 (e2) sources + its GLSL shaders. Same in-parent-scope include rationale as rdg2.
+include(e2/CMakeLists.txt)
+
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
     GN_add_source_folder(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
@@ -119,6 +122,9 @@ if(TARGET GNcore-rdg-shaders)
 endif()
 if(TARGET GNcore-rdg2-shaders)
     add_dependencies(GNcore-objects GNcore-rdg2-shaders)
+endif()
+if(TARGET GNcore-e2-shaders)
+    add_dependencies(GNcore-objects GNcore-e2-shaders)
 endif()
 
 # =======================

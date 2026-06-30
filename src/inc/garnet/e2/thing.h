@@ -63,7 +63,27 @@ using Ref = AutoRef<T>;
 struct OperatingDomain : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
-    GN_API Ref<OperatingDomain> create();
+    struct CreateParameters {
+        Universe & universe;
+        StrA       caption = "Garnet engine2";
+        uint32_t   width   = 1280; ///< initial client width in pixels. 0 = pick a platform default.
+        uint32_t   height  = 720;  ///< initial client height in pixels. 0 = pick a platform default.
+    };
+
+    /// Create the operating-system domain (main window + event pump). Returns null on failure.
+    GN_API static Ref<OperatingDomain> create(const CreateParameters &);
+
+    /// Native render-surface handle for the given graphics-API instance handle (e.g. a
+    /// VkSurfaceKHR built from a VkInstance, both passed/returned as intptr_t). Returns 0 if
+    /// unsupported. The domain owns the surface; the caller must not destroy it.
+    virtual intptr_t renderSurfaceHandle(intptr_t graphicsInstanceHandle) const = 0;
+
+    /// Current client-area size of the main window, in pixels.
+    virtual Vector2<uint32_t> clientSize() const = 0;
+
+    /// Pump the OS event queue once. Returns false when the user has requested the
+    /// application to quit (e.g. the main window was closed).
+    virtual bool processEvents() = 0;
 };
 
 } // namespace GN::e2

@@ -21,11 +21,17 @@ struct Camera : Thing {
         float fovYInDegree = 60.0f;
     };
 
+    /// Mutable observer description. May be updated at any time, e.g. to move or re-orient
+    /// the camera; the value is read when a world captures a visual moment.
+    Desc desc;
+
     struct CreateParameters {
+        /// The visual domain this camera observes through. The camera takes its owning
+        /// universe from this domain, so it must not be null.
         Ref<VisualDomain> domain;
     };
 
-    GN_API Ref<Camera> create(const CreateParameters &);
+    GN_API static Ref<Camera> create(const CreateParameters &);
 };
 
 /// A visual snapshot of something. consumed by graphics domain for graphics rendering.
@@ -52,9 +58,12 @@ struct VisualDomain : Thing {
         Ref<OperatingDomain> os;
     };
 
+    /// The universe this domain belongs to.
+    virtual Universe & universe() const = 0;
+
     virtual void render(Ref<VisualMoment>) = 0;
 
-    GN_API Ref<VisualDomain> create(const CreateParameters &);
+    GN_API static Ref<VisualDomain> create(const CreateParameters &);
 };
 
 } // namespace GN::e2
