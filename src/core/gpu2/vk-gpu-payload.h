@@ -47,6 +47,13 @@ struct GpuPayloadVulkan : GpuPayload {
     /// resource state flushing is handled by submit() via batchTracker->flushToResources().
     virtual void onSubmitComplete() {}
 
+    /// Hook fired once from pump()/waitForIdle() after this payload's submission fence has signaled,
+    /// i.e. its GPU work is guaranteed complete. Use it for post-completion CPU work such as
+    /// reading back data from staging buffers and resolving download futures. It is NOT called if the
+    /// payload is dropped without ever being submitted — in that case the payload's destructor runs
+    /// instead, which is where un-submitted work must release its resources / break its promises.
+    virtual void onGpuComplete() {}
+
 protected:
     friend class GpuContextVulkan2;
 
