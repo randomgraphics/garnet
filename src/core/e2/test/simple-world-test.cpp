@@ -24,8 +24,7 @@ TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment
 
     auto box   = Simple::createBox(u, WorldPosition(UnitOfLength(0), UnitOfLength(0), UnitOfLength(0)),
                                    Vector3<UnitOfLength>(UnitOfLength(1), UnitOfLength(1), UnitOfLength(1)));
-    auto light = Simple::createPointLight(u, WorldPosition(UnitOfLength(3), UnitOfLength(3), UnitOfLength(3)),
-                                          IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
+    auto light = Simple::createPointLight(u, WorldPosition(UnitOfLength(3), UnitOfLength(3), UnitOfLength(3)), IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
     REQUIRE(box);
     REQUIRE(light);
 
@@ -57,9 +56,9 @@ TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment
 TEST_CASE("E2 Simple: the world evolves on its own cadence, independent of capture") {
     TestUniverse u;
 
-    auto world = Simple::createWorld(u);
-    auto box   = Simple::createBox(u, WorldPosition(UnitOfLength(0), UnitOfLength(0), UnitOfLength(0)),
-                                   Vector3<UnitOfLength>(UnitOfLength(1), UnitOfLength(1), UnitOfLength(1)));
+    auto      world   = Simple::createWorld(u);
+    auto      box     = Simple::createBox(u, WorldPosition(UnitOfLength(0), UnitOfLength(0), UnitOfLength(0)),
+                                          Vector3<UnitOfLength>(UnitOfLength(1), UnitOfLength(1), UnitOfLength(1)));
     Ref<Form> forms[] = {box};
     world->populate({forms, 1});
 

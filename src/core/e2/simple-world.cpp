@@ -68,15 +68,13 @@ struct BoxForm : Form {
     }
 
     // Advances on the world's simulation thread under the world lock.
-    void update() override {
-        mOrientation = glm::normalize(glm::angleAxis(kSpinPerTick, kSpinAxis) * mOrientation);
-    }
+    void update() override { mOrientation = glm::normalize(glm::angleAxis(kSpinPerTick, kSpinAxis) * mOrientation); }
 
     // Called by the world (under its lock) while capturing a moment.
     Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
         glm::mat4 model = glm::translate(glm::mat4(1.f), mPosition) * glm::mat4_cast(mOrientation) * glm::scale(glm::mat4(1.f), mDimensions);
 
-        auto                       moment = referenceTo(new VisualMomentImpl(mUniverse));
+        auto                         moment = referenceTo(new VisualMomentImpl(mUniverse));
         VisualMomentImpl::Renderable r;
         r.mesh      = mMesh;
         r.model     = model;
@@ -88,12 +86,12 @@ struct BoxForm : Form {
 private:
     static constexpr float kSpinPerTick = 0.01f; // radians per simulation tick
 
-    Universe &                  mUniverse;
-    std::shared_ptr<MeshData>   mMesh;
-    glm::vec3                   mPosition;
-    glm::quat                   mOrientation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    glm::vec3                   mDimensions;
-    glm::vec3                   mColor    = {0.70f, 0.74f, 0.80f};
+    Universe &                    mUniverse;
+    std::shared_ptr<MeshData>     mMesh;
+    glm::vec3                     mPosition;
+    glm::quat                     mOrientation = glm::quat(1.f, 0.f, 0.f, 0.f);
+    glm::vec3                     mDimensions;
+    glm::vec3                     mColor    = {0.70f, 0.74f, 0.80f};
     static inline const glm::vec3 kSpinAxis = glm::normalize(glm::vec3(0.3f, 1.0f, 0.2f));
 };
 
@@ -188,8 +186,8 @@ private:
     }
 
     Universe &           mUniverse;
-    std::mutex           mMutex;             // guards mForms and the live state of every form
-    DynaArray<Ref<Form>> mForms;             // guarded by mMutex
+    std::mutex           mMutex; // guards mForms and the live state of every form
+    DynaArray<Ref<Form>> mForms; // guarded by mMutex
     std::thread          mSimThread;
     std::atomic<bool>    mRunning = {false}; // run() guard
     std::atomic<bool>    mStop    = {false}; // simulation-thread stop signal

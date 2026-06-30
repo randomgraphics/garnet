@@ -89,10 +89,10 @@ constexpr uint32_t kMaxLights = 4;
 
 /// Per-frame uniform block, set = 0, binding = 0. std140 layout.
 struct FrameConstants {
-    glm::mat4 viewProj;                ///< proj * view, Vulkan clip space (Y already flipped)
-    glm::vec4 ambient;                 ///< rgb ambient term, a unused
-    glm::vec4 lightPosition[kMaxLights];  ///< xyz world position, w unused
-    glm::vec4 lightColor[kMaxLights];     ///< rgb intensity-scaled color, w unused
+    glm::mat4 viewProj;                  ///< proj * view, Vulkan clip space (Y already flipped)
+    glm::vec4 ambient;                   ///< rgb ambient term, a unused
+    glm::vec4 lightPosition[kMaxLights]; ///< xyz world position, w unused
+    glm::vec4 lightColor[kMaxLights];    ///< rgb intensity-scaled color, w unused
     int32_t   lightCount = 0;
     int32_t   _pad[3]    = {0, 0, 0};
 };

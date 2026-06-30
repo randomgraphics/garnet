@@ -140,8 +140,8 @@ struct VisualDomainImpl : VisualDomain {
         mRenderTarget.setColorTarget(0, frame.view);
 
         // Fill the per-frame constants from the first camera and the lights.
-        FrameConstants fc = {};
-        fc.ambient        = glm::vec4(0.04f, 0.04f, 0.05f, 0.f);
+        FrameConstants fc     = {};
+        fc.ambient            = glm::vec4(0.04f, 0.04f, 0.05f, 0.f);
         const bool haveCamera = moment->cameras.size() > 0;
         if (haveCamera) fc.viewProj = buildViewProj(moment->cameras[0]);
         int lightCount = (int) std::min<size_t>(moment->lights.size(), kMaxLights);
@@ -211,7 +211,7 @@ private:
         auto it = mMeshCache.find(mesh.id);
         if (it != mMeshCache.end()) return &it->second;
 
-        GpuMesh gm;
+        GpuMesh        gm;
         const uint64_t vbSize = mesh.vertices.size() * sizeof(MeshData::Vertex);
         const uint64_t ibSize = mesh.indices.size() * sizeof(uint16_t);
         gm.vb                 = Buffer::create("e2-mesh-vb", {.context = mGpu, .size = vbSize});
@@ -251,17 +251,17 @@ private:
         return proj * view;
     }
 
-    Universe &                                  mUniverse;
-    Ref<OperatingDomain>                        mOs;
-    AutoRef<GpuContext>                         mGpu;
-    AutoRef<Swapchain>                          mSwapchain;
-    AutoRef<Texture>                            mDepth;
-    AutoRef<GpuShader>                          mVs, mPs;
-    AutoRef<Buffer>                             mFrameUbo;
-    RasterTarget                                mRenderTarget;
+    Universe &                                    mUniverse;
+    Ref<OperatingDomain>                          mOs;
+    AutoRef<GpuContext>                           mGpu;
+    AutoRef<Swapchain>                            mSwapchain;
+    AutoRef<Texture>                              mDepth;
+    AutoRef<GpuShader>                            mVs, mPs;
+    AutoRef<Buffer>                               mFrameUbo;
+    RasterTarget                                  mRenderTarget;
     std::unordered_map<UniqueIdentifier, GpuMesh> mMeshCache;
-    uint32_t                                    mWidth  = 1280;
-    uint32_t                                    mHeight = 720;
+    uint32_t                                      mWidth  = 1280;
+    uint32_t                                      mHeight = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN

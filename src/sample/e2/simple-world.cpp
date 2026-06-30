@@ -59,7 +59,7 @@ int main(int argc, const char ** argv) {
     camera->desc.nearPlane    = m(1);
     camera->desc.farPlane     = m(100);
     camera->desc.fovYInDegree = 60.f;
-    Ref<Camera> cameras[] = {camera};
+    Ref<Camera> cameras[]     = {camera};
 
     // Start the world evolving on its own thread.
     world->run();
