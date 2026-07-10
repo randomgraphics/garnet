@@ -50,8 +50,14 @@ private:
 /// Spatial unit of length.
 using WorldLength = UnitOfLength<int64_t>;
 
-/// Spatial location defined by 3D coordinate within the world.
-using WorldPosition = Vector3<WorldLength>;
+/// 2D spatial coordinate within the world.
+using WorldVector2 = Vector2<WorldLength>;
+
+/// 3D spatial coordinate within the world.
+using WorldVector3 = Vector3<WorldLength>;
+
+/// 4D spatial coordinate within the world.
+using WorldVector4 = Vector4<WorldLength>;
 
 // Spatial orientation defined by a rotation primitive.
 using Rotation = glm::quat;

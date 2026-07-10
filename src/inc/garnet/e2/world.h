@@ -40,7 +40,7 @@ struct World : Thing {
     /// Conversion between this world's length unit and physical units, bound to the world's scale.
     ///@{
     float       toMeters(WorldLength v) const { return v.toMeters(metersPerUnit); }
-    glm::vec3   toMeters(const WorldPosition & p) const { return {toMeters(p.x), toMeters(p.y), toMeters(p.z)}; }
+    glm::vec3   toMeters(const WorldVector3 & p) const { return {toMeters(p.x), toMeters(p.y), toMeters(p.z)}; }
     float       toCentimeters(WorldLength v) const { return v.toCentimeters(metersPerUnit); }
     WorldLength fromMeters(float meters) const { return WorldLength::fromMeters(meters, metersPerUnit); }
     WorldLength fromCentimeters(float cm) const { return WorldLength::fromCentimeters(cm, metersPerUnit); }

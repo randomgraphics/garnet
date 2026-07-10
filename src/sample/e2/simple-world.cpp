@@ -44,8 +44,8 @@ int main(int argc, const char ** argv) {
 
     // Build the simple world: a 1m box at the origin and a point light off to one side.
     auto world = Simple::createWorld(universe);
-    auto box   = Simple::createBox(universe, WorldPosition(m(0), m(0), m(0)), Vector3<WorldLength>(m(1), m(1), m(1)));
-    auto light = Simple::createPointLight(universe, WorldPosition(m(3), m(4), m(3)), IntensityRGB {1.f, 0.95f, 0.85f, Candela {80.f}});
+    auto box   = Simple::createBox(universe, WorldVector3(m(0), m(0), m(0)), WorldVector3(m(1), m(1), m(1)));
+    auto light = Simple::createPointLight(universe, WorldVector3(m(3), m(4), m(3)), IntensityRGB {1.f, 0.95f, 0.85f, Candela {80.f}});
 
     Ref<Form> forms[] = {box, light};
     world->populate({forms, 2});
@@ -54,7 +54,7 @@ int main(int argc, const char ** argv) {
     // domain; its observer description is set directly on the mutable `desc` member.
     auto camera = Camera::create({.domain = visual});
     if (!camera) return -1;
-    camera->desc.position     = WorldPosition(m(0), m(0), m(4));
+    camera->desc.position     = WorldVector3(m(0), m(0), m(4));
     camera->desc.orientation  = glm::quat(1.f, 0.f, 0.f, 0.f); // identity -> looking down -Z
     camera->desc.nearPlane    = m(1);
     camera->desc.farPlane     = m(100);

@@ -20,7 +20,7 @@ namespace GN::e2 {
 // Convert engine-space quantities into the plain float/glm types the GPU path consumes.
 // The scale (meters-per-unit) is a per-world runtime value carried by the visual moment.
 
-inline glm::vec3 toMeters(const WorldPosition & p, double metersPerUnit) {
+inline glm::vec3 toMeters(const WorldVector3 & p, double metersPerUnit) {
     return {p.x.toMeters(metersPerUnit), p.y.toMeters(metersPerUnit), p.z.toMeters(metersPerUnit)};
 }
 
@@ -62,15 +62,15 @@ struct VisualMomentImpl : VisualMoment {
         // Transform kept in world units (not a baked float matrix) so the visual domain can do
         // position math (e.g. future camera-relative rebasing) in exact integer space before
         // converting to physical floats.
-        WorldPosition        translation;
+        WorldVector3        translation;
         glm::quat            rotation = {1.f, 0.f, 0.f, 0.f};
-        Vector3<WorldLength> scaling  = {WorldLength(1), WorldLength(1), WorldLength(1)};
+        WorldVector3 scaling  = {WorldLength(1), WorldLength(1), WorldLength(1)};
 
         glm::vec3 baseColor = glm::vec3(0.8f);
     };
 
     struct Light {
-        WorldPosition position;         ///< position in world units
+        WorldVector3 position;         ///< position in world units
         glm::vec3     color = {1, 1, 1}; ///< RGB already pre-scaled by luminous intensity
     };
 

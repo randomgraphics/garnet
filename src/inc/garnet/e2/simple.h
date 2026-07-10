@@ -15,9 +15,9 @@ GN_API Ref<World> createWorld(Universe & universe, double metersPerUnit = 1.0);
 
 /// Create a solid box form, centered at \p position, sized \p dimensions. It slowly spins
 /// while the world runs so that motion is visible across captured visual moments.
-GN_API Ref<Form> createBox(Universe & universe, const WorldPosition & position, const Vector3<WorldLength> & dimensions);
+GN_API Ref<Form> createBox(Universe & universe, const WorldVector3 & position, const WorldVector3 & dimensions);
 
 /// Create a point-light form at \p position emitting light of the given color/intensity.
-GN_API Ref<Form> createPointLight(Universe & universe, const WorldPosition & position, const IntensityRGB & color);
+GN_API Ref<Form> createPointLight(Universe & universe, const WorldVector3 & position, const IntensityRGB & color);
 
 } // namespace GN::e2::Simple

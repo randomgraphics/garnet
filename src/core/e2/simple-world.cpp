@@ -59,7 +59,7 @@ GN::Logger * sLogger = GN::getLogger("GN.e2.simple");
 struct BoxForm : Form {
     GN_REGISTER_RUNTIME_TYPE(Form);
 
-    BoxForm(Universe & u, const WorldPosition & position, const Vector3<WorldLength> & dimensions)
+    BoxForm(Universe & u, const WorldVector3 & position, const WorldVector3 & dimensions)
         : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-box"), mUniverse(u), mPosition(position), mDimensions(dimensions) {
         mMesh     = std::make_shared<MeshData>();
         mMesh->id = id;
@@ -87,9 +87,9 @@ private:
 
     Universe &                    mUniverse;
     std::shared_ptr<MeshData>     mMesh;
-    WorldPosition                 mPosition;
+    WorldVector3                 mPosition;
     glm::quat                     mOrientation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    Vector3<WorldLength>          mDimensions;
+    WorldVector3          mDimensions;
     glm::vec3                     mColor    = {0.70f, 0.74f, 0.80f};
     static inline const glm::vec3 kSpinAxis = glm::normalize(glm::vec3(0.3f, 1.0f, 0.2f));
 };
@@ -98,7 +98,7 @@ private:
 struct PointLightForm : Form {
     GN_REGISTER_RUNTIME_TYPE(Form);
 
-    PointLightForm(Universe & u, const WorldPosition & position, const IntensityRGB & color)
+    PointLightForm(Universe & u, const WorldVector3 & position, const IntensityRGB & color)
         : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mUniverse(u), mPosition(position),
           mColor(glm::vec3(color.r, color.g, color.b) * color.intensity.value) {}
 
@@ -113,7 +113,7 @@ struct PointLightForm : Form {
 
 private:
     Universe &    mUniverse;
-    WorldPosition mPosition;
+    WorldVector3 mPosition;
     glm::vec3     mColor; // pre-scaled by luminous intensity
 };
 
@@ -196,11 +196,11 @@ namespace GN::e2::Simple {
 
 Ref<World> createWorld(Universe & universe, double metersPerUnit) { return referenceTo(new SimpleWorld(universe, metersPerUnit)); }
 
-Ref<Form> createBox(Universe & universe, const WorldPosition & position, const Vector3<WorldLength> & dimensions) {
+Ref<Form> createBox(Universe & universe, const WorldVector3 & position, const WorldVector3 & dimensions) {
     return referenceTo(new BoxForm(universe, position, dimensions));
 }
 
-Ref<Form> createPointLight(Universe & universe, const WorldPosition & position, const IntensityRGB & color) {
+Ref<Form> createPointLight(Universe & universe, const WorldVector3 & position, const IntensityRGB & color) {
     return referenceTo(new PointLightForm(universe, position, color));
 }
 

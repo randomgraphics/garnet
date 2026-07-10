@@ -11,7 +11,7 @@ struct Camera : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
     struct Desc {
-        WorldPosition position;
+        WorldVector3 position;
         Rotation      orientation;
         WorldLength   nearPlane;
         WorldLength   farPlane;
