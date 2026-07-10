@@ -30,12 +30,17 @@ public:
     virtual intptr_t          getModuleHandle() const  = 0;
     virtual Vector2<uint32_t> getClientSize() const    = 0;
 
-    /// Returns a VkSurfaceKHR for the given Vulkan instance (\p vulkanInstanceHandle is
-    /// VkInstance cast to intptr_t). The window owns the surface: it is created and
-    /// destroyed by the window using the same allocator; surfaces are destroyed when
-    /// the window is destroyed. Caller must not destroy the surface. Returns 0 on failure
-    /// or if unsupported. Multiple calls with the same instance return the same handle.
-    virtual intptr_t getVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const = 0;
+    /// Creates a new VkSurfaceKHR for the given Vulkan instance (\p vulkanInstanceHandle is
+    /// VkInstance cast to intptr_t) and returns it as intptr_t. The window keeps no reference
+    /// to the result: ownership passes to the caller, who must pass it back to
+    /// destroyVulkanSurfaceHandle() before the instance is destroyed. Returns 0 on failure or
+    /// if unsupported. Each call creates a distinct surface.
+    virtual intptr_t createVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const = 0;
+
+    /// Destroys a VkSurfaceKHR previously returned by createVulkanSurfaceHandle() for the same
+    /// Vulkan instance. Must be called after any swapchain using the surface is destroyed and
+    /// while the instance is still alive. No-op if either handle is 0.
+    virtual void destroyVulkanSurfaceHandle(intptr_t vulkanInstanceHandle, intptr_t vulkanSurfaceHandle) const = 0;
 
     //@}
 

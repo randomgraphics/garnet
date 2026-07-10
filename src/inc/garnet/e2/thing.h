@@ -73,10 +73,16 @@ struct OperatingDomain : Thing {
     /// Create the operating-system domain (main window + event pump). Returns null on failure.
     GN_API static Ref<OperatingDomain> create(const CreateParameters &);
 
-    /// Native render-surface handle for the given graphics-API instance handle (e.g. a
+    /// Creates a native render surface for the given graphics-API instance handle (e.g. a
     /// VkSurfaceKHR built from a VkInstance, both passed/returned as intptr_t). Returns 0 if
-    /// unsupported. The domain owns the surface; the caller must not destroy it.
-    virtual intptr_t renderSurfaceHandle(intptr_t graphicsInstanceHandle) const = 0;
+    /// unsupported. The domain keeps no reference to it: ownership passes to the caller, who
+    /// must pass it back to destroyRenderSurface() before the instance dies.
+    virtual intptr_t createRenderSurface(intptr_t graphicsInstanceHandle) const = 0;
+
+    /// Destroys a render surface previously returned by createRenderSurface() for the same
+    /// instance. Must be called after any swapchain using the surface is destroyed and while
+    /// the instance is still alive. No-op if either handle is 0.
+    virtual void destroyRenderSurface(intptr_t graphicsInstanceHandle, intptr_t surfaceHandle) const = 0;
 
     /// Current client-area size of the main window, in pixels.
     virtual Vector2<uint32_t> clientSize() const = 0;

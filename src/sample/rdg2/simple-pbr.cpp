@@ -76,7 +76,7 @@ int main(int argc, const char ** argv) {
         window.reset(win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR (rdg2)", .clientWidth = W, .clientHeight = H}));
         if (!window) return -1;
         window->show();
-        surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+        surface = window->createVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
         if (!surface) return -1;
     }
     Swapchain::CreateDesc scDesc {.gpu = gpuContext, .width = W, .height = H};
@@ -146,7 +146,10 @@ int main(int argc, const char ** argv) {
         if (!renderWorks.empty() && renderWorks.back()) swapchain->present(*renderWorks.back());
     }
 
-    // Drain the GPU before AutoRef destructors release Vulkan resources.
+    // Drain the GPU before AutoRef destructors release Vulkan resources, then destroy the
+    // sample-owned surface after the swapchain and before the GPU context (the Vulkan instance).
     gpuContext->waitForIdle();
+    swapchain.clear();
+    if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
     return 0;
 }

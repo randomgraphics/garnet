@@ -10,7 +10,6 @@
 
 struct GLFWwindow;
 struct GLFWmonitor;
-    #include <unordered_map>
 
     #if GN_BUILD_HAS_VULKAN
         #include <vulkan/vulkan.h>
@@ -45,9 +44,6 @@ private:
         mWindow  = nullptr;
         mMonitor = nullptr;
         mClosing = false;
-    #if GN_BUILD_HAS_VULKAN
-        mVulkanSurfaces.clear();
-    #endif
     }
 
     // ********************************
@@ -58,7 +54,8 @@ public:
     intptr_t          getMonitorHandle() const override;
     intptr_t          getWindowHandle() const override;
     intptr_t          getModuleHandle() const override;
-    intptr_t          getVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const override;
+    intptr_t          createVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const override;
+    void              destroyVulkanSurfaceHandle(intptr_t vulkanInstanceHandle, intptr_t vulkanSurfaceHandle) const override;
     Vector2<uint32_t> getClientSize() const override;
     void              show() override;
     void              hide() override;
@@ -75,14 +72,6 @@ private:
     GLFWmonitor * mMonitor;
     bool          mClosing;
     bool          mOwned; ///< true if we created the window; false if attached (unsupported with GLFW)
-
-    #if GN_BUILD_HAS_VULKAN
-    struct VulkanSurfaceEntry {
-        VkSurfaceKHR            surface    = {}; ///< created by glfwCreateWindowSurface
-        PFN_vkDestroySurfaceKHR pfnDestroy = {}; ///< from glfwGetInstanceProcAddress; used in quit()
-    };
-    mutable std::unordered_map<intptr_t, VulkanSurfaceEntry> mVulkanSurfaces; ///< instance (intptr_t) -> entry; window owns, destroyed in quit()
-    #endif
 
     bool createWindow(const WindowCreateParameters & wcp);
 };

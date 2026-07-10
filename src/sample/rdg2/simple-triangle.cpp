@@ -84,8 +84,8 @@ int main(int argc, const char ** argv) {
         if (!window) return -1;
         window->show();
 
-        // Window owns the surface; no need to destroy it explicitly. Destroy swapchain before window.
-        surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+        // The sample owns the surface; it is destroyed after the swapchain, before the GPU context.
+        surface = window->createVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
         if (!surface) return -1;
     }
 
@@ -175,5 +175,9 @@ int main(int argc, const char ** argv) {
         swapchain->present(*colorPassWork);
     }
 
+    // Destroy the surface after the swapchain and before the GPU context (the Vulkan instance).
+    gpuContext->waitForIdle();
+    swapchain.clear();
+    if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
     return 0;
 }

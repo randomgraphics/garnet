@@ -50,7 +50,17 @@ struct VisualDomainImpl : VisualDomain {
     explicit VisualDomainImpl(Universe & u): VisualDomain(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-domain"), mUniverse(u) {}
 
     ~VisualDomainImpl() override {
-        if (mGpu) mGpu->waitForIdle();
+        if (!mGpu) return;
+        mGpu->waitForIdle();
+        // Vulkan teardown must nest: swapchain-image views → swapchain → surface → instance.
+        // Member destruction alone can't order the surface (a raw handle we own) between the
+        // swapchain and the instance, so unwind explicitly while mGpu keeps the instance alive.
+        mRenderTarget.setColorTarget(0, {});
+        mSwapchain.clear();
+        if (mSurface && mOs) {
+            mOs->destroyRenderSurface(mGpu->getVulkanInstanceHandle(), mSurface);
+            mSurface = 0;
+        }
     }
 
     Universe & universe() const override { return mUniverse; }
@@ -64,9 +74,10 @@ struct VisualDomainImpl : VisualDomain {
             return false;
         }
 
-        intptr_t surface = 0;
         if (mOs) {
-            surface       = mOs->renderSurfaceHandle(mGpu->getVulkanInstanceHandle());
+            // The domain owns this surface from here on; the destructor destroys it between
+            // the swapchain and the GPU context (i.e. the Vulkan instance).
+            mSurface      = mOs->createRenderSurface(mGpu->getVulkanInstanceHandle());
             auto clientSz = mOs->clientSize();
             if (clientSz.x && clientSz.y) {
                 mWidth  = clientSz.x;
@@ -76,7 +87,7 @@ struct VisualDomainImpl : VisualDomain {
 
         Swapchain::CreateDesc scDesc;
         scDesc.setGpu(mGpu).setName("e2-swapchain").setDimensions(mWidth, mHeight);
-        if (surface) scDesc.setSurface(surface);
+        if (mSurface) scDesc.setSurface(mSurface);
         mSwapchain = Swapchain::create(scDesc);
         if (!mSwapchain) {
             GN_ERROR(sLogger)("Failed to create swapchain.");
@@ -183,7 +194,7 @@ struct VisualDomainImpl : VisualDomain {
                 // Moment transforms stay in world units; convert to float meters only here.
                 DrawConstants dc;
                 dc.model     = glm::translate(glm::mat4(1.f), toMeters(r.translation, moment->metersPerUnit)) * glm::mat4_cast(glm::normalize(r.rotation)) *
-                           glm::scale(glm::mat4(1.f), toMeters(r.scaling, moment->metersPerUnit));
+                               glm::scale(glm::mat4(1.f), toMeters(r.scaling, moment->metersPerUnit));
                 dc.baseColor = glm::vec4(r.baseColor, 1.f);
 
                 GpuRaster::DrawParameters dp;
@@ -256,6 +267,7 @@ private:
     Universe &                                    mUniverse;
     Ref<OperatingDomain>                          mOs;
     AutoRef<GpuContext>                           mGpu;
+    intptr_t                                      mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
     AutoRef<Swapchain>                            mSwapchain;
     AutoRef<Texture>                              mDepth;
     AutoRef<GpuShader>                            mVs, mPs;

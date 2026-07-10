@@ -33,8 +33,12 @@ struct OperatingDomainImpl : OperatingDomain {
         return true;
     }
 
-    intptr_t renderSurfaceHandle(intptr_t graphicsInstanceHandle) const override {
-        return mWindow ? mWindow->getVulkanSurfaceHandle(graphicsInstanceHandle) : 0;
+    intptr_t createRenderSurface(intptr_t graphicsInstanceHandle) const override {
+        return mWindow ? mWindow->createVulkanSurfaceHandle(graphicsInstanceHandle) : 0;
+    }
+
+    void destroyRenderSurface(intptr_t graphicsInstanceHandle, intptr_t surfaceHandle) const override {
+        if (mWindow) mWindow->destroyVulkanSurfaceHandle(graphicsInstanceHandle, surfaceHandle);
     }
 
     Vector2<uint32_t> clientSize() const override { return mWindow ? mWindow->getClientSize() : Vector2<uint32_t>(0, 0); }
