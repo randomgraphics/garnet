@@ -1,7 +1,7 @@
 // simple-world.cpp — engine2 sample demonstrating the world / visual-moment workflow.
 //
-// It builds a Simple world containing one spinning box and one point light, starts the
-// world running on its own background simulation thread, then — on the main thread — repeatedly
+// It builds a Simple world containing one spinning box and one point light, runs the world's
+// blocking game loop on a thread owned by the sample, then — on the main thread — repeatedly
 // captures a self-contained visual moment and hands it to the official VisualDomain to render.
 // Simulation cadence and rendering cadence are fully independent; the only thing shared
 // between them is the snapshot.
@@ -61,8 +61,9 @@ int main(int argc, const char ** argv) {
     camera->desc.fovYInDegree = 60.f;
     Ref<Camera> cameras[]     = {camera};
 
-    // Start the world evolving on its own thread.
-    world->run();
+    // World::run() blocks, so the sample owns the threading policy: run the simulation on a
+    // dedicated thread to keep its cadence independent of the render loop below.
+    std::thread simThread([&world] { world->run(); });
 
     const int totalFrames = testMode ? 60 : 0; // 0 = run until the window closes
     for (int frame = 0; totalFrames == 0 || frame < totalFrames; ++frame) {
@@ -77,6 +78,9 @@ int main(int argc, const char ** argv) {
 
         if (testMode) std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
+
+    world->stop();
+    simThread.join();
 
     return 0;
 }

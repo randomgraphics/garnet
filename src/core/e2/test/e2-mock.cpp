@@ -16,6 +16,8 @@ struct MockWorld : World {
 
     void run() override {}
 
+    void stop() override {}
+
     auto captureVisualMoment(const VisualMoment::CaptureParameters &) -> AutoRef<VisualMoment> override { return {}; }
 };
 

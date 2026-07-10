@@ -64,11 +64,16 @@ TEST_CASE("E2 Simple: the world evolves on its own cadence, independent of captu
 
     VisualMoment::CaptureParameters cp; // no cameras needed for this check
 
-    world->run();
+    // run() blocks, so the test provides the thread — mirroring how a real client drives a world.
+    std::thread simThread([&world] { world->run(); });
 
     auto firstMoment = world->captureVisualMoment(cp);
     std::this_thread::sleep_for(std::chrono::milliseconds(120)); // several simulation ticks
     auto secondMoment = world->captureVisualMoment(cp);
+
+    // Join before any assertion: a failing REQUIRE throws, and an unjoined thread terminates.
+    world->stop();
+    simThread.join();
 
     auto * first  = RuntimeType::cast<VisualMomentImpl>(firstMoment.get());
     auto * second = RuntimeType::cast<VisualMomentImpl>(secondMoment.get());

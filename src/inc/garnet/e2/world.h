@@ -46,8 +46,13 @@ struct World : Thing {
     WorldLength fromCentimeters(float cm) const { return WorldLength::fromCentimeters(cm, metersPerUnit); }
     ///@}
 
-    /// The main entry point (game-loop) of this world.
+    /// The main entry point (game-loop) of this world. Blocks the calling thread until stop()
+    /// is called. The world imposes no threading policy of its own; callers that want the
+    /// simulation to evolve concurrently should invoke run() on a thread they own.
     virtual void run() = 0;
+
+    /// Signal the game loop to exit. Can be called from any thread; run() returns shortly after.
+    virtual void stop() = 0;
 
     /// Add new actors to the world. Can be called from any thread.
     virtual void populate(ArrayView<Ref<Form>>) = 0;

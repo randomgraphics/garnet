@@ -1,6 +1,6 @@
 // simple-world.cpp — a minimal concrete world used to verify the engine2 world and
 // visual-moment workflow. It contains a couple of trivial form types (a spinning box mesh
-// and a point light) and a world that advances them on its own background-thread cadence
+// and a point light) and a world whose blocking run() loop advances them at a fixed cadence
 // while exposing thread-safe snapshot capture. The actual rendering of the captured moment
 // is the responsibility of the official VisualDomain (see visual.cpp).
 
@@ -121,8 +121,9 @@ private:
 // World
 // ---------------------------------------------------------------------------
 //
-// Threading model: run() starts a dedicated simulation thread that advances every form at
-// a fixed timestep. populate() and captureVisualMoment() may be called from any thread; the
+// Threading model: run() executes the fixed-timestep simulation loop synchronously on the
+// calling thread until stop() is called — the world owns no thread; the caller decides where
+// the loop lives. populate() and captureVisualMoment() may be called from any thread; the
 // world's mutex is the synchronization boundary that guards both the form collection and
 // every form's live state, so a captured moment is always internally consistent. The
 // renderer observes the world only through these self-contained snapshots, never through
@@ -134,11 +135,6 @@ struct SimpleWorld : World {
     SimpleWorld(Universe & u, double metersPerUnit_)
         : World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world", metersPerUnit_), mUniverse(u) {}
 
-    ~SimpleWorld() override {
-        mStop.store(true, std::memory_order_relaxed);
-        if (mSimThread.joinable()) mSimThread.join();
-    }
-
     void populate(ArrayView<Ref<Form>> forms) override {
         std::lock_guard<std::mutex> lock(mMutex);
         for (auto & f : forms) {
@@ -148,12 +144,22 @@ struct SimpleWorld : World {
 
     void run() override {
         bool expected = false;
-        if (!mRunning.compare_exchange_strong(expected, true)) {
-            GN_WARN(sLogger)("SimpleWorld::run() called more than once; ignored.");
+        if (!mRunning.compare_exchange_strong(expected, true)) GN_UNLIKELY {
+            GN_WARN(sLogger)("SimpleWorld::run() called while already running; ignored.");
             return;
         }
-        mSimThread = std::thread([this] { simLoop(); });
+        using namespace std::chrono;
+        constexpr auto kTimestep = milliseconds(16); // ~60 Hz fixed timestep
+        while (!mStop.load(std::memory_order_relaxed)) {
+            {
+                std::lock_guard<std::mutex> lock(mMutex);
+                for (auto & f : mForms) f->update();
+            }
+            std::this_thread::sleep_for(kTimestep);
+        }
     }
+
+    void stop() override { mStop.store(true, std::memory_order_relaxed); }
 
     Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & paramsIn) override {
         // Stamp this world's scale so the aggregate moment and every form contribution carry it.
@@ -177,24 +183,11 @@ struct SimpleWorld : World {
     }
 
 private:
-    void simLoop() {
-        using namespace std::chrono;
-        constexpr auto kTimestep = milliseconds(16); // ~60 Hz fixed timestep
-        while (!mStop.load(std::memory_order_relaxed)) {
-            {
-                std::lock_guard<std::mutex> lock(mMutex);
-                for (auto & f : mForms) f->update();
-            }
-            std::this_thread::sleep_for(kTimestep);
-        }
-    }
-
     Universe &           mUniverse;
     std::mutex           mMutex; // guards mForms and the live state of every form
     DynaArray<Ref<Form>> mForms; // guarded by mMutex
-    std::thread          mSimThread;
-    std::atomic<bool>    mRunning = {false}; // run() guard
-    std::atomic<bool>    mStop    = {false}; // simulation-thread stop signal
+    std::atomic<bool>    mRunning = {false}; // concurrent-run() guard
+    std::atomic<bool>    mStop    = {false}; // game-loop stop signal
 };
 
 } // namespace
