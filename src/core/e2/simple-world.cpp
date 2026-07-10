@@ -59,9 +59,8 @@ GN::Logger * sLogger = GN::getLogger("GN.e2.simple");
 struct BoxForm : Form {
     GN_REGISTER_RUNTIME_TYPE(Form);
 
-    BoxForm(Universe & u, const WorldPosition & position, const Vector3<UnitOfLength> & dimensions)
-        : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-box"), mUniverse(u), mPosition(toVec3(position)),
-          mDimensions(toMeters(dimensions.x), toMeters(dimensions.y), toMeters(dimensions.z)) {
+    BoxForm(Universe & u, const WorldPosition & position, const Vector3<WorldLength> & dimensions)
+        : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-box"), mUniverse(u), mPosition(position), mDimensions(dimensions) {
         mMesh     = std::make_shared<MeshData>();
         mMesh->id = id;
         buildUnitBoxMesh(*mMesh);
@@ -71,14 +70,14 @@ struct BoxForm : Form {
     void update() override { mOrientation = glm::normalize(glm::angleAxis(kSpinPerTick, kSpinAxis) * mOrientation); }
 
     // Called by the world (under its lock) while capturing a moment.
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
-        glm::mat4 model = glm::translate(glm::mat4(1.f), mPosition) * glm::mat4_cast(mOrientation) * glm::scale(glm::mat4(1.f), mDimensions);
-
-        auto                         moment = referenceTo(new VisualMomentImpl(mUniverse));
+    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
+        auto                         moment = referenceTo(new VisualMomentImpl(mUniverse, params.metersPerUnit));
         VisualMomentImpl::Renderable r;
-        r.mesh      = mMesh;
-        r.model     = model;
-        r.baseColor = mColor;
+        r.mesh        = mMesh;
+        r.translation = mPosition;
+        r.rotation    = mOrientation;
+        r.scaling     = mDimensions;
+        r.baseColor   = mColor;
         moment->renderables.append(r);
         return moment;
     }
@@ -88,9 +87,9 @@ private:
 
     Universe &                    mUniverse;
     std::shared_ptr<MeshData>     mMesh;
-    glm::vec3                     mPosition;
+    WorldPosition                 mPosition;
     glm::quat                     mOrientation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    glm::vec3                     mDimensions;
+    Vector3<WorldLength>          mDimensions;
     glm::vec3                     mColor    = {0.70f, 0.74f, 0.80f};
     static inline const glm::vec3 kSpinAxis = glm::normalize(glm::vec3(0.3f, 1.0f, 0.2f));
 };
@@ -100,11 +99,11 @@ struct PointLightForm : Form {
     GN_REGISTER_RUNTIME_TYPE(Form);
 
     PointLightForm(Universe & u, const WorldPosition & position, const IntensityRGB & color)
-        : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mUniverse(u), mPosition(toVec3(position)),
+        : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mUniverse(u), mPosition(position),
           mColor(glm::vec3(color.r, color.g, color.b) * color.intensity.value) {}
 
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
-        auto                    moment = referenceTo(new VisualMomentImpl(mUniverse));
+    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
+        auto                    moment = referenceTo(new VisualMomentImpl(mUniverse, params.metersPerUnit));
         VisualMomentImpl::Light l;
         l.position = mPosition;
         l.color    = mColor;
@@ -113,9 +112,9 @@ struct PointLightForm : Form {
     }
 
 private:
-    Universe & mUniverse;
-    glm::vec3  mPosition;
-    glm::vec3  mColor; // pre-scaled by luminous intensity
+    Universe &    mUniverse;
+    WorldPosition mPosition;
+    glm::vec3     mColor; // pre-scaled by luminous intensity
 };
 
 // ---------------------------------------------------------------------------
@@ -132,7 +131,8 @@ private:
 struct SimpleWorld : World {
     GN_REGISTER_RUNTIME_TYPE(World);
 
-    explicit SimpleWorld(Universe & u): World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world"), mUniverse(u) {}
+    SimpleWorld(Universe & u, double metersPerUnit_)
+        : World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world", metersPerUnit_), mUniverse(u) {}
 
     ~SimpleWorld() override {
         mStop.store(true, std::memory_order_relaxed);
@@ -155,8 +155,12 @@ struct SimpleWorld : World {
         mSimThread = std::thread([this] { simLoop(); });
     }
 
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
-        auto moment = referenceTo(new VisualMomentImpl(mUniverse));
+    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & paramsIn) override {
+        // Stamp this world's scale so the aggregate moment and every form contribution carry it.
+        auto params          = paramsIn;
+        params.metersPerUnit = metersPerUnit;
+
+        auto moment = referenceTo(new VisualMomentImpl(mUniverse, metersPerUnit));
 
         // Snapshot the observing cameras into the moment so the snapshot is self-contained.
         for (auto & cam : params.cameras) {
@@ -197,9 +201,9 @@ private:
 
 namespace GN::e2::Simple {
 
-Ref<World> createWorld(Universe & universe) { return referenceTo(new SimpleWorld(universe)); }
+Ref<World> createWorld(Universe & universe, double metersPerUnit) { return referenceTo(new SimpleWorld(universe, metersPerUnit)); }
 
-Ref<Form> createBox(Universe & universe, const WorldPosition & position, const Vector3<UnitOfLength> & dimensions) {
+Ref<Form> createBox(Universe & universe, const WorldPosition & position, const Vector3<WorldLength> & dimensions) {
     return referenceTo(new BoxForm(universe, position, dimensions));
 }
 

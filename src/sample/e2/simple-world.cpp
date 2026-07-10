@@ -23,7 +23,7 @@ namespace {
 // A concrete universe; the base universe has a protected constructor.
 struct SampleUniverse : Universe {};
 
-UnitOfLength m(int64_t meters) { return UnitOfLength(meters); }
+WorldLength m(int64_t meters) { return WorldLength(meters); }
 } // namespace
 
 int main(int argc, const char ** argv) {
@@ -44,7 +44,7 @@ int main(int argc, const char ** argv) {
 
     // Build the simple world: a 1m box at the origin and a point light off to one side.
     auto world = Simple::createWorld(universe);
-    auto box   = Simple::createBox(universe, WorldPosition(m(0), m(0), m(0)), Vector3<UnitOfLength>(m(1), m(1), m(1)));
+    auto box   = Simple::createBox(universe, WorldPosition(m(0), m(0), m(0)), Vector3<WorldLength>(m(1), m(1), m(1)));
     auto light = Simple::createPointLight(universe, WorldPosition(m(3), m(4), m(3)), IntensityRGB {1.f, 0.95f, 0.85f, Candela {80.f}});
 
     Ref<Form> forms[] = {box, light};

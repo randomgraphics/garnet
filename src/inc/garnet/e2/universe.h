@@ -12,7 +12,7 @@ struct Universe {
     GN_NO_COPY(Universe);
     GN_NO_MOVE(Universe);
 
-    /// @brief Generate an identifer unique within the entire universe,
+    /// @brief Generate an identifier unique within the entire universe,
     UniqueIdentifier generateUniqueIdentifier() {
         auto old = mNextID.load(std::memory_order_relaxed);
         for (;;) {

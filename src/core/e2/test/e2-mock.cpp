@@ -10,7 +10,7 @@ struct MockUniverse : Universe {};
 struct MockWorld : World {
     GN_REGISTER_RUNTIME_TYPE(World);
 
-    MockWorld(Universe & u): World(TYPE_INFO(), u.generateUniqueIdentifier(), "hello world") {}
+    MockWorld(Universe & u): World(TYPE_INFO(), u.generateUniqueIdentifier(), "hello world", 1.0) {}
 
     void populate(ArrayView<Ref<Form>>) override {}
 

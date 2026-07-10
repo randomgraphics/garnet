@@ -17,13 +17,12 @@ namespace GN::e2 {
 // ---------------------------------------------------------------------------
 // Unit helpers
 // ---------------------------------------------------------------------------
-// The Simple world treats one UnitOfLength as one meter for the purpose of this
-// verification demo. These helpers convert engine-space quantities into the plain
-// float/glm types the GPU path consumes.
+// Convert engine-space quantities into the plain float/glm types the GPU path consumes.
+// The scale (meters-per-unit) is a per-world runtime value carried by the visual moment.
 
-inline float toMeters(UnitOfLength v) { return (float) v._value; }
-
-inline glm::vec3 toVec3(const WorldPosition & p) { return {toMeters(p.x), toMeters(p.y), toMeters(p.z)}; }
+inline glm::vec3 toMeters(const WorldPosition & p, double metersPerUnit) {
+    return {p.x.toMeters(metersPerUnit), p.y.toMeters(metersPerUnit), p.z.toMeters(metersPerUnit)};
+}
 
 // ---------------------------------------------------------------------------
 // MeshData — CPU-side geometry shared across frames
@@ -59,20 +58,28 @@ struct VisualMomentImpl : VisualMoment {
 
     struct Renderable {
         std::shared_ptr<const MeshData> mesh;
-        glm::mat4                       model     = glm::mat4(1.f);
-        glm::vec3                       baseColor = glm::vec3(0.8f);
+
+        // Transform kept in world units (not a baked float matrix) so the visual domain can do
+        // position math (e.g. future camera-relative rebasing) in exact integer space before
+        // converting to physical floats.
+        WorldPosition        translation;
+        glm::quat            rotation = {1.f, 0.f, 0.f, 0.f};
+        Vector3<WorldLength> scaling  = {WorldLength(1), WorldLength(1), WorldLength(1)};
+
+        glm::vec3 baseColor = glm::vec3(0.8f);
     };
 
     struct Light {
-        glm::vec3 position = {};        ///< world-space position
-        glm::vec3 color    = {1, 1, 1}; ///< RGB already pre-scaled by luminous intensity
+        WorldPosition position;         ///< position in world units
+        glm::vec3     color = {1, 1, 1}; ///< RGB already pre-scaled by luminous intensity
     };
 
     DynaArray<Camera::Desc> cameras;
     DynaArray<Renderable>   renderables;
     DynaArray<Light>        lights;
 
-    explicit VisualMomentImpl(Universe & u): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment") {}
+    VisualMomentImpl(Universe & u, double metersPerUnit)
+        : VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment", metersPerUnit) {}
 
     /// Append another moment's renderables and lights into this one.
     void merge(const VisualMomentImpl & other) {

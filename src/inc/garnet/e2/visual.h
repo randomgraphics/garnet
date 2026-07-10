@@ -13,8 +13,8 @@ struct Camera : Thing {
     struct Desc {
         WorldPosition position;
         Rotation      orientation;
-        UnitOfLength  nearPlane;
-        UnitOfLength  farPlane;
+        WorldLength   nearPlane;
+        WorldLength   farPlane;
 
         /// Set to positive for perspective camera, 0 for orthogonal camera.
         /// Anything out side of [0, 180] are invalid and will be clamped back into valid range.
@@ -42,7 +42,20 @@ struct VisualMoment : Thing {
         Ref<VisualDomain>      domain;
         ArrayView<Ref<Camera>> cameras;
         UnitOfTime             expectedRenderTimeShift = {};
+
+        /// Physical size of one WorldLength unit, in meters. Stamped by the capturing world
+        /// before fanning out to forms, so every sub-moment inherits the world's scale.
+        double metersPerUnit = 1.0;
     };
+
+    /// Physical size of one WorldLength unit for all lengths carried by this moment, in meters.
+    /// Lengths stay in integer world units until the visual domain converts them, so that future
+    /// absolute-to-camera-relative math can happen in exact integer space before scaling.
+    const double metersPerUnit;
+
+protected:
+    VisualMoment(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, double metersPerUnit_)
+        : Thing(type, id, name), metersPerUnit(metersPerUnit_) {}
 };
 
 struct VisualDomain : Thing {

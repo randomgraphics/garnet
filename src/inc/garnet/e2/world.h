@@ -31,7 +31,20 @@ struct World : Thing {
 
     struct CreateParameters {
         Universe & universe;
+        double     metersPerUnit = 1.0; ///< physical size of one WorldLength unit, in meters.
     };
+
+    /// Physical size of one WorldLength unit in this world, in meters. Constant for the world's lifetime.
+    const double metersPerUnit;
+
+    /// Conversion between this world's length unit and physical units, bound to the world's scale.
+    ///@{
+    float       toMeters(WorldLength v) const { return v.toMeters(metersPerUnit); }
+    glm::vec3   toMeters(const WorldPosition & p) const { return {toMeters(p.x), toMeters(p.y), toMeters(p.z)}; }
+    float       toCentimeters(WorldLength v) const { return v.toCentimeters(metersPerUnit); }
+    WorldLength fromMeters(float meters) const { return WorldLength::fromMeters(meters, metersPerUnit); }
+    WorldLength fromCentimeters(float cm) const { return WorldLength::fromCentimeters(cm, metersPerUnit); }
+    ///@}
 
     /// The main entry point (game-loop) of this world.
     virtual void run() = 0;
@@ -41,6 +54,13 @@ struct World : Thing {
 
     /// Briefly freeze the world, snap a visual moment, then continue. Can be called from any thread.
     virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
+
+protected:
+    World(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, double metersPerUnit_)
+        : Thing(type, id, name), metersPerUnit(metersPerUnit_) {
+        // zero/negative/NaN scale is a programming error; NaN fails the > comparison too.
+        GN_ASSERT(metersPerUnit > 0.0);
+    }
 };
 
 } // namespace GN::e2

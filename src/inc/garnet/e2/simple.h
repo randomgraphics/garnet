@@ -10,11 +10,12 @@
 namespace GN::e2::Simple {
 
 /// Create an empty simple world. Call World::run() to start its background simulation.
-GN_API Ref<World> createWorld(Universe & universe);
+/// \p metersPerUnit defines the physical size of one WorldLength unit in this world.
+GN_API Ref<World> createWorld(Universe & universe, double metersPerUnit = 1.0);
 
 /// Create a solid box form, centered at \p position, sized \p dimensions. It slowly spins
 /// while the world runs so that motion is visible across captured visual moments.
-GN_API Ref<Form> createBox(Universe & universe, const WorldPosition & position, const Vector3<UnitOfLength> & dimensions);
+GN_API Ref<Form> createBox(Universe & universe, const WorldPosition & position, const Vector3<WorldLength> & dimensions);
 
 /// Create a point-light form at \p position emitting light of the given color/intensity.
 GN_API Ref<Form> createPointLight(Universe & universe, const WorldPosition & position, const IntensityRGB & color);

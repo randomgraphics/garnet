@@ -143,10 +143,10 @@ struct VisualDomainImpl : VisualDomain {
         FrameConstants fc     = {};
         fc.ambient            = glm::vec4(0.04f, 0.04f, 0.05f, 0.f);
         const bool haveCamera = moment->cameras.size() > 0;
-        if (haveCamera) fc.viewProj = buildViewProj(moment->cameras[0]);
+        if (haveCamera) fc.viewProj = buildViewProj(moment->cameras[0], moment->metersPerUnit);
         int lightCount = (int) std::min<size_t>(moment->lights.size(), kMaxLights);
         for (int i = 0; i < lightCount; ++i) {
-            fc.lightPosition[i] = glm::vec4(moment->lights[i].position, 1.f);
+            fc.lightPosition[i] = glm::vec4(toMeters(moment->lights[i].position, moment->metersPerUnit), 1.f);
             fc.lightColor[i]    = glm::vec4(moment->lights[i].color, 0.f);
         }
         fc.lightCount = lightCount;
@@ -180,8 +180,10 @@ struct VisualDomainImpl : VisualDomain {
                 geom.indices    = RasterGeometry::GeometryBuffer {.buffer = gpuMesh->ib, .offset = 0, .stride = sizeof(uint16_t)};
                 geom.indexCount = gpuMesh->indexCount;
 
+                // Moment transforms stay in world units; convert to float meters only here.
                 DrawConstants dc;
-                dc.model     = r.model;
+                dc.model     = glm::translate(glm::mat4(1.f), toMeters(r.translation, moment->metersPerUnit)) * glm::mat4_cast(glm::normalize(r.rotation)) *
+                           glm::scale(glm::mat4(1.f), toMeters(r.scaling, moment->metersPerUnit));
                 dc.baseColor = glm::vec4(r.baseColor, 1.f);
 
                 GpuRaster::DrawParameters dp;
@@ -230,8 +232,8 @@ private:
         return &inserted.first->second;
     }
 
-    glm::mat4 buildViewProj(const Camera::Desc & cam) const {
-        glm::vec3 eye         = toVec3(cam.position);
+    glm::mat4 buildViewProj(const Camera::Desc & cam, double metersPerUnit) const {
+        glm::vec3 eye         = toMeters(cam.position, metersPerUnit);
         glm::quat orientation = cam.orientation;
         if (glm::dot(orientation, orientation) < 1e-8f) orientation = glm::quat(1.f, 0.f, 0.f, 0.f);
         orientation = glm::normalize(orientation);
@@ -241,8 +243,8 @@ private:
 
         float aspect = (mHeight > 0) ? (float) mWidth / (float) mHeight : 1.f;
         float fovY   = glm::radians(std::clamp(cam.fovYInDegree, 1.f, 179.f));
-        float nearP  = toMeters(cam.nearPlane);
-        float farP   = toMeters(cam.farPlane);
+        float nearP  = cam.nearPlane.toMeters(metersPerUnit);
+        float farP   = cam.farPlane.toMeters(metersPerUnit);
         if (nearP <= 0.f) nearP = 0.1f;
         if (farP <= nearP) farP = nearP + 1000.f;
 
