@@ -37,11 +37,28 @@ public:
     /// one unit in meters. It is caller's responsibility to ensure the value is within reasonable
     /// range to avoid overflow or underflow.
     ///@{
-    constexpr float toMeters(double metersPerUnit) const { return (float) ((double) _value * metersPerUnit); }
-    constexpr float toCentimeters(double metersPerUnit) const { return (float) ((double) _value * metersPerUnit * 100.0); }
-    static constexpr UnitOfLength fromMeters(float meters, double metersPerUnit) { return UnitOfLength(roundToStorage((double) meters / metersPerUnit)); }
-    static constexpr UnitOfLength fromCentimeters(float cm, double metersPerUnit) { return UnitOfLength(roundToStorage((double) cm / 100.0 / metersPerUnit)); }
+    template<typename T = float>
+    constexpr T toMeters(double metersPerUnit) const {
+        return (T) ((double) _value * metersPerUnit);
+    }
+
+    template<typename T = float>
+    constexpr T toCentimeters(double metersPerUnit) const {
+        return (T) ((double) _value * metersPerUnit * 100.0);
+    }
+
+    template<typename T = float>
+    static constexpr UnitOfLength fromMeters(T meters, double metersPerUnit) {
+        return UnitOfLength(roundToStorage((double) meters / metersPerUnit));
+    }
+
+    template<typename T = float>
+    static constexpr UnitOfLength fromCentimeters(T cm, double metersPerUnit) {
+        return UnitOfLength(roundToStorage((double) cm / 100.0 / metersPerUnit));
+    }
     ///@}
+
+    static constexpr UnitOfLength ZERO() { return UnitOfLength(0); }
 
 private:
     Storage _value = 0;

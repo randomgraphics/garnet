@@ -22,9 +22,7 @@ using namespace GN::e2;
 namespace {
 // A concrete universe; the base universe has a protected constructor.
 struct SampleUniverse : Universe {};
-
-WorldLength m(int64_t meters) { return WorldLength(meters); }
-} // namespace
+}; // namespace
 
 int main(int argc, const char ** argv) {
     bool testMode = argc > 1 && argv[1][0] == 't';
@@ -44,6 +42,7 @@ int main(int argc, const char ** argv) {
 
     // Build the simple world: a 1m box at the origin and a point light off to one side.
     auto world = Simple::createWorld(universe);
+    auto m     = [&](int distance) { return world->fromMeters((float) distance); };
     auto box   = Simple::createBox(universe, WorldVector3(m(0), m(0), m(0)), WorldVector3(m(1), m(1), m(1)));
     auto light = Simple::createPointLight(universe, WorldVector3(m(3), m(4), m(3)), IntensityRGB {1.f, 0.95f, 0.85f, Candela {80.f}});
 

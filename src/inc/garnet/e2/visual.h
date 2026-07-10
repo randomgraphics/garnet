@@ -12,9 +12,9 @@ struct Camera : Thing {
 
     struct Desc {
         WorldVector3 position;
-        Rotation      orientation;
-        WorldLength   nearPlane;
-        WorldLength   farPlane;
+        Rotation     orientation;
+        WorldLength  nearPlane;
+        WorldLength  farPlane;
 
         /// Set to positive for perspective camera, 0 for orthogonal camera.
         /// Anything out side of [0, 180] are invalid and will be clamped back into valid range.

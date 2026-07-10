@@ -87,9 +87,9 @@ private:
 
     Universe &                    mUniverse;
     std::shared_ptr<MeshData>     mMesh;
-    WorldVector3                 mPosition;
+    WorldVector3                  mPosition;
     glm::quat                     mOrientation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    WorldVector3          mDimensions;
+    WorldVector3                  mDimensions;
     glm::vec3                     mColor    = {0.70f, 0.74f, 0.80f};
     static inline const glm::vec3 kSpinAxis = glm::normalize(glm::vec3(0.3f, 1.0f, 0.2f));
 };
@@ -112,9 +112,9 @@ struct PointLightForm : Form {
     }
 
 private:
-    Universe &    mUniverse;
+    Universe &   mUniverse;
     WorldVector3 mPosition;
-    glm::vec3     mColor; // pre-scaled by luminous intensity
+    glm::vec3    mColor; // pre-scaled by luminous intensity
 };
 
 // ---------------------------------------------------------------------------
@@ -132,8 +132,7 @@ private:
 struct SimpleWorld : World {
     GN_REGISTER_RUNTIME_TYPE(World);
 
-    SimpleWorld(Universe & u, double metersPerUnit_)
-        : World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world", metersPerUnit_), mUniverse(u) {}
+    SimpleWorld(Universe & u, double metersPerUnit_): World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world", metersPerUnit_), mUniverse(u) {}
 
     void populate(ArrayView<Ref<Form>> forms) override {
         std::lock_guard<std::mutex> lock(mMutex);
@@ -145,9 +144,9 @@ struct SimpleWorld : World {
     void run() override {
         bool expected = false;
         if (!mRunning.compare_exchange_strong(expected, true)) GN_UNLIKELY {
-            GN_WARN(sLogger)("SimpleWorld::run() called while already running; ignored.");
-            return;
-        }
+                GN_WARN(sLogger)("SimpleWorld::run() called while already running; ignored.");
+                return;
+            }
         using namespace std::chrono;
         constexpr auto kTimestep = milliseconds(16); // ~60 Hz fixed timestep
         while (!mStop.load(std::memory_order_relaxed)) {
@@ -184,8 +183,8 @@ struct SimpleWorld : World {
 
 private:
     Universe &           mUniverse;
-    std::mutex           mMutex; // guards mForms and the live state of every form
-    DynaArray<Ref<Form>> mForms; // guarded by mMutex
+    std::mutex           mMutex;             // guards mForms and the live state of every form
+    DynaArray<Ref<Form>> mForms;             // guarded by mMutex
     std::atomic<bool>    mRunning = {false}; // concurrent-run() guard
     std::atomic<bool>    mStop    = {false}; // game-loop stop signal
 };

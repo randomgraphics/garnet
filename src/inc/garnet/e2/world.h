@@ -37,6 +37,8 @@ struct World : Thing {
     /// Physical size of one WorldLength unit in this world, in meters. Constant for the world's lifetime.
     const double metersPerUnit;
 
+    const WorldLength ONE_METER = WorldLength::fromMeters(1.0f, metersPerUnit);
+
     /// Conversion between this world's length unit and physical units, bound to the world's scale.
     ///@{
     float       toMeters(WorldLength v) const { return v.toMeters(metersPerUnit); }

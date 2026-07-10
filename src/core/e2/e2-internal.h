@@ -62,24 +62,23 @@ struct VisualMomentImpl : VisualMoment {
         // Transform kept in world units (not a baked float matrix) so the visual domain can do
         // position math (e.g. future camera-relative rebasing) in exact integer space before
         // converting to physical floats.
-        WorldVector3        translation;
-        glm::quat            rotation = {1.f, 0.f, 0.f, 0.f};
+        WorldVector3 translation;
+        glm::quat    rotation = {1.f, 0.f, 0.f, 0.f};
         WorldVector3 scaling  = {WorldLength(1), WorldLength(1), WorldLength(1)};
 
         glm::vec3 baseColor = glm::vec3(0.8f);
     };
 
     struct Light {
-        WorldVector3 position;         ///< position in world units
-        glm::vec3     color = {1, 1, 1}; ///< RGB already pre-scaled by luminous intensity
+        WorldVector3 position;          ///< position in world units
+        glm::vec3    color = {1, 1, 1}; ///< RGB already pre-scaled by luminous intensity
     };
 
     DynaArray<Camera::Desc> cameras;
     DynaArray<Renderable>   renderables;
     DynaArray<Light>        lights;
 
-    VisualMomentImpl(Universe & u, double metersPerUnit)
-        : VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment", metersPerUnit) {}
+    VisualMomentImpl(Universe & u, double metersPerUnit): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment", metersPerUnit) {}
 
     /// Append another moment's renderables and lights into this one.
     void merge(const VisualMomentImpl & other) {
