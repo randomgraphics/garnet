@@ -6,6 +6,8 @@
 
 #include "e2/e2-internal.h" // VisualMomentImpl (internal), reachable via the src/core include path.
 
+#include <glm/geometric.hpp>
+
 #include <chrono>
 #include <thread>
 
@@ -50,6 +52,28 @@ TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment
     REQUIRE(impl->renderables[0].mesh);
     CHECK(impl->renderables[0].mesh->vertices.size() == 24);
     CHECK(impl->renderables[0].mesh->indices.size() == 36);
+}
+
+TEST_CASE("E2 Simple: unit box faces are wound CCW when viewed from outside") {
+    MeshData mesh;
+    buildUnitBoxMesh(mesh);
+    REQUIRE(mesh.indices.size() % 3 == 0);
+
+    for (size_t t = 0; t < mesh.indices.size(); t += 3) {
+        auto & v0 = mesh.vertices[mesh.indices[t + 0]];
+        auto & v1 = mesh.vertices[mesh.indices[t + 1]];
+        auto & v2 = mesh.vertices[mesh.indices[t + 2]];
+
+        // All 3 vertices of a box triangle share the face normal.
+        REQUIRE(v0.normal == v1.normal);
+        REQUIRE(v0.normal == v2.normal);
+
+        // CCW from outside <=> the geometric normal of the triangle points the same way
+        // as the stored outward face normal.
+        glm::vec3 geometric = glm::cross(v1.position - v0.position, v2.position - v0.position);
+        INFO("triangle " << (t / 3) << " normal (" << v0.normal.x << ", " << v0.normal.y << ", " << v0.normal.z << ")");
+        CHECK(glm::dot(geometric, v0.normal) > 0.f);
+    }
 }
 
 TEST_CASE("E2 Simple: the world evolves on its own cadence, independent of capture") {
