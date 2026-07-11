@@ -6,9 +6,12 @@
 
 namespace GN::e2 {
 
-// This is the single largest container of everything that is always initialized first
-// and is always available for the entire life time of the engine.
+/// This is the global singleton of the engine module. Always initialized first and available
+/// for the entire life time of the engine.
 struct Universe {
+    Universe()          = default;
+    virtual ~Universe() = default;
+
     GN_NO_COPY(Universe);
     GN_NO_MOVE(Universe);
 
@@ -21,10 +24,6 @@ struct Universe {
             if (mNextID.compare_exchange_weak(old, next, std::memory_order_relaxed)) { return next; }
         }
     };
-
-protected:
-    Universe()          = default;
-    virtual ~Universe() = default;
 
 private:
     std::atomic<UniqueIdentifier> mNextID = {};

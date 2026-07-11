@@ -227,8 +227,8 @@ implemented here. The matching sample lives in `src/sample/e2/simple-world.cpp`,
 and `test/simple-world-test.cpp` covers the CPU-side workflow (population, capture
 contents, and independent-cadence advancement) headlessly.
 
-The original smoke test, `test/e2-mock.cpp`, remains: it creates mock `Universe`,
-`World`, and `Form` types to verify the runtime-type and reference patterns
+The original smoke test, `test/e2-mock.cpp`, remains: it creates a `Universe` and
+mock `World` and `Form` types to verify the runtime-type and reference patterns
 compile and that `populate()`/`run()` are callable through the public interfaces.
 
 ## Development Notes

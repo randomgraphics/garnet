@@ -13,8 +13,6 @@ using namespace GN::e2;
 
 namespace {
 
-struct TestUniverse : Universe {};
-
 // Counts ERROR-level messages on the Vulkan logger; validation-layer complaints
 // (e.g. "VkSurfaceKHR has not been destroyed") are routed there.
 struct ErrorCounter : Logger::Receiver {
@@ -31,7 +29,7 @@ struct ErrorCounter : Logger::Receiver {
 } // namespace
 
 TEST_CASE("E2 visual: destroying the visual domain before the OS domain leaves no live Vulkan objects", "[e2][gpu]") {
-    TestUniverse u;
+    Universe u;
 
     auto os = OperatingDomain::create({.universe = u, .caption = "GNtest-e2-teardown", .width = 320, .height = 240});
     if (!os) SKIP("Window creation failed (no display?)");

@@ -5,8 +5,6 @@
 using namespace GN;
 using namespace GN::e2;
 
-struct MockUniverse : Universe {};
-
 struct MockWorld : World {
     GN_REGISTER_RUNTIME_TYPE(World);
 
@@ -28,9 +26,9 @@ struct MockForm : Form {
 };
 
 TEST_CASE("E2: smoke test") {
-    MockUniverse u;
-    auto         w = referenceTo(new MockWorld(u));
-    auto         f = referenceTo(new MockForm(u));
+    Universe u;
+    auto     w = referenceTo(new MockWorld(u));
+    auto     f = referenceTo(new MockForm(u));
     w->populate({&f.cast<Form>(), 1});
     w->run();
 }

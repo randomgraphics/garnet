@@ -14,12 +14,8 @@
 using namespace GN;
 using namespace GN::e2;
 
-namespace {
-struct TestUniverse : Universe {};
-} // namespace
-
 TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment") {
-    TestUniverse u;
+    Universe u;
 
     auto world = Simple::createWorld(u);
     REQUIRE(world);
@@ -77,7 +73,7 @@ TEST_CASE("E2 Simple: unit box faces are wound CCW when viewed from outside") {
 }
 
 TEST_CASE("E2 Simple: the world evolves on its own cadence, independent of capture") {
-    TestUniverse u;
+    Universe u;
 
     auto world = Simple::createWorld(u);
     auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));

@@ -19,15 +19,10 @@
 using namespace GN;
 using namespace GN::e2;
 
-namespace {
-// A concrete universe; the base universe has a protected constructor.
-struct SampleUniverse : Universe {};
-}; // namespace
-
 int main(int argc, const char ** argv) {
     bool testMode = argc > 1 && argv[1][0] == 't';
 
-    SampleUniverse universe;
+    Universe universe;
 
     // Operating-system domain (window + event pump). Skipped in headless test mode.
     Ref<OperatingDomain> os;
