@@ -67,9 +67,6 @@ refer to shared physical resources managed by lower layers. The current public
 responsibility is to generate `UniqueIdentifier` values that are unique within
 the universe.
 
-The base constructor and destructor are protected, so real use goes through a
-derived universe type supplied by the implementation or tests.
-
 ### `Thing`
 
 `Thing` is the common base for named, reference-counted engine objects. It
