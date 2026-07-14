@@ -9,10 +9,16 @@ namespace GN::e2 {
 //     GN_E2_DEFINE_A_THING(Thing);
 // };
 
+struct World;
+
 /// The main class that represents a presence in the world that could affect the state of the world and could
 /// interact with other forms.
 struct Form : Thing {
     GN_E2_DEFINE_A_THING(Thing);
+
+    /// The world this form currently belongs to, or null when not attached to any world. A form can be
+    /// attached to at most one world at a time; attachment is managed by the world's populate().
+    World * world() const { return mWorld; }
 
     /// update this form's internal state. called by the world, usually with an fixed interval.
     virtual void update() {}
@@ -20,6 +26,10 @@ struct Form : Thing {
     /// capture the visual part of a form for rendering. The defalt implementation returns nullptr, which means
     /// this form is not renderable.
     virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) { return {}; }
+
+private:
+    friend struct World;
+    World * mWorld = nullptr;
 
     // /// update the audio part of the form.
     // virtual Ref<AudioMoment> captureAudioMoment() = 0;
@@ -67,6 +77,21 @@ protected:
         : Thing(type, id, name), metersPerUnit(metersPerUnit_) {
         // zero/negative/NaN scale is a programming error; NaN fails the > comparison too.
         GN_ASSERT(metersPerUnit > 0.0);
+    }
+
+    /// Attachment half of the form/world relationship, for populate() implementations. Fails when the
+    /// form is already attached: a form belongs to at most one world, and re-attaching to the same
+    /// world would duplicate it in the world's form collection.
+    bool attachForm(Form & form) {
+        if (form.mWorld) GN_UNLIKELY return false;
+        form.mWorld = this;
+        return true;
+    }
+
+    /// Detachment half. Forms are ref-counted and may outlive the world, so call this for every
+    /// attached form before the world goes away to avoid dangling back-pointers.
+    void detachForm(Form & form) {
+        if (form.mWorld == this) form.mWorld = nullptr;
     }
 };
 

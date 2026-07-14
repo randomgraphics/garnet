@@ -70,8 +70,13 @@ struct BoxForm : Form {
     void update() override { mOrientation = glm::normalize(glm::angleAxis(kSpinPerTick, kSpinAxis) * mOrientation); }
 
     // Called by the world (under its lock) while capturing a moment.
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
-        auto                         moment = referenceTo(new VisualMomentImpl(mUniverse, params.metersPerUnit));
+    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
+        auto * w = world();
+        if (!w) GN_UNLIKELY {
+                GN_WARN(sLogger)("box form is not attached to any world; nothing to capture.");
+                return {};
+            }
+        auto                         moment = referenceTo(new VisualMomentImpl(mUniverse, w->metersPerUnit));
         VisualMomentImpl::Renderable r;
         r.mesh        = mMesh;
         r.translation = mPosition;
@@ -102,8 +107,13 @@ struct PointLightForm : Form {
         : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mUniverse(u), mPosition(position),
           mColor(glm::vec3(color.r, color.g, color.b) * color.intensity.value) {}
 
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
-        auto                    moment = referenceTo(new VisualMomentImpl(mUniverse, params.metersPerUnit));
+    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
+        auto * w = world();
+        if (!w) GN_UNLIKELY {
+                GN_WARN(sLogger)("point light form is not attached to any world; nothing to capture.");
+                return {};
+            }
+        auto                    moment = referenceTo(new VisualMomentImpl(mUniverse, w->metersPerUnit));
         VisualMomentImpl::Light l;
         l.position = mPosition;
         l.color    = mColor;
@@ -134,10 +144,21 @@ struct SimpleWorld : World {
 
     SimpleWorld(Universe & u, double metersPerUnit_): World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world", metersPerUnit_), mUniverse(u) {}
 
+    // Symmetric with populate(): forms are ref-counted and may outlive the world, so clear their
+    // back-pointers before the world goes away.
+    ~SimpleWorld() {
+        for (auto & f : mForms) detachForm(*f);
+    }
+
     void populate(ArrayView<Ref<Form>> forms) override {
         std::lock_guard<std::mutex> lock(mMutex);
         for (auto & f : forms) {
-            if (f) mForms.append(f);
+            if (!f) continue;
+            if (!attachForm(*f)) GN_UNLIKELY {
+                    GN_WARN(sLogger)("form is already attached to a world; ignored.");
+                    continue;
+                }
+            mForms.append(f);
         }
     }
 
@@ -160,11 +181,7 @@ struct SimpleWorld : World {
 
     void stop() override { mStop.store(true, std::memory_order_relaxed); }
 
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & paramsIn) override {
-        // Stamp this world's scale so the aggregate moment and every form contribution carry it.
-        auto params          = paramsIn;
-        params.metersPerUnit = metersPerUnit;
-
+    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
         auto moment = referenceTo(new VisualMomentImpl(mUniverse, metersPerUnit));
 
         // Snapshot the observing cameras into the moment so the snapshot is self-contained.

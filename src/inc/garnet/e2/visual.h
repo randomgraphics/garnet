@@ -42,10 +42,6 @@ struct VisualMoment : Thing {
         Ref<VisualDomain>      domain;
         ArrayView<Ref<Camera>> cameras;
         UnitOfTime             expectedRenderTimeShift = {};
-
-        /// Physical size of one WorldLength unit, in meters. Stamped by the capturing world
-        /// before fanning out to forms, so every sub-moment inherits the world's scale.
-        double metersPerUnit = 1.0;
     };
 
     /// Physical size of one WorldLength unit for all lengths carried by this moment, in meters.
