@@ -98,14 +98,21 @@ simulation mutation and snapshot capture.
 
 ### `Form`
 
-`Form` represents an active presence in the world. It has two current
-responsibilities:
+`Form` represents an active presence in the world. A form may be atomic or
+composed from child forms. It has one base simulation responsibility:
 
 - `update()`: advance internal simulation state.
-- `captureVisualMoment()`: contribute visual state for a snapshot.
 
-This keeps simulation ownership in the form while allowing rendering to consume a
-snapshot built from one or more forms.
+`VisualForm` is the specialized form subtype that can contribute visual state for
+a snapshot through `captureVisualMoment()`. Engine implementations discover
+visual contributors with the internal `queryFormsByType()` helper, using
+`VisualForm::TYPE_INFO()` as the requested runtime type. This keeps simulation
+ownership in the form tree while allowing rendering to consume a snapshot built
+from the visible forms exposed by that tree.
+
+`Mold` is a reusable recipe for creating fresh form trees. The public `Mold`
+interface is pure virtual; `Mold::create()` returns the engine-provided concrete
+implementation.
 
 ### Domains And Visual Layer
 
@@ -153,7 +160,8 @@ World::run()
 
 World::captureVisualMoment(parameters)
   briefly freezes, synchronizes, or otherwise observes live state
-  asks relevant Form objects to capture visual data
+  queries each root Form tree for VisualForm objects by runtime type
+  asks those VisualForm objects to capture visual data
   returns a self-contained VisualMoment for a specific point in time
 
 VisualDomain::render(moment)
@@ -174,9 +182,10 @@ The API already marks two `World` operations as thread-safe entry points:
 - `captureVisualMoment(const VisualMoment::CaptureParameters &)`.
 
 The concrete implementation should treat `World` as the synchronization owner for
-form collection changes and visual snapshot capture. `Form::update()` is driven
-by the world using whatever update cadence that world chooses, while visual
-capture may be requested from another thread by the rendering path.
+root form collection changes, recursive form-tree updates, and visual snapshot
+capture. `Form::update()` is driven by the world using whatever update cadence
+that world chooses, while visual capture may be requested from another thread by
+the rendering path.
 
 ## Relationship To Lower Layers
 
@@ -203,18 +212,22 @@ sharing simulation state or visual moments.
 whole world → visual-moment → render path:
 
 - `simple-world.cpp`: the `Simple` namespace world. A `World` that advances its
-  forms on a dedicated background simulation thread at a fixed timestep, plus two
-  trivial forms — a slowly spinning box mesh and a point light. `populate()` and
-  `captureVisualMoment()` are guarded by a single world mutex, which is the
-  synchronization boundary between live simulation and snapshot capture.
+  form trees on a dedicated background simulation thread at a fixed timestep,
+  plus two trivial visible forms — a slowly spinning box mesh and a point light.
+  `populate()` and `captureVisualMoment()` are guarded by a single world mutex,
+  which is the synchronization boundary between live simulation and snapshot
+  capture.
+- `mold.cpp`: the official `Mold` recipe implementation. It stores a root form
+  factory plus child molds and casts fresh form trees while rejecting recipe
+  cycles.
 - `os.cpp`: the official `OperatingDomain`, wrapping `GN::win` for the window,
   render surface, and event pump.
 - `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
   the gpu2 swapchain, depth buffer, box shaders, a per-frame uniform buffer, and a
   geometry cache; `render()` consumes a self-contained snapshot and draws it.
 - `e2-internal.h`: private types shared across the implementation, most notably
-  `VisualMomentImpl`, the concrete self-contained snapshot (cameras + renderables
-  + lights) that worlds produce and the visual domain consumes.
+  `VisualMomentImpl`, the concrete self-contained snapshot (cameras +
+  renderables + lights) that worlds produce and the visual domain consumes.
 - `vk-shaders/box.{vert,frag}`: a minimal lit shader (per-frame camera/light UBO,
   per-draw model/color push constants).
 
@@ -235,6 +248,7 @@ compile and that `populate()`/`run()` are callable through the public interfaces
 - Derive public engine objects from `Thing` or another direct e2 base type and
   register the direct parent with `GN_REGISTER_RUNTIME_TYPE(...)`.
 - Preserve the simulation/rendering split: live world state belongs to `World`
-  and `Form`; renderer-facing state is a self-contained `VisualMoment`.
+  and `Form`; renderer-facing state is captured from `VisualForm` into a
+  self-contained `VisualMoment`.
 - When implementing thread-safe world operations, document the synchronization
   invariant at the point where the lock, queue, or snapshot boundary is enforced.

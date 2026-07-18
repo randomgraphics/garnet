@@ -14,6 +14,16 @@
 using namespace GN;
 using namespace GN::e2;
 
+namespace {
+
+struct TestGroupForm : Form {
+    GN_REGISTER_RUNTIME_TYPE(Form);
+
+    TestGroupForm(Universe & u, const StrA & name = "test-group"): Form(TYPE_INFO(), u.generateUniqueIdentifier(), name) {}
+};
+
+} // namespace
+
 TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment") {
     Universe u;
 
@@ -50,9 +60,74 @@ TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment
     CHECK(impl->renderables[0].mesh->indices.size() == 36);
 }
 
+TEST_CASE("E2 Simple: visual capture walks child forms") {
+    Universe u;
+
+    auto world = Simple::createWorld(u);
+    auto group = referenceTo(new TestGroupForm(u));
+    auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
+    auto light = Simple::createPointLight(u, WorldVector3(WorldLength(3), WorldLength(3), WorldLength(3)), IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
+    REQUIRE(group);
+    REQUIRE(box);
+    REQUIRE(light);
+    REQUIRE(group->attach(box));
+    REQUIRE(group->attach(light));
+
+    Ref<Form> forms[] = {group};
+    world->populate({forms, 1});
+
+    auto   moment = world->captureVisualMoment(VisualMoment::CaptureParameters {});
+    auto * impl   = RuntimeType::cast<VisualMomentImpl>(moment.get());
+    REQUIRE(impl != nullptr);
+    CHECK(impl->renderables.size() == 1);
+    CHECK(impl->lights.size() == 1);
+    CHECK(group->world() == world.get());
+    CHECK(box->world() == world.get());
+    CHECK(light->world() == world.get());
+}
+
+TEST_CASE("E2 Mold: casting creates a fresh form tree") {
+    Universe u;
+
+    auto groupMold =
+        Mold::create(u, "group-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> { return referenceTo(new TestGroupForm(cp.universe, cp.name)); });
+    auto boxMold = Mold::create(u, "box-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> {
+        return Simple::createBox(cp.universe, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)),
+                                 WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
+    });
+    REQUIRE(groupMold);
+    REQUIRE(boxMold);
+    REQUIRE(groupMold->add(boxMold, "box-child"));
+
+    auto a = groupMold->cast(u, "group-a");
+    auto b = groupMold->cast(u, "group-b");
+    REQUIRE(a);
+    REQUIRE(b);
+    CHECK(a->id != b->id);
+    REQUIRE(a->children().size() == 1);
+    REQUIRE(b->children().size() == 1);
+    CHECK(a->children()[0]->id != b->children()[0]->id);
+    CHECK(a->children()[0]->parent() == a.get());
+}
+
 TEST_CASE("E2 Simple: unit box faces are wound CCW when viewed from outside") {
-    MeshData mesh;
-    buildUnitBoxMesh(mesh);
+    Universe u;
+
+    auto world = Simple::createWorld(u);
+    auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
+    REQUIRE(world);
+    REQUIRE(box);
+
+    Ref<Form> forms[] = {box};
+    world->populate({forms, 1});
+
+    auto   moment = world->captureVisualMoment(VisualMoment::CaptureParameters {});
+    auto * impl   = RuntimeType::cast<VisualMomentImpl>(moment.get());
+    REQUIRE(impl);
+    REQUIRE(impl->renderables.size() == 1);
+    REQUIRE(impl->renderables[0].mesh);
+
+    const MeshData & mesh = *impl->renderables[0].mesh;
     REQUIRE(mesh.indices.size() % 3 == 0);
 
     for (size_t t = 0; t < mesh.indices.size(); t += 3) {

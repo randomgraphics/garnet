@@ -16,7 +16,9 @@
 using namespace GN;
 using namespace GN::e2;
 
-namespace GN::e2 {
+namespace {
+
+GN::Logger * sLogger = GN::getLogger("GN.e2.simple");
 
 void buildUnitBoxMesh(MeshData & mesh) {
     using V = MeshData::Vertex;
@@ -45,22 +47,16 @@ void buildUnitBoxMesh(MeshData & mesh) {
     }
 }
 
-} // namespace GN::e2
-
-namespace {
-
-GN::Logger * sLogger = GN::getLogger("GN.e2.simple");
-
 // ---------------------------------------------------------------------------
 // Forms
 // ---------------------------------------------------------------------------
 
 /// A solid axis-aligned box that slowly spins around a fixed axis while the world runs.
-struct BoxForm : Form {
-    GN_REGISTER_RUNTIME_TYPE(Form);
+struct BoxForm : VisualForm {
+    GN_REGISTER_RUNTIME_TYPE(VisualForm);
 
     BoxForm(Universe & u, const WorldVector3 & position, const WorldVector3 & dimensions)
-        : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-box"), mUniverse(u), mPosition(position), mDimensions(dimensions) {
+        : VisualForm(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-box"), mUniverse(u), mPosition(position), mDimensions(dimensions) {
         mMesh     = std::make_shared<MeshData>();
         mMesh->id = id;
         buildUnitBoxMesh(*mMesh);
@@ -100,11 +96,11 @@ private:
 };
 
 /// A point light source.
-struct PointLightForm : Form {
-    GN_REGISTER_RUNTIME_TYPE(Form);
+struct PointLightForm : VisualForm {
+    GN_REGISTER_RUNTIME_TYPE(VisualForm);
 
     PointLightForm(Universe & u, const WorldVector3 & position, const IntensityRGB & color)
-        : Form(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mUniverse(u), mPosition(position),
+        : VisualForm(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mUniverse(u), mPosition(position),
           mColor(glm::vec3(color.r, color.g, color.b) * color.intensity.value) {}
 
     Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
@@ -147,14 +143,14 @@ struct SimpleWorld : World {
     // Symmetric with populate(): forms are ref-counted and may outlive the world, so clear their
     // back-pointers before the world goes away.
     ~SimpleWorld() {
-        for (auto & f : mForms) detachForm(*f);
+        for (auto & f : mForms) f->leaveWorld(*this);
     }
 
     void populate(ArrayView<Ref<Form>> forms) override {
         std::lock_guard<std::mutex> lock(mMutex);
         for (auto & f : forms) {
             if (!f) continue;
-            if (!attachForm(*f)) GN_UNLIKELY {
+            if (!f->enterWorld(*this)) GN_UNLIKELY {
                     GN_WARN(sLogger)("form is already attached to a world; ignored.");
                     continue;
                 }
@@ -173,7 +169,7 @@ struct SimpleWorld : World {
         while (!mStop.load(std::memory_order_relaxed)) {
             {
                 std::lock_guard<std::mutex> lock(mMutex);
-                for (auto & f : mForms) f->update();
+                for (auto & f : mForms) updateFormTree(*f);
             }
             std::this_thread::sleep_for(kTimestep);
         }
@@ -191,8 +187,12 @@ struct SimpleWorld : World {
 
         // Briefly freeze the simulation and let each form contribute its visual state.
         std::lock_guard<std::mutex> lock(mMutex);
-        for (auto & f : mForms) {
-            auto contribution = f->captureVisualMoment(params);
+        ArrayBody<Ref<Form>>        visualForms;
+        for (auto & f : mForms) queryFormsByType(*f, VisualForm::TYPE_INFO(), visualForms);
+        for (auto & form : visualForms) {
+            auto * visual = RuntimeType::cast<VisualForm>(form.get());
+            GN_ASSERT(visual);
+            auto contribution = visual->captureVisualMoment(params);
             if (auto * vm = RuntimeType::cast<VisualMomentImpl>(contribution.get())) moment->merge(*vm);
         }
         return moment;
@@ -204,6 +204,11 @@ private:
     DynaArray<Ref<Form>> mForms;             // guarded by mMutex
     std::atomic<bool>    mRunning = {false}; // concurrent-run() guard
     std::atomic<bool>    mStop    = {false}; // game-loop stop signal
+
+    static void updateFormTree(Form & form) {
+        form.update();
+        for (auto & child : form.children()) updateFormTree(*child);
+    }
 };
 
 } // namespace

@@ -2,6 +2,8 @@
     #error "Do not include <garnet/e2/world.h> directly. Include <garnet/GNengine2.h> instead."
 #endif
 
+#include <functional>
+
 namespace GN::e2 {
 
 // /// An audio snapshot of something, consumed by audio domain to play sound & music.
@@ -11,8 +13,9 @@ namespace GN::e2 {
 
 struct World;
 
-/// The main class that represents a presence in the world that could affect the state of the world and could
-/// interact with other forms.
+/// The main class that represents a presence in the world. A form may be atomic or composed
+/// from child forms; the world owns only root forms and propagates world membership through
+/// the form tree.
 struct Form : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
@@ -20,19 +23,84 @@ struct Form : Thing {
     /// attached to at most one world at a time; attachment is managed by the world's populate().
     World * world() const { return mWorld; }
 
+    /// The parent form this form is currently attached to, or null when this is a root form.
+    Form * parent() const { return mParent; }
+
+    /// Child forms directly attached to this form.
+    ArrayView<Ref<Form>> children() { return {mChildren.data(), mChildren.size()}; }
+
+    /// Child forms directly attached to this form.
+    ArrayView<const Ref<Form>> children() const { return {mChildren.data(), mChildren.size()}; }
+
+    /// Attach a child form. Fails if the child is null, already parented, belongs to a different world,
+    /// or would create a cycle. When this form is already in a world, the child joins the same world.
+    bool attach(Ref<Form> child) {
+        if (!child) GN_UNLIKELY return false;
+        if (child.get() == this) GN_UNLIKELY return false;
+        if (child->mParent) GN_UNLIKELY return false;
+        if (child->mWorld && child->mWorld != mWorld) GN_UNLIKELY return false;
+        for (auto * p = mParent; p; p = p->mParent) {
+            if (p == child.get()) GN_UNLIKELY return false;
+        }
+        child->mParent = this;
+        child->setWorldRecursive(mWorld);
+        mChildren.append(child);
+        return true;
+    }
+
+    /// Enter a world as a root form. Fails if this form already belongs to a world or is attached
+    /// below another form. World implementations call this before storing a populated root form.
+    bool enterWorld(World & world) {
+        if (mWorld) GN_UNLIKELY return false;
+        if (mParent) GN_UNLIKELY return false;
+        setWorldRecursive(&world);
+        return true;
+    }
+
+    /// Leave a world entered by this root form. Clears world membership for the whole form tree.
+    void leaveWorld(World & world) {
+        if (mWorld == &world) setWorldRecursive(nullptr);
+    }
+
     /// update this form's internal state. called by the world, usually with an fixed interval.
     virtual void update() {}
 
-    /// capture the visual part of a form for rendering. The defalt implementation returns nullptr, which means
-    /// this form is not renderable.
-    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) { return {}; }
-
 private:
-    friend struct World;
-    World * mWorld = nullptr;
+    World *              mWorld  = nullptr;
+    Form *               mParent = nullptr;
+    ArrayBody<Ref<Form>> mChildren;
 
-    // /// update the audio part of the form.
-    // virtual Ref<AudioMoment> captureAudioMoment() = 0;
+    void setWorldRecursive(World * world) {
+        mWorld = world;
+        for (auto & child : mChildren) child->setWorldRecursive(world);
+    }
+};
+
+/// A form with visible state that can contribute to a self-contained visual snapshot.
+struct VisualForm : Form {
+    GN_E2_DEFINE_A_THING(Form);
+
+    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
+};
+
+/// A reusable recipe that casts a fresh form tree from a root-form factory and child molds.
+struct Mold : Thing {
+    GN_E2_DEFINE_A_THING(Thing);
+
+    struct CreateParameters {
+        Universe & universe;
+        StrA       name;
+    };
+
+    using Factory = std::function<Ref<Form>(const CreateParameters &)>;
+
+    GN_API static Ref<Mold> create(Universe & universe, const StrA & name, Factory factory);
+
+    /// Add a child mold to this recipe. Fails if the child is null or would create a recipe cycle.
+    virtual bool add(Ref<Mold> child, const StrA & childName) = 0;
+
+    /// Cast a new form tree. Returns null if the root factory or any child factory fails.
+    virtual Ref<Form> cast(Universe & universe, const StrA & formName) const = 0;
 };
 
 /// This represents a continuously evolving game world with diffent form of things living in it.
@@ -77,21 +145,6 @@ protected:
         : Thing(type, id, name), metersPerUnit(metersPerUnit_) {
         // zero/negative/NaN scale is a programming error; NaN fails the > comparison too.
         GN_ASSERT(metersPerUnit > 0.0);
-    }
-
-    /// Attachment half of the form/world relationship, for populate() implementations. Fails when the
-    /// form is already attached: a form belongs to at most one world, and re-attaching to the same
-    /// world would duplicate it in the world's form collection.
-    bool attachForm(Form & form) {
-        if (form.mWorld) GN_UNLIKELY return false;
-        form.mWorld = this;
-        return true;
-    }
-
-    /// Detachment half. Forms are ref-counted and may outlive the world, so call this for every
-    /// attached form before the world goes away to avoid dangling back-pointers.
-    void detachForm(Form & form) {
-        if (form.mWorld == this) form.mWorld = nullptr;
     }
 };
 

@@ -24,6 +24,12 @@ inline glm::vec3 toMeters(const WorldVector3 & p, double metersPerUnit) {
     return {p.x.toMeters(metersPerUnit), p.y.toMeters(metersPerUnit), p.z.toMeters(metersPerUnit)};
 }
 
+// Query a form tree for forms that match, or derive from, the requested runtime type.
+inline void queryFormsByType(Form & root, const RuntimeType::TypeInfo & type, ArrayBody<Ref<Form>> & result) {
+    if (root.typeInfo().isDerivedFrom(type)) result.append(referenceTo(&root));
+    for (auto & child : root.children()) queryFormsByType(*child, type, result);
+}
+
 // ---------------------------------------------------------------------------
 // MeshData — CPU-side geometry shared across frames
 // ---------------------------------------------------------------------------
@@ -40,10 +46,6 @@ struct MeshData {
     DynaArray<Vertex>   vertices;
     DynaArray<uint16_t> indices;
 };
-
-/// Fill \p mesh with a unit cube spanning [-0.5, 0.5] on each axis, with per-face normals.
-/// 24 vertices (4 per face) and 36 indices (12 triangles).
-void buildUnitBoxMesh(MeshData & mesh);
 
 // ---------------------------------------------------------------------------
 // VisualMomentImpl — the official, self-contained visual snapshot
