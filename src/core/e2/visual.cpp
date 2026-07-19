@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <unordered_map>
 
 #if GN_BUILD_HAS_VULKAN
@@ -56,6 +55,7 @@ struct VisualDomainImpl : VisualDomain {
         // Member destruction alone can't order the surface (a raw handle we own) between the
         // swapchain and the instance, so unwind explicitly while mGpu keeps the instance alive.
         mRenderTarget.setColorTarget(0, {});
+        mFrameUbo.clear();
         mSwapchain.clear();
         if (mSurface && mOs) {
             mOs->destroyRenderSurface(mGpu->getVulkanInstanceHandle(), mSurface);
@@ -108,9 +108,6 @@ struct VisualDomainImpl : VisualDomain {
             return false;
         }
 
-        // Build a reusable render-target baseline: one color target (set per frame to the
-        // acquired swapchain image) plus the depth buffer, with back-face culling and a
-        // standard less-than depth test.
         GpuResourceView depthView;
         depthView.resource = mDepth;
         mRenderTarget.colorTargets.append(RasterTarget::ColorTarget {});
@@ -127,21 +124,18 @@ struct VisualDomainImpl : VisualDomain {
             return false;
         }
 
-        mFrameUbo = Buffer::create("e2-frame-ubo", {.context = mGpu, .size = sizeof(FrameConstants), .mappable = true});
+        mFrameUbo = Buffer::create("e2-frame-ubo", {.context = mGpu, .size = sizeof(FrameConstants)});
         if (!mFrameUbo) {
-            GN_ERROR(sLogger)("Failed to create per-frame uniform buffer.");
+            GN_ERROR(sLogger)("Failed to create frame uniform buffer.");
             return false;
         }
+
         return true;
     }
 
     void render(Ref<VisualMoment> momentBase) override {
         auto * moment = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
         if (!moment) return;
-
-        // Single-buffered for simplicity: wait for the previous frame to finish before
-        // overwriting shared resources (the per-frame UBO) and recording the next one.
-        mGpu->waitForIdle();
 
         Swapchain::Frame frame = mSwapchain->prepare();
         if (frame.view.empty()) {
@@ -161,9 +155,17 @@ struct VisualDomainImpl : VisualDomain {
             fc.lightColor[i]    = glm::vec4(moment->lights[i].color, 0.f);
         }
         fc.lightCount = lightCount;
-        {
-            auto mapped = mFrameUbo->map();
-            if (mapped.data()) memcpy(mapped.data(), &fc, sizeof(fc));
+
+        auto cnc = GpuCnC::create({.gpu = mGpu});
+        if (!cnc) {
+            GN_WARN(sLogger)("Failed to create per-frame upload command list; skipping frame.");
+            return;
+        }
+        cnc->uploadBuffer(mFrameUbo, 0, ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(&fc), sizeof(fc)));
+        AutoRef<GpuPayload> constantsUpload = cnc->seal();
+        if (!constantsUpload) {
+            GN_WARN(sLogger)("Failed to seal per-frame constants upload; skipping frame.");
+            return;
         }
 
         GpuResourceView uboView;
@@ -176,6 +178,10 @@ struct VisualDomainImpl : VisualDomain {
         resources[0][0][0] = uboView;
 
         auto raster = GpuRaster::create("e2-visual", {.gpu = mGpu, .target = &mRenderTarget});
+        if (!raster) {
+            GN_WARN(sLogger)("Failed to create raster pass; skipping frame.");
+            return;
+        }
 
         // Only draw geometry when there is a camera to view it through.
         if (haveCamera) {
@@ -208,7 +214,14 @@ struct VisualDomainImpl : VisualDomain {
         }
 
         AutoRef<GpuPayload> payload = raster->seal();
-        mGpu->submit(GpuContext::SubmitParameters("e2-frame").waitFor(frame.ready).appendWork(payload));
+        if (!payload) {
+            GN_WARN(sLogger)("Failed to seal raster pass; skipping frame.");
+            return;
+        }
+
+        GpuContext::SubmitParameters submit("e2-frame");
+        submit.waitFor(frame.ready).appendWork(constantsUpload).appendWork(payload);
+        mGpu->submit(submit);
         mSwapchain->present(*payload);
     }
 

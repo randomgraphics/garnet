@@ -4,9 +4,9 @@
 platform, GPU, and rendering systems. Its public API lives in
 `src/inc/garnet/e2/` and is included through `garnet/GNengine2.h`.
 
-The module is currently interface-first: the core implementation directory only
-contains tests, while the public headers define the intended ownership model and
-major engine roles.
+The module now has a small concrete vertical slice under `src/core/e2/` while
+the public headers continue to define the intended ownership model and major
+engine roles.
 
 ## Goals
 
@@ -212,19 +212,22 @@ sharing simulation state or visual moments.
 whole world → visual-moment → render path:
 
 - `simple-world.cpp`: the `Simple` namespace world. A `World` that advances its
-  form trees on a dedicated background simulation thread at a fixed timestep,
-  plus two trivial visible forms — a slowly spinning box mesh and a point light.
+  form trees at a fixed timestep on the caller's `run()` thread, plus two
+  trivial visible forms — a slowly spinning box mesh and a point light.
   `populate()` and `captureVisualMoment()` are guarded by a single world mutex,
   which is the synchronization boundary between live simulation and snapshot
-  capture.
+  capture. The sample runs `run()` on its own thread; the world itself does not
+  own a thread.
 - `mold.cpp`: the official `Mold` recipe implementation. It stores a root form
   factory plus child molds and casts fresh form trees while rejecting recipe
   cycles.
 - `os.cpp`: the official `OperatingDomain`, wrapping `GN::win` for the window,
   render surface, and event pump.
 - `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
-  the gpu2 swapchain, depth buffer, box shaders, a per-frame uniform buffer, and a
-  geometry cache; `render()` consumes a self-contained snapshot and draws it.
+  the gpu2 swapchain, depth buffer, box shaders, a frame constants buffer, and a
+  geometry cache; `render()` consumes a self-contained snapshot, emits a
+  per-frame constants upload payload followed by the raster payload, and lets
+  gpu2 queue ordering keep CPU frame preparation and GPU execution overlapped.
 - `e2-internal.h`: private types shared across the implementation, most notably
   `VisualMomentImpl`, the concrete self-contained snapshot (cameras +
   renderables + lights) that worlds produce and the visual domain consumes.

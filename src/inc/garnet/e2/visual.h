@@ -6,7 +6,7 @@ namespace GN::e2 {
 
 struct VisualDomain;
 
-/// Prepresents an visual observer of the world.
+/// Represents a visual observer of the world.
 struct Camera : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
@@ -17,7 +17,7 @@ struct Camera : Thing {
         WorldLength  farPlane;
 
         /// Set to positive for perspective camera, 0 for orthogonal camera.
-        /// Anything out side of [0, 180] are invalid and will be clamped back into valid range.
+        /// Values outside [0, 180] are invalid and will be clamped back into valid range.
         float fovYInDegree = 60.0f;
     };
 
@@ -34,7 +34,7 @@ struct Camera : Thing {
     GN_API static Ref<Camera> create(const CreateParameters &);
 };
 
-/// A visual snapshot of something. consumed by graphics domain for graphics rendering.
+/// A visual snapshot consumed by the graphics domain for rendering.
 struct VisualMoment : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 

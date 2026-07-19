@@ -62,7 +62,7 @@ struct Form : Thing {
         if (mWorld == &world) setWorldRecursive(nullptr);
     }
 
-    /// update this form's internal state. called by the world, usually with an fixed interval.
+    /// Update this form's internal state. Called by the world, usually with a fixed interval.
     virtual void update() {}
 
 private:
@@ -103,7 +103,7 @@ struct Mold : Thing {
     virtual Ref<Form> cast(Universe & universe, const StrA & formName) const = 0;
 };
 
-/// This represents a continuously evolving game world with diffent form of things living in it.
+/// This represents a continuously evolving game world with different forms living in it.
 struct World : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
