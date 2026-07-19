@@ -7,6 +7,7 @@
 #include "e2/e2-internal.h" // VisualMomentImpl (internal), reachable via the src/core include path.
 
 #include <glm/geometric.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include <chrono>
 #include <thread>
@@ -16,10 +17,18 @@ using namespace GN::e2;
 
 namespace {
 
-struct TestGroupForm : Form {
-    GN_REGISTER_RUNTIME_TYPE(Form);
+struct CountingFacet : Facet {
+    GN_REGISTER_RUNTIME_TYPE(Facet);
 
-    TestGroupForm(Universe & u, const StrA & name = "test-group"): Form(TYPE_INFO(), u.generateUniqueIdentifier(), name) {}
+    int updates = 0;
+    int enters  = 0;
+    int leaves  = 0;
+
+    CountingFacet(Universe & u): Facet(TYPE_INFO(), u.generateUniqueIdentifier(), "counting-facet") {}
+
+    void update() override { ++updates; }
+    void enterWorld(World &) override { ++enters; }
+    void leaveWorld(World &) override { ++leaves; }
 };
 
 } // namespace
@@ -60,11 +69,11 @@ TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment
     CHECK(impl->renderables[0].mesh->indices.size() == 36);
 }
 
-TEST_CASE("E2 Simple: visual capture walks child forms") {
+TEST_CASE("E2 Simple: visual capture walks child forms and composes their transforms") {
     Universe u;
 
     auto world = Simple::createWorld(u);
-    auto group = referenceTo(new TestGroupForm(u));
+    auto group = Form::create(u, "test-group");
     auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
     auto light = Simple::createPointLight(u, WorldVector3(WorldLength(3), WorldLength(3), WorldLength(3)), IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
     REQUIRE(group);
@@ -72,6 +81,7 @@ TEST_CASE("E2 Simple: visual capture walks child forms") {
     REQUIRE(light);
     REQUIRE(group->attach(box));
     REQUIRE(group->attach(light));
+    group->setPosition(WorldVector3(WorldLength(5), WorldLength(6), WorldLength(7)));
 
     Ref<Form> forms[] = {group};
     world->populate({forms, 1});
@@ -79,19 +89,118 @@ TEST_CASE("E2 Simple: visual capture walks child forms") {
     auto   moment = world->captureVisualMoment(VisualMoment::CaptureParameters {});
     auto * impl   = RuntimeType::cast<VisualMomentImpl>(moment.get());
     REQUIRE(impl != nullptr);
-    CHECK(impl->renderables.size() == 1);
-    CHECK(impl->lights.size() == 1);
+    REQUIRE(impl->renderables.size() == 1);
+    REQUIRE(impl->lights.size() == 1);
     CHECK(group->world() == world.get());
     CHECK(box->world() == world.get());
     CHECK(light->world() == world.get());
+
+    // Captured positions must be in world space: the group's offset shifts both children.
+    CHECK(impl->renderables[0].translation.x.raw() == 5);
+    CHECK(impl->renderables[0].translation.y.raw() == 6);
+    CHECK(impl->renderables[0].translation.z.raw() == 7);
+    CHECK(impl->lights[0].position.x.raw() == 8);
+    CHECK(impl->lights[0].position.y.raw() == 9);
+    CHECK(impl->lights[0].position.z.raw() == 10);
+}
+
+TEST_CASE("E2 Form: facets attach, update, and detach with their form") {
+    Universe u;
+
+    auto facet = referenceTo(new CountingFacet(u));
+    {
+        auto form = Form::create(u, "test-group");
+        REQUIRE(form);
+        CHECK(!form->addFacet({})); // null facet is rejected
+        REQUIRE(form->addFacet(facet));
+        CHECK(facet->form() == form.get());
+        REQUIRE(form->facets().size() == 1);
+        CHECK(form->facets()[0].get() == facet.get());
+
+        auto other = Form::create(u, "other-group");
+        CHECK(!other->addFacet(facet)); // a facet belongs to at most one form
+
+        CHECK(facet->updates == 0);
+        form->update();
+        CHECK(facet->updates == 1);
+    }
+    // The facet outlived its form; its back-pointer must not dangle.
+    CHECK(facet->form() == nullptr);
+}
+
+TEST_CASE("E2 Facet: world entry and exit reach facets on every path") {
+    Universe u;
+
+    auto early = referenceTo(new CountingFacet(u)); // attached before the form enters a world
+    auto late  = referenceTo(new CountingFacet(u)); // attached while the form lives in a world
+    auto below = referenceTo(new CountingFacet(u)); // on a child attached under a populated form
+
+    auto form = Form::create(u, "test-group");
+    REQUIRE(form);
+    REQUIRE(form->addFacet(early));
+    CHECK(early->enters == 0); // no world yet
+
+    {
+        auto world = Simple::createWorld(u);
+
+        Ref<Form> forms[] = {form};
+        world->populate({forms, 1});
+        CHECK(early->enters == 1); // the owning form entered a world
+
+        REQUIRE(form->addFacet(late));
+        CHECK(late->enters == 1); // added to a form already living in a world
+
+        auto child = Form::create(u, "child");
+        REQUIRE(child->addFacet(below));
+        CHECK(below->enters == 0);
+        REQUIRE(form->attach(child));
+        CHECK(below->enters == 1); // joined through the parent's world membership
+
+        CHECK(early->leaves == 0);
+    }
+
+    // The world is gone; its destructor detaches root forms, which reaches every facet.
+    CHECK(form->world() == nullptr);
+    CHECK(early->leaves == 1);
+    CHECK(late->leaves == 1);
+    CHECK(below->leaves == 1);
+    CHECK(early->enters == 1); // no spurious re-entry
+}
+
+TEST_CASE("E2 Form: transform composes through the parent chain") {
+    Universe u;
+
+    auto parent = Form::create(u, "parent");
+    auto child  = Form::create(u, "child");
+    REQUIRE(parent);
+    REQUIRE(child);
+    REQUIRE(parent->attach(child));
+
+    parent->setPosition(WorldVector3(WorldLength(10), WorldLength(20), WorldLength(30)));
+    parent->setRotation(glm::angleAxis(glm::half_pi<float>(), glm::vec3(0.f, 0.f, 1.f)));
+    child->setPosition(WorldVector3(WorldLength(100), WorldLength(0), WorldLength(0)));
+
+    // A root form's local transform is already world space.
+    CHECK(parent->worldPosition().x.raw() == 10);
+    CHECK(parent->worldPosition().y.raw() == 20);
+    CHECK(parent->worldPosition().z.raw() == 30);
+
+    // The child's local +X offset lands on +Y after the parent's 90-degree Z rotation.
+    auto wp = child->worldPosition();
+    CHECK(wp.x.raw() == 10);
+    CHECK(wp.y.raw() == 120);
+    CHECK(wp.z.raw() == 30);
+
+    // The composed rotation carries the parent's rotation (identity child rotation).
+    auto wr = child->worldRotation();
+    CHECK(glm::dot(wr, parent->rotation()) > 0.9999f);
 }
 
 TEST_CASE("E2 Mold: casting creates a fresh form tree") {
     Universe u;
 
-    auto groupMold =
-        Mold::create(u, "group-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> { return referenceTo(new TestGroupForm(cp.universe, cp.name)); });
-    auto boxMold = Mold::create(u, "box-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> {
+    auto groupMold = Mold::create(u, "group-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> { return Form::create(cp.universe, cp.name); });
+    auto boxMold   = Mold::create(u, "box-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> {
         return Simple::createBox(cp.universe, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)),
                                  WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
     });

@@ -19,16 +19,23 @@ struct MockWorld : World {
     auto captureVisualMoment(const VisualMoment::CaptureParameters &) -> AutoRef<VisualMoment> override { return {}; }
 };
 
-struct MockForm : Form {
-    GN_REGISTER_RUNTIME_TYPE(Form);
+struct MockFacet : Facet {
+    GN_REGISTER_RUNTIME_TYPE(Facet);
 
-    MockForm(Universe & u): Form(TYPE_INFO(), u.generateUniqueIdentifier(), "the first life form") {}
+    MockFacet(Universe & u): Facet(TYPE_INFO(), u.generateUniqueIdentifier(), "the first facet") {}
 };
 
 TEST_CASE("E2: smoke test") {
     Universe u;
-    auto     w = referenceTo(new MockWorld(u));
-    auto     f = referenceTo(new MockForm(u));
-    w->populate({&f.cast<Form>(), 1});
+    auto     w  = referenceTo(new MockWorld(u));
+    auto     f  = Form::create(u, "the first life form"); // Form is sealed; forms come from the factory
+    auto     ft = referenceTo(new MockFacet(u));
+    REQUIRE(f);
+    CHECK(f->isKindOf<Form>());
+    CHECK(f->addFacet(ft));
+    CHECK(ft->isKindOf<Facet>());
+    CHECK(ft->form() == f.get());
+    w->populate({&f, 1});
     w->run();
+    f->update();
 }

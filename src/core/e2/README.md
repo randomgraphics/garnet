@@ -31,7 +31,10 @@ The design aims to keep these concerns separate:
   domain owner, and unique identifier source.
 - `World`: game world or level that can be active, loading, staged, or otherwise
   managed independently of other worlds and of rendering.
-- `Form`: simulation object interface for things that live in a world.
+- `Form`: structural simulation object for things that live in a world — the
+  hierarchy, the spatial transform, and a flat list of facets.
+- `Facet`: unit of state and behavior attached to a form; the extension point
+  for domain-specific aspects such as visuals, audio, or physics.
 - `VisualMoment`: self-contained world snapshot for rendering.
 - Domains: functional subsystems within the universe, such as rendering, audio,
   and operating-system integration.
@@ -50,7 +53,7 @@ module boundary explicit and lets the monolithic header control dependency order
 
 - `thing.h`: base types, references, units, identifiers, and `OperatingDomain`.
 - `visual.h`: camera, visual snapshot, and rendering domain interfaces.
-- `world.h`: simulation forms and world interface.
+- `world.h`: simulation forms, facets, and world interface.
 - `universe.h`: global engine context and identifier generation.
 
 ## Core Types
@@ -96,19 +99,32 @@ moments belong to that world. It owns the main game loop entry point through
 thread. Implementations therefore need a synchronization boundary between live
 simulation mutation and snapshot capture.
 
-### `Form`
+### `Form` And `Facet`
 
-`Form` represents an active presence in the world. A form may be atomic or
-composed from child forms. It has one base simulation responsibility:
+`Form` represents an active presence in the world and owns the structural side
+of the simulation: the parent/child hierarchy, the spatial transform (position
+and rotation, parent-relative, with `worldPosition()`/`worldRotation()` composing
+through the ancestor chain), and a flat list of facets. A form may be atomic or
+composed from child forms. Its `update()` advances each attached facet in
+attach order; the world's tree traversal updates child forms. The public `Form`
+is a sealed pure-virtual interface: `Form::create()` returns a new empty form
+ready to receive facets, and the concrete implementation (hierarchy, transform,
+and facet storage plus world-membership propagation) lives inside the engine.
 
-- `update()`: advance internal simulation state.
+`Facet` is the unit of state and behavior attached to a form, and the extension
+point of the simulation: aspects a form has (visible, audible, physical, ...)
+are expressed by attaching facets, not by subclassing `Form`. A facet belongs to
+at most one form, never has children of its own, and receives world-lifecycle
+notifications: `enterWorld()`/`leaveWorld()` fire when the owning form's world
+membership changes, when the facet is added to a form already living in a world,
+or when the owning form is destroyed while in one.
 
-`VisualForm` is the specialized form subtype that can contribute visual state for
-a snapshot through `captureVisualMoment()`. Engine implementations discover
-visual contributors with the internal `queryFormsByType()` helper, using
-`VisualForm::TYPE_INFO()` as the requested runtime type. This keeps simulation
+`VisualFacet` is the facet subtype that can contribute visual state for a
+snapshot through `captureVisualMoment()`. Engine implementations discover visual
+contributors with the internal `queryFacetsByType()` helper, using
+`VisualFacet::TYPE_INFO()` as the requested runtime type. This keeps simulation
 ownership in the form tree while allowing rendering to consume a snapshot built
-from the visible forms exposed by that tree.
+from the visual facets exposed by that tree.
 
 `Mold` is a reusable recipe for creating fresh form trees. The public `Mold`
 interface is pure virtual; `Mold::create()` returns the engine-provided concrete
@@ -160,8 +176,8 @@ World::run()
 
 World::captureVisualMoment(parameters)
   briefly freezes, synchronizes, or otherwise observes live state
-  queries each root Form tree for VisualForm objects by runtime type
-  asks those VisualForm objects to capture visual data
+  queries each root Form tree for VisualFacet objects by runtime type
+  asks those VisualFacet objects to capture visual data
   returns a self-contained VisualMoment for a specific point in time
 
 VisualDomain::render(moment)
@@ -183,9 +199,9 @@ The API already marks two `World` operations as thread-safe entry points:
 
 The concrete implementation should treat `World` as the synchronization owner for
 root form collection changes, recursive form-tree updates, and visual snapshot
-capture. `Form::update()` is driven by the world using whatever update cadence
-that world chooses, while visual capture may be requested from another thread by
-the rendering path.
+capture. `Form::update()` — which advances the form's facets — is driven by the
+world using whatever update cadence that world chooses, while visual capture may
+be requested from another thread by the rendering path.
 
 ## Relationship To Lower Layers
 
@@ -195,7 +211,7 @@ The expected layering is:
 
 ```text
 Application / sample
-  -> GN::e2 world, forms, cameras
+  -> GN::e2 world, forms, facets, cameras
   -> engine2 domains, such as VisualDomain or OperatingDomain
   -> gpu2 / renderer implementation
   -> platform graphics API
@@ -213,11 +229,18 @@ whole world → visual-moment → render path:
 
 - `simple-world.cpp`: the `Simple` namespace world. A `World` that advances its
   form trees at a fixed timestep on the caller's `run()` thread, plus two
-  trivial visible forms — a slowly spinning box mesh and a point light.
-  `populate()` and `captureVisualMoment()` are guarded by a single world mutex,
-  which is the synchronization boundary between live simulation and snapshot
-  capture. The sample runs `run()` on its own thread; the world itself does not
-  own a thread.
+  trivial visible objects built from facets on plain structural forms — a
+  spinning box (a spin-behavior facet plus a box-mesh visual facet) and a point
+  light (a single visual facet). The box is cast from a `Mold` recipe to
+  exercise that workflow; the light is assembled directly. `populate()` and
+  `captureVisualMoment()` are guarded by a single world mutex, which is the
+  synchronization boundary between live simulation and snapshot capture. The
+  sample runs `run()` on its own thread; the world itself does not own a
+  thread.
+- `form.cpp`: the engine's concrete `Form` implementation behind the sealed
+  public interface — hierarchy, transform, and facet storage with their
+  invariants — plus the `Form::create()` factory and the world-space transform
+  composition helpers.
 - `mold.cpp`: the official `Mold` recipe implementation. It stores a root form
   factory plus child molds and casts fresh form trees while rejecting recipe
   cycles.
@@ -234,15 +257,19 @@ whole world → visual-moment → render path:
 - `vk-shaders/box.{vert,frag}`: a minimal lit shader (per-frame camera/light UBO,
   per-draw model/color push constants).
 
-The factory functions `Simple::createWorld/createBox/createPointLight`,
-`OperatingDomain::create`, `Camera::create`, and `VisualDomain::create` are all
-implemented here. The matching sample lives in `src/sample/e2/simple-world.cpp`,
-and `test/simple-world-test.cpp` covers the CPU-side workflow (population, capture
-contents, and independent-cadence advancement) headlessly.
+The factory functions `Form::create`,
+`Simple::createWorld/createBox/createPointLight`, `OperatingDomain::create`,
+`Camera::create`, and `VisualDomain::create` are all implemented here. The
+matching sample lives in `src/sample/e2/simple-world.cpp`, and
+`test/simple-world-test.cpp` covers the CPU-side workflow headlessly: population,
+capture contents in world space, independent-cadence advancement, facet
+attach/ownership rules, facet update dispatch, `enterWorld()`/`leaveWorld()`
+notifications on every path, and transform composition through the parent chain.
 
-The original smoke test, `test/e2-mock.cpp`, remains: it creates a `Universe` and
-mock `World` and `Form` types to verify the runtime-type and reference patterns
-compile and that `populate()`/`run()` are callable through the public interfaces.
+The original smoke test, `test/e2-mock.cpp`, remains: it creates a `Universe`, a
+mock `World`, a factory-created `Form`, and a mock `Facet` to verify the
+runtime-type and reference patterns compile and that `populate()`/`run()` are
+callable through the public interfaces.
 
 ## Development Notes
 
@@ -250,8 +277,11 @@ compile and that `populate()`/`run()` are callable through the public interfaces
 - Use `GN::e2::Ref<T>` / `AutoRef<T>` for ownership.
 - Derive public engine objects from `Thing` or another direct e2 base type and
   register the direct parent with `GN_REGISTER_RUNTIME_TYPE(...)`.
+- Put behavior and domain-specific state in `Facet` subtypes. `Form` is a
+  sealed interface: create forms with `Form::create()` (or cast them from
+  molds) and compose capabilities by attaching facets.
 - Preserve the simulation/rendering split: live world state belongs to `World`
-  and `Form`; renderer-facing state is captured from `VisualForm` into a
+  and `Form`; renderer-facing state is captured from `VisualFacet` into a
   self-contained `VisualMoment`.
 - When implementing thread-safe world operations, document the synchronization
   invariant at the point where the lock, queue, or snapshot boundary is enforced.

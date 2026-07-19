@@ -12,75 +12,124 @@ namespace GN::e2 {
 // };
 
 struct World;
+struct Form;
 
-/// The main class that represents a presence in the world. A form may be atomic or composed
-/// from child forms; the world owns only root forms and propagates world membership through
-/// the form tree.
+/// A unit of state and behavior attached to a form. A form composes its capabilities from a
+/// flat list of facets (visual, audio, physics, gameplay, ...). Facets are the extension
+/// point of the simulation: aspects that a form has are expressed by attaching facets, not
+/// by subclassing Form. A facet never forms a hierarchy of its own — tree structure belongs
+/// to forms.
+struct Facet : Thing {
+    GN_E2_DEFINE_A_THING(Thing);
+
+    /// The form this facet is attached to, or null when detached. A facet belongs to at most
+    /// one form at a time; the back-pointer is maintained by Form::addFacet() and cleared by
+    /// the owning form's destructor.
+    Form * form() const { return mForm; }
+
+    /// Update this facet's internal state. Called by the owning form's update(), on the
+    /// world's simulation cadence.
+    virtual void update() {}
+
+    /// Called when this facet starts living in a world: either the owning form enters the
+    /// world, or the facet is added to a form that already lives in one. Invoked by the
+    /// owning form; not meant to be called directly. form()->world() is already set when
+    /// the call arrives.
+    virtual void enterWorld(World &) {}
+
+    /// Called when this facet stops living in a world: the owning form leaves the world or
+    /// is destroyed while in one. Invoked by the owning form; not meant to be called
+    /// directly. form() and its world are still valid during the call.
+    virtual void leaveWorld(World &) {}
+
+private:
+    friend struct Form; // the owning form maintains the back-pointer
+    Form * mForm = nullptr;
+};
+
+/// A facet with visible state that can contribute to a self-contained visual snapshot.
+struct VisualFacet : Facet {
+    GN_E2_DEFINE_A_THING(Facet);
+
+    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
+};
+
+/// The main class that represents a presence in the world. A form owns the structural side
+/// of the simulation: the parent/child hierarchy, the spatial transform, and a flat list of
+/// facets that supply its state and behavior. A form may be atomic or composed from child
+/// forms; the world owns only root forms and propagates world membership through the form
+/// tree. The interface is sealed: forms are created with create() (or cast from molds) and
+/// gain capabilities by attaching facets; the concrete implementation lives in the engine.
 struct Form : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
+    /// Create a new empty form: no parent, no children, no facets, identity transform.
+    /// Capabilities are added by attaching facets.
+    GN_API static Ref<Form> create(Universe & universe, const StrA & name);
+
     /// The world this form currently belongs to, or null when not attached to any world. A form can be
     /// attached to at most one world at a time; attachment is managed by the world's populate().
-    World * world() const { return mWorld; }
+    virtual World * world() const = 0;
 
     /// The parent form this form is currently attached to, or null when this is a root form.
-    Form * parent() const { return mParent; }
+    virtual Form * parent() const = 0;
 
     /// Child forms directly attached to this form.
-    ArrayView<Ref<Form>> children() { return {mChildren.data(), mChildren.size()}; }
+    virtual ArrayView<Ref<Form>> children() = 0;
 
     /// Child forms directly attached to this form.
-    ArrayView<const Ref<Form>> children() const { return {mChildren.data(), mChildren.size()}; }
+    virtual ArrayView<const Ref<Form>> children() const = 0;
 
-    /// Attach a child form. Fails if the child is null, already parented, belongs to a different world,
-    /// or would create a cycle. When this form is already in a world, the child joins the same world.
-    bool attach(Ref<Form> child) {
-        if (!child) GN_UNLIKELY return false;
-        if (child.get() == this) GN_UNLIKELY return false;
-        if (child->mParent) GN_UNLIKELY return false;
-        if (child->mWorld && child->mWorld != mWorld) GN_UNLIKELY return false;
-        for (auto * p = mParent; p; p = p->mParent) {
-            if (p == child.get()) GN_UNLIKELY return false;
-        }
-        child->mParent = this;
-        child->setWorldRecursive(mWorld);
-        mChildren.append(child);
-        return true;
-    }
+    /// Attach a child form. Fails if the child is null, not created by this engine, already parented,
+    /// belongs to a different world, or would create a cycle. When this form is already in a world,
+    /// the child joins the same world.
+    virtual bool attach(Ref<Form> child) = 0;
+
+    /// Position relative to the parent form (world-relative for root forms), in world units.
+    ///@{
+    virtual const WorldVector3 & position() const                  = 0;
+    virtual void                 setPosition(const WorldVector3 &) = 0;
+    ///@}
+
+    /// Orientation relative to the parent form (world-relative for root forms).
+    ///@{
+    virtual const Rotation & rotation() const              = 0;
+    virtual void             setRotation(const Rotation &) = 0;
+    ///@}
+
+    /// This form's transform composed with all ancestors, i.e. in world space. Defined once for
+    /// all implementations in terms of parent() and the local transform.
+    ///@{
+    GN_API WorldVector3 worldPosition() const;
+    GN_API Rotation     worldRotation() const;
+    ///@}
+
+    /// Facets attached to this form, in attach order.
+    virtual ArrayView<Ref<Facet>> facets() = 0;
+
+    /// Facets attached to this form, in attach order.
+    virtual ArrayView<const Ref<Facet>> facets() const = 0;
+
+    /// Attach a facet. Fails if the facet is null or already attached to a form. When this
+    /// form already lives in a world, the facet is told it enters that world.
+    virtual bool addFacet(Ref<Facet> facet) = 0;
 
     /// Enter a world as a root form. Fails if this form already belongs to a world or is attached
     /// below another form. World implementations call this before storing a populated root form.
-    bool enterWorld(World & world) {
-        if (mWorld) GN_UNLIKELY return false;
-        if (mParent) GN_UNLIKELY return false;
-        setWorldRecursive(&world);
-        return true;
-    }
+    virtual bool enterWorld(World & world) = 0;
 
     /// Leave a world entered by this root form. Clears world membership for the whole form tree.
-    void leaveWorld(World & world) {
-        if (mWorld == &world) setWorldRecursive(nullptr);
-    }
+    virtual void leaveWorld(World & world) = 0;
 
-    /// Update this form's internal state. Called by the world, usually with a fixed interval.
-    virtual void update() {}
+    /// Update this form's internal state: advances each facet in attach order. Called by the
+    /// world, usually with a fixed interval; the world's tree traversal updates child forms,
+    /// not this method.
+    virtual void update() = 0;
 
-private:
-    World *              mWorld  = nullptr;
-    Form *               mParent = nullptr;
-    ArrayBody<Ref<Form>> mChildren;
-
-    void setWorldRecursive(World * world) {
-        mWorld = world;
-        for (auto & child : mChildren) child->setWorldRecursive(world);
-    }
-};
-
-/// A form with visible state that can contribute to a self-contained visual snapshot.
-struct VisualForm : Form {
-    GN_E2_DEFINE_A_THING(Form);
-
-    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
+protected:
+    /// Facet befriends only this base class and friendship does not inherit, so the engine's
+    /// concrete implementation maintains a facet's owner back-pointer through this helper.
+    static void setFacetOwner(Facet & facet, Form * owner) { facet.mForm = owner; }
 };
 
 /// A reusable recipe that casts a fresh form tree from a root-form factory and child molds.

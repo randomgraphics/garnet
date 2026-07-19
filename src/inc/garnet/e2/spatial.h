@@ -33,6 +33,23 @@ public:
     constexpr UnitOfLength operator*(UnitOfLength o) const { return UnitOfLength(_value * o._value); }
     constexpr UnitOfLength operator/(UnitOfLength o) const { return UnitOfLength(_value / o._value); }
 
+    constexpr UnitOfLength & operator+=(UnitOfLength o) {
+        _value += o._value;
+        return *this;
+    }
+    constexpr UnitOfLength & operator-=(UnitOfLength o) {
+        _value -= o._value;
+        return *this;
+    }
+    constexpr UnitOfLength & operator*=(UnitOfLength o) {
+        _value *= o._value;
+        return *this;
+    }
+    constexpr UnitOfLength & operator/=(UnitOfLength o) {
+        _value /= o._value;
+        return *this;
+    }
+
     /// Conversion between world units and physical units. \p metersPerUnit is the physical size of
     /// one unit in meters. It is caller's responsibility to ensure the value is within reasonable
     /// range to avoid overflow or underflow.
