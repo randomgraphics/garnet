@@ -89,8 +89,8 @@ struct FormImpl : Form {
         if (mWorld == &world) setWorldRecursive(nullptr);
     }
 
-    void update() override {
-        for (auto & f : mFacets) f->update();
+    void live() override {
+        for (auto & f : mFacets) f->live();
     }
 
 private:

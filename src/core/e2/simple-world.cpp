@@ -61,7 +61,7 @@ struct SpinnerFacet : Facet {
     SpinnerFacet(Universe & u): Facet(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-spinner") {}
 
     // Advances on the world's simulation thread under the world lock.
-    void update() override {
+    void live() override {
         auto * f = form();
         if (!f) GN_UNLIKELY return;
         f->setRotation(glm::normalize(glm::angleAxis(kSpinPerTick, kSpinAxis) * f->rotation()));
@@ -201,7 +201,7 @@ struct SimpleWorld : World {
         while (!mStop.load(std::memory_order_relaxed)) {
             {
                 std::lock_guard<std::mutex> lock(mMutex);
-                for (auto & f : mForms) updateFormTree(*f);
+                for (auto & f : mForms) letFormTreeLive(*f);
             }
             std::this_thread::sleep_for(kTimestep);
         }
@@ -237,9 +237,9 @@ private:
     std::atomic<bool>    mRunning = {false}; // concurrent-run() guard
     std::atomic<bool>    mStop    = {false}; // game-loop stop signal
 
-    static void updateFormTree(Form & form) {
-        form.update();
-        for (auto & child : form.children()) updateFormTree(*child);
+    static void letFormTreeLive(Form & form) {
+        form.live();
+        for (auto & child : form.children()) letFormTreeLive(*child);
     }
 };
 

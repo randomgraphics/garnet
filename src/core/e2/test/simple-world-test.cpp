@@ -20,15 +20,28 @@ namespace {
 struct CountingFacet : Facet {
     GN_REGISTER_RUNTIME_TYPE(Facet);
 
-    int updates = 0;
-    int enters  = 0;
-    int leaves  = 0;
+    int lives  = 0; // live() call count, not remaining game lives
+    int enters = 0;
+    int leaves = 0;
+
+    // form()->world() as observed from inside the callbacks, to verify the documented
+    // ordering: already set when enterWorld() arrives, still set during leaveWorld().
+    World * worldSeenOnEnter = nullptr;
+    World * worldSeenOnLeave = nullptr;
 
     CountingFacet(Universe & u): Facet(TYPE_INFO(), u.generateUniqueIdentifier(), "counting-facet") {}
 
-    void update() override { ++updates; }
-    void enterWorld(World &) override { ++enters; }
-    void leaveWorld(World &) override { ++leaves; }
+    void live() override { ++lives; }
+
+    void enterWorld(World &) override {
+        ++enters;
+        worldSeenOnEnter = form() ? form()->world() : nullptr;
+    }
+
+    void leaveWorld(World &) override {
+        ++leaves;
+        worldSeenOnLeave = form() ? form()->world() : nullptr;
+    }
 };
 
 } // namespace
@@ -104,7 +117,7 @@ TEST_CASE("E2 Simple: visual capture walks child forms and composes their transf
     CHECK(impl->lights[0].position.z.raw() == 10);
 }
 
-TEST_CASE("E2 Form: facets attach, update, and detach with their form") {
+TEST_CASE("E2 Form: facets attach, live, and detach with their form") {
     Universe u;
 
     auto facet = referenceTo(new CountingFacet(u));
@@ -120,9 +133,9 @@ TEST_CASE("E2 Form: facets attach, update, and detach with their form") {
         auto other = Form::create(u, "other-group");
         CHECK(!other->addFacet(facet)); // a facet belongs to at most one form
 
-        CHECK(facet->updates == 0);
-        form->update();
-        CHECK(facet->updates == 1);
+        CHECK(facet->lives == 0);
+        form->live();
+        CHECK(facet->lives == 1);
     }
     // The facet outlived its form; its back-pointer must not dangle.
     CHECK(facet->form() == nullptr);
@@ -165,6 +178,66 @@ TEST_CASE("E2 Facet: world entry and exit reach facets on every path") {
     CHECK(late->leaves == 1);
     CHECK(below->leaves == 1);
     CHECK(early->enters == 1); // no spurious re-entry
+}
+
+TEST_CASE("E2 Facet: enter/leave pair up regardless of when the facet joins the form") {
+    Universe u;
+
+    auto world = Simple::createWorld(u);
+    REQUIRE(world);
+
+    auto before = referenceTo(new CountingFacet(u)); // joins the form outside any world
+    auto after  = referenceTo(new CountingFacet(u)); // joins the form while it lives in the world
+
+    auto form = Form::create(u, "test-form");
+    REQUIRE(form);
+
+    // Attached outside a world: no notification until the form enters one.
+    REQUIRE(form->addFacet(before));
+    CHECK(before->enters == 0);
+    CHECK(before->leaves == 0);
+
+    // The test drives enterWorld()/leaveWorld() directly, standing in for a world
+    // implementation, so the enter/leave pairing is observable without world-side
+    // population bookkeeping.
+    REQUIRE(form->enterWorld(*world));
+    CHECK(before->enters == 1);
+    CHECK(before->worldSeenOnEnter == world.get()); // form()->world() set before the callback
+
+    REQUIRE(form->addFacet(after));
+    CHECK(after->enters == 1); // added to a form already in a world: notified immediately
+    CHECK(after->worldSeenOnEnter == world.get());
+
+    // Leaving reaches both facets exactly once, regardless of when they joined.
+    form->leaveWorld(*world);
+    CHECK(form->world() == nullptr);
+    CHECK(before->leaves == 1);
+    CHECK(after->leaves == 1);
+    CHECK(before->worldSeenOnLeave == world.get()); // form()->world() still set during the callback
+    CHECK(after->worldSeenOnLeave == world.get());
+    CHECK(before->enters == 1); // leaving must not re-enter
+    CHECK(after->enters == 1);
+
+    // The pairing survives re-entry into a world.
+    REQUIRE(form->enterWorld(*world));
+    CHECK(before->enters == 2);
+    CHECK(after->enters == 2);
+    form->leaveWorld(*world);
+    CHECK(before->leaves == 2);
+    CHECK(after->leaves == 2);
+
+    // A form destroyed while still inside a world tells its facets to leave on the way out.
+    auto orphan = referenceTo(new CountingFacet(u));
+    {
+        auto doomed = Form::create(u, "doomed-form");
+        REQUIRE(doomed);
+        REQUIRE(doomed->addFacet(orphan));
+        REQUIRE(doomed->enterWorld(*world));
+        CHECK(orphan->enters == 1);
+    }
+    CHECK(orphan->leaves == 1);
+    CHECK(orphan->worldSeenOnLeave == world.get());
+    CHECK(orphan->form() == nullptr);
 }
 
 TEST_CASE("E2 Form: transform composes through the parent chain") {
@@ -285,6 +358,6 @@ TEST_CASE("E2 Simple: the world evolves on its own cadence, independent of captu
     REQUIRE(second->renderables.size() == 1);
 
     // The box spins while the world runs, so its orientation must have changed between
-    // two captures taken at different times, without the test driving update() itself.
+    // two captures taken at different times, without the test driving live() itself.
     CHECK(first->renderables[0].rotation != second->renderables[0].rotation);
 }

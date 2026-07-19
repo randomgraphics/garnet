@@ -27,9 +27,9 @@ struct Facet : Thing {
     /// the owning form's destructor.
     Form * form() const { return mForm; }
 
-    /// Update this facet's internal state. Called by the owning form's update(), on the
-    /// world's simulation cadence.
-    virtual void update() {}
+    /// Live one simulation moment: advance this facet's internal state by one step.
+    /// Called by the owning form's live(), on the world's simulation cadence.
+    virtual void live() {}
 
     /// Called when this facet starts living in a world: either the owning form enters the
     /// world, or the facet is added to a form that already lives in one. Invoked by the
@@ -121,10 +121,10 @@ struct Form : Thing {
     /// Leave a world entered by this root form. Clears world membership for the whole form tree.
     virtual void leaveWorld(World & world) = 0;
 
-    /// Update this form's internal state: advances each facet in attach order. Called by the
-    /// world, usually with a fixed interval; the world's tree traversal updates child forms,
-    /// not this method.
-    virtual void update() = 0;
+    /// Live one simulation moment: lets each facet live, in attach order. Called by the
+    /// world, usually with a fixed interval; the world's tree traversal covers child
+    /// forms, not this method.
+    virtual void live() = 0;
 
 protected:
     /// Facet befriends only this base class and friendship does not inherit, so the engine's

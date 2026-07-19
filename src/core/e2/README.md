@@ -105,8 +105,9 @@ simulation mutation and snapshot capture.
 of the simulation: the parent/child hierarchy, the spatial transform (position
 and rotation, parent-relative, with `worldPosition()`/`worldRotation()` composing
 through the ancestor chain), and a flat list of facets. A form may be atomic or
-composed from child forms. Its `update()` advances each attached facet in
-attach order; the world's tree traversal updates child forms. The public `Form`
+composed from child forms. Its `live()` lets each attached facet live one
+simulation moment, in attach order; the world's tree traversal covers child
+forms. The public `Form`
 is a sealed pure-virtual interface: `Form::create()` returns a new empty form
 ready to receive facets, and the concrete implementation (hierarchy, transform,
 and facet storage plus world-membership propagation) lives inside the engine.
@@ -198,9 +199,10 @@ The API already marks two `World` operations as thread-safe entry points:
 - `captureVisualMoment(const VisualMoment::CaptureParameters &)`.
 
 The concrete implementation should treat `World` as the synchronization owner for
-root form collection changes, recursive form-tree updates, and visual snapshot
-capture. `Form::update()` — which advances the form's facets — is driven by the
-world using whatever update cadence that world chooses, while visual capture may
+root form collection changes, recursive form-tree stepping, and visual snapshot
+capture. `Form::live()` — which lets the form's facets live one simulation
+moment — is driven by the world using whatever update cadence that world
+chooses, while visual capture may
 be requested from another thread by the rendering path.
 
 ## Relationship To Lower Layers
@@ -263,7 +265,7 @@ The factory functions `Form::create`,
 matching sample lives in `src/sample/e2/simple-world.cpp`, and
 `test/simple-world-test.cpp` covers the CPU-side workflow headlessly: population,
 capture contents in world space, independent-cadence advancement, facet
-attach/ownership rules, facet update dispatch, `enterWorld()`/`leaveWorld()`
+attach/ownership rules, facet live() dispatch, `enterWorld()`/`leaveWorld()`
 notifications on every path, and transform composition through the parent chain.
 
 The original smoke test, `test/e2-mock.cpp`, remains: it creates a `Universe`, a

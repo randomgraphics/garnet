@@ -37,5 +37,5 @@ TEST_CASE("E2: smoke test") {
     CHECK(ft->form() == f.get());
     w->populate({&f, 1});
     w->run();
-    f->update();
+    f->live();
 }
