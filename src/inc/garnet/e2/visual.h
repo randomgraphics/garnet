@@ -44,13 +44,8 @@ struct VisualMoment : Thing {
         UnitOfTime             expectedRenderTimeShift = {};
     };
 
-    /// Physical size of one world unit for all lengths carried by this moment. Lengths stay in
-    /// integer world units until the visual domain converts them, so the absolute-to-camera-
-    /// relative rebasing happens in exact integer space before scaling.
-    const PhysicalScale scale;
-
 protected:
-    VisualMoment(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, PhysicalScale scale_): Thing(type, id, name), scale(scale_) {}
+    VisualMoment(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name): Thing(type, id, name) {}
 };
 
 struct VisualDomain : Thing {

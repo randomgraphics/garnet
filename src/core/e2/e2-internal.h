@@ -69,11 +69,16 @@ struct VisualMomentImpl : VisualMoment {
         glm::vec3    color = {1, 1, 1}; ///< RGB already pre-scaled by luminous intensity
     };
 
+    /// Physical size of one world unit for all lengths carried by this moment. Lengths stay in
+    /// integer world units until the visual domain converts them, so the absolute-to-camera-
+    /// relative rebasing happens in exact integer space before scaling.
+    const PhysicalScale scale;
+
     DynaArray<Camera::Desc> cameras;
     DynaArray<Renderable>   renderables;
     DynaArray<Light>        lights;
 
-    VisualMomentImpl(Universe & u, PhysicalScale scale): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment", scale) {}
+    VisualMomentImpl(Universe & u, PhysicalScale scale_): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment"), scale(scale_) {}
 
     /// Append another moment's renderables and lights into this one.
     void merge(const VisualMomentImpl & other) {
