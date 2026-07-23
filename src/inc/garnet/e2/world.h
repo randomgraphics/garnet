@@ -157,23 +157,16 @@ struct World : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
     struct CreateParameters {
-        Universe & universe;
-        double     metersPerUnit = 1.0; ///< physical size of one WorldLength unit, in meters.
+        Universe &    universe;
+        PhysicalScale scale = PhysicalScale::NANOMETER(); ///< physical size of one world unit.
     };
 
-    /// Physical size of one WorldLength unit in this world, in meters. Constant for the world's lifetime.
-    const double metersPerUnit;
+    /// The universe this world belongs to.
+    Universe & universe;
 
-    const WorldLength ONE_METER = WorldLength::fromMeters(1.0f, metersPerUnit);
-
-    /// Conversion between this world's length unit and physical units, bound to the world's scale.
-    ///@{
-    float       toMeters(WorldLength v) const { return v.toMeters(metersPerUnit); }
-    glm::vec3   toMeters(const WorldVector3 & p) const { return {toMeters(p.x), toMeters(p.y), toMeters(p.z)}; }
-    float       toCentimeters(WorldLength v) const { return v.toCentimeters(metersPerUnit); }
-    WorldLength fromMeters(float meters) const { return WorldLength::fromMeters(meters, metersPerUnit); }
-    WorldLength fromCentimeters(float cm) const { return WorldLength::fromCentimeters(cm, metersPerUnit); }
-    ///@}
+    /// Physical size of one world unit in this world; all physical-unit conversion goes through
+    /// it. Constant for the world's lifetime.
+    const PhysicalScale scale;
 
     /// The main entry point (game-loop) of this world. Blocks the calling thread until stop()
     /// is called. The world imposes no threading policy of its own; callers that want the
@@ -190,11 +183,8 @@ struct World : Thing {
     virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
 
 protected:
-    World(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, double metersPerUnit_)
-        : Thing(type, id, name), metersPerUnit(metersPerUnit_) {
-        // zero/negative/NaN scale is a programming error; NaN fails the > comparison too.
-        GN_ASSERT(metersPerUnit > 0.0);
-    }
+    World(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, const CreateParameters & cp)
+        : Thing(type, id, name), universe(cp.universe), scale(cp.scale) {}
 };
 
 } // namespace GN::e2

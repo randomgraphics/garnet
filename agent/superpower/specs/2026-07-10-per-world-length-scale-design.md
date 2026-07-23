@@ -1,7 +1,11 @@
 # Per-World Physical Length Scale — Design
 
 Date: 2026-07-10
-Status: approved pending final review
+Status: SUPERSEDED (2026-07-20) — kept for history. The shipped design evolved past this
+spec: `UnitOfLength`/`WorldLength` became the 128-bit `WorldCoordinate` plus the 64-bit
+`LocalCoordinate` (the only type that converts to physical units), `metersPerUnit` became
+the power-of-ten `PhysicalScale`, and cross-type conversion/rotation lives on the
+`spatial` utility struct. See `src/inc/garnet/e2/spatial.h` and `src/core/e2/README.md`.
 
 ## Problem
 

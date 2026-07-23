@@ -1,6 +1,8 @@
 #version 450
 
-// Must match the vertex shader / GN::e2::FrameConstants.
+// Must match the vertex shader / GN::e2::FrameConstants. Positions (vWorldPos, lightPosition)
+// are camera-relative meters in world orientation — see box.vert; the lighting math is frame-
+// independent since only differences of positions enter it.
 layout(std140, set = 0, binding = 0) uniform FrameBlock {
     mat4 viewProj;
     vec4 ambient;

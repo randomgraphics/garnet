@@ -11,10 +11,10 @@ struct Camera : Thing {
     GN_E2_DEFINE_A_THING(Thing);
 
     struct Desc {
-        WorldVector3 position;
-        Rotation     orientation;
-        WorldLength  nearPlane;
-        WorldLength  farPlane;
+        WorldVector3    position;
+        Rotation        orientation;
+        LocalCoordinate nearPlane; ///< clip distances are camera-relative, hence local
+        LocalCoordinate farPlane;
 
         /// Set to positive for perspective camera, 0 for orthogonal camera.
         /// Values outside [0, 180] are invalid and will be clamped back into valid range.
@@ -44,14 +44,13 @@ struct VisualMoment : Thing {
         UnitOfTime             expectedRenderTimeShift = {};
     };
 
-    /// Physical size of one WorldLength unit for all lengths carried by this moment, in meters.
-    /// Lengths stay in integer world units until the visual domain converts them, so that future
-    /// absolute-to-camera-relative math can happen in exact integer space before scaling.
-    const double metersPerUnit;
+    /// Physical size of one world unit for all lengths carried by this moment. Lengths stay in
+    /// integer world units until the visual domain converts them, so the absolute-to-camera-
+    /// relative rebasing happens in exact integer space before scaling.
+    const PhysicalScale scale;
 
 protected:
-    VisualMoment(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, double metersPerUnit_)
-        : Thing(type, id, name), metersPerUnit(metersPerUnit_) {}
+    VisualMoment(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, PhysicalScale scale_): Thing(type, id, name), scale(scale_) {}
 };
 
 struct VisualDomain : Thing {

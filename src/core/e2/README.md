@@ -52,9 +52,13 @@ module boundary explicit and lets the monolithic header control dependency order
 `GNengine2.h` currently includes `GNgpu2.h`, then the `e2` subheaders:
 
 - `thing.h`: base types, references, units, identifiers, and `OperatingDomain`.
+- `spatial.h`: the coordinate system — absolute and local coordinate types, the
+  physical scale, and the `spatial` rebasing/rotation utilities.
+- `photometry.h`: photometric units used by lights.
 - `visual.h`: camera, visual snapshot, and rendering domain interfaces.
 - `world.h`: simulation forms, facets, and world interface.
 - `universe.h`: global engine context and identifier generation.
+- `simple.h`: the minimal `Simple` world used to exercise the workflow.
 
 ## Core Types
 
@@ -84,6 +88,39 @@ References use `GN::e2::Ref<T>`, an alias of `AutoRef<T>` constrained to
 
 Derived public types use `GN_E2_DEFINE_A_THING(baseType)` to inherit the base
 constructor shape and register runtime type metadata.
+
+### Coordinate System
+
+Spatial state lives in `spatial.h` and splits by role:
+
+- `WorldCoordinate`: an absolute coordinate measured in the smallest unit of a
+  world, stored as a 128-bit signed integer (two 64-bit halves, exposed
+  read-only through `hi()`/`lo()`). It supports full integer arithmetic but
+  deliberately contains no floating-point code.
+- `LocalCoordinate`: a coordinate in a local frame, stored as a signed 64-bit
+  integer of world units. It represents extents, offsets, and camera-relative
+  distances; rebasing into a local frame is what keeps physical-unit conversion
+  precise.
+- `PhysicalScale`: the physical size of one world unit, restricted to powers of
+  ten — one unit = 10^exponent meters (`NANOMETER()` is exponent -9). The
+  restriction keeps every conversion a pure multiply or divide by an
+  exactly-representable constant. All physical-unit conversion lives here
+  (`toMeters`/`fromMeters` and the centimeter variants): local quantities
+  convert exactly, absolute coordinates convert approximately (double
+  precision), and both directions saturate instead of overflowing — to
+  +/-infinity toward physical units, to the int64 unit range toward units.
+- `spatial`: stateless static utilities connecting the two coordinate types.
+  `toLocal(from, to)` narrows a coordinate difference into a local frame
+  (asserting it fits 64 bits), `toWorld(...)` widens or anchors local offsets
+  back onto absolute coordinates, and `rotatedBy(...)` rotates world or local
+  vectors in 32.32 fixed-point integer math.
+- `WorldVector2/3/4` and `LocalVector2/3/4` are the vector aliases; `Rotation`
+  is a `glm::quat`.
+
+The design rule: absolute coordinates never pass through floating point, whose
+53-bit mantissa would corrupt positions far from the origin. Quantities convert
+to float meters only after rebasing into a local frame, so precision is
+independent of where in the (128-bit) world the action happens.
 
 ### `World`
 
@@ -250,9 +287,12 @@ whole world → visual-moment → render path:
   render surface, and event pump.
 - `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
   the gpu2 swapchain, depth buffer, box shaders, a frame constants buffer, and a
-  geometry cache; `render()` consumes a self-contained snapshot, emits a
-  per-frame constants upload payload followed by the raster payload, and lets
-  gpu2 queue ordering keep CPU frame preparation and GPU execution overlapped.
+  geometry cache; `render()` consumes a self-contained snapshot, rebases every
+  absolute position against the primary camera in exact integer space (only the
+  resulting local delta converts to float meters, so the view carries no
+  translation), emits a per-frame constants upload payload followed by the
+  raster payload, and lets gpu2 queue ordering keep CPU frame preparation and
+  GPU execution overlapped.
 - `e2-internal.h`: private types shared across the implementation, most notably
   `VisualMomentImpl`, the concrete self-contained snapshot (cameras +
   renderables + lights) that worlds produce and the visual domain consumes.
@@ -267,6 +307,13 @@ matching sample lives in `src/sample/e2/simple-world.cpp`, and
 capture contents in world space, independent-cadence advancement, facet
 attach/ownership rules, facet live() dispatch, `enterWorld()`/`leaveWorld()`
 notifications on every path, and transform composition through the parent chain.
+
+`test/spatial-test.cpp` covers the coordinate system headlessly: 128-bit
+`WorldCoordinate` arithmetic across the 64-bit boundary, `toLocal`/`toWorld`
+rebasing, integer-space rotation, and physical-unit conversion including
+rounding and saturation behavior. `test/visual-teardown-test.cpp` is a
+GPU-required regression test that destroys the visual domain before the OS
+domain and asserts the Vulkan validation layer reports no leaked objects.
 
 The original smoke test, `test/e2-mock.cpp`, remains: it creates a `Universe`, a
 mock `World`, a factory-created `Form`, and a mock `Facet` to verify the

@@ -77,8 +77,8 @@ private:
 struct BoxMeshFacet : VisualFacet {
     GN_REGISTER_RUNTIME_TYPE(VisualFacet);
 
-    BoxMeshFacet(Universe & u, const WorldVector3 & dimensions)
-        : VisualFacet(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-box-mesh"), mUniverse(u), mDimensions(dimensions) {
+    BoxMeshFacet(Universe & u, const LocalVector3 & dimensions)
+        : VisualFacet(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-box-mesh"), mDimensions(dimensions) {
         mMesh     = std::make_shared<MeshData>();
         mMesh->id = id;
         buildUnitBoxMesh(*mMesh);
@@ -92,7 +92,7 @@ struct BoxMeshFacet : VisualFacet {
                 GN_WARN(sLogger)("box mesh facet is not attached to a form living in a world; nothing to capture.");
                 return {};
             }
-        auto                         moment = referenceTo(new VisualMomentImpl(mUniverse, w->metersPerUnit));
+        auto                         moment = referenceTo(new VisualMomentImpl(w->universe, w->scale));
         VisualMomentImpl::Renderable r;
         r.mesh        = mMesh;
         r.translation = f->worldPosition();
@@ -104,9 +104,8 @@ struct BoxMeshFacet : VisualFacet {
     }
 
 private:
-    Universe &                mUniverse;
     std::shared_ptr<MeshData> mMesh;
-    WorldVector3              mDimensions;
+    LocalVector3              mDimensions;
     glm::vec3                 mColor = {0.70f, 0.74f, 0.80f};
 };
 
@@ -115,8 +114,7 @@ struct PointLightFacet : VisualFacet {
     GN_REGISTER_RUNTIME_TYPE(VisualFacet);
 
     PointLightFacet(Universe & u, const IntensityRGB & color)
-        : VisualFacet(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mUniverse(u),
-          mColor(glm::vec3(color.r, color.g, color.b) * color.intensity.value) {}
+        : VisualFacet(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mColor(glm::vec3(color.r, color.g, color.b) * color.intensity.value) {}
 
     Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
         auto * f = form();
@@ -125,7 +123,7 @@ struct PointLightFacet : VisualFacet {
                 GN_WARN(sLogger)("point light facet is not attached to a form living in a world; nothing to capture.");
                 return {};
             }
-        auto                    moment = referenceTo(new VisualMomentImpl(mUniverse, w->metersPerUnit));
+        auto                    moment = referenceTo(new VisualMomentImpl(w->universe, w->scale));
         VisualMomentImpl::Light l;
         l.position = f->worldPosition();
         l.color    = mColor;
@@ -134,8 +132,7 @@ struct PointLightFacet : VisualFacet {
     }
 
 private:
-    Universe & mUniverse;
-    glm::vec3  mColor; // pre-scaled by luminous intensity
+    glm::vec3 mColor; // pre-scaled by luminous intensity
 };
 
 // ---------------------------------------------------------------------------
@@ -145,7 +142,7 @@ private:
 /// Define the reusable box recipe: a structural form carrying a box mesh facet and a spin
 /// behavior facet. Casting the mold yields a fresh, independently spinning box each time.
 /// Per-instance state such as position is set on the cast form, not baked into the recipe.
-Ref<Mold> createBoxMold(Universe & universe, const WorldVector3 & dimensions) {
+Ref<Mold> createBoxMold(Universe & universe, const LocalVector3 & dimensions) {
     return Mold::create(universe, "simple-box-mold", [dimensions](const Mold::CreateParameters & cp) -> Ref<Form> {
         auto form = Form::create(cp.universe, cp.name);
         if (!form) GN_UNLIKELY return {};
@@ -170,7 +167,7 @@ Ref<Mold> createBoxMold(Universe & universe, const WorldVector3 & dimensions) {
 struct SimpleWorld : World {
     GN_REGISTER_RUNTIME_TYPE(World);
 
-    SimpleWorld(Universe & u, double metersPerUnit_): World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world", metersPerUnit_), mUniverse(u) {}
+    SimpleWorld(Universe & u, PhysicalScale scale_): World(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-world", {.universe = u, .scale = scale_}) {}
 
     // Symmetric with populate(): forms are ref-counted and may outlive the world, so clear their
     // back-pointers before the world goes away.
@@ -210,7 +207,7 @@ struct SimpleWorld : World {
     void stop() override { mStop.store(true, std::memory_order_relaxed); }
 
     Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
-        auto moment = referenceTo(new VisualMomentImpl(mUniverse, metersPerUnit));
+        auto moment = referenceTo(new VisualMomentImpl(universe, scale));
 
         // Snapshot the observing cameras into the moment so the snapshot is self-contained.
         for (auto & cam : params.cameras) {
@@ -231,7 +228,6 @@ struct SimpleWorld : World {
     }
 
 private:
-    Universe &           mUniverse;
     std::mutex           mMutex;             // guards mForms and the live state of every form
     DynaArray<Ref<Form>> mForms;             // guarded by mMutex
     std::atomic<bool>    mRunning = {false}; // concurrent-run() guard
@@ -247,9 +243,9 @@ private:
 
 namespace GN::e2::Simple {
 
-Ref<World> createWorld(Universe & universe, double metersPerUnit) { return referenceTo(new SimpleWorld(universe, metersPerUnit)); }
+Ref<World> createWorld(Universe & universe, PhysicalScale scale) { return referenceTo(new SimpleWorld(universe, scale)); }
 
-Ref<Form> createBox(Universe & universe, const WorldVector3 & position, const WorldVector3 & dimensions) {
+Ref<Form> createBox(Universe & universe, const WorldVector3 & position, const LocalVector3 & dimensions) {
     // Exercise the Mold workflow: define the box recipe first, then cast a form from it.
     auto mold = createBoxMold(universe, dimensions);
     if (!mold) GN_UNLIKELY return {};

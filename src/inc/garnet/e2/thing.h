@@ -25,7 +25,7 @@ using ArrayBody = DynaArray<T>;
 template<typename T>
 using ArrayView = SafeArrayAccessor<T>;
 
-/// Unit of time used in by E2
+/// Unit of time used by E2
 using UnitOfTime = std::chrono::nanoseconds;
 
 typedef int64_t UniqueIdentifier;

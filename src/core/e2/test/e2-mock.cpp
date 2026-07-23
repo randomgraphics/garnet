@@ -8,7 +8,7 @@ using namespace GN::e2;
 struct MockWorld : World {
     GN_REGISTER_RUNTIME_TYPE(World);
 
-    MockWorld(Universe & u): World(TYPE_INFO(), u.generateUniqueIdentifier(), "hello world", 1.0) {}
+    MockWorld(Universe & u): World(TYPE_INFO(), u.generateUniqueIdentifier(), "hello world", {.universe = u}) {}
 
     void populate(ArrayView<Ref<Form>>) override {}
 

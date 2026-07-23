@@ -17,6 +17,9 @@ using namespace GN::e2;
 
 namespace {
 
+// Test shorthand: the absolute coordinate \p v units from the origin.
+WorldCoordinate W(int64_t v) { return spatial::toWorld(LocalCoordinate(v)); }
+
 struct CountingFacet : Facet {
     GN_REGISTER_RUNTIME_TYPE(Facet);
 
@@ -52,8 +55,8 @@ TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment
     auto world = Simple::createWorld(u);
     REQUIRE(world);
 
-    auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
-    auto light = Simple::createPointLight(u, WorldVector3(WorldLength(3), WorldLength(3), WorldLength(3)), IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
+    auto box   = Simple::createBox(u, WorldVector3(W(0), W(0), W(0)), LocalVector3(LocalCoordinate(1), LocalCoordinate(1), LocalCoordinate(1)));
+    auto light = Simple::createPointLight(u, WorldVector3(W(3), W(3), W(3)), IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
     REQUIRE(box);
     REQUIRE(light);
 
@@ -87,14 +90,14 @@ TEST_CASE("E2 Simple: visual capture walks child forms and composes their transf
 
     auto world = Simple::createWorld(u);
     auto group = Form::create(u, "test-group");
-    auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
-    auto light = Simple::createPointLight(u, WorldVector3(WorldLength(3), WorldLength(3), WorldLength(3)), IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
+    auto box   = Simple::createBox(u, WorldVector3(W(0), W(0), W(0)), LocalVector3(LocalCoordinate(1), LocalCoordinate(1), LocalCoordinate(1)));
+    auto light = Simple::createPointLight(u, WorldVector3(W(3), W(3), W(3)), IntensityRGB {1.f, 1.f, 1.f, Candela {50.f}});
     REQUIRE(group);
     REQUIRE(box);
     REQUIRE(light);
     REQUIRE(group->attach(box));
     REQUIRE(group->attach(light));
-    group->setPosition(WorldVector3(WorldLength(5), WorldLength(6), WorldLength(7)));
+    group->setPosition(WorldVector3(W(5), W(6), W(7)));
 
     Ref<Form> forms[] = {group};
     world->populate({forms, 1});
@@ -109,12 +112,12 @@ TEST_CASE("E2 Simple: visual capture walks child forms and composes their transf
     CHECK(light->world() == world.get());
 
     // Captured positions must be in world space: the group's offset shifts both children.
-    CHECK(impl->renderables[0].translation.x.raw() == 5);
-    CHECK(impl->renderables[0].translation.y.raw() == 6);
-    CHECK(impl->renderables[0].translation.z.raw() == 7);
-    CHECK(impl->lights[0].position.x.raw() == 8);
-    CHECK(impl->lights[0].position.y.raw() == 9);
-    CHECK(impl->lights[0].position.z.raw() == 10);
+    CHECK(impl->renderables[0].translation.x == W(5));
+    CHECK(impl->renderables[0].translation.y == W(6));
+    CHECK(impl->renderables[0].translation.z == W(7));
+    CHECK(impl->lights[0].position.x == W(8));
+    CHECK(impl->lights[0].position.y == W(9));
+    CHECK(impl->lights[0].position.z == W(10));
 }
 
 TEST_CASE("E2 Form: facets attach, live, and detach with their form") {
@@ -249,20 +252,20 @@ TEST_CASE("E2 Form: transform composes through the parent chain") {
     REQUIRE(child);
     REQUIRE(parent->attach(child));
 
-    parent->setPosition(WorldVector3(WorldLength(10), WorldLength(20), WorldLength(30)));
+    parent->setPosition(WorldVector3(W(10), W(20), W(30)));
     parent->setRotation(glm::angleAxis(glm::half_pi<float>(), glm::vec3(0.f, 0.f, 1.f)));
-    child->setPosition(WorldVector3(WorldLength(100), WorldLength(0), WorldLength(0)));
+    child->setPosition(WorldVector3(W(100), W(0), W(0)));
 
     // A root form's local transform is already world space.
-    CHECK(parent->worldPosition().x.raw() == 10);
-    CHECK(parent->worldPosition().y.raw() == 20);
-    CHECK(parent->worldPosition().z.raw() == 30);
+    CHECK(parent->worldPosition().x == W(10));
+    CHECK(parent->worldPosition().y == W(20));
+    CHECK(parent->worldPosition().z == W(30));
 
     // The child's local +X offset lands on +Y after the parent's 90-degree Z rotation.
     auto wp = child->worldPosition();
-    CHECK(wp.x.raw() == 10);
-    CHECK(wp.y.raw() == 120);
-    CHECK(wp.z.raw() == 30);
+    CHECK(wp.x == W(10));
+    CHECK(wp.y == W(120));
+    CHECK(wp.z == W(30));
 
     // The composed rotation carries the parent's rotation (identity child rotation).
     auto wr = child->worldRotation();
@@ -274,8 +277,7 @@ TEST_CASE("E2 Mold: casting creates a fresh form tree") {
 
     auto groupMold = Mold::create(u, "group-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> { return Form::create(cp.universe, cp.name); });
     auto boxMold   = Mold::create(u, "box-mold", [](const Mold::CreateParameters & cp) -> Ref<Form> {
-        return Simple::createBox(cp.universe, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)),
-                                 WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
+        return Simple::createBox(cp.universe, WorldVector3(W(0), W(0), W(0)), LocalVector3(LocalCoordinate(1), LocalCoordinate(1), LocalCoordinate(1)));
     });
     REQUIRE(groupMold);
     REQUIRE(boxMold);
@@ -296,7 +298,7 @@ TEST_CASE("E2 Simple: unit box faces are wound CCW when viewed from outside") {
     Universe u;
 
     auto world = Simple::createWorld(u);
-    auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
+    auto box   = Simple::createBox(u, WorldVector3(W(0), W(0), W(0)), LocalVector3(LocalCoordinate(1), LocalCoordinate(1), LocalCoordinate(1)));
     REQUIRE(world);
     REQUIRE(box);
 
@@ -332,8 +334,8 @@ TEST_CASE("E2 Simple: unit box faces are wound CCW when viewed from outside") {
 TEST_CASE("E2 Simple: the world evolves on its own cadence, independent of capture") {
     Universe u;
 
-    auto world = Simple::createWorld(u);
-    auto box = Simple::createBox(u, WorldVector3(WorldLength(0), WorldLength(0), WorldLength(0)), WorldVector3(WorldLength(1), WorldLength(1), WorldLength(1)));
+    auto      world   = Simple::createWorld(u);
+    auto      box     = Simple::createBox(u, WorldVector3(W(0), W(0), W(0)), LocalVector3(LocalCoordinate(1), LocalCoordinate(1), LocalCoordinate(1)));
     Ref<Form> forms[] = {box};
     world->populate({forms, 1});
 

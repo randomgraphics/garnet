@@ -2,6 +2,10 @@
 
 // Per-frame constants (camera + lights). set = 0, binding = 0.
 // Field order/layout must match GN::e2::FrameConstants in e2-internal.h.
+//
+// All positions here are camera-relative: the CPU rebases every absolute coordinate against
+// the primary camera in exact integer space, so "world" below means world orientation with
+// the camera at the origin, in meters. viewProj therefore carries no translation.
 layout(std140, set = 0, binding = 0) uniform FrameBlock {
     mat4 viewProj;
     vec4 ambient;

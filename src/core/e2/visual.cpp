@@ -144,14 +144,18 @@ struct VisualDomainImpl : VisualDomain {
         }
         mRenderTarget.setColorTarget(0, frame.view);
 
-        // Fill the per-frame constants from the first camera and the lights.
-        FrameConstants fc     = {};
-        fc.ambient            = glm::vec4(0.04f, 0.04f, 0.05f, 0.f);
-        const bool haveCamera = moment->cameras.size() > 0;
-        if (haveCamera) fc.viewProj = buildViewProj(moment->cameras[0], moment->metersPerUnit);
+        // Fill the per-frame constants from the first camera and the lights. Rendering is
+        // camera-relative: every absolute position is rebased against the primary camera in
+        // exact integer space, and only the resulting local delta converts to float meters.
+        FrameConstants fc             = {};
+        fc.ambient                    = glm::vec4(0.04f, 0.04f, 0.05f, 0.f);
+        const bool         haveCamera = moment->cameras.size() > 0;
+        const WorldVector3 eye =
+            haveCamera ? moment->cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
+        if (haveCamera) fc.viewProj = buildViewProj(moment->cameras[0], moment->scale);
         int lightCount = (int) std::min<size_t>(moment->lights.size(), kMaxLights);
         for (int i = 0; i < lightCount; ++i) {
-            fc.lightPosition[i] = glm::vec4(toMeters(moment->lights[i].position, moment->metersPerUnit), 1.f);
+            fc.lightPosition[i] = glm::vec4(moment->scale.toMeters(spatial::toLocal(eye, moment->lights[i].position)), 1.f);
             fc.lightColor[i]    = glm::vec4(moment->lights[i].color, 0.f);
         }
         fc.lightCount = lightCount;
@@ -197,10 +201,11 @@ struct VisualDomainImpl : VisualDomain {
                 geom.indices    = RasterGeometry::GeometryBuffer {.buffer = gpuMesh->ib, .offset = 0, .stride = sizeof(uint16_t)};
                 geom.indexCount = gpuMesh->indexCount;
 
-                // Moment transforms stay in world units; convert to float meters only here.
+                // Moment transforms stay in world units; the camera-relative delta converts to
+                // float meters only here.
                 DrawConstants dc;
-                dc.model     = glm::translate(glm::mat4(1.f), toMeters(r.translation, moment->metersPerUnit)) * glm::mat4_cast(glm::normalize(r.rotation)) *
-                               glm::scale(glm::mat4(1.f), toMeters(r.scaling, moment->metersPerUnit));
+                dc.model     = glm::translate(glm::mat4(1.f), moment->scale.toMeters(spatial::toLocal(eye, r.translation))) *
+                               glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment->scale.toMeters(r.scaling));
                 dc.baseColor = glm::vec4(r.baseColor, 1.f);
 
                 GpuRaster::DrawParameters dp;
@@ -256,19 +261,19 @@ private:
         return &inserted.first->second;
     }
 
-    glm::mat4 buildViewProj(const Camera::Desc & cam, double metersPerUnit) const {
-        glm::vec3 eye         = toMeters(cam.position, metersPerUnit);
+    glm::mat4 buildViewProj(const Camera::Desc & cam, PhysicalScale scale) const {
+        // Rendering is camera-relative: positions are rebased against the camera before any
+        // float conversion, so the camera sits at the origin and the view carries no translation.
         glm::quat orientation = cam.orientation;
         if (glm::dot(orientation, orientation) < 1e-8f) orientation = glm::quat(1.f, 0.f, 0.f, 0.f);
         orientation = glm::normalize(orientation);
 
-        glm::mat4 camToWorld = glm::translate(glm::mat4(1.f), eye) * glm::mat4_cast(orientation);
-        glm::mat4 view       = glm::inverse(camToWorld);
+        glm::mat4 view = glm::inverse(glm::mat4_cast(orientation));
 
         float aspect = (mHeight > 0) ? (float) mWidth / (float) mHeight : 1.f;
         float fovY   = glm::radians(std::clamp(cam.fovYInDegree, 1.f, 179.f));
-        float nearP  = cam.nearPlane.toMeters(metersPerUnit);
-        float farP   = cam.farPlane.toMeters(metersPerUnit);
+        float nearP  = scale.toMeters(cam.nearPlane);
+        float farP   = scale.toMeters(cam.farPlane);
         if (nearP <= 0.f) nearP = 0.1f;
         if (farP <= nearP) farP = nearP + 1000.f;
 

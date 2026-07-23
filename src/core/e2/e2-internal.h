@@ -14,16 +14,6 @@
 
 namespace GN::e2 {
 
-// ---------------------------------------------------------------------------
-// Unit helpers
-// ---------------------------------------------------------------------------
-// Convert engine-space quantities into the plain float/glm types the GPU path consumes.
-// The scale (meters-per-unit) is a per-world runtime value carried by the visual moment.
-
-inline glm::vec3 toMeters(const WorldVector3 & p, double metersPerUnit) {
-    return {p.x.toMeters(metersPerUnit), p.y.toMeters(metersPerUnit), p.z.toMeters(metersPerUnit)};
-}
-
 // Query a form tree for facets that match, or derive from, the requested runtime type.
 inline void queryFacetsByType(Form & root, const RuntimeType::TypeInfo & type, ArrayBody<Ref<Facet>> & result) {
     for (auto & facet : root.facets()) {
@@ -64,11 +54,12 @@ struct VisualMomentImpl : VisualMoment {
         std::shared_ptr<const MeshData> mesh;
 
         // Transform kept in world units (not a baked float matrix) so the visual domain can do
-        // position math (e.g. future camera-relative rebasing) in exact integer space before
-        // converting to physical floats.
+        // the camera-relative rebasing in exact integer space before converting to physical
+        // floats. The translation is an absolute coordinate; the scaling is an extent, so it is
+        // local and converts directly.
         WorldVector3 translation;
         glm::quat    rotation = {1.f, 0.f, 0.f, 0.f};
-        WorldVector3 scaling  = {WorldLength(1), WorldLength(1), WorldLength(1)};
+        LocalVector3 scaling  = {LocalCoordinate(1), LocalCoordinate(1), LocalCoordinate(1)};
 
         glm::vec3 baseColor = glm::vec3(0.8f);
     };
@@ -82,7 +73,7 @@ struct VisualMomentImpl : VisualMoment {
     DynaArray<Renderable>   renderables;
     DynaArray<Light>        lights;
 
-    VisualMomentImpl(Universe & u, double metersPerUnit): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment", metersPerUnit) {}
+    VisualMomentImpl(Universe & u, PhysicalScale scale): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment", scale) {}
 
     /// Append another moment's renderables and lights into this one.
     void merge(const VisualMomentImpl & other) {
@@ -99,9 +90,9 @@ constexpr uint32_t kMaxLights = 4;
 
 /// Per-frame uniform block, set = 0, binding = 0. std140 layout.
 struct FrameConstants {
-    glm::mat4 viewProj;                  ///< proj * view, Vulkan clip space (Y already flipped)
+    glm::mat4 viewProj;                  ///< proj * view, Vulkan clip space (Y already flipped); the view carries no translation
     glm::vec4 ambient;                   ///< rgb ambient term, a unused
-    glm::vec4 lightPosition[kMaxLights]; ///< xyz world position, w unused
+    glm::vec4 lightPosition[kMaxLights]; ///< xyz camera-relative position in meters (rebased against the primary camera), w unused
     glm::vec4 lightColor[kMaxLights];    ///< rgb intensity-scaled color, w unused
     int32_t   lightCount = 0;
     int32_t   _pad[3]    = {0, 0, 0};

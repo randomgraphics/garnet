@@ -4,8 +4,6 @@
 
 #include <garnet/GNengine2.h>
 
-#include <cmath>
-
 using namespace GN;
 using namespace GN::e2;
 
@@ -98,7 +96,7 @@ private:
     FormImpl *            mParent = nullptr;
     ArrayBody<Ref<Form>>  mChildren;
     ArrayBody<Ref<Facet>> mFacets;
-    WorldVector3          mPosition = {WorldLength(0), WorldLength(0), WorldLength(0)};
+    WorldVector3          mPosition = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()};
     Rotation              mRotation = Rotation(1.f, 0.f, 0.f, 0.f);
 
     // Propagates world membership through the form tree and notifies facets of the
@@ -122,14 +120,6 @@ private:
     }
 };
 
-// Rotate a world-unit vector in double precision: doubles represent integers up to 2^53
-// exactly, so practical world coordinates survive the round trip; float would corrupt
-// large int64 positions.
-WorldVector3 rotatedBy(const Rotation & q, const WorldVector3 & v) {
-    glm::dvec3 d = glm::dquat(q) * glm::dvec3((double) v.x.raw(), (double) v.y.raw(), (double) v.z.raw());
-    return {WorldLength((int64_t) std::llround(d.x)), WorldLength((int64_t) std::llround(d.y)), WorldLength((int64_t) std::llround(d.z))};
-}
-
 } // namespace
 
 namespace GN::e2 {
@@ -138,7 +128,7 @@ Ref<Form> Form::create(Universe & universe, const StrA & name) { return referenc
 
 WorldVector3 Form::worldPosition() const {
     auto * p = parent();
-    return p ? p->worldPosition() + rotatedBy(p->worldRotation(), position()) : position();
+    return p ? p->worldPosition() + spatial::rotatedBy(p->worldRotation(), position()) : position();
 }
 
 Rotation Form::worldRotation() const {
