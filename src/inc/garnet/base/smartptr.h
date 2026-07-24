@@ -366,6 +366,20 @@ public:
         return AutoRef<T>(static_cast<T *>(mPtr));
     }
 
+    /// @brief Safe cast to another compatible type
+    template<typename T>
+    AutoRef<T> & cast() {
+        static_assert(std::is_base_of_v<T, X>);
+        return *(AutoRef<T> *) this;
+    }
+
+    /// @brief Safe cast to another compatible type
+    template<typename T>
+    const AutoRef<T> & cast() const {
+        static_assert(std::is_base_of_v<T, X>);
+        return *(const AutoRef<T> *) this;
+    }
+
     ///
     /// Creates an AutoRef by constructing X with the given arguments.
     /// Similar to std::make_shared.

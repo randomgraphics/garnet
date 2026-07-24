@@ -97,7 +97,7 @@ struct GpuContext : public RootEntity {
 
     virtual Caps caps() const = 0;
 
-    /// Vulkan instance handle (VkInstance as intptr_t) for use with Window::getVulkanSurfaceHandle. Returns 0 if not Vulkan.
+    /// Vulkan instance handle (VkInstance as intptr_t) for use with Window::createVulkanSurfaceHandle. Returns 0 if not Vulkan.
     virtual intptr_t getVulkanInstanceHandle() const { return 0; }
 
     // --------------------------------------------------------

@@ -25,13 +25,16 @@ TEST_CASE("GPU2: swapchain prepare and present", "[gpu2][swapchain][gpu]") {
     window->show();
 
     // TODO: make it work for other APIs.
-    intptr_t surface = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+    intptr_t surface = window->createVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
     if (!surface) SKIP("No Vulkan surface for window");
 
     Swapchain::CreateDesc scDesc;
     scDesc.setGpu(gpuContext).setName("test_swapchain").setSurface(surface).setDimensions(windowWidth, windowHeight);
     AutoRef<Swapchain> swapchain = Swapchain::create(scDesc);
-    if (!swapchain) SKIP("Swapchain creation failed (Vulkan surface or device?)");
+    if (!swapchain) {
+        window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
+        SKIP("Swapchain creation failed (Vulkan surface or device?)");
+    }
 
     constexpr int kFrames = 4;
     for (int i = 0; i < kFrames; ++i) {
@@ -43,6 +46,11 @@ TEST_CASE("GPU2: swapchain prepare and present", "[gpu2][swapchain][gpu]") {
         // Empty frame: pass prepare()'s ready signal directly to present.
         swapchain->present(*frame.ready);
     }
+
+    // The test owns the surface: destroy it after the swapchain, before the GPU context.
+    gpuContext->waitForIdle();
+    swapchain.clear();
+    window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
 }
 
 TEST_CASE("GPU2: headless swapchain prepare and present", "[gpu2][swapchain][gpu][headless]") {

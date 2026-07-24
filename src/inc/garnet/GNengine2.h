@@ -6,82 +6,18 @@
 /// \author  CHEN@@CHENLI-HOMEPC (2015.4.8)
 // *****************************************************************************
 
-namespace GN {
-namespace e2 {
+#include "GNgpu2.h"
 
-/// Position is defined as 64-bit signed integer to support large open world.
-/// 1 unit = 1 um (micrometer) for better precision.
-struct Position {
-    int64_t x, y, z;
-};
-
-class Transformation {
-    Vector3f    translation;
-    Quaternionf rotation;
-    Vector3f    scaling;
-};
-
-class Entity : public RefCounter {
-    // basic properties
-    uint64_t _id;
-    StrA     _name;
-};
-
-class SpacialEntity : public Entity {
-    // spacial properties
-    WeakRef<Entity> _spacialParent;
-    Position        _worldPosition; // only when _spacialParent is empty.
-    Spheref         _boundingSphere;
-    Transformation  _transformation; // local to parent transformation
-};
-
-class VisualEntity : SpacialEntity {
-public:
-    virtual void RenderPass0();
-    virtual void RenderPass1();
-    virtual void RenderPass2();
-};
-
-// Camera object
-class Camera : public VisualEntity {};
-
-// The geometry object that never changes
-class ImmutableGeometry : public VisualEntity {};
-
-class SceneGraph {
-public:
-    void AddEntity(SpacialEntity *);
-    void RemoveEntity(uint64_t id);
-};
-
-class AsyncNofitication : RefCounter {
-public:
-    enum Status {
-        PENDING = -2,
-        ABORT   = -1,
-        FAILED  = 0,
-        DONE    = 1,
-    };
-
-    void   Notify(OperationResult);
-    Status Pool();
-    void   WaitForFinish();
-};
-
-// self contained world object.
-class World {
-public:
-    void LoadAsync(File &);
-    void SaveAsync(File &);
-    void PurgeAsync();
-    void Render(UINT pass);
-};
-
-class Universe {
-    uint64_t GenerateUniqueId();
-};
-} // namespace e2
-} // namespace GN
+// engine2 subheaders below must only be included through this file (__GN_INSIDE_ENGINE2_H__ is checked there).
+#define __GN_INSIDE_ENGINE2_H__ 1
+#include "e2/thing.h"
+#include "e2/spatial.h"
+#include "e2/photometry.h"
+#include "e2/visual.h"
+#include "e2/world.h"
+#include "e2/universe.h"
+#include "e2/simple.h"
+#undef __GN_INSIDE_ENGINE2_H__
 
 // *****************************************************************************
 //                                     EOF
