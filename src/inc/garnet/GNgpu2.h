@@ -4,12 +4,6 @@
 /// \namespace GN::gpu2 — GPU abstraction layer v2
 namespace GN::gpu2 {};
 
-// Backward-compat namespace aliases (older code used GN::gfx::gpu2 / GN::gfx::Gpu2).
-namespace GN::gfx {
-namespace gpu2 = GN::gpu2;
-namespace Gpu2 = GN::gpu2;
-} // namespace GN::gfx
-
 #include "GNbase.h"
 #include "gfx/image.h"
 
