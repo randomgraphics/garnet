@@ -518,7 +518,7 @@ int main(int argc, const char ** argv) {
         auto clientSize = window->getClientSize();
         windowWidth     = clientSize.x;
         windowHeight    = clientSize.y;
-        surface         = window->getVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
+        surface         = window->createVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
         if (!surface) return -1;
     }
 
@@ -618,6 +618,9 @@ int main(int argc, const char ** argv) {
 
     graph->waitForIdle();
     gpuContext->waitForIdle();
+    // Destroy the sample-owned surface after the swapchain, before the GPU context (the Vulkan instance).
+    swapchain.clear();
+    if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
     GN_INFO(sLogger)("render-to-cube finished.");
     return 0;
 }

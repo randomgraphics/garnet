@@ -31,7 +31,8 @@ int main(int argc, const char ** argv) {
         }
         window->show();
         // Vulkan surfaces are created from the native window handle, not by the swapchain itself.
-        surface = window->getVulkanSurfaceHandle(gpu->getVulkanInstanceHandle());
+        // The sample owns the surface; it is destroyed after the swapchain, before the GPU context.
+        surface = window->createVulkanSurfaceHandle(gpu->getVulkanInstanceHandle());
         if (!surface) {
             std::fprintf(stderr, "Failed to get Vulkan surface\n");
             return -1;
@@ -91,5 +92,10 @@ int main(int argc, const char ** argv) {
         ++frameCounter;
     }
 
+    // Destroy the surface after the swapchain and before the GPU context (the Vulkan instance).
+    gpu->waitForIdle();
+    rt.setColorTarget(0, {});
+    swapchain.clear();
+    if (window) window->destroyVulkanSurfaceHandle(gpu->getVulkanInstanceHandle(), surface);
     return 0;
 }

@@ -34,13 +34,6 @@ bool GN::win::WindowGlfw::init(const WindowAttachingParameters &) {
 void GN::win::WindowGlfw::quit() {
     GN_GUARD;
 
-    #if GN_BUILD_HAS_VULKAN
-    for (const auto & kv : mVulkanSurfaces) {
-        if (kv.second.pfnDestroy && kv.second.surface) kv.second.pfnDestroy((VkInstance) kv.first, kv.second.surface, nullptr);
-    }
-    mVulkanSurfaces.clear();
-    #endif
-
     if (mWindow && mOwned) {
         glfwDestroyWindow(mWindow);
         mWindow = nullptr;
@@ -67,32 +60,41 @@ intptr_t GN::win::WindowGlfw::getMonitorHandle() const { return (intptr_t) mMoni
 
 intptr_t GN::win::WindowGlfw::getWindowHandle() const { return (intptr_t) mWindow; }
 
-intptr_t GN::win::WindowGlfw::getVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const {
+intptr_t GN::win::WindowGlfw::createVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const {
     #if GN_BUILD_HAS_VULKAN
     if (!mWindow) {
-        GN_ERROR(sLogger)("getVulkanSurfaceHandle: window not created");
+        GN_ERROR(sLogger)("createVulkanSurfaceHandle: window not created");
         return 0;
     }
     if (!vulkanInstanceHandle) return 0;
-    auto it = mVulkanSurfaces.find(vulkanInstanceHandle);
-    if (it != mVulkanSurfaces.end()) return (intptr_t) (void *) it->second.surface;
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkResult     err     = glfwCreateWindowSurface((VkInstance) vulkanInstanceHandle, mWindow, nullptr, &surface);
     if (err != VK_SUCCESS || surface == VK_NULL_HANDLE) {
-        GN_ERROR(sLogger)("getVulkanSurfaceHandle: glfwCreateWindowSurface failed");
+        GN_ERROR(sLogger)("createVulkanSurfaceHandle: glfwCreateWindowSurface failed");
         return 0;
     }
-    auto pfn = (PFN_vkDestroySurfaceKHR) glfwGetInstanceProcAddress((VkInstance) vulkanInstanceHandle, "vkDestroySurfaceKHR");
-    if (!pfn) {
-        GN_ERROR(sLogger)("getVulkanSurfaceHandle: vkDestroySurfaceKHR not available");
-        return 0; // surface created above would leak; caller gets no handle
-    }
-    mVulkanSurfaces[vulkanInstanceHandle] = VulkanSurfaceEntry {surface, pfn};
     return (intptr_t) (void *) surface;
     #else
     (void) vulkanInstanceHandle;
-    GN_ERROR(sLogger)("getVulkanSurfaceHandle: Vulkan not supported in this build");
+    GN_ERROR(sLogger)("createVulkanSurfaceHandle: Vulkan not supported in this build");
     return 0;
+    #endif
+}
+
+void GN::win::WindowGlfw::destroyVulkanSurfaceHandle(intptr_t vulkanInstanceHandle, intptr_t vulkanSurfaceHandle) const {
+    #if GN_BUILD_HAS_VULKAN
+    if (!vulkanInstanceHandle || !vulkanSurfaceHandle) return;
+    // The Vulkan loader is not linked; resolve the (platform-independent) destroy entry point
+    // through GLFW's loader, the same one createVulkanSurfaceHandle() used to create it.
+    auto pfn = (PFN_vkDestroySurfaceKHR) glfwGetInstanceProcAddress((VkInstance) vulkanInstanceHandle, "vkDestroySurfaceKHR");
+    if (!pfn) {
+        GN_ERROR(sLogger)("destroyVulkanSurfaceHandle: vkDestroySurfaceKHR not available; surface leaked");
+        return;
+    }
+    pfn((VkInstance) vulkanInstanceHandle, (VkSurfaceKHR) (void *) vulkanSurfaceHandle, nullptr);
+    #else
+    (void) vulkanInstanceHandle;
+    (void) vulkanSurfaceHandle;
     #endif
 }
 

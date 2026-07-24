@@ -311,6 +311,17 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
 
     // Invoke completion callbacks, outside of the pending lock.
     for (auto & s : finishedSubmissions) {
+        // Per-payload GPU-completion hooks fire first: this is where downloads read back their
+        // staging buffers and resolve their futures, so the data is ready before the submit-level
+        // onComplete (which a caller may use as the signal to consume those futures) runs.
+        for (auto & w : s.works) {
+            if (!w) continue;
+            try {
+                w->onGpuComplete();
+            } catch (const std::exception & e) {
+                GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} payload onGpuComplete threw exception: {}", w->name, e.what());
+            } catch (...) { GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} payload onGpuComplete threw unknown exception", w->name); }
+        }
         try {
             if (s.onComplete) s.onComplete();
         } catch (const std::exception & e) {

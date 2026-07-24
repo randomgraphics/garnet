@@ -26,7 +26,8 @@ public:
     intptr_t          getMonitorHandle() const { return (intptr_t) 1; }
     intptr_t          getWindowHandle() const { return (intptr_t) 1; }
     intptr_t          getModuleHandle() const { return (intptr_t) 1; }
-    intptr_t          getVulkanSurfaceHandle(intptr_t) const { return 0; }
+    intptr_t          createVulkanSurfaceHandle(intptr_t) const { return 0; }
+    void              destroyVulkanSurfaceHandle(intptr_t, intptr_t) const {}
     Vector2<uint32_t> getClientSize() const { return Vector2<uint32_t>(640, 480); }
     void              show() {}
     void              hide() {}

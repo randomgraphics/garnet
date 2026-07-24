@@ -1,5 +1,6 @@
 target_sources(${GN_INTERNAL_TEST_TARGET} PRIVATE
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-buffer-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-async-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-raster-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-raster-test.cpp

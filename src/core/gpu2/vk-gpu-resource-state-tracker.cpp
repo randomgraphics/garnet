@@ -282,6 +282,16 @@ bool GpuResourceStateTrackerVulkan::addTransferDstImage(TextureVulkanBase * tex,
     return addTexture(tex, view, state);
 }
 
+bool GpuResourceStateTrackerVulkan::addTransferSrcImage(TextureVulkanBase * tex, const GpuResourceView::ImageView & view) {
+    if (!tex) GN_UNLIKELY return true;
+    rv::Image::State::PlaneState state;
+    state.layout = vk::ImageLayout::eTransferSrcOptimal;
+    state.access = vk::AccessFlagBits::eTransferRead;
+    state.stages = vk::PipelineStageFlagBits::eTransfer;
+    state.usage  = "transfer source image";
+    return addTexture(tex, view, state);
+}
+
 std::vector<uint64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
     std::vector<uint64_t> invalid;
     for (size_t setIdx = 0; setIdx < table.size(); ++setIdx) {

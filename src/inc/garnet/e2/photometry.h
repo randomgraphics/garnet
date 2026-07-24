@@ -1,14 +1,10 @@
-#if !defined(__GN_INSIDE_RDG2_H__)
-    #error "Do not include <garnet/rdg2/physical.h> directly. Include <garnet/GNrdg2.h> instead."
+#if !defined(__GN_INSIDE_ENGINE2_H__)
+    #error "Do not include <garnet/e2/photometry.h> directly. Include <garnet/GNengine2.h> instead."
 #endif
 
 #include <chrono>
 
-namespace GN::rdg2 {
-
-/// Time units
-using Nanoseconds  = std::chrono::nanoseconds;
-using Microseconds = std::chrono::microseconds;
+namespace GN::e2 {
 
 ///< Intensity unit [cd].
 struct Candela {
@@ -56,4 +52,4 @@ struct RadianceRGB {
     Nit   luminance; // luminance in cd/m^2.
 };
 
-} // namespace GN::rdg2
+} // namespace GN::e2

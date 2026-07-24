@@ -6,7 +6,7 @@
 - Integrate with NVIIDA DLSS:
   - need a rendering pipeline that is able to generate depth and motion vector
 
-- Mordenization:
+- Modernization:
   - replace some custom classes with 3rdparty library:
     - custom log -> spdlog (https://github.com/gabime/spdlog)
     - remove custom Dictionary, since it is significantly slower than std counterparts.
@@ -21,9 +21,6 @@
       - memory footprint compatible with raw pointer. An array of DynaArray can be safely cast to
         array of raw pointers.
     - custom 2d/3d/4d vector class: do support custom lenght unit: like Vector3<MyWorldUnit>
-
-- Misc.
-  - upgrade clang-format to 22.1.0 (the current available version on mac)
 
 - ripple effect sample is currently broken: report empty vertex layout error.
 
