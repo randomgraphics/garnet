@@ -2,7 +2,7 @@
 
 ## Resource Repo System
 
-Resource registry that can lookup and create resources by certain Key type (such as resource's uri) to eliminate resource redundancy in memory. The basic system is there already. Need to apply it to the rest of the RDG.
+Resource registry that can lookup and create resources by certain Key type (such as resource's uri) to eliminate resource redundancy in memory. A working draft was built and later retired to `src/experimental/repo/` (kept as design reference, out of the active build). Revive from there when the RDG needs it.
 
 ## Standalone Versioned Artifact
 

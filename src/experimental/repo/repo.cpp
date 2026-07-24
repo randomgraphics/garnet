@@ -1,3 +1,5 @@
+// RETIRED: kept as design reference only. Not part of the active build. See repo.h.
+
 #include "pch.h"
 
 #include <map>

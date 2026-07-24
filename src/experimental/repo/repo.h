@@ -1,3 +1,8 @@
+// RETIRED: kept as design reference only. Not part of the active build.
+// This was the rdg2 typed resource repository system (see also repo.cpp and repo-test.cpp
+// in this folder). It compiled and worked against the rdg2 open graph, but the concrete
+// resource repos were disabled by a gcc build break and nothing references it anymore.
+
 #if !defined(__GN_INSIDE_RDG2_H__)
     #error "Do not include <garnet/rdg2/repo.h> directly. Include <garnet/GNrdg2.h> instead."
 #endif

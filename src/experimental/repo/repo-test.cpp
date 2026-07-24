@@ -1,3 +1,5 @@
+// RETIRED: kept as design reference only. Not part of the active build. See repo.h.
+
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNrdg2.h>
 

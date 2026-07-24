@@ -12,7 +12,6 @@ namespace GN::rdg2 {};
 #include "rdg2/open-graph.h"
 #include "rdg2/physical-obsolete.h"
 #include "rdg2/transform.h"
-#include "rdg2/repo.h"
 #include "rdg2/shared-shader-constants.h"
 #include "rdg2/pbr.h"
 #include "rdg2/render-graph.h"
