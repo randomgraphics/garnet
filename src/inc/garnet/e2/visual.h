@@ -7,8 +7,8 @@ namespace GN::e2 {
 struct VisualDomain;
 
 /// Represents a visual observer of the world.
-struct Camera : RCRT64 {
-    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
+struct Camera : Being {
+    GN_E2_DEFINE_A_BEING(Being);
 
     struct Desc {
         WorldVector3    position;
@@ -35,8 +35,8 @@ struct Camera : RCRT64 {
 };
 
 /// A visual snapshot consumed by the graphics domain for rendering.
-struct VisualMoment : RCRT64 {
-    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
+struct VisualMoment : Being {
+    GN_E2_DEFINE_A_BEING(Being);
 
     struct CaptureParameters {
         Ref<VisualDomain>      domain;
@@ -45,11 +45,11 @@ struct VisualMoment : RCRT64 {
     };
 
 protected:
-    VisualMoment(const RuntimeType::TypeInfo & type, int64_t id, const StrA & name): RCRT64(type, id, name) {}
+    VisualMoment(const RuntimeType::TypeInfo & type, int64_t id, const StrA & name): Being(type, id, name) {}
 };
 
-struct VisualDomain : RCRT64 {
-    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
+struct VisualDomain : Being {
+    GN_E2_DEFINE_A_BEING(Being);
 
     struct Reset {
         uint32_t screenWidthInPixels;

@@ -74,23 +74,25 @@ refer to shared physical resources managed by lower layers. The current public
 responsibility is to generate 64-bit identifier values that are unique within
 the universe.
 
-### `RCRT64`
+### `Being`
 
-`GN::RCRT64` (defined in the base module and shared with gpu2) is the common
-base for named, reference-counted engine objects. It combines:
+`Being` is the common base for named, reference-counted engine objects. It is
+an e2-local alias of `GN::RCRT64` (defined in the base module and shared with
+gpu2), kept as a separate name so e2 can later switch to a different id width
+by changing only the alias. It combines:
 
 - `RefCounter` ownership.
 - `RuntimeType` metadata.
 - immutable `id` and `name` fields.
 
-e2 constructs objects with universe-generated ids via the `(type, id, name)`
+e2 constructs beings with universe-generated ids via the `(type, id, name)`
 constructor.
 
 References use `GN::e2::Ref<T>`, an alias of `AutoRef<T>` constrained to
-`RCRT64`-derived targets when the target type is complete.
+`Being`-derived targets when the target type is complete.
 
-Derived public types use `GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(baseType)` to
-inherit the base constructor shape and register runtime type metadata.
+Derived public types use `GN_E2_DEFINE_A_BEING(baseType)` to inherit the base
+constructor shape and register runtime type metadata.
 
 ### Coordinate System
 
@@ -327,7 +329,7 @@ callable through the public interfaces.
 
 - Keep client code on the monolithic include: `#include <garnet/GNengine2.h>`.
 - Use `GN::e2::Ref<T>` / `AutoRef<T>` for ownership.
-- Derive public engine objects from `RCRT64` or another direct e2 base type and
+- Derive public engine objects from `Being` or another direct e2 base type and
   register the direct parent with `GN_REGISTER_RUNTIME_TYPE(...)`.
 - Put behavior and domain-specific state in `Facet` subtypes. `Form` is a
   sealed interface: create forms with `Form::create()` (or cast them from
