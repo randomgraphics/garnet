@@ -5,9 +5,8 @@ description: Create and maintain Garnet assignment files in agent/. Use for mult
 
 # Garnet Assignment Tracking
 
-Use `agent/ASSIGNMENT_<SCREAMING_SNAKE>.txt` for complex, multi-step, resumable
-work. Follow `agent/README.md` exactly; `agent/progress-monitor.py` parses the
-format.
+Use `agent/<SCREAMING_SNAKE_TITLE>.txt` for complex, multi-step, resumable
+work. Follow the format described in `agent/README.md` exactly.
 
 ## Required Sections
 
@@ -57,4 +56,6 @@ Rules:
 - For assignment work, prefer one verified task per commit and push when the
   assignment workflow calls for shared progress.
 - Keep the assignment file synchronized with the actual code state.
+- When the assignment is fully done, move it to `agent/completed/` per
+  `garnet-agent-doc-archive`.
 

@@ -1,23 +1,36 @@
-This folder is for AI agent to store notes and tasks. Human are welcome though.
+This folder is for AI agents to store notes and tasks. Humans are welcome though.
+
+Layout:
+
+- `*.txt` at the top level — ongoing assignment files (format below).
+- `skills/` — repo-local skill notes shared by all AI coding agents; see
+  `skills/README.md`.
+- `completed/` — archive of finished agent docs (assignments, specs, plans).
+  Reference for how existing code/features came to be; see
+  `skills/garnet-agent-doc-archive/SKILL.md` for the archiving convention.
 
 ---
 
 # Assignment File Format — Agent Reference
 
 This document describes the required structure and tag conventions for assignment files
-(`ASSIGNMENT_*.txt`) in this folder. It is written for **agents** that create or update
-assignment files. Follow it exactly so that `progress-monitor.py` can parse every file
-without modification.
+(`*.txt` at the top of this folder) in this folder. It is written for **agents** that
+create or update assignment files. Follow it exactly so that every assignment file stays
+consistent and machine-parseable.
 
 ---
 
 ## File naming
 
 ```
-ASSIGNMENT_<SCREAMING_SNAKE_CASE_TITLE>.txt
+<SCREAMING_SNAKE_CASE_TITLE>.txt
 ```
 
-Examples: `ASSIGNMENT_GPU_RESOURCE_BINDING.txt`, `ASSIGNMENT_DYNAMIC_BUFFER_UPLOAD.txt`
+Example: `RDG2_RENDER_GRAPH_EXECUTION.txt`
+
+Only ongoing assignments live at the top of `agent/`. Finished ones are archived
+in `agent/completed/`; archived files keep whatever name they had historically
+(older ones carry an `ASSIGNMENT_` prefix that is no longer used).
 
 ---
 
@@ -148,7 +161,7 @@ Phase N: <title>
     - <optional detail bullet>
     - <optional detail bullet>
     Verify: <what "done" means — build, test name, sample output>
-    Commit: "rdg(<scope>): <description> (Phase N.M)"
+    Commit: "<scope>(<area>): <description> (Phase N.M)"
 
   Task N.P: <description>
     Verify: …
@@ -193,7 +206,7 @@ Phase N+1 (label):
 
 ## Quick checklist for agents creating a new assignment file
 
-1. [ ] File named `ASSIGNMENT_<SCREAMING_SNAKE>.txt`.
+1. [ ] File named `<SCREAMING_SNAKE_TITLE>.txt` at the top of `agent/`.
 2. [ ] First line is `# Assignment: <title>`.
 3. [ ] Section order: Goals → Design → Progress → Reference → Build/CI →
        Workflow → Task Breakdown → Summary.
@@ -202,5 +215,3 @@ Phase N+1 (label):
 6. [ ] No multi-line progress entries.
 7. [ ] Every non-FUTURE task has `Verify:` and `Commit:` lines.
 8. [ ] Phase headers in task breakdown followed by a `─────` separator line.
-9. [ ] Run `python3 agent/progress-monitor.py` and open the browser to confirm the
-       new assignment appears as a tab and phases/tasks show the correct status.

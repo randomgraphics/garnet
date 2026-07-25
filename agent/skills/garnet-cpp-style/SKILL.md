@@ -14,7 +14,7 @@ description: Garnet C++ coding style and local conventions. Use when editing C/C
 - Enum values are `ALL_CAPS`.
 - New project filenames use lowercase words with hyphens, e.g.
   `simple-triangle.cpp`.
-- Public client code includes monolithic headers such as `GNrdg.h`, `GNrdg2.h`,
+- Public client code includes monolithic headers such as `GNrdg2.h`,
   `GNgpu2.h`, and `GNgfx.h`.
 - In headers, include what declarations need and prefer forward declarations
   when a pointer/reference is enough.

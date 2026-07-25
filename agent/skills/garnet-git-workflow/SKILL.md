@@ -24,7 +24,7 @@ Apply the fix, verify what you can, then summarize changed files and checks.
 - Verify before committing.
 - Push after commits when the assignment workflow requires visible shared
   progress.
-- Keep `agent/ASSIGNMENT_*.txt` progress synchronized.
+- Keep the assignment file's `PROGRESS` block in `agent/` synchronized.
 
 ## RDG/gpu2 Branches
 

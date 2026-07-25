@@ -3,7 +3,7 @@
 This is the Codex-facing repo guide. It consolidates the consumed guidance from
 `CLAUDE.md`, `.claude/rules/*`, `.claude/context.md`, `.cursor/rules/*`,
 `.cursor/skills/*`, `agent/README.md`, and the project docs. Prefer this file
-first, then use the focused skill notes under `codex/skills/`.
+first, then use the focused skill notes under `agent/skills/`.
 
 ## Project
 
@@ -15,13 +15,16 @@ Important directories:
 
 - `src/inc/garnet/`: public monolithic headers.
 - `src/core/`: core implementation.
-- `src/core/rdg/1/`: RDG v1, stable Vulkan-backed render dependency graph.
-- `src/core/rdg/2/`: RDG v2, active open-graph redesign.
-- `src/core/gpu2/`: gpu2 abstraction layer used by RDG v2.
+- `src/core/rdg2/`: RDG2, the active render graph module.
+- `src/core/gpu2/`: gpu2 abstraction layer used by RDG2.
+- `src/core/e2/`: engine2 (`GN::e2`), spatial/engine layer; public include
+  `GNengine2.h`.
 - `src/sample/`: sample applications.
-- `src/test/` and `src/core/rdg/*/test/`: tests.
+- `src/core/<module>/test/`: module-local tests, auto-picked up by
+  `GNtest-internal`; `src/test/`: older shared tests.
 - `env/bin/`: build, CIT, formatting, shader, and utility scripts.
-- `agent/`: AI assignment notes and progress monitor input.
+- `agent/`: AI assignment notes, skill files, and the archive of finished
+  agent docs (`agent/completed/`).
 
 ## Build, Test, Format
 
@@ -84,7 +87,7 @@ env/bin/format-all-sources.py       # format all tracked sources
 - Do not add comments that simply narrate what the next line does.
 - Enum values are `ALL_CAPS`.
 - Public include usage is monolithic: include top-level module headers such as
-  `GNrdg.h`, `GNrdg2.h`, `GNgpu2.h`, `GNgfx.h`; do not include public
+  `GNrdg2.h`, `GNgpu2.h`, `GNengine2.h`, `GNgfx.h`; do not include public
   sub-headers directly in client code.
 - Use `AutoRef<T>` for ownership in RDG/gpu2. Avoid raw owning pointers.
 - Use `RuntimeType::cast<T>()`; do not use `dynamic_cast` in RDG/gpu2.
@@ -115,53 +118,42 @@ env/bin/format-all-sources.py       # format all tracked sources
 
 ## Assignment Files
 
-Use `agent/ASSIGNMENT_<SCREAMING_SNAKE>.txt` for multi-step work that must be
-resumable. Follow `agent/README.md` exactly so `agent/progress-monitor.py` can
-parse it.
+Use `agent/<SCREAMING_SNAKE_TITLE>.txt` for multi-step work that must be
+resumable. Follow the format described in `agent/README.md`.
 
 Every assignment task should be verifiable with build/test/sample output or a
 clear manual check. Each non-future task needs `Verify:` and `Commit:` lines.
 Update the `PROGRESS` block when starting and completing tasks.
 
-Run the monitor with:
+When the work an agent doc describes is finished, superseded, or abandoned,
+move the doc to `agent/completed/` — that folder is the archive of past work
+and a reference for how existing code came to be. See
+`agent/skills/garnet-agent-doc-archive/SKILL.md`.
 
-```bash
-cd agent
-python3 progress-monitor.py
-```
+## RDG2 Module
 
-## RDG Module
+RDG2 (`GN::rdg2`) is the primary active rendering abstraction. Public include
+`GNrdg2.h`, implementation `src/core/rdg2/`, public headers
+`src/inc/garnet/rdg2/`. RDG v1 has been removed from the tree.
 
-RDG is the primary active rendering abstraction.
+RDG2 is a playground for graph designs with two generations:
 
-- V1 namespace: `GN::rdg`, public include `GNrdg.h`, implementation
-  `src/core/rdg/1/`, public headers `src/inc/garnet/rdg/1/`.
-- V2 namespace: `GN::rdg2`, public include `GNrdg2.h`, implementation
-  `src/core/rdg/2/`, public headers `src/inc/garnet/rdg/2/`.
-- Do not mix V1 and V2 GPU resource types.
+- Open graph (`open-graph.h`) is a generic DAG executor, now reference
+  material. `Graph::create()` returns a single-worker implementation. Nodes
+  become ready when dependency tokens are satisfied and run by scheduling
+  class, priority, then insertion order. `manualComplete = true` keeps nodes in
+  `FinishedAction` until `satisfyNode()` is called. Artifact versions use a
+  128-bit counter; `OOO()` means the next published version.
+- Render graph take 2 (`render-graph.h`) is the active design: `Quest`, `Plan`,
+  and `Execution` over versioned `Artifact`/`Relic` data. Design details and
+  task tracking live in `agent/RDG2_RENDER_GRAPH_EXECUTION.txt`.
 
-RDG V1 has four layers:
-
-1. Dependency graph: `Artifact`, `Arguments`, `Action`, `Workflow`,
-   `RenderGraph`, `Submission`.
-2. GPU IR: `GpuContext`, `Texture`, buffers, resource views, render targets,
-   draw/compute/copy actions, backbuffer prepare/present.
-3. Pipeline library: `SubGraph`, `SharedShaderConstants`, `PbrShading`,
-   `SkyBox`.
-4. Scene: placeholder.
-
-RDG V2 is a generic DAG executor. `Graph::create()` returns a single-worker
-implementation. Nodes become ready when dependency tokens are satisfied and run
-by scheduling class, priority, then insertion order. `manualComplete = true`
-keeps nodes in `FinishedAction` until `satisfyNode()` is called. Artifact
-versions use a 128-bit counter; `OOO()` means the next published version.
-
-Known RDG V2 gaps include multi-worker execution, descriptor/resource binding
-paths, indexed draw coverage, and file-path shader loading.
+Known open-graph gaps include multi-worker execution, descriptor/resource
+binding paths, indexed draw coverage, and file-path shader loading.
 
 ## gpu2 Module
 
-gpu2 is `GN::gpu2`, used by RDG V2. Vulkan is active; D3D12 and Metal factories
+gpu2 is `GN::gpu2`, used by RDG2. Vulkan is active; D3D12 and Metal factories
 are stubs.
 
 Key conventions:
@@ -190,13 +182,14 @@ Submodules that this project owns or actively modifies should be developed on
 their own `wip/<topic>` branches. `garnet master` must only reference submodule
 `main`/`master` commits.
 
-## Converted Skills
+## Skills
 
-Repo-local Codex skill conversions live under `codex/skills/`:
+Repo-local agent skill notes live under `agent/skills/`:
 
 - `garnet-build-test`
 - `garnet-feature-workflow`
 - `garnet-assignment-tracking`
+- `garnet-agent-doc-archive`
 - `garnet-cpp-style`
 - `garnet-rdg-gpu2`
 - `garnet-git-workflow`
