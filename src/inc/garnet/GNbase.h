@@ -53,14 +53,14 @@ namespace internal {}
 // single/double linked list
 #include "base/link.h"
 
-// smart pointer
+// string types (before smartptr.h/rtti.h, so GN::Being in rtti.h can use StrA)
+#include "base/string.h"
+
+// reference-counted smart and weak pointers
 #include "base/smartptr.h"
 
-// low overhead run-time type information
+// low overhead run-time type information and the GN::Being root base class
 #include "base/rtti.h"
-
-// string types
-#include "base/string.h"
 
 // exceptions
 #include "base/exception.h"

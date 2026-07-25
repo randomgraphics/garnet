@@ -189,7 +189,7 @@ Gpu2RasterPsoKey Gpu2RasterPsoKey::make(const GpuShaderVulkan & vs, const GpuSha
 
     // ── 1. Shader identity ────────────────────────────────────────────────────
     // Combine VS and PS ids using FNV multiply to avoid trivial cancellations.
-    k.shaderHash = vs.id * 0x100000001b3ULL ^ (ps ? ps->id : 0ULL);
+    k.shaderHash = uint64_t(vs.id) * 0x100000001b3ULL ^ uint64_t(ps ? ps->id : 0);
 
     // ── 2. Vertex input ───────────────────────────────────────────────────────
     const bool hasInput = !geom.format.attributes.empty() && !geom.vertices.empty();

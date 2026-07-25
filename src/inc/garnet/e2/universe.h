@@ -16,7 +16,7 @@ struct Universe {
     GN_NO_MOVE(Universe);
 
     /// @brief Generate an identifier unique within the entire universe,
-    UniqueIdentifier generateUniqueIdentifier() {
+    int64_t generateUniqueIdentifier() {
         auto old = mNextID.load(std::memory_order_relaxed);
         for (;;) {
             auto next = old + 1;
@@ -26,7 +26,7 @@ struct Universe {
     };
 
 private:
-    std::atomic<UniqueIdentifier> mNextID = {};
+    std::atomic<int64_t> mNextID = {};
 };
 
 } // namespace GN::e2

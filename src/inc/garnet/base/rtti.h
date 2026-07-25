@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 namespace GN {
 
@@ -142,5 +143,49 @@ struct RttiBaseTypeIds<> {
     bool isKindOf() const {                                                                                                    \
         return typeInfo().isDerivedFrom(DERIVED_TYPE::TYPE_INFO());                                                            \
     }
+
+/// Shared implementation mixin for everything that needs reference counting, runtime type
+/// information, and identity: a unique id plus an optional human-readable name.
+///
+/// ID is the identity type. The id is always caller-supplied; the template deliberately
+/// registers no runtime type and owns no static data, so it is safe to use across DLL
+/// boundaries without explicit-instantiation tricks. Concrete non-templated root classes
+/// (RCRT64 below, rdg2::Entity) derive from it, register themselves as the root of their
+/// runtime-type chain (GN_API-exported TYPE_ID), and define GN_API constructors implemented
+/// inside GNcore when they need process-unique auto-generated ids.
+template<typename ID>
+struct RefCountedRuntimeType : public RefCounter, public RuntimeType {
+    /// Unique identity of this instance, supplied by the creating module's id generator or owning scope.
+    const ID id;
+
+    /// Name of this instance. Optional. No uniqueness requirement.
+    const StrA name;
+
+    virtual ~RefCountedRuntimeType() {
+#if GN_BUILD_DEBUG_ENABLED
+        static auto * logger = GN::getLogger("GN.base");
+        GN_VVTRACE(logger)("Destroying ref-counted runtime type: name='{}', type={}, id={}", name, typeInfo().name, id);
+#endif
+    }
+
+protected:
+    RefCountedRuntimeType(const RuntimeType::TypeInfo & type, ID id_, const StrA & name_): RuntimeType(type), id(std::move(id_)), name(name_) {}
+};
+
+/// The reference counted runtime type with 64-bit integer id.
+struct RCRT64 : public RefCountedRuntimeType<int64_t> {
+    GN_API GN_REGISTER_RUNTIME_TYPE();
+
+protected:
+    /// Expose the caller-supplied-id constructor to derived classes. The id is supplied by the
+    /// creating module's id source, such as an e2 universe.
+    using RefCountedRuntimeType<int64_t>::RefCountedRuntimeType;
+
+    /// Convenience constructor that automatically generates a unique id for this instance.
+    /// Implemented inside GNcore (rtti.cpp) so the generated id is truly process-unique, even
+    /// across DLL boundaries. The first id is 1; 0 is never assigned and can serve as an
+    /// "invalid/unassigned" sentinel.
+    GN_API RCRT64(const RuntimeType::TypeInfo & type, const StrA & name_);
+};
 
 } // namespace GN

@@ -101,26 +101,36 @@ using ArrayProxy = SafeArrayAccessor<T>;
 // Base class of everything with a ID and name.
 // ============================================================
 
+} // namespace GN::rdg2
+
+/// Make NeverOverflowingCounter formattable by fmt (and thus by GN logging, e.g. the
+/// destruction trace in GN::RefCountedRuntimeType).
+template<>
+struct fmt::formatter<GN::rdg2::NeverOverflowingCounter> {
+    constexpr auto parse(fmt::format_parse_context & ctx) { return ctx.begin(); }
+    template<typename FormatContext>
+    auto format(const GN::rdg2::NeverOverflowingCounter & c, FormatContext & ctx) const {
+        if (c.value1) return fmt::format_to(ctx.out(), "{}.{}", c.value1, c.value0);
+        return fmt::format_to(ctx.out(), "{}", c.value0);
+    }
+};
+
+namespace GN::rdg2 {
+
 /// The basic building block of the render graph module. Base class of everything that
-/// needs reference counting and runtime type information.
-struct Entity : public RefCounter, public RuntimeType {
+/// needs reference counting and runtime type information. Ids are process-unique 128-bit
+/// counters.
+struct Entity : public GN::RefCountedRuntimeType<NeverOverflowingCounter> {
     GN_API GN_REGISTER_RUNTIME_TYPE();
 
-    /// ID of the entity. Guaranteed to be unique within the process.
-    const NeverOverflowingCounter id;
-
-    /// Name of the entity. Optional. No uniqueness requirement.
-    const StrA name;
-
-    virtual ~Entity() {
-#if GN_BUILD_DEBUG_ENABLED
-        static auto * logger = GN::getLogger("GN.rdg2");
-        GN_VVTRACE(logger)("Destroying RDG2 entity: name='{}', type = {}, id={}.{}", name, typeInfo().name, id.value0, id.value1);
-#endif
-    }
-
 protected:
-    /// Constructor
+    /// Expose the caller-supplied-id constructor to derived classes.
+    using RefCountedRuntimeType<NeverOverflowingCounter>::RefCountedRuntimeType;
+
+    /// Convenience constructor that automatically generates a unique id for this entity.
+    /// Implemented inside GNcore (artifact.cpp) so the generated id is truly process-unique,
+    /// even across DLL boundaries. The first id is 1; 0 (OOO) is never assigned and can serve
+    /// as an "invalid/unassigned" sentinel.
     GN_API Entity(const RuntimeType::TypeInfo & type, const StrA & name);
 };
 
@@ -151,8 +161,8 @@ struct Artifact : public Entity {
         }
         explicit operator bool() const { return !empty(); }
         bool     operator!() const { return empty(); }
-                 operator AutoRef<C>() const { return value; }
-        C *      operator->() const { return value.get(); }
+        operator AutoRef<C>() const { return value; }
+        C * operator->() const { return value.get(); }
     };
 
     /// Content captured atomically with the actual retained content version.

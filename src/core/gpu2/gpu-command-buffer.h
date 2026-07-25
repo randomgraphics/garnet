@@ -7,8 +7,8 @@ namespace GN::gpu2 {
 
 /// Internal command buffer abstraction. Not part of the public API.
 /// Public callers use GpuContext::submit() + GpuPayload instead.
-struct GpuCommandBuffer : public RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct GpuCommandBuffer : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct Payload;
     struct Fence;
@@ -27,7 +27,7 @@ struct GpuCommandBuffer : public RootEntity {
     virtual Fence * submit(const SubmitParameters &) = 0;
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 /// Shared implementation for command buffers that record against one \c GpuContext.

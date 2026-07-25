@@ -9,9 +9,9 @@ namespace GN::gpu2 {
 
 /// Accumulates non-graphics GPU work (compute dispatches and copies), then produces
 /// a sealed GpuPayload for submission via GpuContext::submit().
-struct GpuCnC : public RootEntity {
+struct GpuCnC : public RCRT64 {
 public:
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
@@ -87,7 +87,7 @@ public:
     virtual AutoRef<GpuPayload> seal() = 0;
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

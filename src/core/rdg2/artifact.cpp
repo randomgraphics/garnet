@@ -9,18 +9,6 @@ namespace {
 
 GN::Logger * sLogger = GN::getLogger("GN.rdg2.artifact");
 
-/// Generates a process-wide unique entity id.
-///
-/// Thread-safe and monotonic, using NeverOverflowingCounter to avoid wraparound.
-NeverOverflowingCounter nextEntityNeverOverflowingId() {
-    static std::mutex              m;
-    static NeverOverflowingCounter counter = NeverOverflowingCounter::OOO();
-    std::lock_guard<std::mutex>    lock(m);
-    auto                           out = counter;
-    counter.increment();
-    return out;
-}
-
 class ArtifactImpl final : public Artifact {
 public:
     GN_REGISTER_RUNTIME_TYPE(Artifact);
@@ -100,9 +88,18 @@ private:
 
 } // namespace
 
-/// Constructs an RDG entity with a unique id and human-readable name.
-GN_API Entity::Entity(const GN::RuntimeType::TypeInfo & type, const StrA & name)
-    : RefCounter(), RuntimeType(type), id(nextEntityNeverOverflowingId()), name(name) {}
+/// Process-wide unique entity id generator. The first id is 1; 0 (OOO) is never assigned.
+static NeverOverflowingCounter nextEntityId() {
+    static std::mutex              m;
+    static NeverOverflowingCounter counter = NeverOverflowingCounter::OOO();
+    std::lock_guard<std::mutex>    lock(m);
+    return counter.increment();
+}
+
+/// Constructs an rdg2 entity with an automatically generated id. Defined here (and exported via
+/// GN_API on the declaration) so the id counter lives in exactly one place in the process,
+/// keeping generated ids unique even across DLL boundaries.
+GN_API Entity::Entity(const RuntimeType::TypeInfo & type, const StrA & name_): RefCountedRuntimeType(type, nextEntityId(), name_) {}
 
 GN_API ArtifactPtr Artifact::create(const StrA & name) { return ArtifactPtr(new ArtifactImpl(name)); }
 

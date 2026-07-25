@@ -34,7 +34,7 @@ struct MeshData {
         glm::vec3 normal;
     };
 
-    UniqueIdentifier    id = 0; ///< stable identity used as the visual domain's GPU-cache key
+    int64_t             id = 0; ///< stable identity used as the visual domain's GPU-cache key
     DynaArray<Vertex>   vertices;
     DynaArray<uint16_t> indices;
 };

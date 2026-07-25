@@ -292,8 +292,8 @@ bool GpuResourceStateTrackerVulkan::addTransferSrcImage(TextureVulkanBase * tex,
     return addTexture(tex, view, state);
 }
 
-std::vector<uint64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
-    std::vector<uint64_t> invalid;
+std::vector<int64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
+    std::vector<int64_t> invalid;
     for (size_t setIdx = 0; setIdx < table.size(); ++setIdx) {
         const auto & set = table[setIdx];
         for (size_t bindingIdx = 0; bindingIdx < set.size(); ++bindingIdx) {
@@ -399,8 +399,8 @@ namespace {
 static vk::ImageLayout combineDepthStencilLayouts(vk::ImageLayout depth, vk::ImageLayout stencil) {
     if (depth == stencil) return depth;
     // Classify writable vs. read-only for each plane and pick the Vulkan split layout.
-    const bool depthRW   = depth == vk::ImageLayout::eDepthStencilAttachmentOptimal || depth == vk::ImageLayout::eDepthAttachmentOptimal ||
-                           depth == vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal || depth == vk::ImageLayout::eGeneral;
+    const bool depthRW = depth == vk::ImageLayout::eDepthStencilAttachmentOptimal || depth == vk::ImageLayout::eDepthAttachmentOptimal ||
+                         depth == vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal || depth == vk::ImageLayout::eGeneral;
     const bool stencilRW = stencil == vk::ImageLayout::eDepthStencilAttachmentOptimal || stencil == vk::ImageLayout::eStencilAttachmentOptimal ||
                            stencil == vk::ImageLayout::eDepthReadOnlyStencilAttachmentOptimal || stencil == vk::ImageLayout::eGeneral;
     if (depthRW && stencilRW) return vk::ImageLayout::eDepthStencilAttachmentOptimal;

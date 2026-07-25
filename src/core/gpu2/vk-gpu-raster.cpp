@@ -24,8 +24,8 @@ struct StoredDraw {
     AutoRef<const Blob> immediates;
 
     // Populated during pass 1 (collectPassResources); read during pass 2 (recordDraw).
-    std::vector<uint64_t> invalidResourceIds;     ///< resource IDs rejected by tracker; skip their bindings
-    bool                  geometryHazard = false; ///< true if any vertex/index buffer was rejected; skip the draw
+    std::vector<int64_t> invalidResourceIds;     ///< resource IDs rejected by tracker; skip their bindings
+    bool                 geometryHazard = false; ///< true if any vertex/index buffer was rejected; skip the draw
 };
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).

@@ -7,8 +7,8 @@
 namespace GN::e2 {
 
 // /// An audio snapshot of something, consumed by audio domain to play sound & music.
-// struct AudioMoment : Thing {
-//     GN_E2_DEFINE_A_THING(Thing);
+// struct AudioMoment : RCRT64 {
+//     GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
 // };
 
 struct World;
@@ -19,8 +19,8 @@ struct Form;
 /// point of the simulation: aspects that a form has are expressed by attaching facets, not
 /// by subclassing Form. A facet never forms a hierarchy of its own — tree structure belongs
 /// to forms.
-struct Facet : Thing {
-    GN_E2_DEFINE_A_THING(Thing);
+struct Facet : RCRT64 {
+    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
 
     /// The form this facet is attached to, or null when detached. A facet belongs to at most
     /// one form at a time; the back-pointer is maintained by Form::addFacet() and cleared by
@@ -49,7 +49,7 @@ private:
 
 /// A facet with visible state that can contribute to a self-contained visual snapshot.
 struct VisualFacet : Facet {
-    GN_E2_DEFINE_A_THING(Facet);
+    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(Facet);
 
     virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
 };
@@ -60,8 +60,8 @@ struct VisualFacet : Facet {
 /// forms; the world owns only root forms and propagates world membership through the form
 /// tree. The interface is sealed: forms are created with create() (or cast from molds) and
 /// gain capabilities by attaching facets; the concrete implementation lives in the engine.
-struct Form : Thing {
-    GN_E2_DEFINE_A_THING(Thing);
+struct Form : RCRT64 {
+    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
 
     /// Create a new empty form: no parent, no children, no facets, identity transform.
     /// Capabilities are added by attaching facets.
@@ -133,8 +133,8 @@ protected:
 };
 
 /// A reusable recipe that casts a fresh form tree from a root-form factory and child molds.
-struct Mold : Thing {
-    GN_E2_DEFINE_A_THING(Thing);
+struct Mold : RCRT64 {
+    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
 
     struct CreateParameters {
         Universe & universe;
@@ -153,8 +153,8 @@ struct Mold : Thing {
 };
 
 /// This represents a continuously evolving game world with different forms living in it.
-struct World : Thing {
-    GN_E2_DEFINE_A_THING(Thing);
+struct World : RCRT64 {
+    GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(RCRT64);
 
     struct CreateParameters {
         Universe &    universe;
@@ -183,8 +183,8 @@ struct World : Thing {
     virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
 
 protected:
-    World(const RuntimeType::TypeInfo & type, UniqueIdentifier id, const StrA & name, const CreateParameters & cp)
-        : Thing(type, id, name), universe(cp.universe), scale(cp.scale) {}
+    World(const RuntimeType::TypeInfo & type, int64_t id, const StrA & name, const CreateParameters & cp)
+        : RCRT64(type, id, name), universe(cp.universe), scale(cp.scale) {}
 };
 
 } // namespace GN::e2

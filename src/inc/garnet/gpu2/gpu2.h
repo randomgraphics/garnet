@@ -18,48 +18,26 @@ template<typename T>
 using ArrayProxy = SafeArrayAccessor<T>;
 
 // -----------------------------
-// Base entity
-// -----------------------------
-
-/// Base class for all GPU objects. Provides reference counting and runtime type info.
-struct RootEntity : public RefCounter, public RuntimeType {
-    GN_API GN_REGISTER_RUNTIME_TYPE();
-
-    /// Process-unique ID assigned at construction.
-    const uint64_t id;
-
-    /// Human-readable name. Optional; no uniqueness requirement.
-    const StrA name;
-
-    virtual ~RootEntity() {
-#if GN_BUILD_DEBUG_ENABLED
-        static auto * logger = GN::getLogger("GN.gpu2");
-        GN_VVTRACE(logger)("Destroying entity, name='{}', type = {}, id={}", name, typeInfo().name, id);
-#endif
-    }
-
-protected:
-    GN_API RootEntity(const RuntimeType::TypeInfo & type, const StrA & name);
-};
-
-// -----------------------------
 // GpuPayload
 // -----------------------------
+//
+// All GPU objects derive from GN::RCRT64: reference counting, runtime type info, and a
+// process-unique id generated automatically by the RCRT64 (type, name) constructor.
 
 /// API-neutral base class for a GPU payload. Represents a self-contained unit of GPU work load that is ready to record and submit to the GPU.
-struct GpuPayload : public RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct GpuPayload : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 // -----------------------------
 // GPU context
 // -----------------------------
 
-struct GpuContext : public RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct GpuContext : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     enum class DebugMode {
         DISABLED,
@@ -144,15 +122,15 @@ struct GpuContext : public RootEntity {
     virtual void waitForIdle() = 0;
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 // -----------------------------
 // Texture
 // -----------------------------
 
-struct Texture : RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct Texture : RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
@@ -223,22 +201,22 @@ struct Texture : RootEntity {
     static GN_API AutoRef<Texture> load(const LoadParameters & params);
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 // -----------------------------
 // Sampler, buffer
 // -----------------------------
 
-struct Sampler : public RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct Sampler : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
-struct Buffer : public RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct Buffer : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
@@ -348,7 +326,7 @@ struct Buffer : public RootEntity {
 protected:
     virtual void unmap(const Mapped &) = 0;
 
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 // -----------------------------
@@ -395,10 +373,10 @@ struct GpuResourceView {
         bool     operator!=(const BufferView & o) const { return !(*this == o); }
     };
 
-    AutoRef<RootEntity> resource               = {};
-    AutoRef<Sampler>    combinedTextureSampler = {};
-    ImageView           imageView              = {};
-    BufferView          bufferView             = {};
+    AutoRef<RCRT64>  resource               = {};
+    AutoRef<Sampler> combinedTextureSampler = {};
+    ImageView        imageView              = {};
+    BufferView       bufferView             = {};
 
     bool empty() const { return resource.empty(); }
     bool isTexture() const { return resource && resource->isKindOf<Texture>(); }
@@ -476,8 +454,8 @@ using GpuResourceTable = ArrayContainer<GpuResourceSet>;
 // GpuShader
 // -----------------------------
 
-struct GpuShader : public RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct GpuShader : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
@@ -497,7 +475,7 @@ struct GpuShader : public RootEntity {
     static GN_API AutoRef<GpuShader> load(const LoadParameters &);
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

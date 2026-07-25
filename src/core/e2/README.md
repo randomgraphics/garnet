@@ -51,7 +51,7 @@ The subheaders under `src/inc/garnet/e2/` reject direct inclusion. This keeps th
 module boundary explicit and lets the monolithic header control dependency order.
 `GNengine2.h` currently includes `GNgpu2.h`, then the `e2` subheaders:
 
-- `thing.h`: base types, references, units, identifiers, and `OperatingDomain`.
+- `e2.h`: base types, references, units, and `OperatingDomain`.
 - `spatial.h`: the coordinate system — absolute and local coordinate types, the
   physical scale, and the `spatial` rebasing/rotation utilities.
 - `photometry.h`: photometric units used by lights.
@@ -71,23 +71,26 @@ the same time. For example, the current playable level and the next level being
 loaded in the background can both be represented as `World` objects within the
 same universe. Those worlds run as separate logical simulations, but they may
 refer to shared physical resources managed by lower layers. The current public
-responsibility is to generate `UniqueIdentifier` values that are unique within
+responsibility is to generate 64-bit identifier values that are unique within
 the universe.
 
-### `Thing`
+### `RCRT64`
 
-`Thing` is the common base for named, reference-counted engine objects. It
-combines:
+`GN::RCRT64` (defined in the base module and shared with gpu2) is the common
+base for named, reference-counted engine objects. It combines:
 
 - `RefCounter` ownership.
 - `RuntimeType` metadata.
 - immutable `id` and `name` fields.
 
-References use `GN::e2::Ref<T>`, an alias of `AutoRef<T>` constrained to
-`Thing`-derived targets when the target type is complete.
+e2 constructs objects with universe-generated ids via the `(type, id, name)`
+constructor.
 
-Derived public types use `GN_E2_DEFINE_A_THING(baseType)` to inherit the base
-constructor shape and register runtime type metadata.
+References use `GN::e2::Ref<T>`, an alias of `AutoRef<T>` constrained to
+`RCRT64`-derived targets when the target type is complete.
+
+Derived public types use `GN_E2_DEFINE_PUBLIC_ABSTRACT_TYPE(baseType)` to
+inherit the base constructor shape and register runtime type metadata.
 
 ### Coordinate System
 
@@ -324,7 +327,7 @@ callable through the public interfaces.
 
 - Keep client code on the monolithic include: `#include <garnet/GNengine2.h>`.
 - Use `GN::e2::Ref<T>` / `AutoRef<T>` for ownership.
-- Derive public engine objects from `Thing` or another direct e2 base type and
+- Derive public engine objects from `RCRT64` or another direct e2 base type and
   register the direct parent with `GN_REGISTER_RUNTIME_TYPE(...)`.
 - Put behavior and domain-specific state in `Facet` subtypes. `Form` is a
   sealed interface: create forms with `Form::create()` (or cast them from

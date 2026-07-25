@@ -204,8 +204,8 @@ struct VisualDomainImpl : VisualDomain {
                 // Moment transforms stay in world units; the camera-relative delta converts to
                 // float meters only here.
                 DrawConstants dc;
-                dc.model     = glm::translate(glm::mat4(1.f), moment->scale.toMeters(spatial::toLocal(eye, r.translation))) *
-                               glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment->scale.toMeters(r.scaling));
+                dc.model = glm::translate(glm::mat4(1.f), moment->scale.toMeters(spatial::toLocal(eye, r.translation))) *
+                           glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment->scale.toMeters(r.scaling));
                 dc.baseColor = glm::vec4(r.baseColor, 1.f);
 
                 GpuRaster::DrawParameters dp;
@@ -282,18 +282,18 @@ private:
         return proj * view;
     }
 
-    Universe &                                    mUniverse;
-    Ref<OperatingDomain>                          mOs;
-    AutoRef<GpuContext>                           mGpu;
-    intptr_t                                      mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
-    AutoRef<Swapchain>                            mSwapchain;
-    AutoRef<Texture>                              mDepth;
-    AutoRef<GpuShader>                            mVs, mPs;
-    AutoRef<Buffer>                               mFrameUbo;
-    RasterTarget                                  mRenderTarget;
-    std::unordered_map<UniqueIdentifier, GpuMesh> mMeshCache;
-    uint32_t                                      mWidth  = 1280;
-    uint32_t                                      mHeight = 720;
+    Universe &                           mUniverse;
+    Ref<OperatingDomain>                 mOs;
+    AutoRef<GpuContext>                  mGpu;
+    intptr_t                             mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
+    AutoRef<Swapchain>                   mSwapchain;
+    AutoRef<Texture>                     mDepth;
+    AutoRef<GpuShader>                   mVs, mPs;
+    AutoRef<Buffer>                      mFrameUbo;
+    RasterTarget                         mRenderTarget;
+    std::unordered_map<int64_t, GpuMesh> mMeshCache;
+    uint32_t                             mWidth  = 1280;
+    uint32_t                             mHeight = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN
