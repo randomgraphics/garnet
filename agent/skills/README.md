@@ -14,6 +14,7 @@ before starting a task it covers.
 - `garnet-assignment-tracking`: create and maintain assignment files in `agent/`.
 - `garnet-agent-doc-archive`: archive finished agent docs into `agent/completed/`.
 - `garnet-cpp-style`: C++ coding style and local conventions.
+- `garnet-line-endings`: new files match the hosting OS (CRLF on Windows, LF on Linux).
 - `garnet-rdg-gpu2`: RDG and gpu2 module guidance.
 - `garnet-git-workflow`: git workflow for assignments, branches, and commits.
 - `garnet-submodules`: git submodule rules.

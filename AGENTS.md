@@ -184,16 +184,6 @@ their own `wip/<topic>` branches. `garnet master` must only reference submodule
 
 ## Skills
 
-Repo-local agent skill notes live under `agent/skills/`:
-
-- `garnet-build-test`
-- `garnet-feature-workflow`
-- `garnet-assignment-tracking`
-- `garnet-agent-doc-archive`
-- `garnet-cpp-style`
-- `garnet-rdg-gpu2`
-- `garnet-git-workflow`
-- `garnet-submodules`
-- `garnet-android-docker`
-
-Use these as focused workflow notes when a task matches their descriptions.
+Repo-local agent skill notes live under `agent/skills/`; see
+`agent/skills/README.md` for the authoritative list and when to use each.
+When a task matches a skill's description, read that SKILL.md and follow it.
