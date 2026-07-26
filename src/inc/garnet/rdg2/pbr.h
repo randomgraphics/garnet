@@ -2,6 +2,8 @@
     #error "Do not include <garnet/rdg2/pbr.h> directly. Include <garnet/GNrdg2.h> instead."
 #endif
 
+#include <glm/mat4x4.hpp>
+
 namespace GN::rdg2 {
 
 /// Namespace struct grouping PBR asset types and operations.

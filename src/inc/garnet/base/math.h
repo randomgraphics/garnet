@@ -8,21 +8,6 @@
 
 #include <math.h>
 
-///
-/// 圆周率
-///
-#define GN_PI 3.1415926535897932385f
-
-///
-/// 圆周率/2
-///
-#define GN_HALF_PI (GN_PI / 2.0f)
-
-///
-/// 圆周率*2
-///
-#define GN_TWO_PI (GN_PI * 2.0f)
-
 namespace GN {
 ///
 /// namespace for math helpers
@@ -36,22 +21,6 @@ template<typename T>
 GN_FORCE_INLINE bool floatEqual(const T & a, const T & b, const T & epsilon = (T) 0.0000001) {
     T diff = a - b;
     return -epsilon < diff && diff < epsilon;
-}
-
-///
-/// 角度->弧度
-// --------------------------------------------------------------------
-template<typename T>
-GN_FORCE_INLINE T deg2rad(T a) {
-    return a * (T) 0.01745329252f;
-}
-
-///
-/// 弧度->角度
-// --------------------------------------------------------------------
-template<typename T>
-GN_FORCE_INLINE T rad2deg(T a) {
-    return a * (T) 57.29577951f;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

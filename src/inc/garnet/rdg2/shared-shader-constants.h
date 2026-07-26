@@ -2,7 +2,22 @@
     #error "Do not include <garnet/rdg2/shared-shader-constants.h> directly. Include <garnet/GNrdg2.h> instead."
 #endif
 
+#include <glm/vec3.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+#include <chrono>
+
 namespace GN::rdg2 {
+
+using Microseconds = std::chrono::microseconds;
+
+/// Position in float meters. rdg2 works entirely in render space: positions are nominally
+/// camera-relative so float precision holds in large worlds. It is the caller's job (e.g. e2)
+/// to rebase exact world coordinates against the camera before handing values down; small
+/// self-contained scenes may pass absolute positions since the math is identical.
+using Location    = glm::vec3;
+using Orientation = glm::quat;
+using Distance    = float; ///< distance in meters (float)
 
 struct SharedShaderConstants : public Entity {
     struct FrameConstants {
@@ -37,7 +52,7 @@ struct SharedShaderConstants : public Entity {
     struct CameraConstants {
         Location    cameraPosition    = {0, 0, 0};
         Orientation cameraOrientation = {1.f, 0.f, 0.f, 0.f};
-        Radian      cameraFov         = Degree(60.f);
+        Radian      cameraFov         = ArcDegree(60.f);
         float       aspectRatio       = 16.f / 9.f;
         Distance    nearPlane         = 0.01f;
         Distance    farPlane          = 10000.f;

@@ -34,6 +34,8 @@
 #include "cube-draw-vert.spv.h"
 #include "cube-draw-frag.spv.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -568,7 +570,7 @@ int main(int argc, const char ** argv) {
             glm::mat4              camToWorld     = glm::inverse(glm::lookAtRH(kEye, kTarget, kUp));
             ssc->set0.camera.cameraPosition       = kEye;
             ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
-            ssc->set0.camera.cameraFov            = Degree(45.f);
+            ssc->set0.camera.cameraFov            = ArcDegree(45.f);
             ssc->set0.camera.nearPlane            = 0.1f;
             ssc->set0.camera.farPlane             = 100.f;
             ssc->set0.frameConstants.frameCounter = frameCounter;

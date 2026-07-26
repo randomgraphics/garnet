@@ -66,8 +66,12 @@ namespace internal {}
 #include "base/exception.h"
 
 // math library
+#include "base/trig.h"
 #include "base/math.h"
 #include "base/geometry.h"
+
+// photometric unit types
+#include "base/photometry.h"
 
 // misc.
 #include "base/misc.h"

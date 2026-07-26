@@ -1,12 +1,10 @@
-#if !defined(__GN_INSIDE_ENGINE2_H__)
-    #error "Do not include <garnet/e2/photometry.h> directly. Include <garnet/GNengine2.h> instead."
-#endif
+/// \file photometry.h
+/// Photometric unit types: generic physical-lighting vocabulary shared by rendering-related
+/// modules (rdg2, e2, ...). Deliberately module-agnostic, hence defined in base.
 
-#include <chrono>
+namespace GN {
 
-namespace GN::e2 {
-
-///< Intensity unit [cd].
+/// Intensity unit [cd].
 struct Candela {
     float value;
 };
@@ -52,4 +50,4 @@ struct RadianceRGB {
     Nit   luminance; // luminance in cd/m^2.
 };
 
-} // namespace GN::e2
+} // namespace GN
