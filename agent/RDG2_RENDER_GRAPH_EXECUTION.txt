@@ -78,8 +78,9 @@ plans, and executions.
 
 - **Artifact**: A named graph data item with a publication history. Quests read
   from and write to artifacts.
-- **Relic**: One immutable published state of an artifact. It carries the stored
-  `Entity` and the concrete version assigned by execution.
+- **Relic**: One immutable published state of an artifact: a small value struct
+  carrying the stored content `Entity` and the concrete version assigned at
+  publication. Relics are not entities themselves.
 - **Quest**: A declared executable unit. It declares artifact reads/writes and
   later executes through a `QuestContext`.
 - **Plan**: The compiled dependency graph generated from quest declarations. It
@@ -88,7 +89,7 @@ plans, and executions.
 - **Execution**: An active running instance of a plan. Execution owns scheduling
   and may run independent ready quests in parallel. A frame execution is bounded
   by one frame; a background execution is long-lived or incremental.
-- **Relic selector**: A symbolic version request such as current-known-good,
+- **Relic selector**: A symbolic version request such as latest-at-compile,
   next-published, or latest-at-execution-start. Outside execution, code should
   use selectors rather than concrete version numbers.
 - **Execution-local resource**: An internal planner classification for physical
@@ -119,9 +120,6 @@ Public retained RDG objects inherit `Entity` and use `AutoRef` references:
 struct Artifact : Entity {};
 using ArtifactRef = AutoRef<Artifact>;
 
-struct Relic : Entity {};
-using RelicRef = AutoRef<Relic>;
-
 struct Quest : Entity {};
 using QuestRef = AutoRef<Quest>;
 
@@ -131,6 +129,13 @@ using PlanRef = AutoRef<Plan>;
 struct Execution : Entity {};
 using ExecutionRef = AutoRef<Execution>;
 ```
+
+A relic is deliberately not an `Entity` and not refcounted by itself. It is a
+small value struct pairing the stored content entity with the concrete version
+assigned at publication (`Artifact::Relic<C>`, roughly
+`{ AutoRef<C> value; Version version; }`). Relics are copied by value, are
+immutable after publication, and may cross threads freely; the content they
+carry is the refcounted `Entity`.
 
 Use `XxxRef = AutoRef<Xxx>` for refcounted public objects. Reserve `Handle` for
 repo/table-managed opaque IDs with explicit validation or generation semantics,
@@ -158,13 +163,13 @@ For the first implementation, using `Artifact` directly in multithreaded code is
 acceptable if the API enforces clear ownership rules:
 
 - `ArtifactRef` is a shared identity and may cross threads.
-- `RelicRef` is immutable after publication and may cross threads.
+- A relic is immutable after publication and may cross threads by value.
 - Only the execution system may resolve concrete relic versions, query latest
   relics, or publish new relics.
 - Declaration, compilation, game-thread frame setup, and normal client code must
   treat artifacts as opaque immutable identities.
 - Outside execution, code should not call `artifact->version()`,
-  `artifact->latest()`, or `artifact->publish(...)`.
+  `artifact->content()`, or `artifact->publish(...)`.
 - Outside execution, concrete relic version numbers should not be used for
   ordinary reads. A queried concrete version can become stale immediately.
 - If a declaration needs to describe which relic it wants, it should use a
@@ -174,7 +179,6 @@ Example selectors:
 
 ```cpp
 enum class RelicSelector {
-    CURRENT_KNOWN_GOOD,
     LATEST_AT_COMPILE,
     LATEST_AT_EXECUTION_START,
     NEXT_PUBLISHED,
@@ -186,6 +190,62 @@ Frame executions should usually capture stable relics before crossing to the
 execution thread. Background executions may use latest or next-published selectors when
 their producer/consumer policy needs that behavior.
 
+### Quest Context Read And Publish Semantics
+
+During execution, both reads and writes go through the quest's `QuestContext`.
+Quests never call `artifact->content()` or `artifact->publish()` directly, even
+when the content they want already exists.
+
+Reading pre-existing relics is a supported core case, not an exception:
+
+- If an earlier quest in the same plan writes the artifact, `read()` returns the
+  relic published by that quest during this execution. An in-plan producer
+  shadows pre-existing content and overrides the declared selector.
+- If no quest in the plan writes the artifact, the artifact is effectively
+  imported and `read()` returns a pre-existing relic chosen by the declared
+  selector: `LATEST_AT_COMPILE` returns the relic current at plan compile time,
+  `LATEST_AT_EXECUTION_START` the relic current when the execution began.
+- `NEXT_PUBLISHED` is the exception: it deliberately rejects pre-existing
+  content and waits for a publication that happens after execution starts.
+- The first read-modify-write of a `READ_WRITE` artifact in an execution reads
+  the pre-existing relic and publishes an updated one. Accumulation and history
+  buffers (for example TAA history) work this way across frames.
+
+Two guarantees keep pre-existing reads safe:
+
+- The resolved version is pinned, not live. Once execution resolves a selector
+  to a concrete relic, every `read()` of that use returns the same relic for the
+  whole execution. A background producer publishing mid-execution affects later
+  compiles/executions, never the current one.
+- The case is validated at compile time. A `READ_ONLY` use with no in-plan
+  producer and no published relic to import is a missing-producer compile error,
+  not a null at execution time.
+
+`publish()` must go through the context for stronger reasons, because writes
+mutate state that other threads and executions can observe:
+
+- A write is a promise the plan already reasoned about. Downstream readers were
+  ordered against declared writes only. The context is the enforcement point
+  that rejects publication to undeclared artifacts instead of letting it
+  silently corrupt the compiled dependency analysis.
+- Publication time is an execution policy decision, not the CPU moment
+  `execute()` returns. GPU-produced relic contents do not exist until the
+  gathered payloads are submitted (or completed). `QuestContext::publish()`
+  therefore stages a provisional relic; the execution system performs the real
+  `Artifact::publish()` at the policy-defined completion point.
+- Failure atomicity: if the quest or execution fails, or a payload is culled,
+  staged publications are dropped. Nothing half-finished becomes visible, which
+  matters because relics are immutable and observers may hold them indefinitely.
+- Deterministic versioning: parallel quests publishing directly would race
+  version assignment. Execution commits staged publications in compiled order so
+  plan results stay reproducible.
+
+The raw `Artifact::publish()` API still exists, but it belongs to the execution
+system and to producers that own an artifact outside any plan, such as a
+background baker committing a finished slice or import setup pre-publishing an
+external resource. Inside a plan, a quest operates on shared state as a guest;
+the context is what makes its declared contract binding.
+
 ### Phase 1: Quest Declaration
 
 Declaration is pure description. It does not allocate transient GPU resources,
@@ -194,7 +254,7 @@ record commands, submit GPU work, publish relics, or call effect helpers.
 A quest should be able to declare:
 
 - a stable human-readable name;
-- scheduling hints;
+- scheduling hints (deferred until the execution layer needs them);
 - artifact reads with symbolic relic selectors;
 - artifact writes;
 - optional explicit before/after quest dependencies;
@@ -212,18 +272,18 @@ enum class ArtifactAccess {
 };
 
 struct ArtifactUse {
-    ArrayContainer<ArtifactRef> artifacts;
-    ArtifactAccess              access = ArtifactAccess::READ_ONLY;
-    RelicSelector               selector = RelicSelector::CURRENT_KNOWN_GOOD;
+    StrA           name;     // diagnostics and quest-local lookup
+    ArtifactRef    artifact; // one artifact per use
+    ArtifactAccess access   = ArtifactAccess::READ_ONLY;
+    RelicSelector  selector = RelicSelector::LATEST_AT_COMPILE;
+    // Root uses are retained even when no other quest in this execution reads them.
+    bool           root     = false;
 };
 
 struct QuestDeclaration {
     StrA name;
-    SchedulingHints scheduling;
     ArrayContainer<ArtifactUse> artifactUses;
     ArrayContainer<QuestRef> explicitDependencies;
-    // Root outputs are retained even when no other quest in this execution reads them.
-    bool outputRoot = false;
 };
 
 struct Quest : Entity {
@@ -235,9 +295,9 @@ struct Quest : Entity {
 Exact type names may change during implementation, but the split between
 declaration and execution should remain.
 
-Each `ArtifactUse` groups artifacts with the same access policy. This keeps
-declarations compact for common cases such as a quest reading many input
-textures with the same selector.
+Each `ArtifactUse` names exactly one artifact with its access mode, relic
+selector, and root flag. Scheduling hints are deferred until the execution
+layer needs them.
 
 `DISCARD_WRITE` means write-only/full replacement. The quest promises it does
 not need the prior contents of the artifact and will publish a complete
@@ -307,14 +367,14 @@ public:
     struct Declaration {
         TypedArtifactUse<SceneConstantsRelic> sceneConstants = {
             .access   = ArtifactAccess::READ_ONLY,
-            .selector = RelicSelector::CURRENT_KNOWN_GOOD,
+            .selector = RelicSelector::LATEST_AT_COMPILE,
         };
 
         int lightIndex = 0;
 
         TypedArtifactUse<ModelRelicList> models = {
             .access   = ArtifactAccess::READ_ONLY,
-            .selector = RelicSelector::CURRENT_KNOWN_GOOD,
+            .selector = RelicSelector::LATEST_AT_COMPILE,
         };
 
         TypedArtifactUse<DepthTargetRelic> depth = {
@@ -395,6 +455,17 @@ Responsibilities:
 Initial dependency rules:
 
 - A read depends on the latest prior write to the same artifact.
+- In-plan producers override relic selectors: a read with an earlier in-plan
+  writer binds to that writer's publication; the selector is consulted only
+  for reads with no in-plan producer (imported or background-published
+  relics).
+- Quest declaration order is semantically meaningful: it defines "prior" for
+  reads, orders multiple writes to the same artifact, and is the deterministic
+  tie-breaker for any future reordering of independent quests. A reader must
+  be declared after its in-plan producer.
+- A quest that needs the pre-execution relic of an artifact that is also
+  written in the same plan must use two artifacts (for example historyIn and
+  historyOut); selectors cannot express that.
 - A discard-write access publishes a complete replacement relic for that
   artifact and does not depend on the previous relic.
 - A read-write access depends on the latest prior write to the same artifact and
@@ -472,9 +543,11 @@ Mutable artifact operations live behind execution context:
 
 ```cpp
 struct QuestContext {
-    virtual RelicRef read(const ArtifactRef &) const = 0;
+    virtual Artifact::Relic<> read(const ArtifactRef &) const = 0;
     virtual void publish(const ArtifactRef &, AutoRef<Entity>) = 0;
     virtual void emit(AutoRef<gpu2::GpuPayload>) = 0;
+    virtual void await(AutoRef<gpu2::GpuPayload>) = 0;   // external submit dependency
+    virtual void present(AutoRef<gpu2::Swapchain>) = 0;  // performed by execution after submit
     virtual AutoRef<gpu2::GpuContext> gpu() const = 0;
 };
 ```
@@ -579,16 +652,16 @@ Recommended initial model:
 - each logical graph item is an artifact;
 - every write publishes a new relic for that artifact;
 - every read captures or resolves a relic according to its selector;
-- frame reads of background-produced artifacts may request a stable known-good
-  relic, latest-at-execution-start, next-published, or another selector;
+- frame reads of background-produced artifacts may request latest-at-compile,
+  latest-at-execution-start, next-published, or another selector;
 - output roots are artifacts or quests requested by the caller;
 - imported external artifacts are pre-published relics.
 
-Keep API method names short. Prefer names like `publish`, `latest`, and `wait`
-inside execution-owned APIs over longer phrases such as `publishRelic`,
-`latestRelic`, or `waitForRelic`.
+Keep API method names short. Prefer names like `read`, `publish`, and `emit`
+inside execution-owned APIs over longer phrases such as `readRelic`,
+`publishRelic`, or `emitGpuPayload`.
 
-Potential relic entity types include:
+Potential relic content entity types include:
 
 - `GpuPayloadListRelic`;
 - `GpuResourceSetRelic`;
@@ -694,12 +767,13 @@ SCC and PBR are validation clients, not core concepts.
 
 Useful first adapters:
 
-- `SccQuest`: declares a `SceneConstants` or `Set0Resources` output, calls
-  `SharedShaderConstants::takeSnapshot()`, publishes a relic containing the
-  resource set, and emits the upload payloads returned by that snapshot.
+- SCC: a configured quest (`Quest::create`) that declares a scene-constants
+  output, calls `SharedShaderConstants::takeSnapshot()`, publishes a relic
+  containing the resource set, and emits the upload payloads returned by that
+  snapshot. Already validated by the closed-graph test suite.
 - `PbrQuest`: declares reads of scene constants, material/asset inputs, and
   render target GPU resources, calls `PbrShading::getDrawParams()`, seals a
-  raster payload, and emits it.
+  raster payload, and emits it. Kept as the bespoke-subclass adapter example.
 
 These adapters prove the graph is usable, but the render graph execution layer
 must not depend on their types.
@@ -724,10 +798,22 @@ and API neutral; the API-specific classes are private implementation choices.
   graph implementation.
 - Reuse open graph concepts only when they prove useful for this design.
 - Use `Entity` plus `AutoRef` references for retained public objects: Artifact,
-  Relic, Quest, Plan, and Execution.
+  Quest, Plan, and Execution. Relics are value structs of content + version,
+  not entities.
+- Keep artifact, version, and relic as the basic resource concepts of the
+  render/close graph; do not introduce a separate logical-GPU-resource concept.
 - Use `XxxRef` for `AutoRef<Xxx>` public references; reserve `Handle` for
   repo/table-managed opaque IDs.
 - Keep concrete rendering helpers as ordinary quest clients.
+- Author pass-style quests through the generic configured-quest factory
+  (`Quest::create` with name, artifact uses, explicit dependencies, and an
+  execute callable); reserve bespoke `Quest` subclasses for stateful producers
+  and API-specific effect adapters.
+- Swapchain acquire is an ordinary configured quest that publishes the
+  backbuffer artifact and registers the acquire payload as an external
+  submission dependency (QuestContext::await). The frame-end quest requests
+  presentation through QuestContext::present; the execution performs the
+  actual present after the gathered submission.
 - Gather GPU payloads and submit them once in the first implementation.
 - Design for both frame-scoped executions and long-lived background producers.
 - Treat artifacts as opaque immutable identities outside execution.
@@ -747,10 +833,8 @@ and API neutral; the API-specific classes are private implementation choices.
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.1 — public declaration API added and verified
-  Phase 0: spec and resumable assignment drafted
-  Phase 1.1: abstract render graph API, public refs, API mock-shape test, and API sketch sample added (1 test / 30 assertions)
-In progress: none — ready to review public API shape before Phase 1.2 validation tests
+Last completed: Phase 1 — first executable slice: Quest::create factory, Plan::compile validation compiler, synchronous Execution::run with gathered submission and quest-requested present, frame begin/end quests, and the closed-graph-hello-world sample
+In progress: none — design iteration continues on wip/rdg2/close-graph (artifact/version/relic are the basic resource concepts); task breakdown intentionally deferred until the design settles
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -758,6 +842,7 @@ In progress: none — ready to review public API shape before Phase 1.2 validati
 Primary files:
 
 - `src/inc/garnet/rdg2/artifact.h` — existing artifact/relic starting point; refactor as needed.
+- `src/core/rdg2/design-choices.md` — closed/open graph design white paper and required usage scenarios.
 - `src/inc/garnet/gpu2/gpu2.h` — `GpuContext`, `GpuPayload`, and submit API.
 - `src/inc/garnet/gpu2/raster.h` — raster payload creation API.
 - `src/inc/garnet/gpu2/cnc.h` — compute/copy payload creation API.
@@ -817,7 +902,8 @@ compile plus non-device unit tests passing.
 - Keep gpu2 vocabulary as-is: use GPU resource and GPU payload for concepts
   inherited from gpu2.
 - Use `Entity` plus `AutoRef` references for retained public objects: Artifact,
-  Relic, Quest, Plan, and Execution.
+  Quest, Plan, and Execution. Relics are value structs of content + version,
+  not entities.
 - Use `XxxRef` for `AutoRef<Xxx>` public references; reserve `Handle` for
   repo/table-managed opaque IDs.
 - Prefer small, verified slices that leave the tree buildable.
@@ -832,189 +918,8 @@ compile plus non-device unit tests passing.
   Separate logical needs, such as shadow-pass depth and main-pass depth, should
   be separate artifacts even when their physical GPU resources may alias
   internally.
-- Keep artifact/relic API method names short, such as `publish`, `latest`, and
-  `wait`, inside execution-owned APIs.
+- Keep artifact/relic API method names short, such as `read`, `publish`, and
+  `emit`, inside execution-owned APIs.
 - Preserve user/manual changes and avoid unrelated refactors.
-- Prefer one verified task per commit when turning this plan into commits.
+- Prefer one verified step per commit.
 
---- TASK BREAKDOWN ---
-
-Phase 0: Spec And Agreement
-─────────────────────────────────────────────────────────────────────
-  Task 0.1: Draft the render graph execution spec and assignment plan
-    Verify: assignment file follows the format in `agent/README.md`
-    Commit: "docs(rdg2): plan render graph execution layer (Phase 0.1)"
-
-Phase 1: Declaration API
-─────────────────────────────────────────────────────────────────────
-  Task 1.1: Add public declaration types for render quests and artifacts
-    - Add neutral quest/artifact/access/result types under `rdg2`.
-    - Add `XxxRef = AutoRef<Xxx>` public references for Artifact, Relic, Quest, Plan, and Execution.
-    - Let each `ArtifactUse` group multiple artifacts with the same access/selector policy.
-    - Define READ_ONLY as a pure read, DISCARD_WRITE as full replacement with old contents discarded, and READ_WRITE as preserve/read previous contents before publishing an update.
-    - Include symbolic relic selector concepts without exposing ordinary concrete version reads outside execution.
-    - Keep transient lifetime and physical resource aliasing out of the public quest declaration API.
-    Verify: `env/bin/build.py d`
-    Commit: "rdg2(render-graph): add quest declaration API (Phase 1.1)"
-
-  Task 1.2: Add declaration construction and validation tests
-    - Let tests declare artifacts, reads, writes, and explicit quest dependencies.
-    - Keep `Quest::declare()` as the core API returning `QuestDeclaration`; any builder is only a local helper.
-    - Validate duplicate/unknown ref behavior without GPU devices.
-    Verify: Targeted render graph declaration tests plus `env/bin/build.py d`
-    Commit: "rdg2(render-graph): validate quest declarations (Phase 1.2)"
-
-Phase 2: Compile / Build
-─────────────────────────────────────────────────────────────────────
-  Task 2.1: Compile declarations into artifact dependency edges
-    - Map artifact reads/writes to relic producers and consumers.
-    - Ensure discard-write accesses do not depend on prior artifact contents.
-    - Ensure read-write accesses depend on the selected prior relic and preserve partial-update semantics.
-    - Resolve symbolic relic selectors only at the compile/execution boundary chosen by policy.
-    - Detect missing producers, unknown explicit dependencies, and cycles.
-    Verify: Unit tests for read-after-write, write-after-read/write, missing input, selector policy, and cycle cases
-    Commit: "rdg2(render-graph): compile artifact dependencies (Phase 2.1)"
-
-  Task 2.2: Generate deterministic execution and gather order
-    - Add stable topological ordering using scheduling hints and declaration order.
-    - Mark independent ready groups or equivalent scheduling data for execution-time parallelism.
-    Verify: Unit tests for ordering, tie-breaking, and dead-quest culling
-    Commit: "rdg2(render-graph): build deterministic execution plan (Phase 2.2)"
-
-  Task 2.3: Infer execution-local lifetimes and alias candidates
-    - Keep all feature-authored data as ordinary artifacts with read/write/root intent.
-    - Compute first/last use intervals from compiled artifact reads/writes.
-    - Mark non-overlapping, descriptor-compatible execution-local artifacts as alias candidates.
-    - Keep logical artifacts distinct even when they can share one physical gpu2 resource.
-    Verify: Unit tests with shadow-depth/main-depth artifacts and upload/readback scratch buffers showing aliasable and non-aliasable cases
-    Commit: "rdg2(render-graph): plan transient resource aliasing (Phase 2.3)"
-
-Phase 3: Quest Execution
-─────────────────────────────────────────────────────────────────────
-  Task 3.1: Execute compiled quests sequentially through a constrained quest context
-    - Provide declared input relic reads and output publication helpers.
-    - Collect quest results and reject undeclared reads/writes.
-    - Keep relic ownership stable so frame consumers can hold older background-published relics alive.
-    Verify: Unit tests for relic publication, result collection, and failure behavior
-    Commit: "rdg2(render-graph): execute compiled quests sequentially (Phase 3.1)"
-
-  Task 3.2: Execute independent ready quests in parallel
-    - Add a small worker path or another executor suitable for this design.
-    - Only quests without unsatisfied dependencies may run concurrently.
-    - Preserve deterministic result gathering order despite parallel execution.
-    Verify: Unit tests with instrumented independent and dependent quests; `env/bin/build.py d`
-    Commit: "rdg2(render-graph): execute independent quests in parallel (Phase 3.2)"
-
-Phase 4: GPU Payload Gathering
-─────────────────────────────────────────────────────────────────────
-  Task 4.1: Gather emitted GPU payloads into one submit batch
-    - Preserve compiled gather order.
-    - Include external GPU dependencies such as swapchain-ready payloads.
-    Verify: Unit tests with mock/instrumented payload outputs, plus `env/bin/build.py d`
-    Commit: "rdg2(render-graph): gather gpu payload outputs (Phase 4.1)"
-
-  Task 4.2: Submit gathered payloads and complete the execution result
-    - Call `gpu2::GpuContext::submit()` once for the first implementation.
-    - Wire completion callback/manual completion for execution status.
-    Verify: GPU-capable test or sample path that submits multiple payloads in one execution
-    Commit: "rdg2(render-graph): submit gathered gpu payloads (Phase 4.2)"
-
-  Task 4.3: Bind execution-local artifacts to physical gpu2 resources
-    - Start with conservative one-physical-resource-per-execution-local-artifact allocation when needed.
-    - Add the allocator boundary that can map multiple alias-compatible execution-local artifacts to one physical resource.
-    - Ensure quest execution observes only logical artifact bindings, never the aliasing decision.
-    Verify: Unit tests or a GPU-capable sample where non-overlapping execution-local depth/scratch artifacts execute correctly with aliasing disabled and enabled
-    Commit: "rdg2(render-graph): allocate transient gpu resources (Phase 4.3)"
-
-Phase 5: Background Producers
-─────────────────────────────────────────────────────────────────────
-  Task 5.1: Add a background execution ref for incremental producer quests
-    - Support start/pump/cancel/status behavior without a frame boundary.
-    - Let each background slice publish relics and emit GPU payloads.
-    Verify: Unit tests for pump progress, cancellation, and relic publication across slices
-    Commit: "rdg2(render-graph): add background execution ref (Phase 5.1)"
-
-  Task 5.2: Let frame executions consume background-published relics safely
-    - Support current-known-good, latest-at-execution-start, and required-version selectors.
-    - Ensure frame executions are not failed by unrelated background producer failures.
-    Verify: Unit tests where frame executions consume old, latest, and required background relics
-    Commit: "rdg2(render-graph): consume background relics (Phase 5.2)"
-
-Phase 6: Validation Clients
-─────────────────────────────────────────────────────────────────────
-  Task 6.1: Wrap SharedShaderConstants as an ordinary render quest
-    - Declare its artifact outputs and emit upload payloads.
-    - Keep SCC implementation itself concrete and graph-agnostic.
-    Verify: Existing SSC tests plus a render graph adapter test
-    Commit: "rdg2(render-graph): adapt shared shader constants quest (Phase 6.1)"
-
-  Task 6.2: Wrap a minimal PBR raster pass as an ordinary render quest
-    - Consume declared scene constants and PBR asset inputs.
-    - Emit a sealed raster payload without teaching core RDG about PBR.
-    Verify: Existing PBR sample/test path uses the render graph execution layer
-    Commit: "rdg2(render-graph): adapt pbr pass quest (Phase 6.2)"
-
-  Task 6.3: Add a minimal background-data-provider sample or test adapter
-    - Model an incremental producer such as a lightmap/probe update without baking that concept into RDG.
-    - Feed its published relic into a frame-scoped render quest test.
-    Verify: Targeted render graph test or sample demonstrates background producer to frame consumer flow
-    Commit: "rdg2(render-graph): validate background producer flow (Phase 6.3)"
-
-Phase 7: Documentation And Cleanup
-─────────────────────────────────────────────────────────────────────
-  Task 7.1: Document the render graph execution layer and update RDG2 notes
-    - Explain declaration, compile, execute, gather/submit phases.
-    - Clarify that concrete effects are clients, not RDG concepts.
-    - Explain frame executions, background executions, and artifact/relic handoff.
-    Verify: `env/bin/format-all-sources.py -dqn` and `env/bin/build.py d`
-    Commit: "docs(rdg2): document render graph execution phases (Phase 7.1)"
-
-Phase 8: Future Extensions — FUTURE
-─────────────────────────────────────────────────────────────────────
-  Deferred ideas: async compute/transfer queue splitting, pass merging,
-  cross-frame caching, hot-reload integration, and explicit render-graph
-  visualization.
-
---- SUMMARY OF FILES TO TOUCH ---
-
-Phase 0 (plan):
-  agent/RDG2_RENDER_GRAPH_EXECUTION.txt — NEW: resumable plan with full design spec in the Design section (originally a separate SPEC_RDG2_RENDER_GRAPH_EXECUTION.md, since merged in)
-
-Phase 1 (declaration API):
-  src/inc/garnet/GNrdg2.h — include new public render graph header
-  src/inc/garnet/rdg2/render-graph.h — NEW: public declaration/quest/result API
-  src/core/rdg2/test/render-graph-api-mock-test.cpp — NEW: API-only mock shape test
-  src/sample/rdg2/render-graph-api-sketch.cpp — NEW: concrete API sketch sample before real implementation
-
-Phase 2 (compile/build):
-  src/inc/garnet/rdg2/render-graph.h — plan and selector policy types
-  src/core/rdg2/render-graph.cpp — dependency analysis and ordering
-  src/core/rdg2/test/render-graph-test.cpp — compile/order/culling tests
-  src/core/rdg2/test/render-graph-transient-test.cpp — internal execution-local lifetime and alias-candidate tests
-
-Phase 3 (execution):
-  src/inc/garnet/rdg2/render-graph.h — quest context/result API
-  src/core/rdg2/render-graph.cpp — execution engine
-  src/core/rdg2/test/render-graph-test.cpp — execution and parallelism tests
-
-Phase 4 (GPU gather/submit):
-  src/inc/garnet/rdg2/render-graph.h — execution result API
-  src/core/rdg2/render-graph.cpp — payload gathering and submit integration
-  src/core/rdg2/transient-resource-planner.cpp — optional transient allocation planner implementation
-  src/core/rdg2/test/render-graph-test.cpp — payload gathering tests
-
-Phase 5 (background producers):
-  src/inc/garnet/rdg2/render-graph.h — background execution ref and selector policy API
-  src/core/rdg2/render-graph.cpp — incremental background execution and relic publication
-  src/core/rdg2/test/render-graph-test.cpp — background producer/consumer tests
-
-Phase 6 (validation clients):
-  src/inc/garnet/rdg2/shared-shader-constants.h — optional adapter declarations
-  src/core/rdg2/shared-shader-constants.cpp — optional adapter implementation
-  src/inc/garnet/rdg2/pbr.h — optional adapter declarations
-  src/core/rdg2/pbr.cpp — optional adapter implementation
-  src/sample/rdg2/simple-pbr.cpp — use render graph execution path
-
-Phase 7 (docs):
-  src/inc/garnet/rdg2/README.md — update RDG2 design notes
-  agent/RDG2_RENDER_GRAPH_EXECUTION.txt — update Design section with resolved decisions from implementation

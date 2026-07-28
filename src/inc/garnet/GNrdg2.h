@@ -12,5 +12,5 @@ namespace GN::rdg2 {};
 #include "rdg2/open-graph.h"
 #include "rdg2/shared-shader-constants.h"
 #include "rdg2/pbr.h"
-#include "rdg2/render-graph.h"
+#include "rdg2/closed-graph.h"
 #undef __GN_INSIDE_RDG2_H__

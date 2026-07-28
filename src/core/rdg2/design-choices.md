@@ -332,7 +332,8 @@ Expected behavior:
 
 The graph needs logical GPU resource identity separate from physical GPU
 allocation. The graph should not infer resource identity from matching
-descriptions.
+descriptions. In the current closed-graph design the artifact is that logical
+identity; there is no separate logical-resource type.
 
 Example: pre-Z and main rendering share one logical scene depth resource.
 
@@ -794,8 +795,9 @@ These invariants should guide implementation choices:
 
 ## Open Questions
 
-- What public names should be used for the closed-plan API: `ClosedGraph`,
-  `FrameGraph`, or only `Plan`/`Execution`?
+- What public names should be used for the closed-plan API? (Partially
+  resolved: the public header is `closed-graph.h` and the API exposes
+  `Plan`/`Execution`; no `ClosedGraph` type has been needed so far.)
 - Should phased discovery be a first-class RDG2 API or a pattern built by client
   code using OpenGraph plus Plan compilation?
 - How much conditional work is acceptable before a frame should switch to

@@ -15,6 +15,9 @@ add_custom_target(rdg-sample-shaders DEPENDS ${spv_headers})
 add_executable(GNsample-rdg2-open-graph-hello-world open-graph-hello-world.cpp)
 target_link_libraries(GNsample-rdg2-open-graph-hello-world GNcore)
 
+add_executable(GNsample-rdg2-closed-graph-hello-world closed-graph-hello-world.cpp)
+target_link_libraries(GNsample-rdg2-closed-graph-hello-world GNcore)
+
 add_executable(GNsample-rdg2-simple-triangle simple-triangle.cpp)
 target_include_directories(GNsample-rdg2-simple-triangle PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GNsample-rdg2-simple-triangle GNcore)

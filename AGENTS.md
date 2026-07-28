@@ -144,9 +144,9 @@ RDG2 is a playground for graph designs with two generations:
   class, priority, then insertion order. `manualComplete = true` keeps nodes in
   `FinishedAction` until `satisfyNode()` is called. Artifact versions use a
   128-bit counter; `OOO()` means the next published version.
-- Render graph take 2 (`render-graph.h`) is the active design: `Quest`, `Plan`,
+- Render graph take 2 (`closed-graph.h`) is the active design: `Quest`, `Plan`,
   and `Execution` over versioned `Artifact`/`Relic` data. Design details and
-  task tracking live in `agent/RDG2_RENDER_GRAPH_EXECUTION.txt`.
+  iteration notes live in `agent/RDG2_RENDER_GRAPH_EXECUTION.txt`.
 
 Known open-graph gaps include multi-worker execution, descriptor/resource
 binding paths, indexed draw coverage, and file-path shader loading.

@@ -9,8 +9,9 @@ Resource registry that can lookup and create resources by certain Key type (such
 The most useful part of the current open-graph system is the artifact/version
 model: an artifact represents a piece of content with a monotonically increasing
 version. Successful publish increments the version, failed work does not publish,
-and users can either retrieve the latest known-good content immediately or wait
-for a specific version to become available.
+and users retrieve the latest known-good content immediately. Waiting for a
+specific version is provided by graph tokens or the publish signal, not by the
+artifact itself (`Artifact::wait()`/`Snapshot` were removed as obsolete).
 
 The first standalone version is implemented with no graph ownership. The base
 artifact is untyped and owns the version counter, latest content, and waiters
@@ -24,8 +25,6 @@ Important initial semantics to preserve:
 - Reject empty content; rejected publish must not increment the version.
 - Loading/creation failure should simply skip publish so the previous
   last-known-good content remains available.
-- `wait(version)` should atomically return both wait status and the content
-  snapshot that satisfied the wait, because callers usually wait and then read.
 - Keep the API shape open enough to allow a future multi-stage model without
   committing to it now.
 

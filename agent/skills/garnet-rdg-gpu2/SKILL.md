@@ -28,9 +28,9 @@ RDG2 is a playground for graph designs with two generations:
   FinishedAction, Completed. `manualComplete = true` is for externally
   completed work such as GPU fences. Artifact versions use a 128-bit counter;
   `OOO()` means the next publish. This is now reference material.
-- Render graph take 2 (`render-graph.h`): the active design — `Quest`, `Plan`,
-  `Execution` over versioned `Artifact`/`Relic` data. Design details and task
-  tracking live in `agent/RDG2_RENDER_GRAPH_EXECUTION.txt`.
+- Render graph take 2 (`closed-graph.h`): the active design — `Quest`, `Plan`,
+  `Execution` over versioned `Artifact`/`Relic` data. Design details and
+  iteration notes live in `agent/RDG2_RENDER_GRAPH_EXECUTION.txt`.
 
 ## gpu2
 

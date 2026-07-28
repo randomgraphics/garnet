@@ -24,20 +24,19 @@ std::atomic<int> TestContent::alive = 0;
 
 } // namespace
 
-TEST_CASE("rdg2::Artifact: publish and wait are graph independent", "[rdg2][artifact]") {
+TEST_CASE("rdg2::Artifact: publish and read are graph independent", "[rdg2][artifact]") {
     auto artifact = Artifact::create("content");
     REQUIRE(artifact);
     CHECK(artifact->version() == NeverOverflowingCounter::OOO());
     CHECK(artifact->publish({}) == NeverOverflowingCounter::OOO());
     CHECK(artifact->version() == NeverOverflowingCounter::OOO());
 
-    auto beforePublish = artifact->wait(NeverOverflowingCounter::ONE(), std::chrono::milliseconds::zero());
-    CHECK(beforePublish.status == Artifact::WaitStatus::BUSY);
+    CHECK(!artifact->content());
 
     TypedArtifact<TestContent> typed(artifact);
     int                        publishSignals = 0;
     NeverOverflowingCounter    signaledVersion;
-    auto                       onPublish = [&](const Artifact::Content<> & content) {
+    auto                       onPublish = [&](const Artifact::Relic<> & content) {
         ++publishSignals;
         signaledVersion = content.version;
     };
@@ -47,11 +46,10 @@ TEST_CASE("rdg2::Artifact: publish and wait are graph independent", "[rdg2][arti
     CHECK(publishSignals == 1);
     CHECK(signaledVersion == NeverOverflowingCounter::ONE());
 
-    auto afterPublish = typed.wait(NeverOverflowingCounter::ONE(), std::chrono::milliseconds::zero());
-    CHECK(afterPublish.status == Artifact::WaitStatus::READY);
+    auto afterPublish = typed.content();
     CHECK(afterPublish.version == NeverOverflowingCounter::ONE());
-    REQUIRE(afterPublish.content);
-    CHECK(afterPublish.content->value == 7);
+    REQUIRE(afterPublish.value);
+    CHECK(afterPublish.value->value == 7);
 
     auto secondVersion = NeverOverflowingCounter::ONE();
     ++secondVersion;
@@ -59,11 +57,10 @@ TEST_CASE("rdg2::Artifact: publish and wait are graph independent", "[rdg2][arti
     CHECK(publishSignals == 2);
     CHECK(signaledVersion == secondVersion);
 
-    auto oldVersionWait = typed.wait(NeverOverflowingCounter::ONE(), std::chrono::milliseconds::zero());
-    CHECK(oldVersionWait.status == Artifact::WaitStatus::READY);
-    CHECK(oldVersionWait.version == secondVersion);
-    REQUIRE(oldVersionWait.content);
-    CHECK(oldVersionWait.content->value == 8);
+    auto latestRelic = typed.content();
+    CHECK(latestRelic.version == secondVersion);
+    REQUIRE(latestRelic.value);
+    CHECK(latestRelic.value->value == 8);
 }
 
 TEST_CASE("rdg2::OpenGraph: artifact keeps only latest published content", "[rdg2][open-graph]") {
