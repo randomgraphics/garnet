@@ -125,7 +125,7 @@ public:
     ///
     int run() {
         if (!gInputPtr) {
-            GN_ERROR(sLogger)("InputTest is not initialized!");
+            GN_ERROR(sLogger, "InputTest is not initialized!");
             return -1;
         }
 

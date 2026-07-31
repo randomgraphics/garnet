@@ -129,7 +129,7 @@ public:
 
 GN_API AutoRef<PbrShading> PbrShading::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("PbrShading::create: gpu is null, name='{}'", name);
+            GN_ERROR(sLogger, "PbrShading::create: gpu is null, name='{}'", name);
             return {};
         }
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
@@ -138,13 +138,13 @@ GN_API AutoRef<PbrShading> PbrShading::create(const StrA & name, const CreatePar
         return AutoRef<PbrShading>(new PbrShadingVulkan(name, params.gpu));
     }
     case GpuContextCommon::Api::D3D12:
-        GN_ERROR(sLogger)("PbrShading::create: D3D12 backend not implemented");
+        GN_ERROR(sLogger, "PbrShading::create: D3D12 backend not implemented");
         return {};
     case GpuContextCommon::Api::Metal:
-        GN_ERROR(sLogger)("PbrShading::create: Metal backend not implemented");
+        GN_ERROR(sLogger, "PbrShading::create: Metal backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("PbrShading::create: unknown API, name='{}'", name);
+        GN_ERROR(sLogger, "PbrShading::create: unknown API, name='{}'", name);
         return {};
     }
 }
@@ -193,15 +193,15 @@ static bool parseMaterialLine(const std::string & line, std::string & key, std::
 
 GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(const StrA & name, const LoadParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("PbrShading::Material::load: gpu is null");
+            GN_ERROR(sLogger, "PbrShading::Material::load: gpu is null");
             return {};
         }
     if (!params.source) GN_UNLIKELY {
-            GN_ERROR(sLogger)("PbrShading::Material::load: source is null");
+            GN_ERROR(sLogger, "PbrShading::Material::load: source is null");
             return {};
         }
     if (!params.source->readable()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("PbrShading::Material::load: source is not readable");
+            GN_ERROR(sLogger, "PbrShading::Material::load: source is not readable");
             return {};
         }
     auto * p = new PbrMaterialImpl(name, params.gpu);
@@ -214,10 +214,9 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(const StrA & nam
     if (basePath.empty()) {
         basePath = GN::fs::dirName(params.source->name());
         if (basePath.empty()) {
-            GN_WARN(sLogger)
-            ("PbrShading::Material::load: no base path provided and source file has no directory. "
-             "The loader will try to resolve relative texture paths as relative to the current working directory, "
-             "which could yeild undetermined result.");
+            GN_WARN(sLogger, "PbrShading::Material::load: no base path provided and source file has no directory. "
+                             "The loader will try to resolve relative texture paths as relative to the current working directory, "
+                             "which could yeild undetermined result.");
             basePath = GN::fs::getCurrentDir();
         }
     }
@@ -234,7 +233,7 @@ GN_API AutoRef<PbrShading::Material> PbrShading::Material::load(const StrA & nam
         StrA             texPath = GN::fs::isAbsPath(valueA) ? valueA : GN::fs::resolvePath(basePath, valueA);
         AutoRef<Texture> tex     = Texture::load(Texture::LoadParameters {.context = params.gpu, .filename = texPath});
         if (!tex) {
-            GN_ERROR(sLogger)("PbrShading::Material::load: failed to load texture '{}' for key '{}'", texPath, key);
+            GN_ERROR(sLogger, "PbrShading::Material::load: failed to load texture '{}' for key '{}'", texPath, key);
             continue;
         }
         if (key == "baseColorTexture")

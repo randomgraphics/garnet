@@ -20,7 +20,7 @@ bool GN::gfx::OGLVtxBufVBO::init(const VtxBufDesc & desc) {
     GN_STDCLASS_INIT();
 
     if (0 == desc.length) {
-        GN_ERROR(sLogger)("Vertex buffer size can't be zero!");
+        GN_ERROR(sLogger, "Vertex buffer size can't be zero!");
         return failure();
     }
 

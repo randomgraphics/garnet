@@ -24,16 +24,16 @@ bool GN::gfx::BasicGpu::init(const GpuOptions & o) {
     // check GPU options
     if (o.api < 0 || o.api >= GpuAPI::NUM_APIs) {
         if (GpuAPI::AUTO == o.api) {
-            GN_ERROR(sLogger)("GpuAPI::AUTO must be changed to actual API value before initializing GPU.");
+            GN_ERROR(sLogger, "GpuAPI::AUTO must be changed to actual API value before initializing GPU.");
         } else {
-            GN_ERROR(sLogger)("Invalid API: {}", o.api.toInt());
+            GN_ERROR(sLogger, "Invalid API: {}", o.api.toInt());
         }
 
         return failure();
     }
 
     // sanity check: warning when render context size is larger than 2K bytes
-    if (sizeof(GpuContext) > 2048) { GN_WARN(sLogger)("GN::gfx::GpuContext is huge! ({} bytes)", sizeof(GpuContext)); }
+    if (sizeof(GpuContext) > 2048) { GN_WARN(sLogger, "GN::gfx::GpuContext is huge! ({} bytes)", sizeof(GpuContext)); }
 
     // initialize sub-components one by one
     if (!dispInit(o)) return failure();
@@ -97,7 +97,7 @@ void GN::gfx::BasicGpu::setUserData(const Guid & id, const void * data, uint32_t
         if (currentUserData) {
             mUserData.remove(id);
         } else {
-            GN_ERROR(sLogger)("Invalid user data GUID.");
+            GN_ERROR(sLogger, "Invalid user data GUID.");
         }
     } else if (currentUserData) {
         // overwrite existing data
@@ -130,7 +130,7 @@ const void * GN::gfx::BasicGpu::getUserData(const Guid & id, uint32_t * length) 
 
         return currentUserData->data();
     } else {
-        GN_ERROR(sLogger)("Invalid user data GUID.");
+        GN_ERROR(sLogger, "Invalid user data GUID.");
 
         if (length) *length = 0;
 

@@ -123,7 +123,7 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     ip.setPrintVkInfo(getVkDeviceVerbosity(params.howToPrintDeviceCaps));
     mInstance.emplace(ip);
     if (!mInstance->handle()) {
-        GN_ERROR(sLoggerVk)("GpuContextVulkan2: failed to create Vulkan instance, name='{}'", name);
+        GN_ERROR(sLoggerVk, "GpuContextVulkan2: failed to create Vulkan instance, name='{}'", name);
         return;
     }
 
@@ -146,11 +146,11 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     if (depthVk != vk::Format::eUndefined) {
         mCaps.defaultDepthFormat = vkFormatToPixelFormat(depthVk);
         if (mCaps.defaultDepthFormat == gfx::img::PixelFormat::UNKNOWN()) {
-            GN_WARN(sLoggerVk)("GpuContextVulkan2: vkFormatToPixelFormat({}) returned UNKNOWN; caps.defaultDepthFormat stays UNKNOWN",
-                               rv::vkFormat2String(depthVk));
+            GN_WARN(sLoggerVk, "GpuContextVulkan2: vkFormatToPixelFormat({}) returned UNKNOWN; caps.defaultDepthFormat stays UNKNOWN",
+                    rv::vkFormat2String(depthVk));
         }
     } else {
-        GN_WARN(sLoggerVk)("GpuContextVulkan2: no depth/stencil format from queryDepthFormat; caps.defaultDepthFormat stays UNKNOWN");
+        GN_WARN(sLoggerVk, "GpuContextVulkan2: no depth/stencil format from queryDepthFormat; caps.defaultDepthFormat stays UNKNOWN");
     }
 
     // Create sub objects
@@ -162,14 +162,14 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
 }
 
 GpuContextVulkan2::~GpuContextVulkan2() {
-    GN_INFO(sLoggerVk)("Wait for GPU idle ...");
+    GN_INFO(sLoggerVk, "Wait for GPU idle ...");
     pumpInternal(true);
-    GN_INFO(sLoggerVk)("Destroying Vulkan GPU context");
+    GN_INFO(sLoggerVk, "Destroying Vulkan GPU context");
 }
 
 void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     if (!ready()) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("GpuContextVulkan2::submit failed: device not ready, name='{}'", sp.name);
+            GN_ERROR(sLoggerVk, "GpuContextVulkan2::submit failed: device not ready, name='{}'", sp.name);
             return;
         }
 
@@ -182,7 +182,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     const rv::Device & dev   = vulkanDevice();
     rv::CommandQueue * queue = dev.graphics(); // TODO: support sp.queue
     if (!queue) GN_UNLIKELY {
-            GN_ERROR(sLoggerVk)("GpuContextVulkan2::submit failed: graphics queue not available, name='{}'", sp.name);
+            GN_ERROR(sLoggerVk, "GpuContextVulkan2::submit failed: graphics queue not available, name='{}'", sp.name);
             return;
         }
 
@@ -194,7 +194,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         if (!d) GN_UNLIKELY continue;
         auto w = RuntimeType::cast<GpuPayloadVulkan>(*d);
         if (!w) GN_UNLIKELY {
-                GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", d->name, d->id);
+                GN_ERROR(sLoggerVk, "Unrecognized payload type: {}({})", d->name, d->id);
                 continue;
             }
         const auto & s = w->syncpoint();
@@ -203,7 +203,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         } else if (const auto * b = s.asBinarySemaphore()) {
             waitBinaries.push_back({*b, 0, vk::PipelineStageFlagBits::eAllCommands});
         } else {
-            GN_ERROR(sLoggerVk)("Can't depend on un-submitted payload: {}({})", d->name, d->id);
+            GN_ERROR(sLoggerVk, "Can't depend on un-submitted payload: {}({})", d->name, d->id);
             continue;
         }
     }
@@ -212,7 +212,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     auto mainFence = fencePool().acquire(sp.name);
     auto mainPoint = mImpl->getNextTimelinePoint(queue); // stages already set to eAllCommands
     if (!mainFence || !mainPoint) {
-        GN_ERROR(sLoggerVk)("failed to acquire the main fence and semaphore for the submission.");
+        GN_ERROR(sLoggerVk, "failed to acquire the main fence and semaphore for the submission.");
         return;
     }
 
@@ -228,7 +228,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     recordCtx.batchTracker = &batchTracker;
     recordCtx.cmd          = queue->begin(sp.name.empty() ? "rdg2_cmd" : sp.name.c_str());
     if (recordCtx.cmd.empty()) {
-        GN_ERROR(sLoggerVk)("GpuContextVulkan2::submit: failed to begin command buffer, name='{}'", sp.name);
+        GN_ERROR(sLoggerVk, "GpuContextVulkan2::submit: failed to begin command buffer, name='{}'", sp.name);
         return;
     }
 
@@ -239,12 +239,12 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         if (!item) GN_UNLIKELY continue;
         auto w = RuntimeType::cast<GpuPayloadVulkan>(item);
         if (!w) GN_UNLIKELY {
-                GN_ERROR(sLoggerVk)("Unrecognized payload type: {}({})", item->name, item->id);
+                GN_ERROR(sLoggerVk, "Unrecognized payload type: {}({})", item->name, item->id);
                 continue;
             }
         if (w->syncpoint()) GN_UNLIKELY {
                 // This payload has a sync point already. it means it has been submit to GPU already. Reject it.
-                GN_ERROR(sLoggerVk)("Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
+                GN_ERROR(sLoggerVk, "Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
                 continue;
             }
         w->recordForVulkanSubmit(recordCtx);
@@ -319,14 +319,14 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
             try {
                 w->onGpuComplete();
             } catch (const std::exception & e) {
-                GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} payload onGpuComplete threw exception: {}", w->name, e.what());
-            } catch (...) { GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} payload onGpuComplete threw unknown exception", w->name); }
+                GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} payload onGpuComplete threw exception: {}", w->name, e.what());
+            } catch (...) { GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} payload onGpuComplete threw unknown exception", w->name); }
         }
         try {
             if (s.onComplete) s.onComplete();
         } catch (const std::exception & e) {
-            GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw exception: {}", s.name, e.what());
-        } catch (...) { GN_ERROR(sLoggerVk)("GpuContextVulkan2: {} onComplete callback threw unknown exception", s.name); }
+            GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} onComplete callback threw exception: {}", s.name, e.what());
+        } catch (...) { GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} onComplete callback threw unknown exception", s.name); }
     }
 
     // Our pending list doesn't cover all in-flight work (e.g. bridge submits in the swapchain

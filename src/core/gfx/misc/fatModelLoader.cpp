@@ -112,12 +112,12 @@ static void sAddNewBone(INOUT uint32_t * joints, INOUT float * weights, IN uint3
                 // The joint array is full. And the last existing weight in the array
                 // is smaller then the new/current weight. So the existing one will be
                 // dropped, with warning.
-                GN_VERBOSE(sLogger)
-                ("Vertex %d has more than 4 joints attatched. "
-                 "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
-                 "because it has less influence to the vertex "
-                 "then other joints.",
-                 vertexIndex, joints[j], weights[j], skeletonIndex);
+                GN_VERBOSE(sLogger,
+                           "Vertex %d has more than 4 joints attatched. "
+                           "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
+                           "because it has less influence to the vertex "
+                           "then other joints.",
+                           vertexIndex, joints[j], weights[j], skeletonIndex);
             }
         } else {
             // The new weight is smaller then the weight in slot #j. So we need
@@ -130,12 +130,12 @@ static void sAddNewBone(INOUT uint32_t * joints, INOUT float * weights, IN uint3
                 weights[j + 1] = newWeight;
             } else {
                 // Drop the new joint, since the joint array is full already.
-                GN_VERBOSE(sLogger)
-                ("Vertex %d has more than 4 joints attatched. "
-                 "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
-                 "because it has less influence to the vertex "
-                 "then other joints.",
-                 vertexIndex, newJoint, newWeight, skeletonIndex);
+                GN_VERBOSE(sLogger,
+                           "Vertex %d has more than 4 joints attatched. "
+                           "Joint %d (weight=%f) in skeleton %d is going to be ignore, "
+                           "because it has less influence to the vertex "
+                           "then other joints.",
+                           vertexIndex, newJoint, newWeight, skeletonIndex);
             }
 
             // We've done with the new joint. It has been either stored in the array,
@@ -222,7 +222,7 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
 
         // copy vertex buffer.
         if (!dst.vertices.resize(vtxfmt, src.numvtx)) {
-            GN_ERROR(sLogger)("Out of memory.");
+            GN_ERROR(sLogger, "Out of memory.");
             return false;
         }
         if (position) {
@@ -240,7 +240,7 @@ static bool sLoadFromASE(FatModel & fatmodel, File & file, const StrA & filename
 
         // copy index buffer
         if (!dst.indices.resize(src.numidx)) {
-            GN_ERROR(sLogger)("Out of memory.");
+            GN_ERROR(sLogger, "Out of memory.");
             return false;
         }
         if (src.idx32) {
@@ -378,7 +378,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eIndexToDirect == refmode) {
         return elements->GetIndexArray().GetAt(index);
     } else {
-        GN_ERROR(sLogger)("Unsupport reference mode: {}", (int) refmode);
+        GN_ERROR(sLogger, "Unsupport reference mode: {}", (int) refmode);
         return -1;
     }
 }
@@ -399,7 +399,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eByPolygon == mapmode) {
         return sGetLayerElementIndex(elements, polygonIndex);
     } else {
-        GN_ERROR(sLogger)("Invalid layer mapping mode: {}", (int) mapmode);
+        GN_ERROR(sLogger, "Invalid layer mapping mode: {}", (int) mapmode);
         return -1;
     }
 }
@@ -606,7 +606,7 @@ static void sLoadFbxSkeletons(FatModel & fatmodel, FbxNode * fbxnode) {
         {
             StrA s;
             fatmodel.skeletons[i].printJointHierarchy( s );
-            GN_INFO(sLogger)( s );
+            GN_INFO(sLogger, s);
         }
     }
     #endif
@@ -656,7 +656,7 @@ static void sBuildSkinningMap(OUT SkinningMap & sm, IN FbxSdkWrapper & sdk, IN c
                 // The cluster links to an node that is not part of any skeletons.
                 // This should not happen for a valid FBX file. But any way, the cluster
                 // has to be ignored, with warning.
-                GN_ERROR(sLogger)("Cluter is ignored, because it is linking to a node that is not part of any skeleton.");
+                GN_ERROR(sLogger, "Cluter is ignored, because it is linking to a node that is not part of any skeleton.");
                 continue;
             }
 
@@ -706,7 +706,7 @@ static void sLoadFbxVertexSkinning(INOUT uint32_t & skeleton, // Index into FatM
             } else if (skeleton != w.skeleton) {
                 // The cluster is linking to a skeleton other than the skeleton linked to vertex #0.
                 // We support at most one skeleton per mesh. So this cluster will be ignored, with warning.
-                GN_ERROR(sLogger)("Cluster is ignored, because it is linking to another skeleton.");
+                GN_ERROR(sLogger, "Cluster is ignored, because it is linking to another skeleton.");
                 continue;
             }
             // Add the new binding information to the skinning structure.
@@ -884,7 +884,7 @@ static bool sBuildFatMeshSubsetJointList(FatMesh & mesh) {
 
         // Allocate array memory first.
         if (!subset.joints.resize((uint32_t) accumulatedJoints.size())) {
-            GN_ERROR(sLogger)("Out of memory");
+            GN_ERROR(sLogger, "Out of memory");
             return false;
         }
 
@@ -905,7 +905,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     if (!fbxmesh->IsTriangleMesh()) {
         fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
         if (NULL == fbxmesh) {
-            GN_ERROR(sLogger)("Fail to triangulate fbxmesh node: {}", fbxnode->GetName());
+            GN_ERROR(sLogger, "Fail to triangulate fbxmesh node: {}", fbxnode->GetName());
             return;
         }
     }
@@ -913,7 +913,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // For now, we supports layer 0 only.
     FbxLayer * layer0 = fbxmesh->GetLayer(0);
     if (NULL == layer0) {
-        GN_ERROR(sLogger)("The fbxmesh does not have a layer: {}", fbxnode->GetName());
+        GN_ERROR(sLogger, "The fbxmesh does not have a layer: {}", fbxnode->GetName());
         return;
     }
     if (NULL == layer0->GetNormals()) { fbxmesh->ComputeVertexNormals(); }
@@ -937,9 +937,8 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
         nummat = fbxnode->GetMaterialCount();
     } else {
         if (fbxMaterials && FbxLayerElement::eAllSame != fbxMaterials->GetMappingMode()) {
-            GN_WARN(sLogger)
-            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.", (int) fbxMaterials->GetMappingMode(),
-             (int) fbxMaterials->GetReferenceMode());
+            GN_WARN(sLogger, "Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eALL_SAME.",
+                    (int) fbxMaterials->GetMappingMode(), (int) fbxMaterials->GetReferenceMode());
         }
 
         // one material
@@ -972,7 +971,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // sort polygon by material
     DynaArray<int> sortedPolygons;
     if (!sortedPolygons.resize(numtri)) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+        GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
         return;
     }
     for (size_t i = 0; i < sortedPolygons.size(); ++i) { sortedPolygons[i] = (int) i; }
@@ -983,7 +982,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
 
     // Allocate index buffer
     if (!fatmesh.indices.resize((uint32_t) numidx)) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+        GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
         return;
     }
 
@@ -991,7 +990,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     DynaArray<MeshVertexCache, uint32_t> vcache;
     int                                  numpos = fbxmesh->GetControlPointsCount();
     if (!vcache.resize((uint32_t) numpos)) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+        GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
         return;
     }
     for (int i = 0; i < numpos; ++i) {
@@ -1005,7 +1004,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // Allocate another buffer to hold the final sequance of vertex keys
     DynaArray<MeshVertexKey, uint32_t> vertexKeys;
     if (!vertexKeys.reserve((uint32_t) numidx)) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+        GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
         return;
     }
 
@@ -1034,7 +1033,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
 
             // create a new subset
             if (!fatmesh.subsets.resize(fatmesh.subsets.size() + 1)) {
-                GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+                GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
                 return;
             }
             FatMeshSubset & subset = fatmesh.subsets.back();
@@ -1134,7 +1133,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     // It's always triangle list.
     fatmesh.primitive = PrimitiveType::TRIANGLE_LIST;
 
-    GN_INFO(sLogger)("Load FBX mesh {}: {} vertices, {} faces", fbxnode->GetName(), fatmesh.vertices.getVertexCount(), fatmesh.indices.size());
+    GN_INFO(sLogger, "Load FBX mesh {}: {} vertices, {} faces", fbxnode->GetName(), fatmesh.vertices.getVertexCount(), fatmesh.indices.size());
 
     // finally, add the fatmesh to fatmodel. And we are done!
     fatmodel.meshes.append(std::move(fatmesh));
@@ -1198,7 +1197,7 @@ static void sLoadFbxAnimations(FatModel & fatmodel, FbxScene & fbxscene) {
 static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename) {
 #ifdef HAS_FBX
 
-    GN_INFO(sLogger)("Load FBX model from file: {}", filename.data());
+    GN_INFO(sLogger, "Load FBX model from file: {}", filename.data());
 
     FbxSdkWrapper sdk;
     if (!sdk.init()) return false;
@@ -1218,20 +1217,20 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
     FbxImporter * gImporter = FbxImporter::Create(gSdkManager, "");
     if (NULL == gImporter) return false;
     if (!gImporter->Initialize(filename, lFileFormat)) {
-        GN_ERROR(sLogger)("{}", gImporter->GetStatus().GetErrorString());
+        GN_ERROR(sLogger, "{}", gImporter->GetStatus().GetErrorString());
         return false;
     }
 
     // Check file version
     int vmajor, vminor, vrev;
     gImporter->GetFileVersion(vmajor, vminor, vrev);
-    GN_INFO(sLogger)("FBX model version = {}.{}.{}", vmajor, vminor, vrev);
+    GN_INFO(sLogger, "FBX model version = {}.{}.{}", vmajor, vminor, vrev);
 
     // Import the scene
     FbxScene * gScene = FbxScene::Create(gSdkManager, "");
     if (NULL == gScene) return false;
     if (!gImporter->Import(gScene)) {
-        GN_ERROR(sLogger)("{}", gImporter->GetStatus().GetErrorString());
+        GN_ERROR(sLogger, "{}", gImporter->GetStatus().GetErrorString());
         return false;
     }
 
@@ -1278,7 +1277,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
 
     fatmodel.clear();
     GN_UNUSED_PARAM(file);
-    GN_ERROR(sLogger)("Fail to load file {}: FBX is not supported.", filename.data());
+    GN_ERROR(sLogger, "Fail to load file {}: FBX is not supported.", filename.data());
     return false;
 
 #endif // HAS_FBX
@@ -1554,7 +1553,7 @@ static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
         // make sure parent/child/sibling are in vaild range
         if ((j.parent >= jointArraySize && FatJoint::NO_JOINT != j.parent) || (j.child >= jointArraySize && FatJoint::NO_JOINT != j.child) ||
             (j.sibling >= jointArraySize && FatJoint::NO_JOINT != j.sibling)) {
-            GN_ERROR(sLogger)("Invalid joint herarchy: joint {} contains invalid joint index.", i);
+            GN_ERROR(sLogger, "Invalid joint herarchy: joint {} contains invalid joint index.", i);
             return FatJoint::NO_JOINT;
         }
 
@@ -1562,7 +1561,7 @@ static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
         if (FatJoint::NO_JOINT == j.parent) {
             if (root != FatJoint::NO_JOINT) {
                 // There's more than one joint in the tree that has no parent.
-                GN_ERROR(sLogger)("Invalid joint hierarchy: multiple root joints.");
+                GN_ERROR(sLogger, "Invalid joint hierarchy: multiple root joints.");
                 return FatJoint::NO_JOINT;
             }
 
@@ -1572,7 +1571,7 @@ static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
         }
     }
     if (root == FatJoint::NO_JOINT) {
-        GN_ERROR(sLogger)("Invalid joint hierarchy: root joint not found.");
+        GN_ERROR(sLogger, "Invalid joint hierarchy: root joint not found.");
         return FatJoint::NO_JOINT;
     }
 
@@ -1590,7 +1589,7 @@ static uint32_t sFindRootJoint(const FatSkeleton & fatsk) {
     Local::sCountJointRecursivly( fatsk.joints.data(), fatsk.joints.size(), counter, fatsk.root );
     if( counter != fatsk.joints.size() )
     {
-        GN_ERROR(sLogger)( "Invalid joint hierarchy!" );
+        GN_ERROR(sLogger, "Invalid joint hierarchy!");
         return FatJoint::NO_JOINT;
     }
 #endif
@@ -1648,7 +1647,7 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
     fatsk.name = aimesh.mName.data;
 
     if (!fatsk.joints.resize(aimesh.mNumBones)) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return;
     }
 
@@ -1711,12 +1710,12 @@ void sLoadAiMeshSkeleton(FatModel & fatmodel, FatMesh & fatmesh, const aiScene &
     // Print joint hierarchy
     StrA s;
     fatsk.printJointHierarchy( s );
-    GN_INFO(sLogger)( s );
+    GN_INFO(sLogger, s);
 #endif
 
     // Add the new skeleton to fat model.
     if (!fatmodel.skeletons.append(fatsk)) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return;
     }
 
@@ -1885,12 +1884,12 @@ static bool sLoadAiIndices(FatMesh & fatmesh, const aiMesh * aimesh) {
 
     default:
         // Unsupported primitive.
-        GN_ERROR(sLogger)("Unsupported primitive: {}", aimesh->mPrimitiveTypes);
+        GN_ERROR(sLogger, "Unsupported primitive: {}", aimesh->mPrimitiveTypes);
         return false;
     }
 
     if (!fatmesh.indices.resize(numidx)) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return false;
     }
 
@@ -1953,12 +1952,12 @@ static void sLoadAiNodeRecursivly(FatModel & fatmodel, const aiScene * aiscene, 
 static bool sLoadAiJointAnimation(FatModel & fatmodel, FatAnimation & fatanim, const StringMap<char, JointLocation> & jointMap, const aiAnimation & aianim) {
     // Preallocate animation buffer.
     if (!fatanim.skeletonAnimations.resize(fatmodel.skeletons.size())) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return false;
     }
     for (uint32_t i = 0; i < fatanim.skeletonAnimations.size(); ++i) {
         if (!fatanim.skeletonAnimations[i].resize(fatmodel.skeletons[i].joints.size())) {
-            GN_ERROR(sLogger)("Out of memory.");
+            GN_ERROR(sLogger, "Out of memory.");
             return false;
         }
     }
@@ -2001,7 +2000,7 @@ static bool sLoadAiJointAnimation(FatModel & fatmodel, FatAnimation & fatanim, c
         if (!fatJointAnim.positions.resize(aina.mNumPositionKeys) || !fatJointAnim.rotations.resize(aina.mNumRotationKeys) ||
             !fatJointAnim.scalings.resize(aina.mNumScalingKeys)) {
             // We are running out of memory. Stop loading.
-            GN_ERROR(sLogger)("Out of memory.");
+            GN_ERROR(sLogger, "Out of memory.");
             return false;
         }
 
@@ -2046,7 +2045,7 @@ static void sLoadAiAnimations(FatModel & fatmodel, const aiScene & aiscene) {
 
     // Preallocate animation array
     if (!fatmodel.skinAnimations.reserve(aiscene.mNumAnimations)) {
-        GN_ERROR(sLogger)("Fail to preallocate fat animation array: out of memory.");
+        GN_ERROR(sLogger, "Fail to preallocate fat animation array: out of memory.");
         return;
     }
 
@@ -2258,7 +2257,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
 
     default:
         if (!ai::sLoadFromAssimp(*this, fullFileName)) {
-            GN_ERROR(sLogger)("Unknown file format: {}", filename.data());
+            GN_ERROR(sLogger, "Unknown file format: {}", filename.data());
             noerr = false;
         }
         break;
@@ -2272,7 +2271,7 @@ bool GN::gfx::FatModel::loadFromFile(const StrA & filename) {
             totalVerts += m.vertices.getVertexCount();
             totalFaces += m.indices.size() / 3;
         }
-        GN_INFO(sLogger)("Total vertices: {}, faces: {}", totalVerts, totalFaces);
+        GN_INFO(sLogger, "Total vertices: {}, faces: {}", totalVerts, totalFaces);
     } else {
         clear();
     }

@@ -34,7 +34,7 @@ public:
         ~RenderPass() {
             if (mResult == Action::ExecutionResult::PASSED && mCommandBuffer) {
                 static auto sLogger = getLogger("GN.rdg.vk");
-                GN_VERBOSE(sLogger)("{} - ending render pass", mTaskInfo);
+                GN_VERBOSE(sLogger, "{} - ending render pass", mTaskInfo);
                 mCommandBuffer.endRendering();
             }
         }

@@ -578,13 +578,13 @@ public:
         static Logger * sLogger = getLogger("GN.core.LoggerContainer");
         std::string     loggerTree;
         printLoggerTree(loggerTree, 0, mRootLogger);
-        GN_VERBOSE(sLogger)
-        ("\n"
-         "===================\n"
-         "    Logger Tree\n"
-         "===================\n"
-         "{}",
-         loggerTree.data());
+        GN_VERBOSE(sLogger,
+                   "\n"
+                   "===================\n"
+                   "    Logger Tree\n"
+                   "===================\n"
+                   "{}",
+                   loggerTree.data());
         mLoggers.clear();
     }
 

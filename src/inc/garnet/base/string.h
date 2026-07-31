@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include <stdarg.h>
+#include <algorithm>
 #include <ostream>
 #include <string.h>
 #include <string>
@@ -1269,7 +1270,7 @@ private:
         // check for NULL text pointer
         if (NULL == text) {
             static Logger * sLocalLogger = getLogger("GN.base.StringMap");
-            GN_WARN(sLocalLogger)("StringMap finding warning: NULL text!");
+            GN_WARN(sLocalLogger, "StringMap finding warning: NULL text!");
             return NULL;
         }
 
@@ -1315,7 +1316,7 @@ private:
         // check for NULL text pointer
         if (NULL == text) {
             static Logger * sLocalLogger = getLogger("GN.base.StringMap");
-            GN_WARN(sLocalLogger)("Null text is not allowed!");
+            GN_WARN(sLocalLogger, "Null text is not allowed!");
             return NULL;
         }
 
@@ -1367,7 +1368,7 @@ private:
             Node * newNode = allocNode();
             if (NULL == newNode) {
                 static Logger * sLocalLogger = getLogger("GN.base.StringMap");
-                GN_ERROR(sLocalLogger)("out of memory!");
+                GN_ERROR(sLocalLogger, "out of memory!");
                 return NULL;
             }
 
@@ -1377,7 +1378,7 @@ private:
                 newNode->leaf = allocLeaf(inputText, text - inputText, value);
                 if (NULL == newNode->leaf) {
                     static Logger * sLocalLogger = getLogger("GN.base.StringMap");
-                    GN_ERROR(sLocalLogger)("out of memory!");
+                    GN_ERROR(sLocalLogger, "out of memory!");
                     return NULL;
                 }
 
@@ -1425,7 +1426,7 @@ private:
 
         if (&leaf->owner != this) {
             static Logger * sLocalLogger = getLogger("GN.base.StringMap");
-            GN_ERROR(sLocalLogger)("Input pointer does not belong to this string map.");
+            GN_ERROR(sLocalLogger, "Input pointer does not belong to this string map.");
             return NULL;
         }
 
@@ -1473,7 +1474,7 @@ private:
         // check for NULL text pointer
         if (NULL == text) {
             static Logger * sLocalLogger = getLogger("GN.base.StringMap");
-            GN_WARN(sLocalLogger)("StringMap erasing warning: NULL text!");
+            GN_WARN(sLocalLogger, "StringMap erasing warning: NULL text!");
             return;
         }
 
@@ -1572,21 +1573,33 @@ GN_API size_t toFloatArray(float * buffer, size_t maxCount, const char * string,
 } // namespace str
 } // namespace GN
 
-template<>
-struct fmt::formatter<GN::StrA> {
-    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
-    template<typename Context>
-    constexpr auto format(GN::StrA const & foo, Context & ctx) const {
-        return format_to(ctx.out(), "{}", foo.c_str());
-    }
-};
+/// GN::Str is iterable, so fmt would otherwise pick up its range formatter and print a Str as
+/// "['a', 'b']". Opting out of range formatting both fixes that and resolves what would otherwise be
+/// an ambiguity: the formatter below and fmt's range formatter are both partial specializations of
+/// formatter<Str<CHAR, ALLOC>, CHAR, void>, and neither is more specialized than the other.
+template<typename CHAR, typename ALLOC>
+struct fmt::range_format_kind<GN::Str<CHAR, ALLOC>, CHAR> : std::integral_constant<fmt::range_format, fmt::range_format::disabled> {};
 
-template<>
-struct fmt::formatter<GN::StrW> {
-    constexpr auto parse(format_parse_context & ctx) { return ctx.begin(); }
+/// Format GN::Str as a string, for any character type and allocator, so that it can be passed to a
+/// format string directly without .data() or .c_str().
+///
+/// The second template parameter must be CHAR: specializing only the default (narrow) character
+/// type, as this used to, leaves GN::StrW unformattable inside a wide format string.
+///
+/// Format specifications are deliberately ignored rather than inherited from the basic_string_view
+/// formatter. The log macros accept printf syntax as well as fmt syntax, which means every argument
+/// type is instantiated against fmt's printf context too, and the spec-handling machinery behind
+/// basic_string_view does not compile there. Writing the characters straight to the output iterator
+/// works in both contexts.
+template<typename CHAR, typename ALLOC>
+struct fmt::formatter<GN::Str<CHAR, ALLOC>, CHAR> {
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext & ctx) {
+        return ctx.begin();
+    }
     template<typename Context>
-    constexpr auto format(GN::StrW const & foo, Context & ctx) const {
-        return format_to(ctx.out(), L"{}", foo.c_str());
+    auto format(const GN::Str<CHAR, ALLOC> & s, Context & ctx) const {
+        return std::copy(s.data(), s.data() + s.size(), ctx.out());
     }
 };
 

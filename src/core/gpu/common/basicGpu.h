@@ -150,7 +150,7 @@ protected:
 
     void drawLines(uint32_t, const void *, uint32_t, uint32_t, uint32_t, const Matrix44f &, const Matrix44f &, const Matrix44f &) {
         static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.common");
-        GN_ERROR(sLogger)("obsolete functions. will be removed sooon.");
+        GN_ERROR(sLogger, "obsolete functions. will be removed sooon.");
     }
 
     //@}
@@ -211,7 +211,7 @@ struct RenderTargetDesc {
     bool valid() const {
         for (uint32_t i = 0; i < colortargets.size(); ++i) {
             if (!colortargets[i].texture) {
-                GN_ERROR(GN::getLogger("GN.gfx"))("NULL color render targets in render target array is not allowed.");
+                GN_ERROR(GN::getLogger("GN.gfx"), "NULL color render targets in render target array is not allowed.");
                 return false;
             }
         }

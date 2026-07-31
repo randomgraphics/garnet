@@ -80,7 +80,7 @@ static void AdjustPP(HWND hFocusWindow, D3DPRESENT_PARAMETERS * pp) {
         if (pp->Windowed) {
             HWND window = pp->hDeviceWindow ? pp->hDeviceWindow : hFocusWindow;
             if (IsWindow(window)) {
-                GN_INFO(sLogger)("Maximize the D3D window and make it borderless");
+                GN_INFO(sLogger, "Maximize the D3D window and make it borderless");
                 DWORD style = GetWindowLongA(window, GWL_STYLE);
                 style &= ~(WS_CAPTION | WS_BORDER | WS_THICKFRAME);
                 style |= WS_POPUP;
@@ -141,7 +141,7 @@ static IDirect3D9 * Direct3DCreate9Hook(UINT SDKVersion) {
 
 #if 1
     if (d3d9) {
-        GN_INFO(sLogger)("Patch IDirect3D9 vtable.");
+        GN_INFO(sLogger, "Patch IDirect3D9 vtable.");
         IDirect3D9Vtbl * vtable  = *(IDirect3D9Vtbl **) d3d9;
         HANDLE           process = ::GetCurrentProcess();
         DWORD            oldProtection;
@@ -150,7 +150,7 @@ static IDirect3D9 * Direct3DCreate9Hook(UINT SDKVersion) {
             vtable->CreateDevice  = IDirect3D9_CreateDevice_Hook;
             ::VirtualProtectEx(process, vtable, sizeof(*vtable), oldProtection, &oldProtection);
         } else {
-            GN_ERROR(sLogger)("Failed to change vtable page protection for interface IDirect3D9.");
+            GN_ERROR(sLogger, "Failed to change vtable page protection for interface IDirect3D9.");
         }
     }
 #endif
@@ -171,7 +171,7 @@ static HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex ** ppD3D) {
 
 #if 1
     if (SUCCEEDED(hr)) {
-        GN_INFO(sLogger)("Patch IDirect3D9Ex vtable.");
+        GN_INFO(sLogger, "Patch IDirect3D9Ex vtable.");
         IDirect3D9ExVtbl * vtable  = *(IDirect3D9ExVtbl **) (*ppD3D);
         HANDLE             process = ::GetCurrentProcess();
         DWORD              oldProtection;
@@ -181,7 +181,7 @@ static HRESULT Direct3DCreate9ExHook(UINT SDKVersion, IDirect3D9Ex ** ppD3D) {
             vtable->CreateDeviceEx  = IDirect3D9Ex_CreateDeviceEx_Hook;
             ::VirtualProtectEx(process, vtable, sizeof(*vtable), oldProtection, &oldProtection);
         } else {
-            GN_ERROR(sLogger)("Failed to change vtable page protection for interface IDirect3D9.");
+            GN_ERROR(sLogger, "Failed to change vtable page protection for interface IDirect3D9.");
         }
     }
 #endif

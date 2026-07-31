@@ -41,13 +41,13 @@ GN_API AutoRef<GpuContext> GpuContext::create(const StrA & name, const CreatePar
     if ("vulkan" == apiStr) {
         return createVulkanGpuContext2(name, params);
     } else if ("d3d12" == apiStr) {
-        GN_ERROR(sLogger)("GpuContext::create: D3D12 backend not implemented yet");
+        GN_ERROR(sLogger, "GpuContext::create: D3D12 backend not implemented yet");
         return {};
     } else if ("metal" == apiStr) {
-        GN_ERROR(sLogger)("GpuContext::create: Metal backend not implemented yet");
+        GN_ERROR(sLogger, "GpuContext::create: Metal backend not implemented yet");
         return {};
     } else {
-        GN_ERROR(sLogger)("GpuContext::create: unknown or unsupported API '{}'", apiStr);
+        GN_ERROR(sLogger, "GpuContext::create: unknown or unsupported API '{}'", apiStr);
         return {};
     }
 }

@@ -74,12 +74,12 @@ size_t GN::CECImplXenon::convert(void * destBuffer, size_t destBufferSizeInBytes
         }
 
         if (0 == sourceBuffer) {
-            GN_ERROR(sLogger)("NULL source buffer pointer!");
+            GN_ERROR(sLogger, "NULL source buffer pointer!");
             return 0;
         }
 
         if (sourceBufferSizeInBytes > destBufferSizeInBytes) {
-            GN_ERROR(sLogger)("There's no enough space in destination buffer.");
+            GN_ERROR(sLogger, "There's no enough space in destination buffer.");
             return 0;
         }
 

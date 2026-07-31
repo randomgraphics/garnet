@@ -52,7 +52,7 @@ bool GN::gfx::D3D11Gpu::dispInit() {
                                                                    flags, &featureLevel, 1, D3D11_SDK_VERSION, &sd, &mSwapChain, &mDevice,
                                                                    NULL, // feature level
                                                                    &mDeviceContext));
-        GN_WARN(sLogger)("D3D device created w/o debug layer.");
+        GN_WARN(sLogger, "D3D device created w/o debug layer.");
     }
 
     mDevice->QueryInterface(IID_ID3D11Debug, (void **) &mD3D11Debug);

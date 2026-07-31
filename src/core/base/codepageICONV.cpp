@@ -54,7 +54,7 @@ static const char * sEncodingToLocale(CharacterEncodingConverter::Encoding e) {
     if (0 <= e && e < (int) GN_ARRAY_COUNT(TABLE)) {
         return TABLE[e];
     } else {
-        GN_ERROR(sLogger)("Invalid character encoding: {}", (int) e);
+        GN_ERROR(sLogger, "Invalid character encoding: {}", (int) e);
         return NULL;
     }
 }
@@ -82,11 +82,11 @@ bool GN::CECImplICONV::init(CharacterEncodingConverter::Encoding from, Character
 
         switch (err) {
         case EINVAL:
-            GN_ERROR(sLogger)("iconv_open() failed: the conversion from {} to {} is not supported by the implementation", fromstr, tostr);
+            GN_ERROR(sLogger, "iconv_open() failed: the conversion from {} to {} is not supported by the implementation", fromstr, tostr);
             break;
 
         default:
-            GN_ERROR(sLogger)("iconv_open() failed: errno={} ({}).", err, errno2str(err));
+            GN_ERROR(sLogger, "iconv_open() failed: errno={} ({}).", err, errno2str(err));
             break;
         };
 
@@ -144,7 +144,7 @@ static size_t calcualteRequiredOutputBufferSize(iconv_t cd, const void * sourceB
                 storage.resize(storage.size() * 2);
             } else {
                 // Handle other errors
-                GN_ERROR(sLogger)("iconv error. error code = {}", errno);
+                GN_ERROR(sLogger, "iconv error. error code = {}", errno);
                 return 0;
             }
         } else {
@@ -191,7 +191,7 @@ size_t GN::CECImplICONV::convert(void * destBuffer, size_t destBufferSizeInBytes
             reason = errno2str(err);
             break;
         }
-        GN_ERROR(sLogger)("iconv() failed : {}", reason);
+        GN_ERROR(sLogger, "iconv() failed : {}", reason);
         return 0;
     }
 

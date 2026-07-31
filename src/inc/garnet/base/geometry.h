@@ -1157,7 +1157,7 @@ public:
                 dst /= k;
             } else {
                 static Logger * logger = getLogger("GN.base.Matrix44");
-                GN_WARN(logger)("the vertex is transformed to infinite place");
+                GN_WARN(logger, "the vertex is transformed to infinite place");
             }
         }
     }

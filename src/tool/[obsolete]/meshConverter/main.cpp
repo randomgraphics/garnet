@@ -127,6 +127,6 @@ int main(int argc, const char * argv[]) {
 
     if (!mhd.saveToFile(outputFile)) return -1;
 
-    GN_INFO(sLogger)("Conversion done successfully.");
+    GN_INFO(sLogger, "Conversion done successfully.");
     return 0;
 }

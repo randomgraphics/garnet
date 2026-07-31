@@ -22,13 +22,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 GN_API bool GN::gfx::ImagePlaneDesc::valid() const {
     // check format
     if (!format.valid()) {
-        GN_ERROR(sLogger)("invalid format");
+        GN_ERROR(sLogger, "invalid format");
         return false;
     }
 
     // check dimension
     if (0 == width || 0 == height || 0 == depth) {
-        GN_ERROR(sLogger)("dimension can't zero!");
+        GN_ERROR(sLogger, "dimension can't zero!");
         return false;
     }
 
@@ -37,35 +37,35 @@ GN_API bool GN::gfx::ImagePlaneDesc::valid() const {
     auto   w   = math::alignToPowerOf2<uint32_t>(width, cld.blockWidth);
     auto   h   = math::alignToPowerOf2<uint32_t>(height, cld.blockHeight);
     if (step < cld.bits) {
-        GN_ERROR(sLogger)("step is too small!");
+        GN_ERROR(sLogger, "step is too small!");
         return false;
     }
     if (pitch < w * cld.bits / 8) {
-        GN_ERROR(sLogger)("pitch is too small!");
+        GN_ERROR(sLogger, "pitch is too small!");
         return false;
     }
     if (slice < pitch * h) {
-        GN_ERROR(sLogger)("slice is too small!");
+        GN_ERROR(sLogger, "slice is too small!");
         return false;
     }
     if (size < slice * depth) {
-        GN_ERROR(sLogger)("size is too small!");
+        GN_ERROR(sLogger, "size is too small!");
         return false;
     }
 
     // check alignment
     static_assert(!math::isPowerOf2(0));
     if (!math::isPowerOf2(rowAlignment)) {
-        GN_ERROR(sLogger)("alignment is not power of 2.");
+        GN_ERROR(sLogger, "alignment is not power of 2.");
         return false;
     }
-    if (offset % rowAlignment) { GN_ERROR(sLogger)("offset is not aligned."); }
+    if (offset % rowAlignment) { GN_ERROR(sLogger, "offset is not aligned."); }
     if (pitch % rowAlignment) {
-        GN_ERROR(sLogger)("pitch is not aligned.");
+        GN_ERROR(sLogger, "pitch is not aligned.");
         return false;
     }
     if (slice % rowAlignment) {
-        GN_ERROR(sLogger)("slice is not aligned.");
+        GN_ERROR(sLogger, "slice is not aligned.");
         return false;
     }
 
@@ -80,14 +80,14 @@ GN_API GN::gfx::ImagePlaneDesc GN::gfx::ImagePlaneDesc::make(ColorFormat format,
                                                              size_t slice, size_t alignment) {
 
     if (!format.valid()) {
-        GN_ERROR(sLogger)("invalid color format: 0x{:X}", format.u32);
+        GN_ERROR(sLogger, "invalid color format: 0x{:X}", format.u32);
         return {};
     }
 
     if (0 == alignment) {
         alignment = 4; // aligned to 32bits by default.
     } else if (!math::isPowerOf2(alignment)) {
-        GN_WARN(sLogger)("image alignment must be power of 2.");
+        GN_WARN(sLogger, "image alignment must be power of 2.");
         alignment = math::ceilPowerOf2(alignment); // make sure alignment is power of 2.
     }
 
@@ -126,7 +126,7 @@ GN_API bool GN::gfx::ImageDesc::valid() const {
     if (planes.size() == 0) {
         // supposed to be an empty descriptor
         if (0 != levels || 0 != layers || 0 != size) {
-            GN_ERROR(sLogger)("empty descriptor should have zero on all members variables.");
+            GN_ERROR(sLogger, "empty descriptor should have zero on all members variables.");
             return false;
         } else {
             return true;
@@ -134,7 +134,7 @@ GN_API bool GN::gfx::ImageDesc::valid() const {
     }
 
     if (layers * levels != planes.size()) {
-        GN_ERROR(sLogger)("plane arary size must be eaul to (layers * levels)");
+        GN_ERROR(sLogger, "plane arary size must be eaul to (layers * levels)");
         return false;
     }
 
@@ -144,7 +144,7 @@ GN_API bool GN::gfx::ImageDesc::valid() const {
             auto & m = plane(f, l);
 
             if (!m.valid()) {
-                GN_ERROR(sLogger)("plane descritor [{}] is invalid", index(f, l));
+                GN_ERROR(sLogger, "plane descritor [{}] is invalid", index(f, l));
                 return false;
             }
         }
@@ -218,7 +218,7 @@ GN::gfx::RawImage::RawImage(ImageDesc && desc, const void * initialContent, size
         if (0 == initialContentSizeInbytes) {
             initialContentSizeInbytes = imageSize;
         } else if (initialContentSizeInbytes != imageSize) {
-            GN_WARN(sLogger)("incoming pixel buffer size does not equal to calculated image size.");
+            GN_WARN(sLogger, "incoming pixel buffer size does not equal to calculated image size.");
         }
         memcpy(mPixels, initialContent, std::min(imageSize, initialContentSizeInbytes));
     }
@@ -269,6 +269,6 @@ GN::gfx::RawImage GN::gfx::RawImage::load(File & fp) {
         return image;
     }
 
-    GN_ERROR(sLogger)("Failed to load image from file: unrecognized file format.");
+    GN_ERROR(sLogger, "Failed to load image from file: unrecognized file format.");
     return {};
 }

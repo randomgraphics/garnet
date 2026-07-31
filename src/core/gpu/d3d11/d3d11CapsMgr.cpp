@@ -39,15 +39,15 @@ bool GN::gfx::D3D11Gpu::capsInit() {
     if (feature >= D3D_FEATURE_LEVEL_10_0) mCaps.shaderModels |= ShaderModel::SM_3_0 | ShaderModel::SM_4_0;
     if (feature >= D3D_FEATURE_LEVEL_11_0) mCaps.shaderModels |= ShaderModel::SM_5_0;
 
-    GN_INFO(sLogger)
-    ("\n\n"
-     "===================================================\n"
-     "         D3D11 Implementation Informations\n"
-     "---------------------------------------------------\n"
-     "   Feature Level   : {}.{}\n"
-     "===================================================\n"
-     "\n\n",
-     feature >> 12, (feature >> 8) & 0xF);
+    GN_INFO(sLogger,
+            "\n\n"
+            "===================================================\n"
+            "         D3D11 Implementation Informations\n"
+            "---------------------------------------------------\n"
+            "   Feature Level   : {}.{}\n"
+            "===================================================\n"
+            "\n\n",
+            feature >> 12, (feature >> 8) & 0xF);
 
     // success
     return true;
@@ -86,7 +86,7 @@ bool GN::gfx::D3D11Gpu::checkTextureFormatSupport(img::PixelFormat format, Textu
         break;
 
     default:
-        GN_ERROR(sLogger)("Invalid texture usage.");
+        GN_ERROR(sLogger, "Invalid texture usage.");
         return false;
     }
 

@@ -15,12 +15,12 @@ namespace GN::gpu2 {
 
 AutoRef<GpuShader> GpuShader::create(const CreateParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("GpuShader::create: GpuContext is null");
+        GN_ERROR(sLogger, "GpuShader::create: GpuContext is null");
         return {};
     }
     AutoRef<GpuContextCommon2> common = params.context.staticCastTo<GpuContextCommon2>();
     if (!common) {
-        GN_ERROR(sLogger)("GpuShader::create: GpuContext is not GpuContextCommon2");
+        GN_ERROR(sLogger, "GpuShader::create: GpuContext is not GpuContextCommon2");
         return {};
     }
     switch (common->api()) {
@@ -30,24 +30,24 @@ AutoRef<GpuShader> GpuShader::create(const CreateParameters & params) {
     case GpuContextCommon2::Api::METAL:
         return {};
     default:
-        GN_ERROR(sLogger)("GpuShader::create: unknown GpuContext::Api");
+        GN_ERROR(sLogger, "GpuShader::create: unknown GpuContext::Api");
         return {};
     }
 }
 
 AutoRef<GpuShader> GpuShader::load(const LoadParameters & params) {
-    if (!params.context) { GN_ERROR(sLogger)("GpuShader::load: GpuContext is null"); }
+    if (!params.context) { GN_ERROR(sLogger, "GpuShader::load: GpuContext is null"); }
     return {};
 }
 
 AutoRef<Buffer> Buffer::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("Buffer::create: GpuContext is null");
+        GN_ERROR(sLogger, "Buffer::create: GpuContext is null");
         return {};
     }
     AutoRef<GpuContextCommon2> common = params.context.staticCastTo<GpuContextCommon2>();
     if (!common) {
-        GN_ERROR(sLogger)("Buffer::create: GpuContext is not GpuContextCommon2");
+        GN_ERROR(sLogger, "Buffer::create: GpuContext is not GpuContextCommon2");
         return {};
     }
     switch (common->api()) {
@@ -55,22 +55,22 @@ AutoRef<Buffer> Buffer::create(const StrA & name, const CreateParameters & param
         return createBufferVulkan2(name, params);
     case GpuContextCommon2::Api::D3D12:
     case GpuContextCommon2::Api::METAL:
-        GN_ERROR(sLogger)("Buffer::create: backend not implemented");
+        GN_ERROR(sLogger, "Buffer::create: backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("Buffer::create: unknown GpuContext::Api");
+        GN_ERROR(sLogger, "Buffer::create: unknown GpuContext::Api");
         return {};
     }
 }
 
 AutoRef<Texture> Texture::create(const StrA & entityName, const CreateParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("Texture::create: GpuContext is null");
+        GN_ERROR(sLogger, "Texture::create: GpuContext is null");
         return {};
     }
     AutoRef<GpuContextCommon2> common = params.context.staticCastTo<GpuContextCommon2>();
     if (!common) {
-        GN_ERROR(sLogger)("Texture::create: GpuContext is not GpuContextCommon2");
+        GN_ERROR(sLogger, "Texture::create: GpuContext is not GpuContextCommon2");
         return {};
     }
     switch (common->api()) {
@@ -78,22 +78,22 @@ AutoRef<Texture> Texture::create(const StrA & entityName, const CreateParameters
         return createTextureVulkan2(entityName, params);
     case GpuContextCommon2::Api::D3D12:
     case GpuContextCommon2::Api::METAL:
-        GN_ERROR(sLogger)("Texture::create: backend not implemented");
+        GN_ERROR(sLogger, "Texture::create: backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("Texture::create: unknown GpuContext::Api");
+        GN_ERROR(sLogger, "Texture::create: unknown GpuContext::Api");
         return {};
     }
 }
 
 AutoRef<Texture> Texture::load(const LoadParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("Texture::load: GpuContext is null");
+        GN_ERROR(sLogger, "Texture::load: GpuContext is null");
         return {};
     }
     AutoRef<GpuContextCommon2> common = params.context.staticCastTo<GpuContextCommon2>();
     if (!common) {
-        GN_ERROR(sLogger)("Texture::load: GpuContext is not GpuContextCommon2");
+        GN_ERROR(sLogger, "Texture::load: GpuContext is not GpuContextCommon2");
         return {};
     }
     switch (common->api()) {
@@ -101,10 +101,10 @@ AutoRef<Texture> Texture::load(const LoadParameters & params) {
         return loadTextureVulkan2(params);
     case GpuContextCommon2::Api::D3D12:
     case GpuContextCommon2::Api::METAL:
-        GN_ERROR(sLogger)("Texture::load: backend not implemented");
+        GN_ERROR(sLogger, "Texture::load: backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("Texture::load: unknown GpuContext::Api");
+        GN_ERROR(sLogger, "Texture::load: unknown GpuContext::Api");
         return {};
     }
 }
@@ -118,12 +118,12 @@ namespace GN::gpu2 {
 
 AutoRef<GpuRaster> GpuRaster::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) {
-        GN_ERROR(sLogger)("GpuRaster::create: GpuContext is null");
+        GN_ERROR(sLogger, "GpuRaster::create: GpuContext is null");
         return {};
     }
     AutoRef<GN::gpu2::GpuContextCommon2> common = params.gpu.staticCastTo<GN::gpu2::GpuContextCommon2>();
     if (!common) {
-        GN_ERROR(sLogger)("GpuRaster::create: GpuContext is not GpuContextCommon2");
+        GN_ERROR(sLogger, "GpuRaster::create: GpuContext is not GpuContextCommon2");
         return {};
     }
     switch (common->api()) {
@@ -131,22 +131,22 @@ AutoRef<GpuRaster> GpuRaster::create(const StrA & name, const CreateParameters &
         return createGpuRasterVulkan2(name, params);
     case GN::gpu2::GpuContextCommon2::Api::D3D12:
     case GN::gpu2::GpuContextCommon2::Api::METAL:
-        GN_ERROR(sLogger)("GpuRaster::create: backend not implemented");
+        GN_ERROR(sLogger, "GpuRaster::create: backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("GpuRaster::create: unknown GpuContext::Api");
+        GN_ERROR(sLogger, "GpuRaster::create: unknown GpuContext::Api");
         return {};
     }
 }
 
 AutoRef<GpuCnC> GpuCnC::create(const CreateParameters & params) {
     if (!params.gpu) {
-        GN_ERROR(sLogger)("GpuCnC::create: GpuContext is null");
+        GN_ERROR(sLogger, "GpuCnC::create: GpuContext is null");
         return {};
     }
     AutoRef<GpuContextCommon2> common = params.gpu.staticCastTo<GpuContextCommon2>();
     if (!common) {
-        GN_ERROR(sLogger)("GpuCnC::create: GpuContext is not GpuContextCommon2");
+        GN_ERROR(sLogger, "GpuCnC::create: GpuContext is not GpuContextCommon2");
         return {};
     }
     switch (common->api()) {
@@ -154,10 +154,10 @@ AutoRef<GpuCnC> GpuCnC::create(const CreateParameters & params) {
         return createGpuCncVulkan2(params);
     case GpuContextCommon2::Api::D3D12:
     case GpuContextCommon2::Api::METAL:
-        GN_ERROR(sLogger)("GpuCnC::create: backend not implemented");
+        GN_ERROR(sLogger, "GpuCnC::create: backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("GpuCnC::create: unknown GpuContext::Api");
+        GN_ERROR(sLogger, "GpuCnC::create: unknown GpuContext::Api");
         return {};
     }
 }

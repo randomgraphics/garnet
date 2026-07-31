@@ -31,12 +31,12 @@ void GN::gfx::D3D11Gpu::resourceQuit() {
     GN_GUARD;
 
     if (!mResourceList.empty()) {
-        GN_ERROR(sLogger)("All graphics resouces MUST be released, before destroying GPU!");
+        GN_ERROR(sLogger, "All graphics resouces MUST be released, before destroying GPU!");
 
         std::list<D3D11Resource *>::iterator i = mResourceList.begin();
         while (i != mResourceList.end()) {
             D3D11Resource * r = *i;
-            GN_ERROR(sLogger)("0x{:X}", (intptr_t) r);
+            GN_ERROR(sLogger, "0x{:X}", (intptr_t) r);
             ++i;
         }
     }
@@ -53,7 +53,7 @@ void GN::gfx::D3D11Gpu::resourceQuit() {
 // -----------------------------------------------------------------------------
 GN::gfx::GpuProgram * GN::gfx::D3D11Gpu::createGpuProgram(const GpuProgramDesc & desc) {
     if (0 == (desc.shaderModels & mCaps.shaderModels)) {
-        GN_ERROR(sLogger)("Unsupported GPU shader model: {}", ShaderModel::sToString(desc.shaderModels).data());
+        GN_ERROR(sLogger, "Unsupported GPU shader model: {}", ShaderModel::sToString(desc.shaderModels).data());
         return NULL;
     }
 
@@ -62,7 +62,7 @@ GN::gfx::GpuProgram * GN::gfx::D3D11Gpu::createGpuProgram(const GpuProgramDesc &
         if (!prog->init(desc)) return NULL;
         return prog.detach();
     } else {
-        GN_ERROR(sLogger)("Unsupported or invalid GPU program language: {}", desc.lang.toInt());
+        GN_ERROR(sLogger, "Unsupported or invalid GPU program language: {}", desc.lang.toInt());
         return NULL;
     }
 }

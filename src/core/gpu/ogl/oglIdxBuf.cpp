@@ -18,7 +18,7 @@ bool GN::gfx::OGLIdxBuf::init(const IdxBufDesc & desc) {
 
     // check parameter
     if (0 == desc.numidx) {
-        GN_ERROR(sLogger)("invalid buffer length!");
+        GN_ERROR(sLogger, "invalid buffer length!");
         return failure();
     }
 

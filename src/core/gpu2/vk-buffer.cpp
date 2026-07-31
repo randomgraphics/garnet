@@ -14,21 +14,21 @@ BufferVulkan::~BufferVulkan() { reset(); }
 bool BufferVulkan::init(const Buffer::CreateParameters & params) {
     reset();
     if (!params.context) {
-        GN_ERROR(sLogger)("BufferVulkan::init: context is null, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::init: context is null, name='{}'", name);
         return false;
     }
     if (params.size == 0) {
-        GN_ERROR(sLogger)("BufferVulkan::init: size must be > 0, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::init: size must be > 0, name='{}'", name);
         return false;
     }
     mGpu = params.context.staticCastTo<GpuContextVulkan2>();
     if (!mGpu || !mGpu->ready()) {
-        GN_ERROR(sLogger)("BufferVulkan::init: invalid GpuContext, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::init: invalid GpuContext, name='{}'", name);
         return false;
     }
     const rv::Device & dev = mGpu->vulkanDevice();
     if (!dev.gi()) {
-        GN_ERROR(sLogger)("BufferVulkan::init: invalid Vulkan device, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::init: invalid Vulkan device, name='{}'", name);
         return false;
     }
 
@@ -50,7 +50,7 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
 
     mRvBuffer = rv::Ref<rv::Buffer>(new rv::Buffer(cp));
     if (!mRvBuffer || !mRvBuffer->handle()) {
-        GN_ERROR(sLogger)("BufferVulkan::init: VkBuffer creation failed, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::init: VkBuffer creation failed, name='{}'", name);
         reset();
         return false;
     }
@@ -62,20 +62,20 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
 
 Buffer::Mapped BufferVulkan::map() {
     if (!mRvBuffer) {
-        GN_ERROR(sLogger)("BufferVulkan::map: buffer not initialized, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::map: buffer not initialized, name='{}'", name);
         return {};
     }
     if (!mMappable) {
-        GN_ERROR(sLogger)("BufferVulkan::map: buffer is not mappable, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::map: buffer is not mappable, name='{}'", name);
         return {};
     }
     if (mIsMapped) {
-        GN_ERROR(sLogger)("BufferVulkan::map: buffer already mapped, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::map: buffer already mapped, name='{}'", name);
         return {};
     }
     auto mapped = mRvBuffer->map({});
     if (!mapped.data) {
-        GN_ERROR(sLogger)("BufferVulkan::map: vkMapMemory failed, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::map: vkMapMemory failed, name='{}'", name);
         return {};
     }
     mIsMapped = true;
@@ -93,7 +93,7 @@ void BufferVulkan::unmap(const Mapped &) {
 
 bool BufferVulkan::setContent(ArrayProxy<const uint8_t> data, size_t offset) {
     if (!mRvBuffer) {
-        GN_ERROR(sLogger)("BufferVulkan::setContent: buffer not initialized, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::setContent: buffer not initialized, name='{}'", name);
         return false;
     }
     if (data.empty()) return true;
@@ -101,7 +101,7 @@ bool BufferVulkan::setContent(ArrayProxy<const uint8_t> data, size_t offset) {
     const rv::Device & dev = mGpu->vulkanDevice();
     rv::CommandQueue * gq  = dev.graphics();
     if (!gq) {
-        GN_ERROR(sLogger)("BufferVulkan::setContent: no graphics queue, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::setContent: no graphics queue, name='{}'", name);
         return false;
     }
     mGpu->waitForIdle();
@@ -115,14 +115,14 @@ bool BufferVulkan::setContent(ArrayProxy<const uint8_t> data, size_t offset) {
 
 std::vector<uint8_t> BufferVulkan::readContent(size_t offset, size_t size) const {
     if (!mRvBuffer) {
-        GN_ERROR(sLogger)("BufferVulkan::readContent: buffer not initialized, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::readContent: buffer not initialized, name='{}'", name);
         return {};
     }
     if (!mGpu || !mGpu->ready()) return {};
     const rv::Device & dev = mGpu->vulkanDevice();
     rv::CommandQueue * gq  = dev.graphics();
     if (!gq) {
-        GN_ERROR(sLogger)("BufferVulkan::readContent: no graphics queue, name='{}'", name);
+        GN_ERROR(sLogger, "BufferVulkan::readContent: no graphics queue, name='{}'", name);
         return {};
     }
     mGpu->waitForIdle();

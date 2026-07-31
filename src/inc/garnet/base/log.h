@@ -17,85 +17,108 @@
 #include <fmt/printf.h>
 
 ///
-/// General log macros, with user specified source code location
-//@{
-#if GN_ENABLE_LOG
-    #define GN_LOG_EX(logger, level, func, file, line) \
-        if (logger->isOff(level)) {                    \
-        } else                                         \
-            GN::Logger::LogHelper(logger, level, func, file, line).format
-    #define GN_PRINTF_EX(logger, level, func, file, line) \
-        if (logger->isOff(level)) {                       \
-        } else                                            \
-            GN::Logger::LogHelper(logger, level, func, file, line).printf
-#else
-    #define GN_LOG_EX(logger, level, func, file, line) \
-        if (1) {                                       \
-        } else                                         \
-            GN::Logger::sFakeLog
-    #define GN_PRINTF_EX(logger, level, func, file, line) \
-        if (1) {                                          \
-        } else                                            \
-            GN::Logger::sFakeLog
-#endif
-//@}
+/// General log macro, with user specified source code location.
+///
+/// The logger comes first, followed by the source location, followed by an optional format argument
+/// list in either fmt brace syntax or printf syntax. Because the expansion ends in an expression of
+/// type GN::Logger::LogHelper &, a streaming expression may be appended to any of these forms, and
+/// the two syntaxes can be combined in a single statement:
+///
+/// \code
+/// GN_LOG_EX(logger, level, func, file, line);                                    // nothing logged
+/// GN_LOG_EX(logger, level, func, file, line, "a = {}", a);                       // format only
+/// GN_LOG_EX(logger, level, func, file, line) << "a = " << a;                     // streaming only
+/// GN_LOG_EX(logger, level, func, file, line, "a = {}", a) << ", b = " << b;      // both -> "a = 1, b = 2"
+/// \endcode
+///
+/// Cost when the level is off is a single level test: the whole expansion sits in the else branch,
+/// so neither the helper nor any format or streamed argument is constructed or evaluated.
+///
+/// The `switch (0) case 0: default:` guard is what makes the inner if/else a complete statement.
+/// Without it, `if (cond) GN_LOG_EX(...);` would nest an if/else inside an if and trip
+/// -Wdangling-else, and a following `else` would bind to the wrong if.
+///
+#define GN_LOG_EX(logger, level, func, file, line, ...)         \
+    switch (0)                                                  \
+    case 0:                                                     \
+    default:                                                    \
+        if (auto gnLogger_ = (logger); gnLogger_->isOff(level)) \
+            GN_LIKELY;                                          \
+        else                                                    \
+            ::GN::Logger::LogHelper(gnLogger_, level, func, file, line).emit(__VA_ARGS__)
+
+///
+/// Log using printf syntax unconditionally, with user specified source code location. Useful for
+/// redirecting third party library logging, which is printf based. GN_LOG_EX already accepts printf
+/// syntax; reach for this only when a format string must never be interpreted as fmt.
+///
+#define GN_PRINTF_EX(logger, level, func, file, line, ...)      \
+    switch (0)                                                  \
+    case 0:                                                     \
+    default:                                                    \
+        if (auto gnLogger_ = (logger); gnLogger_->isOff(level)) \
+            GN_LIKELY;                                          \
+        else                                                    \
+            ::GN::Logger::LogHelper(gnLogger_, level, func, file, line).emitPrintf(__VA_ARGS__)
 
 ///
 /// General log macro, with automatic source code location
 ///
-#define GN_LOG(logger, level) GN_LOG_EX(logger, level, GN_FUNCTION, __FILE__, __LINE__)
+#define GN_LOG(logger, level, ...) GN_LOG_EX(logger, level, GN_FUNCTION, __FILE__, __LINE__, ##__VA_ARGS__)
 
 ///
 /// output fatal error message
 ///
-#define GN_FATAL(logger) GN_LOG(logger, GN::Logger::FATAL)
+#define GN_FATAL(logger, ...) GN_LOG(logger, ::GN::Logger::FATAL, ##__VA_ARGS__)
 
 ///
 /// output error message
 ///
-#define GN_ERROR(logger) GN_LOG(logger, GN::Logger::ERROR_)
+#define GN_ERROR(logger, ...) GN_LOG(logger, ::GN::Logger::ERROR_, ##__VA_ARGS__)
 
 ///
 /// output warning message
 ///
-#define GN_WARN(logger) GN_LOG(logger, GN::Logger::WARN)
+#define GN_WARN(logger, ...) GN_LOG(logger, ::GN::Logger::WARN, ##__VA_ARGS__)
 
 ///
 /// output informational message
 ///
-#define GN_INFO(logger) GN_LOG(logger, GN::Logger::INFO)
+#define GN_INFO(logger, ...) GN_LOG(logger, ::GN::Logger::INFO, ##__VA_ARGS__)
 
 ///
 /// output verbose message
 ///
-#define GN_VERBOSE(logger) GN_LOG(logger, GN::Logger::VERBOSE)
+#define GN_VERBOSE(logger, ...) GN_LOG(logger, ::GN::Logger::VERBOSE, ##__VA_ARGS__)
 
 ///
 /// output very-verbose message
 ///
-#define GN_BABBLE(logger) GN_LOG(logger, GN::Logger::BABBLE)
+#define GN_BABBLE(logger, ...) GN_LOG(logger, ::GN::Logger::BABBLE, ##__VA_ARGS__)
 
 ///
 /// Debug only log macros (no effect to non-debug build)
 ///
 //@{
 #if GN_BUILD_DEBUG_ENABLED
-    #define GN_TRACE(logger)   GN_INFO(logger)
-    #define GN_VTRACE(logger)  GN_VERBOSE(logger)
-    #define GN_VVTRACE(logger) GN_BABBLE(logger)
+    #define GN_TRACE(logger, ...)   GN_INFO(logger, ##__VA_ARGS__)
+    #define GN_VTRACE(logger, ...)  GN_VERBOSE(logger, ##__VA_ARGS__)
+    #define GN_VVTRACE(logger, ...) GN_BABBLE(logger, ##__VA_ARGS__)
 #else
-    #define GN_TRACE(logger) \
-        if (1) {             \
-        } else               \
-            ::GN::Logger::sFakeLog
-    #define GN_VTRACE(logger) \
-        if (1) {              \
-        } else                \
-            ::GN::Logger::sFakeLog
-    #define GN_VVTRACE(logger) \
-        if (1) {               \
-        } else                 \
-            ::GN::Logger::sFakeLog
+    /// Discards the statement without generating code, while still type-checking the arguments so
+    /// that disabled logs cannot rot and log-only locals do not warn as unused. Shaped like
+    /// GN_LOG_EX so that an appended streaming expression still compiles.
+    #define GN_LOG_DISCARD_(logger, ...) \
+        switch (0)                       \
+        case 0:                          \
+        default:                         \
+            if (true)                    \
+                GN_LIKELY;               \
+            else                         \
+                ::GN::Logger::LogHelper(logger, ::GN::Logger::BABBLE, "", "", 0).emit(__VA_ARGS__)
+    #define GN_TRACE(logger, ...)   GN_LOG_DISCARD_(logger, ##__VA_ARGS__)
+    #define GN_VTRACE(logger, ...)  GN_LOG_DISCARD_(logger, ##__VA_ARGS__)
+    #define GN_VVTRACE(logger, ...) GN_LOG_DISCARD_(logger, ##__VA_ARGS__)
 #endif
 //@}
 
@@ -111,84 +134,116 @@ struct GN_API WideString {
 };
 
 ///
+/// Does the format string contain at least one printf conversion specifier? Used to route
+/// between printf and fmt formatting. Reserved for internal use only.
+///
+template<typename CHAR>
+inline bool hasPrintfSpecifier(const CHAR * formatString) {
+    if (!formatString) return false;
+
+    for (const CHAR * p = formatString; *p; ++p) {
+        if (*p != '%') continue;
+        ++p;
+        if (*p == '%') return true; // "%%" is a printf escape, so this is printf syntax
+
+        // optional flags
+        while (*p == '-' || *p == '+' || *p == ' ' || *p == '#' || *p == '0') ++p;
+
+        // optional width
+        if (*p == '*') {
+            ++p;
+        } else {
+            while (*p >= '0' && *p <= '9') ++p;
+        }
+
+        // optional precision
+        if (*p == '.') {
+            ++p;
+            if (*p == '*') {
+                ++p;
+            } else {
+                while (*p >= '0' && *p <= '9') ++p;
+            }
+        }
+
+        // optional length modifier
+        if (*p == 'h' || *p == 'l') {
+            ++p;
+            if (*p == 'h' || *p == 'l') ++p; // "hh" and "ll"
+        } else if (*p == 'j' || *p == 'z' || *p == 't' || *p == 'L') {
+            ++p;
+        }
+
+        switch (*p) {
+        case 'd':
+        case 'i':
+        case 'o':
+        case 'u':
+        case 'x':
+        case 'X':
+        case 'f':
+        case 'F':
+        case 'e':
+        case 'E':
+        case 'g':
+        case 'G':
+        case 'a':
+        case 'A':
+        case 'c':
+        case 's':
+        case 'p':
+        case 'n':
+            return true;
+        default:
+            break;
+        }
+
+        if (!*p) break; // the trailing '%' ate the null terminator
+    }
+
+    return false;
+}
+
+///
+/// Does the format string contain at least one fmt replacement field? "{{" is an escaped brace
+/// and does not count. Reserved for internal use only.
+///
+template<typename CHAR>
+inline bool hasFmtField(const CHAR * formatString) {
+    if (!formatString) return false;
+
+    for (const CHAR * p = formatString; *p; ++p) {
+        if (*p != '{') continue;
+        if (p[1] == '{') {
+            ++p;
+            continue;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+///
 /// String format utility class. Reserved for internal use only.
 ///
 template<typename CHAR, size_t PREALLOCATED_CHARACTERS = 1024>
 class StringFormatter {
 #if GN_BUILD_DEBUG_ENABLED
-    static bool lookForPrintfSpecifiers(const CHAR * formatString) {
-        if (!formatString) return false;
-
-        // Helper function to check if a character is a valid printf conversion specifier
-        auto isPrintfSpecifier = [](CHAR c) -> bool {
-            // Valid printf conversion specifiers: d, i, o, u, x, X, f, F, e, E, g, G, a, A, c, s, p, n
-            return (c == 'd' || c == 'i' || c == 'o' || c == 'u' || c == 'x' || c == 'X' || c == 'f' || c == 'F' || c == 'e' || c == 'E' || c == 'g' ||
-                    c == 'G' || c == 'a' || c == 'A' || c == 'c' || c == 's' || c == 'p' || c == 'n');
-        };
-
-        const CHAR * p = formatString;
-        while (*p) {
-            if (*p == '%') {
-                ++p;
-                // Handle escaped percent sign
-                if (*p == '%') {
-                    ++p;
-                    continue;
-                }
-
-                // Skip optional flags: -+ #0 space
-                while (*p == '-' || *p == '+' || *p == ' ' || *p == '#' || *p == '0') { ++p; }
-
-                // Skip optional width: digits or *
-                if (*p == '*') {
-                    ++p;
-                } else {
-                    while (*p >= '0' && *p <= '9') { ++p; }
-                }
-
-                // Skip optional precision: . followed by digits or *
-                if (*p == '.') {
-                    ++p;
-                    if (*p == '*') {
-                        ++p;
-                    } else {
-                        while (*p >= '0' && *p <= '9') { ++p; }
-                    }
-                }
-
-                // Skip optional length modifiers: h, hh, l, ll, j, z, t, L
-                if (*p == 'h') {
-                    ++p;
-                    if (*p == 'h') ++p; // hh
-                } else if (*p == 'l') {
-                    ++p;
-                    if (*p == 'l') ++p; // ll
-                } else if (*p == 'j' || *p == 'z' || *p == 't' || *p == 'L') {
-                    ++p;
-                }
-
-                // Check for conversion specifier
-                if (*p && isPrintfSpecifier(*p)) {
-                    return true; // Found printf-style format specifier
-                }
-            } else {
-                ++p;
-            }
-        }
-
-        return false; // No printf-style format specifiers found
-    }
-
+    /// StringFormatter only understands fmt brace syntax. Callers that want printf syntax must
+    /// route through fmt::sprintf instead; GN::Logger::LogHelper::emit() does that automatically.
+    /// A string carrying a printf specifier alongside a brace field is intentional and allowed.
     static void checkForPrintf(const CHAR * formatString) {
         if (!formatString || !*formatString) return;
+        if (!hasPrintfSpecifier(formatString) || hasFmtField(formatString)) return;
         if constexpr (std::is_same_v<CHAR, char>) {
-            auto s = fmt::format("Printf syntax is deprecated: {}", formatString);
-            GN_ASSERT(!lookForPrintfSpecifiers(formatString), s.c_str());
+            auto s = fmt::format("Printf syntax is not supported here, use GN_PRINTF_EX or a log macro: {}", formatString);
+            GN_ASSERT(false, s.c_str());
         } else if constexpr (std::is_same_v<CHAR, wchar_t>) {
-            auto s = fmt::format(L"Printf syntax is deprecated: {}", formatString);
-            GN_ASSERT(!lookForPrintfSpecifiers(formatString), s.c_str());
+            auto s = fmt::format(L"Printf syntax is not supported here, use GN_PRINTF_EX or a log macro: {}", formatString);
+            GN_ASSERT(false, s.c_str());
         } else {
-            GN_ASSERT(!lookForPrintfSpecifiers(formatString), "Printf syntax is deprecated");
+            GN_ASSERT(false, "Printf syntax is not supported here");
         }
     }
 #else
@@ -373,73 +428,134 @@ public:
     /// doLog helper
     ///
     struct GN_API LogHelper {
-        Logger *    mLogger; ///< Logger instance pointer
+        Logger *    mLogger; ///< Logger instance pointer. Never null: the macro tests the level first.
         LogLocation mDesc;   ///< Logging descriptor
-        uint8_t     mStreamBuffer[sizeof(std::stringstream)];
-        bool        mStreamConstructed = false;
 
-        std::stringstream * ss() {
-            if (!mStreamConstructed) {
-                new (mStreamBuffer) std::stringstream();
-                mStreamConstructed = true;
-            }
-            return (std::stringstream *) mStreamBuffer;
+        /// Narrow message accumulated so far. A log must not be reported until the whole statement has
+        /// run, because a streaming tail may still follow a format argument list
+        /// (`GN_ERROR(logger, "a = {}", a) << ", b = " << b` is one message, not two). Reporting from
+        /// emit() instead would split it.
+        std::string mMessage;
+
+        /// Created by the first streamed operand only, so a format-only log never pays for it. Seeded
+        /// from mMessage so that a format prefix keeps its place ahead of the streamed text.
+        std::stringstream * mStream = nullptr;
+
+        std::stringstream & ss() {
+            if (!mStream) GN_UNLIKELY {
+                    mStream = new std::stringstream();
+                    if (!mMessage.empty()) {
+                        *mStream << mMessage;
+                        mMessage.clear();
+                    }
+                }
+            return *mStream;
         }
 
-        template<class T>
-        static inline void dtor(T * p) {
-            p->~T();
+        /// Should this format string be handed to printf rather than fmt? A brace replacement field
+        /// resolves the ambiguity in favor of fmt, which also keeps such strings on the
+        /// StringFormatter fast path instead of tripping its brace-syntax-only assert.
+        template<typename CHAR>
+        static bool isPrintfSyntax(const CHAR * formatString) {
+            return internal::hasPrintfSpecifier(formatString) && !internal::hasFmtField(formatString);
+        }
+
+        /// Append formatted narrow text to whichever accumulator is in use.
+        void append(const char * text) {
+            if (mStream) GN_UNLIKELY {
+                    *mStream << text;
+                    return;
+                }
+            mMessage += text;
         }
 
     public:
         ///
-        /// Construct doLog helper
+        /// Construct a log helper. The caller has already applied the level test, so the logger is
+        /// known to be live.
         ///
         LogHelper(Logger * logger, int level, const char * func, const char * file, int line): mLogger(logger), mDesc(level, func, file, line) {
             GN_ASSERT(mLogger);
         }
 
         ///
-        /// destructor
+        /// Reports the accumulated message, as a single log entry. This is the only place a narrow
+        /// message is reported, which is what keeps a mixed format-plus-streaming statement together.
         ///
         ~LogHelper() {
-            if (mStreamConstructed) {
-                if (mLogger) GN_LIKELY mLogger->doLog(mDesc, ss()->str().c_str());
-                dtor(ss());
-            }
+            if (mStream) GN_UNLIKELY {
+                    mLogger->doLog(mDesc, mStream->str().c_str());
+                    delete mStream;
+                }
+            else if (!mMessage.empty()) { mLogger->doLog(mDesc, mMessage.c_str()); }
         }
 
         ///
-        /// stream style log operator
+        /// Stream style log operator. Appends to the message; the destructor reports the result.
         ///
         template<typename T>
         inline LogHelper & operator<<(T && t) {
-            *ss() << std::forward<T>(t);
+            ss() << std::forward<T>(t);
             return *this;
         }
 
-        void format() {}
+        ///
+        /// No format arguments. Returns *this so that a streaming expression can be appended, which is
+        /// how the streaming-only form of the log macros works.
+        ///
+        LogHelper & emit() { return *this; }
 
+        ///
+        /// Format and append the message. Accepts both fmt brace syntax and printf syntax: the string
+        /// is routed to fmt::sprintf when it carries a printf conversion specifier and no brace
+        /// replacement field, and to fmt::format otherwise.
+        ///
+        /// A string holding both, such as "{} %d", is ambiguous and resolves to fmt: the brace field
+        /// is substituted and the %d stays literal. A lone "%%" escape counts as printf syntax, so
+        /// "100%% done" is unescaped to "100% done"; combine it with a brace field and fmt wins
+        /// instead, leaving the percent doubled.
+        ///
         template<typename... Args>
-        void format(fmt::format_string<Args...> formatString, Args &&... args) const {
-            return mLogger->doLog(mDesc, internal::StringFormatter<char>(formatString, std::forward<Args>(args)...).result());
+        LogHelper & emit(fmt::format_string<Args...> formatString, Args &&... args) {
+            if (isPrintfSyntax(formatString.get().data())) GN_UNLIKELY {
+                    append(fmt::sprintf(formatString.get(), std::forward<Args>(args)...).c_str());
+                    return *this;
+                }
+            append(internal::StringFormatter<char>(formatString, std::forward<Args>(args)...).result());
+            return *this;
         }
 
+        ///
+        /// Wide overload. Returns void rather than LogHelper &, which makes appending a streaming tail
+        /// to a wide format string a compile error instead of silently producing something wrong: the
+        /// accumulators above are narrow, and folding a wide message into them would need a
+        /// lossy conversion. No call site mixes the two. Report the wide message directly.
+        ///
         template<typename... Args>
-        void format(fmt::wformat_string<Args...> formatString, Args &&... args) {
-            return mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(formatString, std::forward<Args>(args)...).result());
+        void emit(fmt::wformat_string<Args...> formatString, Args &&... args) {
+            GN_ASSERT(!mStream && mMessage.empty()); // a wide format is always the whole message
+            if (isPrintfSyntax(formatString.get().data())) GN_UNLIKELY {
+                    return mLogger->doLog(mDesc, fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args...)).c_str());
+                }
+            mLogger->doLog(mDesc, internal::StringFormatter<wchar_t>(formatString, std::forward<Args>(args)...).result());
         }
 
-        void printf() {}
+        ///
+        /// Format and append the message using printf syntax unconditionally.
+        ///
+        LogHelper & emitPrintf() { return *this; }
 
         template<typename... Args>
-        void printf(fmt::format_string<Args...> formatString, Args &&... args) const {
-            return mLogger->doLog(mDesc, fmt::sprintf(formatString, std::forward<Args>(args)...).c_str());
+        LogHelper & emitPrintf(fmt::format_string<Args...> formatString, Args &&... args) {
+            append(fmt::sprintf(formatString.get(), std::forward<Args>(args)...).c_str());
+            return *this;
         }
 
+        /// Wide overload. Returns void for the same reason as emit() above.
         template<typename... Args>
-        void printf(fmt::wformat_string<Args...> formatString, Args &&... args) {
-            return mLogger->doLog(mDesc, fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args...)).c_str());
+        void emitPrintf(fmt::wformat_string<Args...> formatString, Args &&... args) {
+            GN_ASSERT(!mStream && mMessage.empty());
+            mLogger->doLog(mDesc, fmt::vsprintf(formatString.get(), fmt::make_printf_args<wchar_t>(args...)).c_str());
         }
     };
 
@@ -530,11 +646,6 @@ public:
         GN_ASSERT(level > 0);
         return !mEnabled || 0 == mLevel || (level > mLevel && level != -mLevel);
     }
-
-    ///
-    /// Fake logging. Do nothing.
-    ///
-    static inline void sFakeLog(...) {}
 
 protected:
     ///

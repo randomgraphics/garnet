@@ -48,7 +48,7 @@ GpuContextVulkan::GpuContextVulkan(const StrA & name, const CreateParameters & p
     ip.setPrintVkInfo(getVkDeviceVerbosity(params.howToPrintDeviceCaps));
     mInstance.emplace(ip);
     if (!mInstance->handle()) {
-        GN_ERROR(sLogger)("GpuContextVulkan::GpuContextVulkan: failed to create Vulkan instance, name='{}'", name);
+        GN_ERROR(sLogger, "GpuContextVulkan::GpuContextVulkan: failed to create Vulkan instance, name='{}'", name);
         return;
     }
     rapid_vulkan::Device::ConstructParameters dp;
@@ -66,17 +66,17 @@ GpuContextVulkan::GpuContextVulkan(const StrA & name, const CreateParameters & p
         if (depthVk != vk::Format::eUndefined) {
             mCaps.defaultDepthFormat = vkFormatToPixelFormat(depthVk);
             if (mCaps.defaultDepthFormat == gfx::img::PixelFormat::UNKNOWN()) {
-                GN_WARN(sLogger)("GpuContextVulkan: vkFormatToPixelFormat({}) returned UNKNOWN; caps.defaultDepthFormat stays UNKNOWN",
-                                 rapid_vulkan::vkFormat2String(depthVk));
+                GN_WARN(sLogger, "GpuContextVulkan: vkFormatToPixelFormat({}) returned UNKNOWN; caps.defaultDepthFormat stays UNKNOWN",
+                        rapid_vulkan::vkFormat2String(depthVk));
             }
         } else {
-            GN_WARN(sLogger)("GpuContextVulkan: no depth/stencil format reported by queryDepthFormat; caps.defaultDepthFormat stays UNKNOWN");
+            GN_WARN(sLogger, "GpuContextVulkan: no depth/stencil format reported by queryDepthFormat; caps.defaultDepthFormat stays UNKNOWN");
         }
         mPsoFactory = std::make_unique<PsoFactoryVulkan>(*this);
     }
 }
 
-GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger)("Destroying Vulkan GPU context, name='{}'", name); }
+GpuContextVulkan::~GpuContextVulkan() { GN_INFO(sLogger, "Destroying Vulkan GPU context, name='{}'", name); }
 
 // =============================================================================
 // createVulkanGpuContext - API-specific factory

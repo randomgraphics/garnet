@@ -146,7 +146,7 @@ bool GN::input::InputDInput::acquire() {
     GN_DX_CHECK_RETURN(mMouse->Acquire(), 0);
 
     // success
-    GN_TRACE(sLogger)("Acquire DInput devices");
+    GN_TRACE(sLogger, "Acquire DInput devices");
     mAcquired = true;
     return true;
 
@@ -161,19 +161,19 @@ bool GN::input::InputDInput::unacquire() {
 
     mAcquired = false;
 
-    GN_TRACE(sLogger)("Unacquire DInput devices");
+    GN_TRACE(sLogger, "Unacquire DInput devices");
     HRESULT rval;
     if (mKeyboard) {
         rval = mKeyboard->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT) {
-            GN_ERROR(sLogger)("Fail to unacquire keyboard, {}!", getDXErrorInfo(rval));
+            GN_ERROR(sLogger, "Fail to unacquire keyboard, {}!", getDXErrorInfo(rval));
             return false;
         }
     }
     if (mMouse) {
         rval = mMouse->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT) {
-            GN_ERROR(sLogger)("Fail to unacquire mouse, {}!", getDXErrorInfo(rval));
+            GN_ERROR(sLogger, "Fail to unacquire mouse, {}!", getDXErrorInfo(rval));
             return false;
         }
     }

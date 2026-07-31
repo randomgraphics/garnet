@@ -25,7 +25,7 @@ TransientBuffer::Mapped TransientBufferVulkan::map() {
         if (!mBacking->mappedPtr) {
             auto mapped = mBacking->buffer->map({});
             if (!mapped.data) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("TransientBufferVulkan::map: failed to map backing buffer");
+                    GN_ERROR(sLogger, "TransientBufferVulkan::map: failed to map backing buffer");
                     mBacking->mappedCount.fetch_add(1, std::memory_order_relaxed); // so unmap() on destroy is valid
                     return TransientBuffer::Mapped(*this, nullptr, 0);
                 }
@@ -49,7 +49,7 @@ void TransientBufferVulkan::unmap(const TransientBuffer::Mapped &) {
 bool TransientBufferVulkan::setContent(const void * data, uint64_t size) {
     if (!data || !size) GN_UNLIKELY return true;
     if (size > mSize) {
-        GN_ERROR(sLogger)("TransientBufferVulkan::setContent: size {} exceeds allocated {}", size, mSize);
+        GN_ERROR(sLogger, "TransientBufferVulkan::setContent: size {} exceeds allocated {}", size, mSize);
         return false;
     }
     auto m = map();
@@ -85,8 +85,8 @@ TransientArenaVulkan::~TransientArenaVulkan() {
         auto   mapped = b->mappedCount.load(std::memory_order_relaxed);
         auto   live   = b->liveCount.load(std::memory_order_relaxed);
         if (mapped != 0 || live != 0) GN_UNLIKELY {
-                GN_WARN(sLogger)("TransientArenaVulkan::~TransientArenaVulkan: backing buffer[{}] has mappedCount={}, liveCount={} (expected 0)", i, mapped,
-                                 live);
+                GN_WARN(sLogger, "TransientArenaVulkan::~TransientArenaVulkan: backing buffer[{}] has mappedCount={}, liveCount={} (expected 0)", i, mapped,
+                        live);
             }
     }
 }
@@ -121,7 +121,7 @@ bool TransientArenaVulkan::createBackingBuffer(uint64_t minCapacity) {
     cp.memory  = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
     auto vkBuf = rapid_vulkan::Ref<rapid_vulkan::Buffer>::make(cp);
     if (!vkBuf || !vkBuf->desc().handle) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TransientBufferPoolVulkan: failed to create backing VkBuffer ({}B)", capacity);
+            GN_ERROR(sLogger, "TransientBufferPoolVulkan: failed to create backing VkBuffer ({}B)", capacity);
             return false;
         }
     auto back           = std::make_unique<BackingBuffer>();
@@ -134,7 +134,7 @@ bool TransientArenaVulkan::createBackingBuffer(uint64_t minCapacity) {
 
 AutoRef<TransientBuffer> TransientArenaVulkan::allocate(uint64_t size, const char * name_) {
     if (!size) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TransientBufferPoolVulkan::allocate: size is 0");
+            GN_ERROR(sLogger, "TransientBufferPoolVulkan::allocate: size is 0");
             return {};
         }
 
@@ -159,7 +159,7 @@ AutoRef<TransientBuffer> TransientArenaVulkan::allocate(uint64_t size, const cha
 AutoRef<TransientArena> createVulkanTransientArena(const StrA & name, const TransientArena::CreateParameters & params) {
     auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanTransientArena: no GPU context, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanTransientArena: no GPU context, name='{}'", name);
             return {};
         }
     return AutoRef<TransientArena>(new TransientArenaVulkan(name, params));

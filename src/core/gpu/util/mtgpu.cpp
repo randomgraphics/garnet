@@ -52,7 +52,7 @@ bool GN::gfx::MultiThreadGpu::init(const GpuOptions & ro, const MultiThreadGpuOp
 
     // check parameters
     if (NULL == func) {
-        GN_ERROR(sLogger)("Null creator!");
+        GN_ERROR(sLogger, "Null creator!");
         return failure();
     }
     mCreator         = func;
@@ -365,14 +365,14 @@ void GN::gfx::MultiThreadGpu::drawIndexedUp(PrimitiveType prim, uint32_t numidx,
 
     void * tmpvb = HeapMemory::alloc(vbsize);
     if (NULL == tmpvb) {
-        GN_ERROR(sLogger)("Fail to allocate temporary vertex buffer.");
+        GN_ERROR(sLogger, "Fail to allocate temporary vertex buffer.");
         return;
     }
     memcpy(tmpvb, vertexData, vbsize);
 
     void * tmpib = HeapMemory::alloc(ibsize);
     if (NULL == tmpib) {
-        GN_ERROR(sLogger)("Fail to allocate temporary index buffer.");
+        GN_ERROR(sLogger, "Fail to allocate temporary index buffer.");
         HeapMemory::dealloc(tmpvb);
         return;
     }
@@ -388,7 +388,7 @@ void GN::gfx::MultiThreadGpu::drawUp(PrimitiveType prim, uint32_t numvtx, const 
     uint32_t sz = strideInBytes * numvtx;
     void *   vb = HeapMemory::alloc(sz);
     if (NULL == vb) {
-        GN_ERROR(sLogger)("fail to allocate temporary vertex buffer.");
+        GN_ERROR(sLogger, "fail to allocate temporary vertex buffer.");
         return;
     }
     memcpy(vb, vertexData, sz);
@@ -404,7 +404,7 @@ void GN::gfx::MultiThreadGpu::drawLines(uint32_t options, const void * positions
 
     void * tmpbuf = HeapMemory::alloc(length);
     if (NULL == tmpbuf) {
-        GN_ERROR(sLogger)("fail to allocate temporary buffer.");
+        GN_ERROR(sLogger, "fail to allocate temporary buffer.");
         return;
     }
     memcpy(tmpbuf, positions, length);

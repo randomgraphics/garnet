@@ -35,9 +35,10 @@ struct GpuUploadSlot {
     void waitUntilReady(const char * slotDebugName = nullptr) {
         if (submissionId.empty()) return;
         static GN::Logger * sLogger = GN::getLogger("GN.rdg.upload");
-        GN_WARN(sLogger)("GpuUploadSlot{}: CPU-GPU sync — waiting for slot to become ready. "
-                         "This stall is expected when all ring slots are in flight simultaneously.",
-                         slotDebugName ? slotDebugName : "?");
+        GN_WARN(sLogger,
+                "GpuUploadSlot{}: CPU-GPU sync — waiting for slot to become ready. "
+                "This stall is expected when all ring slots are in flight simultaneously.",
+                slotDebugName ? slotDebugName : "?");
         submissionId.wait();
         recycle();
     }

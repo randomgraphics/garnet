@@ -184,14 +184,14 @@ public:
         GN_UNUSED_PARAM(exename);
 
         if (0 == argc) {
-            GN_ERROR(sLogger)("Mesh file name is missing.");
+            GN_ERROR(sLogger, "Mesh file name is missing.");
             return false;
         }
 
         if (argc >= 2 && (0 == str::compare(argv[0], "-print") || 0 == str::compare(argv[0], "--print"))) {
             StrA s;
             printModelFileNodeHierarchy(s, argv[1]);
-            GN_INFO(sLogger)("{}", s.data());
+            GN_INFO(sLogger, "{}", s.data());
             return false;
         } else {
             filename = argv[0];
@@ -200,7 +200,7 @@ public:
     }
 
     void onPrintHelpScreen(const char * executableName) {
-        GN_INFO(sLogger)("\nUsage: {} [options] meshfile\n", executableName);
+        GN_INFO(sLogger, "\nUsage: {} [options] meshfile\n", executableName);
         printStandardCommandLineOptions();
     }
 };

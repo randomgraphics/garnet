@@ -60,7 +60,7 @@ private:
         const wchar_t * classname = L"d3d11app_mainwindow";
 
         // register window class
-        GN_VTRACE(sLogger)(L"Register window class: {} (module handle: 0x{:X})", classname, (intptr_t) module);
+        GN_VTRACE(sLogger, L"Register window class: {} (module handle: 0x{:X})", classname, (intptr_t) module);
         wcex.cbSize        = sizeof(wcex);
         wcex.style         = 0;
         wcex.lpfnWndProc   = (WNDPROC) &sStaticWindowProc;
@@ -74,7 +74,7 @@ private:
         wcex.lpszClassName = classname;
         wcex.hIconSm       = LoadIcon(0, IDI_APPLICATION);
         if (0 == ::RegisterClassExW(&wcex)) {
-            GN_ERROR(sLogger)("fail to register window class!");
+            GN_ERROR(sLogger, "fail to register window class!");
             return 0;
         }
 
@@ -91,7 +91,7 @@ private:
                                       0, // no menu
                                       module, 0);
         if (0 == hwnd) {
-            GN_ERROR(sLogger)("fail to create window!");
+            GN_ERROR(sLogger, "fail to create window!");
             return 0;
         }
 
@@ -114,7 +114,7 @@ private:
         // calculate boundary size
         RECT rc = {0, 0, (LONG) width, (LONG) height};
         if (!::AdjustWindowRectEx(&rc, style, 0, ::GetWindowLongA(window, GWL_EXSTYLE))) {
-            GN_ERROR(sLogger)("Fail to adjust windows style.");
+            GN_ERROR(sLogger, "Fail to adjust windows style.");
             return false;
         }
 
@@ -122,7 +122,7 @@ private:
         if (!::SetWindowPos(window, HWND_TOP, 0, 0,                 // position, ignored.
                             rc.right - rc.left, rc.bottom - rc.top, // size
                             SWP_NOMOVE)) {
-            GN_ERROR(sLogger)("Fail to adjust windows size.");
+            GN_ERROR(sLogger, "Fail to adjust windows size.");
             return false;
         }
 
@@ -162,20 +162,20 @@ private:
 static void sPrintD3D11DeviceInfo(ID3D11Device * dev, const DXGI_SWAP_CHAIN_DESC & scd) {
     D3D_FEATURE_LEVEL fl = dev->GetFeatureLevel();
 
-    GN_INFO(sLogger)
-    ("\n\n"
-     "===================================================\n"
-     "        D3D11 Implementation Information\n"
-     "---------------------------------------------------\n"
-     "    Feature Level                  : {}.{}\n"
-     "    Backbuffer Size                : {},{}\n"
-     "    Fullscreen                     : {}\n"
-     "    MSAA Sample Count              : {}\n"
-     "    MSAA Sample Quality            : {}\n"
-     "===================================================\n"
-     "\n\n",
-     (fl >> 12) & 0xF, (fl >> 8) & 0xF, scd.BufferDesc.Width, scd.BufferDesc.Height, scd.Windowed ? "False" : "True", scd.SampleDesc.Count,
-     scd.SampleDesc.Quality);
+    GN_INFO(sLogger,
+            "\n\n"
+            "===================================================\n"
+            "        D3D11 Implementation Information\n"
+            "---------------------------------------------------\n"
+            "    Feature Level                  : {}.{}\n"
+            "    Backbuffer Size                : {},{}\n"
+            "    Fullscreen                     : {}\n"
+            "    MSAA Sample Count              : {}\n"
+            "    MSAA Sample Quality            : {}\n"
+            "===================================================\n"
+            "\n\n",
+            (fl >> 12) & 0xF, (fl >> 8) & 0xF, scd.BufferDesc.Width, scd.BufferDesc.Height, scd.Windowed ? "False" : "True", scd.SampleDesc.Count,
+            scd.SampleDesc.Quality);
 }
 
 // -----------------------------------------------------------------------------
@@ -197,7 +197,7 @@ static DXGI_SAMPLE_DESC sConstructDXGISampleDesc(ID3D11Device & device,
                 return sd;
             }
         }
-        GN_WARN(sLogger)("Current device does not support requested MSAA mode");
+        GN_WARN(sLogger, "Current device does not support requested MSAA mode");
     }
 
     sd.Count   = 1;
@@ -256,7 +256,7 @@ int GN::d3d11::D3D11Application::run(const D3D11AppOption * o) {
                 ::TranslateMessage(&msg);
                 ::DispatchMessage(&msg);
             } else if (::IsIconic(mWindow->GetHWND())) {
-                GN_TRACE(sLogger)("Minimized. Wait for more messages...");
+                GN_TRACE(sLogger, "Minimized. Wait for more messages...");
                 ::WaitMessage();
             } else {
                 // TODO: process input devies (keyboard, mouse, controller and etc.)

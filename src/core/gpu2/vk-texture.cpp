@@ -29,8 +29,8 @@ Texture::Descriptor descriptorFromImageDesc(const gfx::img::ImageDesc & id) {
 Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
     Texture::Descriptor result = desc;
     if (0 == result.width || 0 == result.height || 0 == result.depth || 0 == result.faces || 0 == result.samples) {
-        GN_ERROR(sLogger)("validateDesc: invalid descriptor (zero dimension), width={} height={} depth={} faces={} samples={}", result.width, result.height,
-                          result.depth, result.faces, result.samples);
+        GN_ERROR(sLogger, "validateDesc: invalid descriptor (zero dimension), width={} height={} depth={} faces={} samples={}", result.width, result.height,
+                 result.depth, result.faces, result.samples);
         result.width   = 0;
         result.height  = 0;
         result.depth   = 0;
@@ -98,17 +98,17 @@ TextureVulkanBase::~TextureVulkanBase() = default;
 
 gfx::img::Image TextureVulkanBase::readback() const {
     if (!mRvImage || !mImage) {
-        GN_ERROR(sLogger)("TextureVulkanBase::readback: no image, name='{}'", name);
+        GN_ERROR(sLogger, "TextureVulkanBase::readback: no image, name='{}'", name);
         return gfx::img::Image();
     }
     if (!mGpu || !mGpu->ready()) {
-        GN_ERROR(sLogger)("TextureVulkanBase::readback: no GpuContext, name='{}'", name);
+        GN_ERROR(sLogger, "TextureVulkanBase::readback: no GpuContext, name='{}'", name);
         return gfx::img::Image();
     }
     const rv::Device & dev = mGpu->vulkanDevice();
     rv::CommandQueue * gq  = dev.graphics();
     if (!gq) {
-        GN_ERROR(sLogger)("TextureVulkanBase::readback: no graphics queue, name='{}'", name);
+        GN_ERROR(sLogger, "TextureVulkanBase::readback: no graphics queue, name='{}'", name);
         return gfx::img::Image();
     }
     mGpu->waitForIdle(); // Ensure all submitted GPU operations are complete before readback.
@@ -121,11 +121,11 @@ gfx::img::Image TextureVulkanBase::readback() const {
 
 bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
     if (!mRvImage || !mImage) {
-        GN_ERROR(sLogger)("TextureVulkanBase::setContent: texture not writable or not initialized, name='{}'", name);
+        GN_ERROR(sLogger, "TextureVulkanBase::setContent: texture not writable or not initialized, name='{}'", name);
         return false;
     }
     if (image.empty()) {
-        GN_ERROR(sLogger)("TextureVulkanBase::setContent: input image is empty, name='{}'", name);
+        GN_ERROR(sLogger, "TextureVulkanBase::setContent: input image is empty, name='{}'", name);
         return false;
     }
     if (!mGpu || !mGpu->ready()) return false;
@@ -171,7 +171,7 @@ public:
     bool initOwned(const CreateParameters & params) {
         reset();
         if (!params.context) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initOwned: context is null, name='{}'", name);
+            GN_ERROR(sLogger, "OwnedTextureVulkan::initOwned: context is null, name='{}'", name);
             return false;
         }
         mGpu        = params.context.staticCastTo<GpuContextVulkan2>();
@@ -179,7 +179,7 @@ public:
         if (0 == mDescriptor.width) return false;
         const rv::Device & dev = mGpu->vulkanDevice();
         if (!dev.gi()) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initOwned: invalid Vulkan device, name='{}'", name);
+            GN_ERROR(sLogger, "OwnedTextureVulkan::initOwned: invalid Vulkan device, name='{}'", name);
             return false;
         }
         mOwnedImage = createVkImage(mDescriptor, *dev.gi());
@@ -193,7 +193,7 @@ public:
     bool initFromLoad(const LoadParameters & params) {
         reset();
         if (!params.context) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: context is null");
+            GN_ERROR(sLogger, "OwnedTextureVulkan::initFromLoad: context is null");
             return false;
         }
         mGpu = params.context.staticCastTo<GpuContextVulkan2>();
@@ -201,18 +201,18 @@ public:
 
         StrA path = params.filename;
         if (path.empty()) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: filename is empty");
+            GN_ERROR(sLogger, "OwnedTextureVulkan::initFromLoad: filename is empty");
             return false;
         }
         if (!GN::fs::isAbsPath(path)) path = GN::fs::resolvePath(GN::fs::getCurrentDir(), path);
         auto fp = GN::fs::openFile(path, std::ios::in | std::ios::binary);
         if (!fp) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: cannot open '{}'", path);
+            GN_ERROR(sLogger, "OwnedTextureVulkan::initFromLoad: cannot open '{}'", path);
             return false;
         }
         gfx::img::Image image = gfx::img::Image::load(fp->input(), path.c_str());
         if (image.empty()) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: failed to load '{}'", path);
+            GN_ERROR(sLogger, "OwnedTextureVulkan::initFromLoad: failed to load '{}'", path);
             return false;
         }
         mDescriptor = validateDesc(descriptorFromImageDesc(image.desc()));
@@ -227,7 +227,7 @@ public:
         setVulkanHandles(mOwnedImage.get());
         rv::CommandQueue * gq = dev.graphics();
         if (!gq) {
-            GN_ERROR(sLogger)("OwnedTextureVulkan::initFromLoad: no graphics queue");
+            GN_ERROR(sLogger, "OwnedTextureVulkan::initFromLoad: no graphics queue");
             return false;
         }
         for (uint32_t f = 0; f < mDescriptor.faces; ++f)
@@ -250,7 +250,7 @@ public:
                 mOwnedImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
             }
 
-        GN_INFO(sLogger)("Loaded texture '{}'", path);
+        GN_INFO(sLogger, "Loaded texture '{}'", path);
         return true;
     }
 

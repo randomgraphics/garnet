@@ -33,7 +33,7 @@ static bool sVtxBind2D3D11InputLayout(GN::DynaArray<D3D11_INPUT_ELEMENT_DESC> & 
         // set attrib format
         elem.Format = (DXGI_FORMAT) ve.format.toDXGI();
         if (DXGI_FORMAT_UNKNOWN == elem.Format) {
-            GN_ERROR(sLogger)("Unknown element format: {}", ve.format.toString().c_str());
+            GN_ERROR(sLogger, "Unknown element format: {}", ve.format.toString().c_str());
             return false;
         }
 
@@ -52,7 +52,7 @@ static bool sVtxBind2D3D11InputLayout(GN::DynaArray<D3D11_INPUT_ELEMENT_DESC> & 
     }
 
     if (elements.empty()) {
-        GN_ERROR(sLogger)("Empty input layout is not allowed.");
+        GN_ERROR(sLogger, "Empty input layout is not allowed.");
         return false;
     }
 

@@ -60,7 +60,7 @@ bool GN::gfx::OGLVtxFmt::bindBuffers(const VertexBufferBinding * bindings, size_
         auto & ab     = mAttribBindings[i];
         size_t stream = ab.stream;
         if (stream >= numbufs) {
-            GN_ERROR(sLogger)("Current vertex format requires at least {} vertex buffers. But only {} are provided.", stream + 1, numbufs);
+            GN_ERROR(sLogger, "Current vertex format requires at least {} vertex buffers. But only {} are provided.", stream + 1, numbufs);
             return false;
         }
         const VertexBufferBinding & b = bindings[stream];
@@ -86,7 +86,7 @@ bool GN::gfx::OGLVtxFmt::bindRawMemoryBuffer(const void * data, size_t stride) c
         auto & ab = mAttribBindings[i];
 
         if (ab.stream > 0) {
-            GN_ERROR(sLogger)("Current vertex format requires at least {} vertex buffers. But only 1 are provided.", ab.stream + 1);
+            GN_ERROR(sLogger, "Current vertex format requires at least {} vertex buffers. But only 1 are provided.", ab.stream + 1);
             return false;
         }
 
@@ -121,10 +121,10 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
 
         // get binding information
         if ((NULL == gpuProgram || !gpuProgram->getBindingDesc(vbd, e.attribute))) {
-            GN_WARN(sLogger)
-            ("Attribute #%d is ignored, since it is not used by "
-             "current active GPU program.",
-             i);
+            GN_WARN(sLogger,
+                    "Attribute #%d is ignored, since it is not used by "
+                    "current active GPU program.",
+                    i);
             continue;
         }
 
@@ -144,7 +144,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
         case VERTEX_SEMANTIC_TEXCOORD:
         case VERTEX_SEMANTIC_COLOR:
         case VERTEX_SEMANTIC_FOG:
-            GN_ERROR(sLogger)("client side vertex data pointer is not supportd anymore.");
+            GN_ERROR(sLogger, "client side vertex data pointer is not supportd anymore.");
             return false;
 
         default:
@@ -189,7 +189,7 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings(const OGLGpuProgram * gpuProgram) {
             ab.components    = 4;
             ab.normalization = false;
         } else {
-            GN_ERROR(sLogger)("unsupport vertex format: {}", e.format.toString().c_str());
+            GN_ERROR(sLogger, "unsupport vertex format: {}", e.format.toString().c_str());
             return false;
         }
 

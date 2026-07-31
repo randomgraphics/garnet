@@ -26,7 +26,7 @@ bool GN::gfx::OGLGpu::dispInit() {
     auto   disp = (Display *) rw.getDisplayHandle();
     auto   win  = (::Window) rw.getWindowHandle();
     if (!disp || !win) {
-        GN_ERROR(sLogger)("Invalid display or window handle!");
+        GN_ERROR(sLogger, "Invalid display or window handle!");
         return false;
     }
 
@@ -54,13 +54,13 @@ bool GN::gfx::OGLGpu::dispInit() {
                                       true // enable direct rendering, which yields best feature set and performance.
     );
     if (0 == mRenderContext) {
-        GN_ERROR(sLogger)("Fail to create GLX context.");
+        GN_ERROR(sLogger, "Fail to create GLX context.");
         return false;
     }
 
     // make the context as current render context.
     if (!glXMakeCurrent(disp, win, mRenderContext)) {
-        GN_ERROR(sLogger)("glXMakeCurrent() failed.");
+        GN_ERROR(sLogger, "glXMakeCurrent() failed.");
         return false;
     }
 
@@ -72,7 +72,7 @@ bool GN::gfx::OGLGpu::dispInit() {
 
     // setup swap control
     if (GLX_SGI_swap_control) {
-        if (!glXSwapIntervalSGI(getOptions().vsync)) { GN_WARN(sLogger)("Fail to adjust SGI swap control"); }
+        if (!glXSwapIntervalSGI(getOptions().vsync)) { GN_WARN(sLogger, "Fail to adjust SGI swap control"); }
     }
 
     // success

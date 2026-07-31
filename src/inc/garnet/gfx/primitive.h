@@ -91,7 +91,7 @@ inline uint32_t calcPrimitiveCount(PrimitiveType pt, uint32_t numvert) {
         return (numvert >= 3) ? numvert / 3 : 0;
     default: {
         static Logger * sLocalLogger = getLogger("GN.gfx.misc");
-        GN_ERROR(sLocalLogger)("Invalid primitive type!");
+        GN_ERROR(sLocalLogger, "Invalid primitive type!");
     }
         return 0;
     }
@@ -124,7 +124,7 @@ inline uint32_t calcVertexCount(PrimitiveType pt, uint32_t numprim) {
         return numprim * 3;
     default: {
         static Logger * sLocalLogger = getLogger("GN.gfx.misc");
-        GN_ERROR(sLocalLogger)("Invalid primitive type!");
+        GN_ERROR(sLocalLogger, "Invalid primitive type!");
     }
         return 0;
     }

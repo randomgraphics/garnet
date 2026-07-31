@@ -391,7 +391,7 @@ static rv::Ref<rv::GraphicsPipeline> buildPipeline(const Gpu2RasterPsoCreatePara
 
     rv::Ref<rv::GraphicsPipeline> pipe(new rv::GraphicsPipeline(gcp));
     if (!pipe->handle()) {
-        GN_ERROR(sLogger)("RasterPsoFactory: failed to create VkPipeline");
+        GN_ERROR(sLogger, "RasterPsoFactory: failed to create VkPipeline");
         return {};
     }
     return pipe;
@@ -408,7 +408,7 @@ RasterPsoFactory::~RasterPsoFactory() {
 
 rv::Ref<const rv::GraphicsPipeline> RasterPsoFactory::getOrCreate(const Gpu2RasterPsoCreateParams & params) {
     if (!params.vs) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RasterPsoFactory::getOrCreate: null vertex shader");
+            GN_ERROR(sLogger, "RasterPsoFactory::getOrCreate: null vertex shader");
             return {};
         }
 
@@ -420,7 +420,7 @@ rv::Ref<const rv::GraphicsPipeline> RasterPsoFactory::getOrCreate(const Gpu2Rast
     rv::Ref<rv::GraphicsPipeline> pipe = buildPipeline(params);
     if (!pipe) return {};
 
-    GN_VVTRACE(sLogger)("RasterPsoFactory: created new PSO (cache size now {})", mImpl->cache.size() + 1);
+    GN_VVTRACE(sLogger, "RasterPsoFactory: created new PSO (cache size now {})", mImpl->cache.size() + 1);
     mImpl->cache.emplace(key, pipe);
     return pipe;
 }

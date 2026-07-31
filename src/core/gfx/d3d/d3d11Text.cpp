@@ -229,7 +229,7 @@ GN::d3d11::TextRenderer::~TextRenderer() { shutdown(); }
 bool GN::d3d11::TextRenderer::initialize(ID3D11Device & dev, FontDesc & font) {
     std::unique_ptr<Impl> impl(new Impl);
     if (nullptr == impl) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return false;
     }
     if (!impl->Initialize(dev, font)) return false;

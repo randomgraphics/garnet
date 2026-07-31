@@ -43,7 +43,7 @@ static bool sParseEnum(RESULT_TYPE & result, const char * name, const EnumNames 
         ++table;
     }
 
-    GN_ERROR(sLogger)("Invalid {} value: {}", header->name, name);
+    GN_ERROR(sLogger, "Invalid {} value: {}", header->name, name);
     return false;
 }
 
@@ -63,9 +63,9 @@ static RESULT_TYPE sParseEnum(const char * name, const EnumNames * table, const 
 static void sPostError(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_ERROR(sLogger)("Effect XML error: element <{}> - {}", e->name.data(), msg.data());
+        GN_ERROR(sLogger, "Effect XML error: element <{}> - {}", e->name.data(), msg.data());
     } else {
-        GN_ERROR(sLogger)("Effect XML error: {}", msg.data());
+        GN_ERROR(sLogger, "Effect XML error: {}", msg.data());
     }
 }
 
@@ -75,9 +75,9 @@ static void sPostError(const XmlNode & node, const StrA & msg) {
 static void sPostWarning(const XmlNode & node, const StrA & msg) {
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_WARN(sLogger)("Effect XML warning: element <{}> - {}", e->name.data(), msg.data());
+        GN_WARN(sLogger, "Effect XML warning: element <{}> - {}", e->name.data(), msg.data());
     } else {
-        GN_WARN(sLogger)("Effect XML warning: {}", msg.data());
+        GN_WARN(sLogger, "Effect XML warning: {}", msg.data());
     }
 }
 
@@ -426,7 +426,7 @@ static void sParseRenderStates(EffectResourceDesc::EffectRenderStateDesc & rsdes
         if (0 == str::compareI("CULL_MODE", rsname)) {
             rsdesc.cullMode = sParseEnum(rsvalue, CULL_MODE_TABLE, GpuContext::CULL_BACK);
         } else {
-            GN_ERROR(sLogger)("Unknow render state name: {}.", rsname);
+            GN_ERROR(sLogger, "Unknow render state name: {}.", rsname);
         }
     }
 
@@ -630,7 +630,7 @@ bool GN::gfx::EffectResourceDesc::loadFromXml(const XmlNode & root) {
     const XmlElement * e = root.toElement();
 
     if (0 == e || e->name != "effect") {
-        GN_ERROR(sLogger)("root node must be \"<effect>\".");
+        GN_ERROR(sLogger, "root node must be \"<effect>\".");
         return false;
     }
 
