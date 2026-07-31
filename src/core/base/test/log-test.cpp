@@ -313,18 +313,24 @@ TEST_CASE("log macro: expands to a single statement", "[log]") {
     const bool no  = false;
 
     SECTION("if/else, comma parameter list") {
-        if (yes) GN_ERROR(f.logger, "then");
-        else GN_ERROR(f.logger, "else");
+        if (yes)
+            GN_ERROR(f.logger, "then");
+        else
+            GN_ERROR(f.logger, "else");
         CHECK(f.onlyNarrow() == "then");
         f.capture.clear();
-        if (no) GN_ERROR(f.logger, "then");
-        else GN_ERROR(f.logger, "else");
+        if (no)
+            GN_ERROR(f.logger, "then");
+        else
+            GN_ERROR(f.logger, "else");
         CHECK(f.onlyNarrow() == "else");
     }
 
     SECTION("if/else, streaming") {
-        if (yes) GN_ERROR(f.logger) << "then";
-        else GN_ERROR(f.logger) << "else";
+        if (yes)
+            GN_ERROR(f.logger) << "then";
+        else
+            GN_ERROR(f.logger) << "else";
         CHECK(f.onlyNarrow() == "then");
     }
 
@@ -332,8 +338,12 @@ TEST_CASE("log macro: expands to a single statement", "[log]") {
         for (int i = 0; i < 2; ++i) GN_INFO(f.logger, "loop {}", i);
         while (no) GN_INFO(f.logger, "never");
         switch (1) {
-        case 1: GN_INFO(f.logger, "switch"); break;
-        default: GN_INFO(f.logger, "default"); break;
+        case 1:
+            GN_INFO(f.logger, "switch");
+            break;
+        default:
+            GN_INFO(f.logger, "default");
+            break;
         }
         CHECK(f.capture.narrow == std::vector<std::string> {"loop 0", "loop 1", "switch"});
     }
@@ -341,8 +351,10 @@ TEST_CASE("log macro: expands to a single statement", "[log]") {
     SECTION("GN_DO_ONCE in an unbraced if body") {
         // GN_DO_LIMITED_TIMES carried the same dangling-else defect and was fixed alongside.
         for (int i = 0; i < 3; ++i) {
-            if (yes) GN_DO_ONCE(GN_INFO(f.logger, "once"));
-            else GN_INFO(f.logger, "never");
+            if (yes)
+                GN_DO_ONCE(GN_INFO(f.logger, "once"));
+            else
+                GN_INFO(f.logger, "never");
         }
         CHECK(f.capture.narrow == std::vector<std::string> {"once"});
     }
