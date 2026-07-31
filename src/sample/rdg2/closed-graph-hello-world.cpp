@@ -45,7 +45,7 @@ static bool verifySolidColor(const GpuResourceView & view, uint32_t width, uint3
     }
     const auto check = [](const char * where, const auto & p) {
         const bool ok = p.r == (uint8_t) (kClearR * 255.f) && p.g == (uint8_t) (kClearG * 255.f) && p.b == (uint8_t) (kClearB * 255.f);
-        if (!ok) GN_ERROR(sLogger)("verifySolidColor: {} pixel mismatch — got ({},{},{},{})", where, p.r, p.g, p.b, p.a);
+        if (!ok) { GN_ERROR(sLogger)("verifySolidColor: {} pixel mismatch — got ({},{},{},{})", where, p.r, p.g, p.b, p.a); }
         return ok;
     };
     const bool cornerOk = check("corner", pixels[0]);

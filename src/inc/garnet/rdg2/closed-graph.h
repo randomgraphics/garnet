@@ -253,11 +253,11 @@ struct Execution : public Entity {
 
     struct RunParameters {
         /// Plan to execute.
-        PlanRef plan;
+        PlanRef plan = {};
 
         /// GPU context used to submit gathered payloads. May stay empty for
         /// CPU-only plans that emit no payloads.
-        AutoRef<gpu2::GpuContext> gpu;
+        AutoRef<gpu2::GpuContext> gpu = {};
 
         /// Human-readable name for diagnostics and submission labeling.
         StrA name = "rdg2-execution";
