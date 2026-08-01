@@ -94,8 +94,8 @@ struct FormImpl : Form {
 private:
     World *               mWorld  = nullptr;
     FormImpl *            mParent = nullptr;
-    ArrayBody<Ref<Form>>  mChildren;
-    ArrayBody<Ref<Facet>> mFacets;
+    DynaArray<Ref<Form>>  mChildren;
+    DynaArray<Ref<Facet>> mFacets;
     WorldVector3          mPosition = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()};
     Rotation              mRotation = Rotation(1.f, 0.f, 0.f, 0.f);
 

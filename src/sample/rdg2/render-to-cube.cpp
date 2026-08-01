@@ -439,11 +439,11 @@ private:
             return false;
         }
 
-        if (!mVb->setContent(gpu2::ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(kVertices), sizeof(kVertices)))) {
+        if (!mVb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(kVertices), sizeof(kVertices)))) {
             GN_ERROR(sLogger)("CubeDraw: vertex buffer upload failed");
             return false;
         }
-        if (!mIb->setContent(gpu2::ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(kIndices), sizeof(kIndices)))) {
+        if (!mIb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(kIndices), sizeof(kIndices)))) {
             GN_ERROR(sLogger)("CubeDraw: index buffer upload failed");
             return false;
         }

@@ -14,8 +14,8 @@ struct GpuCommandBuffer : public RCRT64 {
     struct Fence;
 
     struct SubmitParameters {
-        StrA                      name;
-        ArrayContainer<Payload *> jobs;
+        StrA                 name;
+        DynaArray<Payload *> jobs;
     };
 
     struct CreateParameters {

@@ -239,7 +239,7 @@ TEST_CASE("RDG workflow: arithmetic 3*(1+2)=9", "[rdg][workflow]") {
         workflows.append(std::move(workflow));
     }
 
-    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(workflows.data(), workflows.size())});
+    auto submission = renderGraph->submit({.workflows = GN::ArrayView<GN::rdg::Workflow>(workflows.data(), workflows.size())});
     REQUIRE(submission != nullptr);
 
     auto submissionResult = submission->result();
@@ -347,7 +347,7 @@ TEST_CASE("RDG workflow: dependency write-write", "[rdg][workflow]") {
     GN::DynaArray<GN::rdg::Workflow> toSubmit;
     toSubmit.append(std::move(w0));
     toSubmit.append(std::move(w1));
-    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
+    auto submission = renderGraph->submit({.workflows = GN::ArrayView<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();
@@ -390,7 +390,7 @@ TEST_CASE("RDG workflow: dependency read-write", "[rdg][workflow]") {
     GN::DynaArray<GN::rdg::Workflow> toSubmit;
     toSubmit.append(std::move(w0));
     toSubmit.append(std::move(w1));
-    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
+    auto submission = renderGraph->submit({.workflows = GN::ArrayView<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();
@@ -444,7 +444,7 @@ TEST_CASE("RDG workflow: dependency write-read", "[rdg][workflow]") {
     toSubmit.append(std::move(w0));
     toSubmit.append(std::move(w1));
     toSubmit.append(std::move(w2));
-    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
+    auto submission = renderGraph->submit({.workflows = GN::ArrayView<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();
@@ -495,7 +495,7 @@ TEST_CASE("RDG workflow: dependency read-read (no dependency)", "[rdg][workflow]
     toSubmit.append(std::move(w0));
     toSubmit.append(std::move(w1));
     toSubmit.append(std::move(w2));
-    auto submission = renderGraph->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
+    auto submission = renderGraph->submit({.workflows = GN::ArrayView<GN::rdg::Workflow>(toSubmit.data(), toSubmit.size())});
     REQUIRE(submission != nullptr);
     submission->result();
     auto state = submission->dumpState();

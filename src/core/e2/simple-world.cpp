@@ -216,7 +216,7 @@ struct SimpleWorld : World {
 
         // Briefly freeze the simulation and let each visual facet contribute its state.
         std::lock_guard<std::mutex> lock(mMutex);
-        ArrayBody<Ref<Facet>>       visualFacets;
+        DynaArray<Ref<Facet>>       visualFacets;
         for (auto & f : mForms) queryFacetsByType(*f, VisualFacet::TYPE_INFO(), visualFacets);
         for (auto & facet : visualFacets) {
             auto * visual = RuntimeType::cast<VisualFacet>(facet.get());

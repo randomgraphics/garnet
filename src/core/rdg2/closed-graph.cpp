@@ -41,7 +41,7 @@ public:
         QuestDeclaration declaration;
     };
 
-    ArrayContainer<CompiledQuest> compiled;
+    DynaArray<CompiledQuest> compiled;
 
     explicit PlanImpl(const StrA & name_): Plan(TYPE_INFO(), name_) {}
 
@@ -82,13 +82,13 @@ public:
         AutoRef<Entity> content;
     };
 
-    const QuestDeclaration *                  declaration = nullptr; ///< declaration of the currently running quest
-    AutoRef<gpu2::GpuContext>                 gpuContext;
-    ArrayContainer<StagedPublish>             staged;       ///< publications staged by the current quest
-    ArrayContainer<AutoRef<gpu2::GpuPayload>> work;         ///< payloads gathered across the whole execution
-    ArrayContainer<AutoRef<gpu2::GpuPayload>> dependencies; ///< external GPU dependencies of the gathered submission
-    AutoRef<gpu2::Swapchain>                  presentTarget;
-    mutable size_t                            violations = 0; ///< undeclared reads/writes observed
+    const QuestDeclaration *             declaration = nullptr; ///< declaration of the currently running quest
+    AutoRef<gpu2::GpuContext>            gpuContext;
+    DynaArray<StagedPublish>             staged;       ///< publications staged by the current quest
+    DynaArray<AutoRef<gpu2::GpuPayload>> work;         ///< payloads gathered across the whole execution
+    DynaArray<AutoRef<gpu2::GpuPayload>> dependencies; ///< external GPU dependencies of the gathered submission
+    AutoRef<gpu2::Swapchain>             presentTarget;
+    mutable size_t                       violations = 0; ///< undeclared reads/writes observed
 
     Artifact::Relic<> read(const ArtifactRef & artifact) const override {
         if (!declared(artifact, false)) {

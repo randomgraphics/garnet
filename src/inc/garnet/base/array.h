@@ -742,10 +742,11 @@ public:
 };
 
 ///
-/// array accessor with out-of-boundary check in debug build.
+/// Array view with out-of-boundary check in debug build. It takes double
+/// duty as array observer and array iterator.
 ///
 template<typename T>
-class SafeArrayAccessor {
+class ArrayView {
     T * mBegin;
     T * mEnd;
     T * mPtr;
@@ -753,47 +754,47 @@ class SafeArrayAccessor {
 public:
     //@{
     /// default constructor
-    SafeArrayAccessor(): mBegin(nullptr), mEnd(nullptr), mPtr(nullptr) {}
+    ArrayView(): mBegin(nullptr), mEnd(nullptr), mPtr(nullptr) {}
 
     template<typename T2>
-    SafeArrayAccessor(T2 * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
+    ArrayView(T2 * data, size_t count): mBegin(data), mEnd(data + count), mPtr(data) {}
 
     template<typename T2>
-    SafeArrayAccessor(DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+    ArrayView(DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2>
-    SafeArrayAccessor(DynaArray<T2> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
-
-    template<typename T2>
-        requires std::is_const_v<T>
-    SafeArrayAccessor(const DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
-
-    template<typename T2>
-    SafeArrayAccessor(std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
-
-    template<typename T2>
-    SafeArrayAccessor(std::vector<T2> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+    ArrayView(DynaArray<T2> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2>
         requires std::is_const_v<T>
-    SafeArrayAccessor(const std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+    ArrayView(const DynaArray<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2>
+    ArrayView(std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2>
+    ArrayView(std::vector<T2> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+
+    template<typename T2>
+        requires std::is_const_v<T>
+    ArrayView(const std::vector<T2> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2, size_t N>
-    SafeArrayAccessor(FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+    ArrayView(FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2, size_t N>
-    SafeArrayAccessor(FixedArray<T2, N> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+    ArrayView(FixedArray<T2, N> && v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2, size_t N>
         requires std::is_const_v<T>
-    SafeArrayAccessor(const FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
+    ArrayView(const FixedArray<T2, N> & v): mBegin(v.data()), mEnd(v.data() + v.size()), mPtr(v.data()) {}
 
     template<typename T2, size_t N>
-    SafeArrayAccessor(T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
+    ArrayView(T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
 
     template<typename T2, size_t N>
         requires std::is_const_v<T>
-    SafeArrayAccessor(const T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
+    ArrayView(const T2 v[N]): mBegin(v), mEnd(v + N), mPtr(v) {}
 
     bool empty() const { return mPtr == mEnd; }
 
@@ -830,7 +831,7 @@ public:
     }
 
     template<typename T2>
-    void copyTo(size_t srcOffset, const SafeArrayAccessor<T2> & dest, size_t dstOffset, size_t lengthInUnitOfT) {
+    void copyTo(size_t srcOffset, const ArrayView<T2> & dest, size_t dstOffset, size_t lengthInUnitOfT) {
         const T * src = subrange(srcOffset, lengthInUnitOfT);
         T2 *      dst = dest.subrange(dstOffset, lengthInUnitOfT);
         if constexpr (std::is_trivially_copyable<T>::value && std::is_trivially_copyable<T2>::value) {
@@ -863,22 +864,22 @@ public:
 
     T & operator[](size_t index) const { return at(index); }
 
-    SafeArrayAccessor & operator++() {
+    ArrayView & operator++() {
         ++mPtr;
         return *this;
     }
 
-    SafeArrayAccessor & operator--() {
+    ArrayView & operator--() {
         --mPtr;
         return *this;
     }
 
-    SafeArrayAccessor & operator+=(size_t offset) {
+    ArrayView & operator+=(size_t offset) {
         mPtr += offset;
         return *this;
     }
 
-    SafeArrayAccessor & operator-=(size_t offset) {
+    ArrayView & operator-=(size_t offset) {
         mPtr -= offset;
         return *this;
     }

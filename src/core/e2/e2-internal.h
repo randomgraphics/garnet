@@ -15,7 +15,7 @@
 namespace GN::e2 {
 
 // Query a form tree for facets that match, or derive from, the requested runtime type.
-inline void queryFacetsByType(Form & root, const RuntimeType::TypeInfo & type, ArrayBody<Ref<Facet>> & result) {
+inline void queryFacetsByType(Form & root, const RuntimeType::TypeInfo & type, DynaArray<Ref<Facet>> & result) {
     for (auto & facet : root.facets()) {
         if (facet->typeInfo().isDerivedFrom(type)) result.append(facet);
     }

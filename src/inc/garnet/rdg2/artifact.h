@@ -86,16 +86,6 @@ struct NeverOverflowingCounter {
 };
 
 // ============================================================
-// Array container and proxy
-// ============================================================
-
-template<typename T>
-using ArrayContainer = DynaArray<T, size_t>;
-
-template<typename T>
-using ArrayProxy = SafeArrayAccessor<T>;
-
-// ============================================================
 // Base class of everything with a ID and name.
 // ============================================================
 

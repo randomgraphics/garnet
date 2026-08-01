@@ -107,9 +107,9 @@ int main(int argc, const char ** argv) {
         if (frame.view.empty()) return -1;
 
         rasterTarget.setColorTarget(0, frame.view);
-        SharedShaderConstants::Snapshot           sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
-        gpu2::ArrayContainer<AutoRef<GpuPayload>> renderWorks;
-        auto                                      drawScene = [&]() {
+        SharedShaderConstants::Snapshot sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
+        DynaArray<AutoRef<GpuPayload>>  renderWorks;
+        auto                            drawScene = [&]() {
             renderWorks.append(sscSnapshot.set0Payloads);
 
             GpuRaster::CreateParameters rcp;

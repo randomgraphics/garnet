@@ -161,7 +161,7 @@ GpuResourceGroupVulkan::~GpuResourceGroupVulkan() {
     mGpu    = {};
 }
 
-void GpuResourceGroupVulkan::setResourceViews(size_t slot, size_t offset, SafeArrayAccessor<const GpuResourceView> views) {
+void GpuResourceGroupVulkan::setResourceViews(size_t slot, size_t offset, ArrayView<const GpuResourceView> views) {
     if (slot >= mSlots.size()) GN_UNLIKELY return;
     if (!mSet) return;
 

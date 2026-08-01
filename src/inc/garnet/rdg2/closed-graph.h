@@ -101,10 +101,10 @@ struct QuestDeclaration {
     /// CPU-side quest inputs are intentionally absent. They are stored by the
     /// concrete quest object and are not part of closed-graph dependency
     /// compilation.
-    ArrayContainer<ArtifactUse> artifactUses = {};
+    DynaArray<ArtifactUse> artifactUses = {};
 
     /// Explicit quest dependencies in addition to artifact producer/consumer dependencies.
-    ArrayContainer<QuestRef> explicitDependencies = {};
+    DynaArray<QuestRef> explicitDependencies = {};
 };
 
 /// Result returned by a quest after CPU-side execution.
@@ -191,10 +191,10 @@ struct Quest : public Entity {
         StrA name = StrA::EMPTYSTR();
 
         /// Artifacts read or written by the quest.
-        ArrayContainer<ArtifactUse> artifactUses = {};
+        DynaArray<ArtifactUse> artifactUses = {};
 
         /// Explicit quest dependencies in addition to artifact producer/consumer dependencies.
-        ArrayContainer<QuestRef> explicitDependencies = {};
+        DynaArray<QuestRef> explicitDependencies = {};
 
         /// CPU-side execution body. Must honor the declared artifact uses.
         std::function<QuestResult(QuestContext &)> execute = {};
@@ -223,7 +223,7 @@ struct Plan : public Entity {
         /// in-plan producer. The first implementation also executes in exactly
         /// this order; a future compiler may reorder independent quests but
         /// keeps declaration order as the deterministic tie-breaker.
-        ArrayContainer<QuestRef> quests;
+        DynaArray<QuestRef> quests;
     };
 
     /// Compile quest declarations into an executable plan. Returns an empty
@@ -407,7 +407,7 @@ GN_API QuestRef createFrameEndQuest(const FrameEndParameters &);
 // };
 
 // struct PbrModelList : Entity {
-//     ArrayContainer<AutoRef<PbrShading::Asset>> value;
+//     DynaArray<AutoRef<PbrShading::Asset>> value;
 // };
 
 // typedef TypedArtifact<SscParameters>      SscParametersArtifact;
@@ -465,8 +465,8 @@ struct PbrQuest : public Quest {
     GN_RDG2_DEFINE_PUBLIC_ENTITY(Quest);
 
     struct CreateParameters {
-        AutoRef<gpu2::GpuContext>         gpu;
-        ArrayContainer<PbrShading::Asset> assets;
+        AutoRef<gpu2::GpuContext>    gpu;
+        DynaArray<PbrShading::Asset> assets;
     };
 
     static GN_API AutoRef<PbrQuest> create(const CreateParameters &);

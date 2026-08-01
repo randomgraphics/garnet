@@ -40,10 +40,10 @@ struct MockMeshAsset final : public Entity {
 struct MockRenderTarget final : public Entity {
     GN_REGISTER_RUNTIME_TYPE(Entity);
 
-    uint32_t             width = 0, height = 0;
-    int                  drawCount  = 0;
-    int                  frameIndex = -1;
-    ArrayContainer<StrA> history; ///< names of the passes whose output flowed into this target
+    uint32_t        width = 0, height = 0;
+    int             drawCount  = 0;
+    int             frameIndex = -1;
+    DynaArray<StrA> history; ///< names of the passes whose output flowed into this target
 
     MockRenderTarget(uint32_t w, uint32_t h): Entity(TYPE_INFO(), "mock-render-target"), width(w), height(h) {}
 };
@@ -70,9 +70,9 @@ public:
     /// Declaration of the quest currently executing; set by the mock executor.
     const QuestDeclaration * declaration = nullptr;
 
-    ArrayContainer<StagedPublish>             staged;         ///< publications staged by the current quest
-    ArrayContainer<AutoRef<gpu2::GpuPayload>> payloads;       ///< gathered across the whole execution
-    mutable int                               violations = 0; ///< undeclared reads/writes observed
+    DynaArray<StagedPublish>             staged;         ///< publications staged by the current quest
+    DynaArray<AutoRef<gpu2::GpuPayload>> payloads;       ///< gathered across the whole execution
+    mutable int                          violations = 0; ///< undeclared reads/writes observed
 
     Artifact::Relic<> read(const ArtifactRef & artifact) const override {
         if (!declared(artifact, false)) {
@@ -98,8 +98,8 @@ public:
 
     void present(AutoRef<gpu2::Swapchain> swapchain) override { presentTarget = std::move(swapchain); }
 
-    ArrayContainer<AutoRef<gpu2::GpuPayload>> awaited;       ///< external submit dependencies registered by quests
-    AutoRef<gpu2::Swapchain>                  presentTarget; ///< present requested by a quest, if any
+    DynaArray<AutoRef<gpu2::GpuPayload>> awaited;       ///< external submit dependencies registered by quests
+    AutoRef<gpu2::Swapchain>             presentTarget; ///< present requested by a quest, if any
 
     AutoRef<gpu2::GpuContext> gpu() const override { return {}; } // no GPU device in this API-shape test
 
@@ -127,7 +127,7 @@ public:
         QuestDeclaration declaration;
     };
 
-    ArrayContainer<CompiledQuest> compiled;
+    DynaArray<CompiledQuest> compiled;
 
     size_t questCount() const override { return compiled.size(); }
 
@@ -137,7 +137,7 @@ public:
     /// neither an earlier in-plan writer nor an imported (already published)
     /// relic. Compile-time version queries are execution-system territory, which
     /// is exactly what this mock is.
-    static AutoRef<MockPlan> compile(const ArrayContainer<QuestRef> & quests) {
+    static AutoRef<MockPlan> compile(const DynaArray<QuestRef> & quests) {
         AutoRef<MockPlan> plan(new MockPlan("mock-plan"));
         for (size_t i = 0; i < quests.size(); ++i) {
             auto declaration = quests[i]->declare();
@@ -279,13 +279,13 @@ struct MockPbrQuest final : public Quest {
 /// input, publishes one render target per declared write carrying the
 /// provenance history of the primary input plus this pass's name, and emits
 /// one payload named after the pass.
-QuestRef makePassQuest(const StrA & name, const ArrayContainer<ArtifactUse> & uses, ArtifactRef primaryInput, uint32_t width, uint32_t height) {
+QuestRef makePassQuest(const StrA & name, const DynaArray<ArtifactUse> & uses, ArtifactRef primaryInput, uint32_t width, uint32_t height) {
     Quest::CreateParameters p;
     p.name         = name;
     p.artifactUses = uses;
     p.execute      = [name, uses, primaryInput, width, height](QuestContext & ctx) -> QuestResult {
         // Read every declared input; provenance continues from the primary input.
-        ArrayContainer<StrA> history;
+        DynaArray<StrA> history;
         for (size_t i = 0; i < uses.size(); ++i) {
             const auto & use = uses[i];
             if (ArtifactAccess::DISCARD_WRITE == use.access) continue;
@@ -386,7 +386,7 @@ TEST_CASE("rdg2::ClosedGraph: pbr frame through quest/plan/execution", "[rdg2][c
     CHECK(pbrDecl.explicitDependencies.empty());
 
     // Compile: deterministic declaration order, reads validated.
-    ArrayContainer<QuestRef> quests;
+    DynaArray<QuestRef> quests;
     quests.append(QuestRef(scc));
     quests.append(QuestRef(pbr));
     auto plan = MockPlan::compile(quests);
@@ -427,7 +427,7 @@ TEST_CASE("rdg2::ClosedGraph: compile rejects reads without producer or import",
 
     auto pbr = AutoRef<MockPbrQuest>(new MockPbrQuest(sceneConstants, mesh, color, depth));
 
-    ArrayContainer<QuestRef> quests;
+    DynaArray<QuestRef> quests;
     quests.append(QuestRef(pbr));
     CHECK(!MockPlan::compile(quests)); // missing producers for sceneConstants and mesh
 }
@@ -438,7 +438,7 @@ TEST_CASE("rdg2::ClosedGraph: undeclared publish fails the execution", "[rdg2][c
 
     auto rogue = AutoRef<RogueQuest>(new RogueQuest(declared, undeclared));
 
-    ArrayContainer<QuestRef> quests;
+    DynaArray<QuestRef> quests;
     quests.append(QuestRef(rogue));
     auto plan = MockPlan::compile(quests);
     REQUIRE(plan);
@@ -472,28 +472,28 @@ TEST_CASE("rdg2::ClosedGraph: multi-pass frame: shadow, hdr scene, post, super-r
 
     // All five passes are authored through the public Quest::create() factory —
     // no bespoke Quest subclass involved (contrast with MockPbrQuest above).
-    ArrayContainer<ArtifactUse> shadowUses;
+    DynaArray<ArtifactUse> shadowUses;
     shadowUses.append(ArtifactUse {.name = "shadowMap", .artifact = shadowMap, .access = ArtifactAccess::DISCARD_WRITE});
     auto shadow = makePassQuest("shadow-map", shadowUses, {}, 2048, 2048);
 
-    ArrayContainer<ArtifactUse> sceneUses;
+    DynaArray<ArtifactUse> sceneUses;
     sceneUses.append(ArtifactUse {.name = "shadowMap", .artifact = shadowMap});
     sceneUses.append(ArtifactUse {.name = "hdrColor", .artifact = hdrColor, .access = ArtifactAccess::DISCARD_WRITE});
     sceneUses.append(ArtifactUse {.name = "sceneDepth", .artifact = sceneDepth, .access = ArtifactAccess::DISCARD_WRITE});
     auto scene = makePassQuest("main-scene", sceneUses, shadowMap, 1920, 1080);
 
-    ArrayContainer<ArtifactUse> postUses; // tone map + bloom + depth blur
+    DynaArray<ArtifactUse> postUses; // tone map + bloom + depth blur
     postUses.append(ArtifactUse {.name = "hdrColor", .artifact = hdrColor});
     postUses.append(ArtifactUse {.name = "sceneDepth", .artifact = sceneDepth}); // depth blur input
     postUses.append(ArtifactUse {.name = "ldrColor", .artifact = ldrColor, .access = ArtifactAccess::DISCARD_WRITE});
     auto post = makePassQuest("post-process", postUses, hdrColor, 1920, 1080);
 
-    ArrayContainer<ArtifactUse> superResUses;
+    DynaArray<ArtifactUse> superResUses;
     superResUses.append(ArtifactUse {.name = "ldrColor", .artifact = ldrColor});
     superResUses.append(ArtifactUse {.name = "backbuffer", .artifact = backbuffer, .access = ArtifactAccess::DISCARD_WRITE});
     auto superRes = makePassQuest("super-res", superResUses, ldrColor, 3840, 2160);
 
-    ArrayContainer<ArtifactUse> uiUses;
+    DynaArray<ArtifactUse> uiUses;
     uiUses.append(ArtifactUse {.name = "backbuffer", .artifact = backbuffer, .access = ArtifactAccess::READ_WRITE, .root = true});
     auto ui = makePassQuest("ui", uiUses, backbuffer, 3840, 2160);
 
@@ -509,7 +509,7 @@ TEST_CASE("rdg2::ClosedGraph: multi-pass frame: shadow, hdr scene, post, super-r
     CHECK(uiDecl.artifactUses[0].access == ArtifactAccess::READ_WRITE);
     CHECK(uiDecl.artifactUses[0].root);
 
-    ArrayContainer<QuestRef> quests;
+    DynaArray<QuestRef> quests;
     quests.append(QuestRef(shadow));
     quests.append(QuestRef(scene));
     quests.append(QuestRef(post));
@@ -573,7 +573,7 @@ TEST_CASE("rdg2::ClosedGraph: shared shader constants as a configured quest", "[
     auto scc            = makeSccQuest(ssc, sceneConstants);
     REQUIRE(scc);
 
-    ArrayContainer<QuestRef> quests;
+    DynaArray<QuestRef> quests;
     quests.append(scc);
     auto plan = MockPlan::compile(quests);
     REQUIRE(plan);

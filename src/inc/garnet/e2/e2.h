@@ -19,12 +19,6 @@ public:                                \
 
 namespace GN::e2 {
 
-template<typename T>
-using ArrayBody = DynaArray<T>;
-
-template<typename T>
-using ArrayView = SafeArrayAccessor<T>;
-
 /// Unit of time used by E2
 using UnitOfTime = std::chrono::nanoseconds;
 

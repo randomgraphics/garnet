@@ -50,7 +50,7 @@ static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2
         }
     }
 
-    gpu2::ArrayContainer<gpu2::GpuCnC::Region> regions;
+    DynaArray<gpu2::GpuCnC::Region> regions;
     for (uint32_t f = 0; f < faces; ++f) {
         gpu2::GpuCnC::Region reg;
         reg.mip          = 0;

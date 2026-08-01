@@ -165,7 +165,7 @@ struct VisualDomainImpl : VisualDomain {
             GN_WARN(sLogger)("Failed to create per-frame upload command list; skipping frame.");
             return;
         }
-        cnc->uploadBuffer(mFrameUbo, 0, ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(&fc), sizeof(fc)));
+        cnc->uploadBuffer(mFrameUbo, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(&fc), sizeof(fc)));
         AutoRef<GpuPayload> constantsUpload = cnc->seal();
         if (!constantsUpload) {
             GN_WARN(sLogger)("Failed to seal per-frame constants upload; skipping frame.");
@@ -204,8 +204,8 @@ struct VisualDomainImpl : VisualDomain {
                 // Moment transforms stay in world units; the camera-relative delta converts to
                 // float meters only here.
                 DrawConstants dc;
-                dc.model = glm::translate(glm::mat4(1.f), moment->scale.toMeters(spatial::toLocal(eye, r.translation))) *
-                           glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment->scale.toMeters(r.scaling));
+                dc.model     = glm::translate(glm::mat4(1.f), moment->scale.toMeters(spatial::toLocal(eye, r.translation))) *
+                               glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment->scale.toMeters(r.scaling));
                 dc.baseColor = glm::vec4(r.baseColor, 1.f);
 
                 GpuRaster::DrawParameters dp;
@@ -251,8 +251,8 @@ private:
             GN_ERROR(sLogger)("Failed to create mesh buffers.");
             return nullptr;
         }
-        if (!gm.vb->setContent(ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.vertices.data()), vbSize)) ||
-            !gm.ib->setContent(ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.indices.data()), ibSize))) {
+        if (!gm.vb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.vertices.data()), vbSize)) ||
+            !gm.ib->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.indices.data()), ibSize))) {
             GN_ERROR(sLogger)("Failed to upload mesh buffers.");
             return nullptr;
         }

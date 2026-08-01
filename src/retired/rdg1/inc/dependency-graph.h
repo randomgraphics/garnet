@@ -217,9 +217,9 @@ struct Workflow {
     StrA name() const { return mPayload ? mPayload->name : StrA(); }
 
     /// Read-only access to the task list. Use appendTask() to add tasks (validates at append time).
-    SafeArrayAccessor<const Task> tasks() const {
-        if (!mPayload) return SafeArrayAccessor<const Task>();
-        return SafeArrayAccessor<const Task>(mPayload->tasks);
+    ArrayView<const Task> tasks() const {
+        if (!mPayload) return ArrayView<const Task>();
+        return ArrayView<const Task>(mPayload->tasks);
     }
 
     /// Append a task. Validates action non-null, arguments non-null, and action->validate(arguments) at append time; on failure logs and does not append.
@@ -290,7 +290,7 @@ struct RenderGraph {
         /// is considered older than the ones in the back of the array (larger index).
         /// Also, a workflow is always newer than any previously submitted workflows.
         /// On submit, ownership of each workflow's payload is transferred to the submission.
-        SafeArrayAccessor<Workflow> workflows;
+        ArrayView<Workflow> workflows;
 
         /// name of the submission. For logging and debugging.
         StrA name = "[unnamed submission]"_s;

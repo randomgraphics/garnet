@@ -113,7 +113,7 @@ struct NodeDesc {
     ActionPtr action = nullptr;
 
     /// Tokens that must be satisfied before this node may run.
-    ArrayContainer<TokenPtr> dependencies = {};
+    DynaArray<TokenPtr> dependencies = {};
 
     /// Scheduling band and intra-band priority.
     SchedulingHints scheduling = {};

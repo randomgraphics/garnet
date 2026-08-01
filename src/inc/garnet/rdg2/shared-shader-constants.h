@@ -79,7 +79,7 @@ struct SharedShaderConstants : public Entity {
         GN::gpu2::GpuResourceSet set0Resources;
         /// All GPU work for this snapshot: any one-time inits (first frame only) followed by
         /// the per-frame UBO upload. Submit all entries every frame.
-        ArrayContainer<AutoRef<GN::gpu2::GpuPayload>> set0Payloads;
+        DynaArray<AutoRef<GN::gpu2::GpuPayload>> set0Payloads;
     };
 
     Set0Parameters set0;

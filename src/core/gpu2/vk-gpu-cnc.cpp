@@ -585,7 +585,7 @@ public:
         return future;
     }
 
-    std::future<TextureContent> downloadImage(AutoRef<Texture> src, ArrayProxy<const Region> regions) override {
+    std::future<TextureContent> downloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) override {
         // On any early return below, `result` destructs and resolves the future with an empty content.
         DownloadResult<TextureContent> result;
         auto                           future = result.future();

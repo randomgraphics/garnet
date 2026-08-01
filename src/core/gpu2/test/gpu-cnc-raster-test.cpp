@@ -58,7 +58,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
 
     auto cnc1 = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc1);
-    cnc1->copyBufferToImage({.src = staging, .dst = sourceTex, .regions = ArrayProxy<const GpuCnC::Region>(&region, 1)});
+    cnc1->copyBufferToImage({.src = staging, .dst = sourceTex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
     AutoRef<GpuPayload> p1 = cnc1->seal();
 
     // ── Payload 2: Raster — sample sourceTex → renderTarget ──────────────

@@ -131,8 +131,8 @@ struct RepoContent : Entity {
 
     typedef T Value;
 
-    T                                         value;
-    ArrayContainer<AutoRef<gpu2::GpuPayload>> gpuWorks;
+    T                                    value;
+    DynaArray<AutoRef<gpu2::GpuPayload>> gpuWorks;
 
     RepoContent(const RuntimeType::TypeInfo & type, const StrA & name, T value_ = {}): Entity(type, name), value(std::move(value_)) {}
 };

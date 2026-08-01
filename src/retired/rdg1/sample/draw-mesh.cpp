@@ -208,7 +208,7 @@ int main(int, const char **) {
         if (!sscSubGraph.workflows.empty()) { toSubmit.append(std::move(sscSubGraph.workflows[0])); }
         toSubmit.append(std::move(renderWorkflow));
         auto submission =
-            renderGraph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow>(toSubmit.data(), toSubmit.size()), .name = "Frame"});
+            renderGraph->submit(RenderGraph::SubmitParameters {.workflows = ArrayView<Workflow>(toSubmit.data(), toSubmit.size()), .name = "Frame"});
         if (!submission) {
             GN_ERROR(sLogger)("Failed to submit render graph");
             break;

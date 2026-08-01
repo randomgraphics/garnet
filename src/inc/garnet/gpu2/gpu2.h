@@ -7,17 +7,6 @@
 namespace GN::gpu2 {
 
 // -----------------------------
-// Array container and proxy
-// -----------------------------
-//
-// Keep these local to gpu2 to avoid forcing rdg2 public headers into all gpu2 users.
-template<typename T>
-using ArrayContainer = DynaArray<T, size_t>;
-
-template<typename T>
-using ArrayProxy = SafeArrayAccessor<T>;
-
-// -----------------------------
 // GpuPayload
 // -----------------------------
 //
@@ -83,11 +72,11 @@ struct GpuContext : public RCRT64 {
     // --------------------------------------------------------
 
     struct SubmitParameters {
-        StrA                                name;
-        Queue                               queue = Queue::GRAPHICS; ///< Target queue tier for this submission.
-        ArrayContainer<AutoRef<GpuPayload>> work;                    ///< Sealed GPU payloads to execute (in order)
-        ArrayContainer<AutoRef<GpuPayload>> dependencies;            ///< GPU-side dependencies. Backend inserts semaphore as needed.
-        std::function<void()>               onComplete;              ///< Optional CPU callback fired (from any thread) when the GPU fence signals.
+        StrA                           name;
+        Queue                          queue = Queue::GRAPHICS; ///< Target queue tier for this submission.
+        DynaArray<AutoRef<GpuPayload>> work;                    ///< Sealed GPU payloads to execute (in order)
+        DynaArray<AutoRef<GpuPayload>> dependencies;            ///< GPU-side dependencies. Backend inserts semaphore as needed.
+        std::function<void()>          onComplete;              ///< Optional CPU callback fired (from any thread) when the GPU fence signals.
 
         SubmitParameters(const StrA & name_): name(name_) {}
 
@@ -95,7 +84,7 @@ struct GpuContext : public RCRT64 {
             if (w) work.append(w);
             return *this;
         }
-        SubmitParameters & appendWorks(const ArrayProxy<AutoRef<GpuPayload>> & ws) {
+        SubmitParameters & appendWorks(const ArrayView<AutoRef<GpuPayload>> & ws) {
             for (const auto & w : ws) appendWork(w);
             return *this;
         }
@@ -290,7 +279,7 @@ struct Buffer : public RCRT64 {
     /// consider uploading data into mappable staging buffers, then issue GPU copy commands to transfer data from the
     /// staging buffers into the target buffers. This way multiple uploads can be batched together and submitted at
     /// once, significantly reducing CPU-GPU synchronization overhead.
-    virtual bool setContent(ArrayProxy<const uint8_t> data, size_t offset = 0) = 0;
+    virtual bool setContent(ArrayView<const uint8_t> data, size_t offset = 0) = 0;
 
     /// Read \p size bytes starting at \p offset from the buffer into a CPU-side vector.
     /// Uses an internal staging buffer if the buffer is not CPU-mappable. Stalls CPU and GPU.
@@ -311,10 +300,10 @@ struct Buffer : public RCRT64 {
             uint32_t          bufferRowLength = 0; ///< 0 = tight (same as imageExtent.x)
             uint32_t          bufferHeight    = 0; ///< 0 = tight (same as imageExtent.y)
         };
-        AutoRef<Buffer>        staging;    ///< host-visible; keep alive until GPU copy completes
-        Texture::Descriptor    descriptor; ///< use with Texture::create() for the GPU-side texture
-        ArrayContainer<Region> regions;    ///< one entry per face×mip
-        bool                   empty() const { return !staging; }
+        AutoRef<Buffer>     staging;    ///< host-visible; keep alive until GPU copy completes
+        Texture::Descriptor descriptor; ///< use with Texture::create() for the GPU-side texture
+        DynaArray<Region>   regions;    ///< one entry per face×mip
+        bool                empty() const { return !staging; }
     };
 
     /// Load a texture image file into a CPU-visible staging buffer. No GPU operations.
@@ -442,13 +431,13 @@ struct GpuResourceView {
 };
 
 /// List of resource views bound to one shader binding slot.
-using GpuResourceSlot = ArrayContainer<GpuResourceView>;
+using GpuResourceSlot = DynaArray<GpuResourceView>;
 
 /// One descriptor set: array of binding slots.
-using GpuResourceSet = ArrayContainer<GpuResourceSlot>;
+using GpuResourceSet = DynaArray<GpuResourceSlot>;
 
 /// Full binding table: \c resources[setIndex][bindingIndex][arrayIndex].
-using GpuResourceTable = ArrayContainer<GpuResourceSet>;
+using GpuResourceTable = DynaArray<GpuResourceSet>;
 
 // -----------------------------
 // GpuShader

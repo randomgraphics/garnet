@@ -128,7 +128,7 @@ int main(int argc, const char ** argv) {
         // before present — so that frame omits the frame-end quest.
         const bool presentThisFrame = !(testMode && frameCounter == totalFrames);
 
-        rdg2::ArrayContainer<QuestRef> quests;
+        DynaArray<QuestRef> quests;
         quests.append(createFrameBeginQuest({.swapchain = swapchain, .backbuffer = backbuffer}));
         quests.append(makeClearQuest(backbuffer));
         if (presentThisFrame) quests.append(createFrameEndQuest({.swapchain = swapchain, .backbuffer = backbuffer}));

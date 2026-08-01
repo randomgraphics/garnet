@@ -38,7 +38,7 @@ private:
     };
 
     Factory          mFactory;
-    ArrayBody<Child> mChildren;
+    DynaArray<Child> mChildren;
 
     static bool contains(const Mold * haystack, const Mold & needle) {
         if (haystack == &needle) return true;

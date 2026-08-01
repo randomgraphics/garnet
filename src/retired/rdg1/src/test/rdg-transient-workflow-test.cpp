@@ -62,7 +62,7 @@ TEST_CASE("Transient workflow: UBO upload via transient + copy", "[rdg][transien
     auto wf = rg->createWorkflow("ubo-upload-wf");
     wf.appendTask("camera-copy", copy, args);
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);
@@ -129,7 +129,7 @@ TEST_CASE("Transient workflow: multiple UBO copies in one submission", "[rdg][tr
     wf.appendTask("camera-copy", copy, camArgs);
     wf.appendTask("lighting-copy", copy, lightArgs);
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);
@@ -186,7 +186,7 @@ TEST_CASE("Transient workflow: per-draw payloads packed in one transient buffer"
     auto wf = rg->createWorkflow("dyn-offset-wf");
     wf.appendTask("pack-copy", copy, args);
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);
