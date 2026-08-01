@@ -25,7 +25,7 @@ bool GN::win::WindowGlfw::init(const WindowAttachingParameters &) {
     GN_GUARD;
 
     GN_STDCLASS_INIT();
-    GN_ERROR(sLogger)("attachToExistingWindow is not supported with the GLFW backend.");
+    GN_ERROR(sLogger, "attachToExistingWindow is not supported with the GLFW backend.");
     return failure();
 
     GN_UNGUARD;
@@ -63,20 +63,20 @@ intptr_t GN::win::WindowGlfw::getWindowHandle() const { return (intptr_t) mWindo
 intptr_t GN::win::WindowGlfw::createVulkanSurfaceHandle(intptr_t vulkanInstanceHandle) const {
     #if GN_BUILD_HAS_VULKAN
     if (!mWindow) {
-        GN_ERROR(sLogger)("createVulkanSurfaceHandle: window not created");
+        GN_ERROR(sLogger, "createVulkanSurfaceHandle: window not created");
         return 0;
     }
     if (!vulkanInstanceHandle) return 0;
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkResult     err     = glfwCreateWindowSurface((VkInstance) vulkanInstanceHandle, mWindow, nullptr, &surface);
     if (err != VK_SUCCESS || surface == VK_NULL_HANDLE) {
-        GN_ERROR(sLogger)("createVulkanSurfaceHandle: glfwCreateWindowSurface failed");
+        GN_ERROR(sLogger, "createVulkanSurfaceHandle: glfwCreateWindowSurface failed");
         return 0;
     }
     return (intptr_t) (void *) surface;
     #else
     (void) vulkanInstanceHandle;
-    GN_ERROR(sLogger)("createVulkanSurfaceHandle: Vulkan not supported in this build");
+    GN_ERROR(sLogger, "createVulkanSurfaceHandle: Vulkan not supported in this build");
     return 0;
     #endif
 }
@@ -88,7 +88,7 @@ void GN::win::WindowGlfw::destroyVulkanSurfaceHandle(intptr_t vulkanInstanceHand
     // through GLFW's loader, the same one createVulkanSurfaceHandle() used to create it.
     auto pfn = (PFN_vkDestroySurfaceKHR) glfwGetInstanceProcAddress((VkInstance) vulkanInstanceHandle, "vkDestroySurfaceKHR");
     if (!pfn) {
-        GN_ERROR(sLogger)("destroyVulkanSurfaceHandle: vkDestroySurfaceKHR not available; surface leaked");
+        GN_ERROR(sLogger, "destroyVulkanSurfaceHandle: vkDestroySurfaceKHR not available; surface leaked");
         return;
     }
     pfn((VkInstance) vulkanInstanceHandle, (VkSurfaceKHR) (void *) vulkanSurfaceHandle, nullptr);
@@ -149,13 +149,13 @@ bool GN::win::WindowGlfw::createWindow(const WindowCreateParameters & wcp) {
     GN_GUARD;
 
     if (wcp.parent) {
-        GN_ERROR(sLogger)("Parent window is not supported with GLFW.");
+        GN_ERROR(sLogger, "Parent window is not supported with GLFW.");
         return false;
     }
 
     // TODO: do it only once.
     if (glfwInit() != GLFW_TRUE) {
-        GN_ERROR(sLogger)("glfwInit failed.");
+        GN_ERROR(sLogger, "glfwInit failed.");
         return false;
     }
 
@@ -178,7 +178,7 @@ bool GN::win::WindowGlfw::createWindow(const WindowCreateParameters & wcp) {
     const char * title = wcp.caption.empty() ? "Garnet" : wcp.caption.c_str();
     mWindow            = glfwCreateWindow(width, height, title, mon, nullptr);
     if (!mWindow) {
-        GN_ERROR(sLogger)("glfwCreateWindow failed.");
+        GN_ERROR(sLogger, "glfwCreateWindow failed.");
         glfwTerminate();
         return false;
     }

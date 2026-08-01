@@ -58,7 +58,7 @@ static GN::input::Input * sCreateNativeInputSystem() {
     if (!p->init()) return 0;
     return p.detach();
 #else
-    GN_ERROR(sLogger)("No input system available.");
+    GN_ERROR(sLogger, "No input system available.");
     return nullptr;
 #endif
 }
@@ -95,7 +95,7 @@ GN_API bool GN::input::initializeInputSystem(InputAPI api) {
     }
 
     default:
-        GN_ERROR(sLogger)("unknow or unsupport API : {}", api.toInt());
+        GN_ERROR(sLogger, "unknow or unsupport API : {}", api.toInt());
         return 0;
     }
 

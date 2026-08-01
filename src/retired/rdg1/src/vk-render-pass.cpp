@@ -25,7 +25,7 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const G
     if (auto tex = color.texture().staticCastTo<TextureVulkan>().get()) {
         image = tex->image();
         if (!image) GN_UNLIKELY {
-                GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the render target texture for stage {} is not properly initialized.", stage);
+                GN_ERROR(sLogger, "RenderPassManagerVulkan::execute: the render target texture for stage {} is not properly initialized.", stage);
                 return {};
             }
         const auto & si  = color.imageView.range.i;
@@ -35,13 +35,13 @@ std::pair<const rapid_vulkan::Image *, vk::Extent2D> getColorTargetImage(const G
     } else if (auto bb = color.backbuffer().staticCastTo<BackbufferVulkan>().get()) {
         image = bb->backBufferImage();
         if (!image) GN_UNLIKELY {
-                GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the backbuffer is not prepared yet or not properly initialized.");
+                GN_ERROR(sLogger, "RenderPassManagerVulkan::execute: the backbuffer is not prepared yet or not properly initialized.");
                 return {};
             }
         extent.width  = bb->descriptor().width;
         extent.height = bb->descriptor().height;
     } else {
-        GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: color target is not a texture or backbuffer for stage {}", stage);
+        GN_ERROR(sLogger, "RenderPassManagerVulkan::execute: color target is not a texture or backbuffer for stage {}", stage);
         return {};
     }
     GN_ASSERT(image);
@@ -139,13 +139,13 @@ vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const GpuReso
 
     auto image = depth->image();
     if (!image) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: the depth target texture is not properly initialized.");
+            GN_ERROR(sLogger, "RenderPassManagerVulkan::execute: the depth target texture is not properly initialized.");
             return {};
         }
 
     if (!formatSupportsDepthStencilAttachment(physical, image->desc().format)) GN_UNLIKELY {
-            GN_ERROR(sLogger)
-            ("RenderPassManagerVulkan::execute: format does not support depth/stencil attachment: {}.", rapid_vulkan::vkFormat2String(image->desc().format));
+            GN_ERROR(sLogger, "RenderPassManagerVulkan::execute: format does not support depth/stencil attachment: {}.",
+                     rapid_vulkan::vkFormat2String(image->desc().format));
             return {};
         }
 
@@ -158,7 +158,7 @@ vk::ImageView getDepthTargetImageView(vk::PhysicalDevice physical, const GpuReso
                                .setRange(vk::ImageSubresourceRange(aspect, si.mip, 1, si.face, 1));
     auto view            = image->getView(depthViewParams);
     if (!view) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RenderPassManagerVulkan::execute: can't create depth view for depth target texture.");
+            GN_ERROR(sLogger, "RenderPassManagerVulkan::execute: can't create depth view for depth target texture.");
             return {};
         }
 
@@ -214,12 +214,12 @@ Action::ExecutionResult RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo
     // Validate the render target.
     if (!renderTarget) {
         if (mEntries.empty()) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - empty render target is not allowed on the first draw task.", taskInfo);
+                GN_ERROR(sLogger, "{} - empty render target is not allowed on the first draw task.", taskInfo);
                 return Action::FAILED;
             }
         const Entry & prev = mEntries.back();
         if (!prev.draw) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - empty render target is not allowed, when the previous action is presenting backbuffer.", taskInfo);
+                GN_ERROR(sLogger, "{} - empty render target is not allowed, when the previous action is presenting backbuffer.", taskInfo);
                 return Action::FAILED;
             }
         renderTarget = prev.draw;
@@ -242,7 +242,7 @@ Action::ExecutionResult RenderPassManagerVulkan::prepareDraw(TaskInfo & taskInfo
 
 Action::ExecutionResult RenderPassManagerVulkan::preparePresent(TaskInfo & taskInfo, AutoRef<Backbuffer> backbuffer) {
     if (!backbuffer) GN_UNLIKELY {
-            GN_ERROR(sLogger)("{} - can't present empty backbuffer", taskInfo);
+            GN_ERROR(sLogger, "{} - can't present empty backbuffer", taskInfo);
             return Action::FAILED;
         }
 
@@ -275,7 +275,7 @@ Action::ExecutionResult RenderPassManagerVulkan::preparePresent(TaskInfo & taskI
 
 Action::ExecutionResult RenderPassManagerVulkan::registerDrawTextureTransitions(TaskInfo & taskInfo, const GpuShaderAction::GpuResourceTable & resources) {
     if (mEntries.empty()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("{} - registerDrawTextureTransitions called without preceding prepareDraw", taskInfo);
+            GN_ERROR(sLogger, "{} - registerDrawTextureTransitions called without preceding prepareDraw", taskInfo);
             return Action::FAILED;
         }
     Entry & passEntry = mEntries[mEntries.back().renderPassBeginIndex];
@@ -300,11 +300,12 @@ Action::ExecutionResult RenderPassManagerVulkan::registerDrawTextureTransitions(
                         auto                 it = passEntry.textureTransitions.find(key);
                         if (it != passEntry.textureTransitions.end()) {
                             if (it->second != SHADER_READ_STATE) {
-                                GN_ERROR(sLogger)
-                                ("{} - resource state conflict: texture '{}' (mip={}, face={}) already registered in this render pass with different state "
-                                 "(layout=0x{:x}, access=0x{:x}, stages=0x{:x}); draw requires shader-read. Resolve by using consistent state for the resource.",
-                                 taskInfo, tex->name.c_str(), mip, face, static_cast<uint32_t>(it->second.layout), static_cast<uint32_t>(it->second.access),
-                                 static_cast<uint32_t>(it->second.stages));
+                                GN_ERROR(
+                                    sLogger,
+                                    "{} - resource state conflict: texture '{}' (mip={}, face={}) already registered in this render pass with different state "
+                                    "(layout=0x{:x}, access=0x{:x}, stages=0x{:x}); draw requires shader-read. Resolve by using consistent state for the resource.",
+                                    taskInfo, tex->name.c_str(), mip, face, static_cast<uint32_t>(it->second.layout), static_cast<uint32_t>(it->second.access),
+                                    static_cast<uint32_t>(it->second.stages));
                                 return Action::FAILED;
                             }
                             continue;
@@ -321,7 +322,7 @@ Action::ExecutionResult RenderPassManagerVulkan::registerDrawTextureTransitions(
 Action::ExecutionResult RenderPassManagerVulkan::registerDrawBufferTransitions(TaskInfo & taskInfo, const GpuShaderAction::GpuResourceTable & resources,
                                                                                const GpuDraw::GpuGeometry & geom) {
     if (mEntries.empty()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("{} - registerDrawBufferTransitions called without preceding prepareDraw", taskInfo);
+            GN_ERROR(sLogger, "{} - registerDrawBufferTransitions called without preceding prepareDraw", taskInfo);
             return Action::FAILED;
         }
     Entry & passEntry = mEntries[mEntries.back().renderPassBeginIndex];
@@ -333,11 +334,11 @@ Action::ExecutionResult RenderPassManagerVulkan::registerDrawBufferTransitions(T
         auto                it = passEntry.bufferTransitions.find(key);
         if (it != passEntry.bufferTransitions.end()) {
             if (it->second != wanted) {
-                GN_ERROR(sLogger)
-                ("{} - resource state conflict: buffer (offset={}, size={}) already registered in this render pass with different state "
-                 "(access=0x{:x}, stage=0x{:x}); draw requires (access=0x{:x}, stage=0x{:x}). Resolve by using consistent state for the resource.",
-                 taskInfo, offset, size, static_cast<uint32_t>(it->second.access), static_cast<uint32_t>(it->second.stage), static_cast<uint32_t>(access),
-                 static_cast<uint32_t>(stage));
+                GN_ERROR(sLogger,
+                         "{} - resource state conflict: buffer (offset={}, size={}) already registered in this render pass with different state "
+                         "(access=0x{:x}, stage=0x{:x}); draw requires (access=0x{:x}, stage=0x{:x}). Resolve by using consistent state for the resource.",
+                         taskInfo, offset, size, static_cast<uint32_t>(it->second.access), static_cast<uint32_t>(it->second.stage),
+                         static_cast<uint32_t>(access), static_cast<uint32_t>(stage));
                 return false;
             }
             return true;
@@ -373,7 +374,7 @@ Action::ExecutionResult RenderPassManagerVulkan::registerDrawBufferTransitions(T
 
 auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerVulkan::CommandProxy * cb) -> RenderPass {
     if (mCurrentExecuteIndex >= mEntries.size()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("{} - execute index {} out of range (entries size {})", taskInfo, mCurrentExecuteIndex, mEntries.size());
+            GN_ERROR(sLogger, "{} - execute index {} out of range (entries size {})", taskInfo, mCurrentExecuteIndex, mEntries.size());
             return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
@@ -382,12 +383,12 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
     mCurrentExecuteIndex++;
 
     if (entry.taskIndex != taskInfo.index) GN_UNLIKELY {
-            GN_ERROR(sLogger)("{} - entry task index mismatch: entry has {}, expected {}", taskInfo, entry.taskIndex, taskInfo.index);
+            GN_ERROR(sLogger, "{} - entry task index mismatch: entry has {}, expected {}", taskInfo, entry.taskIndex, taskInfo.index);
             return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
     if (!entry.isPresent() && (!cb || !*cb)) GN_UNLIKELY {
-            GN_ERROR(sLogger)("{} - draw entry requires a valid RDG command buffer", taskInfo);
+            GN_ERROR(sLogger, "{} - draw entry requires a valid RDG command buffer", taskInfo);
             return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
@@ -402,8 +403,8 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
 
     // Integrity: non-empty transition maps must only appear on the render-pass-begin entry.
     if ((!entry.textureTransitions.empty() || !entry.bufferTransitions.empty()) && entry.renderPassBeginIndex != static_cast<int32_t>(index)) GN_UNLIKELY {
-            GN_ERROR(sLogger)("{} - integrity: draw resource transitions must be on render pass begin entry only (index={}, passBegin={})", taskInfo, index,
-                              entry.renderPassBeginIndex);
+            GN_ERROR(sLogger, "{} - integrity: draw resource transitions must be on render pass begin entry only (index={}, passBegin={})", taskInfo, index,
+                     entry.renderPassBeginIndex);
             return {taskInfo, Action::ExecutionResult::FAILED, {}, nullptr};
         }
 
@@ -423,7 +424,7 @@ auto RenderPassManagerVulkan::execute(TaskInfo & taskInfo, CommandBufferManagerV
 
 bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget, CommandBufferManagerVulkan::CommandProxy & rdgCommandBuffer,
                                               const Entry * drawResourceTransitions) {
-    GN_VERBOSE(sLogger)("begin render pass for render target: {}.", renderTarget.name);
+    GN_VERBOSE(sLogger, "begin render pass for render target: {}.", renderTarget.name);
 
     vk::CommandBuffer vkCommandBuffer = rdgCommandBuffer.rapid().handle();
 
@@ -483,7 +484,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
         const auto & color = renderTarget.colors[i];
         auto [view, dim]   = getColorTargetImageView(color.target, i, &layoutBarrier, rdgCommandBuffer);
         if (!view) GN_UNLIKELY {
-                GN_ERROR(sLogger)("can't create view for render target texture for stage {}.", i);
+                GN_ERROR(sLogger, "can't create view for render target texture for stage {}.", i);
                 return false;
             }
         const auto & c          = renderTarget.clearColor;
@@ -528,7 +529,7 @@ bool RenderPassManagerVulkan::beginRenderPass(const RenderTarget & renderTarget,
     }
 
     // setup render area.
-    GN_VERBOSE(sLogger)("render pass area: (width={}, height={}).", renderArea.extent.width, renderArea.extent.height);
+    GN_VERBOSE(sLogger, "render pass area: (width={}, height={}).", renderArea.extent.width, renderArea.extent.height);
     renderInfo.setRenderArea(renderArea);
 
     // Add depth/stencil layout transition when present (color transitions added in getColorTargetImageView when needed).

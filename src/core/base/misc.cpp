@@ -17,14 +17,14 @@ GN_API void GN::putEnv(const char * name, const char * value) {
     GN_UNUSED_PARAM(value);
 #else
     if (str::empty(name)) {
-        GN_ERROR(sLogger)("Environment variable name can't be empty!");
+        GN_ERROR(sLogger, "Environment variable name can't be empty!");
         return;
     }
 
     if (0 == value) value = "";
 
     #if GN_POSIX
-    if (0 != ::setenv(name, value, 1)) { GN_ERROR(sLogger)("fail to set environment '{}={}'.", name, value); }
+    if (0 != ::setenv(name, value, 1)) { GN_ERROR(sLogger, "fail to set environment '{}={}'.", name, value); }
     #else
     StrA s;
     if (str::empty(value)) {
@@ -33,7 +33,7 @@ GN_API void GN::putEnv(const char * name, const char * value) {
         s.formatInplace("{}={}", name, value);
     }
 
-    if (0 != _putenv(const_cast<char *>(s.data()))) { GN_ERROR(sLogger)("fail to set environment '{}'.", s.data()); }
+    if (0 != _putenv(const_cast<char *>(s.data()))) { GN_ERROR(sLogger, "fail to set environment '{}'.", s.data()); }
     #endif
 #endif
 }

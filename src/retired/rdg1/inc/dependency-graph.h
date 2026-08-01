@@ -179,11 +179,11 @@ struct Workflow {
             const size_t taskIndex = tasks.size();
             auto *       log       = GN::getLogger("GN.rdg");
             if (!task.action) GN_UNLIKELY {
-                    GN_ERROR(log)("Workflow '{}' task [{}] '{}': action is null", name, taskIndex, task.name);
+                    GN_ERROR(log, "Workflow '{}' task [{}] '{}': action is null", name, taskIndex, task.name);
                     return false;
                 }
             if (!task.arguments) GN_UNLIKELY {
-                    GN_ERROR(log)("Workflow '{}' task [{}] '{}': arguments is null", name, taskIndex, task.name);
+                    GN_ERROR(log, "Workflow '{}' task [{}] '{}': arguments is null", name, taskIndex, task.name);
                     return false;
                 }
             // if (!task.action->validate(*task.arguments)) GN_UNLIKELY {
@@ -226,7 +226,7 @@ struct Workflow {
     Workflow & appendTask(Task && task) {
         if (!mPayload) GN_UNLIKELY {
                 static auto * log = GN::getLogger("GN.rdg");
-                GN_ERROR(log)("Task '{}': Can't apend task to workflow of null payload.", task.name);
+                GN_ERROR(log, "Task '{}': Can't apend task to workflow of null payload.", task.name);
                 return *this;
             }
         mPayload->validateAndAppend(std::move(task));

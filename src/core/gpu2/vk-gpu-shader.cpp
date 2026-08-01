@@ -20,25 +20,25 @@ GpuShaderVulkan::~GpuShaderVulkan() = default;
 
 AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & p) {
     if (!p.context) {
-        GN_ERROR(sLogger)("createGpuShaderVulkan2: null GpuContext");
+        GN_ERROR(sLogger, "createGpuShaderVulkan2: null GpuContext");
         return {};
     }
     AutoRef<GpuContextVulkan2> vkctx = p.context.staticCastTo<GpuContextVulkan2>();
     if (!vkctx || !vkctx->ready()) {
-        GN_ERROR(sLogger)("createGpuShaderVulkan2: GpuContext is not a ready Vulkan context");
+        GN_ERROR(sLogger, "createGpuShaderVulkan2: GpuContext is not a ready Vulkan context");
         return {};
     }
     const rv::Device & dev = vkctx->vulkanDevice();
     if (!dev.handle()) {
-        GN_ERROR(sLogger)("createGpuShaderVulkan2: no Vulkan device");
+        GN_ERROR(sLogger, "createGpuShaderVulkan2: no Vulkan device");
         return {};
     }
     if (!p.binary || p.size == 0) {
-        GN_ERROR(sLogger)("createGpuShaderVulkan2: empty SPIR-V for '{}'", shaderEntityName(p));
+        GN_ERROR(sLogger, "createGpuShaderVulkan2: empty SPIR-V for '{}'", shaderEntityName(p));
         return {};
     }
     if ((p.size % sizeof(uint32_t)) != 0) {
-        GN_ERROR(sLogger)("createGpuShaderVulkan2: SPIR-V size {} not multiple of 4 for '{}'", p.size, shaderEntityName(p));
+        GN_ERROR(sLogger, "createGpuShaderVulkan2: SPIR-V size {} not multiple of 4 for '{}'", p.size, shaderEntityName(p));
         return {};
     }
 
@@ -51,11 +51,11 @@ AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & p)
     try {
         sh.reset(new rv::Shader(scp));
     } catch (const std::exception & ex) {
-        GN_ERROR(sLogger)("createGpuShaderVulkan2: Shader ctor failed for '{}': {}", shaderEntityName(p), ex.what());
+        GN_ERROR(sLogger, "createGpuShaderVulkan2: Shader ctor failed for '{}': {}", shaderEntityName(p), ex.what());
         return {};
     }
     if (!sh->handle()) {
-        GN_ERROR(sLogger)("createGpuShaderVulkan2: null shader module for '{}'", shaderEntityName(p));
+        GN_ERROR(sLogger, "createGpuShaderVulkan2: null shader module for '{}'", shaderEntityName(p));
         return {};
     }
 

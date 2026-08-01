@@ -89,7 +89,7 @@ struct BoxMeshFacet : VisualFacet {
         auto * f = form();
         auto * w = f ? f->world() : nullptr;
         if (!w) GN_UNLIKELY {
-                GN_WARN(sLogger)("box mesh facet is not attached to a form living in a world; nothing to capture.");
+                GN_WARN(sLogger, "box mesh facet is not attached to a form living in a world; nothing to capture.");
                 return {};
             }
         auto                         moment = referenceTo(new VisualMomentImpl(w->universe, w->scale));
@@ -120,7 +120,7 @@ struct PointLightFacet : VisualFacet {
         auto * f = form();
         auto * w = f ? f->world() : nullptr;
         if (!w) GN_UNLIKELY {
-                GN_WARN(sLogger)("point light facet is not attached to a form living in a world; nothing to capture.");
+                GN_WARN(sLogger, "point light facet is not attached to a form living in a world; nothing to capture.");
                 return {};
             }
         auto                    moment = referenceTo(new VisualMomentImpl(w->universe, w->scale));
@@ -180,7 +180,7 @@ struct SimpleWorld : World {
         for (auto & f : forms) {
             if (!f) continue;
             if (!f->enterWorld(*this)) GN_UNLIKELY {
-                    GN_WARN(sLogger)("form is already attached to a world; ignored.");
+                    GN_WARN(sLogger, "form is already attached to a world; ignored.");
                     continue;
                 }
             mForms.append(f);
@@ -190,7 +190,7 @@ struct SimpleWorld : World {
     void run() override {
         bool expected = false;
         if (!mRunning.compare_exchange_strong(expected, true)) GN_UNLIKELY {
-                GN_WARN(sLogger)("SimpleWorld::run() called while already running; ignored.");
+                GN_WARN(sLogger, "SimpleWorld::run() called while already running; ignored.");
                 return;
             }
         using namespace std::chrono;

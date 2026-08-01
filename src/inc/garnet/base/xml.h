@@ -290,12 +290,12 @@ inline bool loadFromXmlFile(T & t, File & fp, const StrA & basedir) {
     XmlParseResult xpr;
     if (!doc.parse(xpr, fp)) {
         static Logger * sLocalLogger = getLogger("GN.base.xml");
-        GN_ERROR(sLocalLogger)
-        ("Fail to parse XML file ({}):\n"
-         "    line   : {}\n"
-         "    column : {}\n"
-         "    error  : {}",
-         fp.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
+        GN_ERROR(sLocalLogger,
+                 "Fail to parse XML file ({}):\n"
+                 "    line   : {}\n"
+                 "    column : {}\n"
+                 "    error  : {}",
+                 fp.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
     GN_ASSERT(xpr.root);
@@ -312,7 +312,7 @@ inline bool loadFromXmlFile(T & t, const StrA & filename) {
     GN_GUARD;
 
     static Logger * sLocalLogger = getLogger("GN.base.xml");
-    GN_INFO(sLocalLogger)("Load '{}'", filename.data());
+    GN_INFO(sLocalLogger, "Load '{}'", filename.data());
 
     auto fp = fs::openFile(filename, std::ios::in);
     if (!fp) return false;

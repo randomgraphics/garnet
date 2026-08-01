@@ -14,7 +14,7 @@ namespace GN::rdg {
 
 BackbufferVulkan::BackbufferVulkan(const StrA & name): Backbuffer(TYPE_INFO(), name) {}
 
-BackbufferVulkan::~BackbufferVulkan() { GN_INFO(sLogger)("Destorying Vulkan backbuffer, name='{}'", name); }
+BackbufferVulkan::~BackbufferVulkan() { GN_INFO(sLogger, "Destorying Vulkan backbuffer, name='{}'", name); }
 
 bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
 
@@ -23,7 +23,7 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     mDescriptor = params.descriptor;
 
     if (mDescriptor.width == 0 || mDescriptor.height == 0) {
-        GN_ERROR(sLogger)("BackbufferVulkan::init: invalid dimensions {}x{} (caller must set positive width/height)", mDescriptor.width, mDescriptor.height);
+        GN_ERROR(sLogger, "BackbufferVulkan::init: invalid dimensions {}x{} (caller must set positive width/height)", mDescriptor.width, mDescriptor.height);
         return false;
     }
 
@@ -38,7 +38,7 @@ bool BackbufferVulkan::init(const Backbuffer::CreateParameters & params) {
     try {
         mSwapchain = rapid_vulkan::Ref<rapid_vulkan::Swapchain>::make(scp);
     } catch (const std::exception & e) {
-        GN_ERROR(sLogger)("BackbufferVulkan::init: Swapchain creation failed: {}, name='{}'", e.what(), name);
+        GN_ERROR(sLogger, "BackbufferVulkan::init: Swapchain creation failed: {}, name='{}'", e.what(), name);
         return false;
     }
 
@@ -70,7 +70,7 @@ gfx::img::Image contentToImage(const rapid_vulkan::Image::Content & content) {
 
 gfx::img::Image BackbufferVulkan::readback() const {
     if (!mSwapchain.valid()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BackbufferVulkan::readback: swapchain not initialized");
+            GN_ERROR(sLogger, "BackbufferVulkan::readback: swapchain not initialized");
             return gfx::img::Image();
         }
     return mActiveFrame.valid() ? readbackInsideRenderPass() : readbackOutsideRenderPass();
@@ -85,7 +85,7 @@ gfx::img::Image BackbufferVulkan::readbackInsideRenderPass() const {
 gfx::img::Image BackbufferVulkan::readbackOutsideRenderPass() const {
     GN_ASSERT(!mActiveFrame.valid()); // can only be called when not actively rendering to the backbuffer.
     if (!mLastPresentedImage) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BackbufferVulkan::readbackOutsideRenderPass: no last presented image (present at least one frame first)");
+            GN_ERROR(sLogger, "BackbufferVulkan::readbackOutsideRenderPass: no last presented image (present at least one frame first)");
             return gfx::img::Image();
         }
 
@@ -128,18 +128,18 @@ Action::ExecutionResult BackbufferVulkan::beginFrame(const TaskInfo & taskInfo) 
 
     // Check if the backbuffer is already prepared.
     if (mActiveFrame.valid()) GN_UNLIKELY {
-            GN_VERBOSE(sLogger)("BackbufferVulkan::prepare: already prepared. Redundant call is ignored.");
+            GN_VERBOSE(sLogger, "BackbufferVulkan::prepare: already prepared. Redundant call is ignored.");
             return Action::ExecutionResult::WARNING;
         }
 
     try {
-        GN_VERBOSE(sLogger)("{} - begin frame", taskInfo);
+        GN_VERBOSE(sLogger, "{} - begin frame", taskInfo);
         mActiveFrame = mSwapchain->beginFrame();
     } catch (const std::exception & e) {
-        GN_VERBOSE(sLogger)("{} - beginFrame failed (e.g. window closed): {}", taskInfo, e.what());
+        GN_VERBOSE(sLogger, "{} - beginFrame failed (e.g. window closed): {}", taskInfo, e.what());
         return Action::ExecutionResult::FAILED;
     } catch (...) {
-        GN_VERBOSE(sLogger)("{} - beginFrame failed with unknown exception", taskInfo);
+        GN_VERBOSE(sLogger, "{} - beginFrame failed with unknown exception", taskInfo);
         return Action::ExecutionResult::FAILED;
     }
     GN_RDG_FAIL_ON_FALSE(mActiveFrame.valid(), "{} - beginFrame failed", taskInfo);
@@ -157,12 +157,12 @@ Action::ExecutionResult BackbufferVulkan::present(const TaskInfo & taskInfo) {
 
     // Check if the backbuffer is already prepared. If not, ignore this present call.
     if (!mActiveFrame.valid()) GN_UNLIKELY {
-            GN_VERBOSE(sLogger)("BackbufferVulkan::present: ignore. The backbuffer is not prepared yet.");
+            GN_VERBOSE(sLogger, "BackbufferVulkan::present: ignore. The backbuffer is not prepared yet.");
             return Action::ExecutionResult::WARNING;
         }
 
     // Call present() and update the image state to post-present layout.
-    GN_VERBOSE(sLogger)("BackbufferVulkan::present: present frame");
+    GN_VERBOSE(sLogger, "BackbufferVulkan::present: present frame");
     rapid_vulkan::Swapchain::PresentResult result;
     rapid_vulkan::Image *                  currentImage = mActiveFrame.backbuffer->image;
     try {
@@ -170,11 +170,11 @@ Action::ExecutionResult BackbufferVulkan::present(const TaskInfo & taskInfo) {
         pp.setRenderFinished(vk::ArrayProxy<vk::Semaphore>((uint32_t) mPendingSemaphores.size(), mPendingSemaphores.data()));
         result = mSwapchain->present(pp);
     } catch (const std::exception & e) {
-        GN_VERBOSE(sLogger)("BackbufferVulkan::present failed (e.g. window closed): {}", e.what());
+        GN_VERBOSE(sLogger, "BackbufferVulkan::present failed (e.g. window closed): {}", e.what());
         mActiveFrame = {};
         return Action::ExecutionResult::FAILED;
     } catch (...) {
-        GN_VERBOSE(sLogger)("BackbufferVulkan::present failed with unknown exception");
+        GN_VERBOSE(sLogger, "BackbufferVulkan::present failed with unknown exception");
         mActiveFrame = {};
         return Action::ExecutionResult::FAILED;
     }

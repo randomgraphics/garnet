@@ -19,7 +19,7 @@ static HMONITOR sGetWindowMonitor(HWND window) {
         POINT pt = {LONG_MIN, LONG_MIN};
         monitor  = ::MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
         if (0 == monitor) {
-            GN_ERROR(sLogger)("Fail to get primary monitor handle.");
+            GN_ERROR(sLogger, "Fail to get primary monitor handle.");
             return 0;
         }
     }
@@ -89,19 +89,19 @@ bool GN::win::WindowMsw::init(const WindowAttachingParameters & wap) {
     GN_STDCLASS_INIT();
 
     if (!::IsWindow((HWND) wap.window)) {
-        GN_ERROR(sLogger)("External render window handle must be valid.");
+        GN_ERROR(sLogger, "External render window handle must be valid.");
         return failure();
     }
 
     if (NULL != msInstanceMap.find((HWND) wap.window)) {
-        GN_ERROR(sLogger)("You can't create multiple render window instance for single window handle: 0x{:X}", (intptr_t) wap.window);
+        GN_ERROR(sLogger, "You can't create multiple render window instance for single window handle: 0x{:X}", (intptr_t) wap.window);
         return failure();
     }
 
     // register a message hook to render window.
     mHook = ::SetWindowsHookEx(WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId());
     if (0 == mHook) {
-        GN_ERROR(sLogger)("Fail to setup message hook : {}", getWin32LastErrorInfo());
+        GN_ERROR(sLogger, "Fail to setup message hook : {}", getWin32LastErrorInfo());
         return failure();
     }
 
@@ -126,7 +126,7 @@ void GN::win::WindowMsw::quit() {
     // destroy window
     if (::IsWindow(mWindow)) {
         if (!mIsExternal) {
-            GN_TRACE(sLogger)("Destroy window (handle: 0x{:X})", (intptr_t) mWindow);
+            GN_TRACE(sLogger, "Destroy window (handle: 0x{:X})", (intptr_t) mWindow);
             ::DestroyWindow(mWindow);
         }
 
@@ -137,7 +137,7 @@ void GN::win::WindowMsw::quit() {
 
     // unregister window class
     if (!mClassName.empty()) {
-        GN_TRACE(sLogger)(L"Unregister window class: {} (module handle: 0x{:X})", mClassName.c_str(), (intptr_t) mModuleInstance);
+        GN_TRACE(sLogger, L"Unregister window class: {} (module handle: 0x{:X})", mClassName.c_str(), (intptr_t) mModuleInstance);
         GN_ASSERT(mModuleInstance);
         GN_MSW_CHECK(::UnregisterClassW(mClassName.c_str(), mModuleInstance));
         mClassName.clear();
@@ -256,7 +256,7 @@ bool GN::win::WindowMsw::runUntilNoNewEvents(bool blockWhileMinized) {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
         } else if (::IsIconic((HWND) mWindow) && blockWhileMinized) {
-            GN_TRACE(sLogger)("Wait for window messages...");
+            GN_TRACE(sLogger, "Wait for window messages...");
             ::WaitMessage();
         } else
             return true; // Idle time
@@ -323,10 +323,10 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
     wcex.lpszClassName = mClassName.c_str();
     wcex.hIconSm       = LoadIcon(0, IDI_APPLICATION);
     if (0 == ::RegisterClassExW(&wcex)) {
-        GN_ERROR(sLogger)("fail to register window class, {}!", getWin32LastErrorInfo());
+        GN_ERROR(sLogger, "fail to register window class, {}!", getWin32LastErrorInfo());
         return false;
     }
-    GN_TRACE(sLogger)(L"Register window class: {} (module handle: 0x{:X})", mClassName.c_str(), (intptr_t) mModuleInstance);
+    GN_TRACE(sLogger, L"Register window class: {} (module handle: 0x{:X})", mClassName.c_str(), (intptr_t) mModuleInstance);
 
     // setup window style
     DWORD exStyle = 0;
@@ -354,10 +354,10 @@ bool GN::win::WindowMsw::createWindow(const WindowCreateParameters & wcp) {
                                 0, // no menu
                                 mModuleInstance, 0);
     if (0 == mWindow) {
-        GN_ERROR(sLogger)("fail to create window, {}!", getWin32LastErrorInfo());
+        GN_ERROR(sLogger, "fail to create window, {}!", getWin32LastErrorInfo());
         return false;
     }
-    GN_TRACE(sLogger)("Create window (handle: 0x{:X})", (intptr_t) mWindow);
+    GN_TRACE(sLogger, "Create window (handle: 0x{:X})", (intptr_t) mWindow);
 
     // add window handle to instance map
     GN_ASSERT(NULL == msInstanceMap.find(mWindow) || this == *msInstanceMap.find(mWindow));

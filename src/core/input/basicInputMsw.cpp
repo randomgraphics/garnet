@@ -96,7 +96,7 @@ bool GN::input::BasicInputMsw::attachToWindow(intptr_t /*display*/, intptr_t win
 
     // check window handle
     if (!::IsWindow(hwnd)) {
-        GN_ERROR(sLogger)("Window handle is not valid!");
+        GN_ERROR(sLogger, "Window handle is not valid!");
         return false;
     }
 
@@ -114,7 +114,7 @@ bool GN::input::BasicInputMsw::attachToWindow(intptr_t /*display*/, intptr_t win
 
     // success
     mWindow = hwnd;
-    GN_VERBOSE(sLogger)("Attach to window 0x{:X}", (intptr_t) mWindow);
+    GN_VERBOSE(sLogger, "Attach to window 0x{:X}", (intptr_t) mWindow);
     return true;
 
     GN_UNGUARD;
@@ -301,7 +301,7 @@ bool GN::input::BasicInputMsw::setupWindowHooks(HWND hwnd) {
     mMsgHook = ::SetWindowsHookEx(WH_GETMESSAGE, sMsgHookProc, 0, threadID);
     mCwpHook = ::SetWindowsHookEx(WH_CALLWNDPROC, sCwpHookProc, 0, threadID);
     if (0 == mMsgHook || 0 == mCwpHook) {
-        GN_ERROR(sLogger)("{}", getWin32LastErrorInfo());
+        GN_ERROR(sLogger, "{}", getWin32LastErrorInfo());
         return false;
     }
 

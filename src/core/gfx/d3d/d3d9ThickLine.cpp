@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.d3d9.thickline");
 //
 //
 // -----------------------------------------------------------------------------
-static void LOG_ERROR(const char * message) { GN_ERROR(sLogger)("{}", message); }
+static void LOG_ERROR(const char * message) { GN_ERROR(sLogger, "{}", message); }
 
     #define SAFE_RELEASE(x) \
         if (x) {            \

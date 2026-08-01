@@ -8,7 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.rdg");
 namespace GN::rdg {
 
 SubmissionImpl::SubmissionImpl(DynaArray<WorkflowImplPayload *> pendingWorkflows, const RenderGraph::SubmitParameters & params): Submission(params.name) {
-    GN_VERBOSE(sLogger)("SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
+    GN_VERBOSE(sLogger, "SubmissionImpl constructor: {} workflows.", pendingWorkflows.size());
     mWorkflows = std::move(pendingWorkflows);
     mFuture    = std::async(std::launch::async, [this, params]() -> Result { return run(params); });
 }
@@ -27,7 +27,7 @@ void SubmissionImpl::cleanup(bool cleanupPendingWorkflows) noexcept {
         }
         mValidatedWorkflows.clear();
         mDependencyGraph.clear();
-    } catch (...) { GN_ERROR(sLogger)("Exception occurred during cleanup."); }
+    } catch (...) { GN_ERROR(sLogger, "Exception occurred during cleanup."); }
 }
 
 bool SubmissionImpl::isFinished() { return mFuture.valid() && mFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready; }
@@ -40,11 +40,11 @@ Submission::Result SubmissionImpl::result() {
 
 bool SubmissionImpl::validateTask(const Workflow::Task & task, const StrA & workflowName, size_t taskIndex) {
     if (!task.action) {
-        GN_ERROR(sLogger)("Workflow '{}' task[{}] {}: action is null", workflowName, taskIndex, task.name);
+        GN_ERROR(sLogger, "Workflow '{}' task[{}] {}: action is null", workflowName, taskIndex, task.name);
         return false;
     }
     if (!task.arguments) {
-        GN_ERROR(sLogger)("Workflow '{}' task[{}] {}: arguments is null", workflowName, taskIndex, task.name);
+        GN_ERROR(sLogger, "Workflow '{}' task[{}] {}: arguments is null", workflowName, taskIndex, task.name);
         return false;
     }
     return true;
@@ -63,7 +63,7 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
         mValidatedWorkflows.append(payload);
     }
 
-    GN_VERBOSE(sLogger)("Validated {} workflows.", mValidatedWorkflows.size());
+    GN_VERBOSE(sLogger, "Validated {} workflows.", mValidatedWorkflows.size());
 
     mDependencyGraph.resize(mValidatedWorkflows.size());
 
@@ -108,7 +108,7 @@ bool SubmissionImpl::validateAndBuildDependencyGraph() {
         }
     }
 
-    GN_VERBOSE(sLogger)("Dependency graph built: {} workflows.", mValidatedWorkflows.size());
+    GN_VERBOSE(sLogger, "Dependency graph built: {} workflows.", mValidatedWorkflows.size());
     return true;
 }
 
@@ -143,7 +143,7 @@ DynaArray<size_t> SubmissionImpl::topologicalSort() {
     }
 
     if (result.size() != mValidatedWorkflows.size()) {
-        GN_ERROR(sLogger)("Circular dependency detected in workflow graph");
+        GN_ERROR(sLogger, "Circular dependency detected in workflow graph");
         result.clear();
         return result;
     }
@@ -283,7 +283,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
 
     // shortcut for empty workflows.
     if (mWorkflows.empty()) {
-        GN_VERBOSE(sLogger)("No workflows to execute, returning PASSED.");
+        GN_VERBOSE(sLogger, "No workflows to execute, returning PASSED.");
         std::lock_guard<std::mutex> lock(mStateMutex);
         mTaskStates.clear();
         mExecutionOrder.clear();
@@ -307,7 +307,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         // step 2: topological sort.
         DynaArray<size_t> executionOrder = topologicalSort();
         if (executionOrder.empty()) {
-            GN_ERROR(sLogger)("Topological sort failed - circular dependency detected");
+            GN_ERROR(sLogger, "Topological sort failed - circular dependency detected");
             cleanup();
             std::lock_guard<std::mutex> lock(mStateMutex);
             mTaskStates.clear();
@@ -351,7 +351,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                     mTaskStates.append(TaskExecutionState {.workflowName = wfName, .taskName = tName, .index = idx, .validationPassed = true});
                 }
                 auto & pt = pendingTasks.back();
-                GN_VERBOSE(sLogger)("Preparing {}", pt.info);
+                GN_VERBOSE(sLogger, "Preparing {}", pt.info);
                 auto prepareResult = task.action->prepare(pt.info, *task.arguments);
                 {
                     std::lock_guard<std::mutex> lock(mStateMutex);
@@ -361,13 +361,13 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                     }
                 }
                 if (prepareResult.result == Action::ExecutionResult::FAILED) {
-                    GN_ERROR(sLogger)("{}: preparation failed", pt.info);
+                    GN_ERROR(sLogger, "{}: preparation failed", pt.info);
                     std::lock_guard<std::mutex> lock2(mStateMutex);
                     mRunResult = Action::ExecutionResult::FAILED;
                     return setResult(Action::ExecutionResult::FAILED);
                 }
                 if (prepareResult.result == Action::ExecutionResult::WARNING) {
-                    GN_VERBOSE(sLogger)("{}: preparation completed with warnings", pt.info);
+                    GN_VERBOSE(sLogger, "{}: preparation completed with warnings", pt.info);
                     hasWarning = true;
                 }
                 pt.remainingSteps = prepareResult.remainingSteps;
@@ -395,7 +395,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         while (!pendingTasks.empty()) {
             for (auto iter = pendingTasks.begin(); iter != pendingTasks.end();) {
                 auto & pt = *iter;
-                GN_VERBOSE(sLogger)("Executing {}, step = {}", pt.info, currentStep);
+                GN_VERBOSE(sLogger, "Executing {}, step = {}", pt.info, currentStep);
                 auto result = pt.task->action->execute(pt.info, currentStep, *pt.task->arguments);
                 {
                     std::lock_guard<std::mutex> lock(mStateMutex);
@@ -405,13 +405,13 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
                     }
                 }
                 if (result == Action::ExecutionResult::FAILED) {
-                    GN_ERROR(sLogger)("{}: execution failed", pt.info);
+                    GN_ERROR(sLogger, "{}: execution failed", pt.info);
                     std::lock_guard<std::mutex> lock(mStateMutex);
                     mRunResult = Action::ExecutionResult::FAILED;
                     return setResult(Action::ExecutionResult::FAILED);
                 }
                 if (result == Action::ExecutionResult::WARNING) {
-                    GN_VERBOSE(sLogger)("{}: execution completed with warnings", pt.info);
+                    GN_VERBOSE(sLogger, "{}: execution completed with warnings", pt.info);
                     hasWarning = true;
                 }
                 GN_ASSERT(pt.remainingSteps > 0);
@@ -448,7 +448,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         }
         return setResult(finalResult);
     } catch (const std::exception & e) {
-        GN_ERROR(sLogger)("Exception occurred during submission: {}", e.what());
+        GN_ERROR(sLogger, "Exception occurred during submission: {}", e.what());
         cleanup();
         std::lock_guard<std::mutex> lock(mStateMutex);
         mTaskStates.clear();
@@ -456,7 +456,7 @@ Submission::Result SubmissionImpl::run(const RenderGraph::SubmitParameters &) {
         mRunResult = Action::ExecutionResult::FAILED;
         return setResult(Action::ExecutionResult::FAILED);
     } catch (...) {
-        GN_ERROR(sLogger)("Exception occurred during submission.");
+        GN_ERROR(sLogger, "Exception occurred during submission.");
         cleanup();
         std::lock_guard<std::mutex> lock(mStateMutex);
         mTaskStates.clear();

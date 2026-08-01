@@ -7,7 +7,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.pcre");
 
 int main(int argc, const char * argv[]) {
     if (argc < 3) {
-        GN_INFO(sLogger)("usage: {} <pattern> <string>", argv[0]);
+        GN_INFO(sLogger, "usage: {} <pattern> <string>", argv[0]);
         return -1;
     }
 
@@ -18,7 +18,7 @@ int main(int argc, const char * argv[]) {
     pcrecpp::RE         re(pattern);
     const std::string & err = re.error();
     if (!err.empty()) {
-        GN_ERROR(sLogger)("{}", err);
+        GN_ERROR(sLogger, "{}", err);
         return -1;
     }
 

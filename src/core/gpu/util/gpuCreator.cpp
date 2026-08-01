@@ -20,7 +20,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.util.gpu");
 // -------------------------------------------------------------------------
 #if !GN_BUILD_HAS_OGL
 GN_API Gpu * GN::gfx::createOGLGpu(const GpuOptions &, uint32_t) {
-    GN_ERROR(sLogger)("OpenGL renderer is not available.");
+    GN_ERROR(sLogger, "OpenGL renderer is not available.");
     return 0;
 }
 #endif
@@ -30,7 +30,7 @@ GN_API Gpu * GN::gfx::createOGLGpu(const GpuOptions &, uint32_t) {
 // -------------------------------------------------------------------------
 #if !GN_BUILD_HAS_D3D11
 GN_API Gpu * GN::gfx::createD3DGpu(const GpuOptions &, uint32_t) {
-    GN_ERROR(sLogger)("D3D11 renderer is not available.");
+    GN_ERROR(sLogger, "D3D11 renderer is not available.");
     return 0;
 }
 #endif
@@ -58,7 +58,7 @@ GN_API Gpu * GN::gfx::createGpu(const GpuOptions & inputOptions, uint32_t creati
         GN_UNIMPL();
         return 0;
     default:
-        GN_ERROR(sLogger)("Invalid API({})", ro.api.toInt());
+        GN_ERROR(sLogger, "Invalid API({})", ro.api.toInt());
         return 0;
     }
 }

@@ -40,7 +40,7 @@ public:
 
     NeverOverflowingCounter publish(AutoRef<Entity> content) override {
         if (!content) GN_UNLIKELY {
-                GN_ERROR(sLogger)("Artifact '{}': publishing empty content is prohibited.", name);
+                GN_ERROR(sLogger, "Artifact '{}': publishing empty content is prohibited.", name);
                 return NeverOverflowingCounter::OOO();
             }
 

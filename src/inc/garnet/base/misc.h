@@ -23,15 +23,16 @@
 /// Execute only limited times during the entir life of the
 /// application, no matter how many time it is called.
 ///
-#define GN_DO_LIMITED_TIMES(n, X)    \
-    if (true) {                      \
-        static size_t s_counter = n; \
-        if (s_counter > 0) {         \
-            --s_counter;             \
-            X;                       \
-        }                            \
-    } else                           \
-        void(0)
+/// Expands to a single statement, so that an unbraced `if (cond) GN_DO_LIMITED_TIMES(...);`
+/// neither warns about an ambiguous else nor swallows a following else branch.
+#define GN_DO_LIMITED_TIMES(n, X)        \
+    do {                                 \
+        static size_t s_counter = n;     \
+        if (s_counter > 0) GN_UNLIKELY { \
+                --s_counter;             \
+                X;                       \
+            }                            \
+    } while (false)
 
 ///
 /// Do something only once. 通常用来在内层循环中输出一些调试和错误信息。

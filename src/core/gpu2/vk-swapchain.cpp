@@ -103,14 +103,14 @@ void SwapchainVulkan2::clearAcquiredFrameBindings() {
 bool SwapchainVulkan2::init(const Swapchain::CreateDesc & desc) {
     mGpu = desc.gpu.staticCastTo<GpuContextVulkan2>();
     if (!mGpu || !mGpu->ready()) {
-        GN_ERROR(sLogger)("SwapchainVulkan2::init: invalid or non-ready Vulkan GpuContext, name='{}'", name);
+        GN_ERROR(sLogger, "SwapchainVulkan2::init: invalid or non-ready Vulkan GpuContext, name='{}'", name);
         return false;
     }
 
     const rv::Device & dev = mGpu->vulkanDevice();
 
     if (desc.width == 0 || desc.height == 0) {
-        GN_ERROR(sLogger)("SwapchainVulkan2::init: invalid dimensions {}x{}, name='{}'", desc.width, desc.height, name);
+        GN_ERROR(sLogger, "SwapchainVulkan2::init: invalid dimensions {}x{}, name='{}'", desc.width, desc.height, name);
         return false;
     }
 
@@ -124,13 +124,13 @@ bool SwapchainVulkan2::init(const Swapchain::CreateDesc & desc) {
     try {
         mRvSwapchain = rv::Ref<rv::Swapchain>::make(scp);
     } catch (const std::exception & e) {
-        GN_ERROR(sLogger)("SwapchainVulkan2::init: Swapchain creation failed: {}, name='{}'", e.what(), name);
+        GN_ERROR(sLogger, "SwapchainVulkan2::init: Swapchain creation failed: {}, name='{}'", e.what(), name);
         return false;
     }
 
     mSurfaceFormat = vkFormatToPixelFormat(mRvSwapchain->cp().backbufferFormat);
     if (mSurfaceFormat == gfx::img::PixelFormat::UNKNOWN()) {
-        GN_ERROR(sLogger)("SwapchainVulkan2::init: swapchain backbuffer format resolved to UNKNOWN, name='{}'", name);
+        GN_ERROR(sLogger, "SwapchainVulkan2::init: swapchain backbuffer format resolved to UNKNOWN, name='{}'", name);
         mRvSwapchain.clear();
         return false;
     }
@@ -144,19 +144,19 @@ bool SwapchainVulkan2::init(const Swapchain::CreateDesc & desc) {
 
 Swapchain::Frame SwapchainVulkan2::prepare() {
     if (!mRvSwapchain.valid()) {
-        GN_ERROR(sLogger)("SwapchainVulkan2::prepare: swapchain not initialized, name='{}'", name);
+        GN_ERROR(sLogger, "SwapchainVulkan2::prepare: swapchain not initialized, name='{}'", name);
         return {};
     }
 
     if (mActiveFrame.valid()) {
-        GN_VERBOSE(sLogger)("SwapchainVulkan2::prepare: already prepared; redundant call ignored, name='{}'", name);
+        GN_VERBOSE(sLogger, "SwapchainVulkan2::prepare: already prepared; redundant call ignored, name='{}'", name);
         GN_ASSERT(mActiveBackbufferTexture);
         return Swapchain::Frame {makeFrameColorView(), mActiveBackbufferTexture->readyPayload};
     }
 
     mActiveFrame = mRvSwapchain->beginFrame();
     if (!mActiveFrame.valid()) {
-        GN_VERBOSE(sLogger)("SwapchainVulkan2::prepare: beginFrame failed, name='{}'", name);
+        GN_VERBOSE(sLogger, "SwapchainVulkan2::prepare: beginFrame failed, name='{}'", name);
         clearAcquiredFrameBindings();
         return {};
     }
@@ -185,18 +185,18 @@ Swapchain::Frame SwapchainVulkan2::prepare() {
 void SwapchainVulkan2::present(GpuPayload & waitFor) {
 
     if (!mRvSwapchain.valid()) {
-        GN_ERROR(sLogger)("SwapchainVulkan2::present: swapchain not initialized, name='{}'", name);
+        GN_ERROR(sLogger, "SwapchainVulkan2::present: swapchain not initialized, name='{}'", name);
         return;
     }
 
     if (!mActiveFrame.valid()) {
-        GN_VERBOSE(sLogger)("SwapchainVulkan2::present: not prepared; ignored, name='{}'", name);
+        GN_VERBOSE(sLogger, "SwapchainVulkan2::present: not prepared; ignored, name='{}'", name);
         return;
     }
 
     SwapchainBackbufferTextureVulkan * backbufferTex = mActiveBackbufferTexture;
     if (!backbufferTex) {
-        GN_VERBOSE(sLogger)("SwapchainVulkan2::present: no active backbuffer texture; ignored, name='{}'", name);
+        GN_VERBOSE(sLogger, "SwapchainVulkan2::present: no active backbuffer texture; ignored, name='{}'", name);
         return;
     }
 
@@ -211,10 +211,10 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
                 // that waits on the timeline and signals a per-backbuffer binary semaphore.
                 renderFinished = bridgeTimelineToBinary(*t);
             } else {
-                GN_ERROR(sLogger)("present() must wait on an already-submitted payload: {}({})", waitFor.name, waitFor.id);
+                GN_ERROR(sLogger, "present() must wait on an already-submitted payload: {}({})", waitFor.name, waitFor.id);
             }
         }
-    else { GN_ERROR(sLogger)("waitFor is not a GpuPayloadVulkan: {}({})", waitFor.name, waitFor.id); }
+    else { GN_ERROR(sLogger, "waitFor is not a GpuPayloadVulkan: {}({})", waitFor.name, waitFor.id); }
 
     rv::Swapchain::PresentResult result;
     try {
@@ -222,11 +222,11 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
         pp.setRenderFinished(vk::ArrayProxy<const vk::Semaphore>(renderFinished ? 1u : 0u, &renderFinished));
         result = mRvSwapchain->present(pp);
     } catch (const std::exception & e) {
-        GN_VERBOSE(sLogger)("SwapchainVulkan2::present failed: {}, name='{}'", e.what(), name);
+        GN_VERBOSE(sLogger, "SwapchainVulkan2::present failed: {}, name='{}'", e.what(), name);
         clearAcquiredFrameBindings();
         return;
     } catch (...) {
-        GN_VERBOSE(sLogger)("SwapchainVulkan2::present failed (unknown), name='{}'", name);
+        GN_VERBOSE(sLogger, "SwapchainVulkan2::present failed (unknown), name='{}'", name);
         clearAcquiredFrameBindings();
         return;
     }
@@ -249,7 +249,7 @@ vk::Semaphore SwapchainVulkan2::bridgeTimelineToBinary(const rv::CommandQueue::S
 
     rv::CommandQueue * queue = mGpu->vulkanDevice().graphics();
     if (!queue) {
-        GN_ERROR(sLogger)("SwapchainVulkan2: no graphics queue for timeline bridge submit");
+        GN_ERROR(sLogger, "SwapchainVulkan2: no graphics queue for timeline bridge submit");
         return {};
     }
 

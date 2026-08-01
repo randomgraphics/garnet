@@ -64,7 +64,7 @@ public:
                 value = mTraits->create();
                 if (!value) return {};
             } catch (const std::exception & e) {
-                GN_ERROR(GN::getLogger("GN.gpu2.vk"))("ResourcePoolVulkan::acquire failed: {}", e.what());
+                GN_ERROR(GN::getLogger("GN.gpu2.vk"), "ResourcePoolVulkan::acquire failed: {}", e.what());
                 return {};
             }
         }

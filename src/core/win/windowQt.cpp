@@ -52,7 +52,7 @@ bool GN::win::WindowQt::init(const WindowAttachingParameters & wap) {
 
     mWindow = QWindow::fromWinId((WId) wap.window);
     if (!mWindow) {
-        GN_ERROR(sLogger)("Failed to attach to external window handle 0x{:x}", wap.window);
+        GN_ERROR(sLogger, "Failed to attach to external window handle 0x{:x}", wap.window);
         return failure();
     }
 
@@ -167,7 +167,7 @@ bool GN::win::WindowQt::createWindow(const WindowCreateParameters & wcp) {
 
     // check parent
     if (wcp.parent) {
-        GN_ERROR(sLogger)("Not implented");
+        GN_ERROR(sLogger, "Not implented");
         return false;
     }
 

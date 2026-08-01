@@ -58,7 +58,7 @@ Matrix33<T> & Matrix33<T>::inverse() {
         // Uninvertable matrix is rare used in 3D graphics, and usually
         // means error. So we output a warning message here.
         static Logger * sLogger = getLogger("GN.base.Matrix33");
-        GN_WARN(sLogger)("Matrix is un-invertable!");
+        GN_WARN(sLogger, "Matrix is un-invertable!");
         return identity();
     }
 
@@ -316,7 +316,7 @@ Matrix44<T> & Matrix44<T>::inverse() {
             // Uninvertible matrix is rare used in 3D graphics, and usually
             // means error. So we output a warning message here.
             static Logger * logger = getLogger("GN.base.Matrix44");
-            GN_WARN(logger)("Matrix is un-invertable!");
+            GN_WARN(logger, "Matrix is un-invertable!");
             return identity();
         }
 

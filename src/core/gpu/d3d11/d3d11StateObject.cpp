@@ -161,7 +161,7 @@ bool GN::gfx::D3D11StateObjectManager::setVSSampler(const D3D11_SAMPLER_DESC & d
     if (NULL == ss) return false;
 
     if (stage >= GN_ARRAY_COUNT(mCurrentVSSamplers)) {
-        GN_ERROR(sLogger)("PS sampler state is too large.");
+        GN_ERROR(sLogger, "PS sampler state is too large.");
         return false;
     }
     if (skipDirtyCheck || ss != mCurrentVSSamplers[stage]) {
@@ -181,7 +181,7 @@ bool GN::gfx::D3D11StateObjectManager::setGSSampler(const D3D11_SAMPLER_DESC & d
     if (NULL == ss) return false;
 
     if (stage >= GN_ARRAY_COUNT(mCurrentGSSamplers)) {
-        GN_ERROR(sLogger)("PS sampler state is too large.");
+        GN_ERROR(sLogger, "PS sampler state is too large.");
         return false;
     }
     if (skipDirtyCheck || ss != mCurrentGSSamplers[stage]) {
@@ -201,7 +201,7 @@ bool GN::gfx::D3D11StateObjectManager::setPSSampler(const D3D11_SAMPLER_DESC & d
     if (NULL == ss) return false;
 
     if (stage >= GN_ARRAY_COUNT(mCurrentPSSamplers)) {
-        GN_ERROR(sLogger)("PS sampler state is too large.");
+        GN_ERROR(sLogger, "PS sampler state is too large.");
         return false;
     }
     if (skipDirtyCheck || ss != mCurrentPSSamplers[stage]) {

@@ -16,7 +16,7 @@ D3D11_TEXTURE_ADDRESS_MODE sAdressModeToD3D11(unsigned short addr) {
     if (addr < GN_ARRAY_COUNT(mapping)) {
         return mapping[addr];
     } else {
-        GN_ERROR(sLogger)("Invalid garnet texture address mode: {}", addr);
+        GN_ERROR(sLogger, "Invalid garnet texture address mode: {}", addr);
         return D3D11_TEXTURE_ADDRESS_CLAMP;
     }
 }
@@ -170,7 +170,7 @@ static bool sInitD3D11Uniforms(ID3D11ShaderReflection & reflection, D3D11GpuProg
 
     D3D11_SHADER_DESC desc;
     if (FAILED(reflection.GetDesc(&desc))) {
-        GN_ERROR(sLogger)("fail to get shader descriptor");
+        GN_ERROR(sLogger, "fail to get shader descriptor");
         return false;
     }
 
@@ -190,7 +190,7 @@ static bool sInitD3D11Uniforms(ID3D11ShaderReflection & reflection, D3D11GpuProg
             D3D11UniformParameterDesc * existingUniform = paramDesc.findUniform(vardesc.Name);
             if (existingUniform) {
                 if (existingUniform->size != vardesc.Size) {
-                    GN_ERROR(sLogger)("If an uniform name is used by more than one shaders, its type and size must be same in all shaders.");
+                    GN_ERROR(sLogger, "If an uniform name is used by more than one shaders, its type and size must be same in all shaders.");
                     return false;
                 }
 
@@ -226,7 +226,7 @@ static bool sInitD3D11Textures(ID3D11ShaderReflection & reflection, D3D11GpuProg
 
     D3D11_SHADER_DESC desc;
     if (FAILED(reflection.GetDesc(&desc))) {
-        GN_ERROR(sLogger)("fail to get shader descriptor");
+        GN_ERROR(sLogger, "fail to get shader descriptor");
         return false;
     }
 
@@ -316,7 +316,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::init(const GpuProgramDesc & desc) {
 
     const size_t NUM_STAGES = getGpu().caps().maxTextures;
     if (mParamDesc.textures.count() > NUM_STAGES) {
-        GN_ERROR(sLogger)("The GPU program requires more textures than current hardware supports.");
+        GN_ERROR(sLogger, "The GPU program requires more textures than current hardware supports.");
         return failure();
     }
 
@@ -348,7 +348,7 @@ void GN::gfx::D3D11GpuProgramHLSL::quit() {
 // -----------------------------------------------------------------------------
 const char * GN::gfx::D3D11GpuProgramHLSL::getAttributeSemantic(uint32_t attributeIndex, UINT * semanticIndex) const {
     if (attributeIndex >= mParamDesc.attributes.count()) {
-        GN_ERROR(sLogger)("Invalid attribute index: {}", attributeIndex);
+        GN_ERROR(sLogger, "Invalid attribute index: {}", attributeIndex);
         if (semanticIndex) *semanticIndex = 0;
         return NULL;
     } else {
@@ -368,7 +368,7 @@ const void * GN::gfx::D3D11GpuProgramHLSL::getInputSignature(size_t * pSignature
         if (pSignatureSize) *pSignatureSize = mInputSignature->GetBufferSize();
         return mInputSignature->GetBufferPointer();
     } else {
-        GN_ERROR(sLogger)("The GPU program has no vertex shader.");
+        GN_ERROR(sLogger, "The GPU program has no vertex shader.");
         if (pSignatureSize) *pSignatureSize = 0;
         return NULL;
     }
@@ -502,7 +502,7 @@ bool GN::gfx::D3D11GpuProgramHLSL::initShader(ShaderHLSL & shader, const ShaderC
     // get shader reflection interface
     AutoComPtr<ID3D11ShaderReflection> reflection;
     if (FAILED(D3DReflect(binary->GetBufferPointer(), binary->GetBufferSize(), IID_ID3D11ShaderReflection, (void **) &reflection))) {
-        GN_ERROR(sLogger)("fail to get shader refelection interface");
+        GN_ERROR(sLogger, "fail to get shader refelection interface");
         return false;
     }
 
@@ -548,16 +548,16 @@ bool GN::gfx::D3D11GpuProgramHLSL::sInitConstBuffers(ID3D11Device & dev, ID3D11S
     // get shader description
     D3D11_SHADER_DESC desc;
     if (FAILED(reflection.GetDesc(&desc))) {
-        GN_ERROR(sLogger)("fail to get shader descriptor");
+        GN_ERROR(sLogger, "fail to get shader descriptor");
         return false;
     }
 
     // check for number of constant buffers
     if (desc.ConstantBuffers > constBufs.MAX_SIZE) {
-        GN_ERROR(sLogger)
-        ("Too many constant buffers. "
-         "Currently D3D11 GPU support %d constant buffers.",
-         constBufs.MAX_SIZE);
+        GN_ERROR(sLogger,
+                 "Too many constant buffers. "
+                 "Currently D3D11 GPU support %d constant buffers.",
+                 constBufs.MAX_SIZE);
         return false;
     }
 
@@ -597,7 +597,7 @@ void GN::gfx::D3D11GpuProgramHLSL::sUpdateD3D11ConstData(const D3D11UniformParam
     if (!ssp.used) return;
 
     if (desc.size != uniform.size()) {
-        GN_WARN(sLogger)("parameter {}: value size({}) differs from size defined in shader code({}).", desc.name, uniform.size(), desc.size);
+        GN_WARN(sLogger, "parameter {}: value size({}) differs from size defined in shader code({}).", desc.name, uniform.size(), desc.size);
     }
 
     DynaArray<uint8_t> &             cb = cbarray[ssp.cbidx];

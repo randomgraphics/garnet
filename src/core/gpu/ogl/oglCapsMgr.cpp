@@ -79,7 +79,7 @@ static bool sCheckRequiredExtensions(const DynaArray<std::string> & extensions) 
     char const * const * p    = sRequiredExtensions;
     while (*p) {
         if (GL_TRUE != sFindExtension(extensions, *p)) {
-            GN_ERROR(sLogger)("Required extension '{}' was not supported!", *p);
+            GN_ERROR(sLogger, "Required extension '{}' was not supported!", *p);
             fail = true;
         }
         // next extension
@@ -165,7 +165,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
                          "===================================================\n"
                          "\n\n",
                          ts, tu);
-    GN_INFO(sLogger)("{}", info.data());
+    GN_INFO(sLogger, "{}", info.data());
 
     // extension info.
     info = "\n\n"
@@ -176,7 +176,7 @@ static void sOutputOGLInfo(intptr_t disp, const DynaArray<std::string> & glexts)
     info += "===================================================\n"
             "\n\n";
 
-    GN_VERBOSE(sLogger)("{}", info.data());
+    GN_VERBOSE(sLogger, "{}", info.data());
 
     GN_UNGUARD;
 }
@@ -207,7 +207,7 @@ bool GN::gfx::OGLGpu::capsInit() {
     int majorVersion, miniorVersion;
     sGetOpenGLVersion((const char *) glGetString(GL_VERSION), &majorVersion, &miniorVersion, NULL);
     if (majorVersion < 2) {
-        GN_ERROR(sLogger)("OpenGL version 2.0+ is required.");
+        GN_ERROR(sLogger, "OpenGL version 2.0+ is required.");
         return false;
     }
 

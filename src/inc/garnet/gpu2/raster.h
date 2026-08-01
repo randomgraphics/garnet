@@ -291,7 +291,7 @@ struct RasterTarget {
 
     RasterTarget & setColorTarget(size_t index, const GpuResourceView & target) {
         if (index >= colorTargets.MAX_SIZE) GN_UNLIKELY {
-                GN_ERROR(getLogger("GN.gpu2"))("Invalid color target index: %zu. Max supported is %zu.", index, colorTargets.MAX_SIZE);
+                GN_ERROR(getLogger("GN.gpu2"), "Invalid color target index: %zu. Max supported is %zu.", index, colorTargets.MAX_SIZE);
                 return *this;
             }
         if (index >= colorTargets.size()) GN_UNLIKELY {

@@ -12,7 +12,7 @@ static Logger * sLogger = GN::getLogger("dxutils");
         #define IFC(x)                                            \
             hr = (x);                                             \
             if (FAILED(hr)) {                                     \
-                GN_ERROR(sLogger)(#x " Failed: hr=0x{:08X}", hr); \
+                GN_ERROR(sLogger, #x " Failed: hr=0x{:08X}", hr); \
                 goto Cleanup;                                     \
             }
     #endif
@@ -50,7 +50,7 @@ static const char * sGetDefaultShaderProfile(ShaderType type) {
     case SHADER_TYPE_CS:
         return "cs_4_0";
     default:
-        GN_ERROR(sLogger)("Invalid shader type: {}", (int) type);
+        GN_ERROR(sLogger, "Invalid shader type: {}", (int) type);
         return nullptr;
     }
 }
@@ -80,13 +80,13 @@ static UINT sRefineFlagsD3D11(UINT flags) {
 
 // -----------------------------------------------------------------------------
 static void sPrintShaderCompileErrorD3D11(const char * code, ID3DBlob * err) {
-    GN_ERROR(sLogger)
-    ("\n================== Shader compile failure ===============\n"
-     "{}\n"
-     "\n---------------------------------------------------------\n"
-     "{}\n"
-     "\n=========================================================\n",
-     code ? sAddLineCountD3D11(code).c_str() : "Shader code: <EMPTY>", err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
+    GN_ERROR(sLogger,
+             "\n================== Shader compile failure ===============\n"
+             "{}\n"
+             "\n---------------------------------------------------------\n"
+             "{}\n"
+             "\n=========================================================\n",
+             code ? sAddLineCountD3D11(code).c_str() : "Shader code: <EMPTY>", err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
 }
 
 // -----------------------------------------------------------------------------
@@ -98,13 +98,13 @@ static void sPrintShaderCompileInfoD3D11(const char * hlsl, ID3DBlob * bin) {
 
     D3DDisassemble(bin->GetBufferPointer(), bin->GetBufferSize(), false, nullptr, &asm_);
 
-    GN_VTRACE(sLogger)
-    ("\n================== Shader compile success ===============\n"
-     "{}\n"
-     "\n---------------------------------------------------------\n"
-     "{}\n"
-     "\n=========================================================\n",
-     sAddLineCountD3D11(hlsl).c_str(), sAddLineCountD3D11((const char *) asm_->GetBufferPointer()).c_str());
+    GN_VTRACE(sLogger,
+              "\n================== Shader compile success ===============\n"
+              "{}\n"
+              "\n---------------------------------------------------------\n"
+              "{}\n"
+              "\n=========================================================\n",
+              sAddLineCountD3D11(hlsl).c_str(), sAddLineCountD3D11((const char *) asm_->GetBufferPointer()).c_str());
 }
 
 // *****************************************************************************
@@ -144,7 +144,7 @@ GN_API ID3DBlob * GN::d3d11::compileShader(const char * profile, const char * so
     AutoComPtr<ID3DBlob> bin, err;
 
     if (nullptr == source || 0 == *source) {
-        GN_ERROR(sLogger)("empty source code.");
+        GN_ERROR(sLogger, "empty source code.");
         return nullptr;
     }
 
@@ -231,7 +231,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::createShader(ID3D11Device & dev, ShaderTyp
         return nullptr;
 
     default:
-        GN_ERROR(sLogger)("Invalid shader type: {}", (int) type);
+        GN_ERROR(sLogger, "Invalid shader type: {}", (int) type);
         return nullptr;
     }
 
@@ -245,13 +245,13 @@ GN_API ID3D11DeviceChild * GN::d3d11::createShader(ID3D11Device & dev, ShaderTyp
 GN_API ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(ID3D11Device & dev, ShaderType type, const wchar_t * fileName, UINT flags, const char * entry,
                                                          const char * profile, ID3DBlob ** signature) {
     if (nullptr == fileName || 0 == *fileName) {
-        GN_ERROR(sLogger)("Empty/Null shader file name is not allowed.");
+        GN_ERROR(sLogger, "Empty/Null shader file name is not allowed.");
         return nullptr;
     }
 
     AutoFile file;
     if (_wfopen_s(&file.fp, fileName, L"rt")) {
-        GN_ERROR(sLogger)(L"Fail to open shader file: {}.", fileName);
+        GN_ERROR(sLogger, L"Fail to open shader file: {}.", fileName);
         return nullptr;
     }
 
@@ -259,7 +259,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(ID3D11Device & dev, Sha
     long fileSize = ftell(file.fp);
     fseek(file.fp, 0, SEEK_SET);
     if (fileSize <= 0) {
-        GN_ERROR(sLogger)(L"Fail to determine shader file size: {}", fileName);
+        GN_ERROR(sLogger, L"Fail to determine shader file size: {}", fileName);
         return nullptr;
     }
 
@@ -267,7 +267,7 @@ GN_API ID3D11DeviceChild * GN::d3d11::loadShaderFromFile(ID3D11Device & dev, Sha
     std::vector<char> buffer(bytesToRead + 1);
     size_t            readen = fread(&buffer[0], 1, bytesToRead, file.fp);
     if (0 == readen) {
-        GN_ERROR(sLogger)(L"Fail to read shader file: {}", fileName);
+        GN_ERROR(sLogger, L"Fail to read shader file: {}", fileName);
         return nullptr;
     }
     buffer[readen] = 0;

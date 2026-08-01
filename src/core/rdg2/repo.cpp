@@ -16,7 +16,7 @@ uint8_t nextRepoId() {
     static uint8_t              next = 1;
     std::lock_guard<std::mutex> lock(m);
     if (next == 0) {
-        GN_ERROR(sLogger)("Too many repositories created for one RDG2 resource type");
+        GN_ERROR(sLogger, "Too many repositories created for one RDG2 resource type");
         return 0;
     }
     return next++;
@@ -34,7 +34,7 @@ public:
 
     bool init(const StrA & name, GraphPtr graph) {
         if (!graph) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ResourceRepo ({}): graph is null", name);
+                GN_ERROR(sLogger, "ResourceRepo ({}): graph is null", name);
                 return false;
             }
 
@@ -60,11 +60,11 @@ public:
 
         // some sanity checks, unlikely to fail.
         if (!mGraph) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ResourceRepo ({}): load failed because graph is null", mName);
+                GN_ERROR(sLogger, "ResourceRepo ({}): load failed because graph is null", mName);
                 return {};
             }
         if (!loader) GN_UNLIKELY {
-                GN_ERROR(sLogger)("ResourceRepo ({}): loader can't be empty.", mName);
+                GN_ERROR(sLogger, "ResourceRepo ({}): loader can't be empty.", mName);
                 return {};
             }
 
@@ -91,7 +91,7 @@ public:
             if (content) {
                 graph->publishArtifact(artifact, content);
             } else {
-                GN_WARN(sLogger)("ResourceRepo ({}): failed to load resource '{}'. Resource content remains unchanged.", repoName, key.uri);
+                GN_WARN(sLogger, "ResourceRepo ({}): failed to load resource '{}'. Resource content remains unchanged.", repoName, key.uri);
             }
         };
 
@@ -107,13 +107,13 @@ public:
     }
 
     bool reload(Handle) {
-        GN_ERROR(sLogger)("resource reloading is not implemented yet.");
+        GN_ERROR(sLogger, "resource reloading is not implemented yet.");
         return false;
     }
 
     void pollHotReload() {
         // File watching and async reload scheduling are intentionally left to resource-specific loaders.
-        GN_ERROR(sLogger)("resource reloading is not implemented yet.");
+        GN_ERROR(sLogger, "resource reloading is not implemented yet.");
     }
 
     bool remove(Handle handle) {
@@ -189,7 +189,7 @@ private:
         Slot &   slot           = mSlots[index];
         uint32_t nextGeneration = slot.generation + 1;
         if (nextGeneration == 0) {
-            GN_WARN(sLogger)("ResourceRepo ({}): Slot {} is overflowing.", mName, index);
+            GN_WARN(sLogger, "ResourceRepo ({}): Slot {} is overflowing.", mName, index);
             ++nextGeneration; // handle overflow.
         }
         slot            = Slot {};

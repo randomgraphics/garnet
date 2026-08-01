@@ -25,7 +25,7 @@ bool PersistentBufferVulkan::allocate(const CreateParameters & params) {
     cp.memory = vk::MemoryPropertyFlagBits::eDeviceLocal;
     mVkBuffer = rapid_vulkan::Ref<rapid_vulkan::Buffer>::make(cp);
     if (!mVkBuffer || !mVkBuffer->desc().handle) GN_UNLIKELY {
-            GN_ERROR(sLogger)("BufferVulkan::allocate: failed to create VkBuffer, name='{}'", name);
+            GN_ERROR(sLogger, "BufferVulkan::allocate: failed to create VkBuffer, name='{}'", name);
             mVkBuffer = {};
             return false;
         }
@@ -36,11 +36,11 @@ bool PersistentBufferVulkan::allocate(const CreateParameters & params) {
 
 bool PersistentBufferVulkan::setContent(const void * data, uint64_t size) {
     if (!data) GN_UNLIKELY {
-            GN_ERROR(sLogger)("PersistentBufferVulkan::setContent: data is null");
+            GN_ERROR(sLogger, "PersistentBufferVulkan::setContent: data is null");
             return false;
         }
     if (size > mAllocatedSize) GN_UNLIKELY {
-            GN_ERROR(sLogger)("PersistentBufferVulkan::setContent: size {} exceeds allocated {}", size, mAllocatedSize);
+            GN_ERROR(sLogger, "PersistentBufferVulkan::setContent: size {} exceeds allocated {}", size, mAllocatedSize);
             return false;
         }
     if (!mVkBuffer) return false;
@@ -67,11 +67,11 @@ AutoRef<Blob> PersistentBufferVulkan::readback() const {
 AutoRef<PersistentBuffer> createVulkanPersistentBuffer(const StrA & name, const PersistentBuffer::CreateParameters & params) {
     auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanBuffer: gpu is not Vulkan, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanBuffer: gpu is not Vulkan, name='{}'", name);
             return {};
         }
     if (!params.size) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanBuffer: size is 0, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanBuffer: size is 0, name='{}'", name);
             return {};
         }
     auto * p = new PersistentBufferVulkan(name, std::move(gpu));

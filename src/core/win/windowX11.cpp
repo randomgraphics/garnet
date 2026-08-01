@@ -23,13 +23,13 @@ static int sXErrorHandler(Display * d, XErrorEvent * e) {
     static char buf[4096];
     XGetErrorText(d, e->error_code, buf, 4095);
 
-    GN_ERROR(sLogger)
-    ("X error : {}"
-     "   Major opcode of failed request:  {}\n"
-     "   Minor opcode of failed request:  {}\n"
-     "   Serial number of failed request:  {}\n"
-     "   Resource ID:  0x{:X}",
-     buf, e->request_code, e->minor_code, e->serial, e->resourceid);
+    GN_ERROR(sLogger,
+             "X error : {}"
+             "   Major opcode of failed request:  {}\n"
+             "   Minor opcode of failed request:  {}\n"
+             "   Serial number of failed request:  {}\n"
+             "   Resource ID:  0x{:X}",
+             buf, e->request_code, e->minor_code, e->serial, e->resourceid);
 
     return 0;
 
@@ -55,7 +55,7 @@ static int sGetScreenNumber(Display * disp, Screen * screen) {
         if (screen == ScreenOfDisplay(disp, i)) return i;
     }
 
-    GN_ERROR(sLogger)("Fail to get screen number out of screen pointer.");
+    GN_ERROR(sLogger, "Fail to get screen number out of screen pointer.");
     return -1;
 }
 
@@ -86,7 +86,7 @@ bool GN::win::WindowX11::init(const WindowAttachingParameters & wap) {
     if (!initDisplay(wap.display)) return false;
 
     if (!sIsWindow(mDisplay, (::Window) wap.window)) {
-        GN_ERROR(sLogger)("External render window is invalid!");
+        GN_ERROR(sLogger, "External render window is invalid!");
         return false;
     }
 
@@ -124,7 +124,7 @@ bool GN::win::WindowX11::init(const WindowCreateParameters & wcp) {
     static int            attributeList[] = {GLX_RGBA, GLX_DOUBLEBUFFER, GLX_DEPTH_SIZE, 24, GLX_STENCIL_SIZE, 8, None};
     AutoXPtr<XVisualInfo> vi(glXChooseVisual(mDisplay, mScreenNumber, attributeList));
     if (0 == vi) {
-        GN_ERROR(sLogger)("Cannot find visual with desired attributes.");
+        GN_ERROR(sLogger, "Cannot find visual with desired attributes.");
         return false;
     }
 
@@ -132,7 +132,7 @@ bool GN::win::WindowX11::init(const WindowCreateParameters & wcp) {
     if (0 == parent) {
         parent = XDefaultRootWindow(mDisplay);
         if (0 == parent) {
-            GN_ERROR(sLogger)("Fail to get default root window.");
+            GN_ERROR(sLogger, "Fail to get default root window.");
             return false;
         }
     }
@@ -140,7 +140,7 @@ bool GN::win::WindowX11::init(const WindowCreateParameters & wcp) {
     // create a colormap
     Colormap cmap = XCreateColormap(mDisplay, parent, vi->visual, AllocNone);
     if (0 == cmap) {
-        GN_ERROR(sLogger)("Cannot allocate colormap.");
+        GN_ERROR(sLogger, "Cannot allocate colormap.");
         return false;
     }
 
@@ -157,7 +157,7 @@ bool GN::win::WindowX11::init(const WindowCreateParameters & wcp) {
                             vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask | CWBorderPixel | CWBackPixel,
                             &swa); // background
     if (0 == mWindow) {
-        GN_ERROR(sLogger)("XCreateWindow() failed.");
+        GN_ERROR(sLogger, "XCreateWindow() failed.");
         return false;
     }
 
@@ -237,7 +237,7 @@ bool GN::win::WindowX11::initDisplay(intptr_t handle) {
         auto dispStr = getEnv("DISPLAY");
         mDisplay     = XOpenDisplay(dispStr.data());
         if (0 == mDisplay) {
-            GN_ERROR(sLogger)("Fail to open display '{}'.", dispStr.data());
+            GN_ERROR(sLogger, "Fail to open display '{}'.", dispStr.data());
             return false;
         }
         mUseExternalDisplay = false;

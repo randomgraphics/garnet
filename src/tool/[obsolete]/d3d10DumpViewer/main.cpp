@@ -87,13 +87,13 @@ template<typename T>
 static bool sLoadBinary(const XmlElement & node, const std::string & attr, const std::string & basedir, DynaArray<T> & result) {
     const XmlAttrib * a = node.findAttrib(attr);
     if (!a) {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attr.data());
+        GN_ERROR(sLogger, "%s : attribute '%s' is missing!", node.getLocation(), attr.data());
         return false;
     }
 
     std::string fullname = fs::resolvePath(basedir, a->value);
 
-    if (!fs::isFile(fullname)) { GN_WARN(sLogger)("%s : binary file not found :  %s!", node.getLocation(), fullname.data()); }
+    if (!fs::isFile(fullname)) { GN_WARN(sLogger, "%s : binary file not found :  %s!", node.getLocation(), fullname.data()); }
 
     AutoObjPtr<File> fp(fs::openFile(fullname, "rb"));
     if (!fp) return false;
@@ -107,7 +107,7 @@ template<typename T>
 static bool sGetNumericAttr(const XmlElement & node, const std::string & attrname, T & result) {
     const XmlAttrib * a = node.findAttrib(attrname);
     if (!a || !str::toNumber<T>(result, a->value.data())) {
-        GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.data());
+        GN_ERROR(sLogger, "%s : attribute '%s' is missing!", node.getLocation(), attrname.data());
         return false;
     } else {
         return true;
@@ -119,7 +119,7 @@ static bool sGetSlot(const XmlElement & node, UINT & slot) {
     if (!sGetNumericAttr(node, "slot", slot)) return false;
 
     if (slot >= MAX_SLOT) {
-        GN_ERROR(sLogger)("%s: slot is too large");
+        GN_ERROR(sLogger, "%s: slot is too large");
         return false;
     }
 
@@ -173,7 +173,7 @@ struct D3D10InputLayoutDump {
             else if ("element" == e->name) {
                 XmlAttrib * sem = e->findAttrib("semantic");
                 if (0 == sem) {
-                    GN_ERROR(sLogger)("%s : 'semantic' attribute is missing.", e->getLocation());
+                    GN_ERROR(sLogger, "%s : 'semantic' attribute is missing.", e->getLocation());
                     return false;
                 }
                 semantics.append(sem->value);
@@ -188,7 +188,7 @@ struct D3D10InputLayoutDump {
 
                 elements.append(desc);
             } else {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
+                GN_WARN(sLogger, "%s : ignore unknown node %s", e->getLocation(), e->name.data());
             }
         }
 
@@ -313,11 +313,11 @@ struct D3D10ViewDump {
                 break;
 
             case D3D10_RESOURCE_DIMENSION_BUFFER:
-                GN_ERROR(sLogger)("not support loading buffer from DDS");
+                GN_ERROR(sLogger, "not support loading buffer from DDS");
                 return false;
 
             default:
-                GN_ERROR(sLogger)("invalid resource dimension");
+                GN_ERROR(sLogger, "invalid resource dimension");
                 return false;
             }
         } else {
@@ -505,7 +505,7 @@ struct D3D10OperationDump {
 
         } else {
             if (instanced) {
-                GN_DO_ONCE(GN_FATAL(sLogger)("Do not support DrawInstanced(...) yet."));
+                GN_DO_ONCE(GN_FATAL(sLogger, "Do not support DrawInstanced(...) yet."));
             } else {
                 // setDumpFilePrefix( fs::joinPath( "a", fs::baseName(sDumpFileName) ) );
                 // dumpDraw( dev, numvtx, startvtx );
@@ -561,7 +561,7 @@ struct D3D10StateDump {
         // check root name
         const XmlElement * e = root.toElement();
         if (0 == e || "D3D10StateDump" != e->name) {
-            GN_ERROR(sLogger)("root node must be \"<D3D10StateDump>\".");
+            GN_ERROR(sLogger, "root node must be \"<D3D10StateDump>\".");
             return false;
         }
 
@@ -678,7 +678,7 @@ struct D3D10StateDump {
                 if (!sGetNumericAttr(*e, "BaseVertexLocation", operation.startvtx)) return false;
                 if (!sGetNumericAttr(*e, "StartInstanceLocation", operation.startinst)) return false;
             } else {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
+                GN_WARN(sLogger, "%s : ignore unknown node %s", e->getLocation(), e->name.data());
             }
         }
 

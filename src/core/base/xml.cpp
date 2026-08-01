@@ -88,7 +88,7 @@ static bool sFormatNodes(GN::File & fp, const GN::XmlNode * root, int ident) {
 
     default:
         GN_UNEXPECTED(); // program should not reach here
-        GN_ERROR(sLogger)("Unknown node type!");
+        GN_ERROR(sLogger, "Unknown node type!");
         return false;
     };
 
@@ -143,7 +143,7 @@ static bool sCompactNodeAndChildren(GN::File & fp, const GN::XmlNode * root) {
 
     default:
         GN_UNEXPECTED(); // program should not reach here
-        GN_ERROR(sLogger)("Unknown node type!");
+        GN_ERROR(sLogger, "Unknown node type!");
         return false;
     };
 
@@ -434,7 +434,7 @@ static int XMLCALL sEncodingHandler(void * encodingHandlerData, const XML_Char *
 
         return 1;
     } else {
-        GN_ERROR(sLogger)("Unknown encoding: {}", name);
+        GN_ERROR(sLogger, "Unknown encoding: {}", name);
         return 0;
     }
 }
@@ -451,12 +451,12 @@ GN_API void GN::XmlAttrib::setOwner(XmlElement * newOwner, XmlAttrib * newPrev) 
     if (node == newOwner) return;
 
     if (newOwner && &newOwner->doc != &this->doc) {
-        GN_ERROR(sLogger)("Cannot attach attribute to node that belongs to different XML document.");
+        GN_ERROR(sLogger, "Cannot attach attribute to node that belongs to different XML document.");
         return;
     }
 
     if (newPrev && newPrev->node != newOwner) {
-        GN_ERROR(sLogger)("New previous attribute does not belong to the new element.");
+        GN_ERROR(sLogger, "New previous attribute does not belong to the new element.");
         return;
     }
 
@@ -501,12 +501,12 @@ GN_API void GN::XmlNode::setParent(XmlNode * newParent, XmlNode * newPrev) {
     if (parent == newParent) return;
 
     if (newParent && &newParent->doc != &this->doc) {
-        GN_ERROR(sLogger)("Can not link nodes belong to different document.");
+        GN_ERROR(sLogger, "Can not link nodes belong to different document.");
         return;
     }
 
     if (newPrev && newPrev->parent != newParent) {
-        GN_ERROR(sLogger)("New previous node does not belong to the new parent node.");
+        GN_ERROR(sLogger, "New previous node does not belong to the new parent node.");
         return;
     }
 
@@ -681,7 +681,7 @@ GN_API GN::XmlNode * GN::XmlDocument::createNode(XmlNodeType type, XmlNode * par
         p = new PooledNode<XmlElement>(*this);
         break;
     default:
-        GN_ERROR(sLogger)("invalid node type : {}", (int) type);
+        GN_ERROR(sLogger, "invalid node type : {}", (int) type);
         return NULL;
     }
     mNodes.append(p);

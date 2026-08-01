@@ -159,7 +159,7 @@ void FirstPersonCamera::connectToInput() {
     if (gInputPtr) {
         connectToSignal<&FirstPersonCamera::onAxisMove>(gInput.sigAxisMove);
     } else {
-        GN_ERROR(sLogger)("Input module is not initialized.");
+        GN_ERROR(sLogger, "Input module is not initialized.");
     }
 }
 

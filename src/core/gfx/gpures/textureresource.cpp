@@ -27,7 +27,7 @@ const Guid & GN::gfx::TextureResource::guid() {
 // -----------------------------------------------------------------------------
 AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatabase & db, const char * filename) {
     if (NULL == filename) {
-        GN_INFO(sLogger)("Null filename string.");
+        GN_INFO(sLogger, "Null filename string.");
         return AutoRef<TextureResource>::NULLREF;
     }
 
@@ -44,7 +44,7 @@ AutoRef<TextureResource> GN::gfx::TextureResource::loadFromFile(GpuResourceDatab
     if (texres) return texres;
 
     // load new texture from file
-    GN_INFO(sLogger)("Load texture from file: {}", filename);
+    GN_INFO(sLogger, "Load texture from file: {}", filename);
     auto fp = GN::fs::openFile(filename, std::ios::binary | std::ios::in);
     if (!fp) return AutoRef<TextureResource>::NULLREF;
 

@@ -78,7 +78,7 @@ void GN::gfx::MultiThreadTexture::quit() {
 void GN::gfx::MultiThreadTexture::updateMipmap(uint32_t face, uint32_t level, const Box<uint32_t> * area, uint32_t rowPitch, uint32_t slicePitch,
                                                const void * data, SurfaceUpdateFlag flag) {
     if (level >= getDesc().levels) {
-        GN_ERROR(sLogger)("Invalid mipmap level: {}", level);
+        GN_ERROR(sLogger, "Invalid mipmap level: {}", level);
         return;
     }
 
@@ -88,7 +88,7 @@ void GN::gfx::MultiThreadTexture::updateMipmap(uint32_t face, uint32_t level, co
 
     void * tmpbuf = HeapMemory::alloc(dataSize);
     if (NULL == tmpbuf) {
-        GN_ERROR(sLogger)("fail to allocate temporary data buffer.");
+        GN_ERROR(sLogger, "fail to allocate temporary data buffer.");
         return;
     }
     memcpy(tmpbuf, data, dataSize);

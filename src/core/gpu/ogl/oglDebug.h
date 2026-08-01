@@ -119,9 +119,8 @@ class OGLDebugOutputARB {
         }
 
         static GN::Logger * sLogger = GN::getLogger("GN.gfx.gpu.OGL");
-        GN_LOG(sLogger, logLevel)
-        ("OpenGL debug output (id=[%d] source=[%s] type=[%s] severity=[%s]): %s", id, source2string(source), type2string(type), severity2string(severity),
-         message);
+        GN_LOG(sLogger, logLevel, "OpenGL debug output (id=[%d] source=[%s] type=[%s] severity=[%s]): %s", id, source2string(source), type2string(type),
+               severity2string(severity), message);
     }
 
 public:

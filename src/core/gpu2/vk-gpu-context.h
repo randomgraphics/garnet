@@ -35,7 +35,7 @@
             } else if (severity == RAPID_VULKAN_NAMESPACE::LogSeverity::BABBLE) {                                         \
                 logLevel = GN::Logger::LogLevel::BABBLE;                                                                  \
             }                                                                                                             \
-            GN_LOG_EX(GN::getLogger("GN.gpu2.vk"), logLevel, __FUNCTION__, __FILE__, __LINE__)("{} {}", prefix, message); \
+            GN_LOG_EX(GN::getLogger("GN.gpu2.vk"), logLevel, __FUNCTION__, __FILE__, __LINE__, "{} {}", prefix, message); \
         } while (false)
     #include <rapid-vulkan/rapid-vulkan.h>
 #else

@@ -129,7 +129,7 @@ GN_API Window * createWindow(const WindowCreateParameters & wcp) {
 #else
 
     GN_UNUSED_PARAM(wcp);
-    GN_WARN(sLogger)("No window class implementation on current platform.");
+    GN_WARN(sLogger, "No window class implementation on current platform.");
     return new FakeWindow;
 
 #endif
@@ -146,7 +146,7 @@ GN_API Window * attachToExistingWindow(const WindowAttachingParameters & wap) {
 #ifdef HAS_GLFW
 
     (void) wap;
-    GN_WARN(sLogger)("attachToExistingWindow is not supported with GLFW backend; use platform-specific backend (e.g. MSW/X11) or createWindow.");
+    GN_WARN(sLogger, "attachToExistingWindow is not supported with GLFW backend; use platform-specific backend (e.g. MSW/X11) or createWindow.");
     return nullptr;
 
 #elif HAS_QT
@@ -169,7 +169,7 @@ GN_API Window * attachToExistingWindow(const WindowAttachingParameters & wap) {
 #else
 
     GN_UNUSED_PARAM(wap);
-    GN_WARN(sLogger)("No window class implementation on current platform.");
+    GN_WARN(sLogger, "No window class implementation on current platform.");
     return new FakeWindow;
 
 #endif

@@ -358,7 +358,7 @@ vk::ImageAspectFlags aspectFromViewFormat(gfx::img::PixelFormat viewFmt, gfx::im
         if (viewFmt == PF::R_8_UINT() || viewFmt == PF::S_8_UNORM()) return vk::ImageAspectFlagBits::eStencil;
         if (viewFmt == PF::RG_24_UNORM_8_UINT() || viewFmt == PF::DS_24_UNORM_8_UINT())
             return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-        GN_ERROR(sLogger)("aspectFromViewFormat: view format {} incompatible with D24S8 texture", viewFmt.toString());
+        GN_ERROR(sLogger, "aspectFromViewFormat: view format {} incompatible with D24S8 texture", viewFmt.toString());
         return {};
     }
 
@@ -368,7 +368,7 @@ vk::ImageAspectFlags aspectFromViewFormat(gfx::img::PixelFormat viewFmt, gfx::im
         if (viewFmt == PF::R_8_UINT() || viewFmt == PF::S_8_UNORM()) return vk::ImageAspectFlagBits::eStencil;
         if (viewFmt == PF::RGX_32_FLOAT_8_UINT_24() || viewFmt == PF::DSX_32_FLOAT_8_UINT_24())
             return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-        GN_ERROR(sLogger)("aspectFromViewFormat: view format {} incompatible with D32S8 texture", viewFmt.toString());
+        GN_ERROR(sLogger, "aspectFromViewFormat: view format {} incompatible with D32S8 texture", viewFmt.toString());
         return {};
     }
 

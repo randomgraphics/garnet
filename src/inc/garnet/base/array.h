@@ -146,12 +146,12 @@ class StackArray {
         GN_ASSERT(mCount <= N);
 
         if (N == mCount) {
-            GN_ERROR(getLogger("GN.base.StackArray"))("Can't insert more. Stack array is full already!");
+            GN_ERROR(getLogger("GN.base.StackArray"), "Can't insert more. Stack array is full already!");
             return;
         }
 
         if (position > mCount) {
-            GN_ERROR(getLogger("GN.base.StackArray"))("invalid insert position.");
+            GN_ERROR(getLogger("GN.base.StackArray"), "invalid insert position.");
             return;
         }
 
@@ -171,7 +171,7 @@ class StackArray {
 
     void doErase(SIZE_TYPE position) {
         if (position >= mCount) {
-            GN_ERROR(getLogger("GN.base.StackArray"))("Invalid eraseIdx position");
+            GN_ERROR(getLogger("GN.base.StackArray"), "Invalid eraseIdx position");
             return;
         }
 
@@ -190,7 +190,7 @@ class StackArray {
         if (count == mCount) return; // shortcut for redundant call.
 
         if (count > N) {
-            GN_ERROR(getLogger("GN.base.StackArray"))("count is too large!");
+            GN_ERROR(getLogger("GN.base.StackArray"), "count is too large!");
             return;
         }
 
@@ -341,7 +341,7 @@ class DynaArray {
         if (0 == count) return true;
 
         if (0 == p) {
-            GN_ERROR(getLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
+            GN_ERROR(getLogger("GN.base.DynaArray"), "non-zero count with NULL pointer is not allowed!");
             return false;
         }
 
@@ -363,7 +363,7 @@ class DynaArray {
         if (0 == count) return true;
 
         if (0 == p) {
-            GN_ERROR(getLogger("GN.base.DynaArray"))("non-zero count with NULL pointer is not allowed!");
+            GN_ERROR(getLogger("GN.base.DynaArray"), "non-zero count with NULL pointer is not allowed!");
             return false;
         }
 
@@ -441,7 +441,7 @@ class DynaArray {
         auto count = GetCount();
 
         if (position > count) {
-            GN_WARN(getLogger("GN.base.DynaArray"))("invalid insert position");
+            GN_WARN(getLogger("GN.base.DynaArray"), "invalid insert position");
             return false;
         }
 
@@ -459,7 +459,7 @@ class DynaArray {
 
     void doErase(SIZE_TYPE position) {
         if (position >= GetCount()) {
-            GN_ERROR(getLogger("GN.base.DynaArray"))("invalid erase position");
+            GN_ERROR(getLogger("GN.base.DynaArray"), "invalid erase position");
             return;
         }
 
@@ -509,7 +509,7 @@ class DynaArray {
         if constexpr (std::is_trivially_copyable_v<T>) {
             auto newHeader = (Header *) OBJECT_ALLOCATOR::sReallocate((T *) oldHeader, newBufferSizeInObjects);
             if (!newHeader) {
-                GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
+                GN_ERROR(getLogger("GN.base.DynaArray"), "out of memory!");
                 return false;
             }
             newHeader->capacity = (SIZE_TYPE) newCap;
@@ -519,7 +519,7 @@ class DynaArray {
             // allocate new buffer (unconstructed raw memory)
             Header * newHeader = (Header *) OBJECT_ALLOCATOR::sAllocate(newBufferSizeInObjects);
             if (NULL == newHeader) {
-                GN_ERROR(getLogger("GN.base.DynaArray"))("out of memory!");
+                GN_ERROR(getLogger("GN.base.DynaArray"), "out of memory!");
                 return false;
             }
             newHeader->capacity = (SIZE_TYPE) newCap;

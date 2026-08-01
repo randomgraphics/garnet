@@ -26,7 +26,7 @@ struct OperatingDomainImpl : OperatingDomain {
         wcp.clientHeight = cp.height;
         mWindow.reset(win::createWindow(wcp));
         if (!mWindow) {
-            GN_ERROR(sLogger)("Failed to create application window.");
+            GN_ERROR(sLogger, "Failed to create application window.");
             return false;
         }
         mWindow->show();

@@ -90,7 +90,7 @@ GN_API GN::CharacterEncodingConverter::~CharacterEncodingConverter() { delete (C
 GN_API size_t GN::CharacterEncodingConverter::convert(void * destBuffer, size_t destBufferSizeInBytes, const void * sourceBuffer,
                                                       size_t sourceBufferSizeInBytes) {
     if (!mImpl) {
-        GN_ERROR(sLogger)("CharacterEncodingConverter is not correctly initialized.");
+        GN_ERROR(sLogger, "CharacterEncodingConverter is not correctly initialized.");
         return 0;
     }
 

@@ -75,7 +75,7 @@ class GpuCopyVulkan : public GpuCopy {
     ExecutionResult copyBufferToImage(TaskInfo & taskInfo, const BufferToImage & arguments) {
         (void) taskInfo;
         (void) arguments;
-        GN_ERROR(sLogger)("GpuCopyVulkan::copyBufferToImage: not implemented");
+        GN_ERROR(sLogger, "GpuCopyVulkan::copyBufferToImage: not implemented");
         return FAILED;
     }
 
@@ -87,36 +87,36 @@ public:
         const auto * a = RuntimeType::cast<BufferToBuffer>(&arguments);
         if (a) {
             if (!a->src) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: src is null", taskInfo);
+                    GN_ERROR(sLogger, "{} - GpuCopyVulkan::validate: src is null", taskInfo);
                     return false;
                 }
             if (!a->dst) {
-                GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: dst is null", taskInfo);
+                GN_ERROR(sLogger, "{} - GpuCopyVulkan::validate: dst is null", taskInfo);
                 return false;
             }
             // make sure the offset and size are valid
             const uint64_t srcSize = BufferUtils::getSize(a->src);
             const uint64_t dstSize = BufferUtils::getSize(a->dst);
             if ((a->srcOffset + a->size) > srcSize) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: src offset and size are out of bounds", taskInfo);
+                    GN_ERROR(sLogger, "{} - GpuCopyVulkan::validate: src offset and size are out of bounds", taskInfo);
                     return false;
                 }
             if ((a->dstOffset + a->size) > dstSize) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: dst offset and size are out of bounds", taskInfo);
+                    GN_ERROR(sLogger, "{} - GpuCopyVulkan::validate: dst offset and size are out of bounds", taskInfo);
                     return false;
                 }
             // make sure the src and dst are not the same
             if (a->src == a->dst) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: src and dst are the same", taskInfo);
+                    GN_ERROR(sLogger, "{} - GpuCopyVulkan::validate: src and dst are the same", taskInfo);
                     return false;
                 }
             return true;
         }
         if (RuntimeType::cast<BufferToImage>(&arguments)) {
-            GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: BufferToImage not implemented", taskInfo);
+            GN_ERROR(sLogger, "{} - GpuCopyVulkan::validate: BufferToImage not implemented", taskInfo);
             return false;
         }
-        GN_ERROR(sLogger)("{} - GpuCopyVulkan::validate: arguments must be either BufferToBuffer or BufferToImage", taskInfo);
+        GN_ERROR(sLogger, "{} - GpuCopyVulkan::validate: arguments must be either BufferToBuffer or BufferToImage", taskInfo);
         return false;
     }
 
@@ -136,7 +136,7 @@ public:
         const auto * bufferToImage = RuntimeType::cast<BufferToImage>(arguments);
         if (bufferToImage) return copyBufferToImage(taskInfo, *bufferToImage);
 
-        GN_ERROR(sLogger)("GpuCopyVulkan::execute: arguments is not BufferToBuffer or BufferToImage");
+        GN_ERROR(sLogger, "GpuCopyVulkan::execute: arguments is not BufferToBuffer or BufferToImage");
         return FAILED;
     }
 };
@@ -147,12 +147,12 @@ public:
 
 AutoRef<GpuCopy> createVulkanGpuCopy(const StrA & name, const GpuCopy::CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuCopy: gpu is null, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanGpuCopy: gpu is null, name='{}'", name);
             return {};
         }
     auto gpu = params.gpu.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuCopy: gpu is not Vulkan, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanGpuCopy: gpu is not Vulkan, name='{}'", name);
             return {};
         }
     return AutoRef<GpuCopy>(new GpuCopyVulkan(name, std::move(gpu), params));

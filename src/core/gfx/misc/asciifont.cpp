@@ -44,7 +44,7 @@ public:
 
     virtual bool loadFontImage(FontImage & result, wchar_t ch) {
         if ((unsigned int) ch > 255) {
-            GN_ERROR(sLogger)("this function supports ASCII characters only.");
+            GN_ERROR(sLogger, "this function supports ASCII characters only.");
             return false;
         }
 

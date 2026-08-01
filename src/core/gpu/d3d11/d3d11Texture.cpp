@@ -25,7 +25,7 @@ static DXGI_FORMAT sGetDepthReadingFormat(DXGI_FORMAT format) {
     case DXGI_FORMAT_R16_TYPELESS:
         return DXGI_FORMAT_R16_UNORM;
     default:
-        GN_ERROR(sLogger)("Format {} is not a valid typeless depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
+        GN_ERROR(sLogger, "Format {} is not a valid typeless depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
         return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -44,7 +44,7 @@ static DXGI_FORMAT sGetDepthWritingFormat(DXGI_FORMAT format) {
     case DXGI_FORMAT_R16_TYPELESS:
         return DXGI_FORMAT_D16_UNORM;
     default:
-        GN_ERROR(sLogger)("Format {} is not a valid depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
+        GN_ERROR(sLogger, "Format {} is not a valid depth buffer format.", dxgi::getDXGIFormatDesc(format).name);
         return DXGI_FORMAT_UNKNOWN;
     }
 }
@@ -128,7 +128,7 @@ void GN::gfx::D3D11Texture::updateMipmap(uint32_t face, uint32_t level, const Bo
 
         // area must be aligned to texel blocks
         if (0 != (clippedArea.x % fmtdesc.blockWidth) || 0 != (clippedArea.y % fmtdesc.blockHeight)) {
-            GN_ERROR(sLogger)("For block-compressed texture, \"area\" parameter must be aligned to texel block boundary.");
+            GN_ERROR(sLogger, "For block-compressed texture, \"area\" parameter must be aligned to texel block boundary.");
             return;
         }
         clippedArea.w = math::alignToPowerOf2(clippedArea.w, fmtdesc.blockWidth);
@@ -246,7 +246,7 @@ ID3D11RenderTargetView * GN::gfx::D3D11Texture::getRTView(uint32_t face, uint32_
 
     case D3D11_SRV_DIMENSION_TEXTURE1D:
         if (0 != face || 0 != slice) {
-            GN_ERROR(sLogger)("face or slice is out of range.");
+            GN_ERROR(sLogger, "face or slice is out of range.");
             return NULL;
         }
         rtvdesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
@@ -255,7 +255,7 @@ ID3D11RenderTargetView * GN::gfx::D3D11Texture::getRTView(uint32_t face, uint32_
 
     case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
         if (0 != slice) {
-            GN_ERROR(sLogger)("slice is out of range.");
+            GN_ERROR(sLogger, "slice is out of range.");
             return NULL;
         }
         rtvdesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
@@ -266,7 +266,7 @@ ID3D11RenderTargetView * GN::gfx::D3D11Texture::getRTView(uint32_t face, uint32_
 
     case D3D11_SRV_DIMENSION_TEXTURE2D:
         if (0 != face || 0 != slice) {
-            GN_ERROR(sLogger)("face or slice is out of range.");
+            GN_ERROR(sLogger, "face or slice is out of range.");
             return NULL;
         }
         rtvdesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
@@ -276,7 +276,7 @@ ID3D11RenderTargetView * GN::gfx::D3D11Texture::getRTView(uint32_t face, uint32_
     case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
     case D3D11_SRV_DIMENSION_TEXTURECUBE:
         if (0 != slice) {
-            GN_ERROR(sLogger)("slice is out of range.");
+            GN_ERROR(sLogger, "slice is out of range.");
             return NULL;
         }
         rtvdesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
@@ -292,7 +292,7 @@ ID3D11RenderTargetView * GN::gfx::D3D11Texture::getRTView(uint32_t face, uint32_
 
     case D3D11_SRV_DIMENSION_TEXTURE3D:
         if (0 != face) {
-            GN_ERROR(sLogger)("face is out of range.");
+            GN_ERROR(sLogger, "face is out of range.");
             return NULL;
         }
         rtvdesc.ViewDimension         = D3D11_RTV_DIMENSION_TEXTURE3D;
@@ -330,12 +330,12 @@ ID3D11DepthStencilView * GN::gfx::D3D11Texture::getDSView(uint32_t face, uint32_
 
     switch (mDimension) {
     case D3D11_SRV_DIMENSION_BUFFER:
-        GN_ERROR(sLogger)("A D3D11Buffer cannot be used as depth buffer.");
+        GN_ERROR(sLogger, "A D3D11Buffer cannot be used as depth buffer.");
         return NULL;
 
     case D3D11_SRV_DIMENSION_TEXTURE1D:
         if (0 != face || 0 != slice) {
-            GN_ERROR(sLogger)("face or slice is out of range.");
+            GN_ERROR(sLogger, "face or slice is out of range.");
             return NULL;
         }
         dsvdesc.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE1D;
@@ -344,7 +344,7 @@ ID3D11DepthStencilView * GN::gfx::D3D11Texture::getDSView(uint32_t face, uint32_
 
     case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
         if (0 != slice) {
-            GN_ERROR(sLogger)("slice is out of range.");
+            GN_ERROR(sLogger, "slice is out of range.");
             return NULL;
         }
         dsvdesc.ViewDimension                  = D3D11_DSV_DIMENSION_TEXTURE1DARRAY;
@@ -355,7 +355,7 @@ ID3D11DepthStencilView * GN::gfx::D3D11Texture::getDSView(uint32_t face, uint32_
 
     case D3D11_SRV_DIMENSION_TEXTURE2D:
         if (0 != face || 0 != slice) {
-            GN_ERROR(sLogger)("face or slice is out of range.");
+            GN_ERROR(sLogger, "face or slice is out of range.");
             return NULL;
         }
         dsvdesc.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
@@ -365,7 +365,7 @@ ID3D11DepthStencilView * GN::gfx::D3D11Texture::getDSView(uint32_t face, uint32_
     case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
     case D3D11_SRV_DIMENSION_TEXTURECUBE:
         if (0 != slice) {
-            GN_ERROR(sLogger)("slice is out of range.");
+            GN_ERROR(sLogger, "slice is out of range.");
             return NULL;
         }
         dsvdesc.ViewDimension                  = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
@@ -380,7 +380,7 @@ ID3D11DepthStencilView * GN::gfx::D3D11Texture::getDSView(uint32_t face, uint32_
         return NULL;
 
     case D3D11_SRV_DIMENSION_TEXTURE3D:
-        GN_ERROR(sLogger)("A 3D texture cannot be used as depth buffer.");
+        GN_ERROR(sLogger, "A 3D texture cannot be used as depth buffer.");
         return NULL;
 
     default:
@@ -421,7 +421,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
         mReadingFormat = sGetDepthReadingFormat(mTextureFormat);
         mWritingFormat = sGetDepthWritingFormat(mTextureFormat);
         if (DXGI_FORMAT_UNKNOWN == mTextureFormat || DXGI_FORMAT_UNKNOWN == mReadingFormat || DXGI_FORMAT_UNKNOWN == mWritingFormat) {
-            GN_ERROR(sLogger)("Fail to determine depth texture format.");
+            GN_ERROR(sLogger, "Fail to determine depth texture format.");
             return false;
         }
     } else {
@@ -429,7 +429,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
         mTextureFormat = mReadingFormat;
         mWritingFormat = mReadingFormat;
         if (DXGI_FORMAT_UNKNOWN == mReadingFormat) {
-            GN_ERROR(sLogger)("Fail to determine texture format.");
+            GN_ERROR(sLogger, "Fail to determine texture format.");
             return false;
         }
     }
@@ -457,7 +457,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
         break;
 
     default:
-        GN_ERROR(sLogger)("Invalid texture usage enumeration.");
+        GN_ERROR(sLogger, "Invalid texture usage enumeration.");
         return false;
     }
 
@@ -515,7 +515,7 @@ bool GN::gfx::D3D11Texture::createTexture() {
         GN_DX_CHECK_RETURN(dev.CreateTexture3D(&desc3d, 0, &tex3d), false);
         mTexture = tex3d;
     } else {
-        GN_ERROR(sLogger)("Invalid texture dimension: {}", (int) mDimension);
+        GN_ERROR(sLogger, "Invalid texture dimension: {}", (int) mDimension);
         GN_UNEXPECTED();
         return false;
     }

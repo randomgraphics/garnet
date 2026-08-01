@@ -102,7 +102,7 @@ public:
 
 GN_API AutoRef<SkyBox> SkyBox::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("SkyBox::create: gpu is null, name='{}'", name);
+            GN_ERROR(sLogger, "SkyBox::create: gpu is null, name='{}'", name);
             return {};
         }
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
@@ -110,13 +110,13 @@ GN_API AutoRef<SkyBox> SkyBox::create(const StrA & name, const CreateParameters 
     case GpuContextCommon::Api::Vulkan:
         return AutoRef<SkyBox>(new SkyBoxVulkan(name, params.gpu));
     case GpuContextCommon::Api::D3D12:
-        GN_ERROR(sLogger)("SkyBox::create: D3D12 backend not implemented");
+        GN_ERROR(sLogger, "SkyBox::create: D3D12 backend not implemented");
         return {};
     case GpuContextCommon::Api::Metal:
-        GN_ERROR(sLogger)("SkyBox::create: Metal backend not implemented");
+        GN_ERROR(sLogger, "SkyBox::create: Metal backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("SkyBox::create: unknown API, name='{}'", name);
+        GN_ERROR(sLogger, "SkyBox::create: unknown API, name='{}'", name);
         return {};
     }
 }

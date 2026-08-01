@@ -275,7 +275,7 @@ public:
     ///
     void * alloc() {
         if (MAX_ITEMS > 0 && mItemCount == MAX_ITEMS) {
-            GN_ERROR(getLogger("FixSizedRawMemoryPool"))("out of pool memory!");
+            GN_ERROR(getLogger("FixSizedRawMemoryPool"), "out of pool memory!");
             return 0;
         }
 
@@ -283,12 +283,12 @@ public:
             // no free items. create new block
             Block * b = (Block *) HeapMemory::alloc(sizeof(Block));
             if (0 == b) {
-                GN_ERROR(getLogger("FixSizedRawMemoryPool"))("out of heap memory!");
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"), "out of heap memory!");
                 return 0;
             }
             b->items = (Item *) HeapMemory::alignedAlloc(sizeof(Item) * mNewBlockSize, ALIGNMENT);
             if (0 == b->items) {
-                GN_ERROR(getLogger("FixSizedRawMemoryPool"))("out of heap memory!");
+                GN_ERROR(getLogger("FixSizedRawMemoryPool"), "out of heap memory!");
                 HeapMemory::dealloc(b);
                 return 0;
             }
@@ -330,12 +330,12 @@ public:
 
         Item * i = (Item *) p;
         if (!check(p)) {
-            GN_ERROR(getLogger("FixSizedRawMemoryPool"))("invalid pointer!");
+            GN_ERROR(getLogger("FixSizedRawMemoryPool"), "invalid pointer!");
             return;
         }
 
         if (0 == mItemCount) {
-            GN_ERROR(getLogger("FixSizedRawMemoryPool"))("input pointer is not belong to this pool!");
+            GN_ERROR(getLogger("FixSizedRawMemoryPool"), "input pointer is not belong to this pool!");
             return;
         }
 

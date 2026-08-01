@@ -59,7 +59,7 @@ public:
 AutoRef<ClearRenderTarget> createVulkanClearRenderTarget(const StrA & name, const ClearRenderTarget::CreateParameters & params) {
     auto gpu = params.gpu.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanClearRenderTarget: gpu is empty, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanClearRenderTarget: gpu is empty, name='{}'", name);
             return {};
         }
     return AutoRef<ClearRenderTarget>(new ClearRenderTargetVulkan(name, gpu));
@@ -133,7 +133,7 @@ public:
 
         const auto size = static_cast<uint32_t>(a->immediates.size());
         if (size > 128) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - inline constants size is too large (max = 128 bytes), size={}", taskInfo, size);
+                GN_ERROR(sLogger, "{} - inline constants size is too large (max = 128 bytes), size={}", taskInfo, size);
                 return FAILED;
             }
 
@@ -145,18 +145,18 @@ public:
 
         const RenderTarget * currentRt = rp.drawTarget();
         if (!currentRt) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - current render target is not set for GpuDraw action", taskInfo);
+                GN_ERROR(sLogger, "{} - current render target is not set for GpuDraw action", taskInfo);
                 return FAILED;
             }
 
         const GpuGeometry & geom = a->geometry;
         if (0 == geom.vertexCount && 0 == geom.indexCount) GN_UNLIKELY {
-                GN_VERBOSE(sLogger)("{} - vertex and index count are zero. nothing to draw", taskInfo);
+                GN_VERBOSE(sLogger, "{} - vertex and index count are zero. nothing to draw", taskInfo);
                 return PASSED;
             }
 
         if (!mCreateParams.vs.binary || mCreateParams.vs.size == 0) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - vertex shader is missing for GpuDraw action", taskInfo);
+                GN_ERROR(sLogger, "{} - vertex shader is missing for GpuDraw action", taskInfo);
                 return FAILED;
             }
 
@@ -172,7 +172,7 @@ public:
 
         auto pipeline = mGpu->psoFactory().getOrCreateGraphicsPso(createParams);
         if (!pipeline) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - PSO factory returned null pipeline", taskInfo);
+                GN_ERROR(sLogger, "{} - PSO factory returned null pipeline", taskInfo);
                 return FAILED;
             }
 
@@ -254,7 +254,7 @@ public:
 
         rapid_vulkan::Ref<const rapid_vulkan::DrawPack> drawPack = drawable.compile();
         if (!drawPack || drawPack->empty()) GN_UNLIKELY {
-                GN_ERROR(sLogger)("{} - Drawable compile produced empty DrawPack", taskInfo);
+                GN_ERROR(sLogger, "{} - Drawable compile produced empty DrawPack", taskInfo);
                 return FAILED;
             }
 
@@ -268,7 +268,7 @@ public:
 AutoRef<GpuDraw> createVulkanGpuDraw(const StrA & name, const GpuDraw::CreateParameters & params) {
     auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuDraw: gpu is empty, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanGpuDraw: gpu is empty, name='{}'", name);
             return {};
         }
     return AutoRef<GpuDraw>(new GpuDrawVulkan(name, gpu, params));
