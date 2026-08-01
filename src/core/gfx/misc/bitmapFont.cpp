@@ -39,7 +39,7 @@ bool GN::gfx::BitmapFont::init(SpriteRenderer * sr, FontFace * ff, size_t maxcha
     GN_STDCLASS_INIT();
 
     if (NULL == sr || NULL == ff) {
-        GN_ERROR(sLogger)("Null parameters.");
+        GN_ERROR(sLogger, "Null parameters.");
         return failure();
     }
 
@@ -125,7 +125,7 @@ void GN::gfx::BitmapFont::drawText(const TextDesc & td) {
         ++index;
 
         if (index > mMaxSlots) {
-            GN_ERROR(sLogger)("text is too long!");
+            GN_ERROR(sLogger, "text is too long!");
             return;
         }
 
@@ -219,7 +219,7 @@ const GN::gfx::BitmapFont::FontSlot * GN::gfx::BitmapFont::createSlot(wchar_t ch
     GN_ASSERT(NULL == mSlotMap.find(ch));
 
     if (mNumUsedSlots >= mMaxSlots) {
-        GN_ERROR(sLogger)("Run out of charactor slots!");
+        GN_ERROR(sLogger, "Run out of charactor slots!");
         return NULL;
     }
 
@@ -231,7 +231,7 @@ const GN::gfx::BitmapFont::FontSlot * GN::gfx::BitmapFont::createSlot(wchar_t ch
     // load font image
     FontImage fbm;
     if (!mFont->loadFontImage(fbm, ch)) {
-        GN_ERROR(sLogger)(L"fail to get font bitmap for character '{}'!", ch);
+        GN_ERROR(sLogger, L"fail to get font bitmap for character '{}'!", ch);
         return NULL;
     }
 
@@ -306,7 +306,7 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16_t fontw, uint16_t fonth, si
     // determine texture size
     size_t texwidth, texheight, texcount;
     if (!sDetermineTextureSizeAndCount(texwidth, texheight, texcount, gpu, rectw, recth, maxchars)) {
-        GN_ERROR(sLogger)("Fail to determine font texture size, please decrease font size or maxchars.");
+        GN_ERROR(sLogger, "Fail to determine font texture size, please decrease font size or maxchars.");
         return false;
     }
 
@@ -373,7 +373,7 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16_t fontw, uint16_t fonth, si
         mTextures[i].attach(gpu.createTexture(td));
 
         if (0 == mTextures[i]) {
-            GN_ERROR(sLogger)("fail to create font texture #{}!", i);
+            GN_ERROR(sLogger, "fail to create font texture #{}!", i);
             return failure();
         }
 

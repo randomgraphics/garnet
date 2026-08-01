@@ -232,7 +232,7 @@ struct D3D9StateDump {
                 break;
 
             default:
-                GN_ERROR(sLogger)("unsupport resource type: %d", info.ResourceType);
+                GN_ERROR(sLogger, "unsupport resource type: %d", info.ResourceType);
                 return false;
             }
         }
@@ -362,7 +362,7 @@ struct D3D9StateDump {
         // check root name
         const XmlElement * e = root.toElement();
         if (0 == e || "D3D9StateDump" != e->name) {
-            GN_ERROR(sLogger)("root node must be \"<D3D9StateDump>\".");
+            GN_ERROR(sLogger, "root node must be \"<D3D9StateDump>\".");
             return false;
         }
 
@@ -426,7 +426,7 @@ struct D3D9StateDump {
                 if (!sGetNumericAttr(*e, "prim", operation.prim)) return false;
                 if (!sGetNumericAttr(*e, "startvtx", operation.startvtx)) return false;
             } else {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
+                GN_WARN(sLogger, "%s : ignore unknown node %s", e->getLocation(), e->name.data());
             }
         }
 
@@ -445,7 +445,7 @@ private:
                 return true;
             }
         }
-        GN_ERROR(sLogger)("no cdata node found!");
+        GN_ERROR(sLogger, "no cdata node found!");
         return false;
     }
 
@@ -453,7 +453,7 @@ private:
     static bool sGetNumericAttr(const XmlElement & node, const std::string & attrname, T & result) {
         const XmlAttrib * a = node.findAttrib(attrname);
         if (!a || !str::toNumber<T>(result, a->value.data())) {
-            GN_ERROR(sLogger)("%s : attribute '%s' is missing!", node.getLocation(), attrname.data());
+            GN_ERROR(sLogger, "%s : attribute '%s' is missing!", node.getLocation(), attrname.data());
             return false;
         } else {
             return true;
@@ -463,13 +463,13 @@ private:
     static bool sGetRefString(const XmlElement & node, const std::string & basedir, std::string & result) {
         const XmlAttrib * a = node.findAttrib("ref");
         if (!a) {
-            GN_ERROR(sLogger)("%s : attribute 'ref' is missing!", node.getLocation());
+            GN_ERROR(sLogger, "%s : attribute 'ref' is missing!", node.getLocation());
             return false;
         }
 
         result = fs::resolvePath(basedir, a->value);
 
-        if (!fs::isFile(result)) { GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.data()); }
+        if (!fs::isFile(result)) { GN_WARN(sLogger, "%s : invalid reference :  %s!", node.getLocation(), result.data()); }
 
         // success
         return true;
@@ -480,14 +480,14 @@ private:
             const XmlElement * e = n->toElement();
             if (!e) continue;
             if (e->name != "f") {
-                GN_ERROR(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
+                GN_ERROR(sLogger, "%s : ignore unknown node %s", e->getLocation(), e->name.data());
                 continue;
             }
 
             size_t index;
             if (!sGetNumericAttr(*e, "index", index)) return false;
             if (index >= count) {
-                GN_ERROR(sLogger)("%s : invalid const index.", e->getLocation());
+                GN_ERROR(sLogger, "%s : invalid const index.", e->getLocation());
                 continue;
             }
 
@@ -510,7 +510,7 @@ private:
             size_t index;
             if (!sGetNumericAttr(*e, "index", index)) return false;
             if (index >= count) {
-                GN_ERROR(sLogger)("%s : invalid const index.", e->getLocation());
+                GN_ERROR(sLogger, "%s : invalid const index.", e->getLocation());
                 continue;
             }
 
@@ -528,21 +528,21 @@ private:
     static bool sLoadConst(float * floats, size_t countf, int * ints, size_t counti, int * bools, size_t countb, const XmlElement & node) {
         XmlElement * e = node.findChildElement("float");
         if (!e) {
-            GN_ERROR(sLogger)("%s : vs float constants are missing!", node.getLocation());
+            GN_ERROR(sLogger, "%s : vs float constants are missing!", node.getLocation());
             return false;
         }
         if (!sLoadConstF(floats, countf, *e)) return false;
 
         e = node.findChildElement("int");
         if (!e) {
-            GN_ERROR(sLogger)("%s : vs integer constants are missing!", node.getLocation());
+            GN_ERROR(sLogger, "%s : vs integer constants are missing!", node.getLocation());
             return false;
         }
         if (!sLoadConstI(ints, 4, counti, *e)) return false;
 
         e = node.findChildElement("bool");
         if (!e) {
-            GN_ERROR(sLogger)("%s : vs boolean constants are missing!", node.getLocation());
+            GN_ERROR(sLogger, "%s : vs boolean constants are missing!", node.getLocation());
             return false;
         }
         if (!sLoadConstI(bools, 1, countb, *e)) return false;
@@ -559,12 +559,12 @@ private:
             if (!e) continue;
 
             if (e->name != "element") {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
+                GN_WARN(sLogger, "%s : ignore unknown node %s", e->getLocation(), e->name.data());
                 continue;
             }
 
             if (count >= GN_ARRAY_COUNT(vtxdecl.elements)) {
-                GN_ERROR(sLogger)("%s : too many elements!", e->getLocation());
+                GN_ERROR(sLogger, "%s : too many elements!", e->getLocation());
                 return false;
             }
 
@@ -588,7 +588,7 @@ private:
         size_t stream;
         if (!sGetNumericAttr(node, "stream", stream)) return false;
         if (stream >= GN_ARRAY_COUNT(vtxbufs)) {
-            GN_ERROR(sLogger)("invalid stream index.");
+            GN_ERROR(sLogger, "invalid stream index.");
             return false;
         }
 
@@ -612,7 +612,7 @@ private:
         size_t stage;
         if (!sGetNumericAttr(node, "stage", stage)) return false;
         if (stage >= GN_ARRAY_COUNT(textures)) {
-            GN_ERROR(sLogger)("invalid stage.");
+            GN_ERROR(sLogger, "invalid stage.");
             return false;
         }
 
@@ -627,7 +627,7 @@ private:
         size_t stage;
         if (!sGetNumericAttr(node, "stage", stage)) return false;
         if (stage >= GN_ARRAY_COUNT(rendertargets)) {
-            GN_ERROR(sLogger)("invalid stage.");
+            GN_ERROR(sLogger, "invalid stage.");
             return false;
         }
 
@@ -663,12 +663,12 @@ private:
             if (!e) continue;
 
             if ("rs" != e->name) {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
+                GN_WARN(sLogger, "%s : ignore unknown node %s", e->getLocation(), e->name.data());
                 continue;
             }
 
             if (count >= GN_ARRAY_COUNT(renderstates)) {
-                GN_WARN(sLogger)("%s : too many render states", e->getLocation());
+                GN_WARN(sLogger, "%s : too many render states", e->getLocation());
                 return true;
             }
 
@@ -680,7 +680,7 @@ private:
             ++count;
         }
 
-        if (count != GN_ARRAY_COUNT(renderstates)) { GN_WARN(sLogger)("%s : too little render states", node.getLocation()); }
+        if (count != GN_ARRAY_COUNT(renderstates)) { GN_WARN(sLogger, "%s : too little render states", node.getLocation()); }
 
         // success
         return true;
@@ -692,7 +692,7 @@ private:
             if (!e) continue;
 
             if ("ss" != e->name) {
-                GN_WARN(sLogger)("%s : ignore unknown node %s", e->getLocation(), e->name.data());
+                GN_WARN(sLogger, "%s : ignore unknown node %s", e->getLocation(), e->name.data());
                 continue;
             }
 
@@ -701,7 +701,7 @@ private:
             if (!sGetNumericAttr(*e, "type", type)) return false;
 
             if (stage > 15 || type > 13) {
-                GN_ERROR(sLogger)("%s : invalid SS stage and/or type", e->getLocation());
+                GN_ERROR(sLogger, "%s : invalid SS stage and/or type", e->getLocation());
                 return false;
             }
 

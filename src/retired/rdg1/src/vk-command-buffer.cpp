@@ -69,7 +69,7 @@ CommandBufferManagerVulkan::CommandProxy CommandBufferManagerVulkan::execute(Tas
         auto b = std::make_shared<CommandBuffer>(bufferType, q,
                                                  q->begin(fmt::format("rdg-command-buffer ({})", taskInfo).c_str(), vk::CommandBufferLevel::ePrimary));
         if (!b) GN_UNLIKELY {
-                GN_ERROR(sLogger)("CommandBufferManagerVulkan::execute: queue->begin() returned empty for task {}", taskInfo.index);
+                GN_ERROR(sLogger, "CommandBufferManagerVulkan::execute: queue->begin() returned empty for task {}", taskInfo.index);
                 return {};
             }
 
@@ -85,7 +85,7 @@ CommandBufferManagerVulkan::CommandProxy CommandBufferManagerVulkan::execute(Tas
 }
 
 void CommandBufferManagerVulkan::submit(const TaskInfo & taskInfo, const CommandBuffer & cb) {
-    GN_VERBOSE(sLogger)("{} - submitting command buffer to queue", taskInfo);
+    GN_VERBOSE(sLogger, "{} - submitting command buffer to queue", taskInfo);
     for (auto & [tex, state] : cb.textureStates) {
         if (tex) tex->state().assignFrom(state, tex->name);
     }

@@ -111,7 +111,7 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
     layoutInfo.setBindings(bindings);
     mLayout = dev.createDescriptorSetLayout(layoutInfo, gi.allocator);
     if (!mLayout) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuResourceGroupVulkan: failed to create descriptor set layout, name='{}'", name);
+            GN_ERROR(sLogger, "GpuResourceGroupVulkan: failed to create descriptor set layout, name='{}'", name);
             return;
         }
 
@@ -123,7 +123,7 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
     poolInfo.setPoolSizes(poolSizes).setMaxSets(1);
     mPool = dev.createDescriptorPool(poolInfo, gi.allocator);
     if (!mPool) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuResourceGroupVulkan: failed to create descriptor pool, name='{}'", name);
+            GN_ERROR(sLogger, "GpuResourceGroupVulkan: failed to create descriptor pool, name='{}'", name);
             dev.destroy(mLayout, gi.allocator);
             mLayout = nullptr;
             return;
@@ -133,7 +133,7 @@ void GpuResourceGroupVulkan::buildLayoutAndPool() {
     allocInfo.setDescriptorPool(mPool).setSetLayouts(mLayout);
     auto sets = dev.allocateDescriptorSets(allocInfo);
     if (sets.empty()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuResourceGroupVulkan: failed to allocate descriptor set, name='{}'", name);
+            GN_ERROR(sLogger, "GpuResourceGroupVulkan: failed to allocate descriptor set, name='{}'", name);
             dev.destroy(mPool, gi.allocator);
             dev.destroy(mLayout, gi.allocator);
             mPool   = nullptr;
@@ -253,12 +253,12 @@ void GpuResourceGroupVulkan::addToReadWriteList(Arguments::ArtifactReadWriteList
 
 AutoRef<GpuResourceGroup> createVulkanGpuResourceGroup(const StrA & name, const GpuResourceGroup::CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is null, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanGpuResourceGroup: context is null, name='{}'", name);
             return {};
         }
     auto gpu = params.context.staticCastTo<GpuContextVulkan>();
     if (!gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createVulkanGpuResourceGroup: context is not Vulkan, name='{}'", name);
+            GN_ERROR(sLogger, "createVulkanGpuResourceGroup: context is not Vulkan, name='{}'", name);
             return {};
         }
     return AutoRef<GpuResourceGroup>(new GpuResourceGroupVulkan(name, std::move(gpu), params));

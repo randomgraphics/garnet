@@ -126,7 +126,7 @@ public:
         if (mFreeList.empty()) {
             Item * newItem = (Item *) mPool.alloc();
             if (0 == newItem) {
-                GN_ERROR(getLogger("GN.base.HandleManager"))("out of memory");
+                GN_ERROR(getLogger("GN.base.HandleManager"), "out of memory");
                 return 0;
             }
             newItem->occupied = false;
@@ -149,7 +149,7 @@ public:
         if (mFreeList.empty()) {
             Item * newItem = (Item *) mPool.alloc();
             if (0 == newItem) {
-                GN_ERROR(getLogger("GN.base.HandleManager"))("out of memory");
+                GN_ERROR(getLogger("GN.base.HandleManager"), "out of memory");
                 return 0;
             }
             newItem->occupied = false;
@@ -170,7 +170,7 @@ public:
     ///
     bool remove(HANDLE_TYPE h) {
         if (!validHandle(h)) {
-            GN_ERROR(getLogger("GN.base.HandleManager"))("Invalid handle!");
+            GN_ERROR(getLogger("GN.base.HandleManager"), "Invalid handle!");
             return false;
         } else {
             size_t idx = h2idx(h);
@@ -300,7 +300,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '{}' is not unique.", name.data());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"), "name '{}' is not unique.", name.data());
             return 0;
         }
 
@@ -327,7 +327,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (NULL != mNames.find(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("name '{}' is not unique.", name.data());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"), "name '{}' is not unique.", name.data());
             return 0;
         }
 
@@ -348,7 +348,7 @@ public:
 
     void remove(H h) {
         if (!validHandle(h)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid handle : {}.", h);
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"), "invalid handle : {}.", h);
             return;
         }
 
@@ -366,7 +366,7 @@ public:
         if (CASE_INSENSITIVE) { GN_UNIMPL(); }
 
         if (!validName(name)) {
-            GN_ERROR(getLogger("GN.base.NamedHandleManager"))("invalid name: {}.", name.data());
+            GN_ERROR(getLogger("GN.base.NamedHandleManager"), "invalid name: {}.", name.data());
             return;
         }
 

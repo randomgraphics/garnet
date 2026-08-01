@@ -471,17 +471,17 @@ GpuResourceDatabase::Impl::~Impl() {}
 // -----------------------------------------------------------------------------
 bool GpuResourceDatabase::Impl::registerResourceFactory(const Guid & type, const char * descriptiveName, GpuResourceFactory factory) {
     if (hasResourceFactory(type)) {
-        GN_ERROR(sLogger)("Resource type exisits already!");
+        GN_ERROR(sLogger, "Resource type exisits already!");
         return false;
     }
 
     if (NULL == factory.createResource) {
-        GN_ERROR(sLogger)("Resource factory has NULL function pointer(s).");
+        GN_ERROR(sLogger, "Resource factory has NULL function pointer(s).");
         return false;
     }
 
     if (mManagers.size() == mManagers.MAX_SIZE) {
-        GN_ERROR(sLogger)("Resource manager pool is full. Cannot register more resource types!");
+        GN_ERROR(sLogger, "Resource manager pool is full. Cannot register more resource types!");
         return false;
     }
 
@@ -510,7 +510,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
     // get the manager for the resource type
     ResourceManager * mgr = getManager(type);
     if (NULL == mgr) {
-        GN_ERROR(sLogger)("Invalid resouce type: {}", type.toStr());
+        GN_ERROR(sLogger, "Invalid resouce type: {}", type.toStr());
         return AutoRef<GpuResource>::NULLREF;
     }
 
@@ -527,7 +527,7 @@ AutoRef<GpuResource> GpuResourceDatabase::Impl::createResource(const Guid & type
 
     // check if the resource with same name exisits already.
     if (mgr->resources.validName(name)) {
-        GN_ERROR(sLogger)("Resource named \"{}\" exists already.", name);
+        GN_ERROR(sLogger, "Resource named \"{}\" exists already.", name);
         return AutoRef<GpuResource>::NULLREF;
     }
 
@@ -610,7 +610,7 @@ const StrA * GpuResourceDatabase::Impl::getResourceName(const GpuResource * reso
 
     const StrA * name = mgr.resources.handle2name(resimpl->handle.internalHandle());
 
-    if (NULL == name) { GN_ERROR(sLogger)("Fail to get reosource name: Invalid resource pointer."); }
+    if (NULL == name) { GN_ERROR(sLogger, "Fail to get reosource name: Invalid resource pointer."); }
 
     return name;
 }
@@ -688,7 +688,7 @@ bool GpuResourceDatabase::Impl::setupBuiltInResources() {
 // -----------------------------------------------------------------------------
 AutoRef<UniformResource> GpuResourceDatabase::Impl::getStandardUniformResource(int index) const {
     if (!StandardUniform::sIsValidIndex(index)) {
-        GN_ERROR(sLogger)("Invalid standard uniform index: {}", index);
+        GN_ERROR(sLogger, "Invalid standard uniform index: {}", index);
         return AutoRef<UniformResource>::NULLREF;
     }
     return mStdUniforms[index];
@@ -700,16 +700,16 @@ AutoRef<UniformResource> GpuResourceDatabase::Impl::getStandardUniformResource(i
 void GpuResourceDatabase::Impl::setStandardUniform(int index, const void * data, uint32_t dataSize) {
     // check parameters
     if (!StandardUniform::sIsValidIndex(index)) {
-        GN_ERROR(sLogger)("Invalid uniform type: {}", index);
+        GN_ERROR(sLogger, "Invalid uniform type: {}", index);
         return;
     }
     if (NULL == data) {
-        GN_ERROR(sLogger)("Null point.");
+        GN_ERROR(sLogger, "Null point.");
         return;
     }
     const StandardUniform::Desc * desc = StandardUniform::sIndex2Desc(index);
     if (dataSize != desc->size) {
-        GN_ERROR(sLogger)("Incorrect uniform data size: expected={}, actual={}.", desc->size, dataSize);
+        GN_ERROR(sLogger, "Incorrect uniform data size: expected={}, actual={}.", desc->size, dataSize);
         return;
     }
 
@@ -787,12 +787,12 @@ inline GpuResourceDatabase::Impl::ResourceManager * GpuResourceDatabase::Impl::g
 // -----------------------------------------------------------------------------
 inline GpuResource::Impl * GpuResourceDatabase::Impl::getResourceImpl(const GpuResource * resource) const {
     if (NULL == resource) {
-        GN_ERROR(sLogger)("Null resource pointer.");
+        GN_ERROR(sLogger, "Null resource pointer.");
         return NULL;
     }
 
     if (this != resource->getGdb().mImpl) {
-        GN_ERROR(sLogger)("The resource belongs to another database.");
+        GN_ERROR(sLogger, "The resource belongs to another database.");
         return NULL;
     }
 

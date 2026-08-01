@@ -145,7 +145,7 @@ static rv::Sampler * ensureDefaultSampler(const rv::Device * dev, rv::Ref<rv::Sa
 void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordContext & ctx) {
     auto * csVk = RuntimeType::cast<GpuShaderVulkan>(op.cs.get());
     if (!csVk || !csVk->rvShader()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: compute requires a valid compute shader");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: compute requires a valid compute shader");
             return;
         }
 
@@ -190,7 +190,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
     ccp.cs   = csVk->rvShader();
     rv::Ref<rv::ComputePipeline> pipeline(new rv::ComputePipeline(ccp));
     if (!pipeline->handle()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: failed to create compute pipeline");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: failed to create compute pipeline");
             return;
         }
 
@@ -200,7 +200,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
 
     if (op.immediates && !op.immediates->empty()) {
         if (op.immediates->size() > 128) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncPayloadVulkan: immediates size {} exceeds 128 bytes", op.immediates->size());
+                GN_ERROR(sLogger, "GpuCncPayloadVulkan: immediates size {} exceeds 128 bytes", op.immediates->size());
             }
         else { drawable.c(0, op.immediates->size(), op.immediates->data(), vk::ShaderStageFlagBits::eCompute); }
     }
@@ -254,7 +254,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
 
     rv::Ref<const rv::DrawPack> pack = drawable.compile();
     if (!pack || pack->empty()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: Drawable::compile produced empty DrawPack for compute dispatch");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: Drawable::compile produced empty DrawPack for compute dispatch");
             return;
         }
     ctx.cmd.render(pack);
@@ -268,13 +268,13 @@ static void emitBufferCopy(BufferVulkan * srcVk, BufferVulkan * dstVk, uint64_t 
                            GpuResourceStateTrackerVulkan & tracker) {
     if (size == 0) return;
     if (!srcVk || !dstVk) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: buffer copy: null Vulkan buffer");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: buffer copy: null Vulkan buffer");
             return;
         }
     vk::Buffer srcBuf = srcVk->nativeBuffer();
     vk::Buffer dstBuf = dstVk->nativeBuffer();
     if (!srcBuf || !dstBuf) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: buffer copy: buffer missing Vulkan handle");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: buffer copy: buffer missing Vulkan handle");
             return;
         }
 
@@ -291,7 +291,7 @@ void GpuCncPayloadVulkan::recordBufToBuf(const StoredBufferToBuffer & op, vk::Co
     auto * srcVk = RuntimeType::cast<BufferVulkan>(op.src.get());
     auto * dstVk = RuntimeType::cast<BufferVulkan>(op.dst.get());
     if (srcVk && srcVk == dstVk) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: copyBufferToBuffer: src and dst are the same buffer");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: copyBufferToBuffer: src and dst are the same buffer");
             return;
         }
     emitBufferCopy(srcVk, dstVk, op.srcOffset, op.dstOffset, op.size, cb, tracker);
@@ -313,14 +313,14 @@ void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::Com
     auto * srcVk = RuntimeType::cast<BufferVulkan>(op.src.get());
     auto * dstVk = RuntimeType::cast<TextureVulkanBase>(op.dst.get());
     if (!srcVk || !dstVk) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: copyBufferToImage: null Vulkan resource");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: copyBufferToImage: null Vulkan resource");
             return;
         }
 
     vk::Buffer srcBuf = srcVk->nativeBuffer();
     vk::Image  dstImg = dstVk->nativeImage();
     if (!srcBuf || !dstImg) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: copyBufferToImage: resource has no Vulkan handle");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: copyBufferToImage: resource has no Vulkan handle");
             return;
         }
 
@@ -360,14 +360,14 @@ void GpuCncPayloadVulkan::recordDownloadImage(const StoredDownloadImage & op, vk
     auto * srcVk = RuntimeType::cast<TextureVulkanBase>(op.src.get());
     auto * dstVk = RuntimeType::cast<BufferVulkan>(op.staging.get());
     if (!srcVk || !dstVk) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: downloadImage: null Vulkan resource");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadImage: null Vulkan resource");
             return;
         }
 
     vk::Image  srcImg = srcVk->nativeImage();
     vk::Buffer dstBuf = dstVk->nativeBuffer();
     if (!srcImg || !dstBuf) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuCncPayloadVulkan: downloadImage: resource has no Vulkan handle");
+            GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadImage: resource has no Vulkan handle");
             return;
         }
 
@@ -406,7 +406,7 @@ void GpuCncPayloadVulkan::resolveDownloadBuffer(StoredDownloadBuffer & op) {
         if (m.data()) {
             blob = AutoRef<const Blob>(new SimpleBlob<uint8_t>((size_t) op.size, (const uint8_t *) m.data()));
         } else
-            GN_UNLIKELY { GN_ERROR(sLogger)("GpuCncPayloadVulkan: downloadBuffer: failed to map staging buffer for read-back"); }
+            GN_UNLIKELY { GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadBuffer: failed to map staging buffer for read-back"); }
         // m unmaps on scope exit (RAII)
     }
     op.staging.clear(); // transient data done; release immediately on GPU completion.
@@ -421,7 +421,7 @@ void GpuCncPayloadVulkan::resolveDownloadImage(StoredDownloadImage & op) {
             content.blob = AutoRef<const Blob>(new SimpleBlob<uint8_t>(m.size(), (const uint8_t *) m.data()));
             for (const auto & r : op.regions) content.regions.append(r);
         } else
-            GN_UNLIKELY { GN_ERROR(sLogger)("GpuCncPayloadVulkan: downloadImage: failed to map staging buffer for read-back"); }
+            GN_UNLIKELY { GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadImage: failed to map staging buffer for read-back"); }
     }
     op.staging.clear();
     op.result.resolve(std::move(content));
@@ -481,7 +481,7 @@ public:
 
     void compute(const ComputeParameters & cp) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::compute: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::compute: already sealed");
                 return;
             }
         StoredCompute op;
@@ -496,7 +496,7 @@ public:
 
     void copyBufferToBuffer(const BufferToBuffer & p) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::copyBufferToBuffer: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::copyBufferToBuffer: already sealed");
                 return;
             }
         mOps.emplace_back(StoredBufferToBuffer {p.src, p.dst, p.srcOffset, p.dstOffset, p.size});
@@ -504,7 +504,7 @@ public:
 
     void copyBufferToImage(const BufferToImage & p) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::copyBufferToImage: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::copyBufferToImage: already sealed");
                 return;
             }
         StoredBufferToImage op;
@@ -516,23 +516,23 @@ public:
 
     void uploadBuffer(AutoRef<Buffer> dst, uint64_t offset, AutoRef<const Blob> content) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::uploadBuffer: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: already sealed");
                 return;
             }
         if (!dst || !content || content->empty()) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::uploadBuffer: null destination or empty content");
+                GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: null destination or empty content");
                 return;
             }
         const uint64_t size    = content->size();
         auto           staging = createStaging("upload_stg", size);
         if (!staging) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::uploadBuffer: staging buffer allocation failed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: staging buffer allocation failed");
                 return;
             }
         {
             auto m = staging->map();
             if (!m.data()) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("GpuCncVulkan2::uploadBuffer: failed to map staging buffer");
+                    GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: failed to map staging buffer");
                     return;
                 }
             memcpy(m.data(), content->data(), (size_t) size);
@@ -553,25 +553,25 @@ public:
 
         auto * srcVk = RuntimeType::cast<BufferVulkan>(src.get());
         if (mSealed || !srcVk) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::downloadBuffer: {}", mSealed ? "already sealed" : "null/invalid source buffer");
+                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: {}", mSealed ? "already sealed" : "null/invalid source buffer");
                 return future;
             }
 
         const uint64_t bufSize = srcVk->bufferSize();
         if (offset > bufSize) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::downloadBuffer: offset {} exceeds buffer size {}", offset, bufSize);
+                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: offset {} exceeds buffer size {}", offset, bufSize);
                 return future;
             }
         if (size == uint64_t(~0)) size = bufSize - offset;
         if (offset + size > bufSize) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::downloadBuffer: range [{}, {}) exceeds buffer size {}", offset, offset + size, bufSize);
+                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: range [{}, {}) exceeds buffer size {}", offset, offset + size, bufSize);
                 return future;
             }
         if (size == 0) return future; // nothing to download => empty blob; not an error.
 
         auto staging = createStaging("download_stg", size);
         if (!staging) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::downloadBuffer: staging buffer allocation failed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: staging buffer allocation failed");
                 return future;
             }
 
@@ -592,8 +592,8 @@ public:
 
         auto * srcVk = RuntimeType::cast<TextureVulkanBase>(src.get());
         if (mSealed || !srcVk || regions.empty()) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::downloadImage: {}",
-                                  mSealed ? "already sealed" : (!srcVk ? "null/invalid source texture" : "no regions specified"));
+                GN_ERROR(sLogger, "GpuCncVulkan2::downloadImage: {}",
+                         mSealed ? "already sealed" : (!srcVk ? "null/invalid source texture" : "no regions specified"));
                 return future;
             }
 
@@ -638,13 +638,13 @@ public:
         }
 
         if (cursor == 0) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::downloadImage: regions describe zero bytes");
+                GN_ERROR(sLogger, "GpuCncVulkan2::downloadImage: regions describe zero bytes");
                 return future;
             }
 
         auto staging = createStaging("download_img_stg", cursor);
         if (!staging) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::downloadImage: staging buffer allocation failed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::downloadImage: staging buffer allocation failed");
                 return future;
             }
 
@@ -659,7 +659,7 @@ public:
 
     AutoRef<GpuPayload> seal() override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger)("GpuCncVulkan2::seal: double seal");
+                GN_ERROR(sLogger, "GpuCncVulkan2::seal: double seal");
                 return {};
             }
         mSealed = true;

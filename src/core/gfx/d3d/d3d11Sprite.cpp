@@ -149,7 +149,7 @@ public:
         // create pending vertex buffer
         mSprites = (Sprite *) malloc(VTXBUF_SIZE);
         if (NULL == mSprites) {
-            GN_ERROR(sLogger)("Out of memory.");
+            GN_ERROR(sLogger, "Out of memory.");
             return false;
         }
 
@@ -176,7 +176,7 @@ public:
     // -----------------------------------------------------------------------------
     void DrawBegin(ID3D11DeviceContext & cxt, ID3D11ShaderResourceView * texture, UINT options) {
         if (mDrawBegun) {
-            GN_ERROR(sLogger)("SpriteRenderer::drawBegin() can not be called consequtively w/o DrawEnd() in between");
+            GN_ERROR(sLogger, "SpriteRenderer::drawBegin() can not be called consequtively w/o DrawEnd() in between");
             return;
         }
 
@@ -211,7 +211,7 @@ public:
         if (options & FORCE_ALPHA_BLENDING_ENABLED) {
             // TODO: setup alpha blending state
             if (options & FORCE_ALPHA_BLENDING_DISABLED) {
-                GN_WARN(sLogger)("FORCE_ALPHA_BLENDING_ENABLED and FORCE_ALPHA_BLENDING_DISABLED should not be specifed together!");
+                GN_WARN(sLogger, "FORCE_ALPHA_BLENDING_ENABLED and FORCE_ALPHA_BLENDING_DISABLED should not be specifed together!");
             }
 
             // mContext.rs.alphaBlend[0].blendEnabled  = true;
@@ -229,7 +229,7 @@ public:
         // setup depth stencil state
         if (options & FORCE_DEPTH_TEST_ENABLED) {
             if (options & FORCE_DEPTH_TEST_DISABLED) {
-                GN_WARN(sLogger)("FORCE_DEPTH_TEST_ENABLED and FORCE_DEPTH_TEST_DISABLED should not be specifed together!");
+                GN_WARN(sLogger, "FORCE_DEPTH_TEST_ENABLED and FORCE_DEPTH_TEST_DISABLED should not be specifed together!");
             }
 
             // mContext.rs.depthTestEnabled = true;
@@ -240,7 +240,7 @@ public:
         // setup depth write
         if (options & FORCE_DEPTH_WRITE_ENABLED) {
             if (options & FORCE_DEPTH_WRITE_DISABLED) {
-                GN_WARN(sLogger)("FORCE_DEPTH_WRITE_ENABLED and FORCE_DEPTH_WRITE_DISABLED should not be specifed together!");
+                GN_WARN(sLogger, "FORCE_DEPTH_WRITE_ENABLED and FORCE_DEPTH_WRITE_DISABLED should not be specifed together!");
             }
 
             // mContext.rs.depthWriteEnabled = true;
@@ -262,7 +262,7 @@ public:
     // -----------------------------------------------------------------------------
     void DrawEnd() {
         if (!mDrawBegun) {
-            GN_ERROR(sLogger)("SpriteRenderer::drawEnd() can not be called consequtively w/o drawBegin() in between");
+            GN_ERROR(sLogger, "SpriteRenderer::drawEnd() can not be called consequtively w/o drawBegin() in between");
             return;
         }
 
@@ -287,7 +287,7 @@ public:
     // -----------------------------------------------------------------------------
     void DrawTexturedSprite(const TexturedSprite & ts) {
         if (!mDrawBegun) {
-            GN_ERROR(sLogger)("Must be called between drawBegin() and drawEnd().");
+            GN_ERROR(sLogger, "Must be called between drawBegin() and drawEnd().");
             return;
         }
 
@@ -332,7 +332,7 @@ public:
     // -----------------------------------------------------------------------------
     void DrawSolidSprite(const SolidSprite & ss) {
         if (!mDrawBegun) {
-            GN_ERROR(sLogger)("Must be called between drawBegin() and drawEnd().");
+            GN_ERROR(sLogger, "Must be called between drawBegin() and drawEnd().");
             return;
         }
 
@@ -377,7 +377,7 @@ bool GN::d3d11::SpriteRenderer::initialize(ID3D11Device & dev) {
     shutdown();
     std::unique_ptr<Impl> p(new Impl);
     if (nullptr == p) {
-        GN_ERROR(sLogger)("out of memory");
+        GN_ERROR(sLogger, "out of memory");
         return false;
     }
     if (!p->Initialize(dev)) return false;

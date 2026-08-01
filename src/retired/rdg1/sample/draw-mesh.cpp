@@ -25,7 +25,7 @@ static AutoRef<PbrShading::Material> loadPbrMaterial(AutoRef<GpuContext> gpu) {
                                                                   .basePath = "media::pbr/DamagedHelmet/",
                                                               });
         if (mat) return mat;
-        GN_WARN(sLogger)("Failed to load PBR material from file, using empty material");
+        GN_WARN(sLogger, "Failed to load PBR material from file, using empty material");
     }
     // Fallback: empty material
     static const char empty[1] = {};
@@ -67,7 +67,7 @@ int main(int, const char **) {
             .context  = gpuContext,
             .filename = fs::toNativeDiskFilePath(path),
         });
-        if (!tex) { GN_WARN(sLogger)("IBL texture not found: {}", path); }
+        if (!tex) { GN_WARN(sLogger, "IBL texture not found: {}", path); }
         return tex;
     };
 
@@ -101,7 +101,7 @@ int main(int, const char **) {
 
     gfx::img::PixelFormat depthFormat = gpuContext->caps().defaultDepthFormat;
     if (depthFormat == gfx::img::PixelFormat::UNKNOWN()) {
-        GN_WARN(sLogger)("GpuContext caps.defaultDepthFormat is UNKNOWN; using D24_UNORM_S8_UINT pixel format for depth texture");
+        GN_WARN(sLogger, "GpuContext caps.defaultDepthFormat is UNKNOWN; using D24_UNORM_S8_UINT pixel format for depth texture");
         depthFormat = gfx::img::PixelFormat::RG_24_UNORM_8_UINT();
     }
     auto depthTexture =
@@ -141,7 +141,7 @@ int main(int, const char **) {
         }
     }
 
-    GN_INFO(sLogger)("Starting PBR helmet render loop...");
+    GN_INFO(sLogger, "Starting PBR helmet render loop...");
 
     const auto orbitStartTime = std::chrono::steady_clock::now();
     // Orbit in XZ at y = 1.4 m; radius matches initial (1.8, 2.4) → 3 m from mesh center at origin.
@@ -210,14 +210,14 @@ int main(int, const char **) {
         auto submission =
             renderGraph->submit(RenderGraph::SubmitParameters {.workflows = ArrayView<Workflow>(toSubmit.data(), toSubmit.size()), .name = "Frame"});
         if (!submission) {
-            GN_ERROR(sLogger)("Failed to submit render graph");
+            GN_ERROR(sLogger, "Failed to submit render graph");
             break;
         }
         auto result = submission->result();
         if (result.executionResult == Action::ExecutionResult::FAILED) break;
-        if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger)("Render graph completed with warnings"); }
+        if (result.executionResult == Action::ExecutionResult::WARNING) { GN_WARN(sLogger, "Render graph completed with warnings"); }
     }
 
-    GN_INFO(sLogger)("PBR helmet demo finished");
+    GN_INFO(sLogger, "PBR helmet demo finished");
     return 0;
 }

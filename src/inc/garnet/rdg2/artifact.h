@@ -170,14 +170,14 @@ struct Artifact : public Entity {
         auto e = content();
         if (e.empty()) {
             static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("Artifact::content: artifact content is empty");
+            GN_ERROR(logger, "Artifact::content: artifact content is empty");
             return {};
         };
         GN_ASSERT(e.value);
         auto typed = RuntimeType::cast<T>(e.value.get());
         if (!typed) {
             static auto * logger = GN::getLogger("GN.rdg2");
-            GN_ERROR(logger)("Artifact::content: stored='{}' requested='{}'", e.value->typeInfo().name, T::TYPE_INFO().name);
+            GN_ERROR(logger, "Artifact::content: stored='{}' requested='{}'", e.value->typeInfo().name, T::TYPE_INFO().name);
             return {};
         }
         return {GN::referenceTo(typed), e.version};

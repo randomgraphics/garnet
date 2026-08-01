@@ -49,7 +49,7 @@ void GN::util::ArcBall::connectToInput() {
         connectToSignal<&ArcBall::onKeyPress>(gInput.sigKeyPress);
         connectToSignal<&ArcBall::onAxisMove>(gInput.sigAxisMove);
     } else {
-        GN_ERROR(sLogger)("Input module is not initialized.");
+        GN_ERROR(sLogger, "Input module is not initialized.");
     }
 }
 
@@ -57,7 +57,7 @@ void GN::util::ArcBall::connectToInput() {
 //
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::beginRotation(int x, int y) {
-    GN_VVTRACE(sLogger)("ArcBall::beginRotation()");
+    GN_VVTRACE(sLogger, "ArcBall::beginRotation()");
 
     mRolling = true;
 
@@ -77,7 +77,7 @@ void GN::util::ArcBall::beginRotation(int x, int y) {
 //
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::endRotation() {
-    GN_VVTRACE(sLogger)("ArcBall::endRotation()");
+    GN_VVTRACE(sLogger, "ArcBall::endRotation()");
     mRolling = false;
 }
 
@@ -87,7 +87,7 @@ void GN::util::ArcBall::endRotation() {
 void GN::util::ArcBall::onRotation(int x, int y) {
     if (!mRolling) return;
 
-    GN_VVTRACE(sLogger)("ArcBall::onRotation()");
+    GN_VVTRACE(sLogger, "ArcBall::onRotation()");
 
     float fx = (float) (x - mWindowCenter.x) / mWindowHalfSize.x;
     float fy = (float) (y - mWindowCenter.y) / mWindowHalfSize.y;
@@ -105,14 +105,14 @@ void GN::util::ArcBall::onRotation(int x, int y) {
 
     mTranslation = q.toMatrix44().transformPoint(mTranslationBase);
 
-    GN_VVTRACE(sLogger)("\n%s", mRotation3x3.print().data());
+    GN_VVTRACE(sLogger, "\n%s", mRotation3x3.print().data());
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::beginTranslation(int x, int y) {
-    GN_VVTRACE(sLogger)("ArcBall::beginTranslation()");
+    GN_VVTRACE(sLogger, "ArcBall::beginTranslation()");
     mMoving          = true;
     mTranslationBase = mTranslation;
     mMoveBase.set(x, y);
@@ -122,7 +122,7 @@ void GN::util::ArcBall::beginTranslation(int x, int y) {
 //
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::endTranslation() {
-    GN_VVTRACE(sLogger)("ArcBall::endTranslation()");
+    GN_VVTRACE(sLogger, "ArcBall::endTranslation()");
     mMoving = false;
 }
 
@@ -132,7 +132,7 @@ void GN::util::ArcBall::endTranslation() {
 void GN::util::ArcBall::onTranslation(int x, int y) {
     if (!mMoving) return;
 
-    GN_VVTRACE(sLogger)("ArcBall::onTranslation()");
+    GN_VVTRACE(sLogger, "ArcBall::onTranslation()");
 
     Vector3f v((float) (x - mMoveBase.x), (float) (mMoveBase.y - y), 0);
 

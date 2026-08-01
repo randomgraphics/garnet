@@ -34,7 +34,7 @@ static int sEncodingToCodePage(CharacterEncodingConverter::Encoding e) {
     if (0 <= e && e < GN_ARRAY_COUNT(TABLE)) {
         return TABLE[e];
     } else {
-        GN_ERROR(sLogger)("Invalid character encoding: {}", (int) e);
+        GN_ERROR(sLogger, "Invalid character encoding: {}", (int) e);
         return -1;
     }
 }
@@ -55,7 +55,7 @@ bool GN::CECImplMSWIN::init(CharacterEncodingConverter::Encoding from, Character
     mCodePageFrom = sEncodingToCodePage(from);
     mCodePageTo   = sEncodingToCodePage(to);
     if (-1 == mCodePageFrom || -1 == mCodePageTo) {
-        GN_ERROR(sLogger)("Invalid or unsupported encoding.");
+        GN_ERROR(sLogger, "Invalid or unsupported encoding.");
         return failure();
     }
 
@@ -100,7 +100,7 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
         converted = (size_t) ::MultiByteToWideChar(mCodePageFrom, 0, (const char *) sourceBuffer, (int) sourceBufferSizeInBytes, tempBuffer.data(),
                                                    (int) (tempBuffer.size() * sizeof(wchar_t)));
         if (0 == converted) {
-            GN_ERROR(sLogger)("fail to convert input buffer to UNICODE.");
+            GN_ERROR(sLogger, "fail to convert input buffer to UNICODE.");
             return 0;
         }
 
@@ -112,7 +112,7 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
     if (0 != mCodePageTo) {
         converted = (size_t) ::WideCharToMultiByte(mCodePageTo, 0, (const wchar_t *) sourceBuffer, (int) (sourceBufferSizeInBytes / sizeof(wchar_t)),
                                                    (char *) destBuffer, (int) destBufferSizeInBytes, NULL, NULL);
-        if (0 == converted) { GN_ERROR(sLogger)("fail to convert from UNICODE to target encoding."); }
+        if (0 == converted) { GN_ERROR(sLogger, "fail to convert from UNICODE to target encoding."); }
         return converted;
     } else if (mEncodingTo == CharacterEncodingConverter::UTF16 || mEncodingTo == CharacterEncodingConverter::UTF16_LE ||
                mEncodingTo == CharacterEncodingConverter::WIDECHAR) {
@@ -133,7 +133,7 @@ size_t GN::CECImplMSWIN::convert(void * destBuffer, size_t destBufferSizeInBytes
         if (needToCopy) GN_LIKELY memcpy(destBuffer, sourceBuffer, needToCopy);
         return needToCopy;
     } else {
-        GN_ERROR(sLogger)("Conversion to encoding \"{}\" is not supported yet.", (int) mEncodingTo);
+        GN_ERROR(sLogger, "Conversion to encoding \"{}\" is not supported yet.", (int) mEncodingTo);
         return 0;
     }
 }

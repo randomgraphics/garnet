@@ -374,21 +374,21 @@ void OpenGraphImpl::pump_(std::unique_lock<std::mutex> & lock) {
 TokenImpl * OpenGraphImpl::validateToken_(const TokenPtr & token, const char * api) const {
     static auto * logger = GN::getLogger("GN.rdg2");
     if (!token) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: token is null", api);
+            GN_ERROR(logger, "{}: token is null", api);
             return nullptr;
         }
     auto * impl = RuntimeType::cast<TokenImpl>(token.get());
     if (!impl || !impl->hasValidTag()) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: token is not an open-graph token", api);
+            GN_ERROR(logger, "{}: token is not an open-graph token", api);
             return nullptr;
         }
     auto graph = impl->graph().promote();
     if (!graph) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: token's graph is already destroyed", api);
+            GN_ERROR(logger, "{}: token's graph is already destroyed", api);
             return nullptr;
         }
     if (graph.get() != this) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: token belongs to a different graph", api);
+            GN_ERROR(logger, "{}: token belongs to a different graph", api);
             return nullptr;
         }
     return impl;
@@ -397,21 +397,21 @@ TokenImpl * OpenGraphImpl::validateToken_(const TokenPtr & token, const char * a
 NodeImpl * OpenGraphImpl::validateNode_(const NodePtr & node, const char * api) const {
     static auto * logger = GN::getLogger("GN.rdg2");
     if (!node) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: node is null", api);
+            GN_ERROR(logger, "{}: node is null", api);
             return nullptr;
         }
     auto * impl = RuntimeType::cast<NodeImpl>(node.get());
     if (!impl || !impl->hasValidTag()) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: node is not an open-graph node", api);
+            GN_ERROR(logger, "{}: node is not an open-graph node", api);
             return nullptr;
         }
     auto graph = impl->graph().promote();
     if (!graph) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: node's graph is already destroyed", api);
+            GN_ERROR(logger, "{}: node's graph is already destroyed", api);
             return nullptr;
         }
     if (graph.get() != this) GN_UNLIKELY {
-            GN_ERROR(logger)("{}: node belongs to a different graph", api);
+            GN_ERROR(logger, "{}: node belongs to a different graph", api);
             return nullptr;
         }
     return impl;
@@ -474,7 +474,7 @@ ArtifactPtr OpenGraphImpl::createArtifact(const StrA & name) { return Artifact::
 /// Publishes new artifact content through the standalone artifact primitive.
 void OpenGraphImpl::publishArtifact(const ArtifactPtr & ap, AutoRef<Entity> content) {
     if (!ap) GN_UNLIKELY {
-            GN_ERROR(sLogger)("publishArtifact: artifact is null.");
+            GN_ERROR(sLogger, "publishArtifact: artifact is null.");
             return;
         }
     (void) ap->publish(std::move(content));
@@ -531,12 +531,12 @@ void OpenGraphImpl::completeNode(const NodePtr & node) {
     if (!n->desc.manualComplete) { return; }
 
     if (n->state != NodeImpl::State::FinishedAction) GN_UNLIKELY {
-            GN_ERROR(GN::getLogger("GN.rdg2"))("completeNode: node '{}' action has not finished", n->name);
+            GN_ERROR(GN::getLogger("GN.rdg2"), "completeNode: node '{}' action has not finished", n->name);
             return;
         }
 
     if (n->incompleteChildren != 0) GN_UNLIKELY {
-            GN_ERROR(GN::getLogger("GN.rdg2"))("completeNode: node '{}' still has incomplete children", n->name);
+            GN_ERROR(GN::getLogger("GN.rdg2"), "completeNode: node '{}' still has incomplete children", n->name);
             return;
         }
 
@@ -563,7 +563,7 @@ TokenPtr OpenGraphImpl::getNodeCompletionToken(const NodePtr & node) {
 /// `version == OOO()` is treated as "next version after current".
 TokenPtr OpenGraphImpl::getArtifactVersionToken(const ArtifactPtr & ap, NeverOverflowingCounter version) {
     if (!ap) GN_UNLIKELY {
-            GN_ERROR(sLogger)("getArtifactVersionToken: artifact is null.");
+            GN_ERROR(sLogger, "getArtifactVersionToken: artifact is null.");
             return nullptr;
         }
 

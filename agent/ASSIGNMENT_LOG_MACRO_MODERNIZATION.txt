@@ -1,0 +1,389 @@
+# Assignment: Log Macro Modernization — variadic call syntax, dual format/stream support, statement-safe expansion
+
+---
+
+## Goals
+
+Replace the trailing-call log macro syntax `GN_ERROR(logger)("format", args...)` with a
+single variadic form `GN_ERROR(logger, "format", args...)`. The trailing-call shape is
+unusual, it forces the macro to expand to a dangling `if/else`, and it makes the macro an
+expression fragment rather than a statement.
+
+Three concrete defects are being fixed:
+
+1. `if (cond) GN_ERROR(sLogger)("x");` emits `-Wdangling-else` ("suggest explicit braces to
+   avoid ambiguous 'else'") on GCC, because the macro expands to
+   `if (logger->isOff(level)) {} else <helper>.format`, nesting an if/else inside an if.
+2. The logger expression is evaluated twice per call — once for `isOff()`, once for the
+   `LogHelper` constructor. Sites like `GN_ERROR(getLogger("GN.base.HandleManager"))(...)`
+   pay two name lookups.
+3. `isOff()`-then-`else` gives the compiler no branch hint at all, so the overwhelmingly
+   common log-is-off path is not favored.
+
+Two capabilities are being added:
+
+4. One macro must accept BOTH comma-separated format arguments and the streaming operator:
+   `GN_INFO(logger, "a = {}", a)` and `GN_INFO(logger << "a = " << a)`.
+5. printf syntax becomes officially supported alongside fmt brace syntax, in the same
+   macro. The log macros are used to redirect third-party library logging (rapid-image
+   today, rapid-vulkan style generally), and those libraries emit printf format strings.
+   The existing "Printf syntax is deprecated" assert is removed.
+
+Finally, three obsolete configuration knobs in `config.h` are deleted. None of them is set
+by any build configuration, so each is an indirection with exactly one meaning:
+
+6. `GN_ENABLE_LOG` — defined to 1, read in exactly one place. Dead configuration surface;
+   removed outright along with the disabled branch it guarded.
+7. `GN_ENABLE_ASSERT` — defaults to `GN_BUILD_DEBUG_ENABLED`, so unlike `GN_ENABLE_LOG` it
+   does real work: asserts compile out in release builds. Removed as a *knob* only; its two
+   use sites substitute `GN_BUILD_DEBUG_ENABLED` directly, so behavior is unchanged.
+8. `GN_ENABLE_GPU_DEBUG_MARK` — defaults to
+   `(GN_BUILD_DEBUG_ENABLED || GN_BUILD_PROFILING_ENABLED)` and has a single use site.
+   Removed as a knob; `gpu.h` checks the two build flags directly.
+
+`GN_ENABLE_GUARD` and `GN_ENABLE_SLOW_GUARD` are deliberately left in place: they have a
+real interdependency (`GN_ENABLE_SLOW_GUARD` is ignored when `GN_ENABLE_GUARD` is off) and
+two use sites in `exception.h`.
+
+---
+
+## Design
+
+### Macro signatures
+
+    GN_FATAL(logger, ...)      GN_ERROR(logger, ...)     GN_WARN(logger, ...)
+    GN_INFO(logger, ...)       GN_VERBOSE(logger, ...)   GN_BABBLE(logger, ...)
+    GN_TRACE(logger, ...)      GN_VTRACE(logger, ...)    GN_VVTRACE(logger, ...)
+    GN_LOG(logger, level, ...)
+    GN_LOG_EX(logger, level, func, file, line, ...)
+    GN_PRINTF_EX(logger, level, func, file, line, ...)
+
+Every signature keeps its original parameter order. The trailing format argument list is optional,
+carried by `, ##__VA_ARGS__` — the same comma-elision extension already used by GN_ASSERT_FAILURE in
+debug.h, and the reason __VA_OPT__ is avoided (it needs /Zc:preprocessor, which this project does not
+set).
+
+### One macro, both syntaxes
+
+The expansion ends in an expression of type `LogHelper &`, so a streaming expression can be appended
+to any form and the two syntaxes compose in a single statement:
+
+    GN_ERROR(logger);                                  // nothing logged
+    GN_ERROR(logger, "a = {}", a);                     // comma parameter list
+    GN_ERROR(logger) << "a = " << a;                   // streaming
+    GN_ERROR(logger, "a = {}", a) << ", b = " << b;    // both -> "a = 1, b = 2"
+
+LogHelper owns both: operator<< appends to a lazily created stream, emit() either goes straight to
+the logger when nothing was streamed or appends to the streamed prefix, and the destructor reports
+whatever is left. emit() and emitPrintf() return *this, which is what makes the chaining work; the
+no-argument emit() overload is what makes the streaming-only form work.
+
+### Off path is a single level test
+
+    #define GN_LOG_EX(logger, level, func, file, line, ...) \
+        switch (0)                                          \
+        case 0:                                             \
+        default:                                            \
+            if ((logger)->isOff(level)) GN_LIKELY            \
+                ;                                           \
+            else                                            \
+                ::GN::Logger::LogHelper(logger, level, func, file, line).emit(__VA_ARGS__)
+
+The whole payload sits in the else branch, so when the level is off nothing is constructed and no
+format or streamed argument is evaluated. Verified in generated code at -O2 for the format-only,
+streaming-only and mixed forms: the off path is a logger load, `cmpb`, `je`, `movl`, `testl`, `jne`
+to the cold block, then the epilogue. Zero initialization stores.
+
+Two earlier designs were measured and rejected. Fusing the logger into the message expression
+(`GN_ERROR(logger << "a" << a)`) makes the logger inseparable from the first macro argument, so
+nothing can precede the level test; that shape cost 6 dead initialization stores and a 120-byte frame
+on every off path, and the stores could not be eliminated because doLog(const LogLocation &, ...)
+takes the helper's address into a virtual call. Wrapping in do/while(false) has the same problem.
+
+`switch (0) case 0: default:` is what keeps this a complete statement. Without it,
+`if (cond) GN_ERROR(...);` nests an if/else inside an if, which trips -Wdangling-else and makes a
+following `else` bind to the wrong if. This is the same guard glog uses for the same reason.
+
+Because the level test is a plain `if` whose taken branch is empty, GN_LIKELY marks the off path
+directly rather than relying on the compiler to guess.
+
+### printf / fmt syntax autodetection
+
+emit() keeps the fmt::format_string / fmt::wformat_string parameter type, so genuine fmt strings
+retain compile-time format checking. At runtime it routes to fmt::sprintf when the string carries a
+printf conversion specifier and no brace replacement field, and to fmt::format otherwise.
+
+This works because fmt (bundled: 12.0.0) tolerates unused arguments and treats %d as literal text, so
+a printf string passes the compile-time check as a zero-field format string. Verified against the
+bundled fmt.
+
+Resolution rules, locked by unit tests:
+  - "a = %d"      -> printf
+  - "a = {}"      -> fmt
+  - "{} %d"       -> fmt (a brace field wins; the string is ambiguous)
+  - "{{literal}}" -> fmt (brace escape)
+  - "100%% done"  -> printf. A lone %% escape counts as printf syntax, so it is unescaped to
+                    "100% done", matching GN_PRINTF_EX.
+  - "{}%% done"   -> fmt (the brace field wins), so the percent stays doubled
+  - "50 percent %" -> fmt. A trailing bare percent is not a conversion specifier.
+
+Consequence worth knowing: because the branch is a runtime test, both the fmt and the printf paths are
+instantiated for every call. Every log argument type must therefore be formattable in fmt's printf
+context as well as its normal context. This is what dictates the shape of the GN::Str formatter below.
+
+### Passing string types directly
+
+GN::StrA, GN::StrW, std::string and std::wstring can all be passed to a format string with no
+.data() or .c_str(). std::string and std::wstring already worked. GN::Str did not, for two reasons,
+both fixed in string.h:
+
+  - fmt::formatter<GN::StrW> was specialized on the default (narrow) character type while formatting
+    with a wide format string, so GN::StrW had no formatter inside a wide format string at all. The
+    specialization is now on <GN::Str<CHAR, ALLOC>, CHAR>, covering both character types and any
+    allocator.
+  - GN::Str is iterable, so fmt's range formatter matched it and would print "['a', 'b']". Worse, that
+    range specialization and the new one are both partial specializations of
+    formatter<Str<CHAR, ALLOC>, CHAR, void> with neither more specialized, which is an ambiguity error.
+    range_format_kind<GN::Str<CHAR, ALLOC>, CHAR> is now specialized to range_format::disabled, which
+    resolves both problems. The old code avoided the ambiguity only by being a full specialization.
+
+The formatter deliberately ignores format specifications (its parse() returns ctx.begin()) and writes
+characters straight to the output iterator, because the spec-handling machinery behind
+basic_string_view does not compile in fmt's printf context. Preserving "{:>10}" padding for Str would
+require dropping printf autodetection.
+
+### Known limitation
+
+A streamed operand must be appended with `<<` rather than fused into the logger argument. The fused
+spelling `GN_ERROR(logger << "a" << a)` is not supported and cannot be: the logger has to be a
+separate macro parameter for the level test to precede everything else. `GN_ERROR(logger) << "a" << a`
+is the supported spelling and is strictly better, since it is gated before its operands are
+evaluated.
+
+### Configuration knob removal
+
+`GN_ENABLE_LOG` is deleted from `config.h` and `log.h`. `GN_BUILD_DEBUG_ENABLED` continues to gate the
+GN_TRACE / GN_VTRACE / GN_VVTRACE family in non-debug builds; that disabled path expands to
+`if (false) <sink>` so arguments still type-check (catching bit-rot, and keeping log-only
+locals "used"). `Logger::sFakeLog` changes from C-varargs to a variadic template, because
+passing non-trivial types such as `std::string` through `...` is ill-formed.
+
+`GN_ENABLE_ASSERT` is deleted from `config.h`; `debug.h` and `core/gpu/util/cmdbuf.cpp`
+test `GN_BUILD_DEBUG_ENABLED` directly instead. `GN_ENABLE_GPU_DEBUG_MARK` is deleted from
+`config.h`; `gfx/gpu.h` tests `(GN_BUILD_DEBUG_ENABLED || GN_BUILD_PROFILING_ENABLED)`
+directly. Both substitutions are behavior-preserving by construction.
+
+### Test framework migration
+
+Log tests move from the retiring CxxTest suite (`src/test/ut/base/log.cpp`) to the Catch2
+internal-test framework: new `src/core/base/test/log-test.cpp` registered via a new
+`src/core/base/test/internal-test.cmake`, picked up automatically by the
+`src/core/*/test/internal-test.cmake` glob in `src/test/internal/CMakeLists.txt`.
+
+All three existing test methods are carried over: `testLogMacro`, `testLogPrintf`,
+`testLogStringFormatter`.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 3 — all call sites migrated, debug build and full test suite green
+  Phase 1.1: statement-guarded variadic macros, LogHelper owns format + streaming + mixed
+  Phase 1.2: removed GN_ENABLE_LOG, GN_ENABLE_ASSERT and GN_ENABLE_GPU_DEBUG_MARK
+  Phase 1.3: GN_DO_LIMITED_TIMES is a statement; dropped stray semicolons in GN_TODO/GN_UNIMPL_WARNING
+  Phase 1.4: log tests ported to Catch2 internal framework (11 cases / 109 assertions)
+  Phase 1.5: GN::Str formatter fixed for wide strings and for range-vs-string ambiguity
+  Phase 2.1: paren-matching migration script, dry run matched the pre-change scan
+  Phase 2.2: swept 1239 call sites in 194 files, reformatted
+  Phase 3.1: wrapper macros converted (HOOK_*_LOG, RAPID_IMAGE_LOG*, GN_TODO, GN_UNIMPL_WARNING)
+  Phase 3.2: generic macro call sites and the optix streaming site updated
+In progress: Phase 4.1 — release build and cit lint
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Macro and logger definitions:
+  src/inc/garnet/base/log.h              — log macros, Logger, LogHelper, StringFormatter
+  src/inc/garnet/base/config.h           — GN_ENABLE_LOG / _ASSERT / _GPU_DEBUG_MARK (to be deleted)
+  src/core/gpu/util/cmdbuf.cpp           — GN_ENABLE_ASSERT use site (line 266)
+  src/inc/garnet/gfx/gpu.h               — GN_ENABLE_GPU_DEBUG_MARK use site (line 1268)
+  src/inc/garnet/base/misc.h             — GN_DO_LIMITED_TIMES / GN_DO_ONCE / GN_DO_EVERY_N_SEC
+  src/inc/garnet/base/basicDefines.h     — GN_LIKELY / GN_UNLIKELY / GN_COUNT_ARGS
+  src/inc/garnet/base/debug.h            — GN_TODO, GN_UNIMPL_WARNING, GN_?_CHECK macro families
+
+Call sites needing hand edits (all others are script-migrated):
+  src/tool/d3dhook/dll/vtable.h          — 4 HOOK_*_LOG wrapper macros
+  src/inc/garnet/gfx/image.h             — 3 RAPID_IMAGE_LOG* wrapper macros
+  src/core/base/exception.cpp            — 2 GN_LOG_EX sites
+  src/core/gpu/ogl/oglDebug.h            — 1 GN_LOG site
+  src/core/gpu2/vk-gpu-context.h         — 1 GN_LOG_EX site
+  src/retired/rdg1/src/vk-gpu-context.h  — 1 GN_LOG_EX site
+  src/sample/optix/main.cpp              — the only operator<< stream call site in the tree
+  src/test/ut/base/log.cpp               — old CxxTest log suite, to be deleted
+
+Test framework:
+  src/test/internal/CMakeLists.txt       — GNtest-internal target, globs core/*/test/internal-test.cmake
+  src/core/rdg2/test/internal-test.cmake — reference for the fragment pattern
+  src/core/test/smoke-test.cpp           — reference for a minimal Catch2 test
+  src/test/ut/CMakeLists.txt             — old CxxTest suite, globs base/*.cpp
+
+Deliberately NOT touched:
+  src/sample/portal/*                    — 8 pre-logger-API sites, GN_ERROR(GN_T("...")) with no
+                                           logger argument; directory commented out of
+                                           src/sample/CMakeLists.txt and does not compile today
+  src/3rdparty/*                         — third-party sources
+
+--- BUILD / CI ---
+
+source env/garnet.rc
+build.py d                      # debug build
+build.py r                      # release build — the only config that exercises the
+                                # disabled GN_TRACE / GN_VTRACE / GN_VVTRACE expansion
+env/bin/cit.py -t               # run tests
+env/bin/cit.py -l               # lint / format check
+env/bin/format-all-sources.py -d
+
+Targeted test run:
+  ./build/.../bin/GNtest-internal "[log]"
+
+--- WORKFLOW / CONVENTIONS ---
+
+- One verified task per commit. Build and test green before moving to the next task.
+- Commit scope for this assignment is `base` (log.h lives in GNbase), except the call-site
+  sweep which uses `all`.
+- The bulk call-site migration is done by script, never by hand-editing 1225 sites. The
+  script must use paren matching and must skip comments and string literals: 53 call sites
+  span multiple lines and ~15 have nested parentheses in the logger argument
+  (`GN_ERROR(getLogger("GN.base.HandleManager"))(...)`), neither of which regex handles.
+- After every scripted sweep run `env/bin/format-all-sources.py -d`, then re-run the
+  scanner to confirm zero remaining trailing-call sites.
+- Warnings are errors on all three compilers. Any new macro must compile clean as an
+  unbraced if/for/while/switch body and in an if/else pair.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: macro rewrite and test suite
+─────────────────────────────────────────────────────
+  Task 1.1: Rewrite the log macros and LogHelper in src/inc/garnet/base/log.h
+    - Add GN_PP_EXPAND_ / GN_PP_CAT_ / GN_PP_HAS_COMMA_ mode-dispatch primitives.
+    - Add GN_LOG_IMPL_0_ (stream) and GN_LOG_IMPL_1_ (format) expansions.
+    - Reorder GN_LOG / GN_LOG_EX / GN_PRINTF_EX to put level and location first.
+    - LogHelper: add the (level, func, file, line) constructor and operator<<(Logger *)
+      that gates on isOn(); rename format() to emit() and printf() to emitPrintf().
+    - emit(): route to fmt::sprintf or fmt::format by inspecting the format string.
+    - Delete the "Printf syntax is deprecated" assert; keep the scanner as the router.
+    - Change Logger::sFakeLog from C-varargs to a variadic template.
+    - Document the two dispatch limitations and the stream-mode eager-evaluation caveat.
+    Verify: build.py d compiles log.h standalone via the new test TU; no warnings.
+    Commit: "base(log): variadic log macros with dual format/stream syntax (Phase 1.1)"
+
+  Task 1.2: Delete the three obsolete config.h knobs
+    - GN_ENABLE_LOG: remove the #define and doc line from config.h; remove the
+      #if / #else / #endif branches from log.h.
+    - GN_ENABLE_ASSERT: remove from config.h; substitute GN_BUILD_DEBUG_ENABLED at
+      src/inc/garnet/base/debug.h:37 and src/core/gpu/util/cmdbuf.cpp:266.
+    - GN_ENABLE_GPU_DEBUG_MARK: remove from config.h; substitute
+      (GN_BUILD_DEBUG_ENABLED || GN_BUILD_PROFILING_ENABLED) at src/inc/garnet/gfx/gpu.h:1268.
+    - Leave GN_ENABLE_GUARD and GN_ENABLE_SLOW_GUARD alone.
+    Verify: grep for the three names returns nothing outside src/3rdparty; build.py d and
+      build.py p both green (profiling build is what exercises the GPU debug mark path).
+    Commit: "base: remove obsolete GN_ENABLE_LOG/ASSERT/GPU_DEBUG_MARK knobs (Phase 1.2)"
+
+  Task 1.3: Fix the dangling-else defect in GN_DO_LIMITED_TIMES
+    - src/inc/garnet/base/misc.h: replace the if (true) {...} else void(0) idiom with
+      do { ... } while (false). Fixes GN_DO_ONCE, GN_TODO and GN_UNIMPL_WARNING too.
+    Verify: a test that places GN_DO_ONCE in an unbraced if body compiles under -Werror.
+    Commit: "base: make GN_DO_LIMITED_TIMES a statement, fixing dangling else (Phase 1.3)"
+
+  Task 1.5: Fix the GN::Str fmt formatter in src/inc/garnet/base/string.h
+    - Specialize on <GN::Str<CHAR, ALLOC>, CHAR> so GN::StrW works in a wide format string.
+    - Specialize range_format_kind to range_format::disabled, so Str formats as a string rather
+      than as a range of characters, and so the two partial specializations stop being ambiguous.
+    - Ignore format specifications: the spec machinery behind basic_string_view does not compile
+      in fmt's printf context, which printf autodetection instantiates for every call.
+    Verify: log tests covering std::string, std::wstring, GN::StrA and GN::StrW pass.
+    Commit: "base(string): format GN::Str directly in narrow and wide format strings (Phase 1.5)"
+
+  Task 1.4: Port the log test suite to the Catch2 internal-test framework
+    - NEW src/core/base/test/log-test.cpp, NEW src/core/base/test/internal-test.cmake.
+    - Carry over testLogMacro, testLogPrintf and testLogStringFormatter.
+    - New coverage: stream mode; printf-vs-fmt resolution rules; level gating produces no
+      output; level gating does not evaluate format arguments; logger expression evaluated
+      exactly once; statement-ness in if/else, for, while and switch bodies; static_assert
+      on GN_PP_HAS_COMMA_ for 1 through 15 arguments and for a paren-nested comma.
+    - Delete src/test/ut/base/log.cpp (the ut CMakeLists globs base/*.cpp, so removal is
+      sufficient — no CMake edit needed there).
+    Verify: GNtest-internal "[log]" passes; env/bin/cit.py -t green.
+    Commit: "base(log): port log tests to internal Catch2 framework, cover new syntax (Phase 1.4)"
+
+Phase 2: scripted call-site sweep
+─────────────────────────────────────────────────────
+  Task 2.1: Write the migration script
+    - Paren-matching, comment- and string-aware rewriter.
+    - NAME(logger)(args)                  -> NAME(logger, args)
+    - GN_LOG(logger, level)(args)         -> GN_LOG(logger, level, args)
+    - GN_LOG_EX(logger, lvl, f, fi, l)(a) -> GN_LOG_EX(logger, lvl, f, fi, l, a)
+    - Same for GN_PRINTF_EX. Note: an earlier iteration of the design moved level and location
+      ahead of the logger; that was reverted, so parameter order is unchanged everywhere and the
+      script only needs to fold the trailing call into the argument list.
+    - Must report, not silently skip, anything it cannot rewrite.
+    Verify: dry-run report matches the pre-change scan: 1225 mechanical sites, 16 flagged.
+    Commit: none — tooling lives in the assignment run, not the tree.
+
+  Task 2.2: Run the sweep across src/ and reformat
+    - Scope: src/core, src/inc, src/sample, src/test, src/tool, src/retired.
+    - Excluded: src/3rdparty, src/sample/portal.
+    - Then env/bin/format-all-sources.py -d.
+    Verify: scanner reports zero remaining trailing-call sites; build.py d green.
+    Commit: "all: migrate log call sites to variadic macro syntax (Phase 2.2)"
+
+Phase 3: hand-fixed call sites
+─────────────────────────────────────────────────────
+  Task 3.1: Convert the wrapper macros
+    - src/tool/d3dhook/dll/vtable.h: 4 HOOK_*_LOG macros forward __VA_ARGS__.
+    - src/inc/garnet/gfx/image.h: RAPID_IMAGE_LOGE/W/I become (...)-taking macros.
+    - src/inc/garnet/base/debug.h: GN_TODO and GN_UNIMPL_WARNING.
+    Verify: build.py d green; the rapid-image printf strings still format correctly.
+    Commit: "all: convert log wrapper macros to variadic forwarding (Phase 3.1)"
+
+  Task 3.2: Convert the generic macro call sites and the stream call site
+    - src/core/base/exception.cpp (2), src/core/gpu/ogl/oglDebug.h (1),
+      src/core/gpu2/vk-gpu-context.h (1), src/retired/rdg1/src/vk-gpu-context.h (1).
+    - src/sample/optix/main.cpp:252 — the only operator<< site; keeps stream style.
+    Verify: build.py d and build.py r green.
+    Commit: "all: update generic log macro call sites (Phase 3.2)"
+
+Phase 4: verification
+─────────────────────────────────────────────────────
+  Task 4.1: Full build and test matrix
+    - build.py d, build.py r, env/bin/cit.py -t, env/bin/cit.py -l.
+    - Re-run the scanner for zero trailing-call sites.
+    - Confirm no new warnings on GCC; note anything that needs an MSVC-side check.
+    Verify: all four commands green.
+    Commit: none — verification only, or a fixup commit if issues surface.
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (macro rewrite and tests):
+  src/inc/garnet/base/log.h                  — macro rewrite, LogHelper emit/stream, printf routing
+  src/inc/garnet/base/config.h               — remove GN_ENABLE_LOG / _ASSERT / _GPU_DEBUG_MARK
+  src/inc/garnet/base/debug.h                — GN_ENABLE_ASSERT -> GN_BUILD_DEBUG_ENABLED
+  src/core/gpu/util/cmdbuf.cpp               — GN_ENABLE_ASSERT -> GN_BUILD_DEBUG_ENABLED
+  src/inc/garnet/gfx/gpu.h                   — GN_ENABLE_GPU_DEBUG_MARK -> build flags inline
+  src/inc/garnet/base/misc.h                 — GN_DO_LIMITED_TIMES becomes a statement
+  src/core/base/test/log-test.cpp            — NEW: Catch2 log test suite
+  src/core/base/test/internal-test.cmake     — NEW: registers log-test.cpp with GNtest-internal
+  src/test/ut/base/log.cpp                   — deleted
+
+Phase 2 (scripted sweep):
+  src/core/**, src/inc/**, src/sample/**, src/test/**, src/tool/**, src/retired/**
+                                             — 1225 mechanical call-site rewrites
+
+Phase 3 (hand-fixed sites):
+  src/tool/d3dhook/dll/vtable.h              — 4 wrapper macros
+  src/inc/garnet/gfx/image.h                 — 3 RAPID_IMAGE_LOG* wrapper macros
+  src/inc/garnet/base/debug.h                — GN_TODO, GN_UNIMPL_WARNING
+  src/core/base/exception.cpp                — 2 GN_LOG_EX sites
+  src/core/gpu/ogl/oglDebug.h                — 1 GN_LOG site
+  src/core/gpu2/vk-gpu-context.h             — 1 GN_LOG_EX site
+  src/retired/rdg1/src/vk-gpu-context.h      — 1 GN_LOG_EX site
+  src/sample/optix/main.cpp                  — 3 sites, one of them the stream-style site

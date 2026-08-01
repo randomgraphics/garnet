@@ -131,7 +131,7 @@ bool GN::gfx::LineRenderer::init() {
         mContext.vtxbind[4].attribute = gppd.attributes["TEXCOORD2"];
         mContext.vtxbind[5].attribute = gppd.attributes["TEXCOORD3"];
     } else {
-        GN_ERROR(sLogger)("Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
+        GN_ERROR(sLogger, "Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
         return failure();
     }
 
@@ -372,7 +372,7 @@ bool GN::gfx::ThickLineRenderer::init(Gpu & g) {
         mContext.vtxbind[1].attribute = gppd.attributes["i_Color"];
         // mContext.vtxbind[2].attribute = gppd.attributes["i_TexCoord"];
     } else {
-        GN_ERROR(sLogger)("Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
+        GN_ERROR(sLogger, "Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
         return failure();
     }
 
@@ -448,7 +448,7 @@ void GN::gfx::ThickLineRenderer::quit() {
 // -----------------------------------------------------------------------------
 bool GN::gfx::ThickLineRenderer::drawBegin(const ThickLineParameters & parameters) {
     if (m_Drawing) {
-        GN_ERROR(sLogger)("Unpaired drawBegin()");
+        GN_ERROR(sLogger, "Unpaired drawBegin()");
         return false;
     }
 
@@ -481,7 +481,7 @@ bool GN::gfx::ThickLineRenderer::drawBegin(const ThickLineParameters & parameter
 // -----------------------------------------------------------------------------
 void GN::gfx::ThickLineRenderer::drawEnd() {
     if (!m_Drawing) {
-        GN_ERROR(sLogger)("Unpaired drawEnd()");
+        GN_ERROR(sLogger, "Unpaired drawEnd()");
         return;
     }
 
@@ -494,7 +494,7 @@ void GN::gfx::ThickLineRenderer::drawEnd() {
 // -----------------------------------------------------------------------------
 void GN::gfx::ThickLineRenderer::line(const ThickLineVertex & v0, const ThickLineVertex & v1) {
     if (!m_Drawing) {
-        GN_ERROR(sLogger)("ThickLineRenderer::line() must be called in between ThickLineRenderer::drawBegin() and ThickLineRenderer::drawEnd().");
+        GN_ERROR(sLogger, "ThickLineRenderer::line() must be called in between ThickLineRenderer::drawBegin() and ThickLineRenderer::drawEnd().");
         return;
     }
 

@@ -105,7 +105,7 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
     // read file header
     XPRFileHeader header;
     if (sizeof(header) != file.read(&header, sizeof(header))) {
-        GN_ERROR(sLogger)("Fail to read file header.");
+        GN_ERROR(sLogger, "Fail to read file header.");
         return false;
     }
 
@@ -118,7 +118,7 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
     size_t dataSize = header.size1 + header.size2 + 12 - sizeof(header);
     xpr.sceneData.resize(dataSize);
     if (dataSize != file.read(xpr.sceneData.data(), dataSize)) {
-        GN_ERROR(sLogger)("Fail to read XPR data.");
+        GN_ERROR(sLogger, "Fail to read XPR data.");
         return false;
     }
 
@@ -139,7 +139,7 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
         case GN_MAKE_FOURCC('V', 'B', 'U', 'F'): {
             XPRVBufDesc * vbdesc = (XPRVBufDesc *) desc;
             if (sizeof(XPRVBufDesc) != o.size) {
-                GN_ERROR(sLogger)("object size is invalid.");
+                GN_ERROR(sLogger, "object size is invalid.");
                 return false;
             }
             swap8in32(vbdesc->dwords, vbdesc->dwords, sizeof(*vbdesc) / 4);
@@ -150,7 +150,7 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
         case GN_MAKE_FOURCC('I', 'B', 'U', 'F'): {
             XPRIBufDesc * ibdesc = (XPRIBufDesc *) desc;
             if (sizeof(XPRIBufDesc) != o.size) {
-                GN_ERROR(sLogger)("object size is invalid.");
+                GN_ERROR(sLogger, "object size is invalid.");
                 return false;
             }
             swap8in32(ibdesc->dwords, ibdesc->dwords, sizeof(*ibdesc) / 4);
@@ -161,7 +161,7 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
         case GN_MAKE_FOURCC('T', 'X', '2', 'D'): {
             XPRTex2DDesc * texdesc = (XPRTex2DDesc *) desc;
             if (sizeof(XPRTex2DDesc) == o.size) {
-                GN_ERROR(sLogger)("object size is invalid.");
+                GN_ERROR(sLogger, "object size is invalid.");
                 return false;
             }
             swap8in32(texdesc->dwords, texdesc->dwords, sizeof(*texdesc) / 4);
@@ -174,7 +174,7 @@ static bool sLoadXprSceneFromFile(XPRScene & xpr, File & file) {
             break;
 
         default:
-            GN_WARN(sLogger)("unknown object type.");
+            GN_WARN(sLogger, "unknown object type.");
             return false;
         }
     }
@@ -234,17 +234,17 @@ static const ModelResourceDesc * sDetermineBestModelTemplate(const MeshResourceD
 
     // position is required
     if (!sHasPosition(vf)) {
-        GN_ERROR(sLogger)("The mesh has no position, which is required by the mesh viewer.");
+        GN_ERROR(sLogger, "The mesh has no position, which is required by the mesh viewer.");
         return NULL;
     }
 
     if (!sHasNormal(vf)) {
-        GN_WARN(sLogger)("The mesh has no normal.");
+        GN_WARN(sLogger, "The mesh has no normal.");
         return &SimpleWireframeModel::DESC;
     }
 
     if (!sHasTex0(vf)) {
-        GN_WARN(sLogger)("The mesh has no texture coordinate.");
+        GN_WARN(sLogger, "The mesh has no texture coordinate.");
         return &SimpleDiffuseModel::DESC;
     }
 
@@ -267,7 +267,7 @@ static bool sLoadModelHierarchyFromASE(ModelHierarchyDesc & desc, File & file) {
 
     StrA filename = file.name();
     if (filename.empty()) {
-        GN_WARN(sLogger)("Can not get filename");
+        GN_WARN(sLogger, "Can not get filename");
         return false;
     }
     filename = fs::resolvePath(fs::getCurrentDir(), filename);
@@ -443,7 +443,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eIndexToDirect == refmode) {
         return elements->GetIndexArray().GetAt(index);
     } else {
-        GN_ERROR(sLogger)("Unsupport reference mode: {}", (int) refmode);
+        GN_ERROR(sLogger, "Unsupport reference mode: {}", (int) refmode);
         return -1;
     }
 }
@@ -464,7 +464,7 @@ static inline int sGetLayerElementIndex(const FbxLayerElementTemplate<T> * eleme
     } else if (FbxLayerElement::eByPolygon == mapmode) {
         return sGetLayerElementIndex(elements, polygonIndex);
     } else {
-        GN_ERROR(sLogger)("Invalid layer mapping mode: {}", (int) mapmode);
+        GN_ERROR(sLogger, "Invalid layer mapping mode: {}", (int) mapmode);
         return -1;
     }
 }
@@ -526,7 +526,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     if (!fbxmesh->IsTriangleMesh()) {
         fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
         if (NULL == fbxmesh) {
-            GN_ERROR(sLogger)("Fail to triangulate fbxmesh node: {}", meshName);
+            GN_ERROR(sLogger, "Fail to triangulate fbxmesh node: {}", meshName);
             return;
         }
     }
@@ -534,7 +534,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     // For now, we supports layer 0 only.
     FbxLayer * layer0 = fbxmesh->GetLayer(0);
     if (NULL == layer0) {
-        GN_ERROR(sLogger)("The fbxmesh does not have a layer: {}", meshName);
+        GN_ERROR(sLogger, "The fbxmesh does not have a layer: {}", meshName);
         return;
     }
     if (NULL == layer0->GetNormals()) { fbxmesh->ComputeVertexNormals(); }
@@ -558,9 +558,8 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
         nummat = fbxnode->GetMaterialCount();
     } else {
         if (fbxMaterials && FbxLayerElement::eAllSame != fbxMaterials->GetMappingMode()) {
-            GN_WARN(sLogger)
-            ("Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eAllSame.", (int) fbxMaterials->GetMappingMode(),
-             (int) fbxMaterials->GetReferenceMode());
+            GN_WARN(sLogger, "Unsupported FBX material layer: mapping mode=%d, reference mode=%d. It will be treated as eAllSame.",
+                    (int) fbxMaterials->GetMappingMode(), (int) fbxMaterials->GetReferenceMode());
         }
 
         // one material
@@ -573,7 +572,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     // sort polygon by material
     DynaArray<int> sortedPolygons;
     if (!sortedPolygons.resize(numtri)) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+        GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
         return;
     }
     for (size_t i = 0; i < sortedPolygons.size(); ++i) { sortedPolygons[i] = (int) i; }
@@ -586,7 +585,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     // Create index blob that stores the index buffer (assume 32-bit indices)
     AutoRef<Blob> indexBlob = referenceTo(new SimpleBlob<uint32_t>(numidx));
     if (0 == indexBlob->size()) {
-        GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+        GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
         return;
     }
 
@@ -689,7 +688,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     if (vertexBlob->count() <= 0x10000) {
         AutoRef<Blob> ib16 = referenceTo(new SimpleBlob<uint16_t>(numidx));
         if (0 == ib16->size()) {
-            GN_ERROR(sLogger)("Fail to load FBX mesh: out of memory.");
+            GN_ERROR(sLogger, "Fail to load FBX mesh: out of memory.");
             return;
         }
 
@@ -724,7 +723,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
     gnmesh.strides[0]         = sizeof(MeshVertex);
     gnmesh.offsets[0]         = 0;
     gnmesh.indices            = indexBlob->data();
-    GN_INFO(sLogger)("Load FBX mesh {}: {} vertices, {} faces", meshName, gnmesh.numvtx, gnmesh.numidx / 3);
+    GN_INFO(sLogger, "Load FBX mesh {}: {} vertices, {} faces", meshName, gnmesh.numvtx, gnmesh.numidx / 3);
 
     desc.meshdata.append(vertexBlob);
     desc.meshdata.append(indexBlob);
@@ -753,7 +752,7 @@ static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const StrA & filen
     // TODO: if the name is not unique, make it unique.
     const char * name = node->GetName();
     if (desc.nodes.find(name)) {
-        GN_WARN(sLogger)("Node named {} exists already.", name);
+        GN_WARN(sLogger, "Node named {} exists already.", name);
         return true;
     }
 
@@ -792,7 +791,7 @@ static bool sLoadFbxNodeRecursivly(ModelHierarchyDesc & desc, const StrA & filen
         // Some nodes are ignored silently.
         FbxNodeAttribute::eNull != type && FbxNodeAttribute::eUnknown != type && FbxNodeAttribute::eLight != type && FbxNodeAttribute::eCamera != type &&
         FbxNodeAttribute::eSkeleton != type) {
-        GN_WARN(sLogger)("Ignore unsupported node: type={}, name={}", (int) type, name);
+        GN_WARN(sLogger, "Ignore unsupported node: type={}, name={}", (int) type, name);
     }
 
     // load children
@@ -831,7 +830,7 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
     FbxImporter * gImporter = FbxImporter::Create(gSdkManager, "");
     if (NULL == gImporter) return false;
     if (!gImporter->Initialize(filename, lFileFormat)) {
-        GN_ERROR(sLogger)("{}", gImporter->GetStatus().GetErrorString());
+        GN_ERROR(sLogger, "{}", gImporter->GetStatus().GetErrorString());
         return false;
     }
 
@@ -839,7 +838,7 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
     FbxScene * gScene = FbxScene::Create(gSdkManager, "");
     if (NULL == gScene) return false;
     if (!gImporter->Import(gScene)) {
-        GN_ERROR(sLogger)("{}", gImporter->GetStatus().GetErrorString());
+        GN_ERROR(sLogger, "{}", gImporter->GetStatus().GetErrorString());
         return false;
     }
 
@@ -848,7 +847,7 @@ static bool sLoadModelHierarchyFromFBX(ModelHierarchyDesc & desc, File & file) {
 #else
 
     desc.clear();
-    GN_ERROR(sLogger)("Fail to load file {}: FBX is not supported.", file.name().data());
+    GN_ERROR(sLogger, "Fail to load file {}: FBX is not supported.", file.name().data());
     return false;
 
 #endif
@@ -954,9 +953,9 @@ static void sPostXMLError(const XmlNode & node, const StrA & msg) {
     GN_UNUSED_PARAM(node);
     const XmlElement * e = node.toElement();
     if (e) {
-        GN_ERROR(sLogger)("<{}>: {}", e->name.data(), msg.data());
+        GN_ERROR(sLogger, "<{}>: {}", e->name.data(), msg.data());
     } else {
-        GN_ERROR(sLogger)("{}", msg.data());
+        GN_ERROR(sLogger, "{}", msg.data());
     }
 }
 
@@ -970,7 +969,7 @@ static bool sParseModel(ModelHierarchyDesc & desc, XmlElement & root, const StrA
 
     XmlAttrib * modelName = root.findAttrib("name");
     if (!modelName || modelName->value.empty()) {
-        GN_ERROR(sLogger)("Model name attribute is missing.");
+        GN_ERROR(sLogger, "Model name attribute is missing.");
         return false;
     }
 
@@ -1062,12 +1061,12 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
     XmlDocument    doc;
     XmlParseResult xpr;
     if (!doc.parse(xpr, file)) {
-        GN_ERROR(sLogger)
-        ("Fail to parse XML file (%s):\n"
-         "    line   : %d\n"
-         "    column : %d\n"
-         "    error  : %s",
-         file.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
+        GN_ERROR(sLogger,
+                 "Fail to parse XML file (%s):\n"
+                 "    line   : %d\n"
+                 "    column : %d\n"
+                 "    error  : %s",
+                 file.name().data(), xpr.errLine, xpr.errColumn, xpr.errInfo.data());
         return false;
     }
     GN_ASSERT(xpr.root);
@@ -1132,7 +1131,7 @@ static bool sLoadModelHierarchyFromXML(ModelHierarchyDesc & desc, File & file) {
 static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char * filename) {
     // check dirname
     if (NULL == filename) {
-        GN_ERROR(sLogger)("NULL directory name");
+        GN_ERROR(sLogger, "NULL directory name");
         return false;
     }
 
@@ -1143,7 +1142,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
     StrA basename = fs::baseName(fullpath);
 
     if (!fs::isDir(dirname)) {
-        GN_ERROR(sLogger)("{} is not a directory", dirname.data());
+        GN_ERROR(sLogger, "{} is not a directory", dirname.data());
         return false;
     }
 
@@ -1215,7 +1214,7 @@ static bool sSaveModelHierarchyToXML(const ModelHierarchyDesc & desc, const char
         if (NULL != pParentEntityName) {
             a->value = *pParentEntityName;
         } else if (!nodeDesc.parent.empty()) {
-            GN_WARN(sLogger)("Entity {} has invalid parent: {}", i->key, nodeDesc.parent.data());
+            GN_WARN(sLogger, "Entity {} has invalid parent: {}", i->key, nodeDesc.parent.data());
         }
 
         a        = xmldoc.createAttrib(node);
@@ -1319,7 +1318,7 @@ bool sLoadModelHierarchyFromMeshBinary(ModelHierarchyDesc & desc, File & fp) {
 GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
     GN_SCOPE_PROFILER(ModelHierarchyDesc_loadFromFile, "Load models hierarchy from file");
 
-    GN_INFO(sLogger)("Load models from file: {}", filename ? filename : "<NULL>");
+    GN_INFO(sLogger, "Load models from file: {}", filename ? filename : "<NULL>");
 
     clear();
 
@@ -1342,7 +1341,7 @@ GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
     } else if (sStrEndWithI(filename, ".mesh.bin")) {
         if (!bin::sLoadModelHierarchyFromMeshBinary(*this, *fp)) return false;
     } else {
-        GN_ERROR(sLogger)("Unknown file extension: {}", ext.data());
+        GN_ERROR(sLogger, "Unknown file extension: {}", ext.data());
         return false;
     }
 
@@ -1353,7 +1352,7 @@ GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
         totalVerts += m.numvtx;
         totalFaces += m.numidx / 3;
     }
-    GN_INFO(sLogger)("Total vertices: {}, faces: {}", totalVerts, totalFaces);
+    GN_INFO(sLogger, "Total vertices: {}, faces: {}", totalVerts, totalFaces);
 
     return true;
 }
@@ -1364,7 +1363,7 @@ GN_API bool GN::gfx::ModelHierarchyDesc::loadFromFile(const char * filename) {
 GN_API bool GN::gfx::ModelHierarchyDesc::saveToFile(const char * filename) const {
     GN_SCOPE_PROFILER(ModelHierarchyDesc_saveToFile, "Save models hierarchy to file");
 
-    GN_INFO(sLogger)("Write scene to : {}", filename);
+    GN_INFO(sLogger, "Write scene to : {}", filename);
 
     return xml::sSaveModelHierarchyToXML(*this, filename);
 }

@@ -10,9 +10,8 @@ static GN::Logger * sBufferStateLogger = GN::getLogger("GN.rdg.vk");
 bool BufferStateTransition::transitTo(vk::AccessFlags newAccess, vk::PipelineStageFlags newStage, const StrA & resourceName) {
     if (curr.access == newAccess && curr.stage == newStage) return false;
     if (!resourceName.empty()) {
-        GN_VERBOSE(sBufferStateLogger)
-        ("buffer '{}': access 0x{:x} -> 0x{:x}, stage 0x{:x} -> 0x{:x}", resourceName.c_str(), static_cast<uint32_t>(curr.access),
-         static_cast<uint32_t>(newAccess), static_cast<uint32_t>(curr.stage), static_cast<uint32_t>(newStage));
+        GN_VERBOSE(sBufferStateLogger, "buffer '{}': access 0x{:x} -> 0x{:x}, stage 0x{:x} -> 0x{:x}", resourceName.c_str(), static_cast<uint32_t>(curr.access),
+                   static_cast<uint32_t>(newAccess), static_cast<uint32_t>(curr.stage), static_cast<uint32_t>(newStage));
     }
     prev = curr;
     curr = {newAccess, newStage};
@@ -21,9 +20,9 @@ bool BufferStateTransition::transitTo(vk::AccessFlags newAccess, vk::PipelineSta
 
 void BufferStateTransition::assignFrom(const BufferStateTransition & other, const StrA & resourceName) {
     if (!resourceName.empty() && (curr.access != other.curr.access || curr.stage != other.curr.stage)) {
-        GN_VERBOSE(sBufferStateLogger)
-        ("buffer '{}': state sync after submit (access 0x{:x} -> 0x{:x}, stage 0x{:x} -> 0x{:x})", resourceName.c_str(), static_cast<uint32_t>(curr.access),
-         static_cast<uint32_t>(other.curr.access), static_cast<uint32_t>(curr.stage), static_cast<uint32_t>(other.curr.stage));
+        GN_VERBOSE(sBufferStateLogger, "buffer '{}': state sync after submit (access 0x{:x} -> 0x{:x}, stage 0x{:x} -> 0x{:x})", resourceName.c_str(),
+                   static_cast<uint32_t>(curr.access), static_cast<uint32_t>(other.curr.access), static_cast<uint32_t>(curr.stage),
+                   static_cast<uint32_t>(other.curr.stage));
     }
     prev = other.curr;
     curr = other.curr;

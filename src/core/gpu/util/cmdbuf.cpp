@@ -19,7 +19,7 @@ bool GN::CommandBuffer::init(size_t bufferSize) {
     GN_ASSERT(NULL == m_Buffer);
 
     if (bufferSize < 16) {
-        GN_WARN(sLogger)("The command buffer size is adjusted to 16 bytes.");
+        GN_WARN(sLogger, "The command buffer size is adjusted to 16 bytes.");
         bufferSize = 16;
     }
 
@@ -140,7 +140,7 @@ GN::CommandBuffer::OperationResult GN::CommandBuffer::beginProduce(uint16_t comm
     // align command size to 16 bytes
     size_t cmdsize = (sizeof(TokenInternal) + parameterSize + 15) & ~15;
     if (cmdsize > m_Size) {
-        GN_ERROR(sLogger)("Command size is too large.");
+        GN_ERROR(sLogger, "Command size is too large.");
         return OPERATION_FAILED;
     }
     parameterSize = (uint16_t) (cmdsize - sizeof(TokenInternal));
@@ -263,7 +263,7 @@ GN::CommandBuffer::OperationResult GN::CommandBuffer::beginConsume(Token * token
         // get command header and parameter
         m_ReadingToken = (TokenInternal *) (m_Buffer + (m_ReadenCursor % m_Size));
 
-#if GN_ENABLE_ASSERT
+#if GN_BUILD_DEBUG_ENABLED
         // full command including all parameters should have been written to command buffer.
         uint32_t wc = m_WrittenCursor;
         memoryBarrier();

@@ -32,9 +32,8 @@ static Texture::Descriptor descriptorFromImageDesc(const gfx::img::ImageDesc & i
 static Texture::Descriptor validateDesc(const Texture::Descriptor & desc) {
     Texture::Descriptor result = desc;
     if (0 == result.width || 0 == result.height || 0 == result.depth || 0 == result.faces || 0 == result.samples) {
-        GN_ERROR(sLogger)
-        ("validateDesc: invalid descriptor: zero dimension: (width={}, height={}, depth={}, faces={}, samples={}).", result.width, result.height, result.depth,
-         result.faces, result.samples);
+        GN_ERROR(sLogger, "validateDesc: invalid descriptor: zero dimension: (width={}, height={}, depth={}, faces={}, samples={}).", result.width,
+                 result.height, result.depth, result.faces, result.samples);
         result.width   = 0;
         result.height  = 0;
         result.depth   = 0;
@@ -78,7 +77,7 @@ TextureVulkan::TextureVulkan(const StrA & name): TextureCommon(name) {}
 
 bool TextureVulkan::init(const Texture::CreateParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("TextureVulkan::init: context is null");
+        GN_ERROR(sLogger, "TextureVulkan::init: context is null");
         return false;
     }
     mGpuContext.set(params.context.get());
@@ -95,14 +94,14 @@ bool TextureVulkan::init(const Texture::CreateParameters & params) {
 
 bool TextureVulkan::upload1x1Mip(const uint8_t rgba[4]) {
     if (!mImage || !mImage->handle() || mDescriptor.width != 1 || mDescriptor.height != 1) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TextureVulkan::upload1x1Mip: invalid state or non-1x1 texture");
+            GN_ERROR(sLogger, "TextureVulkan::upload1x1Mip: invalid state or non-1x1 texture");
             return false;
         }
     auto * vkCtx = static_cast<GpuContextVulkan *>(mGpuContext.get());
     if (!vkCtx) GN_UNLIKELY return false;
     rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
     if (!gq) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TextureVulkan::upload1x1Mip: no graphics queue");
+            GN_ERROR(sLogger, "TextureVulkan::upload1x1Mip: no graphics queue");
             return false;
         }
     rapid_vulkan::Image::SetContentParameters sc;
@@ -142,17 +141,17 @@ gfx::img::Image contentToImage(const rapid_vulkan::Image::Content & content) {
 
 gfx::img::Image TextureVulkan::readback() const {
     if (!mImage || !mImage->handle()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TextureVulkan::readback: no image");
+            GN_ERROR(sLogger, "TextureVulkan::readback: no image");
             return gfx::img::Image();
         }
     auto * vkCtx = static_cast<GpuContextVulkan *>(mGpuContext.get());
     if (!vkCtx) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TextureVulkan::readback: invalid context");
+            GN_ERROR(sLogger, "TextureVulkan::readback: invalid context");
             return gfx::img::Image();
         }
     rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
     if (!gq) GN_UNLIKELY {
-            GN_ERROR(sLogger)("TextureVulkan::readback: no graphics queue");
+            GN_ERROR(sLogger, "TextureVulkan::readback: no graphics queue");
             return gfx::img::Image();
         }
     // Sync RDG v1's tracked state into rv::Image so readContent() can issue the correct barrier.
@@ -179,24 +178,24 @@ AutoRef<Texture> createVulkanTexture(const StrA & name, const Texture::CreatePar
 
 bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: context is null");
+        GN_ERROR(sLogger, "TextureVulkan::initFromLoad: context is null");
         return false;
     }
     mGpuContext.set(params.context.get());
     StrA path = params.filename;
     if (path.empty()) {
-        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: filename is empty");
+        GN_ERROR(sLogger, "TextureVulkan::initFromLoad: filename is empty");
         return false;
     }
     if (!GN::fs::isAbsPath(path)) path = GN::fs::resolvePath(GN::fs::getCurrentDir(), path);
     auto fp = GN::fs::openFile(path, std::ios::in | std::ios::binary);
     if (!fp) {
-        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: cannot open file '{}'", path);
+        GN_ERROR(sLogger, "TextureVulkan::initFromLoad: cannot open file '{}'", path);
         return false;
     }
     gfx::img::Image image = gfx::img::Image::load(fp->input(), path.c_str());
     if (image.empty()) {
-        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: failed to load image '{}'", path);
+        GN_ERROR(sLogger, "TextureVulkan::initFromLoad: failed to load image '{}'", path);
         return false;
     }
     mDescriptor = validateDesc(descriptorFromImageDesc(image.desc()));
@@ -211,7 +210,7 @@ bool TextureVulkan::initFromLoad(const Texture::LoadParameters & params) {
 
     rapid_vulkan::CommandQueue * gq = vkCtx->device().graphics();
     if (!gq) {
-        GN_ERROR(sLogger)("TextureVulkan::initFromLoad: no graphics queue");
+        GN_ERROR(sLogger, "TextureVulkan::initFromLoad: no graphics queue");
         return false;
     }
     for (uint32_t f = 0; f < mDescriptor.faces; ++f)
@@ -279,8 +278,7 @@ AutoRef<Texture> createDefault1x1CubemapTexture(AutoRef<GpuContext> context, con
 
 vk::Extent3D TextureVulkan::dimensions(uint32_t mip) const {
     if (mip >= mDescriptor.levels) {
-        GN_ERROR(sLogger)
-        ("TextureVulkan::dimension(): invalid subresource index: (mip={}).", mip);
+        GN_ERROR(sLogger, "TextureVulkan::dimension(): invalid subresource index: (mip={}).", mip);
         return {0, 0, 0};
     }
     vk::Extent3D dim(mDescriptor.width, mDescriptor.height, mDescriptor.depth);
@@ -318,10 +316,9 @@ bool TextureState::set(const GpuResourceView::SubresourceRange & range, const Im
                 mSubresourceStates[index].transitTo(newState, flags);
                 if (!resourceName.empty()) {
                     const auto & tr = mSubresourceStates[index];
-                    GN_VERBOSE(sLogger)
-                    ("texture '{}': mip={} face={}: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}", resourceName.c_str(), i, j,
-                     static_cast<uint32_t>(tr.prev.layout), static_cast<uint32_t>(tr.curr.layout), static_cast<uint32_t>(tr.prev.access),
-                     static_cast<uint32_t>(tr.curr.access), static_cast<uint32_t>(tr.prev.stages), static_cast<uint32_t>(tr.curr.stages));
+                    GN_VERBOSE(sLogger, "texture '{}': mip={} face={}: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}", resourceName.c_str(),
+                               i, j, static_cast<uint32_t>(tr.prev.layout), static_cast<uint32_t>(tr.curr.layout), static_cast<uint32_t>(tr.prev.access),
+                               static_cast<uint32_t>(tr.curr.access), static_cast<uint32_t>(tr.prev.stages), static_cast<uint32_t>(tr.curr.stages));
                 }
             }
         }
@@ -339,10 +336,10 @@ void TextureState::assignFrom(const TextureState & src, const StrA & resourceNam
         if (!resourceName.empty() && oldCurr != newCurr) {
             const uint32_t face = (uint32_t) (i % mNumArrayLayers);
             const uint32_t mip  = (uint32_t) (i / mNumArrayLayers);
-            GN_VERBOSE(sLogger)
-            ("texture '{}': mip={} face={}: state sync after submit: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}", resourceName.c_str(),
-             mip, face, static_cast<uint32_t>(oldCurr.layout), static_cast<uint32_t>(newCurr.layout), static_cast<uint32_t>(oldCurr.access),
-             static_cast<uint32_t>(newCurr.access), static_cast<uint32_t>(oldCurr.stages), static_cast<uint32_t>(newCurr.stages));
+            GN_VERBOSE(sLogger, "texture '{}': mip={} face={}: state sync after submit: layout {} -> {}, access 0x{:x} -> 0x{:x}, stages 0x{:x} -> 0x{:x}",
+                       resourceName.c_str(), mip, face, static_cast<uint32_t>(oldCurr.layout), static_cast<uint32_t>(newCurr.layout),
+                       static_cast<uint32_t>(oldCurr.access), static_cast<uint32_t>(newCurr.access), static_cast<uint32_t>(oldCurr.stages),
+                       static_cast<uint32_t>(newCurr.stages));
         }
     }
 }

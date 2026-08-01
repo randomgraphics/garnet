@@ -42,12 +42,12 @@ static inline GLenum sDetermineTextureDimension(uint32_t faces, uint32_t width, 
     if (depth > 1) {
         // 3D texture
         if (faces > 1) {
-            GN_ERROR(sLogger)("OpenGL does not support 3D texture array.");
+            GN_ERROR(sLogger, "OpenGL does not support 3D texture array.");
             return INVALID_DIMENSION;
         }
 
         if (!GLEW_EXT_texture3D) {
-            GN_ERROR(sLogger)("Current hardware does not 3D texture. (EXT_texture3D)");
+            GN_ERROR(sLogger, "Current hardware does not 3D texture. (EXT_texture3D)");
             return INVALID_DIMENSION;
         }
 
@@ -56,13 +56,13 @@ static inline GLenum sDetermineTextureDimension(uint32_t faces, uint32_t width, 
         // cube or array texture
         if (6 == faces && width == height) {
             if (!GLEW_ARB_texture_cube_map) {
-                GN_ERROR(sLogger)("Current hardware does not support cube texture. (ARB_texture_cube_map)");
+                GN_ERROR(sLogger, "Current hardware does not support cube texture. (ARB_texture_cube_map)");
                 return INVALID_DIMENSION;
             } else {
                 return GL_TEXTURE_CUBE_MAP_ARB;
             }
         } else {
-            GN_ERROR(sLogger)("Array texture is not implemented yet.");
+            GN_ERROR(sLogger, "Array texture is not implemented yet.");
             return INVALID_DIMENSION;
         }
     } else if (height > 1) {
@@ -85,7 +85,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
 
     if (img::PixelFormat::RGBA_32_32_32_32_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
-            GN_WARN(sLogger)("current hardware do not support floating point texture format!");
+            GN_WARN(sLogger, "current hardware do not support floating point texture format!");
             return false;
         }
         gl_internalformat = GL_RGBA32F_ARB;
@@ -94,7 +94,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
         return true;
     } else if (img::PixelFormat::RG_32_32_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
-            GN_WARN(sLogger)("current hardware do not support floating point texture format!");
+            GN_WARN(sLogger, "current hardware do not support floating point texture format!");
             return false;
         }
         gl_internalformat = GL_LUMINANCE_ALPHA32F_ARB;
@@ -103,7 +103,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
         return true;
     } else if (img::PixelFormat::RGBA_16_16_16_16_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
-            GN_WARN(sLogger)("current hardware do not support floating point texture format!");
+            GN_WARN(sLogger, "current hardware do not support floating point texture format!");
             return false;
         }
         gl_internalformat = GL_RGBA16F_ARB;
@@ -112,7 +112,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
         return true;
     } else if (img::PixelFormat::RG_16_16_FLOAT() == clrfmt) {
         if (!GLEW_ARB_texture_float) {
-            GN_WARN(sLogger)("current hardware do not support floating point texture format!");
+            GN_WARN(sLogger, "current hardware do not support floating point texture format!");
             return false;
         }
         gl_internalformat = GL_LUMINANCE_ALPHA16F_ARB;
@@ -180,7 +180,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_format         = GL_DUDV_ATI;
             gl_type           = GL_BYTE;
         } else {
-            GN_WARN(sLogger)("current hardware do not support UV texture format!");
+            GN_WARN(sLogger, "current hardware do not support UV texture format!");
             gl_internalformat = 2;
             gl_format         = GL_RGBA;
             gl_type           = GL_BYTE;
@@ -220,7 +220,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
     } else if (img::PixelFormat::R_16_UINT() == clrfmt) {
         if (TextureUsage::DEPTH_RENDER_TARGET == usage) {
             if (!GLEW_ARB_depth_texture) {
-                GN_ERROR(sLogger)("does not support GL_ARB_depth_texture.");
+                GN_ERROR(sLogger, "does not support GL_ARB_depth_texture.");
                 return false;
             }
             gl_internalformat = GL_DEPTH_COMPONENT;
@@ -228,13 +228,13 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_type           = GL_UNSIGNED_SHORT;
             return true;
         } else {
-            GN_ERROR(sLogger)("integer texture is not supported yet.");
+            GN_ERROR(sLogger, "integer texture is not supported yet.");
             return false;
         }
     } else if (img::PixelFormat::R_32_UINT() == clrfmt) {
         if (TextureUsage::DEPTH_RENDER_TARGET == usage) {
             if (!GLEW_ARB_depth_texture) {
-                GN_ERROR(sLogger)("does not support GL_ARB_depth_texture.");
+                GN_ERROR(sLogger, "does not support GL_ARB_depth_texture.");
                 return false;
             }
             gl_internalformat = GL_DEPTH_COMPONENT;
@@ -242,7 +242,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
             gl_type           = GL_UNSIGNED_INT;
             return true;
         } else {
-            GN_ERROR(sLogger)("integer texture is not supported yet.");
+            GN_ERROR(sLogger, "integer texture is not supported yet.");
             return false;
         }
     } else if (img::PixelFormat::BC1_UNORM() == clrfmt) {
@@ -272,7 +272,7 @@ static inline bool sColorFormat2OGL(GLint & gl_internalformat, GLuint & gl_forma
     }
 
     // failed
-    GN_ERROR(sLogger)("invalid or unsupported format '{}'!", clrfmt.toString().c_str());
+    GN_ERROR(sLogger, "invalid or unsupported format '{}'!", clrfmt.toString().c_str());
     return false;
 }
 
@@ -293,7 +293,7 @@ static inline GLint sTexWrap2OGL(uint32_t wrap) {
         } else if (GLEW_SGIS_texture_edge_clamp) {
             return GL_CLAMP_TO_EDGE_SGIS;
         } else {
-            GN_WARN(sLogger)("Current hardware does not support clamp to edge feature. (EXT_texture_edge_clamp or SGIS_texture_edge_clamp)");
+            GN_WARN(sLogger, "Current hardware does not support clamp to edge feature. (EXT_texture_edge_clamp or SGIS_texture_edge_clamp)");
             return GL_CLAMP;
         }
 
@@ -301,12 +301,12 @@ static inline GLint sTexWrap2OGL(uint32_t wrap) {
         if (GLEW_ARB_texture_mirrored_repeat) {
             return GL_MIRRORED_REPEAT_ARB;
         } else {
-            GN_WARN(sLogger)("Current hardware does not support texture mirror (ARB_texture_mirrored_repeat)!");
+            GN_WARN(sLogger, "Current hardware does not support texture mirror (ARB_texture_mirrored_repeat)!");
             return GL_REPEAT;
         }
 
     default: {
-        GN_ERROR(sLogger)("invaid texture address mode : {}!", wrap);
+        GN_ERROR(sLogger, "invaid texture address mode : {}!", wrap);
         return GL_REPEAT;
     }
     }
@@ -404,7 +404,7 @@ static GLuint sNewCubeTexture(GLint internalformat, GLsizei size_x, GLint levels
     AutoDeleteTexture autoDel(result);
 
     if (!GLEW_ARB_texture_cube_map) {
-        GN_ERROR(sLogger)("do not support cube map!");
+        GN_ERROR(sLogger, "do not support cube map!");
         return 0;
     }
 
@@ -594,10 +594,10 @@ void GN::gfx::OGLTexture::updateMipmap(uint32_t face, uint32_t level, const Box<
                 break;
 
             default:
-                GN_ERROR(sLogger)("Unsupported dimension.");
+                GN_ERROR(sLogger, "Unsupported dimension.");
             };
         } else {
-            GN_ERROR(sLogger)("Current hardware does not support ARB_texture_compression extension.");
+            GN_ERROR(sLogger, "Current hardware does not support ARB_texture_compression extension.");
         }
     } else {
         switch (mTarget) {
@@ -622,7 +622,7 @@ void GN::gfx::OGLTexture::updateMipmap(uint32_t face, uint32_t level, const Box<
             break;
 
         default:
-            GN_ERROR(sLogger)("Unsupported dimension.");
+            GN_ERROR(sLogger, "Unsupported dimension.");
         };
     }
 }

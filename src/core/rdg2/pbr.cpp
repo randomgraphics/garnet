@@ -150,14 +150,14 @@ static gpu2::RasterGeometry loadGltfGeometryStaged(AutoRef<gpu2::GpuContext> gpu
     StrA nativePath = fs::toNativeDiskFilePath(gltfPath);
     if (nativePath.empty() || !fs::isFile(nativePath)) nativePath = fs::resolvePath(fs::getCurrentDir(), gltfPath);
     if (!fs::isFile(nativePath)) {
-        GN_ERROR(sLogger)("PbrShading::load: cannot resolve GLTF '{}'", gltfPath);
+        GN_ERROR(sLogger, "PbrShading::load: cannot resolve GLTF '{}'", gltfPath);
         return {};
     }
 
     const aiScene * scene = aiImportFile(nativePath.data(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices |
                                                                 aiProcess_ImproveCacheLocality | aiProcess_SortByPType | aiProcess_ValidateDataStructure);
     if (!scene || !scene->mRootNode || !scene->HasMeshes()) {
-        GN_ERROR(sLogger)("PbrShading::load: Assimp failed to load GLTF '{}': {}", gltfPath, aiGetErrorString());
+        GN_ERROR(sLogger, "PbrShading::load: Assimp failed to load GLTF '{}': {}", gltfPath, aiGetErrorString());
         if (scene) aiReleaseImport(scene);
         return {};
     }
@@ -221,7 +221,7 @@ static gpu2::RasterGeometry loadGltfGeometryStaged(AutoRef<gpu2::GpuContext> gpu
     aiReleaseImport(scene);
 
     if (verts.empty() || idxData.empty()) {
-        GN_ERROR(sLogger)("PbrShading::load: GLTF '{}' contains no renderable triangles", gltfPath);
+        GN_ERROR(sLogger, "PbrShading::load: GLTF '{}' contains no renderable triangles", gltfPath);
         return {};
     }
 
@@ -270,14 +270,14 @@ struct PbrAssetImpl final : public PbrShading::Asset {
 
 GN_API AutoRef<PbrShading::Asset> PbrShading::load(AutoRef<gpu2::GpuContext> gpu, const LoadParameters & params) {
     if (!gpu) {
-        GN_ERROR(sLogger)("PbrShading::load: null gpu");
+        GN_ERROR(sLogger, "PbrShading::load: null gpu");
         return {};
     }
 
     auto vs = gpu2::GpuShader::create({.context = gpu, .name = "pbr.vert", .binary = kPbrVertSpv, .size = sizeof(kPbrVertSpv)});
     auto ps = gpu2::GpuShader::create({.context = gpu, .name = "pbr.frag", .binary = kPbrFragSpv, .size = sizeof(kPbrFragSpv)});
     if (!vs || !ps) {
-        GN_ERROR(sLogger)("loadPbrAsset: failed to compile PBR shaders");
+        GN_ERROR(sLogger, "loadPbrAsset: failed to compile PBR shaders");
         return {};
     }
 

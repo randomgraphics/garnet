@@ -19,7 +19,7 @@ bool GN::gfx::D3D11Buffer::init(uint32_t bytes, bool fastCpuWrite, uint32_t bind
 
     // check parameter
     if (0 == bytes) {
-        GN_ERROR(sLogger)("Buffer length can not be zero!");
+        GN_ERROR(sLogger, "Buffer length can not be zero!");
         return failure();
     }
 

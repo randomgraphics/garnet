@@ -57,7 +57,7 @@ void GN::gfx::MultiThreadIdxBuf::quit() {
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadIdxBuf::update(uint32_t startidx, uint32_t numidx, const void * data, SurfaceUpdateFlag flag) {
     if (NULL == data) {
-        GN_ERROR(sLogger)("Null data pointer.");
+        GN_ERROR(sLogger, "Null data pointer.");
         return;
     }
 
@@ -71,7 +71,7 @@ void GN::gfx::MultiThreadIdxBuf::update(uint32_t startidx, uint32_t numidx, cons
 
     void * tmpbuf = HeapMemory::alloc(length);
     if (NULL == tmpbuf) {
-        GN_ERROR(sLogger)("fail to allocate temporary buffer.");
+        GN_ERROR(sLogger, "fail to allocate temporary buffer.");
         return;
     }
     memcpy(tmpbuf, data, length);

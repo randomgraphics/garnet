@@ -136,9 +136,9 @@ struct AseFile {
         return true;
     }
 
-    void err(const StrA & msg) const { GN_ERROR(sLogger)("ASEFILE: line {} : {}", line, msg.data()); }
-    void warn(const StrA & msg) const { GN_WARN(sLogger)("ASEFILE: line {} : {}", line, msg.data()); }
-    void verbose(const StrA & msg) const { GN_VERBOSE(sLogger)("ASEFILE: line {} : {}", line, msg.data()); }
+    void err(const StrA & msg) const { GN_ERROR(sLogger, "ASEFILE: line {} : {}", line, msg.data()); }
+    void warn(const StrA & msg) const { GN_WARN(sLogger, "ASEFILE: line {} : {}", line, msg.data()); }
+    void verbose(const StrA & msg) const { GN_VERBOSE(sLogger, "ASEFILE: line {} : {}", line, msg.data()); }
 
     enum ScanOptionEnum {
         IN_CURRENT_BLOCK            = 0,
@@ -961,7 +961,7 @@ static bool sReadAse(AseSceneInternal & scene, File & file) {
     const char * token = ase.next("*3DSMAX_ASCIIEXPORT");
     if (!token) return false;
     if (200 != ase.readOptionalInt(0)) {
-        GN_ERROR(sLogger)("Not support ASE version other than 2.00!");
+        GN_ERROR(sLogger, "Not support ASE version other than 2.00!");
         return false;
     }
 
@@ -1011,7 +1011,7 @@ static AseGeoObject * sFindGeoObject(AseSceneInternal & scene, const StrA & name
 static bool sBuildNodeTree(AseSceneInternal & scene) {
     GN_SCOPE_PROFILER(sBuildNodeTree, "Build ASE node tree");
 
-    GN_VERBOSE(sLogger)("\nASE: Build node tree:");
+    GN_VERBOSE(sLogger, "\nASE: Build node tree:");
 
     // setup root node
     scene.root.node.name = "root";
@@ -1029,7 +1029,7 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
         AseGeoObject * p = sFindGeoObject(scene, o.node.parent);
 
         if (0 == p) {
-            GN_ERROR(sLogger)("Object {} has invalid parent: {}. Replace it with \"root\".", o.node.name.data(), o.node.parent.data());
+            GN_ERROR(sLogger, "Object {} has invalid parent: {}. Replace it with \"root\".", o.node.name.data(), o.node.parent.data());
             p = &scene.root;
         }
 
@@ -1074,13 +1074,13 @@ static bool sBuildNodeTree(AseSceneInternal & scene) {
         s += StrA::format("{} : bbox_pos({},{},{}), bbox_size({},{},{})", n->node.name.data(), n->node.selfbbox.pos().x, n->node.selfbbox.pos().y,
                           n->node.selfbbox.pos().z, n->node.selfbbox.extend().x, n->node.selfbbox.extend().y, n->node.selfbbox.extend().z);
 
-        GN_VERBOSE(sLogger)("{}", s.data());
+        GN_VERBOSE(sLogger, "{}", s.data());
 
         // next node
         n = ttpre.next(n, &level);
     }
 
-    GN_VERBOSE(sLogger)("");
+    GN_VERBOSE(sLogger, "");
 
     // success
     return true;

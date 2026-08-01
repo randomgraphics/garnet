@@ -29,7 +29,7 @@ GN_API void GN::Clock::reset() {
 // -----------------------------------------------------------------------------
 GN_API void GN::Clock::pause() {
     if (!mPaused) {
-        GN_TRACE(sLogger)("Timer pause!");
+        GN_TRACE(sLogger, "Timer pause!");
         mPauseTime = SystemClock::now();
         mPaused    = true;
     }
@@ -40,7 +40,7 @@ GN_API void GN::Clock::pause() {
 // -----------------------------------------------------------------------------
 GN_API void GN::Clock::resume() {
     if (mPaused) {
-        GN_TRACE(sLogger)("Timer resume!");
+        GN_TRACE(sLogger, "Timer resume!");
         mPauseElapsed += SystemClock::now() - mPauseTime;
         mPaused = false;
     }

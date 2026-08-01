@@ -35,7 +35,7 @@ static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, co
 
 int main(int argc, const char ** argv) {
     bool testMode = (argc > 1) && (argv[1][0] == 't');
-    if (testMode) { GN_INFO(sLogger)("Running in test mode"); }
+    if (testMode) { GN_INFO(sLogger, "Running in test mode"); }
 
     enableCRTMemoryCheck();
 

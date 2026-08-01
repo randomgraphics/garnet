@@ -152,7 +152,7 @@ static uint32_t sGetImageFaceCount(const DDSFileHeader & header) {
     } else if (0 == (DDS_CAPS2_CUBEMAP & header.caps2) && 0 == (DDS_CAPS2_VOLUME & header.caps2)) {
         return 1; // 2D texture
     } else {
-        GN_ERROR(sLogger)("Fail to detect image face count!");
+        GN_ERROR(sLogger, "Fail to detect image face count!");
         return 0;
     }
 }
@@ -195,7 +195,7 @@ static GN::gfx::ColorFormat getImageFormat(const DDPixelFormat & ddpf) {
     }
 
     // failed
-    GN_ERROR(sLogger)("unknown DDS format!");
+    GN_ERROR(sLogger, "unknown DDS format!");
     return GN::gfx::ColorFormat::UNKNOWN;
 
     GN_UNGUARD;
@@ -234,19 +234,19 @@ GN::gfx::ImageDesc DDSReader::readHeader() {
 
     // read header
     if (!mFile->read(&mHeader, sizeof(mHeader), &read) || read != sizeof(mHeader)) {
-        GN_ERROR(sLogger)("fail to read DDS file header!");
+        GN_ERROR(sLogger, "fail to read DDS file header!");
         return {};
     }
 
     // validate header flags
     uint32_t required_flags = DDS_DDSD_WIDTH | DDS_DDSD_HEIGHT;
     if (required_flags != (required_flags & mHeader.flags)) {
-        GN_ERROR(sLogger)("damage DDS header!");
+        GN_ERROR(sLogger, "damage DDS header!");
         return {};
     }
 
     if (DDS_DDPF_PALETTEINDEXED8 & mHeader.ddpf.flags) {
-        GN_ERROR(sLogger)("do not support palette format!");
+        GN_ERROR(sLogger, "do not support palette format!");
         return {};
     }
 
@@ -256,7 +256,7 @@ GN::gfx::ImageDesc DDSReader::readHeader() {
         // read DX10 info
         DX10Info dx10;
         if (!mFile->read(&dx10, sizeof(dx10), &read) || read != sizeof(dx10)) {
-            GN_ERROR(sLogger)("fail to read DX10 info header!");
+            GN_ERROR(sLogger, "fail to read DX10 info header!");
             return {};
         }
 
@@ -301,17 +301,17 @@ bool DDSReader::readPixels(void * o_data, size_t o_size) const {
     GN_GUARD;
 
     if (!o_data) {
-        GN_ERROR(sLogger)("null output buffer.");
+        GN_ERROR(sLogger, "null output buffer.");
         return false;
     }
     if (o_size < mImgDesc.size) {
-        GN_ERROR(sLogger)("output buffer size is not large enough");
+        GN_ERROR(sLogger, "output buffer size is not large enough");
         return false;
     }
 
     size_t read;
     if (!mFile->read(o_data, mImgDesc.size, &read) || read != mImgDesc.size) {
-        GN_ERROR(sLogger)("failed to read DDS pixels.");
+        GN_ERROR(sLogger, "failed to read DDS pixels.");
         return false;
     }
 

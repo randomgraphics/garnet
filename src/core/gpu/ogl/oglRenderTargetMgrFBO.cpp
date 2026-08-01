@@ -164,7 +164,7 @@ bool GN::gfx::OGLRTMgrFBO::bind(const RenderTargetDesc & oldrt, const RenderTarg
             }
 
             // create new z buffer
-            GN_OGL_CHECK(glGenRenderbuffersEXT(1, &mAutoZ), GN_UNEXPECTED(); GN_ERROR(sLogger)(L"fail to generate automatic z buffer"); return false;);
+            GN_OGL_CHECK(glGenRenderbuffersEXT(1, &mAutoZ), GN_UNEXPECTED(); GN_ERROR(sLogger, L"fail to generate automatic z buffer"); return false;);
 
             // create a new z buffer as large as current render target
             // TODO: choose appropriate depth format

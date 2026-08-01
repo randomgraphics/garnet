@@ -153,7 +153,7 @@ static bool sIsAbsPath(const StrA & path) {
 class NativeFileSystem : public FileSystem {
 public:
     bool exist(const StrA & path) {
-        GN_VERBOSE(sLogger)("Checking existence of path '{}'", path.data());
+        GN_VERBOSE(sLogger, "Checking existence of path '{}'", path.data());
         return sNativeExist(FileSystem::toNativeDiskFilePath(path));
     }
 
@@ -187,7 +187,7 @@ public:
         // convert to full path
         char absPath[MAX_PATH + 1];
         if (0 == _fullpath(absPath, tmp.data(), MAX_PATH)) {
-            GN_ERROR(sLogger)("invalid path '{}'.", path.data());
+            GN_ERROR(sLogger, "invalid path '{}'.", path.data());
             result.clear();
             return;
         }
@@ -196,7 +196,7 @@ public:
         if (!tmp.empty() && '/' != tmp[0]) {
             char cwd[PATH_MAX + 1];
             if (0 == getcwd(cwd, PATH_MAX)) {
-                GN_ERROR(sLogger)("getcwd() failed!");
+                GN_ERROR(sLogger, "getcwd() failed!");
                 result.clear();
                 return;
             }
@@ -213,12 +213,12 @@ public:
         GN_GUARD;
 
         if (!exist(dirName)) {
-            GN_TRACE(sLogger)("'{}' does not exist!", dirName.data());
+            GN_TRACE(sLogger, "'{}' does not exist!", dirName.data());
             return result;
         }
 
         if (!isDir(dirName)) {
-            GN_TRACE(sLogger)("'{}' is not directory!", dirName.data());
+            GN_TRACE(sLogger, "'{}' is not directory!", dirName.data());
             return result;
         }
 
@@ -297,11 +297,11 @@ public:
         char     buf[PATH_MAX + 1];
         uint32_t size = PATH_MAX;
         if (0 != _NSGetExecutablePath(buf, &size)) {
-            GN_ERROR(sLogger)("Buffer size {} is not enough to hold executable path!", size);
+            GN_ERROR(sLogger, "Buffer size {} is not enough to hold executable path!", size);
         } else {
             char realPath[PATH_MAX + 1];
             if (0 == realpath(buf, realPath)) {
-                GN_ERROR(sLogger)("Fail to get real path of file '{}'.", buf);
+                GN_ERROR(sLogger, "Fail to get real path of file '{}'.", buf);
             } else {
                 mRootDir = parentPath(realPath);
             }
@@ -311,7 +311,7 @@ public:
         char realPath[PATH_MAX + 1];
         str::formatTo(linkName, PATH_MAX, "/proc/{}/exe", getpid());
         if (0 == realpath(linkName, realPath)) {
-            GN_ERROR(sLogger)("Fail to get real path of file '{}'.", linkName);
+            GN_ERROR(sLogger, "Fail to get real path of file '{}'.", linkName);
         } else {
             mRootDir = parentPath(realPath);
         }
@@ -434,7 +434,7 @@ public:
     AutoRef<File> openFile(const StrA & path, std::ios_base::openmode mode) {
         const StrA * root = findRoot(path);
         if (!root) {
-            GN_ERROR(sLogger)("file '{}' not found!", path.data());
+            GN_ERROR(sLogger, "file '{}' not found!", path.data());
             return {};
         }
         return GN::fs::openFile(joinPath(*root, path), mode);
@@ -531,21 +531,21 @@ struct FileSystemContainer {
     bool registerFs(const StrA & name, FileSystem * fs) {
         // check name
         if (name.empty()) {
-            GN_ERROR(sLogger)("File system name can't be empty!");
+            GN_ERROR(sLogger, "File system name can't be empty!");
             return false;
         }
         if (name.size() < 3 || ':' != name[name.size() - 1] || ':' != name[name.size() - 2]) {
-            GN_ERROR(sLogger)("File system name must be in format like \"your_fs_name::\"!");
+            GN_ERROR(sLogger, "File system name must be in format like \"your_fs_name::\"!");
             return false;
         }
 
         if (0 == fs) {
-            GN_ERROR(sLogger)("Null file system pointer!");
+            GN_ERROR(sLogger, "Null file system pointer!");
             return false;
         }
 
         if (NULL != mFileSystems.find(name)) {
-            GN_ERROR(sLogger)("File system '{}' already exists!", name.data());
+            GN_ERROR(sLogger, "File system '{}' already exists!", name.data());
             return false;
         }
 

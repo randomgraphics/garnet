@@ -73,12 +73,12 @@ private:
     bool checkParent(const T * p) const {
         if ((T *) this == p) {
             static Logger * logger = getLogger("GN.base.TreeNode");
-            GN_ERROR(logger)("can't set itself as parent");
+            GN_ERROR(logger, "can't set itself as parent");
             return false;
         }
         if (isDescendant(p)) {
             static Logger * logger = getLogger("GN.base.TreeNode");
-            GN_ERROR(logger)("can't descendant as parent");
+            GN_ERROR(logger, "can't descendant as parent");
             return false;
         }
         // TODO: traverse child tree to make sure 'p' is not in it.
@@ -93,7 +93,7 @@ private:
 
         if ((T *) this == prev) {
             static Logger * logger = getLogger("GN.base.TreeNode");
-            GN_ERROR(logger)("can't set itself as prev node");
+            GN_ERROR(logger, "can't set itself as prev node");
             return false;
         }
 
@@ -101,7 +101,7 @@ private:
 
         if (prev->mParent != parent) {
             static Logger * logger = getLogger("GN.base.TreeNode");
-            GN_ERROR(logger)("prev node belongs to another parent.");
+            GN_ERROR(logger, "prev node belongs to another parent.");
             return false;
         }
 
@@ -134,7 +134,7 @@ private:
                 }
                 if (0 == c) {
                     static Logger * logger = getLogger("GN.base.TreeNode");
-                    GN_ERROR(logger)("newPrev is not direct child of newParent!");
+                    GN_ERROR(logger, "newPrev is not direct child of newParent!");
                     GN_UNEXPECTED();
                 }
             } else {

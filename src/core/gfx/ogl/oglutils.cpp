@@ -54,13 +54,13 @@ GLuint GN::ogl::loadShaderFromString(const char * source, size_t length, GLenum 
         char infoLog[512];
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
         glDeleteShader(shader);
-        GN_ERROR(sLogger)
-        ("\n================== Failed to compile {} shader '{}' ====================\n"
-         "{}\n"
-         "\n============================= GLSL shader source ===============================\n"
-         "{}\n"
-         "\n================================================================================\n",
-         shaderType2String(shaderType), optionalFilename ? optionalFilename : "<no-name>", infoLog, addLineCount(source).c_str());
+        GN_ERROR(sLogger,
+                 "\n================== Failed to compile {} shader '{}' ====================\n"
+                 "{}\n"
+                 "\n============================= GLSL shader source ===============================\n"
+                 "{}\n"
+                 "\n================================================================================\n",
+                 shaderType2String(shaderType), optionalFilename ? optionalFilename : "<no-name>", infoLog, addLineCount(source).c_str());
         return 0;
     }
 
@@ -84,7 +84,7 @@ GLuint GN::ogl::linkProgram(const GLuint * shaders, size_t count, const char * o
         char infoLog[512];
         glGetProgramInfoLog(program, 512, NULL, infoLog);
         glDeleteProgram(program);
-        GN_ERROR(sLogger)("Failed to link program {}:\n{}", optionalProgramName ? optionalProgramName : "", infoLog);
+        GN_ERROR(sLogger, "Failed to link program {}:\n{}", optionalProgramName ? optionalProgramName : "", infoLog);
         return 0;
     }
 

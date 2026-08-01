@@ -39,7 +39,7 @@ public:
                     params.workflows.at(i).mPayload = nullptr;
                 }
         }
-        GN_VERBOSE(sLogger)("Submitting {} workflows.", pending.size());
+        GN_VERBOSE(sLogger, "Submitting {} workflows.", pending.size());
         return AutoRef<Submission>(new SubmissionImpl(std::move(pending), params));
     }
 };

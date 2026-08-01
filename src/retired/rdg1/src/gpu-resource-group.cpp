@@ -10,7 +10,7 @@ namespace GN::rdg {
 
 GN_API AutoRef<GpuResourceGroup> GpuResourceGroup::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) GN_UNLIKELY {
-            GN_ERROR(sLogger)("GpuResourceGroup::create: context is null, name='{}'", name);
+            GN_ERROR(sLogger, "GpuResourceGroup::create: context is null, name='{}'", name);
             return {};
         }
     auto * common = static_cast<GpuContextCommon *>(params.context.get());
@@ -18,13 +18,13 @@ GN_API AutoRef<GpuResourceGroup> GpuResourceGroup::create(const StrA & name, con
     case GpuContextCommon::Api::Vulkan:
         return createVulkanGpuResourceGroup(name, params);
     case GpuContextCommon::Api::D3D12:
-        GN_ERROR(sLogger)("GpuResourceGroup::create: D3D12 backend not implemented yet");
+        GN_ERROR(sLogger, "GpuResourceGroup::create: D3D12 backend not implemented yet");
         return {};
     case GpuContextCommon::Api::Metal:
-        GN_ERROR(sLogger)("GpuResourceGroup::create: Metal backend not implemented yet");
+        GN_ERROR(sLogger, "GpuResourceGroup::create: Metal backend not implemented yet");
         return {};
     default:
-        GN_ERROR(sLogger)("GpuResourceGroup::create: unknown API, name='{}'", name);
+        GN_ERROR(sLogger, "GpuResourceGroup::create: unknown API, name='{}'", name);
         return {};
     }
 }

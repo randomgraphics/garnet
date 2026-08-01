@@ -73,16 +73,16 @@ public:
     /// Returns VkBuffer for copy/bind. Warns if any Mapped is still outstanding (mappedCount > 0).
     vk::Buffer handle() const {
         if (mBacking->mappedCount.load(std::memory_order_relaxed) != 0) GN_UNLIKELY {
-                GN_WARN(GN::getLogger("GN.rdg"))("TransientBufferVulkan::handle: mappedCount is {} (should be 0 before GPU use)",
-                                                 mBacking->mappedCount.load(std::memory_order_relaxed));
+                GN_WARN(GN::getLogger("GN.rdg"), "TransientBufferVulkan::handle: mappedCount is {} (should be 0 before GPU use)",
+                        mBacking->mappedCount.load(std::memory_order_relaxed));
             }
         return mBacking->buffer ? mBacking->buffer->handle() : vk::Buffer {};
     }
 
     rapid_vulkan::Ref<rapid_vulkan::Buffer> rapid() const {
         if (mBacking->mappedCount.load(std::memory_order_relaxed) != 0) GN_UNLIKELY {
-                GN_WARN(GN::getLogger("GN.rdg"))("TransientBufferVulkan::rapid: mappedCount is {} (should be 0 before GPU use)",
-                                                 mBacking->mappedCount.load(std::memory_order_relaxed));
+                GN_WARN(GN::getLogger("GN.rdg"), "TransientBufferVulkan::rapid: mappedCount is {} (should be 0 before GPU use)",
+                        mBacking->mappedCount.load(std::memory_order_relaxed));
             }
         return mBacking->buffer;
     }

@@ -43,7 +43,7 @@ GN::engine::VisualComponent::~VisualComponent() { clear(); }
 // -----------------------------------------------------------------------------
 bool GN::engine::VisualComponent::addModel(ModelResource * model) {
     if (NULL == model) {
-        GN_ERROR(sLogger)("fail to attach model to visual node: NULL model pointer.");
+        GN_ERROR(sLogger, "fail to attach model to visual node: NULL model pointer.");
         return false;
     }
 
@@ -55,7 +55,7 @@ bool GN::engine::VisualComponent::addModel(ModelResource * model) {
     // handle standard uniforms
     AutoRef<EffectResource> effect = model->effectResource();
     if (NULL == effect) {
-        GN_ERROR(sLogger)("fail to attach model to visual node: No effect attached to the model.");
+        GN_ERROR(sLogger, "fail to attach model to visual node: No effect attached to the model.");
         return false;
     }
     for (StandardUniform::Index type = 0; type < StandardUniform::Index::NUM_STANDARD_UNIFORMS; ++type) {
@@ -77,7 +77,7 @@ bool GN::engine::VisualComponent::addModel(ModelResource * model) {
 
     // add the model into model list
     if (!mModels.resize(mModels.size() + 1)) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return false;
     }
     mModels.back().set(model);

@@ -101,7 +101,7 @@ void printOglInfo(intptr_t disp, int index) {
             "===================================================\n"
             "\n\n";
 
-    GN_INFO(sLogger)(info.data());
+    GN_INFO(sLogger, info.data());
 
     GN_UNGUARD;
 }
@@ -164,7 +164,7 @@ int choosePixelFormat(HDC hdc, int total) {
 
     for (int i = 1; i <= total; i++) {
         if (!DescribePixelFormat(hdc, i, sizeof(pfd), &pfd)) {
-            GN_ERROR(sLogger)("can't get the description of the %dth pixelformat!", i);
+            GN_ERROR(sLogger, "can't get the description of the %dth pixelformat!", i);
             return 0;
         }
 
@@ -216,7 +216,7 @@ int choosePixelFormat(HDC hdc, int total) {
     }
 
     // error
-    GN_ERROR(sLogger)("no appropriate pixelformat!");
+    GN_ERROR(sLogger, "no appropriate pixelformat!");
     return 0;
 
     GN_UNGUARD;
@@ -230,9 +230,9 @@ int main() {
     HDC  hdc;
     GN_MSW_CHECK_RETURN(hdc = ::GetDC(hwnd), -1);
 
-    GN_INFO(sLogger)("Enumerating pixelformats...");
+    GN_INFO(sLogger, "Enumerating pixelformats...");
     int count = DescribePixelFormat(hdc, 1, 0, 0);
-    GN_INFO(sLogger)("%d pixelformats in total.", count);
+    GN_INFO(sLogger, "%d pixelformats in total.", count);
 
     int bestPixelFormat = choosePixelFormat(hdc, count);
 
@@ -251,7 +251,7 @@ int main() {
 #else
 
 int main() {
-    GN_INFO(sLogger)("Not implemented on platform other than MSWIN.");
+    GN_INFO(sLogger, "Not implemented on platform other than MSWIN.");
     return 0;
 }
 

@@ -110,7 +110,7 @@ public:
         for (uint32_t i = 0; i < 6; ++i) {
             r.mFaceTextures[i] = Texture::load({.context = ctx.gpu, .filename = kFaceImagePaths[i]});
             if (!r.mFaceTextures[i]) {
-                GN_ERROR(sLogger)("CubemapRenderer: failed to load face texture '{}'", kFaceImagePaths[i]);
+                GN_ERROR(sLogger, "CubemapRenderer: failed to load face texture '{}'", kFaceImagePaths[i]);
                 return {};
             }
         }
@@ -123,7 +123,7 @@ public:
                     Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(kCubemapSize, kCubemapSize).setFaces(6).setLevels(1),
             });
         if (!r.mCubemap) {
-            GN_ERROR(sLogger)("CubemapRenderer: failed to create cubemap texture");
+            GN_ERROR(sLogger, "CubemapRenderer: failed to create cubemap texture");
             return {};
         }
 
@@ -144,7 +144,7 @@ public:
                                                  .size    = kCubeAllFacesFragSpvSize * sizeof(unsigned int),
                                                  .entry   = "main"});
             if (!vs || !facePs || !allFacesPs) {
-                GN_ERROR(sLogger)("CubemapRenderer: failed to create one or more shaders");
+                GN_ERROR(sLogger, "CubemapRenderer: failed to create one or more shaders");
                 return;
             }
             graph->publishArtifact(vsArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
@@ -174,11 +174,11 @@ public:
     NodePtr addFrameNode(int frameCounter, std::vector<AutoRef<GpuPayload>> & outPayloads) {
         if (mImpl == 1) {
             NodeDesc desc("render cubemap", [this, frameCounter, &outPayloads]() {
-                GN_VVTRACE(sLogger)("frame {}: rendering cubemap (impl 1)", frameCounter);
+                GN_VVTRACE(sLogger, "frame {}: rendering cubemap (impl 1)", frameCounter);
                 auto vsContent = mFaceVsArtifact->content<ShaderArtifactContent>();
                 auto psContent = mFacePsArtifact->content<ShaderArtifactContent>();
                 if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
-                    GN_ERROR(sLogger)("Impl 1: missing shaders");
+                    GN_ERROR(sLogger, "Impl 1: missing shaders");
                     return;
                 }
 
@@ -217,11 +217,11 @@ public:
         } else {
             // Single pass: 6 color targets simultaneously, fragment shader writes all 6 faces.
             NodeDesc desc("render cubemap", [this, frameCounter, &outPayloads]() {
-                GN_VVTRACE(sLogger)("frame {}: rendering cubemap (impl 2)", frameCounter);
+                GN_VVTRACE(sLogger, "frame {}: rendering cubemap (impl 2)", frameCounter);
                 auto vsContent = mFaceVsArtifact->content<ShaderArtifactContent>();
                 auto psContent = mAllFacesPsArtifact->content<ShaderArtifactContent>();
                 if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
-                    GN_ERROR(sLogger)("Impl 2: missing shaders");
+                    GN_ERROR(sLogger, "Impl 2: missing shaders");
                     return;
                 }
 
@@ -286,7 +286,7 @@ public:
         // Depth buffer sized to the swapchain; one mip, one face, depth format.
         auto depthFmt = ctx.gpu->caps().defaultDepthFormat;
         if (depthFmt == gfx::img::PixelFormat::UNKNOWN()) {
-            GN_ERROR(sLogger)("CubeDraw: GPU has no usable depth format");
+            GN_ERROR(sLogger, "CubeDraw: GPU has no usable depth format");
             return {};
         }
         cd.mDepthTex =
@@ -295,7 +295,7 @@ public:
                                                    .descriptor = Texture::Descriptor {}.setFormat(depthFmt).setDimensions(ctx.width, ctx.height).setLevels(1),
                                                });
         if (!cd.mDepthTex) {
-            GN_ERROR(sLogger)("CubeDraw: failed to create depth texture");
+            GN_ERROR(sLogger, "CubeDraw: failed to create depth texture");
             return {};
         }
 
@@ -321,7 +321,7 @@ public:
             auto ps = GpuShader::create(
                 {.context = gpu, .name = "cube-draw PS", .binary = kCubeDrawFragSpv, .size = kCubeDrawFragSpvSize * sizeof(unsigned int), .entry = "main"});
             if (!vs || !ps) {
-                GN_ERROR(sLogger)("CubeDraw: failed to create shaders");
+                GN_ERROR(sLogger, "CubeDraw: failed to create shaders");
                 return;
             }
             graph->publishArtifact(vsArt, AutoRef<ShaderArtifactContent>(new ShaderArtifactContent(vs)));
@@ -348,7 +348,7 @@ public:
                          auto vsContent = mVsArtifact->content<ShaderArtifactContent>();
                          auto psContent = mPsArtifact->content<ShaderArtifactContent>();
                          if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) {
-                             GN_ERROR(sLogger)("CubeDraw: missing shaders");
+                             GN_ERROR(sLogger, "CubeDraw: missing shaders");
                              return;
                          }
 
@@ -435,16 +435,16 @@ private:
         mVb = Buffer::create("cube VB", {.context = mCtx.gpu, .size = sizeof(kVertices)});
         mIb = Buffer::create("cube IB", {.context = mCtx.gpu, .size = sizeof(kIndices)});
         if (!mVb || !mIb) {
-            GN_ERROR(sLogger)("CubeDraw: failed to create vertex/index buffers");
+            GN_ERROR(sLogger, "CubeDraw: failed to create vertex/index buffers");
             return false;
         }
 
         if (!mVb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(kVertices), sizeof(kVertices)))) {
-            GN_ERROR(sLogger)("CubeDraw: vertex buffer upload failed");
+            GN_ERROR(sLogger, "CubeDraw: vertex buffer upload failed");
             return false;
         }
         if (!mIb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(kIndices), sizeof(kIndices)))) {
-            GN_ERROR(sLogger)("CubeDraw: index buffer upload failed");
+            GN_ERROR(sLogger, "CubeDraw: index buffer upload failed");
             return false;
         }
         return true;
@@ -464,18 +464,18 @@ static void verifyFace0(const AutoRef<GpuContext> & gpu, const AutoRef<Texture> 
     gpu->waitForIdle();
     gfx::img::Image image = cubemap->readback();
     if (image.empty()) {
-        GN_WARN(sLogger)("Frame {}: cubemap readback returned empty image", frame);
+        GN_WARN(sLogger, "Frame {}: cubemap readback returned empty image", frame);
         return;
     }
     auto pixels = image.plane().toRGBA8(image.data());
     if (pixels.empty()) {
-        GN_WARN(sLogger)("Frame {}: toRGBA8 returned empty vector", frame);
+        GN_WARN(sLogger, "Frame {}: toRGBA8 returned empty vector", frame);
         return;
     }
     // Just log — face content is loaded from disk so the exact color is not known ahead of time.
     const auto & px = pixels[0];
-    GN_INFO(sLogger)("Frame {}: cubemap face 0 pixel[0] = ({},{},{},{})", frame, px.r, px.g, px.b, px.a);
-    GN_INFO(sLogger)("Frame {}: readback PASSED (non-empty pixel data)", frame);
+    GN_INFO(sLogger, "Frame {}: cubemap face 0 pixel[0] = ({},{},{},{})", frame, px.r, px.g, px.b, px.a);
+    GN_INFO(sLogger, "Frame {}: readback PASSED (non-empty pixel data)", frame);
 }
 
 // ─── main ──────────────────────────────────────────────────────────────────────
@@ -492,12 +492,12 @@ int main(int argc, const char ** argv) {
         }
     }
     if (impl != 1 && impl != 2) {
-        GN_ERROR(sLogger)("--impl must be 1 or 2 (got {})", impl);
+        GN_ERROR(sLogger, "--impl must be 1 or 2 (got {})", impl);
         return -1;
     }
 
     enableCRTMemoryCheck();
-    GN_INFO(sLogger)("render-to-cube  impl={}  testMode={}", impl, testMode);
+    GN_INFO(sLogger, "render-to-cube  impl={}  testMode={}", impl, testMode);
 
     // ── GPU context ────────────────────────────────────────────────────────────
     auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
@@ -546,7 +546,7 @@ int main(int argc, const char ** argv) {
     auto cubeDraw = CubeDraw::create(ctx);
     if (!cubeDraw.valid()) return -1;
 
-    GN_INFO(sLogger)("Starting render loop...");
+    GN_INFO(sLogger, "Starting render loop...");
 
     const auto startTime    = std::chrono::steady_clock::now();
     int        totalFrames  = testMode ? 10 : 0;
@@ -556,7 +556,7 @@ int main(int argc, const char ** argv) {
 
         Swapchain::Frame frame = swapchain->prepare();
         if (frame.view.empty()) {
-            GN_ERROR(sLogger)("Swapchain prepare failed");
+            GN_ERROR(sLogger, "Swapchain prepare failed");
             return -1;
         }
 
@@ -623,6 +623,6 @@ int main(int argc, const char ** argv) {
     // Destroy the sample-owned surface after the swapchain, before the GPU context (the Vulkan instance).
     swapchain.clear();
     if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
-    GN_INFO(sLogger)("render-to-cube finished.");
+    GN_INFO(sLogger, "render-to-cube finished.");
     return 0;
 }

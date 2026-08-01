@@ -59,13 +59,13 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
     void initGpuResources() {
         mArena = TransientArena::create(StrA::format("{}.arena", name), TransientArena::CreateParameters {.context = mGpu});
         if (!mArena) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create transient arena");
+                GN_ERROR(sLogger, "SharedShaderConstantsVulkan: failed to create transient arena");
                 return;
             }
 
         mCopyAction = GpuCopy::create(StrA::format("{}.copy_ubo", name), GpuCopy::CreateParameters {.gpu = mGpu});
         if (!mCopyAction) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create copy action");
+                GN_ERROR(sLogger, "SharedShaderConstantsVulkan: failed to create copy action");
                 return;
             }
 
@@ -74,21 +74,21 @@ class SharedShaderConstantsVulkan : public SharedShaderConstants {
         bufParams.size    = sizeof(GlobalCameraUBO);
         mCameraBuffer     = PersistentBuffer::create(StrA::format("{}.camera_ubo", name), bufParams);
         if (!mCameraBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create camera UBO");
+                GN_ERROR(sLogger, "SharedShaderConstantsVulkan: failed to create camera UBO");
                 return;
             }
 
         bufParams.size  = sizeof(DirectLightingUBO);
         mLightingBuffer = PersistentBuffer::create(StrA::format("{}.lighting_ubo", name), bufParams);
         if (!mLightingBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create lighting UBO");
+                GN_ERROR(sLogger, "SharedShaderConstantsVulkan: failed to create lighting UBO");
                 return;
             }
 
         bufParams.size     = sizeof(EnvironmentLightingUBO);
         mEnvLightingBuffer = PersistentBuffer::create(StrA::format("{}.environment_lighting_ubo", name), bufParams);
         if (!mEnvLightingBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan: failed to create environment lighting UBO");
+                GN_ERROR(sLogger, "SharedShaderConstantsVulkan: failed to create environment lighting UBO");
                 return;
             }
 
@@ -203,13 +203,13 @@ public:
         AutoRef<TransientBuffer> tbLighting = mArena->allocate(sizeof(DirectLightingUBO), "lighting");
         AutoRef<TransientBuffer> tbEnv      = mArena->allocate(sizeof(EnvironmentLightingUBO), "environment_lighting");
         if (!tbCamera || !tbLighting || !tbEnv) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: transient allocate failed");
+                GN_ERROR(sLogger, "SharedShaderConstantsVulkan::build: transient allocate failed");
                 return sg;
             }
         {
             auto m = tbCamera->map();
             if (!m.data() || m.size() < sizeof(GlobalCameraUBO)) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: camera map failed");
+                    GN_ERROR(sLogger, "SharedShaderConstantsVulkan::build: camera map failed");
                     return sg;
                 }
             memcpy(m.data(), &mPendingCamera, sizeof(mPendingCamera));
@@ -217,7 +217,7 @@ public:
         {
             auto m = tbLighting->map();
             if (!m.data() || m.size() < sizeof(DirectLightingUBO)) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: lighting map failed");
+                    GN_ERROR(sLogger, "SharedShaderConstantsVulkan::build: lighting map failed");
                     return sg;
                 }
             memcpy(m.data(), &mPendingLighting, sizeof(mPendingLighting));
@@ -225,7 +225,7 @@ public:
         {
             auto m = tbEnv->map();
             if (!m.data() || m.size() < sizeof(EnvironmentLightingUBO)) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("SharedShaderConstantsVulkan::build: environment lighting map failed");
+                    GN_ERROR(sLogger, "SharedShaderConstantsVulkan::build: environment lighting map failed");
                     return sg;
                 }
             memcpy(m.data(), &mPendingEnv, sizeof(mPendingEnv));
@@ -299,7 +299,7 @@ public:
 
 GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const StrA & name, const CreateParameters & params) {
     if (!params.gpu) GN_UNLIKELY {
-            GN_ERROR(sLogger)("SharedShaderConstants::create: gpu is null, name='{}'", name);
+            GN_ERROR(sLogger, "SharedShaderConstants::create: gpu is null, name='{}'", name);
             return {};
         }
     auto * common = static_cast<GpuContextCommon *>(params.gpu.get());
@@ -308,13 +308,13 @@ GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const StrA &
         return AutoRef<SharedShaderConstants>(new SharedShaderConstantsVulkan(name, params.gpu));
     }
     case GpuContextCommon::Api::D3D12:
-        GN_ERROR(sLogger)("SharedShaderConstants::create: D3D12 backend not implemented");
+        GN_ERROR(sLogger, "SharedShaderConstants::create: D3D12 backend not implemented");
         return {};
     case GpuContextCommon::Api::Metal:
-        GN_ERROR(sLogger)("SharedShaderConstants::create: Metal backend not implemented");
+        GN_ERROR(sLogger, "SharedShaderConstants::create: Metal backend not implemented");
         return {};
     default:
-        GN_ERROR(sLogger)("SharedShaderConstants::create: unknown API, name='{}'", name);
+        GN_ERROR(sLogger, "SharedShaderConstants::create: unknown API, name='{}'", name);
         return {};
     }
 }

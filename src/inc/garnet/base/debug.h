@@ -11,12 +11,14 @@
 ///
 /// Assert failure
 ///
+/// Expands to a single statement, so that an unbraced `if (cond) GN_ASSERT_FAILURE(...);` neither
+/// warns about an ambiguous else nor swallows a following else branch. Safe to wrap in do/while
+/// because the variadic arguments are a message, never caller statements.
 #define GN_ASSERT_FAILURE(...)                                                                                                         \
-    if (true) {                                                                                                                        \
+    do {                                                                                                                               \
         static bool sIgnoredForever = false;                                                                                           \
         if (!sIgnoredForever) { GN::internal::handleAssertFailure(__FILE__, __LINE__, GN_FUNCTION, &sIgnoredForever, ##__VA_ARGS__); } \
-    } else                                                                                                                             \
-        void(0)
+    } while (false)
 
 ///
 /// Perform runtime assert.
@@ -24,17 +26,17 @@
 /// This macro will perform assertion in all builds, in case you want assert in
 /// release build. Normally, you don't need this.
 ///
-#define GN_REQUIRE(exp, ...)                \
-    if (!(exp)) GN_UNLIKELY {               \
-            GN_ASSERT_FAILURE(__VA_ARGS__); \
-        }                                   \
-    else                                    \
-        void(0)
+#define GN_REQUIRE(exp, ...)                    \
+    do {                                        \
+        if (!(exp)) GN_UNLIKELY {               \
+                GN_ASSERT_FAILURE(__VA_ARGS__); \
+            }                                   \
+    } while (false)
 
 ///
 /// Assert macro
 ///
-#if GN_ENABLE_ASSERT
+#if GN_BUILD_DEBUG_ENABLED
     #define GN_ASSERT(exp, ...) GN_REQUIRE(exp, __VA_ARGS__)
 #else
     #define GN_ASSERT(...) void(0)
@@ -58,12 +60,12 @@
 ///
 /// Output a warning message for unimplemented functionality
 ///
-#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: function {} is not implemented yet.", GN_FUNCTION));
+#define GN_UNIMPL_WARNING() GN_DO_ONCE(GN_WARN(::GN::getLogger("GN.base.todo"), "TODO: function {} is not implemented yet.", GN_FUNCTION))
 
 ///
 /// Output a todo message.
 ///
-#define GN_TODO(msg) GN_DO_ONCE(GN_WARN(GN::getLogger("GN.base.todo"))("TODO: {}", msg));
+#define GN_TODO(msg) GN_DO_ONCE(GN_WARN(::GN::getLogger("GN.base.todo"), "TODO: {}", msg))
 
 // *****************************************************************************
 /// \name error check macros
@@ -77,7 +79,7 @@
         GLenum err = glGetError();                                             \
         if (GL_NO_ERROR != err) {                                              \
             static GN::Logger * sOglLogger = GN::getLogger("GN.gfx.OGLError"); \
-            GN_ERROR(sOglLogger)("error=0x{:x}", err);                         \
+            GN_ERROR(sOglLogger, "error=0x{:x}", err);                         \
             __VA_ARGS__                                                        \
         }                                                                      \
     } else                                                                     \
@@ -95,7 +97,7 @@
         intptr_t rr = (intptr_t) (func);                                        \
         if (0 == rr) {                                                          \
             static GN::Logger * sMswLogger = GN::getLogger("GN.base.MSWError"); \
-            GN_ERROR(sMswLogger)("{}", ::GN::getWin32LastErrorInfo());          \
+            GN_ERROR(sMswLogger, "{}", ::GN::getWin32LastErrorInfo());          \
             something                                                           \
         }                                                                       \
     } else                                                                      \
@@ -126,7 +128,7 @@
             HRESULT hr = func;                                                   \
             if (FAILED(hr)) {                                                    \
                 static GN::Logger * sDxLogger = GN::getLogger("GN.gfx.DXError"); \
-                GN_ERROR(sDxLogger)("{}", GN::getDXErrorInfo(hr));               \
+                GN_ERROR(sDxLogger, "{}", GN::getDXErrorInfo(hr));               \
                 something                                                        \
             }                                                                    \
         } else                                                                   \
@@ -155,7 +157,7 @@
         Status rr = (func);                                                            \
         if (0 == rr) {                                                                 \
             static GN::Logger * sXLogger = GN::getLogger("GN.gfx.XLibError");          \
-            GN_ERROR(sXLogger)("XLib function {} failed: return(0x{:X}).", #func, rr); \
+            GN_ERROR(sXLogger, "XLib function {} failed: return(0x{:X}).", #func, rr); \
             something                                                                  \
         }                                                                              \
     } else                                                                             \

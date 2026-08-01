@@ -12,7 +12,7 @@ namespace GN::rdg {
 
 GN_API AutoRef<Texture> Texture::create(const StrA & name, const CreateParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("Texture::create: context is null, name='{}'", name);
+        GN_ERROR(sLogger, "Texture::create: context is null, name='{}'", name);
         return {};
     }
 
@@ -21,13 +21,13 @@ GN_API AutoRef<Texture> Texture::create(const StrA & name, const CreateParameter
     case GpuContextCommon::Api::Vulkan:
         return createVulkanTexture(name, params);
     case GpuContextCommon::Api::D3D12:
-        GN_ERROR(sLogger)("Texture::create: D3D12 backend not implemented yet");
+        GN_ERROR(sLogger, "Texture::create: D3D12 backend not implemented yet");
         return {};
     case GpuContextCommon::Api::Metal:
-        GN_ERROR(sLogger)("Texture::create: Metal backend not implemented yet");
+        GN_ERROR(sLogger, "Texture::create: Metal backend not implemented yet");
         return {};
     default:
-        GN_ERROR(sLogger)("Texture::create: unknown API, name='{}'", name);
+        GN_ERROR(sLogger, "Texture::create: unknown API, name='{}'", name);
         return {};
     }
 }
@@ -38,7 +38,7 @@ GN_API AutoRef<Texture> Texture::create(const StrA & name, const CreateParameter
 
 GN_API AutoRef<Texture> Texture::load(const LoadParameters & params) {
     if (!params.context) {
-        GN_ERROR(sLogger)("Texture::load: context is null, filename='{}'", params.filename);
+        GN_ERROR(sLogger, "Texture::load: context is null, filename='{}'", params.filename);
         return {};
     }
 
@@ -47,13 +47,13 @@ GN_API AutoRef<Texture> Texture::load(const LoadParameters & params) {
     case GpuContextCommon::Api::Vulkan:
         return loadVulkanTexture(params);
     case GpuContextCommon::Api::D3D12:
-        GN_ERROR(sLogger)("Texture::load: D3D12 backend not implemented yet");
+        GN_ERROR(sLogger, "Texture::load: D3D12 backend not implemented yet");
         return {};
     case GpuContextCommon::Api::Metal:
-        GN_ERROR(sLogger)("Texture::load: Metal backend not implemented yet");
+        GN_ERROR(sLogger, "Texture::load: Metal backend not implemented yet");
         return {};
     default:
-        GN_ERROR(sLogger)("Texture::load: unknown API, filename='{}'", params.filename);
+        GN_ERROR(sLogger, "Texture::load: unknown API, filename='{}'", params.filename);
         return {};
     }
 }

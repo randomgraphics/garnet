@@ -44,7 +44,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
     if (!entityDesc.parent.empty()) {
         const ModelHierarchyDesc::NodeDesc * parentDesc = worldDesc.nodes.find(entityDesc.parent);
         if (NULL == parentDesc) {
-            GN_ERROR(sLogger)("Entity '{}' has a invalid parent: '{}'", entityName.data(), entityDesc.parent.data());
+            GN_ERROR(sLogger, "Entity '{}' has a invalid parent: '{}'", entityName.data(), entityDesc.parent.data());
         } else {
 
             parent = (SampleSpacialEntity *) sCreateEntity(root, worldDesc, entities, entityDesc.parent, *parentDesc);
@@ -59,7 +59,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
     // create a new entity instance
     SampleSpacialEntity * e = entityDesc.models.empty() ? new SampleSpacialEntity() : new SampleVisualEntity();
     if (!e) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return NULL;
     }
     entities[entityName] = e;
@@ -77,7 +77,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
 
         const GN::gfx::ModelResourceDesc * pModelDesc = worldDesc.models.find(modelName);
         if (NULL == pModelDesc) {
-            GN_ERROR(sLogger)("Entity {} references invalid model named \"{}\".", entityName.data(), modelName.data());
+            GN_ERROR(sLogger, "Entity {} references invalid model named \"{}\".", entityName.data(), modelName.data());
             continue;
         }
 
@@ -92,8 +92,7 @@ static Entity * sCreateEntity(Entity * root, const ModelHierarchyDesc & worldDes
                 const GN::gfx::MeshResourceDesc * pMeshDesc = worldDesc.meshes.find(pModelDesc->mesh);
 
                 if (NULL == pMeshDesc) {
-                    GN_ERROR(sLogger)
-                    ("Model \"%s\" references a mesh \"%s\" that does not belong to this scene.", modelName.data(), pModelDesc->mesh.data());
+                    GN_ERROR(sLogger, "Model \"%s\" references a mesh \"%s\" that does not belong to this scene.", modelName.data(), pModelDesc->mesh.data());
                     continue; // ignore the model
                 }
 

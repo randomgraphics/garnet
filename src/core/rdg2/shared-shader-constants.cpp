@@ -93,7 +93,7 @@ public:
 
     bool init(const CreateParameters & params) {
         if (!params.gpu) {
-            GN_ERROR(sLogger)("SharedShaderConstants2: invalid create parameters");
+            GN_ERROR(sLogger, "SharedShaderConstants2: invalid create parameters");
             return false;
         }
         mGpu = params.gpu;
@@ -101,14 +101,14 @@ public:
         mSceneBuffer  = gpu2::Buffer::create("ssc2.scene_ubo", {.context = mGpu, .size = sizeof(shader::SceneUBO)});
         mCameraBuffer = gpu2::Buffer::create("ssc2.camera_ubo", {.context = mGpu, .size = sizeof(shader::CameraUBO)});
         if (!mSceneBuffer || !mCameraBuffer) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstants2: failed to create UBO buffers");
+                GN_ERROR(sLogger, "SharedShaderConstants2: failed to create UBO buffers");
                 return false;
             }
 
         mSkyboxVS = gpu2::GpuShader::create({.context = mGpu, .name = "skybox.vert", .binary = kSkyboxVertSpv, .size = sizeof(kSkyboxVertSpv)});
         mSkyboxPS = gpu2::GpuShader::create({.context = mGpu, .name = "skybox.frag", .binary = kSkyboxFragSpv, .size = sizeof(kSkyboxFragSpv)});
         if (!mSkyboxVS || !mSkyboxPS) GN_UNLIKELY {
-                GN_ERROR(sLogger)("SharedShaderConstants2: failed to compile skybox shaders");
+                GN_ERROR(sLogger, "SharedShaderConstants2: failed to compile skybox shaders");
                 return false;
             }
 
@@ -119,7 +119,7 @@ public:
             mFallbackCubemap = make1x1Texture(mGpu, *cnc, "ssc2.fallback_cubemap", 0, 0, 0, 255, 6);
             mFallbackBrdfLut = make1x1Texture(mGpu, *cnc, "ssc2.fallback_brdf_lut", 255, 255, 255, 255, 1);
             if (!mFallbackCubemap || !mFallbackBrdfLut) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("SharedShaderConstants2: failed to create fallback textures");
+                    GN_ERROR(sLogger, "SharedShaderConstants2: failed to create fallback textures");
                     return false;
                 }
             mFallbackInitPayload = cnc->seal();
@@ -328,7 +328,7 @@ private:
 GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const CreateParameters & params) {
     auto impl = AutoRef<SharedShaderConstants2Impl>(new SharedShaderConstants2Impl());
     if (!impl->init(params)) {
-        GN_ERROR(sLogger)("SharedShaderConstants::create failed");
+        GN_ERROR(sLogger, "SharedShaderConstants::create failed");
         return {};
     }
     return impl;

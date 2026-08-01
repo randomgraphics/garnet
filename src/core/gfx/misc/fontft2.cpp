@@ -30,7 +30,7 @@ struct Ft2Library : public RefCounter {
         FT_Error err = FT_Init_FreeType(&lib);
         if (err) {
             lib = 0;
-            GN_ERROR(sLogger)("fail to initialize freetyp2 library");
+            GN_ERROR(sLogger, "fail to initialize freetyp2 library");
         }
     }
 
@@ -150,7 +150,7 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     GN_ASSERT(sLib && sLib->lib);
 
     if (cd.quality < 0 || cd.quality >= FontFaceDesc::NUM_FONT_QUALITIES) {
-        GN_ERROR(sLogger)("Invalid font quality enumeration: {}", (int) cd.quality);
+        GN_ERROR(sLogger, "Invalid font quality enumeration: {}", (int) cd.quality);
         return failure();
     }
 
@@ -174,14 +174,14 @@ bool FontFaceFt2::init(const FontFaceCreationDesc & cd) {
     // load font face
     FT_Error err = FT_Open_Face(sLib->lib, &oa, 0, &mFace);
     if (err) {
-        GN_ERROR(sLogger)("fail to load font face {} from file.", cd.fontname);
+        GN_ERROR(sLogger, "fail to load font face {} from file.", cd.fontname);
         return failure();
     }
 
     // set font size
     err = FT_Set_Pixel_Sizes(mFace, cd.width, cd.height);
     if (err) {
-        GN_ERROR(sLogger)("FT_Set_Pixel_Sizes() failed!");
+        GN_ERROR(sLogger, "FT_Set_Pixel_Sizes() failed!");
         return failure();
     }
 
@@ -252,13 +252,13 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
     if (FT_LOAD_TARGET_LCD & flag) {
         FT_Error error = FT_Library_SetLcdFilter(sLib->lib, FT_LCD_FILTER_DEFAULT);
         if (error) {
-            GN_ERROR(sLogger)("FT_Library_SetLcdFilter() failed.");
+            GN_ERROR(sLogger, "FT_Library_SetLcdFilter() failed.");
             return false;
         }
     }
     FT_Error error = FT_Load_Char(mFace, ch, flag);
     if (error) {
-        GN_ERROR(sLogger)("FT_Load_Char() failed.");
+        GN_ERROR(sLogger, "FT_Load_Char() failed.");
         return false;
     }
 
@@ -319,7 +319,7 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
         break;
 
     default:
-        GN_WARN(sLogger)("Unsupported pixel mode: {}", bitmap.pixel_mode);
+        GN_WARN(sLogger, "Unsupported pixel mode: {}", bitmap.pixel_mode);
         break;
     };
     result.format = FontImage::RGBA;
@@ -343,7 +343,7 @@ bool FontFaceFt2::loadFontImage(FontImage & result, wchar_t ch) {
         break;
 
     default:
-        GN_WARN(sLogger)("Unsupported pixel mode: {}", bitmap.pixel_mode);
+        GN_WARN(sLogger, "Unsupported pixel mode: {}", bitmap.pixel_mode);
         break;
     };
     result.format = FontImage::GRAYSCALE;
@@ -383,7 +383,7 @@ void FontFaceFt2::getKerning(int & dx, int & dy, wchar_t ch1, wchar_t ch2) {
     FT_Vector delta;
     FT_Error  err = FT_Get_Kerning(mFace, ch1, ch2, FT_KERNING_DEFAULT, &delta);
     if (err) {
-        GN_ERROR(sLogger)("FT_Get_Kerning() failed.");
+        GN_ERROR(sLogger, "FT_Get_Kerning() failed.");
         dx = 0;
         dy = 0;
         return;

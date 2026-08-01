@@ -77,11 +77,11 @@ void GN::gfx::MultiThreadUniform::quit() {
 // -----------------------------------------------------------------------------
 void GN::gfx::MultiThreadUniform::update(uint32_t offset, uint32_t length, const void * data) {
     if (offset >= mSize || (offset + length) > mSize) {
-        GN_ERROR(getLogger("GN.gfx.Uniform"))("Out of range!");
+        GN_ERROR(getLogger("GN.gfx.Uniform"), "Out of range!");
         return;
     }
     if (NULL == data) {
-        GN_ERROR(getLogger("GN.gfx.Uniform"))("Null pointer!");
+        GN_ERROR(getLogger("GN.gfx.Uniform"), "Null pointer!");
         return;
     }
 

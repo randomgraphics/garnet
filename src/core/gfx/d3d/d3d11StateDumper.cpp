@@ -113,7 +113,7 @@ static const GUID & IL1GUID() {
 static void sDumpBinary(const char * filename, const void * data, size_t bytes) {
     FILE * fp;
     if (0 != fopen_s(&fp, filename, "wb")) {
-        GN_ERROR(sLogger)("fail to open file : {}", filename);
+        GN_ERROR(sLogger, "fail to open file : {}", filename);
         return;
     }
 
@@ -150,7 +150,7 @@ static void sDumpVs(ID3D11DeviceContext & devcxt, FILE * fp) {
     UINT               sz;
     vs->GetPrivateData(VSGUID(), &sz, 0);
     if (0 == sz) {
-        GN_ERROR(sLogger)("Vertex shader is not dumpable. Please use createDumpableVS().");
+        GN_ERROR(sLogger, "Vertex shader is not dumpable. Please use createDumpableVS().");
         return;
     }
     binbuf.resize(sz);
@@ -175,7 +175,7 @@ static void sDumpGs(ID3D11DeviceContext & devcxt, FILE * fp) {
     UINT               sz;
     gs->GetPrivateData(GSGUID(), &sz, 0);
     if (0 == sz) {
-        GN_ERROR(sLogger)("Geometry shader is not dumpable. Please use createDumpableGS().");
+        GN_ERROR(sLogger, "Geometry shader is not dumpable. Please use createDumpableGS().");
         return;
     }
     binbuf.resize(sz);
@@ -200,7 +200,7 @@ static void sDumpPs(ID3D11DeviceContext & devcxt, FILE * fp) {
     UINT               sz;
     ps->GetPrivateData(PSGUID(), &sz, 0);
     if (0 == sz) {
-        GN_ERROR(sLogger)("Pixel shader is not dumpable. Please use createDumpablePS().");
+        GN_ERROR(sLogger, "Pixel shader is not dumpable. Please use createDumpablePS().");
         return;
     }
     binbuf.resize(sz);
@@ -226,7 +226,7 @@ static void sDumpBuffer(ID3D11DeviceContext & devcxt, const char * filename, ID3
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
     AutoComPtr<ID3D11Buffer> syscpy;
     if (FAILED(dev->CreateBuffer(&desc, 0, &syscpy))) {
-        GN_ERROR(sLogger)("fail to create staging buffer");
+        GN_ERROR(sLogger, "fail to create staging buffer");
         return;
     }
     devcxt.CopyResource(syscpy, buf);
@@ -234,7 +234,7 @@ static void sDumpBuffer(ID3D11DeviceContext & devcxt, const char * filename, ID3
     // map the buffer
     D3D11_MAPPED_SUBRESOURCE mapped;
     if (FAILED(devcxt.Map(syscpy, 0, D3D11_MAP_READ, 0, &mapped))) {
-        GN_ERROR(sLogger)("fail to map staging buffer");
+        GN_ERROR(sLogger, "fail to map staging buffer");
         return;
     }
 
@@ -329,7 +329,7 @@ static void sDumpInputLayout(ID3D11DeviceContext & devcxt, FILE * fp) {
     sprintf_s(sname, "%s_inputlayout_signature.bin", sDumpFilePrefix);
     il->GetPrivateData(IL1GUID(), &sz, 0);
     if (0 == sz) {
-        GN_ERROR(sLogger)("InputLayout is not dumpable. Please use createDumpableIL().");
+        GN_ERROR(sLogger, "InputLayout is not dumpable. Please use createDumpableIL().");
         return;
     }
     signature.resize(sz);

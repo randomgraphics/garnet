@@ -27,17 +27,17 @@ static const ModelResourceDesc * sDetermineBestModelTemplate(const MeshVertexFor
 
     // position is required
     if (!Local::sHasPosition(vf)) {
-        GN_ERROR(sLogger)("The mesh has no position, which is required by the mesh viewer.");
+        GN_ERROR(sLogger, "The mesh has no position, which is required by the mesh viewer.");
         return NULL;
     }
 
     if (!Local::sHasNormal(vf)) {
-        GN_WARN(sLogger)("The mesh has no normal.");
+        GN_WARN(sLogger, "The mesh has no normal.");
         return &SimpleWireframeModel::DESC;
     }
 
     if (!Local::sHasTex0(vf)) {
-        GN_WARN(sLogger)("The mesh has no texture coordinate.");
+        GN_WARN(sLogger, "The mesh has no texture coordinate.");
         return &SimpleDiffuseModel::DESC;
     }
 

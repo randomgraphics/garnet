@@ -84,17 +84,17 @@ static vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2
 
 static AutoRef<GpuContextVulkan2> checkGpu(const AutoRef<GpuContext> & gpu) {
     AutoRef<GpuContextVulkan2> vkGpu = RuntimeType::cast<GpuContextVulkan2>(gpu);
-    if (!vkGpu || !vkGpu->ready()) { GN_ERROR(sLogger)("Failed to create raster object: null/invalid GPU pointer."); }
+    if (!vkGpu || !vkGpu->ready()) { GN_ERROR(sLogger, "Failed to create raster object: null/invalid GPU pointer."); }
     return vkGpu;
 }
 
 static RasterTarget checkRasterTarget(const RasterTarget * target) {
     if (!target) {
-        GN_ERROR(sLogger)("GpuRasterVulkan2: no valid raster target provided");
+        GN_ERROR(sLogger, "GpuRasterVulkan2: no valid raster target provided");
         return {};
     }
     if (target->empty()) {
-        GN_ERROR(sLogger)("GpuRasterVulkan2: no color/depth target defined.");
+        GN_ERROR(sLogger, "GpuRasterVulkan2: no color/depth target defined.");
         return {};
     }
     return *target;
@@ -135,12 +135,13 @@ bool GpuRasterPayloadVulkan::collectPassResources(GpuResourceStateTrackerVulkan 
         tracker.upgradeForDrawRasterState(d.states);
         d.invalidResourceIds = tracker.addGpuResourceTable(d.resources);
         if (!d.invalidResourceIds.empty()) {
-            GN_ERROR(sLogger)("RasterPassPayload: draw {} has {} shader resource(s) with layout hazards; "
-                              "those bindings will be skipped during recording",
-                              di, d.invalidResourceIds.size());
+            GN_ERROR(sLogger,
+                     "RasterPassPayload: draw {} has {} shader resource(s) with layout hazards; "
+                     "those bindings will be skipped during recording",
+                     di, d.invalidResourceIds.size());
         }
         d.geometryHazard = !tracker.addRasterGeometry(d.geometry);
-        if (d.geometryHazard) { GN_ERROR(sLogger)("RasterPassPayload: draw {} has vertex/index buffer layout hazard; draw will be skipped", di); }
+        if (d.geometryHazard) { GN_ERROR(sLogger, "RasterPassPayload: draw {} has vertex/index buffer layout hazard; draw will be skipped", di); }
     }
     return true;
 }
@@ -164,7 +165,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
         vk::Format            fmt    = vk::Format::eUndefined;
         const GpuResourceView ctView = mRenderTarget.colorTargets[i].view();
         if (!resolveColorAttachment(ctView, &img, &view, &ext, &fmt)) {
-            GN_ERROR(sLogger)("RasterPassPayload: could not resolve color attachment {}", i);
+            GN_ERROR(sLogger, "RasterPassPayload: could not resolve color attachment {}", i);
             return false;
         }
         outExt.width  = std::min(outExt.width, ext.width);
@@ -185,7 +186,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
     }
 
     if (colorAtts.empty()) {
-        GN_ERROR(sLogger)("RasterPassPayload: render target has no color attachments");
+        GN_ERROR(sLogger, "RasterPassPayload: render target has no color attachments");
         return false;
     }
 
@@ -233,7 +234,7 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
     auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
     auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
     if (!vsVk || !vsVk->rvShader()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RasterPassPayload: draw {} missing Vulkan vertex shader", di);
+            GN_ERROR(sLogger, "RasterPassPayload: draw {} missing Vulkan vertex shader", di);
             return;
         }
 
@@ -248,7 +249,7 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
 
     // --- Pipeline (get-or-create from factory) ---
     if (!mPsoFactory) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RasterPassPayload: draw {} has no PSO factory", di);
+            GN_ERROR(sLogger, "RasterPassPayload: draw {} has no PSO factory", di);
             return;
         }
     Gpu2RasterPsoCreateParams psoParams {
@@ -269,7 +270,7 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
     // Push constants.
     if (d.immediates && !d.immediates->empty()) {
         if (d.immediates->size() > 128) GN_UNLIKELY {
-                GN_ERROR(sLogger)("RasterPassPayload: immediates size {} exceeds 128", d.immediates->size());
+                GN_ERROR(sLogger, "RasterPassPayload: immediates size {} exceeds 128", d.immediates->size());
             }
         // eAllGraphics so fragment shaders can also declare layout(push_constant) blocks.
         else { drawable.c(0, d.immediates->size(), d.immediates->data(), vk::ShaderStageFlagBits::eAllGraphics); }
@@ -364,7 +365,7 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
 
     rv::Ref<const rv::DrawPack> pack = drawable.compile();
     if (!pack || pack->empty()) GN_UNLIKELY {
-            GN_ERROR(sLogger)("RasterPassPayload: Drawable::compile produced empty DrawPack");
+            GN_ERROR(sLogger, "RasterPassPayload: Drawable::compile produced empty DrawPack");
             return;
         }
     ctx.cmd.render(pack);
@@ -417,7 +418,7 @@ public:
 
     void draw(const DrawParameters & dp) override {
         if (mSealed) {
-            GN_ERROR(sLogger)("GpuRasterVulkan2::draw: already sealed");
+            GN_ERROR(sLogger, "GpuRasterVulkan2::draw: already sealed");
             return;
         }
         mDraws.resize(mDraws.size() + 1);
@@ -436,7 +437,7 @@ public:
 
     AutoRef<GpuPayload> seal() override {
         if (mSealed) {
-            GN_ERROR(sLogger)("GpuRasterVulkan2::seal: double seal");
+            GN_ERROR(sLogger, "GpuRasterVulkan2::seal: double seal");
             return {};
         }
         mSealed        = true;

@@ -76,7 +76,7 @@ static auto getGpuImageViewFormat(const GpuResourceView & view) {
         GN_ASSERT(desc.format != gfx::img::PixelFormat::UNKNOWN());
         return desc.format;
     }
-    GN_ERROR(sLogger)("Can't get GpuResourceView effective format: no texture or backbuffer.");
+    GN_ERROR(sLogger, "Can't get GpuResourceView effective format: no texture or backbuffer.");
     return gfx::img::PixelFormat::UNKNOWN();
 }
 
@@ -264,7 +264,7 @@ static bool applyRenderTargetToPipeline(rapid_vulkan::GraphicsPipeline::Construc
 
         auto f = getGpuImageViewFormat(c.target);
         if (f == gfx::img::PixelFormat::UNKNOWN()) {
-            GN_ERROR(sLogger)("RenderTarget {}: color target [{}] pixel format is UNKNOWN: ", rt.name, i);
+            GN_ERROR(sLogger, "RenderTarget {}: color target [{}] pixel format is UNKNOWN: ", rt.name, i);
             return false;
         }
 
@@ -376,7 +376,7 @@ public:
         vcp.entry = params.vs.entry ? params.vs.entry : "main";
         auto vs   = std::make_unique<rapid_vulkan::Shader>(vcp);
         if (!vs->handle()) {
-            GN_WARN(sLogger)("PsoFactoryVulkan: failed to create vertex shader");
+            GN_WARN(sLogger, "PsoFactoryVulkan: failed to create vertex shader");
             return nullptr;
         }
         std::unique_ptr<rapid_vulkan::Shader> fs;
@@ -408,24 +408,24 @@ PsoFactoryVulkan::~PsoFactoryVulkan() {
 
 rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrCreateGraphicsPso(const GraphicsPsoCreateParams & params) {
     if (!_impl || !_impl->gpu) {
-        GN_ERROR(sLogger)("PsoFactoryVulkan: no impl or gpu");
+        GN_ERROR(sLogger, "PsoFactoryVulkan: no impl or gpu");
         return {};
     }
     const GraphicsPsoKey key = makeKey(params);
     auto                 it  = _impl->cache.find(key);
     if (it != _impl->cache.end()) return it->second;
     if (!params.vs.binary || params.vs.size == 0) {
-        GN_ERROR(sLogger)("PsoFactoryVulkan: invalid vertex shader");
+        GN_ERROR(sLogger, "PsoFactoryVulkan: invalid vertex shader");
         return {};
     }
     ShaderPair * shaders = _impl->getOrCreateShaders(key.shaderKey.hash, params);
     if (!shaders || !shaders->vs) {
-        GN_ERROR(sLogger)("PsoFactoryVulkan: failed to create shaders");
+        GN_ERROR(sLogger, "PsoFactoryVulkan: failed to create shaders");
         return {};
     }
     const rapid_vulkan::GlobalInfo * gi = _impl->gpu->device().gi();
     if (!gi) {
-        GN_ERROR(sLogger)("PsoFactoryVulkan: no GlobalInfo");
+        GN_ERROR(sLogger, "PsoFactoryVulkan: no GlobalInfo");
         return {};
     }
     rapid_vulkan::GraphicsPipeline::ConstructParameters cp;
@@ -440,7 +440,7 @@ rapid_vulkan::Ref<const rapid_vulkan::GraphicsPipeline> PsoFactoryVulkan::getOrC
     }
     rapid_vulkan::Ref<rapid_vulkan::GraphicsPipeline> pipe(new rapid_vulkan::GraphicsPipeline(cp));
     if (!pipe->handle()) {
-        GN_ERROR(sLogger)("PsoFactoryVulkan: failed to create graphics pipeline");
+        GN_ERROR(sLogger, "PsoFactoryVulkan: failed to create graphics pipeline");
         return {};
     }
     _impl->cache[key] = pipe;

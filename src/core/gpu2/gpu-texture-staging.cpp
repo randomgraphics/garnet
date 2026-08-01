@@ -7,7 +7,7 @@ namespace GN::gpu2 {
 
 Buffer::StagedTexture Buffer::loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, const StrA & path) {
     if (!context) {
-        GN_ERROR(sLogger)("loadTextureToStagingBuffer: null context, name='{}'", name);
+        GN_ERROR(sLogger, "loadTextureToStagingBuffer: null context, name='{}'", name);
         return {};
     }
 
@@ -16,13 +16,13 @@ Buffer::StagedTexture Buffer::loadTextureToStagingBuffer(const StrA & name, Auto
 
     auto fp = GN::fs::openFile(absPath, std::ios::in | std::ios::binary);
     if (!fp) {
-        GN_ERROR(sLogger)("loadTextureToStagingBuffer: cannot open '{}', name='{}'", absPath, name);
+        GN_ERROR(sLogger, "loadTextureToStagingBuffer: cannot open '{}', name='{}'", absPath, name);
         return {};
     }
 
     gfx::img::Image image = gfx::img::Image::load(fp->input(), absPath.c_str());
     if (image.empty()) {
-        GN_ERROR(sLogger)("loadTextureToStagingBuffer: failed to decode '{}', name='{}'", absPath, name);
+        GN_ERROR(sLogger, "loadTextureToStagingBuffer: failed to decode '{}', name='{}'", absPath, name);
         return {};
     }
 
@@ -37,7 +37,7 @@ Buffer::StagedTexture Buffer::loadTextureToStagingBuffer(const StrA & name, Auto
     desc.levels  = image.desc().levels ? (uint32_t) image.desc().levels : 1u;
     desc.samples = 1;
     if (desc.width == 0 || desc.height == 0) {
-        GN_ERROR(sLogger)("loadTextureToStagingBuffer: zero-size image '{}', name='{}'", absPath, name);
+        GN_ERROR(sLogger, "loadTextureToStagingBuffer: zero-size image '{}', name='{}'", absPath, name);
         return {};
     }
 
@@ -47,14 +47,14 @@ Buffer::StagedTexture Buffer::loadTextureToStagingBuffer(const StrA & name, Auto
     // rapid-image does not add row padding within a plane, so bufferRowLength=0 (tight) is correct.
     auto staging = Buffer::create(name + "_stg", {.context = context, .size = image.size(), .mappable = true});
     if (!staging) {
-        GN_ERROR(sLogger)("loadTextureToStagingBuffer: staging buffer alloc failed, name='{}'", name);
+        GN_ERROR(sLogger, "loadTextureToStagingBuffer: staging buffer alloc failed, name='{}'", name);
         return {};
     }
 
     {
         auto m = staging->map();
         if (!m.data()) {
-            GN_ERROR(sLogger)("loadTextureToStagingBuffer: map failed, name='{}'", name);
+            GN_ERROR(sLogger, "loadTextureToStagingBuffer: map failed, name='{}'", name);
             return {};
         }
         memcpy(m.data(), image.data(), (size_t) image.size());

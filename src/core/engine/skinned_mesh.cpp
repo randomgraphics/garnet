@@ -652,7 +652,7 @@ void GN::engine::SkinnedMesh::setAnimation(size_t animationIndex, float seconds)
         }
     } else {
         if (animationIndex >= mAnimations.size() || NULL == mAnimations[animationIndex]) {
-            GN_ERROR(sLogger)("Invalid animation index.");
+            GN_ERROR(sLogger, "Invalid animation index.");
             return;
         }
 
@@ -735,7 +735,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
     clear();
 
     if (fatmodel.skeletons.empty()) {
-        GN_ERROR(sLogger)("The fat model does not contain any skeletons.");
+        GN_ERROR(sLogger, "The fat model does not contain any skeletons.");
         clear();
         return false;
     }
@@ -762,7 +762,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
         dest.invRestPose = (Matrix44f *) HeapMemory::alloc(sizeof(Matrix44f) * dest.jointCount);
         dest.bind2rest   = (Matrix44f *) HeapMemory::alloc(sizeof(Matrix44f) * dest.jointCount);
         if (!dest.hierarchy || !dest.spacials || !dest.bindPose || !dest.invRestPose || !dest.bind2rest) {
-            GN_ERROR(sLogger)("Fail to load skinned mesh from FatModel: out of memory.");
+            GN_ERROR(sLogger, "Fail to load skinned mesh from FatModel: out of memory.");
             clear();
             return false;
         }
@@ -877,7 +877,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 
         // reserve memory for mesh subsets.
         if (!mSubsets.reserve(fatmesh.subsets.size())) {
-            GN_ERROR(sLogger)("Out of memory.");
+            GN_ERROR(sLogger, "Out of memory.");
             clear();
             return false;
         }
@@ -889,9 +889,8 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
 
             uint32_t jointCountInTheSubset = fatsubset.joints.size();
             if (jointCountInTheSubset > MAX_JOINTS_PER_DRAW) {
-                GN_ERROR(sLogger)
-                ("Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)", meshName.data(), s, jointCountInTheSubset,
-                 MAX_JOINTS_PER_DRAW);
+                GN_ERROR(sLogger, "Ignore mesh %s subset %d. It contains too many joints (#%d) then the current code allowed (#%d)", meshName.data(), s,
+                         jointCountInTheSubset, MAX_JOINTS_PER_DRAW);
                 continue;
             }
 
@@ -935,7 +934,7 @@ bool GN::engine::SkinnedMesh::loadFromFatModel(const GN::gfx::FatModel & fatmode
             GN_ASSERT(dst.duration == src.duration);
         }
     } else {
-        GN_ERROR(sLogger)("Fail to load animations: out of memory.");
+        GN_ERROR(sLogger, "Fail to load animations: out of memory.");
     }
 
     // update bounding box

@@ -68,7 +68,7 @@ bool GN::gfx::FatVertexBuffer::resize(uint32_t layout, uint32_t count) {
 // -----------------------------------------------------------------------------
 bool GN::gfx::FatVertexBuffer::beginVertices(uint32_t layout, uint32_t estimatedCount) {
     if (!mFatVertex.empty()) {
-        GN_ERROR(sLogger)("redundant call to beginVertices()");
+        GN_ERROR(sLogger, "redundant call to beginVertices()");
         return false;
     }
 
@@ -91,11 +91,11 @@ bool GN::gfx::FatVertexBuffer::beginVertices(uint32_t layout, uint32_t estimated
 // -----------------------------------------------------------------------------
 void GN::gfx::FatVertexBuffer::addVertexElement(int semantic, const VertexElement & value) {
     if (mFatVertex.empty()) {
-        GN_ERROR(sLogger)("addVertexElement() can only be called between beginVertices() and endVertices().");
+        GN_ERROR(sLogger, "addVertexElement() can only be called between beginVertices() and endVertices().");
         return;
     }
     if (semantic < 0 || semantic >= NUM_SEMANTICS) {
-        GN_ERROR(sLogger)("invalid semantic.");
+        GN_ERROR(sLogger, "invalid semantic.");
         return;
     }
 
@@ -113,7 +113,7 @@ void GN::gfx::FatVertexBuffer::addVertexElement(int semantic, const VertexElemen
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::FatVertexBuffer::endVertices() {
-    if (mFatVertex.empty()) { GN_ERROR(sLogger)("Redundant call to endVertices()"); }
+    if (mFatVertex.empty()) { GN_ERROR(sLogger, "Redundant call to endVertices()"); }
     mFatVertex.purge();
 }
 
@@ -146,7 +146,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
     // Check parameters
     uint32_t numStreams = mvf.calcNumStreams();
     if (stream >= numStreams) {
-        GN_ERROR(sLogger)("Invalid stream.");
+        GN_ERROR(sLogger, "Invalid stream.");
         return false;
     }
 
@@ -154,18 +154,18 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
     if (0 == stride) {
         stride = minStride;
     } else if (stride < minStride) {
-        GN_ERROR(sLogger)("Stride is too small.");
+        GN_ERROR(sLogger, "Stride is too small.");
         return false;
     }
 
     if (NULL == buffer) {
-        GN_ERROR(sLogger)("Null buffer pointer.");
+        GN_ERROR(sLogger, "Null buffer pointer.");
         return false;
     }
 
     size_t minBufferSize = stride * mCount;
     if (bufferSize < minBufferSize) {
-        GN_ERROR(sLogger)("Buffer size is too small.");
+        GN_ERROR(sLogger, "Buffer size is too small.");
         return false;
     }
 
@@ -178,7 +178,7 @@ bool GN::gfx::FatVertexBuffer::GenerateVertexStream(const MeshVertexFormat & mvf
         } else {
             semantics[i] = sString2Semantic(s);
         }
-        if (INVALID == semantics[i]) { GN_WARN(sLogger)("unsupport semantic: {}", s); }
+        if (INVALID == semantics[i]) { GN_WARN(sLogger, "unsupport semantic: {}", s); }
     }
 
     // Copy vertex data
@@ -539,7 +539,7 @@ static bool sRemapFatMeshJointID(FatMesh & mesh) {
     // Now let's make a new vertex buffer using remaped joint ID.
     FatVertexBuffer newvb;
     if (!newvb.resize(mesh.vertices.getLayout(), newVertices.size())) {
-        GN_ERROR(sLogger)("Out of memory.");
+        GN_ERROR(sLogger, "Out of memory.");
         return false;
     }
     for (uint32_t s = 0; s < FatVertexBuffer::NUM_SEMANTICS; ++s) {
@@ -602,7 +602,7 @@ bool GN::gfx::FatModel::splitSkinnedMesh(uint32_t maxJointsPerSubset) {
     GN_SCOPE_PROFILER(FatModel_splitSkinnedMesh, "Split skinned mesh in FatModel.");
 
     if (maxJointsPerSubset < 12) {
-        GN_ERROR(sLogger)("The minimal MAX_JOINTS_PER_SUBSET is 12.");
+        GN_ERROR(sLogger, "The minimal MAX_JOINTS_PER_SUBSET is 12.");
         maxJointsPerSubset = 12;
     }
 

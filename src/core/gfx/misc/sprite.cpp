@@ -127,7 +127,7 @@ bool GN::gfx::SpriteRenderer::init(Gpu & gpu) {
         mVertexBinding[2].format    = img::PixelFormat::FLOAT2();
         mVertexBinding[2].attribute = mGpuProgram->getParameterDesc().attributes["TEXCOORD0"];
     } else {
-        GN_ERROR(sLogger)("Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
+        GN_ERROR(sLogger, "Sprite renderer requires either GLSL or HLSL support from graphics hardware.");
         return failure();
     }
 
@@ -192,7 +192,7 @@ void GN::gfx::SpriteRenderer::quit() {
 // -----------------------------------------------------------------------------
 void GN::gfx::SpriteRenderer::drawBegin(Texture * texture, uint32_t options) {
     if (mDrawBegun) {
-        GN_ERROR(sLogger)("SpriteRenderer::drawBegin() can not be called consequtively w/o drawEnd() in between");
+        GN_ERROR(sLogger, "SpriteRenderer::drawBegin() can not be called consequtively w/o drawEnd() in between");
         return;
     }
 
@@ -227,7 +227,7 @@ void GN::gfx::SpriteRenderer::drawBegin(Texture * texture, uint32_t options) {
     // setup alpha blending
     if (options & FORCE_ALPHA_BLENDING_ENABLED) {
         if (options & FORCE_ALPHA_BLENDING_DISABLED) {
-            GN_WARN(sLogger)("FORCE_ALPHA_BLENDING_ENABLED and FORCE_ALPHA_BLENDING_DISABLED should not be specifed together!");
+            GN_WARN(sLogger, "FORCE_ALPHA_BLENDING_ENABLED and FORCE_ALPHA_BLENDING_DISABLED should not be specifed together!");
         }
 
         mContext.rs.alphaBlend[0].blendEnabled  = true;
@@ -244,7 +244,7 @@ void GN::gfx::SpriteRenderer::drawBegin(Texture * texture, uint32_t options) {
     // setup depth test
     if (options & FORCE_DEPTH_TEST_ENABLED) {
         if (options & FORCE_DEPTH_TEST_DISABLED) {
-            GN_WARN(sLogger)("FORCE_DEPTH_TEST_ENABLED and FORCE_DEPTH_TEST_DISABLED should not be specifed together!");
+            GN_WARN(sLogger, "FORCE_DEPTH_TEST_ENABLED and FORCE_DEPTH_TEST_DISABLED should not be specifed together!");
         }
 
         mContext.rs.depthTestEnabled = true;
@@ -255,7 +255,7 @@ void GN::gfx::SpriteRenderer::drawBegin(Texture * texture, uint32_t options) {
     // setup depth write
     if (options & FORCE_DEPTH_WRITE_ENABLED) {
         if (options & FORCE_DEPTH_WRITE_DISABLED) {
-            GN_WARN(sLogger)("FORCE_DEPTH_WRITE_ENABLED and FORCE_DEPTH_WRITE_DISABLED should not be specifed together!");
+            GN_WARN(sLogger, "FORCE_DEPTH_WRITE_ENABLED and FORCE_DEPTH_WRITE_DISABLED should not be specifed together!");
         }
 
         mContext.rs.depthWriteEnabled = true;
@@ -273,7 +273,7 @@ void GN::gfx::SpriteRenderer::drawBegin(Texture * texture, uint32_t options) {
 // -----------------------------------------------------------------------------
 void GN::gfx::SpriteRenderer::drawEnd() {
     if (!mDrawBegun) {
-        GN_ERROR(sLogger)("SpriteRenderer::drawEnd() can not be called consequtively w/o drawBegin() in between");
+        GN_ERROR(sLogger, "SpriteRenderer::drawEnd() can not be called consequtively w/o drawBegin() in between");
         return;
     }
 
@@ -304,7 +304,7 @@ void GN::gfx::SpriteRenderer::drawEnd() {
 // -----------------------------------------------------------------------------
 void GN::gfx::SpriteRenderer::drawTextured(float x, float y, float w, float h, float u, float v, float tw, float th, float z) {
     if (!mDrawBegun) {
-        GN_ERROR(sLogger)("Must be called between drawBegin() and drawEnd().");
+        GN_ERROR(sLogger, "Must be called between drawBegin() and drawEnd().");
         return;
     }
 
@@ -352,7 +352,7 @@ void GN::gfx::SpriteRenderer::drawTextured(float x, float y, float w, float h, f
 // -----------------------------------------------------------------------------
 void GN::gfx::SpriteRenderer::drawSolid(uint32_t rgba, float x, float y, float w, float h, float z) {
     if (!mDrawBegun) {
-        GN_ERROR(sLogger)("Must be called between drawBegin() and drawEnd().");
+        GN_ERROR(sLogger, "Must be called between drawBegin() and drawEnd().");
         return;
     }
 

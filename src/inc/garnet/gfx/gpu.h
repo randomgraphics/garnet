@@ -1265,7 +1265,8 @@ GN_API void deleteGpu(gfx::Gpu *);
 } // namespace gfx
 } // namespace GN
 
-#if GN_ENABLE_GPU_DEBUG_MARK
+// GPU debug markers are emitted in debug and profiling builds only.
+#if GN_BUILD_DEBUG_ENABLED || GN_BUILD_PROFILING_ENABLED
     #define GN_GPU_DEBUG_MARK_BEGIN(gpu, name) (gpu)->debugMarkBegin(name)
     #define GN_GPU_DEBUG_MARK_END(gpu)         (gpu)->debugMarkEnd()
     #define GN_GPU_DEBUG_MARK_SET(gpu, name)   (gpu)->debugMarkSet(name)

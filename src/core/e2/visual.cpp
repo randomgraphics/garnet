@@ -70,7 +70,7 @@ struct VisualDomainImpl : VisualDomain {
 
         mGpu = GpuContext::create("e2-gpu", GpuContext::CreateParameters {});
         if (!mGpu) {
-            GN_ERROR(sLogger)("Failed to create GPU context.");
+            GN_ERROR(sLogger, "Failed to create GPU context.");
             return false;
         }
 
@@ -90,13 +90,13 @@ struct VisualDomainImpl : VisualDomain {
         if (mSurface) scDesc.setSurface(mSurface);
         mSwapchain = Swapchain::create(scDesc);
         if (!mSwapchain) {
-            GN_ERROR(sLogger)("Failed to create swapchain.");
+            GN_ERROR(sLogger, "Failed to create swapchain.");
             return false;
         }
 
         auto depthFormat = mGpu->caps().defaultDepthFormat;
         if (depthFormat == gfx::img::PixelFormat::UNKNOWN()) {
-            GN_ERROR(sLogger)("GPU reports no usable depth format.");
+            GN_ERROR(sLogger, "GPU reports no usable depth format.");
             return false;
         }
         mDepth = Texture::create("e2-depth", Texture::CreateParameters {
@@ -104,7 +104,7 @@ struct VisualDomainImpl : VisualDomain {
                                                  .descriptor = Texture::Descriptor {}.setFormat(depthFormat).setDimensions(mWidth, mHeight).setLevels(1),
                                              });
         if (!mDepth) {
-            GN_ERROR(sLogger)("Failed to create depth texture.");
+            GN_ERROR(sLogger, "Failed to create depth texture.");
             return false;
         }
 
@@ -120,13 +120,13 @@ struct VisualDomainImpl : VisualDomain {
         mVs = GpuShader::create({.context = mGpu, .name = "e2-box-vs", .binary = kBoxVertSpv, .size = sizeof(kBoxVertSpv), .entry = "main"});
         mPs = GpuShader::create({.context = mGpu, .name = "e2-box-ps", .binary = kBoxFragSpv, .size = sizeof(kBoxFragSpv), .entry = "main"});
         if (!mVs || !mPs) {
-            GN_ERROR(sLogger)("Failed to create box shaders.");
+            GN_ERROR(sLogger, "Failed to create box shaders.");
             return false;
         }
 
         mFrameUbo = Buffer::create("e2-frame-ubo", {.context = mGpu, .size = sizeof(FrameConstants)});
         if (!mFrameUbo) {
-            GN_ERROR(sLogger)("Failed to create frame uniform buffer.");
+            GN_ERROR(sLogger, "Failed to create frame uniform buffer.");
             return false;
         }
 
@@ -139,7 +139,7 @@ struct VisualDomainImpl : VisualDomain {
 
         Swapchain::Frame frame = mSwapchain->prepare();
         if (frame.view.empty()) {
-            GN_WARN(sLogger)("Swapchain prepare() failed; skipping frame.");
+            GN_WARN(sLogger, "Swapchain prepare() failed; skipping frame.");
             return;
         }
         mRenderTarget.setColorTarget(0, frame.view);
@@ -162,13 +162,13 @@ struct VisualDomainImpl : VisualDomain {
 
         auto cnc = GpuCnC::create({.gpu = mGpu});
         if (!cnc) {
-            GN_WARN(sLogger)("Failed to create per-frame upload command list; skipping frame.");
+            GN_WARN(sLogger, "Failed to create per-frame upload command list; skipping frame.");
             return;
         }
         cnc->uploadBuffer(mFrameUbo, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(&fc), sizeof(fc)));
         AutoRef<GpuPayload> constantsUpload = cnc->seal();
         if (!constantsUpload) {
-            GN_WARN(sLogger)("Failed to seal per-frame constants upload; skipping frame.");
+            GN_WARN(sLogger, "Failed to seal per-frame constants upload; skipping frame.");
             return;
         }
 
@@ -183,7 +183,7 @@ struct VisualDomainImpl : VisualDomain {
 
         auto raster = GpuRaster::create("e2-visual", {.gpu = mGpu, .target = &mRenderTarget});
         if (!raster) {
-            GN_WARN(sLogger)("Failed to create raster pass; skipping frame.");
+            GN_WARN(sLogger, "Failed to create raster pass; skipping frame.");
             return;
         }
 
@@ -220,7 +220,7 @@ struct VisualDomainImpl : VisualDomain {
 
         AutoRef<GpuPayload> payload = raster->seal();
         if (!payload) {
-            GN_WARN(sLogger)("Failed to seal raster pass; skipping frame.");
+            GN_WARN(sLogger, "Failed to seal raster pass; skipping frame.");
             return;
         }
 
@@ -248,12 +248,12 @@ private:
         gm.vb                 = Buffer::create("e2-mesh-vb", {.context = mGpu, .size = vbSize});
         gm.ib                 = Buffer::create("e2-mesh-ib", {.context = mGpu, .size = ibSize});
         if (!gm.vb || !gm.ib) {
-            GN_ERROR(sLogger)("Failed to create mesh buffers.");
+            GN_ERROR(sLogger, "Failed to create mesh buffers.");
             return nullptr;
         }
         if (!gm.vb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.vertices.data()), vbSize)) ||
             !gm.ib->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.indices.data()), ibSize))) {
-            GN_ERROR(sLogger)("Failed to upload mesh buffers.");
+            GN_ERROR(sLogger, "Failed to upload mesh buffers.");
             return nullptr;
         }
         gm.indexCount = (uint32_t) mesh.indices.size();
@@ -304,7 +304,7 @@ namespace GN::e2 {
 
 Ref<Camera> Camera::create(const CreateParameters & cp) {
     if (!cp.domain) {
-        GN_ERROR(GN::getLogger("GN.e2.visual"))("Camera::create requires a non-null visual domain.");
+        GN_ERROR(GN::getLogger("GN.e2.visual"), "Camera::create requires a non-null visual domain.");
         return {};
     }
     return referenceTo(new CameraImpl(cp.domain->universe()));
@@ -317,7 +317,7 @@ Ref<VisualDomain> VisualDomain::create(const CreateParameters & cp) {
     return d;
 #else
     (void) cp;
-    GN_ERROR(GN::getLogger("GN.e2.visual"))("VisualDomain requires a Vulkan-enabled build.");
+    GN_ERROR(GN::getLogger("GN.e2.visual"), "VisualDomain requires a Vulkan-enabled build.");
     return {};
 #endif
 }

@@ -42,16 +42,16 @@ static uint32_t sRefineFlagsD3D9(uint32_t flags) {
 static void sPrintShaderCompileErrorD3D9(HRESULT hr, const char * code, LPD3DXBUFFER err) {
     GN_GUARD;
 
-    GN_ERROR(sLogger)
-    ("\n================== Shader compile failure ===============\n"
-     "{}\n"
-     "\n---------------------------------------------------------\n"
-     "Error Code(0x{:08X}) : {}\n"
-     "\n---------------------------------------------------------\n"
-     "{}\n"
-     "\n=========================================================\n",
-     code ? sAddLineCountD3D9(code).data() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
-     err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
+    GN_ERROR(sLogger,
+             "\n================== Shader compile failure ===============\n"
+             "{}\n"
+             "\n---------------------------------------------------------\n"
+             "Error Code(0x{:08X}) : {}\n"
+             "\n---------------------------------------------------------\n"
+             "{}\n"
+             "\n=========================================================\n",
+             code ? sAddLineCountD3D9(code).data() : "Shader code: <EMPTY>", hr, GN::getDXErrorInfo(hr),
+             err ? (const char *) err->GetBufferPointer() : "Error: <EMPTY>");
 
     GN_UNGUARD;
 }
@@ -65,11 +65,11 @@ static void sPrintShaderCompileInfoD3D9(const char * hlsl, ID3DXBuffer * bin) {
     GN_ASSERT(hlsl);
     GN_UNUSED_PARAM(bin);
 
-    GN_VTRACE(sLogger)
-    ("\n================== Shader compile success ===============\n"
-     "{}\n"
-     "\n=========================================================\n",
-     sAddLineCountD3D9(hlsl).data());
+    GN_VTRACE(sLogger,
+              "\n================== Shader compile success ===============\n"
+              "{}\n"
+              "\n=========================================================\n",
+              sAddLineCountD3D9(hlsl).data());
 
     GN_UNGUARD;
 }
@@ -88,24 +88,24 @@ static std::string sSaveCodeToTemporaryFile( const char * code, size_t len )
     memcpy( fname, templ, 13 );
     if( 0 != _mktemp_s( fname, 13 ) )
     {
-        GN_ERROR(sLogger)( "fail to generate temporary file name" );
+        GN_ERROR(sLogger, "fail to generate temporary file name");
         return std::string::EMPTYSTR();
     }
 
     AutoObjPtr<File> fp( core::openFile( fname, "wt" ) );
     if( 0 == fp )
     {
-        GN_ERROR(sLogger)( "fail to open temporary file." );
+        GN_ERROR(sLogger, "fail to open temporary file.");
         return std::string::EMPTYSTR();
     }
 
     if( !fp->write( code, len ? len : str::length(code), 0 ) )
     {
-        GN_ERROR(sLogger)( "fail to write to temporary file." );
+        GN_ERROR(sLogger, "fail to write to temporary file.");
         return std::string::EMPTYSTR();
     }
 
-    GN_INFO(sLogger)( "save shader code to file '{}'", fname );
+    GN_INFO(sLogger, "save shader code to file '{}'", fname);
     return fs::toNativeDiskFilePath(fname);
 }
     #endif

@@ -251,7 +251,7 @@ inline bool GN::gfx::OGLGpu::bindContextRenderStates(const GpuContext & newConte
             CHECK_WRAP_STENCIL_OP(zpassop);
 
             if (nonSupportedWrapOp) {
-                GN_ERROR(sLogger)("EXT_stencil_wrap is not supported, which is required to implement STENCIL_INC_SAT and STENCIL_DEC_SAT opertion.");
+                GN_ERROR(sLogger, "EXT_stencil_wrap is not supported, which is required to implement STENCIL_INC_SAT and STENCIL_DEC_SAT opertion.");
             }
         }
         glStencilOp(STENCIL_OP_TO_OGL[failop], STENCIL_OP_TO_OGL[zfailop], STENCIL_OP_TO_OGL[zpassop]);
@@ -274,17 +274,15 @@ inline bool GN::gfx::OGLGpu::bindContextRenderStates(const GpuContext & newConte
         glBlendFunc(BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendSrc], BLEND_ARG_TO_OGL[newContext.rs.alphaBlend[0].blendDst]);
 
         if (newContext.rs.alphaBlend[0].blendOp != GpuContext::BLEND_OP_ADD) {
-            GN_ERROR(sLogger)
-            ("EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
-             "required to implement extended alpha blending operation other than ADD.");
+            GN_ERROR(sLogger, "EXT_blend_minmax and/or EXT_blend_subtract are missing, which are "
+                              "required to implement extended alpha blending operation other than ADD.");
         }
 
         if (newContext.rs.alphaBlend[0].blendAlphaOp != newContext.rs.alphaBlend[0].blendOp ||
             newContext.rs.alphaBlend[0].blendAlphaSrc != newContext.rs.alphaBlend[0].blendSrc ||
             newContext.rs.alphaBlend[0].blendAlphaDst != newContext.rs.alphaBlend[0].blendDst) {
-            GN_ERROR(sLogger)
-            ("EXT_blend_func_separate is missing that is support "
-             "different blend function for alpha channel.");
+            GN_ERROR(sLogger, "EXT_blend_func_separate is missing that is support "
+                              "different blend function for alpha channel.");
         }
     }
 
@@ -308,7 +306,7 @@ inline bool GN::gfx::OGLGpu::bindContextRenderTargets(const GpuContext & newCont
     // clip viewport against render target size
     Rect<uint32_t> newvp = newContext.rs.viewport;
     if ((newvp.x + newvp.w) > rtsize.x) {
-        GN_WARN(sLogger)("Viewport cannot be larger with current render target size.");
+        GN_WARN(sLogger, "Viewport cannot be larger with current render target size.");
         if (newvp.x >= rtsize.x) {
             newvp.x = rtsize.x;
             newvp.w = 0;
@@ -317,7 +315,7 @@ inline bool GN::gfx::OGLGpu::bindContextRenderTargets(const GpuContext & newCont
         }
     }
     if ((newvp.y + newvp.h) > rtsize.y) {
-        GN_WARN(sLogger)("Viewport cannot be larger with current render target size.");
+        GN_WARN(sLogger, "Viewport cannot be larger with current render target size.");
         if (newvp.y > rtsize.y) {
             newvp.y = rtsize.y;
             newvp.h = 0;
