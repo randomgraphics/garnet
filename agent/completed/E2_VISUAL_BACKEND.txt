@@ -24,10 +24,6 @@ For each submitted visual moment, E2 seals the snapshot in an imported RDG2 arti
 
 The render quest reads only the sealed moment relic, converts exact camera-relative world coordinates to float meters, snapshots FX2 shared shader constants, records draw work, republishes the rendered backbuffer relic, and emits all FX2 and raster payloads. RDG2 owns submit and present ordering.
 
-### Evolution
-
-The initial slice keeps the existing E2 box mesh and material representation while moving frame orchestration and shared per-frame constants to RDG2 and FX2. Later phases can enrich the visual moment tree with immutable asset/material relics, discovery/culling output, and additional conditional or concrete render quests without weakening the module boundaries.
-
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
@@ -38,7 +34,7 @@ Last completed: Phase 2 — closed frame backend implemented and validated end t
   Phase 2.1: added CPU coverage for the fixed frame skeleton and missing-acquire rejection
   Phase 2.2: documented the implemented module boundaries, relic flow, and future workload evolution
   Phase 2: debug build, style check, focused E2/RDG2/FX2 tests, and 60-frame headless sample passed
-In progress: none — first executable slice complete; future workload-tree evolution starts at Phase 3
+In progress: none — milestone complete in commit 1610a0bb; assignment archived
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -94,14 +90,6 @@ Phase 2: Verification and documentation
   Task 2.2: Document the implemented backend and remaining visual-moment evolution
     Verify: E2 README describes snapshot ownership, frame plan, and extension points
     Commit: "docs(e2): document fx2-rdg2 visual backend (Phase 2.2)"
-
-Phase 3: Render workload evolution — FUTURE
-─────────────────────────────────────────────────────────────────
-  Task 3.1: Represent immutable render assets and materials as sealed visual-moment data
-
-  Task 3.2: Add discovery/culling and concrete pass selection before closed-plan compilation
-
-  Task 3.3: Add graph-visible depth, shadow, and transient resource artifacts as RDG2 support matures
 
 --- SUMMARY OF FILES TO TOUCH ---
 
