@@ -9,9 +9,9 @@
 #include <cstring>
 #include <vector>
 
-static GN::Logger * sLogger = GN::getLogger("GN.rdg2");
+static GN::Logger * sLogger = GN::getLogger("GN.fx2");
 
-namespace GN::rdg2 {
+namespace GN::fx2 {
 
 /// Private payload for one renderable PBR object: shaders + material textures + mesh.
 struct PbrAssetData {
@@ -374,4 +374,4 @@ GN_API gpu2::GpuRaster::DrawParameters PbrShading::getDrawParams(const SharedSha
     return dp;
 }
 
-} // namespace GN::rdg2
+} // namespace GN::fx2

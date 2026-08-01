@@ -1,10 +1,10 @@
-#if !defined(__GN_INSIDE_RDG2_H__)
-    #error "Do not include <garnet/rdg2/pbr.h> directly. Include <garnet/GNrdg2.h> instead."
+#if !defined(__GN_INSIDE_FX2_H__)
+    #error "Do not include <garnet/fx2/pbr.h> directly. Include <garnet/GNfx2.h> instead."
 #endif
 
 #include <glm/mat4x4.hpp>
 
-namespace GN::rdg2 {
+namespace GN::fx2 {
 
 /// Namespace struct grouping PBR asset types and operations.
 /// All members are static — PbrShading is never instantiated.
@@ -17,13 +17,13 @@ struct PbrShading {
     };
 
     /// Opaque loaded PBR asset. Implementation keeps shaders, material textures, and mesh data private.
-    struct Asset : Entity {
-        GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
+    struct Asset : RCRT64 {
+        GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
         AutoRef<gpu2::GpuPayload> gpuPayload;
 
     protected:
-        using Entity::Entity;
+        using RCRT64::RCRT64;
     };
 
     /// Load one PBR asset synchronously. Missing files fall back per-slot to built-in defaults.
@@ -35,4 +35,4 @@ struct PbrShading {
                                                                 const glm::mat4 & worldTransform);
 };
 
-} // namespace GN::rdg2
+} // namespace GN::fx2

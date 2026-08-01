@@ -26,7 +26,7 @@
     #include <glm/vec4.hpp>
     #define vec4 glm::vec4
     #define uint uint32_t
-namespace GN::rdg2::shader {
+namespace GN::fx2::shader {
 // Use DirectLight::POINT/SPOT/DIRECTIONAL (from pipeline.h) for the type tags on the C++ side.
 static constexpr uint32_t MAX_SCENE_LIGHTS = 16;
 #endif
@@ -56,7 +56,7 @@ static_assert(offsetof(SceneUBO, frameDurationMs) == 4);
 static_assert(offsetof(SceneUBO, environmentRadianceScale) == 8);
 static_assert(offsetof(SceneUBO, numLights) == 12);
 static_assert(offsetof(SceneUBO, lights) == 16);
-} // namespace GN::rdg2::shader
+} // namespace GN::fx2::shader
 #endif
 
 #ifndef __cplusplus

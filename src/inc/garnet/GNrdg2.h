@@ -10,7 +10,5 @@ namespace GN::rdg2 {};
 #define __GN_INSIDE_RDG2_H__ 1
 #include "rdg2/artifact.h"
 #include "rdg2/open-graph.h"
-#include "rdg2/shared-shader-constants.h"
-#include "rdg2/pbr.h"
 #include "rdg2/closed-graph.h"
 #undef __GN_INSIDE_RDG2_H__

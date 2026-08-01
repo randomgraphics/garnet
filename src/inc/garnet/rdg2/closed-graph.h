@@ -394,10 +394,6 @@ GN_API QuestRef createFrameEndQuest(const FrameEndParameters &);
 //     GN::gpu2::GpuResourceView value;
 // };
 
-// struct SscParameters : Entity {
-//     SharedShaderConstants::Set0Parameters value;
-// };
-
 // struct SscGpuResources : Entity {
 //     GN::gpu2::GpuResourceSet value;
 // };
@@ -406,13 +402,7 @@ GN_API QuestRef createFrameEndQuest(const FrameEndParameters &);
 //     GN::gpu2::RasterTarget value;
 // };
 
-// struct PbrModelList : Entity {
-//     DynaArray<AutoRef<PbrShading::Asset>> value;
-// };
-
-// typedef TypedArtifact<SscParameters>      SscParametersArtifact;
 // typedef TypedArtifact<SscGpuResources>    SccGpuResourcesArtifact;
-// typedef TypedArtifact<PbrModelList>       PbrModelListArtifact;
 // typedef TypedArtifact<RasterTargetEntity> RasterTargetArtifact;
 
 // template<size_t N>
@@ -455,21 +445,5 @@ GN_API QuestRef createFrameEndQuest(const FrameEndParameters &);
 //         }
 //     }
 // };
-
-/// Parked sketch of a bespoke effect-adapter quest — the subclass authoring
-/// tier. Pass-style adapters (frame begin/swapchain acquire, shared shader
-/// constants, shadow map, postprocess, ...) are authored through
-/// Quest::create() instead; swapchain present belongs to the future
-/// execution/submission policy, not to a quest.
-struct PbrQuest : public Quest {
-    GN_RDG2_DEFINE_PUBLIC_ENTITY(Quest);
-
-    struct CreateParameters {
-        AutoRef<gpu2::GpuContext>    gpu;
-        DynaArray<PbrShading::Asset> assets;
-    };
-
-    static GN_API AutoRef<PbrQuest> create(const CreateParameters &);
-};
 
 } // namespace GN::rdg2

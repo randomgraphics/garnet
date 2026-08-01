@@ -11,9 +11,9 @@
 #include <mutex>
 #include <algorithm>
 
-static GN::Logger * sLogger = GN::getLogger("GN.rdg2");
+static GN::Logger * sLogger = GN::getLogger("GN.fx2");
 
-namespace GN::rdg2 {
+namespace GN::fx2 {
 
 struct EnvTextureSet {
     AutoRef<gpu2::Texture>    skyboxCubemap;
@@ -334,4 +334,4 @@ GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const Create
     return impl;
 }
 
-} // namespace GN::rdg2
+} // namespace GN::fx2

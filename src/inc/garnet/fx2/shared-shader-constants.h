@@ -1,5 +1,5 @@
-#if !defined(__GN_INSIDE_RDG2_H__)
-    #error "Do not include <garnet/rdg2/shared-shader-constants.h> directly. Include <garnet/GNrdg2.h> instead."
+#if !defined(__GN_INSIDE_FX2_H__)
+    #error "Do not include <garnet/fx2/shared-shader-constants.h> directly. Include <garnet/GNfx2.h> instead."
 #endif
 
 #include <glm/vec3.hpp>
@@ -7,11 +7,11 @@
 
 #include <chrono>
 
-namespace GN::rdg2 {
+namespace GN::fx2 {
 
 using Microseconds = std::chrono::microseconds;
 
-/// Position in float meters. rdg2 works entirely in render space: positions are nominally
+/// Position in float meters. fx2 works entirely in render space: positions are nominally
 /// camera-relative so float precision holds in large worlds. It is the caller's job (e.g. e2)
 /// to rebase exact world coordinates against the camera before handing values down; small
 /// self-contained scenes may pass absolute positions since the math is identical.
@@ -19,7 +19,9 @@ using Location    = glm::vec3;
 using Orientation = glm::quat;
 using Distance    = float; ///< distance in meters (float)
 
-struct SharedShaderConstants : public Entity {
+struct SharedShaderConstants : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+
     struct FrameConstants {
         int          frameCounter  = 0;
         Microseconds frameDuration = {};
@@ -95,7 +97,7 @@ struct SharedShaderConstants : public Entity {
     GN_API static AutoRef<SharedShaderConstants> create(const CreateParameters & params);
 
 private:
-    using Entity::Entity;
+    using RCRT64::RCRT64;
 };
 
-}; // namespace GN::rdg2
+} // namespace GN::fx2

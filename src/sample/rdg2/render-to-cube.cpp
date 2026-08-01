@@ -25,6 +25,7 @@
 //   --impl N — 1 = face-by-face (default), 2 = single-pass MRT
 
 #include <garnet/GNrdg2.h>
+#include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 #include <garnet/GNutil.h>
 
@@ -79,10 +80,10 @@ static constexpr uint32_t kCubemapSize = 512;
 //
 // Resources common to all renderer classes, passed by const reference.
 struct SharedCtx {
-    GraphPtr                             graph;
-    AutoRef<GpuContext>                  gpu;
-    AutoRef<rdg2::SharedShaderConstants> ssc;
-    uint32_t                             width, height;
+    GraphPtr                            graph;
+    AutoRef<GpuContext>                 gpu;
+    AutoRef<fx2::SharedShaderConstants> ssc;
+    uint32_t                            width, height;
 };
 
 // Build a view that addresses exactly one face (one mip, one array layer).
@@ -340,8 +341,8 @@ public:
 
     // Adds the per-frame draw-cube node. outPayload is filled when the node executes.
     // Returns the node handle to wait on.
-    NodePtr addFrameNode(const TokenPtr & cubemapToken, const SharedShaderConstants::Snapshot & sscSnapshot, const AutoRef<Texture> & cubemap, float elapsed,
-                         AutoRef<GpuPayload> & outPayload) {
+    NodePtr addFrameNode(const TokenPtr & cubemapToken, const fx2::SharedShaderConstants::Snapshot & sscSnapshot, const AutoRef<Texture> & cubemap,
+                         float elapsed, AutoRef<GpuPayload> & outPayload) {
         return mCtx.graph->addNode(
             NodeDesc("draw cube",
                      [this, cubemap, elapsed, sscSnapshot, &outPayload]() {
@@ -528,7 +529,7 @@ int main(int argc, const char ** argv) {
     auto graph = Graph::create();
     if (!graph) return -1;
 
-    auto ssc = rdg2::SharedShaderConstants::create({.gpu = gpuContext});
+    auto ssc = fx2::SharedShaderConstants::create({.gpu = gpuContext});
     if (!ssc) return -1;
 
     SharedCtx ctx {.graph = graph, .gpu = gpuContext, .ssc = ssc, .width = windowWidth, .height = windowHeight};
@@ -580,7 +581,7 @@ int main(int argc, const char ** argv) {
             ssc->set0.camera.viewWidthInPixel  = rasterSize.x;
             ssc->set0.camera.viewHeightInPixel = rasterSize.y;
         }
-        SharedShaderConstants::Snapshot sscSnapshot = ssc->takeSnapshot();
+        fx2::SharedShaderConstants::Snapshot sscSnapshot = ssc->takeSnapshot();
 
         std::vector<AutoRef<GpuPayload>> cubemapPayloads;
         AutoRef<GpuPayload>              presentPayload;

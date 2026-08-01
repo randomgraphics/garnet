@@ -310,31 +310,6 @@ QuestRef makePassQuest(const StrA & name, const DynaArray<ArtifactUse> & uses, A
     return Quest::create(p);
 }
 
-/// Client-side relic content wrapping the SCC set0 resource set.
-struct SccResourcesEntity final : public Entity {
-    GN_REGISTER_RUNTIME_TYPE(Entity);
-
-    gpu2::GpuResourceSet value;
-
-    explicit SccResourcesEntity(gpu2::GpuResourceSet value_): Entity(TYPE_INFO(), "scc-set0-resources"), value(std::move(value_)) {}
-};
-
-/// SCC validation-client adapter: the SccQuest of the design spec authored as
-/// a configured quest instead of a public Quest subclass. SCC itself stays
-/// concrete and graph-agnostic; only this thin adapter knows about quests.
-QuestRef makeSccQuest(AutoRef<SharedShaderConstants> ssc, ArtifactRef sceneConstants) {
-    Quest::CreateParameters p;
-    p.name = "scc";
-    p.artifactUses.append(ArtifactUse {.name = "sceneConstants", .artifact = sceneConstants, .access = ArtifactAccess::DISCARD_WRITE});
-    p.execute = [ssc, sceneConstants](QuestContext & ctx) -> QuestResult {
-        auto snapshot = ssc->takeSnapshot();
-        ctx.publish(sceneConstants, AutoRef<Entity>(new SccResourcesEntity(std::move(snapshot.set0Resources))));
-        for (size_t i = 0; i < snapshot.set0Payloads.size(); ++i) ctx.emit(snapshot.set0Payloads[i]);
-        return QuestResult::succeeded();
-    };
-    return Quest::create(p);
-}
-
 /// Declares one write but publishes a different, undeclared artifact.
 struct RogueQuest final : public Quest {
     GN_REGISTER_RUNTIME_TYPE(Quest);
@@ -558,37 +533,6 @@ TEST_CASE("rdg2::ClosedGraph: multi-pass frame: shadow, hdr scene, post, super-r
     CHECK(hdrColor->version() == Artifact::Version::ONE());
     CHECK(sceneDepth->version() == Artifact::Version::ONE());
     CHECK(ldrColor->version() == Artifact::Version::ONE());
-}
-
-TEST_CASE("rdg2::ClosedGraph: shared shader constants as a configured quest", "[rdg2][closed-graph][gpu]") {
-    auto gpu =
-        gpu2::GpuContext::create("closed_graph_scc_gpu", gpu2::GpuContext::CreateParameters {.howToPrintDeviceCaps = gpu2::GpuContext::Verbosity::SILENCE});
-    if (!gpu) SKIP("No Vulkan GPU context available");
-
-    auto ssc = SharedShaderConstants::create({.gpu = gpu});
-    REQUIRE(ssc);
-    ssc->set0.frameConstants.frameCounter = 7;
-
-    auto sceneConstants = Artifact::create("sceneConstants");
-    auto scc            = makeSccQuest(ssc, sceneConstants);
-    REQUIRE(scc);
-
-    DynaArray<QuestRef> quests;
-    quests.append(scc);
-    auto plan = MockPlan::compile(quests);
-    REQUIRE(plan);
-
-    auto execution = AutoRef<MockExecution>(new MockExecution(plan));
-    execution->run();
-    CHECK(execution->wait() == Execution::Status::SUCCEEDED);
-    CHECK(execution->context.violations == 0);
-
-    // The published relic carries the real set0 resource set (6 bindings), and
-    // the snapshot's upload payloads were gathered for later submission.
-    auto relic = sceneConstants->content<SccResourcesEntity>();
-    REQUIRE(relic);
-    CHECK(relic->value.size() == 6u);
-    CHECK(execution->context.payloads.size() >= 2u); // fallback + env uploads on the first snapshot
 }
 
 TEST_CASE("rdg2::ClosedGraph: real compile and run, cpu only", "[rdg2][closed-graph]") {

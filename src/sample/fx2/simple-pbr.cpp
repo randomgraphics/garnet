@@ -1,15 +1,15 @@
-#include <garnet/GNrdg2.h>
+#include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 #include <garnet/GNutil.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <cmath>
 
 using namespace GN;
-using namespace GN::rdg2;
+using namespace GN::fx2;
 using namespace GN::gpu2;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.rdg2.pbr");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.fx2.pbr");
 
 static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, const RasterTarget & target, int frameIdx) {
     // Orbit camera around Y axis; helmet stays fixed at origin.
@@ -73,7 +73,7 @@ int main(int argc, const char ** argv) {
     std::unique_ptr<win::Window> window;
     intptr_t                     surface = 0;
     if (!testMode) {
-        window.reset(win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR (rdg2)", .clientWidth = W, .clientHeight = H}));
+        window.reset(win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - PBR (fx2)", .clientWidth = W, .clientHeight = H}));
         if (!window) return -1;
         window->show();
         surface = window->createVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());

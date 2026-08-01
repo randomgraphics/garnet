@@ -9,7 +9,6 @@ scene formats.
 ```text
 gpu2                     low-level GPU resources, command payloads, submit/present
 rdg2                     graph designs: artifacts/relics, open graph, closed graph
-concrete render helpers  SCC, PBR, skybox, ... — ordinary graph clients, not RDG concepts
 ```
 
 ## Module Layout
@@ -24,7 +23,6 @@ concrete render helpers  SCC, PBR, skybox, ... — ordinary graph clients, not R
   tested; now reference material.
 - `closed-graph.h` — generation 2: the active closed render graph design.
   Public API under iteration; a first executable slice is implemented.
-- `shared-shader-constants.h`, `pbr.h` — concrete validation clients.
 
 ## Shared Primitives: Artifact, Version, Relic
 
@@ -122,17 +120,8 @@ gathered submission, quest-requested present); and the frame begin/end quest
 factories over a `SwapchainFrameEntity` relic. Not yet implemented:
 dependency-driven ordering and culling, selector resolution beyond latest,
 parallel execution, transient aliasing, and GPU-completion-tracked execution
-status. The `PbrQuest` sketch at the bottom of the header is the parked
-bespoke-adapter example. The `closed-graph-hello-world` sample renders a
-solid-color empty frame through this path.
-
-## Validation Clients
-
-`SharedShaderConstants` (frame-level set0 constants; `takeSnapshot()` freezes
-CPU state and returns the resource set plus upload payloads) and `PbrShading`
-(PBR raster draw parameters) are concrete helpers used by tests and the
-`simple-pbr` sample. They exist to validate graph designs; they must never
-define RDG concepts, and the RDG core must not know their types.
+status. The `closed-graph-hello-world` sample renders a solid-color empty frame
+through this path.
 
 ## Direction
 

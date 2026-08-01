@@ -16,7 +16,8 @@ Important directories:
 - `src/inc/garnet/`: public monolithic headers.
 - `src/core/`: core implementation.
 - `src/core/rdg2/`: RDG2, the active render graph module.
-- `src/core/gpu2/`: gpu2 abstraction layer used by RDG2.
+- `src/core/fx2/`: FX2, graph-agnostic effects built on gpu2.
+- `src/core/gpu2/`: gpu2 abstraction layer used by FX2 and RDG2.
 - `src/core/e2/`: engine2 (`GN::e2`), spatial/engine layer; public include
   `GNengine2.h`.
 - `src/sample/`: sample applications.
@@ -134,7 +135,8 @@ and a reference for how existing code came to be. See
 
 RDG2 (`GN::rdg2`) is the primary active rendering abstraction. Public include
 `GNrdg2.h`, implementation `src/core/rdg2/`, public headers
-`src/inc/garnet/rdg2/`. RDG v1 has been removed from the tree.
+`src/inc/garnet/rdg2/`. RDG2 may consume FX2 through graph-specific adapters;
+FX2 must not depend on RDG2. RDG v1 has been removed from the tree.
 
 RDG2 is a playground for graph designs with two generations:
 
@@ -150,6 +152,13 @@ RDG2 is a playground for graph designs with two generations:
 
 Known open-graph gaps include multi-worker execution, descriptor/resource
 binding paths, indexed draw coverage, and file-path shader loading.
+
+## FX2 Module
+
+FX2 (`GN::fx2`) owns graph-agnostic rendering effects such as shared shader
+constants, skybox drawing, and PBR assets. Public include `GNfx2.h`,
+implementation `src/core/fx2/`, public headers `src/inc/garnet/fx2/`. FX2
+depends on gpu2 only and must not include or reference RDG2.
 
 ## gpu2 Module
 

@@ -1,18 +1,18 @@
-// Tests for GN::rdg2::SharedShaderConstants.
+// Tests for GN::fx2::SharedShaderConstants.
 // Requires a Vulkan GPU context; each test skips gracefully if unavailable.
 
 #include <catch2/catch_test_macros.hpp>
-#include <garnet/GNrdg2.h>
+#include <garnet/GNfx2.h>
 
 using namespace GN;
-using namespace GN::rdg2;
+using namespace GN::fx2;
 using namespace GN::gpu2;
 
 static const GpuContext::Verbosity kGpuVerbosity = GpuContext::Verbosity::SILENCE;
 
 static AutoRef<GpuContext> makeGpu(const char * name) { return GpuContext::create(name, GpuContext::CreateParameters {.howToPrintDeviceCaps = kGpuVerbosity}); }
 
-TEST_CASE("rdg2::SharedShaderConstants: create() returns non-null with valid params", "[rdg2][ssc][gpu]") {
+TEST_CASE("fx2::SharedShaderConstants: create() returns non-null with valid params", "[fx2][ssc][gpu]") {
     auto gpu = makeGpu("ssc_create_gpu");
     if (!gpu) SKIP("No Vulkan GPU context available");
 
@@ -20,7 +20,7 @@ TEST_CASE("rdg2::SharedShaderConstants: create() returns non-null with valid par
     REQUIRE(ssc);
 }
 
-TEST_CASE("rdg2::SharedShaderConstants: snapshot contains env resources", "[rdg2][ssc][gpu]") {
+TEST_CASE("fx2::SharedShaderConstants: snapshot contains env resources", "[fx2][ssc][gpu]") {
     auto gpu = makeGpu("ssc_env_gpu");
     if (!gpu) SKIP("No Vulkan GPU context available");
 
@@ -33,7 +33,7 @@ TEST_CASE("rdg2::SharedShaderConstants: snapshot contains env resources", "[rdg2
     CHECK(snapshot.set0Resources.size() == 6u);
 }
 
-TEST_CASE("rdg2::SharedShaderConstants: first snapshot includes fallback + env upload payloads", "[rdg2][ssc][gpu]") {
+TEST_CASE("fx2::SharedShaderConstants: first snapshot includes fallback + env upload payloads", "[fx2][ssc][gpu]") {
     auto gpu = makeGpu("ssc_fallback_payload_gpu");
     if (!gpu) SKIP("No Vulkan GPU context available");
 
@@ -45,7 +45,7 @@ TEST_CASE("rdg2::SharedShaderConstants: first snapshot includes fallback + env u
     CHECK(snapshot.set0Payloads.size() >= 2u);
 }
 
-TEST_CASE("rdg2::SharedShaderConstants: takeSnapshot() returns resources", "[rdg2][ssc][gpu]") {
+TEST_CASE("fx2::SharedShaderConstants: takeSnapshot() returns resources", "[fx2][ssc][gpu]") {
     auto gpu = makeGpu("ssc_snap_gpu");
     if (!gpu) SKIP("No Vulkan GPU context available");
 
@@ -56,7 +56,7 @@ TEST_CASE("rdg2::SharedShaderConstants: takeSnapshot() returns resources", "[rdg
     CHECK(snapshot.set0Resources.size() == 6u);
 }
 
-TEST_CASE("rdg2::SharedShaderConstants: snapshot returns payloads", "[rdg2][ssc][gpu]") {
+TEST_CASE("fx2::SharedShaderConstants: snapshot returns payloads", "[fx2][ssc][gpu]") {
     auto gpu = makeGpu("ssc_content_gpu");
     if (!gpu) SKIP("No Vulkan GPU context available");
 
@@ -70,7 +70,7 @@ TEST_CASE("rdg2::SharedShaderConstants: snapshot returns payloads", "[rdg2][ssc]
     CHECK(!snapshot.set0Payloads.empty());
 }
 
-TEST_CASE("rdg2::SharedShaderConstants: two snapshots are independent values", "[rdg2][ssc][gpu]") {
+TEST_CASE("fx2::SharedShaderConstants: two snapshots are independent values", "[fx2][ssc][gpu]") {
     auto gpu = makeGpu("ssc_evict_gpu");
     if (!gpu) SKIP("No Vulkan GPU context available");
 

@@ -21,7 +21,7 @@
     #define mat4 glm::mat4
     #define vec4 glm::vec4
     #define vec2 glm::vec2
-namespace GN::rdg2::shader {
+namespace GN::fx2::shader {
 #endif
 
 struct CameraUBO {
@@ -48,7 +48,7 @@ static_assert(offsetof(CameraUBO, cameraPosition) == 192);
 static_assert(offsetof(CameraUBO, renderTargetSize) == 208);
 static_assert(offsetof(CameraUBO, nearPlane) == 216);
 static_assert(offsetof(CameraUBO, farPlane) == 220);
-} // namespace GN::rdg2::shader
+} // namespace GN::fx2::shader
 #endif
 
 #ifndef __cplusplus

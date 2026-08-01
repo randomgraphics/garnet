@@ -7,7 +7,7 @@ GN_compile_glsl_shaders(spv_headers
           cube-all-faces.frag
           cube-draw.vert
           cube-draw.frag
-  INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/core/rdg2/vk-shaders
+  INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/core/fx2/vk-shaders
   COMMENT "Compiling RDG sample GLSL to SPIR-V headers"
 )
 add_custom_target(rdg-sample-shaders DEPENDS ${spv_headers})
@@ -29,8 +29,3 @@ add_executable(GNsample-rdg2-render-to-cube render-to-cube.cpp)
 target_include_directories(GNsample-rdg2-render-to-cube PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GNsample-rdg2-render-to-cube GNcore)
 add_dependencies(GNsample-rdg2-render-to-cube rdg2-render-to-cube-shaders)
-
-# simple-pbr: rdg2 PBR + skybox demo using SharedShaderConstants, PbrShading, SkyBox.
-# No per-sample shader compile step — PBR/skybox shaders are part of GNcore-rdg2-shaders.
-add_executable(GNsample-rdg2-pbr simple-pbr.cpp)
-target_link_libraries(GNsample-rdg2-pbr GNcore)
