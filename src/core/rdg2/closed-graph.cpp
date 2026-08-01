@@ -92,7 +92,7 @@ public:
 
     Artifact::Relic<> read(const ArtifactRef & artifact) const override {
         if (!declared(artifact, false)) {
-            GN_ERROR(sLogger)("Quest '{}': reads undeclared artifact '{}'.", questName(), artifact ? artifact->name : StrA::EMPTYSTR());
+            GN_ERROR(sLogger, "Quest '{}': reads undeclared artifact '{}'.", questName(), artifact ? artifact->name : StrA::EMPTYSTR());
             ++violations;
             return {};
         }
@@ -104,7 +104,7 @@ public:
 
     void publish(const ArtifactRef & artifact, AutoRef<Entity> content) override {
         if (!declared(artifact, true)) {
-            GN_ERROR(sLogger)("Quest '{}': publishes undeclared artifact '{}'.", questName(), artifact ? artifact->name : StrA::EMPTYSTR());
+            GN_ERROR(sLogger, "Quest '{}': publishes undeclared artifact '{}'.", questName(), artifact ? artifact->name : StrA::EMPTYSTR());
             ++violations;
             return;
         }
@@ -159,7 +159,7 @@ public:
     void runPlan(const RunParameters & parameters) {
         mStatus = Status::RUNNING;
         if (!parameters.plan) GN_UNLIKELY {
-                GN_ERROR(sLogger)("Execution '{}': a plan is required.", name);
+                GN_ERROR(sLogger, "Execution '{}': a plan is required.", name);
                 mStatus = Status::FAILED;
                 return;
             }
@@ -174,7 +174,7 @@ public:
         for (size_t i = 0; i < count; ++i) {
             auto quest = parameters.plan->quest(i);
             if (!quest) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("Execution '{}': plan quest {} is null.", name, i);
+                    GN_ERROR(sLogger, "Execution '{}': plan quest {} is null.", name, i);
                     mStatus = Status::FAILED;
                     return;
                 }
@@ -188,7 +188,7 @@ public:
             context.declaration = nullptr;
 
             if (QuestResult::Status::SUCCEEDED != result.status || context.violations > 0) {
-                GN_ERROR(sLogger)("Execution '{}': quest '{}' failed. {}", name, declaration.name, result.message);
+                GN_ERROR(sLogger, "Execution '{}': quest '{}' failed. {}", name, declaration.name, result.message);
                 mStatus = Status::FAILED; // fail fast: skip GPU submission entirely
                 return;
             }
@@ -200,7 +200,7 @@ public:
         // external dependencies (e.g. swapchain acquire) as submit waits.
         if (!context.work.empty()) {
             if (!parameters.gpu) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("Execution '{}': quests emitted GPU payloads but no GPU context was provided.", name);
+                    GN_ERROR(sLogger, "Execution '{}': quests emitted GPU payloads but no GPU context was provided.", name);
                     mStatus = Status::FAILED;
                     return;
                 }
@@ -219,7 +219,7 @@ public:
             else if (!context.dependencies.empty())
                 waitFor = context.dependencies[context.dependencies.size() - 1];
             if (!waitFor) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("Execution '{}': present requested but there is no payload to order the present after.", name);
+                    GN_ERROR(sLogger, "Execution '{}': present requested but there is no payload to order the present after.", name);
                     mStatus = Status::FAILED;
                     return;
                 }
@@ -241,7 +241,7 @@ private:
 
 GN_API QuestRef Quest::create(const CreateParameters & parameters) {
     if (!parameters.execute) GN_UNLIKELY {
-            GN_ERROR(sLogger)("Quest '{}': an execute callable is required.", parameters.name);
+            GN_ERROR(sLogger, "Quest '{}': an execute callable is required.", parameters.name);
             return {};
         }
     return QuestRef(new ConfiguredQuest(parameters));
@@ -252,7 +252,7 @@ GN_API PlanRef Plan::compile(const CompileParameters & parameters) {
     for (size_t i = 0; i < parameters.quests.size(); ++i) {
         const auto & quest = parameters.quests[i];
         if (!quest) GN_UNLIKELY {
-                GN_ERROR(sLogger)("Plan::compile: quest {} is null.", i);
+                GN_ERROR(sLogger, "Plan::compile: quest {} is null.", i);
                 return {};
             }
         auto declaration = quest->declare();
@@ -260,22 +260,22 @@ GN_API PlanRef Plan::compile(const CompileParameters & parameters) {
         for (size_t u = 0; u < declaration.artifactUses.size(); ++u) {
             const auto & use = declaration.artifactUses[u];
             if (!use.artifact) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("Plan::compile: quest '{}' use '{}' has no artifact.", declaration.name, use.name);
+                    GN_ERROR(sLogger, "Plan::compile: quest '{}' use '{}' has no artifact.", declaration.name, use.name);
                     return {};
                 }
             if (ArtifactAccess::DISCARD_WRITE == use.access) continue; // pure write: no producer needed
             // Compile-time version queries are execution-system territory, which is exactly what the compiler is.
             const bool imported = use.artifact->version() != Artifact::Version::OOO();
             if (!imported && !plan->writesEarlier(use.artifact)) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("Plan::compile: quest '{}' reads artifact '{}' which has no earlier writer and no imported relic.", declaration.name,
-                                      use.artifact->name);
+                    GN_ERROR(sLogger, "Plan::compile: quest '{}' reads artifact '{}' which has no earlier writer and no imported relic.", declaration.name,
+                             use.artifact->name);
                     return {};
                 }
         }
 
         for (size_t d = 0; d < declaration.explicitDependencies.size(); ++d) {
             if (!plan->contains(declaration.explicitDependencies[d])) GN_UNLIKELY {
-                    GN_ERROR(sLogger)("Plan::compile: quest '{}' has an explicit dependency that is not an earlier quest of this plan.", declaration.name);
+                    GN_ERROR(sLogger, "Plan::compile: quest '{}' has an explicit dependency that is not an earlier quest of this plan.", declaration.name);
                     return {};
                 }
         }
@@ -293,7 +293,7 @@ GN_API ExecutionRef Execution::run(const RunParameters & parameters) {
 
 GN_API QuestRef createFrameBeginQuest(const FrameBeginParameters & parameters) {
     if (!parameters.swapchain || !parameters.backbuffer) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createFrameBeginQuest: swapchain and backbuffer are required.");
+            GN_ERROR(sLogger, "createFrameBeginQuest: swapchain and backbuffer are required.");
             return {};
         }
     Quest::CreateParameters q;
@@ -311,7 +311,7 @@ GN_API QuestRef createFrameBeginQuest(const FrameBeginParameters & parameters) {
 
 GN_API QuestRef createFrameEndQuest(const FrameEndParameters & parameters) {
     if (!parameters.swapchain || !parameters.backbuffer) GN_UNLIKELY {
-            GN_ERROR(sLogger)("createFrameEndQuest: swapchain and backbuffer are required.");
+            GN_ERROR(sLogger, "createFrameEndQuest: swapchain and backbuffer are required.");
             return {};
         }
     Quest::CreateParameters q;

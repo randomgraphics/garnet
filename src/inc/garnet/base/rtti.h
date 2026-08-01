@@ -164,7 +164,7 @@ struct RefCountedRuntimeType : public RefCounter, public RuntimeType {
     virtual ~RefCountedRuntimeType() {
 #if GN_BUILD_DEBUG_ENABLED
         static auto * logger = GN::getLogger("GN.base");
-        GN_VVTRACE(logger)("Destroying ref-counted runtime type: name='{}', type={}, id={}", name, typeInfo().name, id);
+        GN_VVTRACE(logger, "Destroying ref-counted runtime type: name='{}', type={}, id={}", name, typeInfo().name, id);
 #endif
     }
 

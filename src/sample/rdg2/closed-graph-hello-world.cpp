@@ -29,29 +29,29 @@ static constexpr float kClearR = 0.0f, kClearG = 0.0f, kClearB = 1.0f, kClearA =
 static bool verifySolidColor(const GpuResourceView & view, uint32_t width, uint32_t height) {
     auto tex = view.texture();
     if (!tex) {
-        GN_ERROR(sLogger)("verifySolidColor: could not get backbuffer texture");
+        GN_ERROR(sLogger, "verifySolidColor: could not get backbuffer texture");
         return false;
     }
     gfx::img::Image image = tex->readback();
     if (image.empty()) {
-        GN_ERROR(sLogger)("verifySolidColor: readback returned empty image");
+        GN_ERROR(sLogger, "verifySolidColor: readback returned empty image");
         return false;
     }
     auto         pixels   = image.plane().toRGBA8(image.data());
     const size_t expected = (size_t) width * (size_t) height;
     if (pixels.size() != expected) {
-        GN_ERROR(sLogger)("verifySolidColor: unexpected pixel count {} (expected {})", pixels.size(), expected);
+        GN_ERROR(sLogger, "verifySolidColor: unexpected pixel count {} (expected {})", pixels.size(), expected);
         return false;
     }
     const auto check = [](const char * where, const auto & p) {
         const bool ok = p.r == (uint8_t) (kClearR * 255.f) && p.g == (uint8_t) (kClearG * 255.f) && p.b == (uint8_t) (kClearB * 255.f);
-        if (!ok) { GN_ERROR(sLogger)("verifySolidColor: {} pixel mismatch — got ({},{},{},{})", where, p.r, p.g, p.b, p.a); }
+        if (!ok) { GN_ERROR(sLogger, "verifySolidColor: {} pixel mismatch — got ({},{},{},{})", where, p.r, p.g, p.b, p.a); }
         return ok;
     };
     const bool cornerOk = check("corner", pixels[0]);
     const bool centerOk = check("center", pixels[(size_t) (height / 2) * width + width / 2]);
     if (!cornerOk || !centerOk) return false;
-    GN_INFO(sLogger)("verifySolidColor: PASSED");
+    GN_INFO(sLogger, "verifySolidColor: PASSED");
     return true;
 }
 
@@ -88,7 +88,7 @@ static QuestRef makeClearQuest(ArtifactRef backbuffer) {
 
 int main(int argc, const char ** argv) {
     bool testMode = (argc > 1) && (argv[1][0] == 't');
-    if (testMode) { GN_INFO(sLogger)("Running in test mode"); }
+    if (testMode) { GN_INFO(sLogger, "Running in test mode"); }
 
     enableCRTMemoryCheck();
 

@@ -72,7 +72,7 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
             break;
 
         default:
-            GN_ERROR(sLogger)( "invalid texture type!" );
+            GN_ERROR(sLogger, "invalid texture type!");
             return;
     }
 }*/
