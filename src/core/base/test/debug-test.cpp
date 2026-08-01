@@ -21,30 +21,40 @@ TEST_CASE("assert macros expand to a single statement", "[debug]") {
 
     SECTION("GN_ASSERT in an unbraced if body, with a following else") {
         taken = 0;
-        if (yes) GN_ASSERT(yes);
-        else taken = 1;
+        if (yes)
+            GN_ASSERT(yes);
+        else
+            taken = 1;
         CHECK(taken == 0);
 
-        if (no) GN_ASSERT(yes);
-        else taken = 2;
+        if (no)
+            GN_ASSERT(yes);
+        else
+            taken = 2;
         CHECK(taken == 2);
     }
 
     SECTION("GN_ASSERT with a message") {
         // The message is a single string, not a format argument list.
-        if (yes) GN_ASSERT(yes, "a literal message");
-        else FAIL("else branch bound to the wrong if");
+        if (yes)
+            GN_ASSERT(yes, "a literal message");
+        else
+            FAIL("else branch bound to the wrong if");
 
         // ... and the std::string overload, which is how a formatted message is passed
-        if (yes) GN_ASSERT(yes, fmt::format("a formatted message: {}", 1));
-        else FAIL("else branch bound to the wrong if");
+        if (yes)
+            GN_ASSERT(yes, fmt::format("a formatted message: {}", 1));
+        else
+            FAIL("else branch bound to the wrong if");
     }
 
     SECTION("GN_REQUIRE in an unbraced if body") {
         // GN_REQUIRE asserts in every build configuration, not just debug.
         taken = 0;
-        if (yes) GN_REQUIRE(yes);
-        else taken = 1;
+        if (yes)
+            GN_REQUIRE(yes);
+        else
+            taken = 1;
         CHECK(taken == 0);
     }
 
@@ -57,7 +67,8 @@ TEST_CASE("assert macros expand to a single statement", "[debug]") {
             GN_ASSERT(yes);
             ++count;
             break;
-        default: break;
+        default:
+            break;
         }
         CHECK(count == 1);
     }
@@ -74,18 +85,22 @@ TEST_CASE("do-once macros expand to a single statement", "[debug]") {
     }
 
     SECTION("GN_DO_ONCE in an unbraced if body, with a following else") {
-        int once = 0;
+        int once  = 0;
         int other = 0;
         for (int i = 0; i < 5; ++i) {
-            if (yes) GN_DO_ONCE(++once);
-            else ++other;
+            if (yes)
+                GN_DO_ONCE(++once);
+            else
+                ++other;
         }
         CHECK(once == 1);
         CHECK(other == 0);
 
         for (int i = 0; i < 5; ++i) {
-            if (no) GN_DO_ONCE(++once);
-            else ++other;
+            if (no)
+                GN_DO_ONCE(++once);
+            else
+                ++other;
         }
         CHECK(once == 1);
         CHECK(other == 5);
@@ -95,12 +110,16 @@ TEST_CASE("do-once macros expand to a single statement", "[debug]") {
         // These reach a logger, so they also cover the trailing semicolons that used to be baked
         // into their definitions -- those would have orphaned the else below.
         int taken = 0;
-        if (yes) GN_TODO("a todo");
-        else taken = 1;
+        if (yes)
+            GN_TODO("a todo");
+        else
+            taken = 1;
         CHECK(taken == 0);
 
-        if (no) GN_UNIMPL_WARNING();
-        else taken = 2;
+        if (no)
+            GN_UNIMPL_WARNING();
+        else
+            taken = 2;
         CHECK(taken == 2);
     }
 }
