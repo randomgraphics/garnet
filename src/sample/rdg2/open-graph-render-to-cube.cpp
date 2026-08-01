@@ -1,4 +1,4 @@
-// render-to-cube.cpp — RDG v2 render-to-cubemap demo
+// open-graph-render-to-cube.cpp — RDG v2 render-to-cubemap demo
 //
 // Loads 6 images from media/texture/cube1/ and renders each to one face of a
 // 512×512 RGBA8 cubemap using the RDG v2 / gpu2 open-graph API. A rotating 3D cube
@@ -20,7 +20,7 @@
 //   [render cubemap]  ──depends on──> shader ONE() tokens ──publishes──> cubemapReadyArtifact
 //   [draw cube]       ──depends on──> cubemapReadyArtifact (OOO) + cubeDrawVsArtifact + cubeDrawPsArtifact
 //
-// Usage: render-to-cube [t] [--impl 1|2]
+// Usage: open-graph-render-to-cube [t] [--impl 1|2]
 //   t        — headless test mode: 10 frames, readback face 0, log verification
 //   --impl N — 1 = face-by-face (default), 2 = single-pass MRT
 
@@ -49,7 +49,7 @@ using namespace GN::rdg2;
 using namespace GN::gpu2;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.render-to-cube");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.open-graph-render-to-cube");
 
 struct ShaderArtifactContent final : public Entity {
     GN_REGISTER_RUNTIME_TYPE(Entity);
@@ -498,7 +498,7 @@ int main(int argc, const char ** argv) {
     }
 
     enableCRTMemoryCheck();
-    GN_INFO(sLogger, "render-to-cube  impl={}  testMode={}", impl, testMode);
+    GN_INFO(sLogger, "open-graph-render-to-cube  impl={}  testMode={}", impl, testMode);
 
     // ── GPU context ────────────────────────────────────────────────────────────
     auto gpuContext = GpuContext::create("gpu_context", GpuContext::CreateParameters {});
@@ -624,6 +624,6 @@ int main(int argc, const char ** argv) {
     // Destroy the sample-owned surface after the swapchain, before the GPU context (the Vulkan instance).
     swapchain.clear();
     if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
-    GN_INFO(sLogger, "render-to-cube finished.");
+    GN_INFO(sLogger, "open-graph-render-to-cube finished.");
     return 0;
 }

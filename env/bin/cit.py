@@ -6,7 +6,7 @@ import importlib; utils = importlib.import_module("garnet-utils")
 def run_all_tests(args):
     utils.run_the_latest_binary("build/{variant}/bin/GNtest-unit-tests", args.test_args, check=True, cwd=root_folder)
     utils.run_the_latest_binary("build/{variant}/bin/GNtest-internal", args.test_args, check=True, cwd=root_folder)
-    utils.run_the_latest_binary("build/{variant}/bin/GNsample-rdg2-simple-triangle", ["t"], check=True, cwd=root_folder)
+    utils.run_the_latest_binary("build/{variant}/bin/GNsample-rdg2-open-graph-simple-triangle", ["t"], check=True, cwd=root_folder)
     # gpu2 samples double as smoke tests: they verify their results internally and exit non-zero on failure.
     utils.run_the_latest_binary("build/{variant}/bin/GNsample-gpu2-simple-copy", [], check=True, cwd=root_folder)
     utils.run_the_latest_binary("build/{variant}/bin/GNsample-gpu2-simple-compute", [], check=True, cwd=root_folder)

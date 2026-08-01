@@ -10,7 +10,7 @@ using namespace GN::rdg2;
 using namespace GN::gpu2;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.rdg");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.open-graph-simple-triangle");
 
 struct ShaderArtifactContent final : public Entity {
     GN_REGISTER_RUNTIME_TYPE(Entity);
@@ -154,7 +154,7 @@ int main(int argc, const char ** argv) {
             drawParams.ps                   = psContent->shader;
             drawParams.geometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
 
-            auto r = GpuRaster::create("simple-triangle", rcp);
+            auto r = GpuRaster::create("open-graph-simple-triangle", rcp);
             r->draw(drawParams);
             colorPassWork = r->seal();
         };
