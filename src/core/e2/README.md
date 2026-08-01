@@ -224,7 +224,10 @@ World::captureVisualMoment(parameters)
   returns a self-contained VisualMoment for a specific point in time
 
 VisualDomain::render(moment)
-  consumes the snapshot and talks to lower-level GPU/rendering systems
+  seals the snapshot as an imported RDG2 relic
+  builds the concrete closed frame plan (acquire -> render -> present)
+  adapts world-space snapshot values into FX2 render-space effects
+  lets RDG2 gather payloads, submit, and present
 ```
 
 The key rule is that world evolution is independent of rendering. Rendering
@@ -246,6 +249,49 @@ capture. `Form::live()` — which lets the form's facets live one simulation
 moment — is driven by the world using whatever update cadence that world
 chooses, while visual capture may
 be requested from another thread by the rendering path.
+
+## Visual Backend Composition
+
+The rendering backend deliberately lives at the intersection of two lower-level
+modules with narrower responsibilities:
+
+```text
+World / VisualFacet tree
+  -> fixed VisualMoment snapshot (E2 world units and identities)
+  -> VisualDomain composition (E2 backend policy)
+       -> FX2 atomic effects (render-space constants and draw work)
+       -> RDG2 closed plan (declared ordering, submit, and present)
+  -> gpu2
+```
+
+FX2 is graph-agnostic. It accepts camera-relative float-meter positions and
+produces resource sets, draw parameters, and sealed payloads; it never observes
+a world, visual moment, artifact, or quest. RDG2 is domain-agnostic. It sees an
+imported immutable moment wrapper, a versioned backbuffer artifact, and three
+generic quests; it never interprets cameras, lights, forms, or materials. E2 is
+the adapter: it performs exact integer rebasing, chooses the concrete workload,
+and translates the fixed snapshot into FX2 operations inside the render quest.
+
+Each frame currently compiles this fixed outer skeleton:
+
+```text
+frame-begin    DISCARD_WRITE backbuffer (acquire and await ready payload)
+visual-render  READ visual moment, READ_WRITE backbuffer (emit FX2 + raster work)
+frame-end      READ root backbuffer (request present)
+```
+
+The visual moment is published before compilation, so the execution reads one
+sealed relic and never follows identities back into mutable simulation state.
+The render quest republishes the same physical swapchain-frame entity as a new
+relic: the new version represents the semantic transition from acquired to
+rendered and provides the dependency edge to presentation.
+
+This is the first executable slice, not the final workload model. The current
+moment implementation flattens renderables and lights captured from the form
+tree. Future versions can retain a richer moment tree or sealed asset/material
+manifests, perform discovery/culling before compilation, and generate a concrete
+set of shadow, depth, and post-processing quests. Those changes belong in E2;
+they do not require graph knowledge in FX2 or engine knowledge in RDG2.
 
 ## Relationship To Lower Layers
 
@@ -291,18 +337,19 @@ whole world → visual-moment → render path:
 - `os.cpp`: the official `OperatingDomain`, wrapping `GN::win` for the window,
   render surface, and event pump.
 - `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
-  the gpu2 swapchain, depth buffer, box shaders, a frame constants buffer, and a
-  geometry cache; `render()` consumes a self-contained snapshot, rebases every
-  absolute position against the primary camera in exact integer space (only the
-  resulting local delta converts to float meters, so the view carries no
-  translation), emits a per-frame constants upload payload followed by the
-  raster payload, and lets gpu2 queue ordering keep CPU frame preparation and
-  GPU execution overlapped.
+  the gpu2 swapchain, depth buffer, box shaders, an FX2 shared-constants effect,
+  and a geometry cache. `render()` seals the moment into an imported artifact,
+  compiles the E2-owned acquire/render/present RDG2 plan, and executes it. The
+  render quest rebases every absolute position against the primary camera in
+  exact integer space, snapshots FX2 camera/light resources, and emits FX2 plus
+  raster payloads; RDG2 owns their gathered submission and presentation.
 - `e2-internal.h`: private types shared across the implementation, most notably
   `VisualMomentImpl`, the concrete self-contained snapshot (cameras +
   renderables + lights) that worlds produce and the visual domain consumes.
-- `vk-shaders/box.{vert,frag}`: a minimal lit shader (per-frame camera/light UBO,
-  per-draw model/color push constants).
+- `vk-shaders/box.{vert,frag}`: a minimal lit shader that directly includes
+  FX2's canonical `camera-ubo.h` and `scene-ubo.h` set-0 definitions, plus E2
+  per-draw model/color push constants. The E2 build declares those FX2 headers
+  as shader dependencies, so changing the SSC layout recompiles these shaders.
 
 The factory functions `Form::create`,
 `Simple::createWorld/createBox/createPointLight`, `OperatingDomain::create`,
@@ -319,6 +366,8 @@ rebasing, integer-space rotation, and physical-unit conversion including
 rounding and saturation behavior. `test/visual-teardown-test.cpp` is a
 GPU-required regression test that destroys the visual domain before the OS
 domain and asserts the Vulkan validation layer reports no leaked objects.
+`test/visual-graph-test.cpp` covers the E2-owned fixed frame-plan order and
+verifies RDG2 rejects a render stage whose backbuffer has no acquire producer.
 
 The original smoke test, `test/e2-mock.cpp`, remains: it creates a `Universe`, a
 mock `World`, a factory-created `Form`, and a mock `Facet` to verify the
