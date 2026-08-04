@@ -220,8 +220,12 @@ struct SimpleWorld : World {
         for (auto & f : mForms) queryFacetsByType(*f, VisualFacet::TYPE_INFO(), visualFacets);
         for (auto & facet : visualFacets) {
             auto * visual = RuntimeType::cast<VisualFacet>(facet.get());
-            GN_ASSERT(visual);
+            if (!visual) GN_UNLIKELY {
+                    GN_WARN(sLogger, "facet {} is not a visual facet; ignored.", facet->name);
+                    continue;
+                }
             auto contribution = visual->captureVisualMoment(params);
+            if (!contribution) GN_UNLIKELY continue;
             if (auto * vm = RuntimeType::cast<VisualMomentImpl>(contribution.get())) moment->merge(*vm);
         }
         return moment;

@@ -266,25 +266,33 @@ World / VisualFacet tree
 
 FX2 is graph-agnostic. It accepts camera-relative float-meter positions and
 produces resource sets, draw parameters, and sealed payloads; it never observes
-a world, visual moment, artifact, or quest. RDG2 is domain-agnostic. It sees an
-imported immutable moment wrapper, a versioned backbuffer artifact, and three
-generic quests; it never interprets cameras, lights, forms, or materials. E2 is
+a world, visual moment, artifact, or quest. RDG2 is domain-agnostic. It sees
+stable visual-moment, SSC, and backbuffer artifacts plus four generic quests;
+it never interprets cameras, lights, forms, or materials. E2 is
 the adapter: it performs exact integer rebasing, chooses the concrete workload,
 and translates the fixed snapshot into FX2 operations inside the render quest.
 
-Each frame currently compiles this fixed outer skeleton:
+The visual domain creates these artifacts and quests once during initialization.
+Each frame publishes its moment relic and compiles a new plan from this outer
+skeleton, allowing frame-specific workload construction without recreating
+long-lived artifact identities:
 
 ```text
-frame-begin    DISCARD_WRITE backbuffer (acquire and await ready payload)
-visual-render  READ visual moment, READ_WRITE backbuffer (emit FX2 + raster work)
-frame-end      READ root backbuffer (request present)
+frame-begin   DISCARD_WRITE backbuffer (acquire and await ready payload)
+prepare-ssc   READ visual moment, DISCARD_WRITE SSC (publish snapshot + uploads)
+render        READ visual moment and SSC, READ_WRITE backbuffer (emit raster work)
+frame-end     READ root backbuffer (request present)
 ```
 
-The visual moment is published before compilation, so the execution reads one
-sealed relic and never follows identities back into mutable simulation state.
-The render quest republishes the same physical swapchain-frame entity as a new
-relic: the new version represents the semantic transition from acquired to
-rendered and provides the dependency edge to presentation.
+Each call to `render()` publishes only new relics to those persistent artifacts;
+it does not recreate graph identities. The visual moment is published before
+the first compilation, so execution reads one sealed relic and never follows
+identities back into mutable simulation state. SSC preparation publishes one
+immutable FX2 resource snapshot per frame, making the frame-global upload and
+its consumer dependency explicit. The render quest republishes the same
+physical swapchain-frame entity as a new relic: the new version represents the
+semantic transition from acquired to rendered and provides the dependency edge
+to presentation.
 
 This is the first executable slice, not the final workload model. The current
 moment implementation flattens renderables and lights captured from the form
@@ -338,11 +346,12 @@ whole world → visual-moment → render path:
   render surface, and event pump.
 - `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
   the gpu2 swapchain, depth buffer, box shaders, an FX2 shared-constants effect,
-  and a geometry cache. `render()` seals the moment into an imported artifact,
-  compiles the E2-owned acquire/render/present RDG2 plan, and executes it. The
-  render quest rebases every absolute position against the primary camera in
-  exact integer space, snapshots FX2 camera/light resources, and emits FX2 plus
-  raster payloads; RDG2 owns their gathered submission and presentation.
+  a geometry cache, and persistent RDG2 artifacts/quests. `render()` publishes
+  a new moment relic, compiles a frame-local plan, and executes it. A dedicated
+  SSC quest rebases every absolute position against the primary camera in exact
+  integer space, publishes the FX2 camera/light snapshot, and emits its upload
+  payloads. The render quest consumes that SSC relic and emits raster work;
+  RDG2 owns their gathered submission and presentation.
 - `e2-internal.h`: private types shared across the implementation, most notably
   `VisualMomentImpl`, the concrete self-contained snapshot (cameras +
   renderables + lights) that worlds produce and the visual domain consumes.

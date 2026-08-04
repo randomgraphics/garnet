@@ -17,8 +17,8 @@ namespace GN::e2 {
 
 /// Compile the fixed outer frame skeleton used by the visual backend. Keeping this helper
 /// independent of swapchain/GPU construction makes the E2-owned composition policy directly
-/// testable; the three quests themselves remain generic RDG2 units.
-rdg2::PlanRef compileVisualFramePlan(rdg2::QuestRef frameBegin, rdg2::QuestRef visualRender, rdg2::QuestRef frameEnd);
+/// testable; the four quests themselves remain generic RDG2 units.
+rdg2::PlanRef compileVisualFramePlan(rdg2::QuestRef frameBegin, rdg2::QuestRef prepareSsc, rdg2::QuestRef visualRender, rdg2::QuestRef frameEnd);
 
 // Query a form tree for facets that match, or derive from, the requested runtime type.
 inline void queryFacetsByType(Form & root, const RuntimeType::TypeInfo & type, DynaArray<Ref<Facet>> & result) {

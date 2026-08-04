@@ -47,6 +47,17 @@ struct VisualMomentEntity final : rdg2::Entity {
     explicit VisualMomentEntity(Ref<VisualMoment> moment_): Entity(TYPE_INFO(), "visual-moment"), moment(std::move(moment_)) {}
 };
 
+/// One immutable publication of FX2's frame-global GPU resources. The artifact carrying
+/// these snapshots is stable for the lifetime of the visual domain; its relic version is
+/// what changes from frame to frame.
+struct SscSnapshotEntity final : rdg2::Entity {
+    GN_REGISTER_RUNTIME_TYPE(rdg2::Entity);
+
+    fx2::SharedShaderConstants::Snapshot snapshot;
+
+    explicit SscSnapshotEntity(fx2::SharedShaderConstants::Snapshot snapshot_): Entity(TYPE_INFO(), "ssc-snapshot"), snapshot(std::move(snapshot_)) {}
+};
+
 #if GN_BUILD_HAS_VULKAN
 
 // ---------------------------------------------------------------------------
@@ -65,6 +76,13 @@ struct VisualDomainImpl : VisualDomain {
         // Member destruction alone can't order the surface (a raw handle we own) between the
         // swapchain and the instance, so unwind explicitly while mGpu keeps the instance alive.
         mRenderTarget.setColorTarget(0, {});
+        mFrameEndQuest.clear();
+        mRenderQuest.clear();
+        mPrepareSscQuest.clear();
+        mFrameBeginQuest.clear();
+        mSscArtifact.clear();
+        mBackbufferArtifact.clear();
+        mMomentArtifact.clear();
         mSsc.clear();
         mSwapchain.clear();
         if (mSurface && mOs) {
@@ -140,47 +158,21 @@ struct VisualDomainImpl : VisualDomain {
             return false;
         }
 
-        return true;
+        return initFrameGraph();
     }
 
     void render(Ref<VisualMoment> momentBase) override {
         auto * moment = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
         if (!moment) return;
 
-        auto momentArtifact     = rdg2::Artifact::create("e2.visual-moment");
-        auto backbufferArtifact = rdg2::Artifact::create("e2.backbuffer");
-        if (!momentArtifact || !backbufferArtifact ||
-            momentArtifact->publish(AutoRef<rdg2::Entity>(new VisualMomentEntity(std::move(momentBase)))) == rdg2::Artifact::Version::OOO()) {
+        if (mMomentArtifact->publish(AutoRef<rdg2::Entity>(new VisualMomentEntity(std::move(momentBase)))) == rdg2::Artifact::Version::OOO()) {
             GN_WARN(sLogger, "Failed to seal visual moment into a render-graph artifact; skipping frame.");
             return;
         }
 
-        auto frameBegin = rdg2::createFrameBeginQuest({.swapchain = mSwapchain, .backbuffer = backbufferArtifact});
-
-        rdg2::Quest::CreateParameters renderQuestParameters;
-        renderQuestParameters.name = "e2-visual-render";
-        renderQuestParameters.artifactUses.append({.name = "visual-moment", .artifact = momentArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
-        renderQuestParameters.artifactUses.append({.name = "backbuffer", .artifact = backbufferArtifact, .access = rdg2::ArtifactAccess::READ_WRITE});
-        renderQuestParameters.execute = [this, momentArtifact, backbufferArtifact](rdg2::QuestContext & context) {
-            auto momentRelic = context.read<VisualMomentEntity>(momentArtifact);
-            auto frameRelic  = context.read<rdg2::SwapchainFrameEntity>(backbufferArtifact);
-            if (!momentRelic || !frameRelic) return rdg2::QuestResult::failed("visual moment or acquired backbuffer is unavailable");
-
-            auto * visualMoment = RuntimeType::cast<VisualMomentImpl>(momentRelic->moment.get());
-            if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
-
-            mRenderTarget.setColorTarget(0, frameRelic->frame.view);
-            if (!recordVisualMoment(context, *visualMoment)) return rdg2::QuestResult::failed("failed to record visual moment");
-
-            // The physical swapchain frame is unchanged; publishing a new relic records the
-            // semantic transition from acquired to rendered for downstream graph ordering.
-            context.publish(backbufferArtifact, frameRelic.value);
-            return rdg2::QuestResult::succeeded();
-        };
-        auto renderQuest = rdg2::Quest::create(renderQuestParameters);
-        auto frameEnd    = rdg2::createFrameEndQuest({.swapchain = mSwapchain, .backbuffer = backbufferArtifact});
-
-        auto plan = compileVisualFramePlan(frameBegin, renderQuest, frameEnd);
+        // Artifacts and quests are stable domain-owned identities, while the plan is a
+        // frame-local compilation over the relics and workload available for this moment.
+        auto plan = compileVisualFramePlan(mFrameBeginQuest, mPrepareSscQuest, mRenderQuest, mFrameEndQuest);
         if (!plan) {
             GN_WARN(sLogger, "Failed to compile visual frame plan; skipping frame.");
             return;
@@ -197,7 +189,69 @@ private:
         uint32_t        indexCount = 0;
     };
 
-    bool recordVisualMoment(rdg2::QuestContext & context, const VisualMomentImpl & moment) {
+    bool initFrameGraph() {
+        mMomentArtifact     = rdg2::Artifact::create("e2.visual-moment");
+        mBackbufferArtifact = rdg2::Artifact::create("e2.backbuffer");
+        mSscArtifact        = rdg2::Artifact::create("e2.shared-shader-constants");
+        if (!mMomentArtifact || !mBackbufferArtifact || !mSscArtifact) {
+            GN_ERROR(sLogger, "Failed to create persistent visual-domain artifacts.");
+            return false;
+        }
+
+        mFrameBeginQuest = rdg2::createFrameBeginQuest({.swapchain = mSwapchain, .backbuffer = mBackbufferArtifact});
+
+        rdg2::Quest::CreateParameters prepareSscParameters;
+        prepareSscParameters.name = "e2-prepare-ssc";
+        prepareSscParameters.artifactUses.append({.name = "visual-moment", .artifact = mMomentArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        prepareSscParameters.artifactUses.append({.name = "ssc", .artifact = mSscArtifact, .access = rdg2::ArtifactAccess::DISCARD_WRITE});
+        prepareSscParameters.execute = [this](rdg2::QuestContext & context) {
+            auto momentRelic = context.read<VisualMomentEntity>(mMomentArtifact);
+            if (!momentRelic) return rdg2::QuestResult::failed("visual moment is unavailable for SSC preparation");
+            auto * visualMoment = RuntimeType::cast<VisualMomentImpl>(momentRelic->moment.get());
+            if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
+
+            auto snapshot = prepareSharedShaderConstants(*visualMoment);
+            if (snapshot.set0Resources.empty()) return rdg2::QuestResult::failed("FX2 SSC snapshot has no resources");
+            for (auto & payload : snapshot.set0Payloads) context.emit(payload);
+            context.publish(mSscArtifact, AutoRef<rdg2::Entity>(new SscSnapshotEntity(std::move(snapshot))));
+            return rdg2::QuestResult::succeeded();
+        };
+        mPrepareSscQuest = rdg2::Quest::create(prepareSscParameters);
+
+        rdg2::Quest::CreateParameters renderParameters;
+        renderParameters.name = "e2-visual-render";
+        renderParameters.artifactUses.append({.name = "visual-moment", .artifact = mMomentArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        renderParameters.artifactUses.append({.name = "ssc", .artifact = mSscArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        renderParameters.artifactUses.append({.name = "backbuffer", .artifact = mBackbufferArtifact, .access = rdg2::ArtifactAccess::READ_WRITE});
+        renderParameters.execute = [this](rdg2::QuestContext & context) {
+            auto momentRelic = context.read<VisualMomentEntity>(mMomentArtifact);
+            auto sscRelic    = context.read<SscSnapshotEntity>(mSscArtifact);
+            auto frameRelic  = context.read<rdg2::SwapchainFrameEntity>(mBackbufferArtifact);
+            if (!momentRelic || !sscRelic || !frameRelic)
+                return rdg2::QuestResult::failed("visual moment, SSC snapshot, or acquired backbuffer is unavailable");
+
+            auto * visualMoment = RuntimeType::cast<VisualMomentImpl>(momentRelic->moment.get());
+            if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
+
+            mRenderTarget.setColorTarget(0, frameRelic->frame.view);
+            if (!recordVisualMoment(context, *visualMoment, sscRelic->snapshot)) return rdg2::QuestResult::failed("failed to record visual moment");
+
+            // The physical swapchain frame is unchanged; publishing a new relic records the
+            // semantic transition from acquired to rendered for downstream graph ordering.
+            context.publish(mBackbufferArtifact, frameRelic.value);
+            return rdg2::QuestResult::succeeded();
+        };
+        mRenderQuest   = rdg2::Quest::create(renderParameters);
+        mFrameEndQuest = rdg2::createFrameEndQuest({.swapchain = mSwapchain, .backbuffer = mBackbufferArtifact});
+
+        if (!mFrameBeginQuest || !mPrepareSscQuest || !mRenderQuest || !mFrameEndQuest) {
+            GN_ERROR(sLogger, "Failed to create persistent visual-domain quests.");
+            return false;
+        }
+        return true;
+    }
+
+    fx2::SharedShaderConstants::Snapshot prepareSharedShaderConstants(const VisualMomentImpl & moment) {
         const bool         haveCamera = !moment.cameras.empty();
         const WorldVector3 eye =
             haveCamera ? moment.cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
@@ -226,9 +280,13 @@ private:
             if (mSsc->set0.camera.farPlane <= mSsc->set0.camera.nearPlane) mSsc->set0.camera.farPlane = mSsc->set0.camera.nearPlane + 1000.f;
         }
 
-        auto snapshot = mSsc->takeSnapshot();
-        for (auto & payload : snapshot.set0Payloads) context.emit(payload);
+        return mSsc->takeSnapshot();
+    }
 
+    bool recordVisualMoment(rdg2::QuestContext & context, const VisualMomentImpl & moment, const fx2::SharedShaderConstants::Snapshot & sscSnapshot) {
+        const bool         haveCamera = !moment.cameras.empty();
+        const WorldVector3 eye =
+            haveCamera ? moment.cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
         auto raster = GpuRaster::create("e2-visual", {.gpu = mGpu, .target = &mRenderTarget});
         if (!raster) return false;
 
@@ -255,7 +313,7 @@ private:
                 dp.ps       = mPs;
                 dp.geometry = geom;
                 dp.resources.resize(1);
-                dp.resources[0] = snapshot.set0Resources;
+                dp.resources[0] = sscSnapshot.set0Resources;
                 dp.immediates   = referenceTo(new SimpleBlob<uint8_t>(sizeof(dc), reinterpret_cast<const uint8_t *>(&dc)));
                 raster->draw(dp);
             }
@@ -299,6 +357,13 @@ private:
     AutoRef<Texture>                     mDepth;
     AutoRef<GpuShader>                   mVs, mPs;
     AutoRef<fx2::SharedShaderConstants>  mSsc;
+    rdg2::ArtifactRef                    mMomentArtifact;
+    rdg2::ArtifactRef                    mBackbufferArtifact;
+    rdg2::ArtifactRef                    mSscArtifact;
+    rdg2::QuestRef                       mFrameBeginQuest;
+    rdg2::QuestRef                       mPrepareSscQuest;
+    rdg2::QuestRef                       mRenderQuest;
+    rdg2::QuestRef                       mFrameEndQuest;
     RasterTarget                         mRenderTarget;
     std::unordered_map<int64_t, GpuMesh> mMeshCache;
     uint32_t                             mFrameCounter = 0;
@@ -312,9 +377,10 @@ private:
 
 namespace GN::e2 {
 
-rdg2::PlanRef compileVisualFramePlan(rdg2::QuestRef frameBegin, rdg2::QuestRef visualRender, rdg2::QuestRef frameEnd) {
+rdg2::PlanRef compileVisualFramePlan(rdg2::QuestRef frameBegin, rdg2::QuestRef prepareSsc, rdg2::QuestRef visualRender, rdg2::QuestRef frameEnd) {
     rdg2::Plan::CompileParameters parameters;
     parameters.quests.append(std::move(frameBegin));
+    parameters.quests.append(std::move(prepareSsc));
     parameters.quests.append(std::move(visualRender));
     parameters.quests.append(std::move(frameEnd));
     return rdg2::Plan::compile(parameters);
