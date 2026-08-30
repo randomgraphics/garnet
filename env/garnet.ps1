@@ -147,7 +147,7 @@ if( check_env_folder "JAVA_HOME" ) {
 if (-not (Test-Path "$GARNET_ROOT\env\.pyvenv\Scripts\Activate.ps1")) {
     # setup python virtual environment for the first time
     write-host "Setting up python virtual environment..."
-    python3 -m venv $GARNET_ROOT\env\.pyvenv
+    python.exe -m venv $GARNET_ROOT\env\.pyvenv
 }
 if ( Test-Path "$GARNET_ROOT\env\.pyvenv\Scripts\Activate.ps1" ) {
     & "$GARNET_ROOT\env\.pyvenv\Scripts\Activate.ps1"
