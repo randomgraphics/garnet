@@ -51,8 +51,9 @@ fi
 # Setup Python Virtual Environment
 # ================================
 echo "Setting up Python virtual environment..."
-python3 -m venv ${GARNET_ROOT}/env/.pyvenv
-source ${GARNET_ROOT}/env/.pyvenv/bin/activate
+export GARNET_PYVENV="${GARNET_PYVENV:-${GARNET_ROOT}/.pyvenv}"
+python3 -m venv "${GARNET_PYVENV}"
+source "${GARNET_PYVENV}/bin/activate"
 pip install --upgrade pip
 pip install -r ${GARNET_ROOT}/env/requirements.txt
 
@@ -122,6 +123,8 @@ echo Garnet build environment ready to use. Happy coding!
 echo
 echo "USERNAME         = $USER"
 echo "GARNET_ROOT      = $GARNET_ROOT"
+echo "GARNET_PYVENV    = $GARNET_PYVENV"
+echo "GARNET_BUILD_DIR = ${GARNET_BUILD_DIR:-build}"
 echo "VULKAN_SDK       = $VULKAN_SDK (required to build Vulkan related features)" 
 echo "ANDROID_SDK_ROOT = $ANDROID_SDK_ROOT (required for Android build)"
 echo "ANDROID_NDK_ROOT = $ANDROID_NDK_ROOT (required for Android build)"
