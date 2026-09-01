@@ -202,7 +202,7 @@ TEST_CASE("StateTransition: texture transition and getTextureState", "[rdg][stat
     auto wf = rg->createWorkflow("wf");
     wf.appendTask("task", action, args);
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);
@@ -256,7 +256,7 @@ TEST_CASE("StateTransition: buffer transition and getBufferState", "[rdg][state-
     auto wf = rg->createWorkflow("wf");
     wf.appendTask("task", action, args);
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(sub);
     CHECK(sub->result().executionResult == Action::PASSED);
 
@@ -305,7 +305,7 @@ TEST_CASE("StateTransition: backbuffer API with null or no image", "[rdg][state-
     auto wf = rg->createWorkflow("wf");
     wf.appendTask("task", action, args);
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(sub);
     CHECK(sub->result().executionResult == Action::PASSED);
 }

@@ -18,7 +18,7 @@ TEST_CASE("GPU2: Buffer setContent and readContent (device-local)", "[gpu2][buff
     auto buf = Buffer::create("test-buf", Buffer::CreateParameters {.context = gpu, .size = sz, .mappable = false});
     if (!buf) SKIP("Device-local buffer unavailable");
 
-    REQUIRE(buf->setContent(ArrayProxy<const uint8_t>((const uint8_t *) src.data(), sz)));
+    REQUIRE(buf->setContent(ArrayView<const uint8_t>((const uint8_t *) src.data(), sz)));
 
     auto dst = buf->readContent();
     REQUIRE(dst.size() == sz);
@@ -37,11 +37,11 @@ TEST_CASE("GPU2: Buffer setContent with offset (device-local)", "[gpu2][buffer][
 
     // Zero-fill then write the second half
     const std::vector<uint32_t> zeros(kCount, 0);
-    REQUIRE(buf->setContent(ArrayProxy<const uint8_t>((const uint8_t *) zeros.data(), kSz)));
+    REQUIRE(buf->setContent(ArrayView<const uint8_t>((const uint8_t *) zeros.data(), kSz)));
 
     const std::vector<uint32_t> patch = {0xDEAD, 0xBEEF, 0xCAFE, 0xF00D};
     const size_t                half  = kSz / 2;
-    REQUIRE(buf->setContent(ArrayProxy<const uint8_t>((const uint8_t *) patch.data(), half), half));
+    REQUIRE(buf->setContent(ArrayView<const uint8_t>((const uint8_t *) patch.data(), half), half));
 
     auto dst = buf->readContent();
     REQUIRE(dst.size() == kSz);

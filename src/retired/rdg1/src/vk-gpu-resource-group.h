@@ -25,7 +25,7 @@ public:
 
     GpuContext & gpu() const override { return *mGpu; }
 
-    void setResourceViews(size_t slot, size_t offset, SafeArrayAccessor<const GpuResourceView> views) override;
+    void setResourceViews(size_t slot, size_t offset, ArrayView<const GpuResourceView> views) override;
     void addToReadWriteList(Arguments::ArtifactReadWriteList & list) const override;
 
     vk::DescriptorSetLayout vkLayout() const { return mLayout; }

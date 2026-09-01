@@ -293,8 +293,8 @@ bool GpuResourceStateTrackerVulkan::addTransferSrcImage(TextureVulkanBase * tex,
     return addTexture(tex, view, state);
 }
 
-std::vector<uint64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
-    std::vector<uint64_t> invalid;
+std::vector<int64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
+    std::vector<int64_t> invalid;
     for (size_t setIdx = 0; setIdx < table.size(); ++setIdx) {
         const auto & set = table[setIdx];
         for (size_t bindingIdx = 0; bindingIdx < set.size(); ++bindingIdx) {

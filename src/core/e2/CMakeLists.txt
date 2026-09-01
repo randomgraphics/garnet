@@ -10,10 +10,16 @@ list(APPEND sources ${e2_sources})
 if(VULKAN_FOUND)
     set(_e2_shader_dir     ${CMAKE_CURRENT_SOURCE_DIR}/e2/vk-shaders)
     set(_e2_shader_out_dir ${CMAKE_CURRENT_BINARY_DIR}/e2)
+    set(_fx2_shader_dir    ${CMAKE_CURRENT_SOURCE_DIR}/fx2/vk-shaders)
+    set(_e2_fx2_shader_headers
+        ${_fx2_shader_dir}/camera-ubo.h
+        ${_fx2_shader_dir}/scene-ubo.h)
 
     GN_compile_glsl_shaders(_e2_shader_hdrs
         SOURCES ${_e2_shader_dir}/box.vert ${_e2_shader_dir}/box.frag
         OUT_DIR ${_e2_shader_out_dir}
+        INCLUDE_DIRS ${_fx2_shader_dir}
+        DEPENDS ${_e2_fx2_shader_headers}
         COMMENT "Compiling e2 GLSL to SPIR-V"
     )
 

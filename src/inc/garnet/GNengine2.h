@@ -10,9 +10,8 @@
 
 // engine2 subheaders below must only be included through this file (__GN_INSIDE_ENGINE2_H__ is checked there).
 #define __GN_INSIDE_ENGINE2_H__ 1
-#include "e2/thing.h"
+#include "e2/e2.h"
 #include "e2/spatial.h"
-#include "e2/photometry.h"
 #include "e2/visual.h"
 #include "e2/world.h"
 #include "e2/universe.h"

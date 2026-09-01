@@ -110,8 +110,8 @@ struct Scene {
     template<typename T>
     struct TypedSurface {
         // Legacy GPU2 surface type was removed; keep the test compiling by treating it as an opaque handle.
-        AutoRef<GN::gpu2::RootEntity> g;
-        DynaArray<T>                  c;
+        AutoRef<GN::RCRT64> g;
+        DynaArray<T>        c;
 
         void clear() {
             g.clear();

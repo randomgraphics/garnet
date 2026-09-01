@@ -1,19 +1,10 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
-// Per-frame constants (camera + lights). set = 0, binding = 0.
-// Field order/layout must match GN::e2::FrameConstants in e2-internal.h.
-//
-// All positions here are camera-relative: the CPU rebases every absolute coordinate against
-// the primary camera in exact integer space, so "world" below means world orientation with
-// the camera at the origin, in meters. viewProj therefore carries no translation.
-layout(std140, set = 0, binding = 0) uniform FrameBlock {
-    mat4 viewProj;
-    vec4 ambient;
-    vec4 lightPosition[4];
-    vec4 lightColor[4];
-    int  lightCount;
-}
-u_frame;
+#include "camera-ubo.h"
+
+// E2 rebases all positions against the observing camera before taking the FX2 snapshot, so
+// the FX2 cameraPosition is zero and its view matrix carries orientation only.
 
 // Per-draw constants. Must match GN::e2::DrawConstants.
 layout(push_constant) uniform DrawBlock {
@@ -36,5 +27,5 @@ void main() {
     // near-uniform box scales this simple world uses.
     vWorldNormal = mat3(pc.model) * inNormal;
     vColor       = pc.baseColor.rgb;
-    gl_Position  = u_frame.viewProj * worldPos;
+    gl_Position  = u_camera.projViewMatrix * worldPos;
 }

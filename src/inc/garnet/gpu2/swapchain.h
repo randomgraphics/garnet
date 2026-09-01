@@ -6,8 +6,8 @@
 
 namespace GN::gpu2 {
 
-struct Swapchain : RootEntity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+struct Swapchain : RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateDesc {
         AutoRef<GpuContext> gpu;
@@ -55,7 +55,7 @@ struct Swapchain : RootEntity {
     virtual void present(GpuPayload & waitFor) = 0;
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

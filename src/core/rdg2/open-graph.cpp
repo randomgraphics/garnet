@@ -92,7 +92,7 @@ struct TokenImpl final : public Token, private OpaqueBase<TokenImpl> {
 
     // One waiter entry per dependency edge; duplicates of the same node are allowed.
     /// Nodes blocked on this token. Duplicates represent multiple edges from the same node.
-    ArrayContainer<NodeImpl *> waiters;
+    DynaArray<NodeImpl *> waiters;
 
     /// Creates a token with a human-readable name.
     TokenImpl(const StrA & n, Graph * graph): Token(TYPE_INFO(), n), name(n), mGraph(graph) {}
@@ -102,7 +102,7 @@ struct TokenImpl final : public Token, private OpaqueBase<TokenImpl> {
     bool hasValidTag() const { return tag == kTag; }
 
     /// Callable storage for artifact publish signal connections; sigslot keeps a pointer to this object.
-    std::function<void(const Artifact::Content<> &)> artifactPublished;
+    std::function<void(const Artifact::Relic<> &)> artifactPublished;
     /// Disconnects the artifact signal when this token is destroyed or reused.
     Tether artifactPublishedTether;
 
@@ -238,9 +238,9 @@ private:
     mutable uint64_t mEnqueueOrdinal = 0;
     // Ownership of heap nodes and tokens.
     /// Owns all heap-allocated nodes for this graph instance.
-    ArrayContainer<AutoRef<NodeImpl>> mNodeRegistry;
+    DynaArray<AutoRef<NodeImpl>> mNodeRegistry;
     /// Owns all heap Token objects; freed in ~OpenGraphImpl (dep tokens, completion, artifact version).
-    ArrayContainer<AutoRef<TokenImpl>> mAllTokens;
+    DynaArray<AutoRef<TokenImpl>> mAllTokens;
     // Ready queue: lower SchedulingClass and higher int priority first; stable tie-breaker.
     /// Priority-queue element for a runnable node.
     struct ReadyEntry {
@@ -580,7 +580,7 @@ TokenPtr OpenGraphImpl::getArtifactVersionToken(const ArtifactPtr & ap, NeverOve
         ++target;
     }
 
-    t->artifactPublished = [token = t.get(), target](const Artifact::Content<> & content) {
+    t->artifactPublished = [token = t.get(), target](const Artifact::Relic<> & content) {
         if (content.version < target) { return; }
         auto graph = token->graph().promote();
         if (!graph) { return; }

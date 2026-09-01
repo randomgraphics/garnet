@@ -122,8 +122,12 @@ def cmake_config(args, build_dir, build_type):
     elif 'Windows' != platform.system():
         if not args.use_makefile: config += " -GNinja"
         if args.use_clang:
-            clang_version = "" if "Darwin" == platform.system() else "-15"
-            config += f" -DCMAKE_C_COMPILER=clang{clang_version} -DCMAKE_CXX_COMPILER=clang++{clang_version}"
+            # Select a matching compiler pair so C and C++ never use different Clang versions.
+            if shutil.which("clang-15") and shutil.which("clang++-15"):
+                clang, clangxx = "clang-15", "clang++-15"
+            else:
+                clang, clangxx = "clang", "clang++"
+            config += f" -DCMAKE_C_COMPILER={clang} -DCMAKE_CXX_COMPILER={clangxx}"
     cmake(build_dir, config)
 
 def print_compiler_info():
@@ -160,7 +164,7 @@ def build_all(args, build_dir, build_type):
 # parse command line arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-a", dest="android_build", action="store_true", help="Build for Android")
-ap.add_argument("-b", dest="build_dir", default="build", help="Build output folder.")
+ap.add_argument("-b", dest="build_dir", default=os.environ.get("GARNET_BUILD_DIR", "build"), help="Build output folder.")
 ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake config only. Skip cmake build.")
 ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
 ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")

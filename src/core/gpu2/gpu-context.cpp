@@ -1,24 +1,10 @@
 #include "pch.h"
 #include "gpu-context.h"
 #include "vk-gpu-context.h"
-#include <mutex>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
 
 namespace GN::gpu2 {
-
-// =============================================================================
-// RootEntity constructor
-// =============================================================================
-
-static uint64_t nextRootEntityId() {
-    static std::mutex m;
-    static uint64_t   counter = 0;
-    std::lock_guard   lk(m);
-    return counter++;
-}
-
-GN_API RootEntity::RootEntity(const RuntimeType::TypeInfo & type, const StrA & name_): RefCounter(), RuntimeType(type), id(nextRootEntityId()), name(name_) {}
 
 // =============================================================================
 // API resolution

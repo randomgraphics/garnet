@@ -1,0 +1,109 @@
+# Assignment: E2 Visual Backend on FX2 and RDG2
+
+---
+
+## Goals
+
+Refactor the engine2 visual moment and visual domain path around the new FX2 and RDG2 boundaries. A world captures a fixed, self-contained visual moment tree. The visual domain consumes that immutable snapshot, chooses the concrete frame workload, compiles it as an RDG2 closed plan, and executes it.
+
+Keep FX2 limited to atomic, graph-agnostic rendering features over gpu2. Keep RDG2 limited to the generic closed render-graph framework. All adaptation between engine snapshot data, FX2 effects, and RDG2 quests belongs to the E2 visual backend.
+
+---
+
+## Design
+
+### Ownership boundaries
+
+World and visual facets own live simulation state. `VisualMoment` owns only fixed render-facing state captured under the world's synchronization boundary. FX2 accepts render-space values and produces resource tables, draw parameters, and sealed GPU payloads without knowing about graphs or worlds. RDG2 orders declared artifact work, gathers payloads, submits them, and presents. `VisualDomain` is the composition root for all three.
+
+### Frame flow
+
+For each submitted visual moment, E2 seals the snapshot in an imported RDG2 artifact and builds a concrete closed frame plan:
+
+`frame begin (acquire) -> visual render (moment + backbuffer) -> frame end (present)`
+
+The render quest reads only the sealed moment relic, converts exact camera-relative world coordinates to float meters, snapshots FX2 shared shader constants, records draw work, republishes the rendered backbuffer relic, and emits all FX2 and raster payloads. RDG2 owns submit and present ordering.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 2 — closed frame backend implemented and validated end to end
+  Phase 0.1: documented the visual snapshot, effect adaptation, and closed frame-plan flow
+  Phase 1.1: moved frame acquire, render, gathered submit, and present onto an RDG2 closed plan
+  Phase 1.2: adapted camera-relative moment state into FX2 SSC and made E2 shaders include FX2's canonical frame-global UBO definitions
+  Phase 2.1: added CPU coverage for the fixed frame skeleton and missing-acquire rejection
+  Phase 2.2: documented the implemented module boundaries, relic flow, and future workload evolution
+  Phase 2: debug build, style check, focused E2/RDG2/FX2 tests, and 60-frame headless sample passed
+In progress: none — milestone complete in commit 1610a0bb; assignment archived
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Public E2 API: `src/inc/garnet/e2/visual.h`, `src/inc/garnet/e2/world.h`
+E2 implementation: `src/core/e2/e2-internal.h`, `src/core/e2/visual.cpp`, `src/core/e2/simple-world.cpp`
+FX2 API: `src/inc/garnet/fx2/shared-shader-constants.h`, `src/inc/garnet/fx2/pbr.h`
+RDG2 API and design: `src/inc/garnet/rdg2/closed-graph.h`, `src/inc/garnet/rdg2/README.md`
+Tests: `src/core/e2/test`, `src/core/rdg2/test`, `src/core/fx2/test`
+
+--- BUILD / CI ---
+
+`python.exe env/bin/build.py d`
+`build/debug/bin/GNtest-internal "[e2]"`
+`build/debug/bin/GNtest-internal "[rdg2][closed]"`
+`build/debug/bin/GNtest-internal "[fx2]"`
+`python.exe env/bin/cit.py -l`
+
+--- WORKFLOW / CONVENTIONS ---
+
+- FX2 must not include or reference E2 or RDG2.
+- RDG2 stays generic and must not include or reference E2.
+- E2 may include the monolithic `GNfx2.h` and `GNrdg2.h` headers in implementation files.
+- A closed plan observes only fixed moment/relic data and declared artifacts; it never reaches back into live world state.
+- Exact world-coordinate rebasing happens in E2 before values cross into FX2 render space.
+- Per-frame GPU submission and presentation go through RDG2 execution.
+- Preserve Vulkan teardown ordering and avoid render-critical blocking upload APIs.
+
+--- TASK BREAKDOWN ---
+
+Phase 0: Architecture
+─────────────────────────────────────────────────────────────────
+  Task 0.1: Define the E2, FX2, and RDG2 ownership boundaries and fixed frame flow
+    Verify: assignment design agrees with current public APIs and RDG2 closed-graph invariants
+    Commit: "docs(e2): define visual backend composition (Phase 0.1)"
+
+Phase 1: Closed frame execution
+─────────────────────────────────────────────────────────────────
+  Task 1.1: Adapt visual moments and frame lifecycle into an RDG2 closed plan
+    Verify: E2 render path compiles and direct submit/present calls are absent from `visual.cpp`
+    Commit: "refactor(e2): execute visual moments through rdg2 (Phase 1.1)"
+
+  Task 1.2: Adapt visual moment camera and lighting state into FX2 shared shader constants
+    Verify: shaders and C++ layouts consume FX2 set-0 resources; FX2 remains free of E2/RDG2 references
+    Commit: "refactor(e2): source frame constants from fx2 (Phase 1.2)"
+
+Phase 2: Verification and documentation
+─────────────────────────────────────────────────────────────────
+  Task 2.1: Add CPU-testable coverage for fixed moment graph construction and dependency order
+    Verify: focused E2 and RDG2 tests pass without requiring a window where possible
+    Commit: "test(e2): cover visual moment frame planning (Phase 2.1)"
+
+  Task 2.2: Document the implemented backend and remaining visual-moment evolution
+    Verify: E2 README describes snapshot ownership, frame plan, and extension points
+    Commit: "docs(e2): document fx2-rdg2 visual backend (Phase 2.2)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 0 (architecture):
+  agent/E2_VISUAL_BACKEND.txt — NEW: resumable architecture and implementation assignment
+
+Phase 1 (closed frame execution):
+  src/core/e2/e2-internal.h — E2-owned immutable moment relic adapter and draw constants
+  src/core/e2/visual.cpp — compose FX2 effects and RDG2 quests into the frame backend
+  src/core/e2/CMakeLists.txt — compile E2 shaders against FX2's canonical SSC UBO headers
+  src/core/e2/vk-shaders/box.vert — consume FX2 camera constants
+  src/core/e2/vk-shaders/box.frag — consume FX2 scene-light constants
+
+Phase 2 (verification and documentation):
+  src/core/e2/test/visual-graph-test.cpp — NEW: fixed graph shape and snapshot-boundary coverage
+  src/core/e2/test/internal-test.cmake — register coverage
+  src/core/e2/README.md — document the visual backend design

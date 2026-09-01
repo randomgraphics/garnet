@@ -16,7 +16,7 @@ public:
     bool init(const CreateParameters & params);
 
     Mapped               map() override;
-    bool                 setContent(ArrayProxy<const uint8_t> data, size_t offset = 0) override;
+    bool                 setContent(ArrayView<const uint8_t> data, size_t offset = 0) override;
     std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const override;
 
     vk::Buffer          nativeBuffer() const { return mRvBuffer ? mRvBuffer->handle() : vk::Buffer {}; }

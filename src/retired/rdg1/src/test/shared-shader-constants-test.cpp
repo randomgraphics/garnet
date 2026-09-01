@@ -97,7 +97,7 @@ TEST_CASE("SharedShaderConstants: build() + submit() succeeds", "[rdg][shared-co
     auto sg = ssc->build(*rg);
     REQUIRE(!sg.workflows.empty());
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(sg.workflows.data(), sg.workflows.size())});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(sg.workflows.data(), sg.workflows.size())});
     REQUIRE(sub);
     auto res = sub->result();
     CHECK(res.executionResult != Action::ExecutionResult::FAILED);
@@ -121,7 +121,7 @@ TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[r
     {
         auto sg = ssc->build(*rg);
         REQUIRE(!sg.workflows.empty());
-        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(sg.workflows.data(), sg.workflows.size())});
+        auto sub = rg->submit({.workflows = ArrayView<Workflow>(sg.workflows.data(), sg.workflows.size())});
         REQUIRE(sub);
         CHECK(sub->result().executionResult != Action::ExecutionResult::FAILED);
     }
@@ -132,7 +132,7 @@ TEST_CASE("SharedShaderConstants: build() called twice advances ring slots", "[r
     {
         auto sg = ssc->build(*rg);
         REQUIRE(!sg.workflows.empty());
-        auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(sg.workflows.data(), sg.workflows.size())});
+        auto sub = rg->submit({.workflows = ArrayView<Workflow>(sg.workflows.data(), sg.workflows.size())});
         REQUIRE(sub);
         CHECK(sub->result().executionResult != Action::ExecutionResult::FAILED);
     }

@@ -145,7 +145,7 @@ public:
         }
         friend Iterator operator++(Iterator & it, int) {
             Iterator ret(it);
-            it.moveToNext();
+            ++it;
             return ret;
         }
 
@@ -199,7 +199,7 @@ public:
         // i++
         friend ConstIterator operator++(ConstIterator & it, int) {
             ConstIterator ret(it);
-            it.moveToNext();
+            ++it;
             return ret;
         }
 

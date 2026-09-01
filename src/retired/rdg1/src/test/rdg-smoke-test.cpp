@@ -34,7 +34,7 @@ TEST_CASE("RDG smoke: prepare then present immediately (no draws)", "[rdg][smoke
     presentArgs->backbuffer = backbuffer;
     wf.appendTask(Workflow::Task("Present backbuffer", presentAction, presentArgs));
 
-    auto submission = renderGraph->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto submission = renderGraph->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(submission);
     REQUIRE(submission->result().executionResult != Action::ExecutionResult::FAILED);
 }
@@ -86,7 +86,7 @@ TEST_CASE("RDG smoke: clear-to-red headless render", "[rdg][smoke][gpu]") {
     presentTask.arguments   = presentArgs;
     renderWorkflow.appendTask(std::move(presentTask));
 
-    auto submission = renderGraph->submit({.workflows = SafeArrayAccessor<Workflow>(&renderWorkflow, 1)});
+    auto submission = renderGraph->submit({.workflows = ArrayView<Workflow>(&renderWorkflow, 1)});
     REQUIRE(submission);
 
     auto result = submission->result();

@@ -3,6 +3,7 @@
 // This header is private to src/core/e2 and is NOT part of the public e2 interface.
 
 #include <garnet/GNengine2.h>
+#include <garnet/GNrdg2.h>
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/mat3x3.hpp>
@@ -14,8 +15,13 @@
 
 namespace GN::e2 {
 
+/// Compile the fixed outer frame skeleton used by the visual backend. Keeping this helper
+/// independent of swapchain/GPU construction makes the E2-owned composition policy directly
+/// testable; the four quests themselves remain generic RDG2 units.
+rdg2::PlanRef compileVisualFramePlan(rdg2::QuestRef frameBegin, rdg2::QuestRef prepareSsc, rdg2::QuestRef visualRender, rdg2::QuestRef frameEnd);
+
 // Query a form tree for facets that match, or derive from, the requested runtime type.
-inline void queryFacetsByType(Form & root, const RuntimeType::TypeInfo & type, ArrayBody<Ref<Facet>> & result) {
+inline void queryFacetsByType(Form & root, const RuntimeType::TypeInfo & type, DynaArray<Ref<Facet>> & result) {
     for (auto & facet : root.facets()) {
         if (facet->typeInfo().isDerivedFrom(type)) result.append(facet);
     }
@@ -34,7 +40,7 @@ struct MeshData {
         glm::vec3 normal;
     };
 
-    UniqueIdentifier    id = 0; ///< stable identity used as the visual domain's GPU-cache key
+    int64_t             id = 0; ///< stable identity used as the visual domain's GPU-cache key
     DynaArray<Vertex>   vertices;
     DynaArray<uint16_t> indices;
 };
@@ -87,23 +93,8 @@ struct VisualMomentImpl : VisualMoment {
     }
 };
 
-// ---------------------------------------------------------------------------
-// Shader-facing constant layouts (must match src/core/e2/vk-shaders/box.*)
-// ---------------------------------------------------------------------------
-
-constexpr uint32_t kMaxLights = 4;
-
-/// Per-frame uniform block, set = 0, binding = 0. std140 layout.
-struct FrameConstants {
-    glm::mat4 viewProj;                  ///< proj * view, Vulkan clip space (Y already flipped); the view carries no translation
-    glm::vec4 ambient;                   ///< rgb ambient term, a unused
-    glm::vec4 lightPosition[kMaxLights]; ///< xyz camera-relative position in meters (rebased against the primary camera), w unused
-    glm::vec4 lightColor[kMaxLights];    ///< rgb intensity-scaled color, w unused
-    int32_t   lightCount = 0;
-    int32_t   _pad[3]    = {0, 0, 0};
-};
-
-/// Per-draw push constants used by box.vert.
+// Per-draw push constants used by box.vert. Per-frame camera and lighting constants are
+// owned by fx2::SharedShaderConstants and deliberately do not have an E2-local duplicate.
 struct DrawConstants {
     glm::mat4 model;
     glm::vec4 baseColor; ///< rgb base color, a unused

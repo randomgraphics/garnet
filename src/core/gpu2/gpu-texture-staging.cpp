@@ -62,7 +62,7 @@ Buffer::StagedTexture Buffer::loadTextureToStagingBuffer(const StrA & name, Auto
     }
 
     // Build one copy region per face × mip.
-    ArrayContainer<StagedTexture::Region> regions;
+    DynaArray<StagedTexture::Region> regions;
     for (uint32_t f = 0; f < desc.faces; ++f) {
         for (uint32_t l = 0; l < desc.levels; ++l) {
             gfx::img::PlaneCoord pc {0, f, l};

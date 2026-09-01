@@ -6,12 +6,11 @@
 
 #include "e2-internal.h"
 
+#include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <algorithm>
-#include <cmath>
 #include <unordered_map>
 
 #if GN_BUILD_HAS_VULKAN
@@ -37,6 +36,28 @@ struct CameraImpl : Camera {
     explicit CameraImpl(Universe & u): Camera(TYPE_INFO(), u.generateUniqueIdentifier(), "camera") {}
 };
 
+/// RDG2 relic adapter for E2's immutable, ref-counted visual snapshot. The wrapper is the
+/// only cross-domain representation: RDG2 sees an Entity while E2 retains ownership and
+/// type-checking of the underlying moment.
+struct VisualMomentEntity final : rdg2::Entity {
+    GN_REGISTER_RUNTIME_TYPE(rdg2::Entity);
+
+    Ref<VisualMoment> moment;
+
+    explicit VisualMomentEntity(Ref<VisualMoment> moment_): Entity(TYPE_INFO(), "visual-moment"), moment(std::move(moment_)) {}
+};
+
+/// One immutable publication of FX2's frame-global GPU resources. The artifact carrying
+/// these snapshots is stable for the lifetime of the visual domain; its relic version is
+/// what changes from frame to frame.
+struct SscSnapshotEntity final : rdg2::Entity {
+    GN_REGISTER_RUNTIME_TYPE(rdg2::Entity);
+
+    fx2::SharedShaderConstants::Snapshot snapshot;
+
+    explicit SscSnapshotEntity(fx2::SharedShaderConstants::Snapshot snapshot_): Entity(TYPE_INFO(), "ssc-snapshot"), snapshot(std::move(snapshot_)) {}
+};
+
 #if GN_BUILD_HAS_VULKAN
 
 // ---------------------------------------------------------------------------
@@ -55,7 +76,14 @@ struct VisualDomainImpl : VisualDomain {
         // Member destruction alone can't order the surface (a raw handle we own) between the
         // swapchain and the instance, so unwind explicitly while mGpu keeps the instance alive.
         mRenderTarget.setColorTarget(0, {});
-        mFrameUbo.clear();
+        mFrameEndQuest.clear();
+        mRenderQuest.clear();
+        mPrepareSscQuest.clear();
+        mFrameBeginQuest.clear();
+        mSscArtifact.clear();
+        mBackbufferArtifact.clear();
+        mMomentArtifact.clear();
+        mSsc.clear();
         mSwapchain.clear();
         if (mSurface && mOs) {
             mOs->destroyRenderSurface(mGpu->getVulkanInstanceHandle(), mSurface);
@@ -124,72 +152,146 @@ struct VisualDomainImpl : VisualDomain {
             return false;
         }
 
-        mFrameUbo = Buffer::create("e2-frame-ubo", {.context = mGpu, .size = sizeof(FrameConstants)});
-        if (!mFrameUbo) {
-            GN_ERROR(sLogger, "Failed to create frame uniform buffer.");
+        mSsc = fx2::SharedShaderConstants::create({.gpu = mGpu});
+        if (!mSsc) {
+            GN_ERROR(sLogger, "Failed to create FX2 shared shader constants.");
             return false;
         }
 
-        return true;
+        return initFrameGraph();
     }
 
     void render(Ref<VisualMoment> momentBase) override {
         auto * moment = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
         if (!moment) return;
 
-        Swapchain::Frame frame = mSwapchain->prepare();
-        if (frame.view.empty()) {
-            GN_WARN(sLogger, "Swapchain prepare() failed; skipping frame.");
+        if (mMomentArtifact->publish(AutoRef<rdg2::Entity>(new VisualMomentEntity(std::move(momentBase)))) == rdg2::Artifact::Version::OOO()) {
+            GN_WARN(sLogger, "Failed to seal visual moment into a render-graph artifact; skipping frame.");
             return;
         }
-        mRenderTarget.setColorTarget(0, frame.view);
 
-        // Fill the per-frame constants from the first camera and the lights. Rendering is
-        // camera-relative: every absolute position is rebased against the primary camera in
-        // exact integer space, and only the resulting local delta converts to float meters.
-        FrameConstants fc             = {};
-        fc.ambient                    = glm::vec4(0.04f, 0.04f, 0.05f, 0.f);
-        const bool         haveCamera = moment->cameras.size() > 0;
+        // Artifacts and quests are stable domain-owned identities, while the plan is a
+        // frame-local compilation over the relics and workload available for this moment.
+        auto plan = compileVisualFramePlan(mFrameBeginQuest, mPrepareSscQuest, mRenderQuest, mFrameEndQuest);
+        if (!plan) {
+            GN_WARN(sLogger, "Failed to compile visual frame plan; skipping frame.");
+            return;
+        }
+
+        auto execution = rdg2::Execution::run({.plan = plan, .gpu = mGpu, .name = "e2-frame"});
+        if (!execution || execution->status() != rdg2::Execution::Status::SUCCEEDED) { GN_WARN(sLogger, "Visual frame execution failed."); }
+    }
+
+private:
+    struct GpuMesh {
+        AutoRef<Buffer> vb;
+        AutoRef<Buffer> ib;
+        uint32_t        indexCount = 0;
+    };
+
+    bool initFrameGraph() {
+        mMomentArtifact     = rdg2::Artifact::create("e2.visual-moment");
+        mBackbufferArtifact = rdg2::Artifact::create("e2.backbuffer");
+        mSscArtifact        = rdg2::Artifact::create("e2.shared-shader-constants");
+        if (!mMomentArtifact || !mBackbufferArtifact || !mSscArtifact) {
+            GN_ERROR(sLogger, "Failed to create persistent visual-domain artifacts.");
+            return false;
+        }
+
+        mFrameBeginQuest = rdg2::createFrameBeginQuest({.swapchain = mSwapchain, .backbuffer = mBackbufferArtifact});
+
+        rdg2::Quest::CreateParameters prepareSscParameters;
+        prepareSscParameters.name = "e2-prepare-ssc";
+        prepareSscParameters.artifactUses.append({.name = "visual-moment", .artifact = mMomentArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        prepareSscParameters.artifactUses.append({.name = "ssc", .artifact = mSscArtifact, .access = rdg2::ArtifactAccess::DISCARD_WRITE});
+        prepareSscParameters.execute = [this](rdg2::QuestContext & context) {
+            auto momentRelic = context.read<VisualMomentEntity>(mMomentArtifact);
+            if (!momentRelic) return rdg2::QuestResult::failed("visual moment is unavailable for SSC preparation");
+            auto * visualMoment = RuntimeType::cast<VisualMomentImpl>(momentRelic->moment.get());
+            if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
+
+            auto snapshot = prepareSharedShaderConstants(*visualMoment);
+            if (snapshot.set0Resources.empty()) return rdg2::QuestResult::failed("FX2 SSC snapshot has no resources");
+            for (auto & payload : snapshot.set0Payloads) context.emit(payload);
+            context.publish(mSscArtifact, AutoRef<rdg2::Entity>(new SscSnapshotEntity(std::move(snapshot))));
+            return rdg2::QuestResult::succeeded();
+        };
+        mPrepareSscQuest = rdg2::Quest::create(prepareSscParameters);
+
+        rdg2::Quest::CreateParameters renderParameters;
+        renderParameters.name = "e2-visual-render";
+        renderParameters.artifactUses.append({.name = "visual-moment", .artifact = mMomentArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        renderParameters.artifactUses.append({.name = "ssc", .artifact = mSscArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        renderParameters.artifactUses.append({.name = "backbuffer", .artifact = mBackbufferArtifact, .access = rdg2::ArtifactAccess::READ_WRITE});
+        renderParameters.execute = [this](rdg2::QuestContext & context) {
+            auto momentRelic = context.read<VisualMomentEntity>(mMomentArtifact);
+            auto sscRelic    = context.read<SscSnapshotEntity>(mSscArtifact);
+            auto frameRelic  = context.read<rdg2::SwapchainFrameEntity>(mBackbufferArtifact);
+            if (!momentRelic || !sscRelic || !frameRelic)
+                return rdg2::QuestResult::failed("visual moment, SSC snapshot, or acquired backbuffer is unavailable");
+
+            auto * visualMoment = RuntimeType::cast<VisualMomentImpl>(momentRelic->moment.get());
+            if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
+
+            mRenderTarget.setColorTarget(0, frameRelic->frame.view);
+            if (!recordVisualMoment(context, *visualMoment, sscRelic->snapshot)) return rdg2::QuestResult::failed("failed to record visual moment");
+
+            // The physical swapchain frame is unchanged; publishing a new relic records the
+            // semantic transition from acquired to rendered for downstream graph ordering.
+            context.publish(mBackbufferArtifact, frameRelic.value);
+            return rdg2::QuestResult::succeeded();
+        };
+        mRenderQuest   = rdg2::Quest::create(renderParameters);
+        mFrameEndQuest = rdg2::createFrameEndQuest({.swapchain = mSwapchain, .backbuffer = mBackbufferArtifact});
+
+        if (!mFrameBeginQuest || !mPrepareSscQuest || !mRenderQuest || !mFrameEndQuest) {
+            GN_ERROR(sLogger, "Failed to create persistent visual-domain quests.");
+            return false;
+        }
+        return true;
+    }
+
+    fx2::SharedShaderConstants::Snapshot prepareSharedShaderConstants(const VisualMomentImpl & moment) {
+        const bool         haveCamera = !moment.cameras.empty();
         const WorldVector3 eye =
-            haveCamera ? moment->cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
-        if (haveCamera) fc.viewProj = buildViewProj(moment->cameras[0], moment->scale);
-        int lightCount = (int) std::min<size_t>(moment->lights.size(), kMaxLights);
-        for (int i = 0; i < lightCount; ++i) {
-            fc.lightPosition[i] = glm::vec4(moment->scale.toMeters(spatial::toLocal(eye, moment->lights[i].position)), 1.f);
-            fc.lightColor[i]    = glm::vec4(moment->lights[i].color, 0.f);
-        }
-        fc.lightCount = lightCount;
+            haveCamera ? moment.cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
 
-        auto cnc = GpuCnC::create({.gpu = mGpu});
-        if (!cnc) {
-            GN_WARN(sLogger, "Failed to create per-frame upload command list; skipping frame.");
-            return;
-        }
-        cnc->uploadBuffer(mFrameUbo, 0, ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(&fc), sizeof(fc)));
-        AutoRef<GpuPayload> constantsUpload = cnc->seal();
-        if (!constantsUpload) {
-            GN_WARN(sLogger, "Failed to seal per-frame constants upload; skipping frame.");
-            return;
+        mSsc->set0.frameConstants.frameCounter = (int) ++mFrameCounter;
+        mSsc->set0.directLighting.clear();
+        for (const auto & light : moment.lights) {
+            fx2::SharedShaderConstants::DirectLight direct;
+            direct.type            = fx2::SharedShaderConstants::DirectLight::POINT;
+            direct.point.position  = moment.scale.toMeters(spatial::toLocal(eye, light.position));
+            direct.point.intensity = IntensityRGB {light.color.r, light.color.g, light.color.b, Candela {1.f}};
+            mSsc->set0.directLighting.append(direct);
         }
 
-        GpuResourceView uboView;
-        uboView.resource = mFrameUbo;
-        uboView.setBufferViewType(GpuResourceView::BufferView::UNIFORM).setBufferViewOffset(0).setBufferViewSize(sizeof(FrameConstants));
-        GpuResourceTable resources;
-        resources.resize(1);
-        resources[0].resize(1);
-        resources[0][0].resize(1);
-        resources[0][0][0] = uboView;
-
-        auto raster = GpuRaster::create("e2-visual", {.gpu = mGpu, .target = &mRenderTarget});
-        if (!raster) {
-            GN_WARN(sLogger, "Failed to create raster pass; skipping frame.");
-            return;
-        }
-
-        // Only draw geometry when there is a camera to view it through.
         if (haveCamera) {
-            for (auto & r : moment->renderables) {
+            const auto & camera                 = moment.cameras[0];
+            mSsc->set0.camera.cameraPosition    = fx2::Location(0.f);
+            mSsc->set0.camera.cameraOrientation = camera.orientation;
+            mSsc->set0.camera.cameraFov         = ArcDegree(camera.fovYInDegree);
+            mSsc->set0.camera.aspectRatio       = mHeight ? (float) mWidth / (float) mHeight : 1.f;
+            mSsc->set0.camera.nearPlane         = moment.scale.toMeters(camera.nearPlane);
+            mSsc->set0.camera.farPlane          = moment.scale.toMeters(camera.farPlane);
+            mSsc->set0.camera.viewWidthInPixel  = mWidth;
+            mSsc->set0.camera.viewHeightInPixel = mHeight;
+            if (mSsc->set0.camera.nearPlane <= 0.f) mSsc->set0.camera.nearPlane = 0.1f;
+            if (mSsc->set0.camera.farPlane <= mSsc->set0.camera.nearPlane) mSsc->set0.camera.farPlane = mSsc->set0.camera.nearPlane + 1000.f;
+        }
+
+        return mSsc->takeSnapshot();
+    }
+
+    bool recordVisualMoment(rdg2::QuestContext & context, const VisualMomentImpl & moment, const fx2::SharedShaderConstants::Snapshot & sscSnapshot) {
+        const bool         haveCamera = !moment.cameras.empty();
+        const WorldVector3 eye =
+            haveCamera ? moment.cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
+        auto raster = GpuRaster::create("e2-visual", {.gpu = mGpu, .target = &mRenderTarget});
+        if (!raster) return false;
+
+        if (haveCamera) {
+            for (auto & r : moment.renderables) {
                 if (!r.mesh) continue;
                 const GpuMesh * gpuMesh = ensureGpuMesh(*r.mesh);
                 if (!gpuMesh) continue;
@@ -201,41 +303,27 @@ struct VisualDomainImpl : VisualDomain {
                 geom.indices    = RasterGeometry::GeometryBuffer {.buffer = gpuMesh->ib, .offset = 0, .stride = sizeof(uint16_t)};
                 geom.indexCount = gpuMesh->indexCount;
 
-                // Moment transforms stay in world units; the camera-relative delta converts to
-                // float meters only here.
                 DrawConstants dc;
-                dc.model     = glm::translate(glm::mat4(1.f), moment->scale.toMeters(spatial::toLocal(eye, r.translation))) *
-                               glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment->scale.toMeters(r.scaling));
+                dc.model     = glm::translate(glm::mat4(1.f), moment.scale.toMeters(spatial::toLocal(eye, r.translation))) *
+                               glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment.scale.toMeters(r.scaling));
                 dc.baseColor = glm::vec4(r.baseColor, 1.f);
 
                 GpuRaster::DrawParameters dp;
-                dp.vs         = mVs;
-                dp.ps         = mPs;
-                dp.geometry   = geom;
-                dp.resources  = resources;
-                dp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(dc), reinterpret_cast<const uint8_t *>(&dc)));
+                dp.vs       = mVs;
+                dp.ps       = mPs;
+                dp.geometry = geom;
+                dp.resources.resize(1);
+                dp.resources[0] = sscSnapshot.set0Resources;
+                dp.immediates   = referenceTo(new SimpleBlob<uint8_t>(sizeof(dc), reinterpret_cast<const uint8_t *>(&dc)));
                 raster->draw(dp);
             }
         }
 
-        AutoRef<GpuPayload> payload = raster->seal();
-        if (!payload) {
-            GN_WARN(sLogger, "Failed to seal raster pass; skipping frame.");
-            return;
-        }
-
-        GpuContext::SubmitParameters submit("e2-frame");
-        submit.waitFor(frame.ready).appendWork(constantsUpload).appendWork(payload);
-        mGpu->submit(submit);
-        mSwapchain->present(*payload);
+        auto payload = raster->seal();
+        if (!payload) return false;
+        context.emit(payload);
+        return true;
     }
-
-private:
-    struct GpuMesh {
-        AutoRef<Buffer> vb;
-        AutoRef<Buffer> ib;
-        uint32_t        indexCount = 0;
-    };
 
     // Upload a mesh's GPU buffers on first sight; reuse the cached buffers afterwards.
     const GpuMesh * ensureGpuMesh(const MeshData & mesh) {
@@ -251,8 +339,8 @@ private:
             GN_ERROR(sLogger, "Failed to create mesh buffers.");
             return nullptr;
         }
-        if (!gm.vb->setContent(ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.vertices.data()), vbSize)) ||
-            !gm.ib->setContent(ArrayProxy<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.indices.data()), ibSize))) {
+        if (!gm.vb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.vertices.data()), vbSize)) ||
+            !gm.ib->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.indices.data()), ibSize))) {
             GN_ERROR(sLogger, "Failed to upload mesh buffers.");
             return nullptr;
         }
@@ -261,39 +349,26 @@ private:
         return &inserted.first->second;
     }
 
-    glm::mat4 buildViewProj(const Camera::Desc & cam, PhysicalScale scale) const {
-        // Rendering is camera-relative: positions are rebased against the camera before any
-        // float conversion, so the camera sits at the origin and the view carries no translation.
-        glm::quat orientation = cam.orientation;
-        if (glm::dot(orientation, orientation) < 1e-8f) orientation = glm::quat(1.f, 0.f, 0.f, 0.f);
-        orientation = glm::normalize(orientation);
-
-        glm::mat4 view = glm::inverse(glm::mat4_cast(orientation));
-
-        float aspect = (mHeight > 0) ? (float) mWidth / (float) mHeight : 1.f;
-        float fovY   = glm::radians(std::clamp(cam.fovYInDegree, 1.f, 179.f));
-        float nearP  = scale.toMeters(cam.nearPlane);
-        float farP   = scale.toMeters(cam.farPlane);
-        if (nearP <= 0.f) nearP = 0.1f;
-        if (farP <= nearP) farP = nearP + 1000.f;
-
-        glm::mat4 proj = glm::perspectiveRH_ZO(fovY, aspect, nearP, farP);
-        proj[1][1] *= -1.f; // flip Y for Vulkan clip space
-        return proj * view;
-    }
-
-    Universe &                                    mUniverse;
-    Ref<OperatingDomain>                          mOs;
-    AutoRef<GpuContext>                           mGpu;
-    intptr_t                                      mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
-    AutoRef<Swapchain>                            mSwapchain;
-    AutoRef<Texture>                              mDepth;
-    AutoRef<GpuShader>                            mVs, mPs;
-    AutoRef<Buffer>                               mFrameUbo;
-    RasterTarget                                  mRenderTarget;
-    std::unordered_map<UniqueIdentifier, GpuMesh> mMeshCache;
-    uint32_t                                      mWidth  = 1280;
-    uint32_t                                      mHeight = 720;
+    Universe &                           mUniverse;
+    Ref<OperatingDomain>                 mOs;
+    AutoRef<GpuContext>                  mGpu;
+    intptr_t                             mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
+    AutoRef<Swapchain>                   mSwapchain;
+    AutoRef<Texture>                     mDepth;
+    AutoRef<GpuShader>                   mVs, mPs;
+    AutoRef<fx2::SharedShaderConstants>  mSsc;
+    rdg2::ArtifactRef                    mMomentArtifact;
+    rdg2::ArtifactRef                    mBackbufferArtifact;
+    rdg2::ArtifactRef                    mSscArtifact;
+    rdg2::QuestRef                       mFrameBeginQuest;
+    rdg2::QuestRef                       mPrepareSscQuest;
+    rdg2::QuestRef                       mRenderQuest;
+    rdg2::QuestRef                       mFrameEndQuest;
+    RasterTarget                         mRenderTarget;
+    std::unordered_map<int64_t, GpuMesh> mMeshCache;
+    uint32_t                             mFrameCounter = 0;
+    uint32_t                             mWidth        = 1280;
+    uint32_t                             mHeight       = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN
@@ -301,6 +376,15 @@ private:
 } // namespace
 
 namespace GN::e2 {
+
+rdg2::PlanRef compileVisualFramePlan(rdg2::QuestRef frameBegin, rdg2::QuestRef prepareSsc, rdg2::QuestRef visualRender, rdg2::QuestRef frameEnd) {
+    rdg2::Plan::CompileParameters parameters;
+    parameters.quests.append(std::move(frameBegin));
+    parameters.quests.append(std::move(prepareSsc));
+    parameters.quests.append(std::move(visualRender));
+    parameters.quests.append(std::move(frameEnd));
+    return rdg2::Plan::compile(parameters);
+}
 
 Ref<Camera> Camera::create(const CreateParameters & cp) {
     if (!cp.domain) {

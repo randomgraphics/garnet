@@ -318,11 +318,11 @@ bool GN::gfx::BitmapFont::slotInit(Gpu & gpu, uint16_t fontw, uint16_t fonth, si
     mFontSlots = new FontSlot[mMaxSlots];
 
     // initialize font slots
-    float                       stepu = float(rectw) / texwidth;
-    float                       stepv = float(recth) / texheight;
-    uint16_t                    x, y;
-    float                       u, v;
-    SafeArrayAccessor<FontSlot> slot(mFontSlots, mMaxSlots);
+    float               stepu = float(rectw) / texwidth;
+    float               stepv = float(recth) / texheight;
+    uint16_t            x, y;
+    float               u, v;
+    ArrayView<FontSlot> slot(mFontSlots, mMaxSlots);
     for (size_t itex = 0; itex < texcount; ++itex) {
         u = 0;
         x = 0;

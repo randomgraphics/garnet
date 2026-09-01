@@ -9,9 +9,9 @@ namespace GN::gpu2 {
 
 /// Accumulates non-graphics GPU work (compute dispatches and copies), then produces
 /// a sealed GpuPayload for submission via GpuContext::submit().
-struct GpuCnC : public RootEntity {
+struct GpuCnC : public RCRT64 {
 public:
-    GN_API GN_REGISTER_RUNTIME_TYPE(RootEntity);
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
@@ -43,7 +43,7 @@ public:
     /// a GPU copy command is issued to transfer the content into the destination buffer.
     virtual void uploadBuffer(AutoRef<Buffer> dst, uint64_t offset, AutoRef<const Blob> content) = 0;
 
-    void uploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayProxy<const uint8_t> content) {
+    void uploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) {
         uploadBuffer(std::move(dst), offset, referenceTo(new SimpleBlob<uint8_t>(content.size(), content.data())));
     }
 
@@ -59,9 +59,9 @@ public:
 
     /// Upload pixel data from a CPU-visible (mappable) staging buffer into a texture.
     struct BufferToImage {
-        AutoRef<Buffer>          src; ///< CPU-visible staging buffer.
-        AutoRef<Texture>         dst;
-        ArrayProxy<const Region> regions;
+        AutoRef<Buffer>         src; ///< CPU-visible staging buffer.
+        AutoRef<Texture>        dst;
+        ArrayView<const Region> regions;
     };
 
     virtual void copyBufferToImage(const BufferToImage &) = 0;
@@ -72,8 +72,8 @@ public:
     }
 
     struct TextureContent {
-        AutoRef<const Blob>    blob;
-        ArrayContainer<Region> regions;
+        AutoRef<const Blob> blob;
+        DynaArray<Region>   regions;
     };
 
     /// @brief Enqueue a texture download operation. The data is copied from the source texture into an internal staging buffer, then
@@ -81,13 +81,13 @@ public:
     /// downloaded TextureContent on success, or with an empty TextureContent (empty blob, empty regions) if the download failed or was
     /// canceled (e.g. the sealed payload was dropped without submission, or the GpuContext was destroyed before the work completed).
     /// The future never throws.
-    virtual std::future<TextureContent> downloadImage(AutoRef<Texture> src, ArrayProxy<const Region> regions) = 0;
+    virtual std::future<TextureContent> downloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) = 0;
 
     /// Seal the object. Generate payload for all enqueued operations.
     virtual AutoRef<GpuPayload> seal() = 0;
 
 protected:
-    using RootEntity::RootEntity;
+    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

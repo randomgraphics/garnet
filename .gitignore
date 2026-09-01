@@ -1,8 +1,9 @@
 .vscode/
 .codegraph/
 .cache/
-/build*/
+.pyvenv/
 __pycache__/
+/build*/
 tmp/
 *.pyo
 *.pyc

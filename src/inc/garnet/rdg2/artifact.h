@@ -4,11 +4,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <chrono>
 #include <limits>
 #include <type_traits>
 #include <utility>
-#include <variant>
 
 namespace GN::rdg2 {
 
@@ -88,56 +86,62 @@ struct NeverOverflowingCounter {
 };
 
 // ============================================================
-// Array container and proxy
-// ============================================================
-
-template<typename T>
-using ArrayContainer = DynaArray<T, size_t>;
-
-template<typename T>
-using ArrayProxy = SafeArrayAccessor<T>;
-
-// ============================================================
 // Base class of everything with a ID and name.
 // ============================================================
 
+} // namespace GN::rdg2
+
+/// Make NeverOverflowingCounter formattable by fmt (and thus by GN logging, e.g. the
+/// destruction trace in GN::RefCountedRuntimeType).
+template<>
+struct fmt::formatter<GN::rdg2::NeverOverflowingCounter> {
+    constexpr auto parse(fmt::format_parse_context & ctx) { return ctx.begin(); }
+    template<typename FormatContext>
+    auto format(const GN::rdg2::NeverOverflowingCounter & c, FormatContext & ctx) const {
+        if (c.value1) return fmt::format_to(ctx.out(), "{}.{}", c.value1, c.value0);
+        return fmt::format_to(ctx.out(), "{}", c.value0);
+    }
+};
+
+namespace GN::rdg2 {
+
 /// The basic building block of the render graph module. Base class of everything that
-/// needs reference counting and runtime type information.
-struct Entity : public RefCounter, public RuntimeType {
+/// needs reference counting and runtime type information. Ids are process-unique 128-bit
+/// counters.
+struct Entity : public GN::RefCountedRuntimeType<NeverOverflowingCounter> {
     GN_API GN_REGISTER_RUNTIME_TYPE();
 
-    /// ID of the entity. Guaranteed to be unique within the process.
-    const NeverOverflowingCounter id;
-
-    /// Name of the entity. Optional. No uniqueness requirement.
-    const StrA name;
-
-    virtual ~Entity() {
-#if GN_BUILD_DEBUG_ENABLED
-        static auto * logger = GN::getLogger("GN.rdg2");
-        GN_VVTRACE(logger, "Destroying RDG2 entity: name='{}', type = {}, id={}.{}", name, typeInfo().name, id.value0, id.value1);
-#endif
-    }
-
 protected:
-    /// Constructor
+    /// Expose the caller-supplied-id constructor to derived classes.
+    using RefCountedRuntimeType<NeverOverflowingCounter>::RefCountedRuntimeType;
+
+    /// Convenience constructor that automatically generates a unique id for this entity.
+    /// Implemented inside GNcore (artifact.cpp) so the generated id is truly process-unique,
+    /// even across DLL boundaries. The first id is 1; 0 (OOO) is never assigned and can serve
+    /// as an "invalid/unassigned" sentinel.
     GN_API Entity(const RuntimeType::TypeInfo & type, const StrA & name);
 };
 
+#define GN_RDG2_DEFINE_PUBLIC_ENTITY(base) \
+public:                                    \
+    GN_API GN_REGISTER_RUNTIME_TYPE(base); \
+                                           \
+protected:                                 \
+    using base::base;                      \
+                                           \
+public:
+
 /// Versioned payload slot independent of any graph implementation.
 struct Artifact : public Entity {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Entity);
+    GN_RDG2_DEFINE_PUBLIC_ENTITY(Entity);
 
     typedef NeverOverflowingCounter Version;
 
-    /// Result of waiting on an artifact version.
-    enum class WaitStatus : uint8_t {
-        READY, /// The requested version has been published.
-        BUSY,  /// The requested version was not reached before the timeout.
-    };
-
+    /// One immutable published state of an artifact: the stored content entity
+    /// plus the concrete version assigned at publication. A relic is a small
+    /// value struct, not an Entity; the content it carries is the Entity.
     template<typename C = Entity>
-    struct Content {
+    struct Relic {
         // Value of the content.
         AutoRef<C> value = {};
 
@@ -155,73 +159,14 @@ struct Artifact : public Entity {
         C *      operator->() const { return value.get(); }
     };
 
-    /// Content captured atomically with the actual retained content version.
-    struct Snapshot {
-        WaitStatus status = WaitStatus::BUSY;
-
-        /// Actual version of the returned content. This may be newer than the version passed to wait().
-        Version version = Version::OOO();
-
-        /// Content returned by the wait.
-        AutoRef<Entity> content = {};
-    };
-
-    struct SubCollection {
-        ArrayContainer<std::variant<AutoRef<Artifact>, SubCollection>> elements;
-
-        bool empty() const { return elements.empty(); }
-
-        // SubCollection & append(SubArray && a) {
-        //     if (!a.empty()) elements.emplace_back(std::move(a));
-        //     return *this;
-        // }
-
-        SubCollection & append(SubCollection && c) {
-            if (!c.empty()) elements.append(std::move(c));
-            return *this;
-        }
-
-        template<typename ARTIFACT_TYPE>
-        SubCollection & append(const AutoRef<ARTIFACT_TYPE> & a) {
-            static_assert(std::is_base_of_v<Artifact, ARTIFACT_TYPE>);
-            if (!a) return *this;
-
-            auto s = a->sub();
-            if (s.empty()) {
-                elements.append(AutoRef<Artifact>(a));
-            } else {
-                append(std::move(s));
-            }
-            return *this;
-        }
-
-        /// @brief Iterate through all sub artifacts, recursively.
-        template<typename PROC>
-        void forEach(PROC proc) const {
-            for (const auto & e : elements) {
-                auto a = std::get_if<AutoRef<Artifact>>(&e);
-                if (a) {
-                    if (*a) proc(*a);
-                } else {
-                    auto c = std::get_if<SubCollection>(&e);
-                    GN_ASSERT(c);
-                    c->forEach(proc);
-                }
-            }
-        }
-    };
-
     /// Fired whenever a new version is published.
-    Signal<void(const Content<> &)> sigPublished;
+    Signal<void(const Relic<> &)> sigPublished;
 
-    /// Get collection of sub artifacts.
-    virtual SubCollection sub() const { return {}; };
-
-    /// Get the latest published content. Could be empty if the artifact has not been published.
-    virtual Content<> content() const = 0;
+    /// Get the latest published relic. Could be empty if the artifact has not been published.
+    virtual Relic<> content() const = 0;
 
     template<typename T>
-    Content<T> content() const {
+    Relic<T> content() const {
         auto e = content();
         if (e.empty()) {
             static auto * logger = GN::getLogger("GN.rdg2");
@@ -244,15 +189,8 @@ struct Artifact : public Entity {
     /// Publish non-empty content and return the new version. Empty content is rejected and returns zero.
     virtual Version publish(AutoRef<Entity> content) = 0;
 
-    /// Wait for \p version to be published and return the content snapshot that satisfied the wait.
-    /// Passing OOO() waits for the next publish relative to the version observed inside this call.
-    virtual Snapshot wait(Version version, std::chrono::milliseconds timeout = std::chrono::milliseconds::max()) const = 0;
-
     /// Create a standalone artifact with no content and version equal to 0.
     GN_API static AutoRef<Artifact> create(const StrA & name = StrA::EMPTYSTR());
-
-protected:
-    using Entity::Entity;
 };
 using ArtifactRef      = AutoRef<Artifact>;
 using ConstArtifactRef = AutoRef<const Artifact>;
@@ -267,19 +205,13 @@ struct TypedArtifact {
 
     Ref artifact;
 
-    struct Snapshot {
-        Artifact::WaitStatus    status  = Artifact::WaitStatus::BUSY;
-        NeverOverflowingCounter version = NeverOverflowingCounter::OOO();
-        AutoRef<T>              content = {};
-    };
-
     TypedArtifact() = default;
 
     explicit TypedArtifact(Ref artifact_): artifact(std::move(artifact_)) {}
 
     bool empty() const { return !artifact; }
 
-    Artifact::Content<T> content() const {
+    Artifact::Relic<T> content() const {
         if (artifact)
             GN_LIKELY return artifact->template content<T>();
         else
@@ -293,12 +225,6 @@ struct TypedArtifact {
         static_assert(std::is_base_of_v<T, PUBLISHED>);
         if (!artifact) GN_UNLIKELY return NeverOverflowingCounter::OOO();
         return artifact->publish(content);
-    }
-
-    Snapshot wait(NeverOverflowingCounter version, std::chrono::milliseconds timeout = std::chrono::milliseconds::max()) const {
-        if (!artifact) GN_UNLIKELY return {};
-        auto result = artifact->wait(version, timeout);
-        return {result.status, result.version, RuntimeType::cast<T, Entity>(result.content)};
     }
 };
 

@@ -1,16 +1,9 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
-// Must match the vertex shader / GN::e2::FrameConstants. Positions (vWorldPos, lightPosition)
-// are camera-relative meters in world orientation — see box.vert; the lighting math is frame-
-// independent since only differences of positions enter it.
-layout(std140, set = 0, binding = 0) uniform FrameBlock {
-    mat4 viewProj;
-    vec4 ambient;
-    vec4 lightPosition[4];
-    vec4 lightColor[4];
-    int  lightCount;
-}
-u_frame;
+#include "scene-ubo.h"
+
+// E2 adapts visual-moment lights into FX2's graph-agnostic render-space scene constants.
 
 layout(location = 0) in vec3 vWorldPos;
 layout(location = 1) in vec3 vWorldNormal;
@@ -20,15 +13,17 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     vec3 n   = normalize(vWorldNormal);
-    vec3 lit = u_frame.ambient.rgb;
+    vec3 lit = vec3(0.04, 0.04, 0.05);
 
     // Simple Lambert diffuse with photometric inverse-square falloff.
-    for (int i = 0; i < u_frame.lightCount; ++i) {
-        vec3  toLight = u_frame.lightPosition[i].xyz - vWorldPos;
+    for (uint i = 0; i < u_scene.numLights; ++i) {
+        // The current visual moment exposes point lights. Future moment light variants can
+        // select the matching FX2 light type without changing the frame graph.
+        vec3  toLight = u_scene.lights[i].positionOrDir.xyz - vWorldPos;
         float dist2   = max(dot(toLight, toLight), 1e-4);
         vec3  l       = toLight * inversesqrt(dist2);
         float ndotl   = max(dot(n, l), 0.0);
-        lit += u_frame.lightColor[i].rgb * (ndotl / dist2);
+        lit += u_scene.lights[i].colorAndRange.rgb * (ndotl / dist2);
     }
 
     outColor = vec4(vColor * lit, 1.0);

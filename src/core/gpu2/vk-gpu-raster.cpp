@@ -24,8 +24,8 @@ struct StoredDraw {
     AutoRef<const Blob> immediates;
 
     // Populated during pass 1 (collectPassResources); read during pass 2 (recordDraw).
-    std::vector<uint64_t> invalidResourceIds;     ///< resource IDs rejected by tracker; skip their bindings
-    bool                  geometryHazard = false; ///< true if any vertex/index buffer was rejected; skip the draw
+    std::vector<int64_t> invalidResourceIds;     ///< resource IDs rejected by tracker; skip their bindings
+    bool                 geometryHazard = false; ///< true if any vertex/index buffer was rejected; skip the draw
 };
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
@@ -102,15 +102,15 @@ static RasterTarget checkRasterTarget(const RasterTarget * target) {
 
 class GpuRasterPayloadVulkan final : public GpuPayloadVulkan {
 public:
-    GpuRasterPayloadVulkan(const StrA & name, RasterPsoFactory * factory, RasterTarget rt, ArrayContainer<StoredDraw> draws)
+    GpuRasterPayloadVulkan(const StrA & name, RasterPsoFactory * factory, RasterTarget rt, DynaArray<StoredDraw> draws)
         : GpuPayloadVulkan(name), mPsoFactory(factory), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
 
 private:
-    RasterPsoFactory *         mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
-    RasterTarget               mRenderTarget;
-    ArrayContainer<StoredDraw> mDraws;
+    RasterPsoFactory *    mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
+    RasterTarget          mRenderTarget;
+    DynaArray<StoredDraw> mDraws;
 
     // Pass 1: register render targets and per-draw resources into the batch tracker.
     // Returns false if any render target has a hazard; the caller should skip the pass.
@@ -451,7 +451,7 @@ private:
     RasterTarget               mRenderTarget;
     bool                       mValid  = false;
     bool                       mSealed = false;
-    ArrayContainer<StoredDraw> mDraws;
+    DynaArray<StoredDraw>      mDraws;
 };
 
 } // namespace

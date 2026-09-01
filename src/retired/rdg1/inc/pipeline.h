@@ -84,7 +84,7 @@ struct GN_API SubGraph {
     /// \return The submission object; valid until execution completes.
     AutoRef<Submission> submit() {
         if (!graph) return {};
-        auto sub = graph->submit(RenderGraph::SubmitParameters {.workflows = SafeArrayAccessor<Workflow>(workflows.data(), workflows.size()), .name = name});
+        auto sub = graph->submit(RenderGraph::SubmitParameters {.workflows = ArrayView<Workflow>(workflows.data(), workflows.size()), .name = name});
         workflows.clear();
         return sub;
     }

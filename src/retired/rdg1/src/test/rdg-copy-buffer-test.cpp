@@ -76,7 +76,7 @@ TEST_CASE("CopyBuffer: transient→buffer copy via submission", "[rdg][copy-buff
     auto wf = rg->createWorkflow("copy-wf");
     wf.appendTask("copy-task", copy, args);
 
-    auto sub = rg->submit({.workflows = SafeArrayAccessor<Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = ArrayView<Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == Action::PASSED);

@@ -22,6 +22,7 @@
 	path = src/3rdparty/fmt
 	url = https://github.com/fmtlib/fmt.git
 	shallow = true
+	ignore = untracked
 [submodule "src/3rdparty/rapid-vulkan"]
 	path = src/3rdparty/rapid-vulkan
 	url = https://github.com/randomgraphics/rapid-vulkan.git

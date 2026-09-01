@@ -115,12 +115,15 @@ docker run --rm \
     -e HTTP_PROXY=${HTTP_PROXY} \
     -e HTTPS_PROXY=${HTTPS_PROXY} \
     -e HOST_USER_HOME=${HOME} \
+    -e GARNET_BUILD_DIR=build-docker \
+    -e GARNET_PYVENV=${sdkroot}/build-docker/.pyvenv \
     -v "/etc/group:/etc/group:ro" \
     -v "/etc/passwd:/etc/passwd:ro" \
     -v "/etc/shadow:/etc/shadow:ro" \
     -v "${HOME}:${HOME}" \
 	-v "${sdkroot}:${sdkroot}" \
 	-w "${sdkroot}" \
+    --network host \
     ${usb} \
     ${gpu} \
     ${run_as} \

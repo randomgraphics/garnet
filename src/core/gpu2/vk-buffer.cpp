@@ -91,7 +91,7 @@ void BufferVulkan::unmap(const Mapped &) {
     }
 }
 
-bool BufferVulkan::setContent(ArrayProxy<const uint8_t> data, size_t offset) {
+bool BufferVulkan::setContent(ArrayView<const uint8_t> data, size_t offset) {
     if (!mRvBuffer) {
         GN_ERROR(sLogger, "BufferVulkan::setContent: buffer not initialized, name='{}'", name);
         return false;

@@ -1,0 +1,89 @@
+# Assignment: FX2 Module Migration
+
+---
+
+## Goals
+
+Create the independent FX2 effects module above gpu2 and move ownership of shared shader constants, PBR rendering, their shaders, tests, and direct sample out of RDG2 without duplicate APIs or implementations.
+
+---
+
+## Design
+
+### Module boundary
+
+`GNfx2.h` is the only public include for `GN::fx2`. FX2 includes `GNgpu2.h` and does not include or reference RDG2. RDG2 may reference FX2 only where graph-specific adapter declarations need effect types.
+
+### Ownership
+
+FX2 owns SharedShaderConstants, PbrShading, the PBR/skybox shader sources and generated-header integration, FX2-local tests, and the direct PBR sample. RDG2 retains graph primitives and graph-focused consumers only.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 2 — FX2 ownership migration implemented and validated to the baseline build boundary
+  Phase 0: created and verified D:/proj/garnet/fx2 on wip/fx2
+  Phase 1: migrated SSC, PBR, shaders, public API, tests, and direct sample to FX2; retained graph-only RDG2 consumers
+  Phase 2: configure and shader generation passed; FX2 production sources compiled; full build is blocked by pre-existing legacy log calls
+In progress: none — migration complete; baseline logging modernization is required before the full test executable can build
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Source module: `src/core/rdg2`, `src/inc/garnet/rdg2`, `src/inc/garnet/GNrdg2.h`
+Build integration: `src/core/CMakeLists.txt`, `src/core/rdg2/CMakeLists.txt`
+Tests and samples: `src/core/rdg2/test`, `src/sample/rdg2`
+
+--- BUILD / CI ---
+
+`python.exe env/bin/build.py d`
+`python.exe env/bin/cit.py -l`
+Targeted `GNtest-internal` FX2 tests when the build environment supports Vulkan.
+
+Validation result: configure and all FX2 shader generation succeeded. Both FX2 production translation units compiled after temporarily modernizing and then restoring the unrelated baseline call in `base/rtti.h`. The build then stopped on the same pre-existing legacy logging syntax in `rdg2/closed-graph.cpp`, before linking tests or samples.
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Make all edits only in the FX2 worktree.
+- Public clients include only `GNfx2.h` for FX2 APIs.
+- FX2 depends on gpu2 only; RDG2 dependencies are forbidden in FX2 sources and headers.
+- Preserve graph-specific adapters in RDG2 and avoid compatibility aliases that duplicate ownership.
+
+--- TASK BREAKDOWN ---
+
+Phase 0: Worktree setup
+─────────────────────────────────────────────────────────────────
+  Task 0.1: Create and verify the isolated FX2 worktree
+    Verify: branch, HEAD, clean status, and worktree registry match the requested source
+    Commit: "chore(fx2): create isolated migration worktree (Phase 0.1)"
+
+Phase 1: Module and ownership migration
+─────────────────────────────────────────────────────────────────
+  Task 1.1: Create FX2 public API, implementation, shaders, and build integration
+    Verify: configure/build finds FX2 sources and generated shaders; dependency scan finds no RDG2 reference under FX2
+    Commit: "feat(fx2): migrate effects module ownership (Phase 1.1)"
+
+  Task 1.2: Move tests and direct samples to FX2 and update graph consumers
+    Verify: tests compile/run and samples build; no RDG2-owned duplicate API or implementation remains
+    Commit: "test(fx2): migrate effects coverage and samples (Phase 1.2)"
+
+Phase 2: Validation and handoff
+─────────────────────────────────────────────────────────────────
+  Task 2.1: Format, build, test, and audit module boundaries
+    Verify: changed-file formatting, debug build, targeted tests, and reference scans pass or exact environmental blockers are recorded
+    Commit: "chore(fx2): validate module migration (Phase 2.1)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (module migration):
+  src/inc/garnet/GNfx2.h — NEW: unified public FX2 include
+  src/inc/garnet/fx2/* — NEW: FX2 effect APIs migrated from RDG2
+  src/core/fx2/* — NEW: implementations, shaders, tests, and CMake integration
+  src/inc/garnet/GNrdg2.h — remove direct effect ownership and include FX2 only for adapters
+  src/core/rdg2/* — remove migrated implementation/shaders/tests
+  src/core/CMakeLists.txt — register FX2 sources and shader target
+
+Phase 2 (consumers and validation):
+  src/sample/fx2/* — NEW: direct PBR sample
+  src/sample/rdg2/* — keep graph samples and update FX2 effect references
+  src/sample/CMakeLists.txt — register FX2 samples

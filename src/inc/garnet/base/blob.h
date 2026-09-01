@@ -32,8 +32,8 @@ public:
     }
 
     template<typename T>
-    SafeArrayAccessor<T> accessor() const {
-        return SafeArrayAccessor<T>((T *) mData, mSize / sizeof(T));
+    ArrayView<T> accessor() const {
+        return ArrayView<T>((T *) mData, mSize / sizeof(T));
     }
 
     bool empty() const { return mSize == 0; }

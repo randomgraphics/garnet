@@ -77,7 +77,7 @@ TEST_CASE("TaskInfo context: set in prepare, read in execute", "[rdg][taskinfo]"
     auto wf = rg->createWorkflow("ctx-wf");
     wf.appendTask("ctx-task", action, args);
 
-    auto sub = rg->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = GN::ArrayView<GN::rdg::Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == GN::rdg::Action::PASSED);
@@ -97,7 +97,7 @@ TEST_CASE("TaskInfo context: released after submission ends", "[rdg][taskinfo]")
     auto wf   = rg->createWorkflow("grab-wf");
     wf.appendTask("grab-task", action, args);
 
-    auto sub = rg->submit({.workflows = GN::SafeArrayAccessor<GN::rdg::Workflow>(&wf, 1)});
+    auto sub = rg->submit({.workflows = GN::ArrayView<GN::rdg::Workflow>(&wf, 1)});
     REQUIRE(sub);
     auto result = sub->result();
     CHECK(result.executionResult == GN::rdg::Action::PASSED);
