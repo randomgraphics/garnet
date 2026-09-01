@@ -179,7 +179,7 @@ struct VisualDomainImpl : VisualDomain {
         }
 
         auto execution = rdg2::Execution::run({.plan = plan, .gpu = mGpu, .name = "e2-frame"});
-        if (!execution || execution->status() != rdg2::Execution::Status::SUCCEEDED) GN_WARN(sLogger, "Visual frame execution failed.");
+        if (!execution || execution->status() != rdg2::Execution::Status::SUCCEEDED) { GN_WARN(sLogger, "Visual frame execution failed."); }
     }
 
 private:
