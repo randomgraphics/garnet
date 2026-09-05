@@ -64,20 +64,20 @@ struct ModelScene : RCRT64 {
     /// an import warning, while missing properties retain these deterministic defaults.
     struct Material {
         StrA             name;
-        MaterialWorkflow workflow       = MaterialWorkflow::DEFAULT_LIT;
-        AlphaMode        alphaMode      = AlphaMode::OPAQUE;
-        glm::vec4        baseColor      = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
-        glm::vec3        emissive       = glm::vec3(0);
-        float            metallic       = 0.0f;
-        float            roughness      = 1.0f;
-        float            alphaCutoff    = 0.5f;
-        bool             doubleSided    = false;
-        int32_t          baseColorMap   = -1;
-        int32_t          normalMap      = -1;
-        int32_t          emissiveMap    = -1;
-        int32_t          occlusionMap   = -1;
-        int32_t          metalRoughMap  = -1;
-        int32_t          specularMap    = -1;
+        MaterialWorkflow workflow      = MaterialWorkflow::DEFAULT_LIT;
+        AlphaMode        alphaMode     = AlphaMode::OPAQUE;
+        glm::vec4        baseColor     = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+        glm::vec3        emissive      = glm::vec3(0);
+        float            metallic      = 0.0f;
+        float            roughness     = 1.0f;
+        float            alphaCutoff   = 0.5f;
+        bool             doubleSided   = false;
+        int32_t          baseColorMap  = -1;
+        int32_t          normalMap     = -1;
+        int32_t          emissiveMap   = -1;
+        int32_t          occlusionMap  = -1;
+        int32_t          metalRoughMap = -1;
+        int32_t          specularMap   = -1;
     };
 
     /// One normalized vertex. Absent source attributes receive importer-generated or documented
@@ -109,7 +109,7 @@ struct ModelScene : RCRT64 {
     /// the node's complete subtree and are reported in model space for direct scene framing.
     struct Node {
         StrA                name;
-        int32_t             parent = -1;
+        int32_t             parent    = -1;
         glm::mat4           transform = glm::mat4(1);
         DynaArray<uint32_t> primitives;
         Bounds              bounds;
@@ -120,14 +120,14 @@ struct ModelScene : RCRT64 {
         StrA path;
     };
 
-    SourceFormat        sourceFormat = SourceFormat::UNKNOWN;
-    StrA                sourcePath;
-    DynaArray<Texture>  textures;
-    DynaArray<Material> materials;
+    SourceFormat         sourceFormat = SourceFormat::UNKNOWN;
+    StrA                 sourcePath;
+    DynaArray<Texture>   textures;
+    DynaArray<Material>  materials;
     DynaArray<Primitive> primitives;
-    DynaArray<Node>     nodes;
-    Bounds              bounds;
-    DynaArray<StrA>     warnings;
+    DynaArray<Node>      nodes;
+    Bounds               bounds;
+    DynaArray<StrA>      warnings;
 
     /// Import FBX, glTF, GLB, or STL content into a normalized immutable scene. Returns an
     /// empty reference when the path cannot be resolved or contains no renderable triangles.
