@@ -83,7 +83,7 @@ struct FileSystem : public NoCopy {
 ///     - "app::"     : mapping to application's executable directory
 ///     - "startup::" : mapping to application's startup directory
 ///     - "media::"   : mapping to startup::media, media::media and app::../media
-///     - "font::"    : mappint to media::/font, and ${WINDIR}/fonts on Windows platform.
+///     - "font::"    : mapping to media::/font, media::/asset-foundry/font, and ${WINDIR}/fonts on Windows.
 ///
 /// \note
 //      - file system name must be end with "::"

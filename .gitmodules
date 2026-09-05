@@ -39,3 +39,7 @@
 	path = src/test/3rdparty/catch2
 	url = https://github.com/catchorg/Catch2.git
 	shallow = true
+[submodule "media/asset-foundry"]
+	path = media/asset-foundry
+	url = https://huggingface.co/datasets/chenlirandom/asset-foundry
+	shallow = true
