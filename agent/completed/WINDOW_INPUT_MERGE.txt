@@ -3,21 +3,24 @@
 ## Overview
 
 - Branch: `wip/win/input-merge`
-- Overall status: PR verification follow-up in progress.
+- Overall status: complete; PR #42 verified and ready to merge.
 - Completed: API inventory, merged public API, shared input state, GLFW backend,
   Win32 backend, consumer migration, legacy removal, internal tests, Linux debug
   build, full internal test run, and lint.
 - Completed follow-up: `Window` is now an implementation-free pure-virtual
   interface; internal `WindowInput` owns all signals, queues, state, and event
   mutation used by concrete backends and tests.
-- Current step: restore DirectX linkage found by the Windows CI matrix.
-- Remaining: push the fix, obtain green Windows and Linux CI, merge PR #42,
-  then archive this plan again.
+- Completed PR verification: the initial Windows run exposed missing DirectX
+  linkage after standalone XInput removal; linkage was restored independently
+  for retained D3D backends, and the replacement matrix passed.
+- Current step: merge PR #42 after the documentation-only final CI run.
+- Remaining: merge PR #42.
 - Verification baseline: debug build passed; 118 internal tests passed with
   4,163 assertions and 2 display-dependent skips; the focused window suite
   passed 53 assertions across 4 test cases; lint passed.
 - Platform limitation: the native Win32 path was implemented and audited but
-  cannot be compiled or exercised in this Linux workspace.
+  cannot be exercised interactively in this Linux workspace; CI compiled and
+  linked it successfully in debug, profile, and release configurations.
 
 ---
 
@@ -62,7 +65,8 @@ Last completed: Phase 6 — public Window purity follow-up implemented and verif
   Phase 4: debug build and lint passed; 118 internal tests passed with 4163 assertions and 2 display skips
   Phase 5: branch audit, no-work rebuild, 53-assertion focused tests, and lint passed
   Phase 6: moved input implementation to internal WindowInput; debug build, focused tests, lint, and diff checks passed
-In progress: Phase 7 — resolve Windows CI linkage and complete PR #42
+  Phase 7.1: restored DirectX linkage; Windows debug/profile/release and CircleCI passed
+In progress: Phase 7.2 — merge PR #42 after the final documentation-only CI run
 --- END PROGRESS ---
 
 --- REFERENCE ---
