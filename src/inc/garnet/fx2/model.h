@@ -105,7 +105,8 @@ struct ModelScene : RCRT64 {
     };
 
     /// Scene hierarchy node. The transform is relative to the parent; primitive indices refer
-    /// to entries in primitives. A parent value of -1 identifies a root node.
+    /// to entries in primitives. A parent value of -1 identifies a root node. Bounds include
+    /// the node's complete subtree and are reported in model space for direct scene framing.
     struct Node {
         StrA                name;
         int32_t             parent = -1;

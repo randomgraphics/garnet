@@ -4,10 +4,10 @@
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
 - Overall status: active implementation; foundation and public model-scene contract are complete.
-- Completed: normalized tool directory, published execution plan, merged the finalized window-input work and latest master, added the Asset Foundry media submodule, and defined the format-neutral FX2 model API.
-- Current step: Phase 1.2, implementing FBX/glTF/GLB/STL import and cross-format tests; node-bound coordinate semantics are being fixed before importer code lands.
+- Completed: normalized tool directory, published execution plan, merged the finalized window-input work and latest master, added the Asset Foundry media submodule, defined the format-neutral FX2 model API, and fixed the node/subtree bounds coordinate contract.
+- Current step: Phase 1.2, implementing FBX/glTF/GLB/STL import and cross-format tests.
 - Remaining: import normalization, gpu2 residency and shading, E2 snapshot/render integration, viewer replacement, controls/debug display, and final matrix validation.
-- Latest verification: GCC debug build passed after the Phase 1.1 API; `garnet-execution-plan` passes `quick_validate.py`; latest master and finalized input work are merged; all submodules are shallow. No current code blocker.
+- Latest verification: GCC debug build passed after the Phase 1.1 API; the Phase 1.2 bounds documentation passes changed-file formatting and `git diff --check`; all submodules are shallow. No current code blocker.
 
 ---
 
