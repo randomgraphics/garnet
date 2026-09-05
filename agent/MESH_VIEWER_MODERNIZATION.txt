@@ -24,6 +24,12 @@ FBX, glTF, GLB, and STL are acceptance formats. glTF metallic-roughness maps to 
 
 Interactive camera work consumes the new window-owned input API from `wip/win/input-merge` (or its eventual integration branch). This assignment will neither copy nor recommit that agent's changes. Asset loading, E2 integration, fixed-camera rendering, and headless tests proceed independently. The dependency is merged once its owner has committed and published a verified milestone.
 
+### Test model corpus
+
+Use existing project media and models already present in the repository as the primary integration corpus. In particular, exercise `media/boxes/boxes.fbx`, `media/model/R.F.R01/a01.fbx`, `media/model/tiny/tiny.fbx`, `media/model/humanoid.fbx`, `media/model/humanoid_ascii.fbx`, and `media/pbr/DamagedHelmet/DamagedHelmet.gltf`. Use Assimp's checked-out model corpus for GLB and STL coverage, including `glTF2/BoxTextured-glTF-Binary/BoxTextured.glb`, `glTF2/2CylinderEngine-glTF-Binary/2CylinderEngine.glb`, `STL/triangle.stl`, and one nontrivial ASCII and binary STL model.
+
+Tests may add tiny synthetic fixtures only when exact deterministic assertions or malformed-input coverage cannot be expressed with an existing asset. Do not duplicate large media files under a test directory. Automated tests that rely on optional submodule content must report a clear skip when that content is unavailable; repository-owned media smoke tests are mandatory in a fully initialized checkout.
+
 ### Branch workflow
 
 All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicated worktree `/home/chenli/code/garnet-mesh-viewer`. Dependency commits are merged once and retained with their original identity. Before integration, compare branch ancestry and patch identity to avoid duplicate commits.
@@ -47,6 +53,8 @@ E2 visual composition: `src/core/e2/e2-internal.h`, `src/core/e2/visual.cpp`, `s
 E2 public API: `src/inc/garnet/GNengine2.h`, `src/inc/garnet/e2/visual.h`, `src/inc/garnet/e2/world.h`
 RDG2 design: `src/core/rdg2/README.md`, `src/inc/garnet/rdg2/closed-graph.h`
 Input dependency: `wip/win/input-merge`, `agent/WINDOW_INPUT_MERGE.txt`
+Project models: `media/boxes`, `media/model`, `media/pbr/DamagedHelmet`
+Cross-format fixtures: `src/3rdparty/assimp/test/models/FBX`, `src/3rdparty/assimp/test/models/glTF2`, `src/3rdparty/assimp/test/models/STL`
 
 --- BUILD / CI ---
 
@@ -90,7 +98,7 @@ Phase 1: Format-neutral model import
     Commit: "feat(fx2): define model asset interface (Phase 1.1)"
 
   Task 1.2: Import FBX, glTF, GLB, and STL through the neutral model interface
-    Verify: focused importer tests validate hierarchy, transforms, primitives, index widths, materials, and bounds for all four formats
+    Verify: focused importer tests validate hierarchy, transforms, primitives, index widths, materials, and bounds across repository media plus existing Assimp FBX, glTF, GLB, and STL models
     Commit: "feat(fx2): import supported model formats (Phase 1.2)"
 
   Task 1.3: Handle textures, missing attributes, defaults, and malformed inputs
@@ -124,7 +132,7 @@ Phase 3: E2 model integration
 Phase 4: Viewer shell and inspection
 ─────────────────────────────────────────────────────────────────────
   Task 4.1: Replace SampleApp with an E2 application and fixed camera loop
-    Verify: headless fixed-frame runs succeed for FBX, glTF, GLB, and STL fixtures
+    Verify: headless fixed-frame runs succeed for representative project media and existing repository FBX, glTF, GLB, and STL models
     Commit: "refactor(mesh-viewer): move application to e2 (Phase 4.1)"
 
   Task 4.2: Add automatic bounds framing and format-neutral hierarchy printing
@@ -185,4 +193,4 @@ Phase 4-5 (tool):
 Phase 6 (documentation and fixtures):
   src/core/fx2/README.md — supported model and material behavior
   src/core/e2/README.md — model snapshot/rendering ownership
-  src/core/fx2/test/assets/ — NEW: minimal FBX, glTF, GLB, and STL fixtures
+  src/core/fx2/test/assets/ — NEW only if existing media cannot provide a required deterministic or malformed-input case
