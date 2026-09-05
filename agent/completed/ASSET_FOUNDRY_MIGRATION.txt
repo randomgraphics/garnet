@@ -1,0 +1,89 @@
+# Assignment: Audit GitHub LFS and migrate assets to Hugging Face
+
+---
+## Goals
+
+Explain Garnet LFS usage across available refs/history/unreachable objects. Migrate all current digital-forge contents to chenlirandom/asset-foundry and move Garnet media/envmap plus complete resource groups containing other media files larger than 5 MiB there.
+
+---
+## Design
+
+Preserve digital-forge paths and licensing. Map media/envmap to image/envmap and other selected media paths to matching asset categories. Verify source SHA-256 and uploaded content before removing tracked Garnet copies. Mount the dataset as the shallow media/asset-foundry submodule and update code references to its paths. Do not rewrite GitHub history or delete the digital-forge repository.
+
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 2 — shallow dataset integration verified and audit report archived
+  Phase 0.1: scanned remote branches/PR refs, local unreachable objects, and local submodule databases
+  Phase 1.1: verified digital-forge and complete envmap, DamagedHelmet, humanoid, and font groups
+  Phase 1.2: dataset main 5f5399b uploaded; 25 files and all glTF dependencies verified from Hugging Face
+  Phase 0.2: complete audit report and inventories generated
+  Phase 2: updated resource paths; debug build, 208 unit tests, lint, and 5-frame PBR smoke test passed
+In progress: none — complete; dataset published; Garnet changes prepared on wip/lfs-trimming for a PR to master
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+/home/chenli/code/garnet-lfs-audit-20260905/ — raw audit evidence and scripts
+https://github.com/randomgraphics/digital-forge
+https://huggingface.co/datasets/chenlirandom/asset-foundry
+.github/workflows/windows-ci.yml
+media/envmap/bad-salzbrunn-walking-hall/README.md
+
+--- BUILD / CI ---
+
+Validate provenance with SHA-256. Clone the pinned Hugging Face revision and compare hashes. Run project build, relevant tests, and formatting checks for changed sources.
+
+--- WORKFLOW / CONVENTIONS ---
+
+- User explicitly authorizes uploading the assets to the dataset.
+- User authorized committing and pushing Garnet changes on wip/lfs-trimming and creating a PR to master.
+- Preserve existing user files and avoid GitHub LFS downloads when verified local copies exist.
+
+--- TASK BREAKDOWN ---
+
+Phase 0: LFS audit
+─────────────────────────────────────────────────────
+  Task 0.1: Scan all available objects and collect download evidence
+    Verify: Cross-check 161 pointers using git lfs ls-files --all; record inaccessible billing and remote orphan limits.
+    Commit: "docs(assets): record LFS audit (Phase 0.1)"
+  Task 0.2: Save the complete audit report and detailed inventories
+    Verify: Report distinguishes pointer sizes, estimates, observed fetches, and unavailable billing.
+    Commit: "docs(assets): summarize LFS bandwidth findings (Phase 0.2)"
+
+Phase 1: Dataset migration
+─────────────────────────────────────────────────────
+  Task 1.1: Inventory and verify selected source assets
+    Verify: Match all LFS files against source pointer sizes and SHA-256.
+    Commit: "chore(assets): prepare source migration manifest (Phase 1.1)"
+  Task 1.2: Upload digital-forge and selected Garnet assets
+    Verify: Remote pinned revision contains all intended files and verified asset hashes.
+    Commit: "feat(assets): import digital-forge and Garnet media (Phase 1.2)"
+
+Phase 2: Garnet integration
+─────────────────────────────────────────────────────
+  Task 2.1: Replace tracked assets with a shallow asset-foundry submodule and update resource paths
+    Verify: Fresh submodule checkout matches every source hash; resource references and glTF dependencies resolve.
+    Commit: "feat(assets): mount large media from Hugging Face (Phase 2.1)"
+  Task 2.2: Finalize report and archive this assignment
+    Verify: Review diff, manifest, dataset revision, and migration totals.
+    Commit: "docs(assets): finish asset migration record (Phase 2.2)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 0 (audit):
+  /home/chenli/code/garnet-lfs-audit-20260905/ — NEW: full audit report and evidence
+
+Phase 1 (dataset):
+  /home/chenli/code/asset-foundry/ — dataset imports and provenance
+
+Phase 2 (Garnet):
+  media/envmap/ — externalized assets
+  media/model/humanoid*.fbx — externalized complete model pair
+  media/pbr/DamagedHelmet/ — externalized complete model/texture group
+  media/font/ — externalized complete font collection
+  media/asset-foundry — NEW: shallow Hugging Face submodule
+  .gitmodules — dataset URL and shallow setting
+  src/sample/fx2/simple-pbr.cpp — dataset paths
+  src/core/base/filesys.cpp — font search path
+  src/inc/garnet/base/filesys.h — font path documentation
+  media/README.md — migration/download documentation

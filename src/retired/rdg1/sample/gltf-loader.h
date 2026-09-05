@@ -7,7 +7,7 @@
 // and animation data is ignored.
 //
 // Usage:
-//   auto geom = gltf::loadGltfGeometry("media::pbr/DamagedHelmet/DamagedHelmet.gltf", gpu);
+//   auto geom = gltf::loadGltfGeometry("media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf", gpu);
 //   if (geom.vertexCount == 0) { /* loading failed */ }
 
 #include <garnet/GNrdg.h>

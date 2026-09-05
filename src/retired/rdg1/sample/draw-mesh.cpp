@@ -17,12 +17,12 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.render-graph");
 // -------------------------------------------------------------------------
 
 static AutoRef<PbrShading::Material> loadPbrMaterial(AutoRef<GpuContext> gpu) {
-    auto fp = fs::openFile("media::pbr/DamagedHelmet/DamagedHelmet.material", std::ios::in);
+    auto fp = fs::openFile("media::asset-foundry/model/DamagedHelmet/DamagedHelmet.material", std::ios::in);
     if (fp && fp->readable()) {
         auto mat = PbrShading::Material::load("pbr_material", PbrShading::Material::LoadParameters {
                                                                   .gpu      = gpu,
                                                                   .source   = fp,
-                                                                  .basePath = "media::pbr/DamagedHelmet/",
+                                                                  .basePath = "media::asset-foundry/model/DamagedHelmet/",
                                                               });
         if (mat) return mat;
         GN_WARN(sLogger, "Failed to load PBR material from file, using empty material");
@@ -72,7 +72,7 @@ int main(int, const char **) {
     };
 
     // Load IBL assets. Each falls back to 1×1 fallback inside SSC if null.
-    static constexpr const char * kEnvDir           = "media::envmap/bad-salzbrunn-walking-hall/";
+    static constexpr const char * kEnvDir           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/";
     auto                          skyboxCubemap     = loadTex((StrA(kEnvDir) + "skybox.dds").c_str());
     auto                          irradianceMap     = loadTex((StrA(kEnvDir) + "irradiance.dds").c_str());
     auto                          prefilteredEnvMap = loadTex((StrA(kEnvDir) + "prefiltered.dds").c_str());
@@ -81,7 +81,7 @@ int main(int, const char **) {
     auto material = loadPbrMaterial(gpuContext);
     if (!material) return -1;
 
-    auto helmetGeometry = gltf::loadGltfGeometry(fs::toNativeDiskFilePath("media::pbr/DamagedHelmet/DamagedHelmet.gltf").c_str(), gpuContext);
+    auto helmetGeometry = gltf::loadGltfGeometry(fs::toNativeDiskFilePath("media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf").c_str(), gpuContext);
     if (helmetGeometry.vertexCount == 0) return -1;
 
     auto window = std::unique_ptr<win::Window>(
