@@ -6,6 +6,8 @@
 /// \author  chenlee (2006.2.23)
 // *****************************************************************************
 
+#include "window-input.h"
+
 #if GN_WINPC
 
 namespace GN {
@@ -13,7 +15,7 @@ namespace win {
 ///
 /// Window class on MS Windows
 ///
-class WindowMsw : public Window, public StdClass {
+class WindowMsw : public WindowInput, public StdClass {
     GN_DECLARE_STDCLASS(WindowMsw, StdClass);
 
     // ********************************
@@ -22,7 +24,7 @@ class WindowMsw : public Window, public StdClass {
 
     //@{
 public:
-    WindowMsw() { clear(); }
+    WindowMsw();
     virtual ~WindowMsw() { quit(); }
     //@}
 
@@ -42,6 +44,8 @@ private:
         mModuleInstance = 0;
         mWindow         = 0;
         mHook           = 0;
+        mIsExternal     = false;
+        mInsideSizeMove = false;
     }
     //@}
 
@@ -80,6 +84,7 @@ private:
     HHOOK     mHook;
     bool      mIsExternal;
     bool      mInsideSizeMove;
+    KeyCode   mKeyMap[256];
 
     static Dictionary<void *, WindowMsw *> msInstanceMap;
 

@@ -4,7 +4,7 @@
 #include <SimpleOpt.h>
 
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.util");
@@ -150,7 +150,6 @@ int GN::util::SampleApp::run(int argc, const char * const argv[]) {
         // Process Inputs
         GN_START_PROFILER(Input);
         if (!engine::getGpu()->getRenderWindow().runUntilNoNewEvents(false)) break;
-        gInput.processInputEvents();
         GN_STOP_PROFILER(Input);
 
         // Update frame
@@ -234,18 +233,18 @@ void GN::util::SampleApp::onPrintHelpScreen(const char * executableName) {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::SampleApp::onKeyPress(input::KeyEvent ke) {
-    if (input::KeyCode::XB360_X == ke.code() && ke.status.down) {
+void GN::util::SampleApp::onKeyPress(win::KeyEvent ke) {
+    if (win::KeyCode::XB360_X == ke.code() && ke.status.down) {
         mDone = true;
-    } else if (input::KeyCode::ESCAPE == ke.code() && !ke.status.down) {
+    } else if (win::KeyCode::ESCAPE == ke.code() && !ke.status.down) {
         mDone = true;
-    } else if (input::KeyCode::R == ke.code() && !ke.status.down) {
+    } else if (win::KeyCode::R == ke.code() && !ke.status.down) {
         GN_TODO("reload all graphics resources.");
-    } else if (input::KeyCode::F == ke.code() && !ke.status.down) {
+    } else if (win::KeyCode::F == ke.code() && !ke.status.down) {
         GN_TODO("dump graphics system states");
-    } else if (input::KeyCode::RETURN == ke.code() && ke.status.down && ke.status.altDown()) {
+    } else if (win::KeyCode::RETURN == ke.code() && ke.status.down && ke.status.altDown()) {
         GN_TODO("switch fullscreen mode.");
-    } else if (input::KeyCode::F1 == ke.code() && !ke.status.down) {
+    } else if (win::KeyCode::F1 == ke.code() && !ke.status.down) {
         mShowHelp = !mShowHelp;
     }
 }
@@ -347,7 +346,6 @@ bool GN::util::SampleApp::checkCmdLine(int argc, const char * const argv[]) {
 
     // setup default options
     mInitParam.useMultithreadGpu     = !GN_POSIX;
-    mInitParam.iapi                  = InputAPI::NATIVE;
     mInitParam.defaultFont.fontname  = "font::/simsun.ttc";
     mInitParam.defaultFont.width     = 16;
     mInitParam.defaultFont.height    = 16;
@@ -463,11 +461,10 @@ bool GN::util::SampleApp::initEngine() {
     connectToSignal<&SampleApp::postExitEvent>(engine::getGpu()->getSignals().rendererWindowClose);
     connectToSignal<&SampleApp::onRenderWindowResize>(engine::getGpu()->getSignals().rendererWindowSizeMove);
 
-    // initialize input system
-    if (!engine::inputInitialize(mInitParam.iapi)) return false;
-    connectToSignal<&SampleApp::onKeyPress>(gInput.sigKeyPress);
-    connectToSignal<&SampleApp::onCharPress>(gInput.sigCharPress);
-    connectToSignal<&SampleApp::onAxisMove>(gInput.sigAxisMove);
+    auto & window = engine::getGpu()->getRenderWindow();
+    connectToSignal<&SampleApp::onKeyPress>(window.keyPressSignal());
+    connectToSignal<&SampleApp::onCharPress>(window.charPressSignal());
+    connectToSignal<&SampleApp::onAxisMove>(window.axisMoveSignal());
 
     // done
     return true;

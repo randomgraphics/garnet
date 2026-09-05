@@ -10,6 +10,7 @@ frontmatter whose `description` says when to use it; read the matching skill
 before starting a task it covers.
 
 - `garnet-feature-workflow`: top-level lifecycle for feature work.
+- `garnet-execution-plan`: detailed, resumable plans with an Overview, dedicated workspace, progress tracking, and stepwise execution.
 - `garnet-build-test`: build, test, lint, and format through project wrappers.
 - `garnet-assignment-tracking`: create and maintain assignment files in `agent/`.
 - `garnet-agent-doc-archive`: archive finished agent docs into `agent/completed/`.

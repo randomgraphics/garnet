@@ -16,8 +16,6 @@
         #define NOMINMAX
     #endif
     #include <windows.h>
-#elif HAS_X11
-    #include <X11/Xlib.h>
 #endif
 
 // *****************************************************************************

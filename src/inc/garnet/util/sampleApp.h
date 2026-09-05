@@ -36,7 +36,6 @@ public:
     struct InitParam {
         gfx::GpuOptions           ro;                ///< renderer options
         bool                      useMultithreadGpu; ///< use multithread renderer or not.
-        input::InputAPI           iapi;              ///< input API
         gfx::FontFaceCreationDesc defaultFont;       ///< default non-ascii font face creation descriptor
         gfx::FontFaceCreationDesc asciiFont;         ///< default ascii font face creation descriptor.
     };
@@ -54,9 +53,9 @@ public:
     virtual void onUpdate() = 0;
     virtual void onRender() = 0;
     virtual void onRenderWindowResize(intptr_t /*window*/, uint32_t /*width*/, uint32_t /*height*/) {}
-    virtual void onKeyPress(input::KeyEvent);
+    virtual void onKeyPress(win::KeyEvent);
     virtual void onCharPress(wchar_t) {}
-    virtual void onAxisMove(input::Axis, int) {}
+    virtual void onAxisMove(win::Axis, int) {}
 
     ///
     /// Draw X/Y/Z coordinate axes onto screen

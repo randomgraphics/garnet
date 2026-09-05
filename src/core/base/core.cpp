@@ -1,9 +1,5 @@
 #include "pch.h"
-#include "garnet/GNinput.h"
 #include <stdlib.h>
-
-// GN::input::Input singletons
-GN_API GN::input::Input * GN::input::Input::msInstancePtr = 0;
 
 namespace GN {
 

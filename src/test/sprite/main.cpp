@@ -2,7 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::util;
 
 SpriteRenderer * sr = NULL;
@@ -30,10 +30,9 @@ static float pos_x;
 static float pos_y;
 static float angle = 0;
 
-void update(float timestep) {
+void update(Window & in, float timestep) {
     static bool paused = false;
 
-    Input &  in = gInput;
     KeyEvent ke = in.popLastKeyEvent();
     if (ke.status.down && (KeyCode::SPACEBAR == ke.code() || KeyCode::XB360_A == ke.code())) { paused = !paused; }
 
@@ -67,15 +66,13 @@ int run(Gpu & gpu) {
 
     while (gogogo && gpu.getRenderWindow().runUntilNoNewEvents(false)) {
 
-        Input & in = gInput;
-
-        in.processInputEvents();
+        Window & in = gpu.getRenderWindow();
 
         if (in.getKeyStatus(KeyCode::ESCAPE).down || in.getKeyStatus(KeyCode::XB360_B).down) { gogogo = false; }
 
         gpu.clearScreen(Vector4f(0, 0.5f, 0.5f, 1.0f));
         double frameTime = fps.lastFrameTime();
-        update((float) frameTime);
+        update(in, (float) frameTime);
         draw(gpu);
         gpu.present();
 
@@ -86,16 +83,6 @@ int run(Gpu & gpu) {
 
     return 0;
 }
-
-struct InputInitiator {
-    InputInitiator(Gpu & r) {
-        initializeInputSystem(InputAPI::NATIVE);
-        const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow(dd.displayHandle, dd.windowHandle);
-    }
-
-    ~InputInitiator() { shutdownInputSystem(); }
-};
 
 int main(int argc, const char * argv[]) {
     enableCRTMemoryCheck();
@@ -120,8 +107,6 @@ int main(int argc, const char * argv[]) {
 
     Gpu * r = createGpu(cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0);
     if (NULL == r) return -1;
-
-    InputInitiator ii(*r);
 
     int result = run(*r);
 

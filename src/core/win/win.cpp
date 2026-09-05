@@ -1,8 +1,7 @@
 #include "pch.h"
+#include "window-input.h"
 #include "window-glfw.h"
 #include "windowMsw.h"
-#include "windowX11.h"
-#include "windowQt.h"
 
 namespace GN {
 namespace win {
@@ -15,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.win");
 ///
 /// Fake window class
 ///
-class FakeWindow : public Window {
+class FakeWindow : public WindowInput {
     // ********************************
     // from Window
     // ********************************
@@ -103,12 +102,6 @@ GN_API Window * createWindow(const WindowCreateParameters & wcp) {
     if (!p->init(wcp)) return 0;
     return p.detach();
 
-#elif HAS_QT
-
-    AutoObjPtr<WindowQt> p(new WindowQt);
-    if (!p->init(wcp)) return 0;
-    return p.detach();
-
 #elif GN_XBOX2
 
     GN_UNUSED_PARAM(wcp);
@@ -117,12 +110,6 @@ GN_API Window * createWindow(const WindowCreateParameters & wcp) {
 #elif GN_WINPC
 
     AutoObjPtr<WindowMsw> p(new WindowMsw);
-    if (!p->init(wcp)) return 0;
-    return p.detach();
-
-#elif HAS_X11
-
-    AutoObjPtr<WindowX11> p(new WindowX11);
     if (!p->init(wcp)) return 0;
     return p.detach();
 
@@ -148,12 +135,6 @@ GN_API Window * attachToExistingWindow(const WindowAttachingParameters & wap) {
     (void) wap;
     GN_WARN(sLogger, "attachToExistingWindow is not supported with GLFW backend; use platform-specific backend (e.g. MSW/X11) or createWindow.");
     return nullptr;
-
-#elif HAS_QT
-
-    AutoObjPtr<WindowQt> p(new WindowQt);
-    if (!p->init(wap)) return 0;
-    return p.detach();
 
 #elif GN_XBOX2
 

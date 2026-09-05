@@ -4,6 +4,105 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.win.GLFW");
 
+static GN::win::KeyCode sTranslateGlfwKey(int key) {
+    using GN::win::KeyCode;
+    switch (key) {
+    case GLFW_KEY_ESCAPE:
+        return KeyCode::ESCAPE;
+    case GLFW_KEY_BACKSPACE:
+        return KeyCode::BACKSPACE;
+    case GLFW_KEY_TAB:
+        return KeyCode::TAB;
+    case GLFW_KEY_CAPS_LOCK:
+        return KeyCode::CAPSLOCK;
+    case GLFW_KEY_ENTER:
+        return KeyCode::RETURN;
+    case GLFW_KEY_SPACE:
+        return KeyCode::SPACEBAR;
+    case GLFW_KEY_LEFT_SHIFT:
+        return KeyCode::LSHIFT;
+    case GLFW_KEY_RIGHT_SHIFT:
+        return KeyCode::RSHIFT;
+    case GLFW_KEY_LEFT_CONTROL:
+        return KeyCode::LCTRL;
+    case GLFW_KEY_RIGHT_CONTROL:
+        return KeyCode::RCTRL;
+    case GLFW_KEY_LEFT_ALT:
+        return KeyCode::LALT;
+    case GLFW_KEY_RIGHT_ALT:
+        return KeyCode::RALT;
+    case GLFW_KEY_PAGE_UP:
+        return KeyCode::PAGEUP;
+    case GLFW_KEY_PAGE_DOWN:
+        return KeyCode::PAGEDOWN;
+    case GLFW_KEY_END:
+        return KeyCode::END;
+    case GLFW_KEY_HOME:
+        return KeyCode::HOME;
+    case GLFW_KEY_INSERT:
+        return KeyCode::INSERT;
+    case GLFW_KEY_DELETE:
+        return KeyCode::_DELETE;
+    case GLFW_KEY_LEFT:
+        return KeyCode::LEFT;
+    case GLFW_KEY_UP:
+        return KeyCode::UP;
+    case GLFW_KEY_RIGHT:
+        return KeyCode::RIGHT;
+    case GLFW_KEY_DOWN:
+        return KeyCode::DOWN;
+    case GLFW_KEY_MINUS:
+        return KeyCode::MINUS;
+    case GLFW_KEY_EQUAL:
+        return KeyCode::EQUALS;
+    case GLFW_KEY_LEFT_BRACKET:
+        return KeyCode::LBRACKET;
+    case GLFW_KEY_RIGHT_BRACKET:
+        return KeyCode::RBRACKET;
+    case GLFW_KEY_SEMICOLON:
+        return KeyCode::SEMICOLON;
+    case GLFW_KEY_APOSTROPHE:
+        return KeyCode::APOSTROPHE;
+    case GLFW_KEY_GRAVE_ACCENT:
+        return KeyCode::GRAVE;
+    case GLFW_KEY_BACKSLASH:
+        return KeyCode::BACKSLASH;
+    case GLFW_KEY_COMMA:
+        return KeyCode::COMMA;
+    case GLFW_KEY_PERIOD:
+        return KeyCode::PERIOD;
+    case GLFW_KEY_SLASH:
+        return KeyCode::SLASH;
+    case GLFW_KEY_KP_MULTIPLY:
+        return KeyCode::NUMPAD_MULTIPLY;
+    case GLFW_KEY_KP_ADD:
+        return KeyCode::NUMPAD_ADD;
+    case GLFW_KEY_KP_SUBTRACT:
+        return KeyCode::NUMPAD_SUBTRACT;
+    case GLFW_KEY_KP_DECIMAL:
+        return KeyCode::NUMPAD_DECIMAL;
+    case GLFW_KEY_KP_DIVIDE:
+        return KeyCode::NUMPAD_DIVIDE;
+    case GLFW_KEY_KP_ENTER:
+        return KeyCode::NUMPAD_ENTER;
+    case GLFW_KEY_NUM_LOCK:
+        return KeyCode::NUMPAD_NUMLOCK;
+    case GLFW_KEY_PRINT_SCREEN:
+        return KeyCode::SYSRQ;
+    case GLFW_KEY_SCROLL_LOCK:
+        return KeyCode::SCROLL;
+    case GLFW_KEY_PAUSE:
+        return KeyCode::PAUSE;
+    default:
+        break;
+    }
+    if (GLFW_KEY_0 <= key && key <= GLFW_KEY_9) return (KeyCode) ((int) KeyCode::_0 + key - GLFW_KEY_0);
+    if (GLFW_KEY_A <= key && key <= GLFW_KEY_Z) return (KeyCode) ((int) KeyCode::A + key - GLFW_KEY_A);
+    if (GLFW_KEY_KP_0 <= key && key <= GLFW_KEY_KP_9) return (KeyCode) ((int) KeyCode::NUMPAD_0 + key - GLFW_KEY_KP_0);
+    if (GLFW_KEY_F1 <= key && key <= GLFW_KEY_F12) return (KeyCode) ((int) KeyCode::F1 + key - GLFW_KEY_F1);
+    return KeyCode::NONE;
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -189,6 +288,35 @@ bool GN::win::WindowGlfw::createWindow(const WindowCreateParameters & wcp) {
         void * p = glfwGetWindowUserPointer(w);
         if (p) static_cast<WindowGlfw *>(p)->mClosing = true;
     });
+    glfwSetKeyCallback(mWindow, [](GLFWwindow * w, int key, int, int action, int) {
+        if (GLFW_REPEAT == action) return;
+        auto *        self = static_cast<WindowGlfw *>(glfwGetWindowUserPointer(w));
+        const KeyCode code = sTranslateGlfwKey(key);
+        if (self && KeyCode::NONE != code) self->notifyKeyPress(code, GLFW_PRESS == action);
+    });
+    glfwSetCharCallback(mWindow, [](GLFWwindow * w, unsigned int codepoint) {
+        auto * self = static_cast<WindowGlfw *>(glfwGetWindowUserPointer(w));
+        if (self) self->notifyCharPress((wchar_t) codepoint);
+    });
+    glfwSetMouseButtonCallback(mWindow, [](GLFWwindow * w, int button, int action, int) {
+        auto * self = static_cast<WindowGlfw *>(glfwGetWindowUserPointer(w));
+        if (!self || button < GLFW_MOUSE_BUTTON_1 || button > GLFW_MOUSE_BUTTON_8) return;
+        self->notifyKeyPress((KeyCode) ((int) KeyCode::MOUSEBTN_0 + button - GLFW_MOUSE_BUTTON_1), GLFW_PRESS == action);
+    });
+    glfwSetCursorPosCallback(mWindow, [](GLFWwindow * w, double x, double y) {
+        auto * self = static_cast<WindowGlfw *>(glfwGetWindowUserPointer(w));
+        if (self) self->updateMousePosition((int) x, (int) y);
+    });
+    glfwSetScrollCallback(mWindow, [](GLFWwindow * w, double x, double y) {
+        auto * self = static_cast<WindowGlfw *>(glfwGetWindowUserPointer(w));
+        if (!self) return;
+        self->notifyAxisMove(Axis::MOUSE_WHEEL_0, (int) (y * 120.0));
+        self->notifyAxisMove(Axis::MOUSE_WHEEL_1, (int) (x * 120.0));
+    });
+
+    double mouseX = 0, mouseY = 0;
+    glfwGetCursorPos(mWindow, &mouseX, &mouseY);
+    updateMousePosition((int) mouseX, (int) mouseY, false);
 
     mMonitor = glfwGetWindowMonitor(mWindow);
     if (!mMonitor) mMonitor = glfwGetPrimaryMonitor();

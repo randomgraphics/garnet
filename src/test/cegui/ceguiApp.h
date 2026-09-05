@@ -78,23 +78,25 @@ public:
         }
     }
 
-    void onKeyPress(GN::input::KeyEvent key) {
+    void onKeyPress(GN::win::KeyEvent key) {
         SampleApp::onKeyPress(key);
-        using namespace GN::input;
+        using namespace GN::win;
         if (key.status.down) {
-            if (KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON) {
-                CEGUI::System::getSingleton().injectMouseButtonDown((CEGUI::MouseButton) (CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
+            if (KeyCode::FIRST_MOUSE_BUTTON <= key.code() && key.code() <= KeyCode::LAST_MOUSE_BUTTON) {
+                const int button = (int) key.code() - (int) KeyCode::FIRST_MOUSE_BUTTON;
+                CEGUI::System::getSingleton().injectMouseButtonDown((CEGUI::MouseButton) (CEGUI::LeftButton + button));
             }
         } else {
-            if (KeyCode::MOUSEBTN_FIRST <= key.code && key.code <= KeyCode::LAST_MOUSE_BUTTON) {
-                CEGUI::System::getSingleton().injectMouseButtonUp((CEGUI::MouseButton) (CEGUI::LeftButton + key.code - KeyCode::MOUSEBTN_FIRST));
+            if (KeyCode::FIRST_MOUSE_BUTTON <= key.code() && key.code() <= KeyCode::LAST_MOUSE_BUTTON) {
+                const int button = (int) key.code() - (int) KeyCode::FIRST_MOUSE_BUTTON;
+                CEGUI::System::getSingleton().injectMouseButtonUp((CEGUI::MouseButton) (CEGUI::LeftButton + button));
             }
         }
     }
 
-    void onAxisMove(GN::input::Axis, int) {
+    void onAxisMove(GN::win::Axis, int) {
         int x, y;
-        gInput.getMousePosition(x, y);
+        engine::getGpu()->getRenderWindow().getMousePosition(x, y);
         CEGUI::System::getSingleton().injectMousePosition((float) x, (float) y);
     }
 

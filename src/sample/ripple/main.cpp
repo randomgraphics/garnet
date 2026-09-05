@@ -2,7 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::util;
 using namespace GN::util;
 
@@ -122,10 +122,10 @@ public:
         mContext.clear();
     }
 
-    void onKeyPress(input::KeyEvent key) override {
+    void onKeyPress(win::KeyEvent key) override {
         if (key.code() == KeyCode::MOUSEBTN_0 && key.status.down) {
             int mx, my;
-            gInput.getMousePosition(mx, my);
+            engine::getGpu()->getRenderWindow().getMousePosition(mx, my);
 
             mRipples[mNextRipple].x    = (float) mx;
             mRipples[mNextRipple].y    = (float) my;
