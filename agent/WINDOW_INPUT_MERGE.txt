@@ -3,15 +3,16 @@
 ## Overview
 
 - Branch: `wip/win/input-merge`
-- Overall status: complete.
+- Overall status: PR verification follow-up in progress.
 - Completed: API inventory, merged public API, shared input state, GLFW backend,
   Win32 backend, consumer migration, legacy removal, internal tests, Linux debug
   build, full internal test run, and lint.
 - Completed follow-up: `Window` is now an implementation-free pure-virtual
   interface; internal `WindowInput` owns all signals, queues, state, and event
   mutation used by concrete backends and tests.
-- Current step: none.
-- Remaining: none.
+- Current step: restore DirectX linkage found by the Windows CI matrix.
+- Remaining: push the fix, obtain green Windows and Linux CI, merge PR #42,
+  then archive this plan again.
 - Verification baseline: debug build passed; 118 internal tests passed with
   4,163 assertions and 2 display-dependent skips; the focused window suite
   passed 53 assertions across 4 test cases; lint passed.
@@ -61,7 +62,7 @@ Last completed: Phase 6 — public Window purity follow-up implemented and verif
   Phase 4: debug build and lint passed; 118 internal tests passed with 4163 assertions and 2 display skips
   Phase 5: branch audit, no-work rebuild, 53-assertion focused tests, and lint passed
   Phase 6: moved input implementation to internal WindowInput; debug build, focused tests, lint, and diff checks passed
-In progress: none
+In progress: Phase 7 — resolve Windows CI linkage and complete PR #42
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -217,6 +218,19 @@ Phase 6: Keep Window purely abstract
     Verify: focused tests, full practical build, lint, and diff checks pass
     Commit: "test(win): verify abstract window input interface (Phase 6.3)"
 
+Phase 7: PR and Windows verification
+─────────────────────────────────────────────────────────────────────
+  Task 7.1: Restore DirectX linkage independently of the removed input module
+    - Link detected DirectX libraries on Windows for the retained D3D backends.
+    Verify: Linux debug build/lint remain green and Windows CI links GNtest-internal
+    Commit: "fix(build): restore Windows DirectX linkage"
+
+  Task 7.2: Complete CI-gated integration
+    - Require CircleCI and Windows debug/profile/release to pass.
+    - Merge PR #42 to master only after every required check succeeds.
+    Verify: PR is merged and origin/master contains its merge result
+    Commit: merge performed through the PR
+
 --- SUMMARY OF FILES TO TOUCH ---
 
 Phase 1: GNwin.h, moved win metadata/helpers, shared window input implementation, and tests.
@@ -225,3 +239,4 @@ Phase 3: all consumers, core CMake wiring, and removal of input/Qt/X11 files.
 Phase 4: internal Catch2 registration and test sources.
 Phase 5: final audit plus assignment progress and archive location.
 Phase 6: pure Window interface, internal state-owning subclass, caller migration, and verification.
+Phase 7: Windows CI linkage correction and CI-gated PR merge.

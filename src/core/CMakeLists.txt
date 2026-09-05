@@ -155,6 +155,12 @@ if (TARGET glfw)
     target_compile_definitions(GNcore-objects PRIVATE HAS_GLFW=1)
 endif()
 
+# DirectX libraries serve the Windows graphics backends independently of the
+# removed standalone XInput implementation.
+if (WIN32)
+    add_core_libs(${DIRECTX_LIBRARIES})
+endif()
+
 # FBX
 if(WIN32)
     if(DEFINED ENV{FBX_SDK})
