@@ -9,6 +9,7 @@ namespace GN::fx2 {};
 // fx2 subheaders must only be included through this file.
 #define __GN_INSIDE_FX2_H__ 1
 #include "fx2/shared-shader-constants.h"
+#include "fx2/model.h"
 #include "fx2/pbr.h"
 #undef __GN_INSIDE_FX2_H__
 

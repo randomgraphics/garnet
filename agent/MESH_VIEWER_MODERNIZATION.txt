@@ -31,9 +31,12 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 0.1 — dedicated branch and normalized tool directory created
+Last completed: Phase 1.1 — format-neutral FX2 model scene interface defined
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
-In progress: Phase 0.2 — establish assignment and dependency ownership
+  Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
+  Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
+  Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
+In progress: none — ready to start Phase 1.2 format import implementation
 --- END PROGRESS ---
 
 --- REFERENCE ---
