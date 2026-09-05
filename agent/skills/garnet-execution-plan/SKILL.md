@@ -1,12 +1,17 @@
 ---
 name: garnet-execution-plan
-description: Write and execute detailed, resumable implementation plans for substantial Garnet changes. Use when the user requests an execution plan, asks to track progress while implementing, or requires work on a dedicated branch or worktree.
+description: Plan and track substantial, multi-step Garnet work in a resumable agent plan whose status is refreshed on every commit. Use for complex workloads, execution plans, dedicated branches or worktrees, and work that another human or agent may need to resume.
 ---
 
 # Garnet Execution Plan
 
 Create the execution plan before implementation and keep it synchronized with
 the real repository state until handoff.
+
+Relatively complex work must have an active plan under `agent/`. The plan is
+both the detailed execution design and the authoritative current-status record;
+a human or another agent should be able to understand and resume the work by
+reading its beginning and progress block.
 
 ## Establish the workspace
 
@@ -34,6 +39,9 @@ The Overview must state:
 - remaining work;
 - latest verification results and known blockers.
 
+Keep the Overview concise and current. It is the human-facing status summary,
+not a copy of the full task breakdown.
+
 Split implementation into ordered phases and concrete `Task N.M` steps. Each
 step must describe:
 
@@ -54,6 +62,18 @@ an untested backend as verified.
   moving on.
 - Update the Overview and machine-readable PROGRESS block whenever a step or
   blocker changes. The plan must describe actual state, not intended state.
+- Refresh the plan on every commit made for the assignment, including merge,
+  documentation, and dependency-integration commits. Include the refreshed plan
+  in that same commit; do not leave status updates for a later bookkeeping
+  commit.
+- Immediately before committing, make the Overview, `Last completed`, completed
+  phase/task lines, `In progress`, latest verification, blockers, and remaining
+  work agree with the exact state that the commit will create.
+- If a commit only advances infrastructure or integrates a dependency, record
+  that milestone without falsely marking the active implementation task done.
+- After committing, confirm that the plan at `HEAD` names the next active task
+  (or says why none is active) and reports the verification actually run for
+  that commit.
 - When inheriting partially completed work, reconstruct the plan from the diff,
   mark demonstrably finished steps complete, then audit and verify them before
   continuing.
