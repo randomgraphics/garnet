@@ -23,7 +23,7 @@ These assets download from Hugging Face. Other Garnet LFS files and existing Git
 | DamagedHelmet mesh, material, and all textures | `model/DamagedHelmet/` |
 | Humanoid ASCII and binary FBX models | `model/humanoid/` |
 | Complete font collection | `font/` |
-| All current digital-forge content, including the Speeder Getaway model | `model/character/`, `LICENSE`, and `provenance/digital-forge/` |
+| Speeder Getaway model | `model/character/speeder-getaway-from-meshy-ai.glb` |
 
 Use paths such as `media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds` and `media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf`. The `font::` filesystem also searches `media::asset-foundry/font`, so existing font names keep working.
 
