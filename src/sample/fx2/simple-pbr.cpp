@@ -52,20 +52,20 @@ int main(int argc, const char ** argv) {
     if (!ssc) return -1;
 
     ssc->set0.envLighting = {
-        .skyboxPath               = "media::envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
-        .irradiancePath           = "media::envmap/bad-salzbrunn-walking-hall/irradiance.dds",
-        .prefilteredPath          = "media::envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
-        .brdfLutPath              = "media::envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
+        .skyboxPath               = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
+        .irradiancePath           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
+        .prefilteredPath          = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
+        .brdfLutPath              = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
         .environmentRadianceScale = 3500.f,
     };
 
     auto helmet = PbrShading::load(gpuContext, {
-                                                   .gltfPath       = "media::pbr/DamagedHelmet/DamagedHelmet.gltf",
-                                                   .albedoPath     = "media::pbr/DamagedHelmet/baseColor_1.jpg",
-                                                   .normalPath     = "media::pbr/DamagedHelmet/normal_1-gl.jpg",
-                                                   .emissivePath   = "media::pbr/DamagedHelmet/emissive_1.jpg",
-                                                   .occlusionPath  = "media::pbr/DamagedHelmet/occlusion_1.jpg",
-                                                   .metalRoughPath = "media::pbr/DamagedHelmet/metallicRoughness_1.jpg",
+                                                   .gltfPath       = "media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf",
+                                                   .albedoPath     = "media::asset-foundry/model/DamagedHelmet/baseColor_1.jpg",
+                                                   .normalPath     = "media::asset-foundry/model/DamagedHelmet/normal_1-gl.jpg",
+                                                   .emissivePath   = "media::asset-foundry/model/DamagedHelmet/emissive_1.jpg",
+                                                   .occlusionPath  = "media::asset-foundry/model/DamagedHelmet/occlusion_1.jpg",
+                                                   .metalRoughPath = "media::asset-foundry/model/DamagedHelmet/metallicRoughness_1.jpg",
                                                });
     if (!helmet) return -1;
 

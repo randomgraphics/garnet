@@ -476,6 +476,7 @@ class FontFileSystem : public MultiRootsFileSystem {
 public:
     FontFileSystem() {
         addRoot("media::font");
+        addRoot("media::asset-foundry/font");
 #if GN_WINPC
         char windir[MAX_PATH + 1];
         GetWindowsDirectoryA(windir, MAX_PATH);

@@ -14,3 +14,5 @@ Paths are relative to the material file.
 Line started with # are considered comments.
 
 Download and place texture folders under this folder, add or edit a `.material` file pointing to them (paths relative to the material file itself).
+
+The complete DamagedHelmet resource group is in `../asset-foundry/model/DamagedHelmet/`; see [media setup](../README.md).
