@@ -1,0 +1,185 @@
+# Assignment: Modern Mesh Viewer on E2, FX2, RDG2, and gpu2
+
+---
+
+## Goals
+
+Replace the legacy mesh viewer with a format-neutral E2 application that loads and displays FBX, glTF, GLB, and STL scenes through FX2 and gpu2, while E2 owns world/snapshot composition and RDG2 owns frame ordering, submission, and presentation.
+
+Do not use `GNgpu.h`, the legacy effect pipeline, `SampleApp`, `FatModel`, legacy engine mesh components, or the retired global input system. Preserve useful viewer behavior including automatic framing, hierarchy inspection, bounds, axes, and interactive orbit controls. Skeletal animation is a follow-up; FBX scenes must display their static/bind-pose geometry correctly.
+
+---
+
+## Design
+
+### Module boundaries
+
+The importer normalizes Assimp scenes into an immutable, format-neutral FX2 model asset containing hierarchy, transforms, primitives, material descriptions, textures, and bounds. FX2 owns graph-agnostic GPU resources and shading choices. E2 forms capture immutable model instances into visual moments and adapt those instances into FX2 draws. RDG2 retains the existing closed frame flow and owns gathered gpu2 submission and presentation. The tool remains a thin E2 client.
+
+### Supported content
+
+FBX, glTF, GLB, and STL are acceptance formats. glTF metallic-roughness maps to the PBR shading path. FBX material properties normalize into a general lit material. STL and incomplete assets use a deterministic default lit material. Geometry ownership is independent of shading so future inspection modes do not require re-importing assets.
+
+### Input dependency
+
+Interactive camera work consumes the new window-owned input API from `wip/win/input-merge` (or its eventual integration branch). This assignment will neither copy nor recommit that agent's changes. Asset loading, E2 integration, fixed-camera rendering, and headless tests proceed independently. The dependency is merged once its owner has committed and published a verified milestone.
+
+### Branch workflow
+
+All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicated worktree `/home/chenli/code/garnet-mesh-viewer`. Dependency commits are merged once and retained with their original identity. Before integration, compare branch ancestry and patch identity to avoid duplicate commits.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 0.1 — dedicated branch and normalized tool directory created
+  Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
+In progress: Phase 0.2 — establish assignment and dependency ownership
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Legacy viewer: `src/tool/mesh-viewer/main.cpp`
+FX2 model rendering: `src/inc/garnet/fx2/pbr.h`, `src/core/fx2/pbr.cpp`
+E2 visual composition: `src/core/e2/e2-internal.h`, `src/core/e2/visual.cpp`, `src/core/e2/simple-world.cpp`
+E2 public API: `src/inc/garnet/GNengine2.h`, `src/inc/garnet/e2/visual.h`, `src/inc/garnet/e2/world.h`
+RDG2 design: `src/core/rdg2/README.md`, `src/inc/garnet/rdg2/closed-graph.h`
+Input dependency: `wip/win/input-merge`, `agent/WINDOW_INPUT_MERGE.txt`
+
+--- BUILD / CI ---
+
+`source env/garnet.rc`
+`build.py d`
+`build.py --clang d`
+`build/debug/bin/GNtest-internal "[fx2]"`
+`build/debug/bin/GNtest-internal "[e2]"`
+`build/debug/bin/GNtest-internal "[rdg2][closed]"`
+`build/debug/bin/GNsample-e2-simple-world t`
+`build/debug/bin/GNtool-mesh-viewer --test <fixture>`
+`env/bin/format-all-sources.py -dqn`
+`env/bin/cit.py`
+
+--- WORKFLOW / CONVENTIONS ---
+
+- FX2 must not depend on E2 or RDG2; RDG2 must not interpret models, materials, cameras, or worlds.
+- E2 renders sealed visual moments and never reaches back into mutable forms during execution.
+- Model parsing and immutable uploads occur outside the per-frame render path.
+- Use public monolithic headers in clients, `AutoRef` ownership, and `RuntimeType::cast`.
+- Keep all submodules shallow and use project build/test/format wrappers.
+- Preserve other agents' commit ownership; merge dependency branches rather than copying their diffs.
+- Each task is verified and committed independently before progress advances.
+
+--- TASK BREAKDOWN ---
+
+Phase 0: Isolated foundation
+─────────────────────────────────────────────────────────────────────
+  Task 0.1: Create the feature branch and normalize the mesh viewer directory name
+    Verify: debug configuration resolves `src/tool/mesh-viewer`; branch is published on origin
+    Commit: "refactor(tool): normalize mesh viewer directory name (Phase 0.1)"
+
+  Task 0.2: Record architecture, validation, and dependency ownership
+    Verify: assignment follows `agent/README.md` and identifies input work as an external dependency
+    Commit: "docs(mesh-viewer): add modernization assignment (Phase 0.2)"
+
+Phase 1: Format-neutral model import
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Define immutable FX2 scene, primitive, material, hierarchy, and bounds types
+    Verify: public API compiles through `GNfx2.h`; declarations are renderer- and format-neutral
+    Commit: "feat(fx2): define model asset interface (Phase 1.1)"
+
+  Task 1.2: Import FBX, glTF, GLB, and STL through the neutral model interface
+    Verify: focused importer tests validate hierarchy, transforms, primitives, index widths, materials, and bounds for all four formats
+    Commit: "feat(fx2): import supported model formats (Phase 1.2)"
+
+  Task 1.3: Handle textures, missing attributes, defaults, and malformed inputs
+    Verify: tests cover embedded/external textures, generated normals, absent UVs, default material, and clean failures
+    Commit: "feat(fx2): normalize imported model content (Phase 1.3)"
+
+Phase 2: FX2 GPU model rendering
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Upload immutable model geometry and texture resources through gpu2
+    Verify: first-use payload ordering is correct and repeated frames perform no immutable re-upload
+    Commit: "feat(fx2): create gpu2 model assets (Phase 2.1)"
+
+  Task 2.2: Add PBR, general-lit, and default-lit material paths
+    Verify: representative glTF, FBX, and STL fixtures produce correct per-primitive draw descriptions
+    Commit: "feat(fx2): render normalized model materials (Phase 2.2)"
+
+Phase 3: E2 model integration
+─────────────────────────────────────────────────────────────────────
+  Task 3.1: Add a public E2 model form/facet creation API
+    Verify: public declarations have Doxygen documentation and expose no gpu2 or RDG2 implementation details
+    Commit: "feat(e2): add model form interface (Phase 3.1)"
+
+  Task 3.2: Capture immutable model instances into visual moments
+    Verify: snapshot tests prove transform and lifetime independence from subsequent live-form mutation
+    Commit: "feat(e2): capture model visual instances (Phase 3.2)"
+
+  Task 3.3: Render model instances in the existing E2 closed frame plan
+    Verify: E2 tests cover multiple instances and large-world rebasing; submit/present remain RDG2-owned
+    Commit: "feat(e2): render fx2 models through rdg2 (Phase 3.3)"
+
+Phase 4: Viewer shell and inspection
+─────────────────────────────────────────────────────────────────────
+  Task 4.1: Replace SampleApp with an E2 application and fixed camera loop
+    Verify: headless fixed-frame runs succeed for FBX, glTF, GLB, and STL fixtures
+    Commit: "refactor(mesh-viewer): move application to e2 (Phase 4.1)"
+
+  Task 4.2: Add automatic bounds framing and format-neutral hierarchy printing
+    Verify: `--print` and initial framing handle empty, tiny, large, and transformed scenes
+    Commit: "feat(mesh-viewer): add scene inspection and framing (Phase 4.2)"
+
+  Task 4.3: Add new-stack bounds and coordinate-axis visualization
+    Verify: debug geometry matches transformed scene bounds without legacy effects or debug renderers
+    Commit: "feat(mesh-viewer): add debug visualization (Phase 4.3)"
+
+Phase 5: Input integration
+─────────────────────────────────────────────────────────────────────
+  Task 5.1: Merge the completed window-input dependency exactly once
+    Verify: dependency commit ancestry is preserved; no duplicated patch or separately authored input changes exist
+    Commit: "merge: integrate window input dependency (Phase 5.1)"
+
+  Task 5.2: Implement orbit, pan, dolly, resize, focus, reset, and display toggles
+    Verify: synthetic controller tests and a windowed manual pass cover drag, wheel, resize, focus loss, and reset-to-fit
+    Commit: "feat(mesh-viewer): add window-input camera controls (Phase 5.2)"
+
+Phase 6: Final validation and documentation
+─────────────────────────────────────────────────────────────────────
+  Task 6.1: Run the cross-format, teardown, build, format, and CI matrix
+    Verify: GCC and Clang debug builds, focused tests, headless fixtures, samples, format check, and full CIT pass
+    Commit: "test(mesh-viewer): validate modern viewer matrix (Phase 6.1)"
+
+  Task 6.2: Document the settled asset, world, effect, and graph boundaries
+    Verify: E2/FX2 docs describe ownership, supported formats, defaults, and deferred skeletal animation
+    Commit: "docs(mesh-viewer): document modern viewer architecture (Phase 6.2)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 0 (foundation):
+  src/tool/CMakeLists.txt — use the normalized directory name
+  src/tool/mesh-viewer/ — renamed tool directory
+  agent/MESH_VIEWER_MODERNIZATION.txt — NEW: resumable assignment
+
+Phase 1-2 (FX2 model assets):
+  src/inc/garnet/GNfx2.h — expose the model interface
+  src/inc/garnet/fx2/model.h — NEW: neutral model asset and drawing API
+  src/core/fx2/model.cpp — NEW: import, normalization, gpu2 upload, and draw construction
+  src/core/fx2/test/model-test.cpp — NEW: importer and model tests
+  src/core/fx2/test/internal-test.cmake — register model tests and fixtures
+
+Phase 3 (E2 integration):
+  src/inc/garnet/e2/visual.h — model-facing public E2 declarations
+  src/core/e2/e2-internal.h — immutable model instance snapshot data
+  src/core/e2/visual.cpp — adapt captured model instances into FX2/RDG2 work
+  src/core/e2/model.cpp — NEW: model visual facet and form construction
+  src/core/e2/test/ — snapshot and graph integration coverage
+
+Phase 4-5 (tool):
+  src/tool/mesh-viewer/main.cpp — E2 application, inspection, camera, and controls
+  src/tool/mesh-viewer/CMakeLists.txt — modern target sources and fixture support
+  src/tool/mesh-viewer/pch.h — remove or reduce legacy includes
+  src/tool/mesh-viewer/pch.cpp — remove if PCH is no longer useful
+
+Phase 6 (documentation and fixtures):
+  src/core/fx2/README.md — supported model and material behavior
+  src/core/e2/README.md — model snapshot/rendering ownership
+  src/core/fx2/test/assets/ — NEW: minimal FBX, glTF, GLB, and STL fixtures
