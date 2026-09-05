@@ -1,0 +1,246 @@
+# Assignment: Merge keyboard and mouse input into the window module
+
+## Overview
+
+- Branch: `wip/win/input-merge`
+- Overall status: complete; PR #42 verified and ready to merge.
+- Completed: API inventory, merged public API, shared input state, GLFW backend,
+  Win32 backend, consumer migration, legacy removal, internal tests, Linux debug
+  build, full internal test run, and lint.
+- Completed follow-up: `Window` is now an implementation-free pure-virtual
+  interface; internal `WindowInput` owns all signals, queues, state, and event
+  mutation used by concrete backends and tests.
+- Completed PR verification: the initial Windows run exposed missing DirectX
+  linkage after standalone XInput removal; linkage was restored independently
+  for retained D3D backends, and the replacement matrix passed.
+- Current step: merge PR #42 after the documentation-only final CI run.
+- Remaining: merge PR #42.
+- Verification baseline: debug build passed; 118 internal tests passed with
+  4,163 assertions and 2 display-dependent skips; the focused window suite
+  passed 53 assertions across 4 test cases; lint passed.
+- Platform limitation: the native Win32 path was implemented and audited but
+  cannot be exercised interactively in this Linux workspace; CI compiled and
+  linked it successfully in debug, profile, and release configurations.
+
+---
+
+## Goals
+
+Replace the standalone input singleton with per-window keyboard and mouse state,
+events, and queries on `GN::win::Window`. Retain only GLFW and native Win32 as
+real window backends, migrate all clients, remove the old input module, and add
+internal Catch2 tests for backend-independent input behavior.
+
+---
+
+## Design
+
+### Public API
+
+Move key codes, key status/events, axes, conversion helpers, input signals,
+queued key-event access, key/axis state, and mouse-position access into
+`GNwin.h` and namespace `GN::win`. A window owns its input state; pumping window
+events updates the state and emits signals.
+
+### Backends
+
+GLFW uses window-local callbacks. Native Win32 translates messages in the
+window procedure and attached-window hook. Qt and X11 window implementations,
+plus all standalone native/DirectInput/XInput implementations, are removed.
+
+### Verification
+
+Backend-independent event/state semantics are exercised through a test window
+in the internal Catch2 executable. Linux builds exercise the GLFW production
+backend at compile/link time.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 6 — public Window purity follow-up implemented and verified
+  Phase 0: inspected public interfaces, implementations, build wiring, and consumers
+  Phase 1: added per-window input API, shared state, signals, queue, and internal tests
+  Phase 2: implemented GLFW callbacks and native Win32 message translation
+  Phase 3: migrated live consumers and removed standalone input, Qt, and X11 window code
+  Phase 4: debug build and lint passed; 118 internal tests passed with 4163 assertions and 2 display skips
+  Phase 5: branch audit, no-work rebuild, 53-assertion focused tests, and lint passed
+  Phase 6: moved input implementation to internal WindowInput; debug build, focused tests, lint, and diff checks passed
+  Phase 7.1: restored DirectX linkage; Windows debug/profile/release and CircleCI passed
+In progress: Phase 7.2 — merge PR #42 after the final documentation-only CI run
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Public API: src/inc/garnet/GNwin.h and the removed GNinput.h.
+Backends: src/core/win/ and the removed src/core/input/.
+Consumers: src/core/app/, src/core/util/, src/inc/garnet/util/, src/sample/, and src/test/.
+
+--- BUILD / CI ---
+
+Source `env/garnet.rc`, run `build.py d`, `env/bin/cit.py -t`, and
+`env/bin/cit.py -l`.
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Preserve unrelated user changes.
+- Use `GNwin.h` and `GN::win` for the merged API.
+- Put backend-independent bookkeeping in internal `WindowInput`; public `Window`
+  remains a pure-virtual interface and backends translate native events.
+- Use internal Catch2 tests under `src/core/win/test/`.
+- Do not commit or push unless explicitly requested.
+
+--- TASK BREAKDOWN ---
+
+Phase 0: Discovery and design
+─────────────────────────────────────────────────────────────────────
+  Task 0.1: Map public APIs, implementations, build wiring, and consumers
+    Verify: affected source and build paths are recorded in this assignment
+    Commit: "docs(agent): plan window input merge (Phase 0.1)"
+
+  Task 0.2: Establish a dedicated branch without losing the active working tree
+    - Create `wip/win/input-merge` from `master` and retain all task changes there.
+    - Avoid a separate clone because no unrelated working-tree edits need isolation.
+    Verify: `git status --branch` reports `wip/win/input-merge`
+    Commit: "chore(win): establish input merge branch (Phase 0.2)"
+
+Phase 1: Merged window input API
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Move keyboard, mouse-button, axis, status, and event types into GNwin.h
+    - Place the types in `GN::win` and retain stable key names needed by existing clients.
+    - Move key metadata and string conversion helpers under `garnet/win/`.
+    - Correct modifier convenience methods so either left or right modifier counts as held.
+    Verify: GNwin.h compiles as the sole public window/input include and key names round-trip
+    Commit: "win(input): add per-window input API and state (Phase 1.1)"
+
+  Task 1.2: Add per-window signals and public input queries
+    - Expose key, Unicode character, and axis signals directly on `Window`.
+    - Expose queued key transitions, complete key state, single-key state, axis state,
+      and client-relative mouse position.
+    Verify: a test-derived Window can observe every public query and signal
+    Commit: "win(input): expose input events on Window (Phase 1.2)"
+
+  Task 1.3: Implement backend-independent input bookkeeping
+    - Suppress redundant key transitions and keep modifier snapshots consistent.
+    - Bound the transition queue at 32 events, dropping the oldest on overflow.
+    - Maintain absolute mouse and wheel axes while emitting relative deltas.
+    Verify: internal tests cover state transitions, modifiers, queue overflow, axes, and text
+    Commit: "win(input): implement shared input bookkeeping (Phase 1.3)"
+
+Phase 2: Production backends
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Implement GLFW keyboard, character, mouse button, cursor, and wheel translation
+    - Translate the complete retained keyboard vocabulary, keypad, function keys,
+      and all eight mouse buttons.
+    - Ignore repeat actions in the transition signal while relying on character
+      callbacks for text repetition.
+    - Initialize the client-relative cursor position and scale wheel ticks consistently.
+    Verify: Linux debug build compiles and links the GLFW callbacks
+    Commit: "win(glfw): integrate window input callbacks (Phase 2.1)"
+
+  Task 2.2: Implement native Win32 keyboard, character, mouse button, cursor, and wheel translation
+    - Translate `WM_KEY*`, `WM_SYSKEY*`, `WM_CHAR`, mouse buttons, movement, and wheels.
+    - Distinguish left/right Shift, Control, and Alt from scan/extended-key data.
+    - Route messages for owned windows through the window procedure and attached
+      windows through the thread hook and instance map.
+    Verify: guarded source follows Windows API types and shared semantics tests cover its dispatch target
+    Commit: "win(msw): integrate message-driven window input (Phase 2.2)"
+
+Phase 3: Migration and removal
+─────────────────────────────────────────────────────────────────────
+  Task 3.1: Migrate engine and application framework ownership
+    - Remove engine input initialization/shutdown and InputAPI selection.
+    - Connect SampleApp handlers to the GPU render window and let the window pump
+      drive input delivery.
+    Verify: engine and SampleApp compile without the standalone singleton
+    Commit: "refactor(input): migrate clients to window input (Phase 3.1)"
+
+  Task 3.2: Migrate utilities, samples, tools, and legacy application helpers
+    - Update camera/arcball helpers and all maintained call sites to `GN::win` types.
+    - Replace D3D helper input initialization with an attached `Window` wrapper.
+    - Keep old executable tests buildable while moving new coverage to internal tests.
+    Verify: enabled samples, tools, and legacy test executables compile and link
+    Commit: "refactor(input): migrate remaining input clients (Phase 3.2)"
+
+  Task 3.3: Remove the standalone input module and deprecated backends
+    - Delete GNinput.h, public input helper directory, and `src/core/input/`.
+    - Delete Qt and X11 Window implementations, leaving GLFW and native Win32.
+    - Remove input, XInput, Qt, and X11-window backend wiring from core CMake.
+    - Delete the deprecated standalone input executable test.
+    Verify: repository audit finds no live standalone input or removed backend references
+    Commit: "refactor(input): remove legacy input qt and x11 modules (Phase 3.3)"
+
+Phase 4: Internal tests and build verification
+─────────────────────────────────────────────────────────────────────
+  Task 4.1: Add internal Catch2 tests for backend-independent input behavior
+    - Use a minimal test-derived Window to inject translated events.
+    - Cover signal delivery, redundant-event suppression, modifiers, queue bounds,
+      mouse position, wheel axes, Unicode text, and key-name conversion.
+    Verify: focused `[win]` suite passes 53 assertions in 4 test cases
+    Commit: "test(win): verify merged window input module (Phase 4.1)"
+
+  Task 4.2: Format, build, run the complete internal suite, and lint
+    - Run changed-file formatting and whitespace checks.
+    - Build Debug through `build.py`; use a temporary local shader compiler when
+      the host lacks `glslc`, without installing or modifying the system.
+    - Run the full internal Catch2 executable, allowing explicit no-display skips.
+    Verify: debug build, 118-test internal suite, and lint all pass
+    Commit: "test(win): run full input merge verification (Phase 4.2)"
+
+Phase 5: Conformance audit and handoff
+─────────────────────────────────────────────────────────────────────
+  Task 5.1: Audit the implementation and final diff against every plan item
+    - Re-scan for removed APIs/backends and inspect branch/status/diff consistency.
+    - Check public documentation, ownership, event semantics, and build registration.
+    Verify: `git diff --check` passes and forbidden-symbol searches return no live matches
+    Commit: "refactor(win): finalize input merge audit (Phase 5.1)"
+
+  Task 5.2: Repeat focused build/test/lint checks after final plan-conformance edits
+    Verify: Debug build is up to date, `[win]` tests pass, and lint passes
+    Commit: "test(win): confirm final input merge state (Phase 5.2)"
+
+  Task 5.3: Complete and archive the assignment document
+    Verify: Overview and PROGRESS show completion and the document resides in agent/completed/
+    Commit: "docs(agent): archive window input merge assignment (Phase 5.3)"
+
+Phase 6: Keep Window purely abstract
+─────────────────────────────────────────────────────────────────────
+  Task 6.1: Convert Window input storage and behavior to pure virtual interface methods
+    - Replace public signal data members with pure virtual signal accessors.
+    - Make key queue, key/axis state, and mouse-position queries pure virtual.
+    - Remove constructors, protected injection methods, containers, and state from GNwin.h.
+    Verify: Window contains no input storage or concrete input behavior
+    Commit: "refactor(win): keep public Window input API abstract (Phase 6.1)"
+
+  Task 6.2: Add an internal WindowInput subclass and migrate concrete backends
+    - Own all input state and signals in the internal subclass.
+    - Derive GLFW, Win32, fake, and test windows from the internal subclass.
+    - Update clients to call pure virtual signal accessors.
+    Verify: focused window tests and debug build compile and link
+    Commit: "refactor(win): move input state into internal subclass (Phase 6.2)"
+
+  Task 6.3: Audit, test, lint, and archive the updated plan
+    Verify: focused tests, full practical build, lint, and diff checks pass
+    Commit: "test(win): verify abstract window input interface (Phase 6.3)"
+
+Phase 7: PR and Windows verification
+─────────────────────────────────────────────────────────────────────
+  Task 7.1: Restore DirectX linkage independently of the removed input module
+    - Link detected DirectX libraries on Windows for the retained D3D backends.
+    Verify: Linux debug build/lint remain green and Windows CI links GNtest-internal
+    Commit: "fix(build): restore Windows DirectX linkage"
+
+  Task 7.2: Complete CI-gated integration
+    - Require CircleCI and Windows debug/profile/release to pass.
+    - Merge PR #42 to master only after every required check succeeds.
+    Verify: PR is merged and origin/master contains its merge result
+    Commit: merge performed through the PR
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1: GNwin.h, moved win metadata/helpers, shared window input implementation, and tests.
+Phase 2: GLFW and MSW window backend headers and sources.
+Phase 3: all consumers, core CMake wiring, and removal of input/Qt/X11 files.
+Phase 4: internal Catch2 registration and test sources.
+Phase 5: final audit plus assignment progress and archive location.
+Phase 6: pure Window interface, internal state-owning subclass, caller migration, and verification.
+Phase 7: Windows CI linkage correction and CI-gated PR merge.

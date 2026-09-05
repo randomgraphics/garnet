@@ -159,7 +159,7 @@ struct OrbitCamera {
 
 public:
     OrbitCamera() {
-        // TODO: hook with gInput signals,
+        // TODO: hook with render-window input signals,
     }
 
     void reset(const AABB & bb) {
@@ -182,7 +182,6 @@ int main(int argc, const char * argv[]) {
     AutoObjPtr<GN::win::Window> win(GN::win::createWindow({"GNrt", 1280, 720}));
 
     // initalize input manager
-    GN::input::initializeInputSystem();
 
     // Legacy GPU2 API removed; keep test as a no-op placeholder.
     void * gpu = nullptr;
@@ -203,8 +202,6 @@ int main(int argc, const char * argv[]) {
     // float frameDuration = 1.0f / 30.0f;
     // auto  lastFrameTime = std::chrono::high_resolution_clock::now();
     while (win->runUntilNoNewEvents()) {
-
-        gInput.processInputEvents();
 
         s.DrawFrame({
             camera.view,

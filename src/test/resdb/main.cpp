@@ -2,7 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::util;
 
 GpuResourceDatabase * db    = NULL;
@@ -147,7 +147,7 @@ void quit(Gpu &) {
     safeDelete(db);
 }
 
-void update(Input & in) {
+void update(Window & in) {
     KeyEvent k = in.popLastKeyEvent();
 
     if (KeyCode::SPACEBAR == k.code() && k.status.down) {
@@ -179,9 +179,7 @@ int run(Gpu & gpu) {
 
     while (gogogo && gpu.getRenderWindow().runUntilNoNewEvents(false)) {
 
-        Input & in = gInput;
-
-        in.processInputEvents();
+        Window & in = gpu.getRenderWindow();
 
         if (in.getKeyStatus(KeyCode::ESCAPE).down) { gogogo = false; }
 
@@ -198,16 +196,6 @@ int run(Gpu & gpu) {
 
     return 0;
 }
-
-struct InputInitiator {
-    InputInitiator(Gpu & r) {
-        initializeInputSystem(InputAPI::NATIVE);
-        const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow(dd.displayHandle, dd.windowHandle);
-    }
-
-    ~InputInitiator() { shutdownInputSystem(); }
-};
 
 int main(int argc, const char * argv[]) {
     enableCRTMemoryCheck();
@@ -232,8 +220,6 @@ int main(int argc, const char * argv[]) {
 
     Gpu * r = createGpu(cmdargs.rendererOptions, cmdargs.useMultiThreadGpu ? GPU_CREATION_MULTIPLE_THREADS : 0);
     if (NULL == r) return -1;
-
-    InputInitiator ii(*r);
 
     int result = run(*r);
 

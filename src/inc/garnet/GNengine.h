@@ -8,7 +8,7 @@
 
 #include "GNbase.h"
 #include "GNgfx.h"
-#include "GNinput.h"
+#include "GNwin.h"
 
 namespace GN {
 /// Namespace for engine module

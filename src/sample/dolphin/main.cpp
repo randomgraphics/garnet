@@ -132,10 +132,10 @@ public:
 
     void onQuit() { safeDelete(scene); }
 
-    void onKeyPress(input::KeyEvent key) {
+    void onKeyPress(win::KeyEvent key) {
         GN::util::SampleApp::onKeyPress(key);
 
-        if (input::KeyCode::SPACEBAR == key.code() && key.status.down) { swimming = !swimming; }
+        if (win::KeyCode::SPACEBAR == key.code() && key.status.down) { swimming = !swimming; }
     }
 
     void onUpdate() {

@@ -6,7 +6,7 @@
 /// \author  chen@@CHENLI-HOMEPC (2007.4.16)
 // *****************************************************************************
 
-#include "../GNinput.h"
+#include "../GNwin.h"
 
 #if GN_BUILD_DEBUG_ENABLED
     #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
@@ -519,9 +519,9 @@ protected:
 
     virtual void onDraw() {}
     virtual void onUpdate() {}
-    virtual void onKeyPress(input::KeyEvent);
+    virtual void onKeyPress(win::KeyEvent);
     virtual void onCharPress(wchar_t) {}
-    virtual void onAxisMove(input::Axis, int) {}
+    virtual void onAxisMove(win::Axis, int) {}
 
     //@}
 
@@ -544,7 +544,7 @@ private:
     IDirect3D9 *          mD3D;
     IDirect3DDevice9 *    mDevice;
     bool                  mRunning;
-    bool                  mShutdownInputSystem;
+    win::Window *         mInputWindow;
 };
 } // namespace d3d9
 } // namespace GN

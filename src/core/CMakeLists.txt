@@ -74,7 +74,6 @@ GN_add_source_folder(sources gpu/common PCH_SOURCE gpu/common/pch.cpp)
 GN_add_source_folder(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.cpp)
 GN_add_source_folder(sources gpu2 PCH_SOURCE gpu2/pch.cpp)
 include(fx2/CMakeLists.txt)
-GN_add_source_folder(sources input PCH_SOURCE input/pch.cpp)
 GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
@@ -156,28 +155,10 @@ if (TARGET glfw)
     target_compile_definitions(GNcore-objects PRIVATE HAS_GLFW=1)
 endif()
 
-# Qt6 window backend (deprecated; kept for reference, do not delete yet)
-# if(Qt6Widgets_FOUND)
-#     add_core_libs(Qt::Widgets)
-#     target_compile_definitions(GNcore PRIVATE HAS_QT=1)
-# else()
-#     message("QT not found. QT window is disabled")
-# endif()
-
-# xinput
-if(XINPUT_FOUND)
-    target_compile_definitions(GNcore-objects PRIVATE HAS_XINPUT=1)
+# DirectX libraries serve the Windows graphics backends independently of the
+# removed standalone XInput implementation.
+if (WIN32)
     add_core_libs(${DIRECTX_LIBRARIES})
-elseif(WIN32)
-    message(FATAL_ERROR
-        "XInput not found. XInput is required on Windows platform. "
-        "Make sure you have both Windows SDK and Game Development "
-        "with C++ component of Visual Studio properly installed.")
-endif()
-
-# X11
-if(X11_FOUND AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_compile_definitions(GNcore-objects PRIVATE HAS_X11=1)
 endif()
 
 # FBX

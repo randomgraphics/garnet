@@ -114,12 +114,6 @@ static bool sGfxInitInternal(const GfxInitOptions & o) {
     // create GPU resource database
     s_engine.gdb = new GpuResourceDatabase(*s_engine.gpu);
 
-    // attach to input subsystem
-    if (gInputPtr) {
-        const DispDesc & dd = s_engine.gpu->getDispDesc();
-        if (!gInputPtr->attachToWindow(dd.displayHandle, dd.windowHandle)) return false;
-    }
-
     // success
     return true;
 }
@@ -160,39 +154,10 @@ GN_API bool GN::engine::initialize() { return true; }
 GN_API void GN::engine::shutdown() {
     // shutdown subsystems.
     gfxShutdown();
-    inputShutdown();
 
     // clear engine structure
     sEngineClearInternal();
 }
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API bool GN::engine::inputInitialize(input::InputAPI api) {
-    using namespace GN::input;
-
-    if (!initializeInputSystem(api)) {
-        inputShutdown();
-        return false;
-    }
-
-    // attach to graphics subsystem
-    if (s_engine.gpu) {
-        const gfx::DispDesc & dd = s_engine.gpu->getDispDesc();
-        if (!gInputPtr->attachToWindow(dd.displayHandle, dd.windowHandle)) {
-            inputShutdown();
-            return false;
-        }
-    }
-
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_API void GN::engine::inputShutdown() { GN::input::shutdownInputSystem(); }
 
 //
 //

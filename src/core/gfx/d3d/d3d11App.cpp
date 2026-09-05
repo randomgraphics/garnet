@@ -1,5 +1,5 @@
 #include "pch.h"
-#include <garnet/GNinput.h>
+#include <garnet/GNwin.h>
 
 #if GN_BUILD_HAS_D3D11
 
@@ -207,27 +207,21 @@ static DXGI_SAMPLE_DESC sConstructDXGISampleDesc(ID3D11Device & device,
 
 // -----------------------------------------------------------------------------
 GN::d3d11::D3D11Application::D3D11Application()
-    : mWindow(0), mAdapter(0), mDevice(0), mContext(0), mSwapChain(0)
+    : mWindow(0), mInputWindow(nullptr), mAdapter(0), mDevice(0), mContext(0), mSwapChain(0)
     #if GN_BUILD_HAS_D3D11_1
       ,
       mDevice1(0), mContext1(0), mSwapChain1(0)
     #endif
       ,
       mBackBuf(0), mBackRTV(0), mDepthBuf(0), mDepthDSV(0) {
-    // input::initializeInputSystem();
 }
 
 // -----------------------------------------------------------------------------
-GN::d3d11::D3D11Application::~D3D11Application() { input::shutdownInputSystem(); }
+GN::d3d11::D3D11Application::~D3D11Application() = default;
 
 // -----------------------------------------------------------------------------
 int GN::d3d11::D3D11Application::run(const D3D11AppOption * o) {
     try {
-        if (!GN::input::initializeInputSystem()) {
-            cleanup();
-            return -1;
-        }
-
         if (nullptr != o) {
             mOption = *o;
         } else {
@@ -298,6 +292,8 @@ bool GN::d3d11::D3D11Application::init() {
     RenderWindow::Option o = {mOption.width, mOption.height, mOption.fullscreen};
     mWindow                = RenderWindow::Create(o);
     if (nullptr == mWindow) return false;
+    mInputWindow = win::attachToExistingWindow({0, (intptr_t) mWindow->GetHWND()});
+    if (!mInputWindow) return false;
     return onInit(mOption);
 }
 
@@ -305,8 +301,8 @@ bool GN::d3d11::D3D11Application::init() {
 void GN::d3d11::D3D11Application::cleanup() {
     onCleanup();
     destroyDevice();
+    safeDelete(mInputWindow);
     safeDelete(mWindow);
-    GN::input::shutdownInputSystem();
 }
 
 // -----------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::engine;
 using namespace GN::util;
 
@@ -174,10 +174,10 @@ public:
                                                    (float) getGpu()->getDispDesc().width - 320, 40);
     }
 
-    void onKeyPress(input::KeyEvent ke) {
+    void onKeyPress(win::KeyEvent ke) {
         SampleApp::onKeyPress(ke);
 
-        if (input::KeyCode::B == ke.code() && ke.status.down) { showbbox = !showbbox; }
+        if (win::KeyCode::B == ke.code() && ke.status.down) { showbbox = !showbbox; }
     }
 
     bool onCheckExtraCmdlineArguments(const char * exename, int argc, const char * const argv[]) {

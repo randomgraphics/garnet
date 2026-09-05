@@ -2,7 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::util;
 
 SpriteRenderer *     sr  = NULL;
@@ -109,9 +109,7 @@ int run(Gpu & gpu) {
 
     while (gogogo && gpu.getRenderWindow().runUntilNoNewEvents(false)) {
 
-        Input & in = gInput;
-
-        in.processInputEvents();
+        Window & in = gpu.getRenderWindow();
 
         if (in.getKeyStatus(KeyCode::ESCAPE).down) { gogogo = false; }
 
@@ -128,14 +126,7 @@ int run(Gpu & gpu) {
 }
 
 struct InputInitiator : SlotBase {
-    InputInitiator(Gpu & r) {
-        initializeInputSystem(InputAPI::NATIVE);
-        const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow(dd.displayHandle, dd.windowHandle);
-        connectToSignal<&onKeyPress>(gInput.sigKeyPress);
-    }
-
-    ~InputInitiator() { shutdownInputSystem(); }
+    InputInitiator(Gpu & r) { connectToSignal<&onKeyPress>(r.getRenderWindow().keyPressSignal()); }
 };
 
 int main(int argc, const char * argv[]) {
