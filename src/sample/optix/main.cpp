@@ -316,7 +316,7 @@ public:
         _texture.clear();
     }
 
-    void onKeyPress(input::KeyEvent key) { SampleApp::onKeyPress(key); }
+    void onKeyPress(win::KeyEvent key) { SampleApp::onKeyPress(key); }
 
     void onUpdate() {}
 

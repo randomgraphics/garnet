@@ -3,10 +3,10 @@
 #include <math.h>
 
 using namespace GN;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::util;
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.FirstPersonCamera");
+static GN::win::Window & sInputWindow() { return GN::engine::getGpu()->getRenderWindow(); }
 
 // *****************************************************************************
 // local functions
@@ -114,7 +114,7 @@ void FirstPersonCamera::update(float timeslice) {
     Vector3f delta_a(0, 0, 0);
 
     // process keyboard actions (as for right hand)
-    const KeyStatus * kb = gInput.getKeyboardStatus();
+    const KeyStatus * kb = sInputWindow().getKeyboardStatus();
     if (kb[(int) mKeys[MOVE_F]].down) delta_p.z -= mMoveSpeed * timeslice;
     if (kb[(int) mKeys[MOVE_B]].down) delta_p.z += mMoveSpeed * timeslice;
     if (kb[(int) mKeys[MOVE_L]].down) delta_p.x -= mMoveSpeed * timeslice;
@@ -156,11 +156,7 @@ void FirstPersonCamera::update(float timeslice) {
 // -----------------------------------------------------------------------------
 void FirstPersonCamera::connectToInput() {
     disconnectFromAllSignals();
-    if (gInputPtr) {
-        connectToSignal<&FirstPersonCamera::onAxisMove>(gInput.sigAxisMove);
-    } else {
-        GN_ERROR(sLogger, "Input module is not initialized.");
-    }
+    connectToSignal<&FirstPersonCamera::onAxisMove>(sInputWindow().axisMoveSignal());
 }
 
 // *****************************************************************************
@@ -170,8 +166,8 @@ void FirstPersonCamera::connectToInput() {
 //
 //
 // -----------------------------------------------------------------------------
-void FirstPersonCamera::onAxisMove(input::Axis a, int d) {
-    Input & i = gInput;
+void FirstPersonCamera::onAxisMove(win::Axis a, int d) {
+    Window & i = sInputWindow();
 
     if (i.getKeyStatus(mKeys[AXIS_LOOK]).down) {
         float    distance = mAxisSensitivity * d;

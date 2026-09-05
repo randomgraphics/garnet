@@ -1,11 +1,22 @@
 ﻿#include "pch.h"
 #include "windowMsw.h"
 
+#include <algorithm>
+
 #if GN_WINPC
 
 GN::Dictionary<void *, GN::win::WindowMsw *> GN::win::WindowMsw::msInstanceMap;
 
 static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
+
+GN::win::WindowMsw::WindowMsw() {
+    clear();
+    std::fill(std::begin(mKeyMap), std::end(mKeyMap), KeyCode::NONE);
+    #define GNWIN_DEFINE_KEYCODE(name, dikey, scancode, vkeycode, xkeysym) \
+        if ((vkeycode) > 0 && (vkeycode) < (int) std::size(mKeyMap)) mKeyMap[vkeycode] = KeyCode::name;
+    #include "garnet/win/key-code-meta.h"
+    #undef GNWIN_DEFINE_KEYCODE
+}
 
 //
 //
@@ -105,8 +116,9 @@ bool GN::win::WindowMsw::init(const WindowAttachingParameters & wap) {
         return failure();
     }
 
-    mWindow     = (HWND) wap.window;
-    mIsExternal = true;
+    mWindow                = (HWND) wap.window;
+    mIsExternal            = true;
+    msInstanceMap[mWindow] = this;
 
     // success
     return success();
@@ -269,6 +281,68 @@ bool GN::win::WindowMsw::runUntilNoNewEvents(bool blockWhileMinized) {
 // Private methods
 // *****************************************************************************
 
+void GN::win::WindowMsw::handleMessage(HWND, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYUP: {
+        const bool down = WM_KEYDOWN == msg || WM_SYSKEYDOWN == msg;
+        KeyCode    key  = KeyCode::NONE;
+        if (VK_SHIFT == wp) {
+            const UINT vk = ::MapVirtualKeyW((UINT) ((lp >> 16) & 0xFF), MAPVK_VSC_TO_VK_EX);
+            key           = VK_RSHIFT == vk ? KeyCode::RSHIFT : KeyCode::LSHIFT;
+        } else if (VK_CONTROL == wp) {
+            key = (lp & 0x01000000) ? KeyCode::RCTRL : KeyCode::LCTRL;
+        } else if (VK_MENU == wp) {
+            key = (lp & 0x01000000) ? KeyCode::RALT : KeyCode::LALT;
+        } else if (wp < std::size(mKeyMap)) {
+            key = mKeyMap[wp];
+        }
+        if (KeyCode::NONE != key) notifyKeyPress(key, down);
+        break;
+    }
+    case WM_CHAR:
+        notifyCharPress((wchar_t) wp);
+        break;
+    case WM_LBUTTONDOWN:
+        notifyKeyPress(KeyCode::MOUSEBTN_0, true);
+        break;
+    case WM_LBUTTONUP:
+        notifyKeyPress(KeyCode::MOUSEBTN_0, false);
+        break;
+    case WM_RBUTTONDOWN:
+        notifyKeyPress(KeyCode::MOUSEBTN_1, true);
+        break;
+    case WM_RBUTTONUP:
+        notifyKeyPress(KeyCode::MOUSEBTN_1, false);
+        break;
+    case WM_MBUTTONDOWN:
+        notifyKeyPress(KeyCode::MOUSEBTN_2, true);
+        break;
+    case WM_MBUTTONUP:
+        notifyKeyPress(KeyCode::MOUSEBTN_2, false);
+        break;
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONUP: {
+        const auto key = XBUTTON1 == HIWORD(wp) ? KeyCode::MOUSEBTN_3 : KeyCode::MOUSEBTN_4;
+        notifyKeyPress(key, WM_XBUTTONDOWN == msg);
+        break;
+    }
+    case WM_MOUSEMOVE:
+        updateMousePosition((int) (short) LOWORD(lp), (int) (short) HIWORD(lp));
+        break;
+    case WM_MOUSEWHEEL:
+        notifyAxisMove(Axis::MOUSE_WHEEL_0, (int) (short) HIWORD(wp));
+        break;
+    case WM_MOUSEHWHEEL:
+        notifyAxisMove(Axis::MOUSE_WHEEL_1, (int) (short) HIWORD(wp));
+        break;
+    default:
+        break;
+    }
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -376,6 +450,8 @@ LRESULT
 GN::win::WindowMsw::windowProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) {
     GN_GUARD;
 
+    handleMessage(wnd, msg, wp, lp);
+
     switch (msg) {
     case WM_CLOSE:
         ::PostQuitMessage(0);
@@ -421,11 +497,8 @@ LRESULT CALLBACK GN::win::WindowMsw::staticHookProc(int code, WPARAM wp, LPARAM 
     WindowMsw ** ppwnd = msInstanceMap.find(((CWPSTRUCT *) lp)->hwnd);
 
     if (NULL != ppwnd) {
-        // TODO: process window messages here.
-        // CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
-        // WindowMsw * wnd = *ppwnd;
-        // GN_ASSERT( cwp && wnd );
-        // ProcessMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
+        CWPSTRUCT * cwp = (CWPSTRUCT *) lp;
+        (*ppwnd)->handleMessage(cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam);
     }
 
     return ::CallNextHookEx(0, code, wp, lp);

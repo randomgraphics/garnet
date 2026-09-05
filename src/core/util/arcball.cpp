@@ -3,6 +3,8 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.util.ArcBall");
 
+static GN::win::Window & sInputWindow() { return GN::engine::getGpu()->getRenderWindow(); }
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -45,12 +47,8 @@ GN::util::ArcBall::ArcBall(Handness h)
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::connectToInput() {
     disconnectFromAllSignals();
-    if (gInputPtr) {
-        connectToSignal<&ArcBall::onKeyPress>(gInput.sigKeyPress);
-        connectToSignal<&ArcBall::onAxisMove>(gInput.sigAxisMove);
-    } else {
-        GN_ERROR(sLogger, "Input module is not initialized.");
-    }
+    connectToSignal<&ArcBall::onKeyPress>(sInputWindow().keyPressSignal());
+    connectToSignal<&ArcBall::onAxisMove>(sInputWindow().axisMoveSignal());
 }
 
 //
@@ -148,19 +146,19 @@ void GN::util::ArcBall::onTranslation(int x, int y) {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::onKeyPress(input::KeyEvent key) {
-    if (input::KeyCode::MOUSEBTN_0 == key.code()) {
+void GN::util::ArcBall::onKeyPress(win::KeyEvent key) {
+    if (win::KeyCode::MOUSEBTN_0 == key.code()) {
         if (key.status.down) {
             int x, y;
-            gInput.getMousePosition(x, y);
+            sInputWindow().getMousePosition(x, y);
             beginRotation(x, y);
         } else {
             endRotation();
         }
-    } else if (input::KeyCode::MOUSEBTN_1 == key.code()) {
+    } else if (win::KeyCode::MOUSEBTN_1 == key.code()) {
         if (key.status.down) {
             int x, y;
-            gInput.getMousePosition(x, y);
+            sInputWindow().getMousePosition(x, y);
             beginTranslation(x, y);
         } else {
             endTranslation();
@@ -171,11 +169,11 @@ void GN::util::ArcBall::onKeyPress(input::KeyEvent key) {
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::onAxisMove(input::Axis, int) {
+void GN::util::ArcBall::onAxisMove(win::Axis, int) {
     if (!mMoving && !mRolling) return;
 
     int x, y;
-    gInput.getMousePosition(x, y);
+    sInputWindow().getMousePosition(x, y);
 
     onTranslation(x, y);
     onRotation(x, y);

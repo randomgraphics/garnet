@@ -9,6 +9,7 @@
 #ifndef NOMINMAX
     #define NOMINMAX
 #endif
+#include "../GNwin.h"
 #include <windows.h>
 #if GN_BUILD_HAS_D3D11_1
     #include <d3d11_1.h>
@@ -904,6 +905,7 @@ private:
 
     D3D11AppOption        mOption;
     RenderWindow *        mWindow;
+    win::Window *         mInputWindow;
     IDXGIAdapter *        mAdapter;
     ID3D11Device *        mDevice;
     ID3D11DeviceContext * mContext;

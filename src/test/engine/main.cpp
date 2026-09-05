@@ -2,7 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::engine;
 using namespace GN::util;
 
@@ -57,9 +57,7 @@ bool run() {
 
     while (gogogo && getGpu()->getRenderWindow().runUntilNoNewEvents(false)) {
 
-        Input & in = gInput;
-
-        in.processInputEvents();
+        Window & in = getGpu()->getRenderWindow();
 
         if (in.getKeyStatus(KeyCode::ESCAPE).down) { gogogo = false; }
 
@@ -99,8 +97,6 @@ int main(int argc, const char * argv[]) {
     }
 
     bool noerror = engine::initialize();
-
-    if (noerror) { noerror = engine::inputInitialize(input::InputAPI::NATIVE); }
 
     if (noerror) {
         // setup graphics options

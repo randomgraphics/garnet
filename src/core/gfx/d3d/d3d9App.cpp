@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "garnet/GNinput.h"
+#include "garnet/GNwin.h"
 
 #if GN_BUILD_HAS_D3D9
 
@@ -184,7 +184,7 @@ static bool sSetupD3dpp(D3DPRESENT_PARAMETERS & d3dpp, HWND window, IDirect3D9 &
 //
 //
 // -----------------------------------------------------------------------------
-GN_API GN::d3d9::D3D9Application::D3D9Application(): mWindow(0), mD3D(0), mDevice(0), mShutdownInputSystem(false) {}
+GN_API GN::d3d9::D3D9Application::D3D9Application(): mWindow(0), mD3D(0), mDevice(0), mInputWindow(nullptr) {}
 
 //
 //
@@ -212,7 +212,6 @@ GN_API int GN::d3d9::D3D9Application::run(const D3D9AppOption *) {
     #if GN_XBOX2
 
     while (mRunning) {
-        if (gInputPtr) gInput.processInputEvents();
         onUpdate();
         onDraw();
     }
@@ -230,7 +229,6 @@ GN_API int GN::d3d9::D3D9Application::run(const D3D9AppOption *) {
             ::WaitMessage();
         } else {
             // Idle time, do rendering and update
-            if (gInputPtr) gInput.processInputEvents();
             onUpdate();
             onDraw();
         }
@@ -275,15 +273,11 @@ GN_API bool GN::d3d9::D3D9Application::init() {
     if (0 == mWindow) return false;
     #endif
 
-    // initialize input system
-    if (NULL == gInputPtr) {
-        if (!input::initializeInputSystem()) return false;
-        mShutdownInputSystem = true;
-    }
-    if (!gInput.attachToWindow(0, (intptr_t) mWindow)) return false;
-    connectToSignal<&D3D9Application::onKeyPress>(gInput.sigKeyPress);
-    connectToSignal<&D3D9Application::onCharPress>(gInput.sigCharPress);
-    connectToSignal<&D3D9Application::onAxisMove>(gInput.sigAxisMove);
+    mInputWindow = win::attachToExistingWindow({0, (intptr_t) mWindow});
+    if (!mInputWindow) return false;
+    connectToSignal<&D3D9Application::onKeyPress>(mInputWindow->keyPressSignal());
+    connectToSignal<&D3D9Application::onCharPress>(mInputWindow->charPressSignal());
+    connectToSignal<&D3D9Application::onAxisMove>(mInputWindow->axisMoveSignal());
 
     // create D3D object
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);
@@ -307,7 +301,7 @@ GN_API void GN::d3d9::D3D9Application::quit() {
 
     safeRelease(mD3D);
 
-    if (mShutdownInputSystem) { input::shutdownInputSystem(); }
+    safeDelete(mInputWindow);
 
     #if !GN_XBOX2
     sDestroyWindow(mWindow);
@@ -318,11 +312,11 @@ GN_API void GN::d3d9::D3D9Application::quit() {
 //
 //
 // -----------------------------------------------------------------------------
-GN_API void GN::d3d9::D3D9Application::onKeyPress(input::KeyEvent ke) {
+GN_API void GN::d3d9::D3D9Application::onKeyPress(win::KeyEvent ke) {
     #if GN_XBOX2
     GN_UNUSED_PARAM(ke);
     #else
-    if (input::KeyCode::ESCAPE == ke.code() && !ke.status.down) { mRunning = false; }
+    if (win::KeyCode::ESCAPE == ke.code() && !ke.status.down) { mRunning = false; }
     #endif
 }
 

@@ -155,18 +155,18 @@ public:
         // viewFrustum.OnDeviceDelete();
     }
 
-    void onKeyPress(input::KeyEvent ke) override {
+    void onKeyPress(win::KeyEvent ke) override {
         SampleApp::onKeyPress(ke);
 
-        if (input::KeyCode::SPACEBAR == ke.code() && ke.status.down) {
+        if (win::KeyCode::SPACEBAR == ke.code() && ke.status.down) {
             // const int NUM_SCENES = 2;
             // m_ActiveScene = (m_ActiveScene + 1) % NUM_SCENES;
             m_LineWidthInScreenSpace = !m_LineWidthInScreenSpace;
         }
     }
 
-    void onAxisMove(GN::input::Axis a, int d) override {
-        if (GN::input::Axis::MOUSE_WHEEL_0 == a) {
+    void onAxisMove(GN::win::Axis a, int d) override {
+        if (GN::win::Axis::MOUSE_WHEEL_0 == a) {
             float speed = m_Radius / 100.0f;
             m_Radius -= speed * d;
             if (m_Radius < 0.1f) m_Radius = 0.1f;

@@ -3,7 +3,7 @@
 //*
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::input;
+using namespace GN::win;
 using namespace GN::util;
 
 bool       blankScreen = false;
@@ -144,19 +144,7 @@ void draw(Gpu & r) {
     r.drawIndexed(PrimitiveType::TRIANGLE_STRIP, 4, 0, 0, 4, 0);
 }
 
-struct InputInitiator {
-    InputInitiator(Gpu & r) {
-        initializeInputSystem(InputAPI::NATIVE);
-        const DispDesc & dd = r.getDispDesc();
-        gInput.attachToWindow(dd.displayHandle, dd.windowHandle);
-    }
-
-    ~InputInitiator() { shutdownInputSystem(); }
-};
-
 int run(Gpu & gpu) {
-    InputInitiator ii(gpu);
-
     if (!init(gpu)) {
         quit(gpu);
         return -1;
@@ -169,9 +157,7 @@ int run(Gpu & gpu) {
 
     while (gogogo && gpu.getRenderWindow().runUntilNoNewEvents(false)) {
 
-        Input & in = gInput;
-
-        in.processInputEvents();
+        Window & in = gpu.getRenderWindow();
 
         if (in.getKeyStatus(KeyCode::ESCAPE).down || in.getKeyStatus(KeyCode::XB360_A).down) { gogogo = false; }
 

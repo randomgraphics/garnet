@@ -6,6 +6,8 @@
 /// \author  Garnet
 // *****************************************************************************
 
+#include "window-input.h"
+
 #if HAS_GLFW
 
 struct GLFWwindow;
@@ -21,7 +23,7 @@ namespace win {
 ///
 /// Window implementation using GLFW.
 ///
-class WindowGlfw : public Window, public StdClass {
+class WindowGlfw : public WindowInput, public StdClass {
     GN_DECLARE_STDCLASS(WindowGlfw, StdClass);
 
     // ********************************
@@ -44,6 +46,7 @@ private:
         mWindow  = nullptr;
         mMonitor = nullptr;
         mClosing = false;
+        mOwned   = false;
     }
 
     // ********************************

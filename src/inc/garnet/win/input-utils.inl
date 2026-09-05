@@ -1,5 +1,5 @@
 namespace GN {
-namespace input {
+namespace win {
 //
 //
 // ----------------------------------------------------------------------------
@@ -8,9 +8,9 @@ inline KeyCode str2kc(const char * name) {
 
     static const char * sTable[] = {
         "KeyCode::NONE",
-#define GNINPUT_DEFINE_KEYCODE(name, dikey, scancode, vkeycode, xkeysym) #name,
-#include "keyCodeMeta.h"
-#undef GNINPUT_DEFINE_KEYCODE
+#define GNWIN_DEFINE_KEYCODE(name, dikey, scancode, vkeycode, xkeysym) #name,
+#include "key-code-meta.h"
+#undef GNWIN_DEFINE_KEYCODE
     };
 
     for (size_t i = 0; i < sizeof(sTable) / sizeof(sTable[0]); ++i) {
@@ -26,9 +26,9 @@ inline KeyCode str2kc(const char * name) {
 inline const char * keyCode2String(int code) {
     static const char * sTable[] = {
         "KeyCode::NONE",
-#define GNINPUT_DEFINE_KEYCODE(name, dikey, scancode, vkeycode, xkeysym) #name,
-#include "keyCodeMeta.h"
-#undef GNINPUT_DEFINE_KEYCODE
+#define GNWIN_DEFINE_KEYCODE(name, dikey, scancode, vkeycode, xkeysym) #name,
+#include "key-code-meta.h"
+#undef GNWIN_DEFINE_KEYCODE
     };
 
     if (KeyCode::NONE <= (KeyCode) code && (KeyCode) code < KeyCode::NUM_KEYS)
@@ -36,5 +36,5 @@ inline const char * keyCode2String(int code) {
     else
         return "";
 }
-} // namespace input
+} // namespace win
 } // namespace GN

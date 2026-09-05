@@ -282,9 +282,6 @@ struct GfxInitOptions {
     gfx::FontFaceCreationDesc defaultNonAsciiFont; ///< default non-ascii font face creation descriptor
 };
 
-GN_API bool inputInitialize(input::InputAPI);
-GN_API void inputShutdown();
-
 GN_API bool gfxInitialize(const GfxInitOptions &);
 GN_API void gfxShutdown();
 

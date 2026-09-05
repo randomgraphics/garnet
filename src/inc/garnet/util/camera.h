@@ -6,7 +6,7 @@
 /// \author  chenli@@FAREAST (2007.1.16)
 // *****************************************************************************
 
-#include "garnet/GNinput.h"
+#include "garnet/GNwin.h"
 
 namespace GN {
 namespace util {
@@ -190,8 +190,8 @@ public:
     //@}
 
 private:
-    void onKeyPress(input::KeyEvent);
-    void onAxisMove(input::Axis, int);
+    void onKeyPress(win::KeyEvent);
+    void onAxisMove(win::Axis, int);
 };
 
 ///
@@ -270,8 +270,8 @@ public:
     //@}
 
 private:
-    input::KeyCode               mKeys[NUM_KEY_ACTIONS];
-    input::Axis                  mAxises[NUM_AXIS_ACTIONS];
+    win::KeyCode                 mKeys[NUM_KEY_ACTIONS];
+    win::Axis                    mAxises[NUM_AXIS_ACTIONS];
     Handness                     mHandNess;        ///< handness
     Vector3f                     mPosition;        ///< position in world space
     Vector3f                     mAngle;           ///< euler angle in world space
@@ -285,7 +285,7 @@ private:
     LinearInterpolator<Vector3f> mTargetAngle;
 
 private:
-    void onAxisMove(input::Axis, int);
+    void onAxisMove(win::Axis, int);
 };
 } // namespace util
 } // namespace GN
