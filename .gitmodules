@@ -39,3 +39,7 @@
 	path = src/test/3rdparty/catch2
 	url = https://github.com/catchorg/Catch2.git
 	shallow = true
+[submodule "media/digital-forge"]
+	path = media/digital-forge
+	url = https://github.com/randomgraphics/digital-forge.git
+	shallow = true

@@ -26,7 +26,7 @@ Interactive camera work consumes the new window-owned input API from `wip/win/in
 
 ### Test model corpus
 
-Use existing project media and models already present in the repository as the primary integration corpus. In particular, exercise `media/boxes/boxes.fbx`, `media/model/R.F.R01/a01.fbx`, `media/model/tiny/tiny.fbx`, `media/model/humanoid.fbx`, `media/model/humanoid_ascii.fbx`, and `media/pbr/DamagedHelmet/DamagedHelmet.gltf`. Use Assimp's checked-out model corpus for GLB and STL coverage, including `glTF2/BoxTextured-glTF-Binary/BoxTextured.glb`, `glTF2/2CylinderEngine-glTF-Binary/2CylinderEngine.glb`, `STL/triangle.stl`, and one nontrivial ASCII and binary STL model.
+Use existing project media and models already present in the repository as the primary integration corpus. In particular, exercise `media/boxes/boxes.fbx`, `media/model/R.F.R01/a01.fbx`, `media/model/tiny/tiny.fbx`, `media/model/humanoid.fbx`, `media/model/humanoid_ascii.fbx`, and `media/pbr/DamagedHelmet/DamagedHelmet.gltf`. Use `media/digital-forge/model/character/speeder-getaway-from-meshy-ai.glb` as the large real-world GLB stress case for hierarchy, materials, textures, memory use, framing, and rendering. Use Assimp's checked-out model corpus for compact GLB and STL coverage, including `glTF2/BoxTextured-glTF-Binary/BoxTextured.glb`, `glTF2/2CylinderEngine-glTF-Binary/2CylinderEngine.glb`, `STL/triangle.stl`, and one nontrivial ASCII and binary STL model.
 
 Tests may add tiny synthetic fixtures only when exact deterministic assertions or malformed-input coverage cannot be expressed with an existing asset. Do not duplicate large media files under a test directory. Automated tests that rely on optional submodule content must report a clear skip when that content is unavailable; repository-owned media smoke tests are mandatory in a fully initialized checkout.
 
@@ -54,6 +54,7 @@ E2 public API: `src/inc/garnet/GNengine2.h`, `src/inc/garnet/e2/visual.h`, `src/
 RDG2 design: `src/core/rdg2/README.md`, `src/inc/garnet/rdg2/closed-graph.h`
 Input dependency: `wip/win/input-merge`, `agent/WINDOW_INPUT_MERGE.txt`
 Project models: `media/boxes`, `media/model`, `media/pbr/DamagedHelmet`
+Digital Forge stress model: `media/digital-forge/model/character/speeder-getaway-from-meshy-ai.glb`
 Cross-format fixtures: `src/3rdparty/assimp/test/models/FBX`, `src/3rdparty/assimp/test/models/glTF2`, `src/3rdparty/assimp/test/models/STL`
 
 --- BUILD / CI ---
@@ -194,3 +195,4 @@ Phase 6 (documentation and fixtures):
   src/core/fx2/README.md — supported model and material behavior
   src/core/e2/README.md — model snapshot/rendering ownership
   src/core/fx2/test/assets/ — NEW only if existing media cannot provide a required deterministic or malformed-input case
+  media/digital-forge — NEW: shallow model-content submodule used for large-scene validation
