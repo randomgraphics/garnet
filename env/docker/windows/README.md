@@ -6,6 +6,8 @@ revision has merged to master. The rebuilt full Windows Server image replaces
 the earlier Server Core contents under the same tag. Clean debug/profile/release
 builds and full CIT passed on 2026-09-07: each variant passed 208 unit tests,
 116 internal tests (2 presentation skips), and all three GPU smoke checks.
+Published and confirmed by pull: digest
+`sha256:45a4d9e7e5f3a5986dfdb117769d4323b7930c56e43e6ef5bec2380752e09d9d`.
 
 The image uses Microsoft's full `windows/server:ltsc2022` base for graphics
 runtime APIs and DirectX GPU support. Use a compatible Windows Docker host,
