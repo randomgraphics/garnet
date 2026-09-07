@@ -1,6 +1,6 @@
 # Media assets
 
-Large resource groups live in the [Asset Foundry dataset](https://huggingface.co/datasets/chenlirandom/asset-foundry), mounted here as the shallow `asset-foundry` Git submodule. The Garnet commit pins the dataset revision.
+Large resource groups live in the [Asset Foundry dataset](https://huggingface.co/datasets/bravecandy/asset-foundry), mounted here as the shallow `asset-foundry` Git submodule. The Garnet commit pins the dataset revision.
 
 Initialize assets with Git LFS installed:
 

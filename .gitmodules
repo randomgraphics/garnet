@@ -41,5 +41,5 @@
 	shallow = true
 [submodule "media/asset-foundry"]
 	path = media/asset-foundry
-	url = https://huggingface.co/datasets/chenlirandom/asset-foundry
+	url = https://huggingface.co/datasets/bravecandy/asset-foundry
 	shallow = true
