@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 function Install-Executable([string]$Url, [string]$Name, [string[]]$Options) {
     $path = Join-Path $env:TEMP $Name
     Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $path
-    $process = Start-Process -FilePath $path -ArgumentList $Options -Wait -PassThru
+    $process = Start-Process -FilePath $path -ArgumentList $Options -WindowStyle Hidden -Wait -PassThru
     # Installers can report success with a reboot request; containers cannot reboot.
     if ($process.ExitCode -notin @(0, 3010)) { throw "$Name failed: $($process.ExitCode)" }
     Remove-Item $path -Force

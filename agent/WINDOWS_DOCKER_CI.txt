@@ -15,9 +15,10 @@ build variants pass. Preserve existing CI until verification/publication.
 
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 0 — inspected existing CI and saved draft image tooling for Windows handoff
+Last completed: Phase 1.1 — reviewed image tooling and checked PowerShell scripts on Windows
   Phase 0: Docker reports linux; no Windows Docker context is configured
-In progress: none — user paused execution for transfer to a Windows host; resume Phase 1.1 review
+  Phase 1.1: all 8 PowerShell scripts parse; Docker preflight mock checks and git diff --check pass
+In progress: Phase 1.2 — Docker Desktop installed; host restart required before image build
 --- END PROGRESS ---
 --- REFERENCE ---
 .github/workflows/windows-ci.yml
@@ -38,11 +39,18 @@ User requested saving the draft and plan on wip/ci/windows-docker, committing
 and pushing for continuation on a Windows host.
 Docker Hub publication is explicitly requested, after successful verification.
 Do not report Linux static checks as Windows build verification.
-Handoff: image installation, PowerShell execution, all Windows builds and Docker
-Hub publication remain unverified/unperformed. No CircleCI or GitHub workflow
-changes have been made. No PowerShell executable is available on this Linux host.
-Review draft installer URLs/components, Git LFS availability and Vulkan archive
-layout on Windows; verify offline env/garnet.ps1 setup against the baked venv.
+Handoff (2026-09-07, Windows host): Docker Desktop 4.90.0 installed successfully
+with --backend=windows --always-run-service and container storage D:\docker-windows.
+The signed Docker Inc installer enabled Microsoft-Hyper-V and explicitly reports
+that a computer restart is required. Docker CLI 29.7.2 works, but no engine pipe
+is available yet. User authorized Docker Desktop installation; no reboot performed.
+After restarting, start Docker Desktop, reopen PowerShell, and confirm
+  docker info --format '{{.OSType}}'
+reports windows, then run build.ps1 and verify.ps1 above. Image installation,
+Vulkan archive layout, offline environment setup, and all three container builds
+remain unverified. Publication and CI migration have not been performed.
+CI now checks checkout requirements explicitly because env/garnet.ps1 does not
+propagate native pip failures. Existing CI workflows remain unchanged.
 verify.ps1 bind-mounts an already hydrated checkout on the Windows Docker host
 and builds into C:\garnet-build inside a fresh container for each variant.
 No GPU runtime tests are included; this matches existing Windows build coverage.

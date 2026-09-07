@@ -11,6 +11,9 @@ function Invoke-Docker {
 }
 
 function Assert-WindowsDocker {
+    if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+        throw 'Docker CLI is missing. Install Docker Desktop with Windows container support, then reopen PowerShell.'
+    }
     $os = Invoke-Docker info --format '{{.OSType}}'
     if ($os -ne 'windows') { throw 'A Windows Docker engine is required; the current engine runs Linux containers.' }
 }
