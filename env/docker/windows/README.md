@@ -2,7 +2,9 @@
 
 Target image: `randomgraphics/garnet-windows:00001`, read from `tag.txt`.
 The image passed debug, profile and release container builds on 2026-09-07.
-Publication is pending. Continue from
+Published and confirmed by pull on the same date. Registry digest:
+`sha256:011aa786856c4f07152157d10d5f8c7db35f5d50529d632daafae8c3aab8e12d`.
+Continue from
 `agent/WINDOWS_DOCKER_CI.txt` on a Windows host.
 
 Use a Windows Server 2022 Docker engine in Windows container mode. The scripts

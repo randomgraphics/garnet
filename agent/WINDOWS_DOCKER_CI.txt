@@ -15,11 +15,12 @@ build variants pass. Preserve existing CI until verification/publication.
 
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.2 — built current dependency image and passed debug/profile/release
+Last completed: Phase 2.1 — published verified Windows image and confirmed digest by pull
   Phase 0: Docker reports linux; no Windows Docker context is configured
   Phase 1.1: all 8 PowerShell scripts parse; Docker preflight mock checks and git diff --check pass
   Phase 1.2: Windows image 6f465e79df29 verified on 2026-09-07; all three builds passed
-In progress: Phase 2.1 — uploading verified image to Docker Hub
+  Phase 2.1: Published randomgraphics/garnet-windows:00001; pull confirmed registry digest
+In progress: none — next is Phase 2.2 (CircleCI migration)
 --- END PROGRESS ---
 --- REFERENCE ---
 .github/workflows/windows-ci.yml
@@ -56,7 +57,9 @@ All 8 PowerShell scripts parse, git diff --check passes, and build.ps1 plus
 verify.ps1 passed. Debug/profile/release each compiled in a fresh container.
 Checkout submodules and LFS assets are hydrated. No GPU runtime tests were run.
 The existing GitHub CI workflow and shared Vulkan version pin are unchanged.
-Docker Hub upload is underway; pull and record the digest before CI migration.
+Docker Hub upload and pull succeeded on 2026-09-07.
+Published digest: sha256:011aa786856c4f07152157d10d5f8c7db35f5d50529d632daafae8c3aab8e12d
+Next: Phase 2.2, configure and verify CircleCI Windows jobs before retiring GitHub CI.
 
 --- TASK BREAKDOWN ---
 Phase 1: Prepare and verify the image
