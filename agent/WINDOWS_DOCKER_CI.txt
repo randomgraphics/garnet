@@ -7,18 +7,19 @@ randomgraphics/garnet-windows:<revision>, then move Windows CI to CircleCI.
 
 ---
 ## Design
-Use Windows Server Core 2022 with VS 2022 C++ Build Tools, Windows SDK,
-Git/LFS, CMake, Python and the repository's Vulkan SDK version. CircleCI
+Use Windows Server Core 2022 with VS 2026 C++ Build Tools, Windows SDK,
+current stable Git/LFS, CMake, Python and the official LunarG Vulkan SDK. CircleCI
 must use a Windows machine executor to run this Windows container.
 Keep image scripts in env/docker/windows. Publish only after all three
 build variants pass. Preserve existing CI until verification/publication.
 
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.1 — reviewed image tooling and checked PowerShell scripts on Windows
+Last completed: Phase 1.2 — built current dependency image and passed debug/profile/release
   Phase 0: Docker reports linux; no Windows Docker context is configured
   Phase 1.1: all 8 PowerShell scripts parse; Docker preflight mock checks and git diff --check pass
-In progress: Phase 1.2 — Docker Desktop installed; host restart required before image build
+  Phase 1.2: Windows image 6f465e79df29 verified on 2026-09-07; all three builds passed
+In progress: Phase 2.1 — uploading verified image to Docker Hub
 --- END PROGRESS ---
 --- REFERENCE ---
 .github/workflows/windows-ci.yml
@@ -39,22 +40,23 @@ User requested saving the draft and plan on wip/ci/windows-docker, committing
 and pushing for continuation on a Windows host.
 Docker Hub publication is explicitly requested, after successful verification.
 Do not report Linux static checks as Windows build verification.
-Handoff (2026-09-07, Windows host): Docker Desktop 4.90.0 installed successfully
-with --backend=windows --always-run-service and container storage D:\docker-windows.
-The signed Docker Inc installer enabled Microsoft-Hyper-V and explicitly reports
-that a computer restart is required. Docker CLI 29.7.2 works, but no engine pipe
-is available yet. User authorized Docker Desktop installation; no reboot performed.
-After restarting, start Docker Desktop, reopen PowerShell, and confirm
-  docker info --format '{{.OSType}}'
-reports windows, then run build.ps1 and verify.ps1 above. Image installation,
-Vulkan archive layout, offline environment setup, and all three container builds
-remain unverified. Publication and CI migration have not been performed.
-CI now checks checkout requirements explicitly because env/garnet.ps1 does not
-propagate native pip failures. Existing CI workflows remain unchanged.
-verify.ps1 bind-mounts an already hydrated checkout on the Windows Docker host
-and builds into C:\garnet-build inside a fresh container for each variant.
-No GPU runtime tests are included; this matches existing Windows build coverage.
-After successful push, pull the image and record its digest before CI migration.
+Verification (2026-09-07): Docker Desktop 4.90.0 / engine 29.7.2 runs Windows
+containers with storage at D:\dev\docker\windows. An initial base pull failed
+with unexpected EOF; restarting Docker Desktop and retrying succeeded.
+Image: randomgraphics/garnet-windows:00001
+Image ID: sha256:6f465e79df29549327f856ff62c3fc31228238a70b170f1eb0f64ab515b4173f
+Verified UTC: 2026-09-07T20:22:45.3053309Z
+Versions: VS 2026 18.9.2, MSVC 19.51.36256.0, Windows SDK 10.0.26100.16,
+Git 2.55.0.windows.5, LFS 3.8.0, CMake 4.4.3, Python 3.14.7, Vulkan 1.4.357.0.
+Python 3.12 was an undocumented draft pin, not a demonstrated requirement.
+OpenEXR 3.4.15 lacks a cp314 Windows wheel but built successfully from source
+with MSVC. All Python requirements installed, pip check passed, and resolved
+versions are recorded inside the image at C:\image\python-packages.txt.
+All 8 PowerShell scripts parse, git diff --check passes, and build.ps1 plus
+verify.ps1 passed. Debug/profile/release each compiled in a fresh container.
+Checkout submodules and LFS assets are hydrated. No GPU runtime tests were run.
+The existing GitHub CI workflow and shared Vulkan version pin are unchanged.
+Docker Hub upload is underway; pull and record the digest before CI migration.
 
 --- TASK BREAKDOWN ---
 Phase 1: Prepare and verify the image
