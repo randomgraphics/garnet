@@ -15,10 +15,10 @@ From a Windows checkout with Git and Git LFS available on the host:
 git submodule update --init --recursive --depth 1
 git lfs pull
 git submodule foreach --recursive git lfs pull
-powershell -ExecutionPolicy Bypass -File dev/docker/windows/build.ps1
-powershell -ExecutionPolicy Bypass -File dev/docker/windows/verify.ps1
+powershell -ExecutionPolicy Bypass -File env/docker/windows/build.ps1
+powershell -ExecutionPolicy Bypass -File env/docker/windows/verify.ps1
 docker login
-powershell -ExecutionPolicy Bypass -File dev/docker/windows/upload.ps1
+powershell -ExecutionPolicy Bypass -File env/docker/windows/upload.ps1
 ```
 
 The image preinstalls VS 2022 C++ Build Tools, Windows SDK 22621, Git with LFS,
@@ -36,9 +36,9 @@ not claimed by this check. The checkout and its assets must be hydrated first.
 
 ```powershell
 # Pull the published revision on another Windows host.
-./dev/docker/windows/pull.ps1
+./env/docker/windows/pull.ps1
 # Open a developer shell, then initialize the Garnet environment if needed.
-./dev/docker/windows/launch.ps1 -Interactive
+./env/docker/windows/launch.ps1 -Interactive
 # Within the container:
 . env\garnet.ps1
 ```

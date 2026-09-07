@@ -127,7 +127,9 @@ clear manual check. Each non-future task needs `Verify:` and `Commit:` lines.
 Update the `PROGRESS` block when starting and completing tasks.
 
 When the work an agent doc describes is finished, superseded, or abandoned,
-move the doc to `agent/completed/` — that folder is the archive of past work
+move the doc to `agent/completed/`, prefixing its filename with the current
+UTC timestamp as `yyyy-mm-dd-hhmmss-` (always UTC, never local time).
+That folder is the archive of past work
 and a reference for how existing code came to be. See
 `agent/skills/garnet-agent-doc-archive/SKILL.md`.
 

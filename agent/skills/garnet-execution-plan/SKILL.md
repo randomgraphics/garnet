@@ -71,4 +71,6 @@ an untested backend as verified.
 - Mark the Overview and PROGRESS block complete only when no requested work
   remains.
 - Move the completed plan to `agent/completed/` with `git mv` semantics and
-  update live references to its old path.
+  a current UTC `yyyy-mm-dd-hhmmss-` filename prefix, following
+  `garnet-agent-doc-archive`. Always use UTC, never local time, and update live
+  references to its old path.

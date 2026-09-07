@@ -7,7 +7,7 @@ $imageId = Invoke-Docker image inspect --format '{{.Id}}' $Image
 foreach ($variant in @('debug', 'profile', 'release')) {
     & "$PSScriptRoot/launch.ps1" -Command @(
         'powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-        'C:\garnet\dev\docker\windows\ci-build.ps1', '-Variant', $variant
+        'C:\garnet\env\docker\windows\ci-build.ps1', '-Variant', $variant
     )
 }
 @{

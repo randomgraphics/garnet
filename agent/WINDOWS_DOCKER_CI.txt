@@ -10,7 +10,7 @@ randomgraphics/garnet-windows:<revision>, then move Windows CI to CircleCI.
 Use Windows Server Core 2022 with VS 2022 C++ Build Tools, Windows SDK,
 Git/LFS, CMake, Python and the repository's Vulkan SDK version. CircleCI
 must use a Windows machine executor to run this Windows container.
-Keep image scripts in dev/docker/windows. Publish only after all three
+Keep image scripts in env/docker/windows. Publish only after all three
 build variants pass. Preserve existing CI until verification/publication.
 
 ---
@@ -29,10 +29,10 @@ env/requirements.txt
 
 --- BUILD / CI ---
 On a Windows container host, from the repository root:
-  powershell -ExecutionPolicy Bypass -File dev/docker/windows/build.ps1
-  powershell -ExecutionPolicy Bypass -File dev/docker/windows/verify.ps1
+  powershell -ExecutionPolicy Bypass -File env/docker/windows/build.ps1
+  powershell -ExecutionPolicy Bypass -File env/docker/windows/verify.ps1
   docker login
-  powershell -ExecutionPolicy Bypass -File dev/docker/windows/upload.ps1
+  powershell -ExecutionPolicy Bypass -File env/docker/windows/upload.ps1
 
 --- WORKFLOW / CONVENTIONS ---
 User requested saving the draft and plan on wip/ci/windows-docker, committing
@@ -76,7 +76,7 @@ Phase 2: Publish and migrate CI
 
 --- SUMMARY OF FILES TO TOUCH ---
 Phase 1 (image tooling):
-  dev/docker/windows/ — NEW: image, lifecycle scripts and documentation
+  env/docker/windows/ — NEW: image, lifecycle scripts and documentation
 Phase 2 (migration):
   .circleci/config.yml — Windows machine executor and container build matrix
   .github/workflows/windows-ci.yml — retire after CircleCI verification
