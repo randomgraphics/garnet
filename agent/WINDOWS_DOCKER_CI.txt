@@ -1,0 +1,74 @@
+# Assignment: Windows Docker build environment and CircleCI migration
+
+---
+## Goals
+Build and verify a Windows dependency image, publish it as
+randomgraphics/garnet-windows:<revision>, then move Windows CI to CircleCI.
+
+---
+## Design
+Use Windows Server Core 2022 with VS 2022 C++ Build Tools, Windows SDK,
+Git/LFS, CMake, Python and the repository's Vulkan SDK version. CircleCI
+must use a Windows machine executor to run this Windows container.
+Keep image scripts in dev/docker/windows. Publish only after all three
+build variants pass. Preserve existing CI until verification/publication.
+
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 0 — inspected existing CI and saved draft image tooling for Windows handoff
+  Phase 0: Docker reports linux; no Windows Docker context is configured
+In progress: none — user paused execution for transfer to a Windows host; resume Phase 1.1 review
+--- END PROGRESS ---
+--- REFERENCE ---
+.github/workflows/windows-ci.yml
+.circleci/config.yml
+env/docker/ubuntu/
+env/vulkan-sdk-version.txt
+env/requirements.txt
+
+--- BUILD / CI ---
+On a Windows container host, from the repository root:
+  powershell -ExecutionPolicy Bypass -File dev/docker/windows/build.ps1
+  powershell -ExecutionPolicy Bypass -File dev/docker/windows/verify.ps1
+  docker login
+  powershell -ExecutionPolicy Bypass -File dev/docker/windows/upload.ps1
+
+--- WORKFLOW / CONVENTIONS ---
+User requested saving the draft and plan on wip/ci/windows-docker, committing
+and pushing for continuation on a Windows host.
+Docker Hub publication is explicitly requested, after successful verification.
+Do not report Linux static checks as Windows build verification.
+Handoff: image installation, PowerShell execution, all Windows builds and Docker
+Hub publication remain unverified/unperformed. No CircleCI or GitHub workflow
+changes have been made. No PowerShell executable is available on this Linux host.
+Review draft installer URLs/components, Git LFS availability and Vulkan archive
+layout on Windows; verify offline env/garnet.ps1 setup against the baked venv.
+verify.ps1 bind-mounts an already hydrated checkout on the Windows Docker host
+and builds into C:\garnet-build inside a fresh container for each variant.
+No GPU runtime tests are included; this matches existing Windows build coverage.
+After successful push, pull the image and record its digest before CI migration.
+
+--- TASK BREAKDOWN ---
+Phase 1: Prepare and verify the image
+─────────────────────────────────────────────────────
+  Task 1.1: Add Dockerfile, dependency installation, and lifecycle scripts
+    Verify: Review scripts and run available static checks.
+    Commit: "ci(windows): prepare Windows container tooling (Phase 1.1)"
+  Task 1.2: Build image and compile debug, profile, release in containers
+    Verify: build.ps1 and verify.ps1 succeed on a Windows Docker host.
+    Commit: "ci(windows): verify Windows container builds (Phase 1.2)"
+Phase 2: Publish and migrate CI
+─────────────────────────────────────────────────────
+  Task 2.1: Publish verified revision to Docker Hub
+    Verify: upload.ps1 succeeds; pull and inspect published image digest.
+    Commit: "ci(windows): publish verified image revision (Phase 2.1)"
+  Task 2.2: Add Windows CircleCI matrix and retire Windows GitHub workflow
+    Verify: CircleCI configuration validates; all Windows jobs pass.
+    Commit: "ci(windows): move Windows builds to CircleCI (Phase 2.2)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+Phase 1 (image tooling):
+  dev/docker/windows/ — NEW: image, lifecycle scripts and documentation
+Phase 2 (migration):
+  .circleci/config.yml — Windows machine executor and container build matrix
+  .github/workflows/windows-ci.yml — retire after CircleCI verification
