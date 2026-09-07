@@ -1,5 +1,6 @@
 # Core utilities
 termcolor>=2.0
+black>=26.0      # Python formatting in CIT
 
 # Image I/O
 Pillow>=9.0

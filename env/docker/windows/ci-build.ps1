@@ -1,4 +1,7 @@
-param([ValidateSet('debug', 'profile', 'release')][string]$Variant = 'debug')
+param(
+    [ValidateSet('debug', 'profile', 'release')][string]$Variant = 'debug',
+    [switch]$RunCit
+)
 $ErrorActionPreference = 'Stop'
 Set-Location C:\garnet
 & git.exe config --global --add safe.directory C:/garnet
@@ -13,3 +16,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Image dependencies do not satisfy this checkou
 if ($LASTEXITCODE -ne 0) { throw 'Python dependency check failed' }
 & python.exe env\bin\build.py -b C:\garnet-build $Variant
 if ($LASTEXITCODE -ne 0) { throw "$Variant build failed" }
+if ($RunCit) {
+    & python.exe env\bin\cit.py --build-dir C:\garnet-build
+    if ($LASTEXITCODE -ne 0) { throw "$Variant CIT failed" }
+}

@@ -1,5 +1,6 @@
 # escape=`
-FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022
+# Full Windows Server supplies OpenGL runtime DLLs and supports DirectX GPU device sharing.
+FROM mcr.microsoft.com/windows/server:ltsc2022
 SHELL ["powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
 
 ARG VULKAN_VERSION=1.4.357.0

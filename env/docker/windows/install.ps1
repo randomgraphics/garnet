@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 function Install-Executable([string]$Url, [string]$Name, [string[]]$Options) {
+    Write-Host "Installing $Name from $Url"
     $path = Join-Path $env:TEMP $Name
     Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $path
     $process = Start-Process -FilePath $path -ArgumentList $Options -WindowStyle Hidden -Wait -PassThru
@@ -46,6 +47,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Python dependency installation failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Python dependency consistency check failed' }
 & C:\garnet-venv\Scripts\python.exe -m pip freeze | Set-Content C:\image\python-packages.txt
 if ($LASTEXITCODE -ne 0) { throw 'Python package manifest failed' }
+& C:\garnet-venv\Scripts\python.exe -m black --version
+if ($LASTEXITCODE -ne 0) { throw 'Black is missing' }
+& C:\garnet-venv\Scripts\python.exe -c "import ctypes; ctypes.WinDLL('opengl32.dll')"
+if ($LASTEXITCODE -ne 0) { throw 'OpenGL runtime is missing; use the full Windows Server base image' }
 & python.exe --version
 if ($LASTEXITCODE -ne 0) { throw 'Python is missing' }
 & git.exe --version
