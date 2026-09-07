@@ -17,7 +17,9 @@ the real repository state until handoff.
   such as when unrelated edits prevent a safe branch switch or concurrent work
   requires two checked-out branches.
 - Do not commit, push, merge, or delete branches unless the user requested it or
-  the assignment workflow explicitly requires it.
+  the assignment workflow explicitly requires it. An authorized merge includes
+  the default post-merge cleanup in `garnet-git-workflow`; no separate deletion
+  request is needed for eligible short-lived branches.
 
 ## Write the plan
 
