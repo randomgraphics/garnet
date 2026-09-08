@@ -1,0 +1,53 @@
+# Assignment: Native Windows CircleCI SDK cache experiment
+
+---
+## Goals
+Use rapid-vulkan as a testbed for native Windows CircleCI builds with a Vulkan SDK file cache. Verify cold and warm runs before proposing adoption in Garnet.
+
+---
+## Design
+PR #51 adds one CircleCI Windows Server 2022 job. It mirrors GitHub Actions' SDK release and debug build, caching only extracted SDK files. Keep GitHub Actions during evaluation. Garnet PR #45 stays unmerged pending the experiment.
+
+--- PROGRESS ---
+Last completed: PR #51 merged to rapid-vulkan main as fb5fb14; all 12 matrix builds passed.
+In progress: None - experiment accepted and merged; Garnet submodule updated.
+--- END PROGRESS ---
+
+--- TASK BREAKDOWN ---
+Task 1: Verify native Windows SDK caching
+  Verify: Both CircleCI runs pass; logs confirm miss then hit; record setup and total timings.
+  Commit: ci: test native Windows builds with Vulkan SDK caching
+Task 2: Report results before adoption
+  Verify: PR #51 records measurements and GitHub Actions remains available.
+  Commit: ci: verify warm native Windows SDK cache
+Job 812 hit the default SDK preparation silence timeout. Switched download
+to curl.exe and set no_output_timeout: 1h per user. Job 825 successfully
+downloaded SDK in 10.757s, prepared it in 44.984s, saved cache in 19.688s;
+build failed because cmake was unavailable. Commit c5fcba7 installs cmake
+via pip and adds Python Scripts to PATH. Download progress is curl's meter;
+unzip emits percentage/file/byte counts every five seconds. Unzip fixture
+passed locally. Next: two successful native builds with cache-hit evidence.
+
+Job 829 passed a native debug build in 155.402s with cache hit (restore
+18.574s, SDK check 0.633s). User expanded to all variants, briefly requested
+a parallel matrix, then selected one sequential job matching Linux/Android.
+Current commit b02e702 loops debug/profile/release in one Windows job with
+one SDK restore. Job 846 confirmed cache hit (21.279s restore); builds running.
+Do not merge PR #51 or migrate Garnet until results are reviewed.
+
+Final single-job verification: job 846 passed debug/profile/release builds
+in 384.115s, total 455.445s (7m35s). SDK cache hit restored in 21.279s.
+Together with job 829, two successful fresh-VM runs confirmed cache hits.
+All PR #51 checks passed; PR body updated with results. PR remains unmerged.
+
+User expanded all four platform tasks to three-variant matrices (61fdada).
+All 12 build jobs and lint passed in workflow d190a649-038e-49cd-9e0c-c292306e1530.
+Elapsed workflow: 248s versus 477s baseline (48.0% reduction). Summed build-job
+runtime: 1310.832s versus 991.560s baseline (32.2% increase; not a billing estimate).
+Windows debug/profile/release totals: 179.679/213.307/217.605s. All share
+the SDK cache. Full step metrics saved in temporary matrix-job-timings.json.
+PR #51 remains unmerged; Garnet CI is unchanged.
+
+User accepted the matrix configuration and authorized merge. PR #51 merged
+as fb5fb14e824cc8e8da75f4a3317428343be51fc9. Merged tree matches tested head
+61fdada exactly. Updated Garnet gitlink; Garnet CI configuration unchanged.

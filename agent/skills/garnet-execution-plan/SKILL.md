@@ -22,7 +22,9 @@ reading its beginning and progress block.
   such as when unrelated edits prevent a safe branch switch or concurrent work
   requires two checked-out branches.
 - Do not commit, push, merge, or delete branches unless the user requested it or
-  the assignment workflow explicitly requires it.
+  the assignment workflow explicitly requires it. An authorized merge includes
+  the default post-merge cleanup in `garnet-git-workflow`; no separate deletion
+  request is needed for eligible short-lived branches.
 
 ## Write the plan
 
@@ -89,4 +91,6 @@ an untested backend as verified.
 - Mark the Overview and PROGRESS block complete only when no requested work
   remains.
 - Move the completed plan to `agent/completed/` with `git mv` semantics and
-  update live references to its old path.
+  a current UTC `yyyy-mm-dd-hhmmss-` filename prefix, following
+  `garnet-agent-doc-archive`. Always use UTC, never local time, and update live
+  references to its old path.

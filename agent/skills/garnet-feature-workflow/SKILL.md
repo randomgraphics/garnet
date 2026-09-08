@@ -60,5 +60,7 @@ as needed:
 - Re-check `git status`, branch, and recent log before final handoff.
 - Summarize the feature result, verification, and remaining risks.
 - When the user asks to merge accumulated work, squash merge to the target
-  staging branch, push it, then delete completed work branches locally and
-  remotely if requested.
+  staging branch and push it. Follow `garnet-git-workflow` for PRs to `master`
+  and post-merge cleanup: enable GitHub automatic source-branch deletion by
+  default, delete clean local branches with no remaining work after confirmed
+  merges, and always preserve long-lived branches such as `feature/rdg/main`.

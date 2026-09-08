@@ -1,9 +1,9 @@
 version: 2.1
 
-# Docker image for all jobs. Keep in sync with env/docker/ubuntu/tag.txt when updating.
+# Linux/Android image. Keep in sync with env/docker/ubuntu/tag.txt when updating.
 docker-image: &docker-image randomgraphics/garnet:00002
 
-# Prep git safe.directory and SSH known_hosts so clone does not prompt for host key.
+# Local and hosted Docker executors can report different checkout owners.
 prep_git: &prep-git
   run:
     name: prep git
@@ -11,7 +11,128 @@ prep_git: &prep-git
       git config --global --add safe.directory /tmp/_circleci_local_build_repo
       git config --global --add safe.directory /root/project
 
+commands:
+  checkout-linux-source:
+    steps:
+      - *prep-git
+      - checkout:
+          method: blobless
+      - run:
+          name: Hydrate source dependencies
+          command: |
+            # CircleCI's SSH URL rewrite breaks HTTPS/LFS dependency downloads.
+            git config --global --unset-all "url.ssh://git@github.com.insteadof" || test "$?" -eq 5
+            git submodule update --init --recursive --depth 1
+            git lfs pull
+
 jobs:
+  build-windows-native:
+    parameters: &build-parameters
+      variant:
+        type: enum
+        enum: [debug, profile, release]
+    resource_class: windows.medium
+    machine:
+      image: windows-server-2022-gui:current
+      shell: powershell.exe -NoProfile -ExecutionPolicy Bypass
+    steps:
+      - checkout
+      - run:
+          name: Hydrate source dependencies
+          command: |
+            $ErrorActionPreference = 'Stop'
+            # CircleCI's SSH URL rewrite breaks HTTPS/LFS dependency downloads.
+            git config --global --unset-all 'url.ssh://git@github.com.insteadof'
+            if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { throw 'Git URL configuration failed' }
+            git submodule update --init --recursive --depth 1
+            if ($LASTEXITCODE -ne 0) { throw 'Submodule checkout failed' }
+            git lfs pull
+            if ($LASTEXITCODE -ne 0) { throw 'Git LFS checkout failed' }
+      - restore_cache:
+          keys:
+            - windows-vulkan-sdk-v1-{{ checksum "env/vulkan-sdk-version.txt" }}
+      - run:
+          name: Prepare Vulkan SDK
+          no_output_timeout: 1h
+          command: |
+            $ErrorActionPreference = 'Stop'
+            $ProgressPreference = 'SilentlyContinue'
+            $timer = [Diagnostics.Stopwatch]::StartNew()
+            $ver = (Get-Content env/vulkan-sdk-version.txt -Raw).Trim()
+            if ([string]::IsNullOrWhiteSpace($ver)) { throw 'Vulkan SDK version is empty' }
+            $root = "C:\dev\vulkan-sdk\$ver"
+            $sdk = "$root\vulkan-sdk-for-windows"
+            if (-not (Test-Path "$sdk\Include\vulkan\vulkan.hpp") -or -not (Test-Path "$sdk\Lib\vulkan-1.lib")) {
+              Write-Host 'VULKAN_SDK_CACHE=miss'
+              $zipName = "vulkan-sdk-for-windows-$ver.zip"
+              $zip = Join-Path $env:TEMP $zipName
+              New-Item -ItemType Directory -Force -Path $root | Out-Null
+              # Avoid Windows PowerShell's slow large-file HTTP download path.
+              curl.exe --fail --location --retry 3 --output $zip "https://github.com/randomgraphics/vulkan-sdk-for-windows/releases/download/v$ver/$zipName"
+              if ($LASTEXITCODE -ne 0) { throw 'Vulkan SDK download failed' }
+              Write-Host "SDK download seconds: $($timer.Elapsed.TotalSeconds)"
+              # Emit plain log lines because PowerShell's progress UI is not visible in CI.
+              Add-Type -AssemblyName System.IO.Compression.FileSystem
+              $archive = [IO.Compression.ZipFile]::OpenRead($zip)
+              try {
+                $totalBytes = ($archive.Entries | Measure-Object -Property Length -Sum).Sum
+                $doneBytes = 0L
+                $doneFiles = 0
+                $lastReport = -5.0
+                $destination = [IO.Path]::GetFullPath($root) + '\'
+                foreach ($entry in $archive.Entries) {
+                  $target = [IO.Path]::GetFullPath((Join-Path $destination $entry.FullName))
+                  if (-not $target.StartsWith($destination, [StringComparison]::OrdinalIgnoreCase)) {
+                    throw "ZIP entry escapes SDK directory: $($entry.FullName)"
+                  }
+                  if ([string]::IsNullOrEmpty($entry.Name)) {
+                    New-Item -ItemType Directory -Force -Path $target | Out-Null
+                  } else {
+                    New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($target)) | Out-Null
+                    [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $target, $true)
+                  }
+                  $doneBytes += $entry.Length
+                  $doneFiles++
+                  if ($timer.Elapsed.TotalSeconds - $lastReport -ge 5 -or $doneFiles -eq $archive.Entries.Count) {
+                    $percent = if ($totalBytes -gt 0) { 100.0 * $doneBytes / $totalBytes } else { 100 }
+                    Write-Host ('Unzip: {0:N1}% ({1}/{2} entries, {3:N0}/{4:N0} MiB)' -f $percent, $doneFiles, $archive.Entries.Count, ($doneBytes / 1MB), ($totalBytes / 1MB))
+                    $lastReport = $timer.Elapsed.TotalSeconds
+                  }
+                }
+              } finally {
+                $archive.Dispose()
+              }
+              Write-Host "SDK download and extraction seconds: $($timer.Elapsed.TotalSeconds)"
+              Remove-Item -LiteralPath $zip
+            } else {
+              Write-Host 'VULKAN_SDK_CACHE=hit'
+            }
+            if (-not (Test-Path "$sdk\Include\vulkan\vulkan.hpp") -or -not (Test-Path "$sdk\Lib\vulkan-1.lib")) {
+              throw 'Vulkan SDK headers or library are missing'
+            }
+            Write-Host "SDK preparation seconds: $($timer.Elapsed.TotalSeconds)"
+      - save_cache:
+          key: windows-vulkan-sdk-v1-{{ checksum "env/vulkan-sdk-version.txt" }}
+          paths:
+            - C:\dev\vulkan-sdk
+      - run:
+          name: Install build dependencies
+          command: |
+            python.exe -m pip install --upgrade termcolor cmake
+            if ($LASTEXITCODE -ne 0) { throw 'Build dependency installation failed' }
+      - run:
+          name: Build << parameters.variant >> natively
+          command: |
+            $ErrorActionPreference = 'Stop'
+            $ver = (Get-Content env/vulkan-sdk-version.txt -Raw).Trim()
+            $env:VULKAN_SDK = "C:\dev\vulkan-sdk\$ver\vulkan-sdk-for-windows"
+            $scripts = python.exe -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+            if ($LASTEXITCODE -ne 0) { throw 'Python scripts directory lookup failed' }
+            $env:PATH = "$scripts;$env:PATH"
+            . env\garnet.ps1
+            python.exe env\bin\build.py << parameters.variant >>
+            if ($LASTEXITCODE -ne 0) { throw 'Windows build failed' }
+
   lint:
     docker:
       - image: *docker-image
@@ -20,161 +141,76 @@ jobs:
       - checkout
       - run:
           name: lint
-          command: |
-            env/bin/cit.py -l
-  build-linux-gcc-debug:
-    docker:
-      - image: *docker-image
-    steps:
-      - *prep-git
-      - checkout:
-          method: blobless
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            source env/garnet.rc
-            build.py d
-      - run:
-          name: test
-          command: env/bin/cit.py -t
+          command: env/bin/cit.py -l
 
-  build-linux-gcc-profile:
+  build-linux-gcc:
+    parameters: *build-parameters
     docker:
       - image: *docker-image
     steps:
-      - *prep-git
-      - checkout:
-          method: blobless
+      - checkout-linux-source
       - run:
-          name: build
+          name: Build << parameters.variant >>
           command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             source env/garnet.rc
-            build.py p
-            env/bin/cit.py -t
+            # The interactive environment disables errexit; CI must propagate failures.
+            set -e
+            build.py << parameters.variant >>
+      - run:
+          name: Test << parameters.variant >>
+          command: .pyvenv/bin/python env/bin/cit.py -t
 
-  build-linux-gcc-release:
+  build-linux-clang:
+    parameters: *build-parameters
     docker:
       - image: *docker-image
     steps:
-      - *prep-git
-      - checkout
+      - checkout-linux-source
       - run:
-          name: build
+          name: Build << parameters.variant >>
           command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            git submodule update --init --recursive
             source env/garnet.rc
-            build.py r
-            env/bin/cit.py -t
+            # The interactive environment disables errexit; CI must propagate failures.
+            set -e
+            build.py --clang << parameters.variant >>
 
-  build-linux-clang-debug:
+  build-android:
+    parameters: *build-parameters
     docker:
       - image: *docker-image
     steps:
-      - *prep-git
-      - checkout
+      - checkout-linux-source
       - run:
-          name: build
+          name: Build << parameters.variant >>
           command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
             source env/garnet.rc
-            build.py --clang d
-
-  build-linux-clang-profile:
-    docker:
-      - image: *docker-image
-    steps:
-      - *prep-git
-      - checkout
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            source env/garnet.rc
-            build.py --clang p
-
-  build-linux-clang-release:
-    docker:
-      - image: *docker-image
-    steps:
-      - *prep-git
-      - checkout
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            source env/garnet.rc
-            build.py --clang r
-
-  build-android-debug:
-    docker:
-      - image: *docker-image
-    steps:
-      - *prep-git
-      - checkout
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            source env/garnet.rc
-            build.py -a d
-
-  build-android-profile:
-    docker:
-      - image: *docker-image
-    steps:
-      - *prep-git
-      - checkout
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            source env/garnet.rc
-            build.py -a p
-
-  build-android-release:
-    docker:
-      - image: *docker-image
-    steps:
-      - *prep-git
-      - checkout
-      - run:
-          name: build
-          command: |
-            git config --global --unset-all "url.ssh://git@github.com.insteadof" # fix git lfs bad credential when fetching repo stored on github
-            source env/garnet.rc
-            build.py -a r
+            # The interactive environment disables errexit; CI must propagate failures.
+            set -e
+            build.py -a << parameters.variant >>
 
 workflows:
   build-and-test:
     jobs:
       - lint
-      - build-linux-gcc-debug:
+      - build-windows-native:
+          name: build-windows-native-<< matrix.variant >>
+          matrix: &build-matrix
+            parameters:
+              variant: [debug, profile, release]
           requires:
-          - lint
-      - build-linux-gcc-profile:
+            - lint
+      - build-linux-gcc:
+          name: build-linux-gcc-<< matrix.variant >>
+          matrix: *build-matrix
           requires:
-            - build-linux-gcc-debug
-      - build-linux-gcc-release:
+            - lint
+      - build-linux-clang:
+          name: build-linux-clang-<< matrix.variant >>
+          matrix: *build-matrix
           requires:
-            - build-linux-gcc-debug
-      - build-linux-clang-debug:
+            - lint
+      - build-android:
+          name: build-android-<< matrix.variant >>
+          matrix: *build-matrix
           requires:
-            - build-linux-gcc-debug
-      - build-linux-clang-profile:
-          requires:
-            - build-linux-clang-debug
-      - build-linux-clang-release:
-          requires:
-            - build-linux-clang-debug
-      - build-android-debug:
-          requires:
-            - build-linux-gcc-debug
-      - build-android-profile:
-          requires:
-            - build-android-debug
-      - build-android-release:
-          requires:
-            - build-android-debug
+            - lint
