@@ -1,0 +1,197 @@
+# Assignment: Windows Docker build environment and CircleCI migration
+
+---
+## Goals
+Build and verify a Windows dependency image, publish it as
+randomgraphics/garnet-windows:<revision>, then move Windows CI to CircleCI.
+
+---
+## Design
+Use full Windows Server 2022 with VS 2026 C++ Build Tools, Windows SDK,
+current stable Git/LFS, CMake, Python and the official LunarG Vulkan SDK. CircleCI
+must use a Windows machine executor to run this Windows container.
+Keep image scripts in env/docker/windows. Publish only after all three
+build variants pass. Preserve existing CI until verification/publication.
+
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Windows Docker experiment abandoned at user request; original CI restored
+  Phase 0: Docker reports linux; no Windows Docker context is configured
+  Phase 1.1: all 8 PowerShell scripts parse; Docker preflight mock checks and git diff --check pass
+  Phase 1.2: Windows image 6f465e79df29 verified on 2026-09-07; all three builds passed
+  Phase 2.1: Published randomgraphics/garnet-windows:00001; pull confirmed registry digest
+In progress: None - Windows Docker migration abandoned
+--- END PROGRESS ---
+--- REFERENCE ---
+.github/workflows/windows-ci.yml
+.circleci/config.yml
+env/docker/ubuntu/
+env/vulkan-sdk-version.txt
+env/requirements.txt
+
+--- BUILD / CI ---
+On a Windows container host, from the repository root:
+  powershell -ExecutionPolicy Bypass -File env/docker/windows/build.ps1
+  powershell -ExecutionPolicy Bypass -File env/docker/windows/verify.ps1
+  docker login
+  powershell -ExecutionPolicy Bypass -File env/docker/windows/upload.ps1
+
+--- WORKFLOW / CONVENTIONS ---
+User requested saving the draft and plan on wip/ci/windows-docker, committing
+and pushing for continuation on a Windows host.
+Docker Hub publication is explicitly requested, after successful verification.
+Do not report Linux static checks as Windows build verification.
+Verification (2026-09-07): Docker Desktop 4.90.0 / engine 29.7.2 runs Windows
+containers with storage at D:\dev\docker\windows. An initial base pull failed
+with unexpected EOF; restarting Docker Desktop and retrying succeeded.
+Image: randomgraphics/garnet-windows:00001
+Image ID: sha256:6f465e79df29549327f856ff62c3fc31228238a70b170f1eb0f64ab515b4173f
+Verified UTC: 2026-09-07T20:22:45.3053309Z
+Versions: VS 2026 18.9.2, MSVC 19.51.36256.0, Windows SDK 10.0.26100.16,
+Git 2.55.0.windows.5, LFS 3.8.0, CMake 4.4.3, Python 3.14.7, Vulkan 1.4.357.0.
+Python 3.12 was an undocumented draft pin, not a demonstrated requirement.
+OpenEXR 3.4.15 lacks a cp314 Windows wheel but built successfully from source
+with MSVC. All Python requirements installed, pip check passed, and resolved
+versions are recorded inside the image at C:\image\python-packages.txt.
+All 8 PowerShell scripts parse, git diff --check passes, and build.ps1 plus
+verify.ps1 passed. Debug/profile/release each compiled in a fresh container.
+Checkout submodules and LFS assets are hydrated. No GPU runtime tests were run.
+The existing GitHub CI workflow and shared Vulkan version pin are unchanged.
+Docker Hub upload and pull succeeded on 2026-09-07.
+Published digest: sha256:011aa786856c4f07152157d10d5f8c7db35f5d50529d632daafae8c3aab8e12d
+Next: Phase 2.2, configure and verify CircleCI Windows jobs before retiring GitHub CI.
+
+Full CIT follow-up (2026-09-07): fresh local debug build passed on 00001.
+Found and fixed CIT's windows/windocker binary lookup mismatch and lost root
+path during Windows .exe resolution. Added --build-dir for isolated outputs.
+Black was missing; added it to requirements. Formatter worker exceptions now
+propagate instead of yielding false passes. Black 26.5.1 installed in the local
+diagnostic container; lint passed. Both test executables and all three smoke
+samples then failed to load with 0xC0000135: Server Core lacks OPENGL32.dll.
+Vulkaninfo also found no usable ICD (host NVIDIA/Intel manifest paths absent).
+User explicitly requested a rebuilt GPU-capable image and full CIT coverage.
+00001 now targets Microsoft's full windows/server:ltsc2022 image. launch.ps1
+accepts -Gpu to attach the DirectX GPU interface class; verify.ps1 -RunCit -Gpu
+runs CIT per variant. Hardware Vulkan remains to be tested; Microsoft documents
+Windows container GPU acceleration for DirectX, not third-party APIs.
+Full Windows Server image 23575ea60a87 built successfully with Black 26.5.1.
+Keep tag 00001 until the prior revision is merged to master, per user instruction.
+Clean debug/profile/release full CIT passed at 2026-09-07T21:56:24.7420767Z.
+Diagnostic logs: %TEMP%\garnet-docker-cit-20260907\ (debug-build.log,
+debug-cit.log, runtime-results.json, unit.log, internal.log, vulkaninfo.log).
+
+GPU follow-up: full Windows Server image exposes Intel UHD 770 and RTX 4090.
+Explicit DXGI adapter selection created D3D11 devices on both (HRESULT 0).
+Host Vulkan enumerates RTX 4090; container NVIDIA ICD enumerates no devices.
+Forcing nv-vk64.json as ContainerUser with both system Vulkaninfo and SDK
+1.4.357 vulkaninfoSDK fails with ERROR_INITIALIZATION_FAILED. Windows Docker
+exposes the GPU interface class, not an individual NVIDIA device selector.
+Intel Vulkan supports offscreen execution but not VK_KHR_swapchain. Fixed
+rapid-vulkan to make presentation optional for headless devices and to use
+GENERAL layout for headless backbuffers; real window swapchains still require
+VK_KHR_swapchain. Submodule branch: wip/windows-headless-cit, commit b55cd0e (pushed).
+Debug full CIT passed: 208 unit tests; internal 116 passed / 2 presentation
+skips, 4163 assertions; triangle pixel verification, copy and compute passed.
+No test filters or new skips were added. All three clean variants passed these
+same checks. Image ID:
+sha256:23575ea60a8778a5fd08d520bc63df383033ecb11fb4c316dc06abb571802ff5
+The run started under temporary alias 00002; it was retagged to 00001 during
+verification with the identical immutable image ID. Evidence records this correction.
+Logs: %TEMP%\garnet-docker-cit-20260907\gpu-verification.log.
+
+User follow-up: use rapid-vulkan's formal PR process, merge the fix to its main,
+then update the Garnet submodule to the merged main commit. Do not merge the
+Garnet branch with a wip submodule pointer. rapid-vulkan main is protected.
+Local rapid-vulkan debug build and full CIT passed on NVIDIA RTX 4090:
+32 test cases / 83 assertions; header revision and style checks passed.
+Rebuilt image publication and pull confirmed on 2026-09-07:
+randomgraphics/garnet-windows:00001
+sha256:45a4d9e7e5f3a5986dfdb117769d4323b7930c56e43e6ef5bec2380752e09d9d
+Pulled image ID matches the full CIT evidence (23575ea60a87).
+PR body prepared in %TEMP%\garnet-docker-cit-20260907\rapid-vulkan-pr.md.
+GitHub CLI is authenticated at %TEMP%\garnet-gh-v2.100.0\bin\gh.exe.
+PR: https://github.com/randomgraphics/rapid-vulkan/pull/49
+User expanded scope: migrate rapid-vulkan Windows CI to CircleCI and consume
+the existing Garnet image only. Removed the old Windows Dockerfile, build.ps1,
+push-to-github.ps1 and GitHub Windows workflow. Windows helpers share tag 00001.
+Local rapid-vulkan container debug/profile/release compilation passed.
+CircleCI workflow c9d854b6-61f2-4877-9ba2-8b03d24d4f09 is running.
+After the new Windows check passes, migrate the obsolete required GitHub
+build-windows check to ci/circleci: build-windows, preserving required overall
+build-and-test and protected-main rules. Squash merge is the repo merge policy.
+
+PR #49 merged at 2026-09-07T22:41:55Z as fb67faa1c1b03a87cb2e30a96412cd990c8c98ff.
+All CircleCI checks passed. Windows job 773 took 23m02s, including pull and
+three builds. Required checks now include build-and-test and ci/circleci:
+build-windows; other protected-main rules remain in force. Local submodule
+was updated, but user stopped work before the Garnet pointer was committed.
+
+User then authorized a separate tarball-cache experiment. PR #50:
+https://github.com/randomgraphics/rapid-vulkan/pull/50
+Branch wip/windows-image-cache, initial commit e152b18. Use docker save/load
+with C:\docker-image-cache\garnet-windows.tar, keyed by image-lock.json.
+Both digest and image ID are pinned; CI runs the verified image ID.
+Measure a cache miss and a subsequent hit on fresh CircleCI Windows machines.
+Do not merge this experiment or commit the Garnet gitlink without review.
+Cold cache job 781 passed: pull 865.21s, export 413.23s, cache save 441.44s,
+three builds 537.54s, total 2288.13s. Raw archive 19,489,439,232 bytes;
+CircleCI zstd upload 6.3 GiB. Warm job 787 was triggered with empty commit
+715a103 (identical source tree); cache restored in 85.01s, but CircleCI killed
+the silent docker load after 607.90s at its default 10-minute no-output limit.
+Commit fa756d2 adds a documented 30-minute no-output allowance for this step.
+Retry job 793 restored the same cache in 79.487s and loaded it in 1299.454s.
+Expected image ID verified. Restore + load totals 1378.941s (22m59s),
+513.735s slower than Docker Hub pull; recommend keeping direct pulls.
+Warm job 793 passed debug/profile/release builds in 524.667s, total 1936.143s
+(32m16s). All required PR checks passed. PR #50 records the completed experiment
+and remains unmerged; Garnet gitlink remains uncommitted pending review.
+
+--- TASK BREAKDOWN ---
+Phase 1: Prepare and verify the image
+─────────────────────────────────────────────────────
+  Task 1.1: Add Dockerfile, dependency installation, and lifecycle scripts
+    Verify: Review scripts and run available static checks.
+    Commit: "ci(windows): prepare Windows container tooling (Phase 1.1)"
+  Task 1.2: Build image and compile debug, profile, release in containers
+    Verify: build.ps1 and verify.ps1 succeed on a Windows Docker host.
+    Commit: "ci(windows): verify Windows container builds (Phase 1.2)"
+  Task 1.3: Enable graphics runtime, GPU device sharing and full container CIT
+    Verify: Build image 00001, then verify.ps1 -RunCit -Gpu passes debug/profile/release.
+    Commit: "ci(windows): enable GPU container runtime and full CIT (Phase 1.3)"
+  Task 1.4: Merge rapid-vulkan fix through its PR process and update submodule
+    Verify: Required PR checks/reviews pass, PR merged to main; gitlink names merged commit.
+    Commit: "ci(windows): use merged rapid-vulkan headless fix"
+  Task 1.5: Evaluate explicit Windows image tarball cache in rapid-vulkan
+    Verify: CircleCI miss/save and hit/load pass; compare timings before adoption.
+    Commit: "ci: try explicit Windows image tarball caching"
+Phase 2: Publish and migrate CI
+─────────────────────────────────────────────────────
+  Task 2.1: Publish verified revision to Docker Hub
+    Verify: upload.ps1 succeeds; pull and inspect published image digest.
+    Commit: "ci(windows): publish verified image revision (Phase 2.1)"
+  Task 2.2: Add Windows CircleCI matrix and retire Windows GitHub workflow
+    Verify: CircleCI configuration validates; all Windows jobs pass.
+    Commit: "ci(windows): move Windows builds to CircleCI (Phase 2.2)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+Phase 1 (image tooling):
+  env/docker/windows/ — NEW: image, lifecycle scripts and documentation
+Phase 2 (migration):
+  .circleci/config.yml — Windows machine executor and container build matrix
+  .github/workflows/windows-ci.yml — retire after CircleCI verification
+
+User requested another warm run to verify speed. Job 795 uses the identical
+source tree 3d3b4a4ffaec748105a622d50fc38e35d637b73a and existing image cache.
+
+User canceled the repeat and requested the original CI arrangement. Job 795
+was confirmed canceled. Commits d413c7b and 63f81a5 restore both original CI
+YAML files and remove all rapid-vulkan dev/docker/windows files. Local lint
+passed. Required checks restored exactly to build-and-test (CircleCI app
+18001) and build-windows (GitHub Actions app 15368), strict=true. PR #50
+retitled Restore Windows GitHub Actions CI; validation is running. Preserve
+the headless Vulkan fix; no merge or Garnet gitlink commit performed.
+
+Final disposition: user abandoned Windows Docker for both projects. Garnet
+workflow YAML already matched origin/master. Removed all Windows Docker
+tooling and restored CIT/build utility/requirements changes to origin/master.
+Rapid-vulkan rollback is PR #50; merge and submodule follow-up are authorized.
