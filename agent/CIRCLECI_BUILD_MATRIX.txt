@@ -1,0 +1,73 @@
+# Assignment: Consolidate Garnet builds on CircleCI
+
+---
+
+## Goals
+
+Run Windows, Linux GCC, Linux Clang, and Android builds on CircleCI using
+debug/profile/release matrices. Run lint first, then all 12 builds together.
+Remove the redundant GitHub Actions workflow.
+
+---
+
+## Design
+
+Use rapid-vulkan's accepted native Windows Server 2022 executor and Vulkan SDK
+file cache. Keep Garnet's Linux/Android Docker image and GCC CIT coverage.
+Use shared variant parameters and matrices, with lint as the only prerequisite.
+Separate Linux source preparation and GCC tests from compilation for clear logs.
+Preserve the rapid-vulkan update to upstream main e6acc64, committed separately
+as 2b135c1a during implementation; it removes redundant GitHub Actions CI.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 1.1 — CircleCI configuration and all local checks pass.
+  Phase 0: Existing branch and submodule changes reviewed; no manual changes discarded.
+  Phase 1.1: CircleCI validate/process pass; 13 expanded jobs with lint-only prerequisites; PowerShell syntax, CIT lint, and diff checks pass.
+In progress: Phase 1.2 — push to PR #45 and verify the hosted workflow.
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+.circleci/config.yml
+.github/workflows/windows-ci.yml
+src/3rdparty/rapid-vulkan/.circleci/config.yml
+env/garnet.ps1 and env/garnet.rc
+env/bin/build.py and env/bin/cit.py
+agent/completed/2026-09-08-053210-WINDOWS_NATIVE_CIRCLECI.txt
+
+--- BUILD / CI ---
+
+circleci config validate .circleci/config.yml
+circleci config process .circleci/config.yml
+. env/garnet.ps1; python.exe env/bin/cit.py -l
+git diff --check
+Run the branch's CircleCI workflow and verify lint plus all 12 matrix builds.
+
+--- WORKFLOW / CONVENTIONS ---
+
+Work on the existing wip/ci/windows-docker PR branch. Preserve user changes.
+Validate before committing; push the verified configuration to exercise hosted CI.
+Update PR #45 to describe the final migration. Do not merge the PR.
+Keep existing test coverage and fail the job when a build command fails.
+Use CRLF for new working-copy files and preserve existing line endings.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: Migrate and verify CI
+──────────────────────────────────────────────────────────────────────────────
+  Task 1.1: Consolidate CircleCI matrices and migrate Windows builds
+    Verify: CircleCI config validation/expansion, PowerShell parsing, lint, and diff checks pass; expanded workflow has lint and exactly 12 builds requiring only lint.
+    Commit: "ci: consolidate platform build matrices on CircleCI"
+  Task 1.2: Verify the hosted workflow and record the result
+    Verify: All 13 jobs pass; Windows logs show SDK preparation/cache behavior; GitHub Actions has no workflow for the new revision.
+    Commit: "ci: record CircleCI matrix verification"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (CI migration):
+  .circleci/config.yml — shared matrices, native Windows SDK cache, lint-only dependencies.
+  .github/workflows/windows-ci.yml — remove redundant GitHub Actions CI.
+  src/3rdparty/rapid-vulkan — include the existing update to upstream main e6acc64.
+  agent/CIRCLECI_BUILD_MATRIX.txt — NEW: implementation and verification record.
