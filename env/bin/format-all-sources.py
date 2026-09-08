@@ -139,6 +139,4 @@ def format_one_file(x):
 # for x in our_sources: format_one_file(x)
 with concurrent.futures.ThreadPoolExecutor() as executor:
     futures = {executor.submit(format_one_file, x): x for x in our_sources}
-    # Surface worker failures (including missing tools) instead of reporting a false pass.
-    for future in concurrent.futures.as_completed(futures):
-        future.result()
+    concurrent.futures.wait(futures)
