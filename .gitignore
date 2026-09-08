@@ -2,6 +2,7 @@
 .codegraph/
 .cache/
 .pyvenv/
+.serena/
 __pycache__/
 /build*/
 tmp/

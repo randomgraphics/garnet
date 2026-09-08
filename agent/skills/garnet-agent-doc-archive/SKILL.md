@@ -32,6 +32,16 @@ implementation of its subject is usually finished.
 ## Rules
 
 - Move with `git mv`; do not copy.
+- Always prefix the filename with the current UTC timestamp at archival time,
+  in `yyyy-mm-dd-hhmmss` format, followed by a hyphen and the original filename:
+  `agent/completed/2026-09-07-163045-MY_ASSIGNMENT.txt`. Use a 24-hour clock
+  and standard UTC, never local time or a daylight-saving offset. Preserve any
+  subfolder structure; the prefix belongs on the filename.
+  In PowerShell, generate it with
+  `[DateTime]::UtcNow.ToString('yyyy-MM-dd-HHmmss', [Globalization.CultureInfo]::InvariantCulture)`;
+  in Bash, use `date -u +%Y-%m-%d-%H%M%S`.
+- Existing archived filenames remain unchanged; apply the prefix when moving
+  a document into the archive.
 - Archived docs are historical records. Do not rewrite them; stale paths and
   old naming inside them document what was true at the time.
 - Update any live references to the doc's old path (grep before moving).

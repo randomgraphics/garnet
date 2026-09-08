@@ -29,8 +29,10 @@ consistent and machine-parseable.
 Example: `RDG2_RENDER_GRAPH_EXECUTION.txt`
 
 Only ongoing assignments live at the top of `agent/`. Finished ones are archived
-in `agent/completed/`; archived files keep whatever name they had historically
-(older ones carry an `ASSIGNMENT_` prefix that is no longer used).
+in `agent/completed/` with a current UTC timestamp prefix:
+`yyyy-mm-dd-hhmmss-ORIGINAL_FILENAME.txt`. Always use UTC, never local time.
+Existing archived files retain their historical names (older ones may carry
+an `ASSIGNMENT_` prefix).
 
 ---
 
