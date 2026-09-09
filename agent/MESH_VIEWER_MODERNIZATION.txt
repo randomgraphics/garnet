@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; the multi-format environment-lit model path now runs end-to-end through E2 and RDG2.
-- Completed: implemented normalized FX2 assets/draws, public E2 model forms, immutable visual capture, visual-domain GPU caching, node-transform composition, and closed-frame RDG2 submission across repeated frames; Dear ImGui remains pinned and ready for its backend.
-- Current step: Phase 4.1, replacing the legacy SampleApp mesh-viewer shell with an E2 application and fixed-camera/headless execution.
-- Remaining: viewer shell/environment defaults, hierarchy/framing/debug display, dual-mode camera controls, Dear ImGui gpu2 backend/UI, and final matrix validation.
-- Latest verification: GCC debug build passed; `[e2][model]` passed 19 assertions across API, snapshot immutability, two-frame headless rendering, cache reuse, and teardown. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
+- Overall status: active implementation; the legacy viewer shell is replaced and multi-format models render end-to-end through E2/RDG2/gpu2.
+- Completed: implemented the normalized environment-lit model pipeline, E2 capture/render integration, and a legacy-free mesh-viewer executable with bounds-derived fixed camera, Asset Foundry IBL defaults, and finite headless mode.
+- Current step: Phase 4.2, adding format-neutral hierarchy inspection and robust framing diagnostics.
+- Remaining: hierarchy inspection/debug display, dual-mode camera controls, Dear ImGui gpu2 backend/UI, and final matrix validation.
+- Latest verification: GCC debug full build passed; headless viewer runs completed with exit 0 for repository FBX, Asset Foundry glTF, compact GLB, and STL. No legacy mesh/effect pipeline remains in the executable. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
 
 ---
 
@@ -60,7 +60,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 3.3 — captured model instances rendered through E2's closed-frame RDG2 plan
+Last completed: Phase 4.1 — mesh viewer replaced by fixed-camera E2 application shell
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -75,9 +75,10 @@ Phase 2.3: validated six-face skybox/irradiance/prefiltered maps and 2D BRDF LUT
 Phase 3.1: added renderer-independent ModelVisualFacet and model-form declarations with Doxygen; GCC debug build and public-contract test passed
 Phase 3.2: implemented model facet/form factories and immutable snapshot capture of model references plus world transforms; GCC debug build and 12 focused assertions passed
 Phase 3.3: added visual-domain ModelAsset cache, node hierarchy draw composition, first-use payload emission, and two-frame RDG2 render coverage; GCC debug and 19 focused assertions passed
+Phase 4.1: removed SampleApp/FatModel/PCH legacy dependencies, added E2 shell and Asset Foundry environment defaults; FBX/glTF/GLB/STL headless runs exited 0
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 4.1 — replace legacy SampleApp viewer with E2 fixed-camera application shell
+In progress: Phase 4.2 — add format-neutral hierarchy inspection and robust framing diagnostics
 --- END PROGRESS ---
 
 --- REFERENCE ---

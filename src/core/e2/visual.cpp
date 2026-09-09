@@ -95,6 +95,15 @@ struct VisualDomainImpl : VisualDomain {
 
     Universe & universe() const override { return mUniverse; }
 
+    void setEnvironment(const Environment & environment) override {
+        if (!mSsc) return;
+        mSsc->set0.envLighting.skyboxPath               = environment.skyboxPath;
+        mSsc->set0.envLighting.irradiancePath           = environment.irradiancePath;
+        mSsc->set0.envLighting.prefilteredPath          = environment.prefilteredPath;
+        mSsc->set0.envLighting.brdfLutPath              = environment.brdfLutPath;
+        mSsc->set0.envLighting.environmentRadianceScale = environment.radianceScale;
+    }
+
     bool init(const CreateParameters & cp) {
         mOs = cp.os;
 

@@ -64,6 +64,18 @@ struct VisualDomain : Being {
     /// The universe this domain belongs to.
     virtual Universe & universe() const = 0;
 
+    /// Application-selected image-based lighting resources used for subsequent frames.
+    struct Environment {
+        StrA  skyboxPath;
+        StrA  irradiancePath;
+        StrA  prefilteredPath;
+        StrA  brdfLutPath;
+        float radianceScale = 1.0f;
+    };
+
+    /// Change skybox and image-based lighting resources for subsequent snapshots.
+    virtual void setEnvironment(const Environment &) = 0;
+
     virtual void render(Ref<VisualMoment>) = 0;
 
     GN_API static Ref<VisualDomain> create(const CreateParameters &);

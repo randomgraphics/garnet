@@ -1,214 +1,100 @@
-#include "pch.h"
-#include <garnet/gfx/fatModel.h>
+#include <garnet/GNengine2.h>
+#include <garnet/GNfx2.h>
+
+#include <glm/geometric.hpp>
+
+#include <algorithm>
+#include <cstdlib>
 
 using namespace GN;
-using namespace GN::gfx;
-using namespace GN::win;
-using namespace GN::engine;
-using namespace GN::util;
+using namespace GN::e2;
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.meshViewer");
+namespace {
 
-#define USE_ENTITY 1
+Logger * sLogger = getLogger("GN.tool.mesh-viewer");
 
-class MyApp : public SampleApp {
-    struct Camera {
-        Matrix44f proj;
-        Matrix44f view;
-    };
-
-    const char * filename;
-    ArcBall      arcball; // arcball camera
-    float        radius;  // distance from camera to object
-    Camera       camera;
-    bool         showbbox;
-
-#if USE_ENTITY
-    AutoObjPtr<Entity> entity;
-#else
-    SampleWorld world;
-#endif
-
-    float animationDuration;
-    float currentTime;
-
-public:
-    void updateRadius() {
-        Gpu * gpu = engine::getGpu();
-
-        const DispDesc & dd = gpu->getDispDesc();
-
-        // setup camera
-        camera.view.lookAtRh(Vector3f(0, 0, radius), Vector3f(0, 0, 0), Vector3f(0, 1, 0));
-        gpu->composePerspectiveMatrixRh(camera.proj, GN_PI / 4.0f, (float) dd.width / dd.height, radius / 100.0f, radius * 2.0f);
-
-        // setup arcball
-        float h = tan(0.5f) * radius * 2.0f;
-        arcball.setMouseMoveWindow(0, 0, (int) dd.width, (int) dd.height);
-        arcball.setViewMatrix(camera.view);
-        arcball.setTranslationSpeed(h / dd.height);
-
-        // setup light as a head light that is in same location as camera.
-        Vector4f lightPos(0, 0, radius, 1);
-        engine::getGdb()->setStandardUniform(StandardUniform::Index::LIGHT0_POSITION, lightPos);
-    }
-
-    bool onInit() {
-        // Set default animation (no animation)
-        animationDuration = 0;
-        currentTime       = 0;
-
-        // load mesh from file
-#if USE_ENTITY
-        FatModel fm;
-        if (!fm.loadFromFile(filename)) return false;
-        if (!fm.splitSkinnedMesh(SkinnedMesh::sGetMaxJointsPerDraw())) return false;
-        if (fm.skeletons.empty()) {
-            StaticMesh * mesh = new StaticMesh;
-            entity.attach(mesh);
-            if (!mesh->loadFromFatModel(fm)) return false;
-        } else {
-            SkinnedMesh * mesh = new SkinnedMesh;
-            entity.attach(mesh);
-            if (!mesh->loadFromFatModel(fm)) return false;
-            SkinnedAnimationInfo anim;
-            if (mesh->getAnimationInfo(0, anim)) {
-                animationDuration = (float) anim.duration;
-                if (animationDuration > 0) { mesh->setAnimation(0, 0); }
-            }
-        }
-        const Boxf & bbox = entity->getComponent<SpacialComponent>()->getUberBoundingBox();
-#else
-        ModelHierarchyDesc swd;
-        if (!swd.loadFromFile(filename)) return false;
-        if (!world.createEntites(swd)) return false;
-        world.showBoundingBoxes(true);
-        const Boxf & bbox = world.getRootEntity()->getComponent<SpacialComponent>()->getUberBoundingBox();
-#endif
-        showbbox = true;
-
-        // update scene radius
-        Spheref bs;
-        calculateBoundingSphereFromBoundingBox(bs, bbox);
-        radius = bs.radius * 2.0f;
-        if (0.0f == radius) radius = 1.0f;
-        updateRadius();
-
-        // initialize arcball
-        arcball.setHandness(util::RIGHT_HAND);
-        arcball.setTranslation(-bs.center);
-        arcball.connectToInput();
-
-        // success
-        return true;
-    }
-
-    void onQuit() {
-#if USE_ENTITY
-        entity.clear();
-#else
-        world.clear();
-#endif
-    }
-
-    void onRenderWindowResize(intptr_t, uint32_t width, uint32_t height) { arcball.setMouseMoveWindow(0, 0, (int) width, (int) height); }
-
-    void onAxisMove(Axis a, int d) {
-        if (Axis::MOUSE_WHEEL_0 == a) {
-            float speed = radius / 100.0f;
-            radius -= speed * d;
-            if (radius < 0.1f) radius = 0.1f;
-            updateRadius();
-        }
-    }
-
-    void onUpdate() {
-#if USE_ENTITY
-        SpacialComponent * spacial = entity->getComponent<SpacialComponent>();
-        if (animationDuration > 0) {
-            SkinnedMesh * mesh = (SkinnedMesh *) entity.data();
-            mesh->setAnimation(0, currentTime);
-            currentTime += UPDATE_INTERVAL_IN_SECONDS;
-        }
-#else
-        SpacialComponent * spacial = world.getRootEntity()->getComponent<engine::SpacialComponent>();
-#endif
-        const Vector3f & position = arcball.getTranslation();
-        spacial->setPosition(position);
-        spacial->setRotation(arcball.getRotation());
-    }
-
-    void onRender() {
-        Gpu * gpu = engine::getGpu();
-
-        gpu->clearScreen(Vector4f(0, 0.5f, 0.5f, 1.0f));
-
-#if USE_ENTITY
-    #if 0
-        if( animationDuration > 0 )
-        {
-            // Draw skeleton of the skinned mesh.
-            SkinnedMesh * mesh = (SkinnedMesh*)entity.data();
-            Matrix44f transform = camera.proj * camera.view;
-            mesh->drawSkeletons( 0xFFFFFFFF, transform );
-        }
-    #endif
-        VisualComponent *  vc = entity->getComponent<VisualComponent>();
-        SpacialComponent * sc = entity->getComponent<SpacialComponent>();
-        vc->draw(camera.proj, camera.view, sc);
-        if (showbbox) sc->drawBoundingBox(camera.proj, camera.view, 0xFF000000);
-#else
-        world.showBoundingBoxes(showbbox);
-        world.draw(camera.proj, camera.view);
-#endif
-        const Vector3f & position = arcball.getTranslation();
-
-        drawXYZCoordinateAxes(camera.proj * camera.view * arcball.getRotationMatrix44());
-
-        engine::getDefaultFontRenderer()->drawText(StrW::format(L"position : {},\n"
-                                                                L"           {},\n"
-                                                                L"           {}\n"
-                                                                L"radius   : {}",
-                                                                position.x, position.y, position.z, radius)
-                                                       .data(),
-                                                   (float) getGpu()->getDispDesc().width - 320, 40);
-    }
-
-    void onKeyPress(win::KeyEvent ke) {
-        SampleApp::onKeyPress(ke);
-
-        if (win::KeyCode::B == ke.code() && ke.status.down) { showbbox = !showbbox; }
-    }
-
-    bool onCheckExtraCmdlineArguments(const char * exename, int argc, const char * const argv[]) {
-        GN_UNUSED_PARAM(exename);
-
-        if (0 == argc) {
-            GN_ERROR(sLogger, "Mesh file name is missing.");
-            return false;
-        }
-
-        if (argc >= 2 && (0 == str::compare(argv[0], "-print") || 0 == str::compare(argv[0], "--print"))) {
-            StrA s;
-            printModelFileNodeHierarchy(s, argv[1]);
-            GN_INFO(sLogger, "{}", s.data());
-            return false;
-        } else {
-            filename = argv[0];
-            return true;
-        }
-    }
-
-    void onPrintHelpScreen(const char * executableName) {
-        GN_INFO(sLogger, "\nUsage: {} [options] meshfile\n", executableName);
-        printStandardCommandLineOptions();
-    }
+struct Options {
+    StrA path;
+    bool headless = false;
+    int  frames   = 3;
 };
 
+bool parseOptions(int argc, const char * const * argv, Options & options) {
+    for (int i = 1; i < argc; ++i) {
+        const StrA argument = argv[i];
+        if (argument == "--test") {
+            options.headless = true;
+        } else if (argument == "--frames" && i + 1 < argc) {
+            options.frames = std::max(1, std::atoi(argv[++i]));
+        } else if (!argument.empty() && argument[0] == '-') {
+            GN_ERROR(sLogger, "Unknown option '{}'", argument);
+            return false;
+        } else if (options.path.empty()) {
+            options.path = argument;
+        } else {
+            GN_ERROR(sLogger, "Only one model path may be specified");
+            return false;
+        }
+    }
+    if (!options.path.empty()) return true;
+    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--test] [--frames N] <model.fbx|gltf|glb|stl>");
+    return false;
+}
+
+WorldVector3 worldPosition(const PhysicalScale & scale, const glm::vec3 & meters) {
+    return {spatial::toWorld(scale.fromMeters(meters.x)), spatial::toWorld(scale.fromMeters(meters.y)), spatial::toWorld(scale.fromMeters(meters.z))};
+}
+
+LocalCoordinate localDistance(const PhysicalScale & scale, float meters) { return scale.fromMeters(meters); }
+
+} // namespace
+
 int main(int argc, const char * argv[]) {
-    printf("\nGarnet mesh viewer V0.1.\n");
+    Options options;
+    if (!parseOptions(argc, argv, options)) return EXIT_FAILURE;
 
-    MyApp app;
+    auto model = fx2::ModelScene::load({.path = options.path});
+    if (!model) return EXIT_FAILURE;
 
-    return app.run(argc, argv);
+    Universe             universe;
+    Ref<OperatingDomain> os;
+    if (!options.headless) {
+        os = OperatingDomain::create({.universe = universe, .caption = "Garnet Mesh Viewer", .width = 1280, .height = 720});
+        if (!os) return EXIT_FAILURE;
+    }
+    auto visual = VisualDomain::create({.universe = universe, .os = os});
+    if (!visual) return EXIT_FAILURE;
+    visual->setEnvironment({
+        .skyboxPath      = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
+        .irradiancePath  = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
+        .prefilteredPath = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
+        .brdfLutPath     = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
+        .radianceScale   = 1.0f,
+    });
+
+    auto world  = Simple::createWorld(universe);
+    auto form   = createModelForm(universe, "model", model);
+    auto camera = Camera::create({.domain = visual});
+    if (!world || !form || !camera) return EXIT_FAILURE;
+
+    const glm::vec3 center = (model->bounds.minimum + model->bounds.maximum) * 0.5f;
+    const float     radius = std::max(glm::length(model->bounds.maximum - model->bounds.minimum) * 0.5f, 0.001f);
+    form->setPosition(worldPosition(world->scale, -center));
+    Ref<Form> forms[] = {form};
+    world->populate({forms, 1});
+
+    camera->desc.position     = worldPosition(world->scale, {0, 0, radius * 2.5f});
+    camera->desc.orientation  = glm::quat(1, 0, 0, 0);
+    camera->desc.nearPlane    = localDistance(world->scale, std::max(radius / 1000.0f, 0.0001f));
+    camera->desc.farPlane     = localDistance(world->scale, std::max(radius * 20.0f, 1.0f));
+    camera->desc.fovYInDegree = 45.0f;
+    Ref<Camera> cameras[]     = {camera};
+
+    for (int frame = 0; options.headless ? frame < options.frames : true; ++frame) {
+        if (os && !os->processEvents()) break;
+        auto moment = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+        if (!moment) return EXIT_FAILURE;
+        visual->render(moment);
+    }
+    return EXIT_SUCCESS;
 }
