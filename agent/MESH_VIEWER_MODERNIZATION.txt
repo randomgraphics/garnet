@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; CPU import and immutable gpu2 model residency are complete.
-- Completed: implemented/validated normalized FBX/glTF/GLB/STL import, pinned Dear ImGui v1.92.9b, and added batched gpu2 geometry plus external/embedded texture uploads retained by one first-use payload.
-- Current step: Phase 2.2, building draw descriptions for PBR, general-lit, unlit, and default-lit materials.
-- Remaining: model shading/environment lighting, E2 snapshot/render integration, viewer replacement, dual-mode camera controls, Dear ImGui gpu2 backend/UI, debug display, and final matrix validation.
-- Latest verification: GCC debug full build passed. `[fx2][model][gpu]` passed 11 assertions and existing `[gpu2][buffer][staging]` passed 23 assertions, including embedded image decode and retained one-shot upload resources. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
+- Overall status: active implementation; CPU import, gpu2 residency, and format-neutral material draw construction are complete.
+- Completed: implemented/validated normalized FBX/glTF/GLB/STL import, pinned Dear ImGui, added batched gpu2 model residency, and built shared model shaders/fallbacks plus per-material UBO draw binding for PBR, general/default-lit, specular-glossiness, and unlit workflows.
+- Current step: Phase 2.3, validating all lit material paths against shared environment maps and establishing viewer environment defaults.
+- Remaining: environment-light validation/defaults, E2 snapshot/render integration, viewer replacement, dual-mode camera controls, Dear ImGui gpu2 backend/UI, debug display, and final matrix validation.
+- Latest verification: GCC debug full build and model shader compilation passed. `[fx2][model][gpu]` passed 42 assertions across glTF, FBX, and STL draw construction with six material bindings. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
 
 ---
 
@@ -60,7 +60,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 2.1 — immutable gpu2 model geometry and texture residency created
+Last completed: Phase 2.2 — normalized model material workflows produce gpu2 draw descriptions
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -70,9 +70,10 @@ Phase 1.4: normalized PBR/default-lit properties, embedded/external textures, ge
 Phase 1.5: project/Asset Foundry corpus passed 227 assertions; 106 MB Digital Forge GLB loaded in 4.12 s at 831344 KiB peak RSS; pre-2011 tiny.fbx recorded as unsupported by Assimp
 Phase 6.1: added shallow Dear ImGui v1.92.9b submodule and isolated core-only static target; GCC debug configure/build passed
 Phase 2.1: added one-payload device-local primitive uploads, external/embedded texture staging, and retained normalized scene ownership; GCC debug and 34 focused GPU assertions passed
+Phase 2.2: added model shaders, material UBOs, shared fallback textures, and glTF/FBX/STL draw construction; GCC debug build and 42 focused assertions passed
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 2.2 — add PBR, general-lit, unlit, and default-lit model draw paths
+In progress: Phase 2.3 — validate shared environment lighting and establish viewer environment defaults
 --- END PROGRESS ---
 
 --- REFERENCE ---

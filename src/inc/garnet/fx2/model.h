@@ -149,6 +149,7 @@ struct ModelAsset : RCRT64 {
     AutoRef<const ModelScene>         scene;
     DynaArray<gpu2::RasterGeometry>   primitives;
     DynaArray<AutoRef<gpu2::Texture>> textures;
+    DynaArray<AutoRef<gpu2::Buffer>>  materialBuffers;
     AutoRef<gpu2::GpuPayload>         gpuPayload;
 
     /// Create device-local geometry and texture resources without submitting them.
@@ -156,6 +157,27 @@ struct ModelAsset : RCRT64 {
 
 protected:
     using RCRT64::RCRT64;
+};
+
+/// Shared environment-lit shader state for normalized model assets.
+struct ModelShading {
+    ModelShading() = delete;
+
+    /// Opaque shaders and fallback material textures, uploaded once before first use.
+    struct Asset : RCRT64 {
+        GN_API                    GN_REGISTER_RUNTIME_TYPE(RCRT64);
+        AutoRef<gpu2::GpuPayload> gpuPayload;
+
+    protected:
+        using RCRT64::RCRT64;
+    };
+
+    /// Create shared model shader resources without submitting their initialization payload.
+    GN_API static AutoRef<Asset> create(AutoRef<gpu2::GpuContext> gpu);
+
+    /// Build one primitive draw. The caller composes the node and instance transforms.
+    GN_API static gpu2::GpuRaster::DrawParameters getDrawParams(const SharedShaderConstants::Snapshot & sscSnapshot, AutoRef<const Asset> shading,
+                                                                AutoRef<const ModelAsset> model, uint32_t primitiveIndex, const glm::mat4 & worldTransform);
 };
 
 } // namespace GN::fx2

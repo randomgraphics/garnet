@@ -181,4 +181,50 @@ TEST_CASE("fx2::ModelAsset records immutable geometry and texture uploads once",
     CHECK(asset->textures[0]);
     CHECK(asset->primitives[0].vertexCount == scene->primitives[0].vertices.size());
     CHECK(asset->primitives[0].indexCount == scene->primitives[0].indices.size());
+
+    const auto shading = ModelShading::create(gpu);
+    const auto ssc     = SharedShaderConstants::create({.gpu = gpu});
+    REQUIRE(shading);
+    REQUIRE(shading->gpuPayload);
+    REQUIRE(ssc);
+    const auto draw = ModelShading::getDrawParams(ssc->takeSnapshot(), shading, asset, 0, glm::mat4(1.0f));
+    CHECK(draw.vs);
+    CHECK(draw.ps);
+    CHECK(draw.geometry.indexCount == scene->primitives[0].indices.size());
+    REQUIRE(draw.resources.size() == 2);
+    CHECK(draw.resources[1].size() == 6);
+}
+
+TEST_CASE("fx2::ModelShading builds draws for glTF FBX and STL materials", "[fx2][model][gpu]") {
+    constexpr const char * paths[] = {
+        "src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Embedded/BoxTextured.gltf",
+        "src/3rdparty/assimp/test/models/FBX/phong_cube.fbx",
+        "src/3rdparty/assimp/test/models/STL/triangle.stl",
+    };
+    const auto gpu = GN::gpu2::GpuContext::create("model-shading-test",
+                                                  GN::gpu2::GpuContext::CreateParameters {.howToPrintDeviceCaps = GN::gpu2::GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No gpu2 context is available");
+    const auto shading = ModelShading::create(gpu);
+    const auto ssc     = SharedShaderConstants::create({.gpu = gpu});
+    REQUIRE(shading);
+    REQUIRE(ssc);
+    const auto snapshot = ssc->takeSnapshot();
+
+    for (const char * relativePath : paths) {
+        CAPTURE(relativePath);
+        const GN::StrA path = repositoryPath(relativePath);
+        if (!GN::fs::isFile(path)) SKIP("Assimp model corpus is not initialized");
+        const auto scene = ModelScene::load({.path = path});
+        REQUIRE(scene);
+        const auto model = ModelAsset::create(gpu, scene);
+        REQUIRE(model);
+        for (uint32_t primitiveIndex = 0; primitiveIndex < model->primitives.size(); ++primitiveIndex) {
+            const auto draw = ModelShading::getDrawParams(snapshot, shading, model, primitiveIndex, glm::mat4(1.0f));
+            CHECK(draw.vs);
+            CHECK(draw.ps);
+            CHECK(draw.geometry.indexCount > 0);
+            CHECK(draw.resources.size() == 2);
+            CHECK(draw.resources[1].size() == 6);
+        }
+    }
 }

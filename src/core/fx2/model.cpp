@@ -1,4 +1,7 @@
 #include "pch.h"
+#include "model-frag.spv.h"
+#include "model-vert.spv.h"
+#include "vk-shaders/model-material-ubo.h"
 
 #include <assimp/cimport.h>
 #include <assimp/GltfMaterial.h>
@@ -7,6 +10,8 @@
 #include <assimp/scene.h>
 #include <glm/common.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -134,6 +139,23 @@ void generateTangents(ModelScene::Primitive & primitive) {
         tangent                       = lengthSq > 0.0f ? tangent / glm::sqrt(lengthSq) : glm::vec3(1, 0, 0);
         primitive.vertices[i].tangent = glm::vec4(tangent, 1.0f);
     }
+}
+
+AutoRef<gpu2::Texture> makeSolidTexture(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & cnc, const StrA & name, const std::array<uint8_t, 4> & color) {
+    gpu2::Texture::Descriptor descriptor;
+    descriptor.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(1, 1).setFaces(1).setLevels(1);
+    auto texture = gpu2::Texture::create(name, {.context = gpu, .descriptor = descriptor});
+    auto staging = gpu2::Buffer::create(name + ".staging", {.context = gpu, .size = 4, .mappable = true});
+    if (!texture || !staging) return {};
+    {
+        auto mapped = staging->map();
+        if (!mapped.data()) return {};
+        memcpy(mapped.data(), color.data(), color.size());
+    }
+    gpu2::GpuCnC::Region region;
+    region.imageExtent = {1, 1, 1};
+    cnc.copyBufferToImage({.src = staging, .dst = texture, .regions = {&region, 1}});
+    return texture;
 }
 
 } // namespace
@@ -343,9 +365,9 @@ AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<co
         geometry.format.attributes.append(
             {.location = 1, .binding = 0, .offset = offsetof(ModelScene::Vertex, normal), .format = gpu2::RasterGeometry::AttributeFormat::F32_3});
         geometry.format.attributes.append(
-            {.location = 2, .binding = 0, .offset = offsetof(ModelScene::Vertex, tangent), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
+            {.location = 2, .binding = 0, .offset = offsetof(ModelScene::Vertex, texcoord), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
         geometry.format.attributes.append(
-            {.location = 3, .binding = 0, .offset = offsetof(ModelScene::Vertex, texcoord), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
+            {.location = 3, .binding = 0, .offset = offsetof(ModelScene::Vertex, tangent), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
         geometry.format.attributes.append(
             {.location = 4, .binding = 0, .offset = offsetof(ModelScene::Vertex, color), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
         geometry.vertices.append({.buffer = vertexBuffer, .offset = 0, .stride = sizeof(ModelScene::Vertex)});
@@ -353,6 +375,17 @@ AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<co
         geometry.indices     = {.buffer = indexBuffer, .offset = 0, .stride = sizeof(uint32_t)};
         geometry.indexCount  = static_cast<uint32_t>(primitive.indices.size());
         result->primitives.append(std::move(geometry));
+    }
+
+    for (const ModelScene::Material & material : result->scene->materials) {
+        shader::ModelMaterialUBO constants;
+        constants.baseColor              = material.baseColor;
+        constants.emissiveAndMetallic    = glm::vec4(material.emissive, material.metallic);
+        constants.roughnessAlphaWorkflow = glm::vec4(material.roughness, material.alphaCutoff, static_cast<float>(material.workflow), 0.0f);
+        auto buffer                      = gpu2::Buffer::create(material.name + ".constants", {.context = gpu, .size = sizeof(constants)});
+        if (!buffer) GN_UNLIKELY return {};
+        cnc->uploadBuffer(buffer, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)));
+        result->materialBuffers.append(std::move(buffer));
     }
 
     for (size_t textureIndex = 0; textureIndex < result->scene->textures.size(); ++textureIndex) {
@@ -379,6 +412,95 @@ AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<co
 
     result->gpuPayload = cnc->seal();
     return result->gpuPayload ? result : AutoRef<ModelAsset> {};
+}
+
+namespace {
+
+struct ModelShadingData {
+    AutoRef<gpu2::GpuShader> vs;
+    AutoRef<gpu2::GpuShader> ps;
+    AutoRef<gpu2::Texture>   white;
+    AutoRef<gpu2::Texture>   normal;
+    AutoRef<gpu2::Texture>   black;
+    AutoRef<gpu2::Texture>   metalRough;
+};
+
+struct ModelShadingAsset final : ModelShading::Asset {
+    GN_REGISTER_RUNTIME_TYPE(Asset);
+    ModelShadingData data;
+
+    explicit ModelShadingAsset(ModelShadingData value): Asset(TYPE_INFO(), "model-shading"), data(std::move(value)) {}
+};
+
+} // namespace
+
+AutoRef<ModelShading::Asset> ModelShading::create(AutoRef<gpu2::GpuContext> gpu) {
+    if (!gpu) GN_UNLIKELY return {};
+
+    ModelShadingData data;
+    data.vs  = gpu2::GpuShader::create({.context = gpu, .name = "model.vert", .binary = kModelVertSpv, .size = sizeof(kModelVertSpv)});
+    data.ps  = gpu2::GpuShader::create({.context = gpu, .name = "model.frag", .binary = kModelFragSpv, .size = sizeof(kModelFragSpv)});
+    auto cnc = gpu2::GpuCnC::create({.gpu = gpu});
+    if (!data.vs || !data.ps || !cnc) GN_UNLIKELY return {};
+
+    data.white      = makeSolidTexture(gpu, *cnc, "model.white", {255, 255, 255, 255});
+    data.normal     = makeSolidTexture(gpu, *cnc, "model.normal", {128, 128, 255, 255});
+    data.black      = makeSolidTexture(gpu, *cnc, "model.black", {0, 0, 0, 255});
+    data.metalRough = makeSolidTexture(gpu, *cnc, "model.metal-rough", {0, 255, 255, 255});
+    if (!data.white || !data.normal || !data.black || !data.metalRough) GN_UNLIKELY return {};
+
+    AutoRef<ModelShadingAsset> result(new ModelShadingAsset(std::move(data)));
+    result->gpuPayload = cnc->seal();
+    if (!result->gpuPayload) return {};
+    return result;
+}
+
+gpu2::GpuRaster::DrawParameters ModelShading::getDrawParams(const SharedShaderConstants::Snapshot & sscSnapshot, AutoRef<const Asset> shading,
+                                                            AutoRef<const ModelAsset> model, uint32_t primitiveIndex, const glm::mat4 & worldTransform) {
+    const auto * content = RuntimeType::cast<ModelShadingAsset>(shading.get());
+    if (!content || !model || primitiveIndex >= model->primitives.size()) GN_UNLIKELY return {};
+    const ModelScene::Primitive & primitive = model->scene->primitives[primitiveIndex];
+    if (primitive.material >= model->scene->materials.size() || primitive.material >= model->materialBuffers.size()) GN_UNLIKELY return {};
+    const ModelScene::Material & material = model->scene->materials[primitive.material];
+
+    gpu2::GpuRaster::DrawParameters draw;
+    draw.vs                = content->data.vs;
+    draw.ps                = content->data.ps;
+    draw.geometry          = model->primitives[primitiveIndex];
+    draw.states.cullMode   = material.doubleSided ? gpu2::RasterState::CULL_NONE : gpu2::RasterState::CULL_BACK;
+    draw.states.frontFace  = gpu2::RasterState::FRONT_CCW;
+    draw.states.depthState = gpu2::RasterState::DepthState {gpu2::RasterState::Compare::LESS, true};
+
+    const glm::mat4 normalTransform = glm::transpose(glm::inverse(worldTransform));
+    struct PushConstants {
+        glm::mat4 world;
+        glm::mat4 normal;
+    };
+    const PushConstants constants {worldTransform, normalTransform};
+    draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(constants), reinterpret_cast<const uint8_t *>(&constants)));
+
+    draw.resources.resize(2);
+    draw.resources[0] = sscSnapshot.set0Resources;
+    auto & set1       = draw.resources[1];
+    set1.resize(6);
+    auto bindTexture = [&](uint32_t binding, int32_t textureIndex, const AutoRef<gpu2::Texture> & fallback) {
+        AutoRef<gpu2::Texture> texture = fallback;
+        if (textureIndex >= 0 && static_cast<size_t>(textureIndex) < model->textures.size() && model->textures[textureIndex]) {
+            texture = model->textures[textureIndex];
+        }
+        set1[binding].resize(1);
+        set1[binding][0].resource = texture;
+        set1[binding][0].setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
+    };
+    bindTexture(0, material.baseColorMap, content->data.white);
+    bindTexture(1, material.normalMap, content->data.normal);
+    bindTexture(2, material.emissiveMap, content->data.white);
+    bindTexture(3, material.occlusionMap, content->data.white);
+    bindTexture(4, material.metalRoughMap, content->data.metalRough);
+    set1[5].resize(1);
+    set1[5][0].resource = model->materialBuffers[primitive.material];
+    set1[5][0].setBufferViewType(gpu2::GpuResourceView::BufferView::UNIFORM).setBufferViewOffset(0).setBufferViewSize(sizeof(shader::ModelMaterialUBO));
+    return draw;
 }
 
 } // namespace GN::fx2
