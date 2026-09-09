@@ -117,3 +117,46 @@ TEST_CASE("fx2::ModelScene resolves external textures and default-lit content", 
     CHECK(stl->materials[0].roughness == 1.0f);
     CHECK(stl->materials[0].metallic == 0.0f);
 }
+
+TEST_CASE("fx2::ModelScene imports project media corpus", "[fx2][model][media]") {
+    struct Fixture {
+        const char * path;
+        bool         supportedByAssimp;
+    };
+    constexpr Fixture fixtures[] = {
+        {"media/boxes/boxes.fbx", true},
+        // Assimp rejects this pre-2011 FBX; retain it as an explicit compatibility sentinel.
+        {"media/model/tiny/tiny.fbx", false},
+        {"media/model/R.F.R01/a01.fbx", true},
+        {"media/asset-foundry/model/humanoid/humanoid.fbx", true},
+        {"media/asset-foundry/model/humanoid/humanoid_ascii.fbx", true},
+        {"media/asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf", true},
+    };
+
+    for (const Fixture & fixture : fixtures) {
+        CAPTURE(fixture.path);
+        const GN::StrA path = repositoryPath(fixture.path);
+        if (!GN::fs::isFile(path)) SKIP("Project media or Asset Foundry submodule is not initialized");
+        const auto scene = ModelScene::load({.path = path});
+        if (!fixture.supportedByAssimp) {
+            CHECK_FALSE(scene);
+            continue;
+        }
+        REQUIRE(scene);
+        CHECK(scene->bounds.valid);
+        CHECK_FALSE(scene->primitives.empty());
+    }
+}
+
+TEST_CASE("fx2::ModelScene imports Asset Foundry Digital Forge stress model", "[fx2][model][media][.stress]") {
+    const GN::StrA path = repositoryPath("media/asset-foundry/model/character/speeder-getaway-from-meshy-ai.glb");
+    if (!GN::fs::isFile(path)) SKIP("Asset Foundry submodule is not initialized");
+
+    const auto scene = ModelScene::load({.path = path});
+    REQUIRE(scene);
+    CHECK(scene->sourceFormat == ModelScene::SourceFormat::GLB);
+    CHECK(scene->bounds.valid);
+    CHECK_FALSE(scene->primitives.empty());
+    CHECK_FALSE(scene->nodes.empty());
+    CHECK_FALSE(scene->materials.empty());
+}
