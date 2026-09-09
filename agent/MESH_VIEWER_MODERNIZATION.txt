@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; foundation, public model-scene contract, and source-format classification are complete.
-- Completed: normalized tool directory, published execution plan, merged the finalized window-input work and latest master, added the Asset Foundry media submodule, defined the format-neutral FX2 model API, fixed the node/subtree bounds coordinate contract, and added case-insensitive FBX/glTF/GLB/STL classification.
-- Current step: Phase 1.3, resolving sources and importing triangle geometry, hierarchy, transforms, and bounds.
-- Remaining: import normalization, gpu2 residency and environment-lit shading, E2 snapshot/render integration, viewer replacement, dual-mode camera controls/debug display, and final matrix validation.
-- Latest verification: GCC debug build passed after Task 1.2; focused `[fx2][model]` tests passed all source-format cases; changed files were formatted. Latest remote feature/master integration is staged and audited; no current code blocker.
+- Overall status: active implementation; format-neutral geometry and hierarchy import is complete.
+- Completed: normalized the tool directory, integrated window input and latest master, added Asset Foundry, defined the FX2 model API, classified FBX/glTF/GLB/STL, and imported triangle primitives, hierarchy, transforms, and model-space bounds.
+- Current step: Phase 1.4, normalizing materials, textures, and missing vertex attributes.
+- Remaining: import normalization, real-corpus stress validation, gpu2 residency and environment-lit shading, E2 snapshot/render integration, viewer replacement, dual-mode camera controls, Dear ImGui submodule/backend/UI, debug display, and final matrix validation.
+- Latest verification: GCC debug build passed after Task 1.3; focused `[fx2][model]` tests passed 176 assertions across five cases including compact FBX, glTF, GLB, STL and missing-path handling; changed files were formatted. No current code blocker.
 
 ---
 
@@ -43,6 +43,10 @@ The viewer exposes two explicit navigation modes. Arcball mode uses LMB drag to 
 
 Fly-by mode rotates the camera about its current eye position with mouse motion and moves along camera-local axes using W/A/S/D. Movement is elapsed-time based, focus loss clears held state, and mode switches preserve a continuous camera pose without an unexpected jump.
 
+### Dear ImGui integration
+
+Dear ImGui is added as a shallow third-party submodule pinned to an audited upstream revision. A reusable Garnet backend translates ImGui draw data and platform input through gpu2 and the window-owned input API; it must not depend on legacy `GNgpu.h` or the effect pipeline. The mesh viewer owns its panels and uses the backend for scene hierarchy, selection/material inspection, environment controls, navigation-mode selection, and debug toggles. ImGui input capture suppresses camera controls so UI interaction cannot also move the scene.
+
 ### Test model corpus
 
 Use existing project media and models already present in the repository as the primary integration corpus. In particular, exercise `media/boxes/boxes.fbx`, `media/model/R.F.R01/a01.fbx`, `media/model/tiny/tiny.fbx`, `media/asset-foundry/model/humanoid/humanoid.fbx`, `media/asset-foundry/model/humanoid/humanoid_ascii.fbx`, and `media/asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf`. Use `media/asset-foundry/model/character/speeder-getaway-from-meshy-ai.glb` as the large real-world GLB stress case for hierarchy, materials, textures, memory use, framing, and rendering. Use Assimp's checked-out model corpus for compact GLB and STL coverage, including `glTF2/BoxTextured-glTF-Binary/BoxTextured.glb`, `glTF2/2CylinderEngine-glTF-Binary/2CylinderEngine.glb`, `STL/triangle.stl`, and one nontrivial ASCII and binary STL model.
@@ -56,14 +60,15 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.2 — supported model source extensions classified and tested
+Last completed: Phase 1.3 — model geometry, hierarchy, transforms, and bounds imported and tested
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
-  Phase 1.2: added and tested case-insensitive FBX, glTF, GLB, and STL source classification
+Phase 1.2: added and tested case-insensitive FBX, glTF, GLB, and STL source classification
+Phase 1.3: imported compact repository FBX, glTF, GLB, and STL triangle geometry with hierarchy and model-space subtree bounds; GCC debug build and 176 focused assertions passed
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 1.3 — resolve model sources and import geometry, hierarchy, transforms, and bounds
+In progress: Phase 1.4 — normalize materials, textures, and missing vertex attributes
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -208,15 +213,33 @@ Task 5.4: Connect both controllers to window-owned input and viewer state
 Verify: focused input tests and a windowed manual pass cover both modes, LMB/RMB/wheel, W/A/S/D, resize, focus loss, switching, and reset
 Commit: "feat(mesh-viewer): integrate dual-mode camera input (Phase 5.4)"
 
-Phase 6: Final validation and documentation
+Phase 6: Dear ImGui gpu2 backend and mesh-viewer UI
 ─────────────────────────────────────────────────────────────────────
-  Task 6.1: Run the cross-format, teardown, build, format, and CI matrix
-    Verify: GCC and Clang debug builds, focused tests, headless fixtures, samples, format check, and full CIT pass
-    Commit: "test(mesh-viewer): validate modern viewer matrix (Phase 6.1)"
+Task 6.1: Add Dear ImGui as a shallow pinned third-party submodule and build target
+Verify: clean configure/build resolves the pinned revision; `.gitmodules` contains `shallow = true`; no generated or demo backend files leak into Garnet targets
+Commit: "build: add dear imgui submodule (Phase 6.1)"
 
-  Task 6.2: Document the settled asset, world, effect, and graph boundaries
+Task 6.2: Implement reusable gpu2 renderer and window-input platform backend
+- Upload the font atlas once, stream frame vertex/index data, translate clip rects/textures, and preserve gpu2/RDG2 resource ownership.
+- Feed mouse, wheel, keyboard, text, focus, cursor, and display-scale events from `GN::win::Window`; expose ImGui capture state to clients.
+Verify: focused backend tests cover draw-command translation, clip/scissor conversion, index width, input mapping, capture, resize, and teardown; gpu2 smoke frame renders without validation errors
+Commit: "feat(ui): add dear imgui gpu2 backend (Phase 6.2)"
+
+Task 6.3: Build mesh-viewer inspection and control UI
+- Add hierarchy/selection, primitive/material summary, environment-map and exposure controls, arcball/fly-by selector, framing/reset, axes/bounds toggles, and diagnostics.
+- Route captured input exclusively to ImGui and retain viewer controls when UI is not capturing.
+Verify: headless UI-state tests and a windowed manual pass cover selection, controls, capture isolation, resizing, DPI, and both navigation modes
+Commit: "feat(mesh-viewer): add dear imgui interface (Phase 6.3)"
+
+Phase 7: Final validation and documentation
+─────────────────────────────────────────────────────────────────────
+  Task 7.1: Run the cross-format, teardown, build, format, and CI matrix
+    Verify: GCC and Clang debug builds, focused tests, headless fixtures, samples, format check, and full CIT pass
+    Commit: "test(mesh-viewer): validate modern viewer matrix (Phase 7.1)"
+
+  Task 7.2: Document the settled asset, world, effect, graph, and UI-backend boundaries
     Verify: E2/FX2 docs describe ownership, supported formats, defaults, and deferred skeletal animation
-    Commit: "docs(mesh-viewer): document modern viewer architecture (Phase 6.2)"
+    Commit: "docs(mesh-viewer): document modern viewer architecture (Phase 7.2)"
 
 --- SUMMARY OF FILES TO TOUCH ---
 
