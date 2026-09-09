@@ -5,9 +5,9 @@
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
 - Overall status: active implementation; foundation and public model-scene contract are complete.
 - Completed: normalized tool directory, published execution plan, merged the finalized window-input work and latest master, added the Asset Foundry media submodule, defined the format-neutral FX2 model API, and fixed the node/subtree bounds coordinate contract.
-- Current step: Phase 1.2, implementing FBX/glTF/GLB/STL import and cross-format tests.
+- Current step: Phase 1.2, implementing source resolution, format validation, and importer failure handling.
 - Remaining: import normalization, gpu2 residency and shading, E2 snapshot/render integration, viewer replacement, controls/debug display, and final matrix validation.
-- Latest verification: GCC debug build passed after the Phase 1.1 API; the Phase 1.2 public header passes changed-file clang-format verification and `git diff --check`; all submodules are shallow. No current code blocker.
+- Latest verification: GCC debug build passed after the Phase 1.1 API; Phase 1 import work is split into independently verifiable Tasks 1.2-1.5 and the plan passes `git diff --check`. No current code blocker.
 
 ---
 
@@ -107,15 +107,25 @@ Phase 1: Format-neutral model import
     Verify: public API compiles through `GNfx2.h`; declarations are renderer- and format-neutral
     Commit: "feat(fx2): define model asset interface (Phase 1.1)"
 
-  Task 1.2: Import FBX, glTF, GLB, and STL through the neutral model interface
+  Task 1.2: Resolve model sources and reject unsupported or malformed input
+    - Accept FBX, glTF, GLB, and STL extensions case-insensitively.
+    - Resolve virtual/native paths before calling Assimp and return empty references with actionable diagnostics.
+    Verify: focused tests cover empty, missing, unsupported, malformed, and uppercase-extension paths
+    Commit: "feat(fx2): validate model import sources (Phase 1.2)"
+
+  Task 1.3: Import triangle primitives and preserve the node hierarchy
     - Preserve parent-relative node transforms while reporting node/subtree and scene bounds in model space.
     - Retain whether attributes came from the source even when import normalization generates fallback data.
-    Verify: focused importer tests validate hierarchy, transforms, primitives, index widths, materials, and bounds across repository media plus existing Assimp FBX, glTF, GLB, and STL models
-    Commit: "feat(fx2): import supported model formats (Phase 1.2)"
+    Verify: compact existing FBX, glTF, GLB, and STL models validate nodes, transforms, vertices, indices, and bounds
+    Commit: "feat(fx2): import model geometry and hierarchy (Phase 1.3)"
 
-  Task 1.3: Handle textures, missing attributes, defaults, and malformed inputs
-    Verify: tests cover embedded/external textures, generated normals, absent UVs, default material, and clean failures
-    Commit: "feat(fx2): normalize imported model content (Phase 1.3)"
+  Task 1.4: Normalize materials, textures, and missing vertex attributes
+    Verify: tests cover embedded/external textures, generated normals, absent UVs, material workflows, defaults, and clean partial-feature fallback
+    Commit: "feat(fx2): normalize imported model content (Phase 1.4)"
+
+  Task 1.5: Validate the importer against project media and the Asset Foundry stress model
+    Verify: repository FBX/glTF assets load with stable summaries; the large Digital Forge GLB loads within documented time and memory bounds
+    Commit: "test(fx2): validate repository model corpus (Phase 1.5)"
 
 Phase 2: FX2 GPU model rendering
 ─────────────────────────────────────────────────────────────────────
