@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; the modern viewer renders and inspects normalized multi-format scenes.
+- Overall status: final documentation; implementation and validation are complete.
 - Completed: implemented the full environment-lit multi-format viewer, dual navigation, independent debug toggles, reusable Dear ImGui backend, and inspection/control UI.
-- Current step: Phase 7.1, running final GCC/Clang, focused/full tests, format, CIT, media, and stress-model validation.
-- Remaining: final validation matrix and architecture/user documentation.
-- Latest verification: GCC debug build passed; 330 focused assertions in 18 E2/FX2/ui2 tests passed, including E2 overlay composition and debug visibility, and two-frame FBX/glTF/GLB/STL headless viewer runs all exited 0. A real window pass could not start because this environment exposes neither DISPLAY nor WAYLAND_DISPLAY; GPU swapchain-independent UI composition passed on NVIDIA. Validation layers are unavailable. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
+- Current step: Phase 7.2, documenting the settled architecture, controls, validation, and limitations.
+- Remaining: documentation review and assignment archival.
+- Latest verification: GCC and Clang 21 debug builds passed; GCC internal suite passed 4,507 assertions in 139 test cases with two display-dependent skips; format and CIT lint passed. Two-frame headless rendering passed for project FBX, glTF, GLB, STL, both Asset Foundry humanoid FBX variants, and the 110 MB Digital Forge GLB. The stress GLB completed in 5.30 seconds with 1,114,936 KiB peak RSS. The Clang test binary reproducibly loses the Vulkan device in an existing E2 model render test under NVIDIA and faults in llvmpipe, although the same GCC test and all GCC media renders pass; this compiler-specific runtime issue is recorded for follow-up. Real-window validation is unavailable because neither DISPLAY nor WAYLAND_DISPLAY is exposed. Vulkan validation layers are unavailable. Assimp rejects pre-2011 `media/model/tiny/tiny.fbx` with a clear diagnostic.
 
 ---
 
@@ -60,7 +60,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 6.3 — Dear ImGui mesh-viewer inspection/control UI added
+Last completed: Phase 7.1 — final build, test, format, media, and stress-model matrix
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -85,7 +85,8 @@ Phase 6.2: added GNui2 backend, font/texture registry, window event translation,
 Phase 6.3: added hierarchy/selection and primitive/material inspection, exposure/navigation/reset controls, independent bounds/axes toggles, diagnostics, capture isolation, and finite window-frame mode; 330 focused assertions and four-format runs passed
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 7.1 — execute final build, test, format, media, and stress-model matrix
+ Phase 7.1: GCC/Clang debug builds and formatting/lint passed; GCC internal suite passed 4,507 assertions; seven representative two-frame media renders and the Digital Forge stress GLB passed; unsupported and legacy-FBX failures were clean. Clang Vulkan runtime failure and display/validation-layer environment limitations are documented above.
+In progress: Phase 7.2 — document architecture, operation, validation, and known limitations
 --- END PROGRESS ---
 
 --- REFERENCE ---
