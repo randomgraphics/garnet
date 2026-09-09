@@ -4,10 +4,10 @@
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
 - Overall status: active implementation; CPU model import and real-corpus validation are complete.
-- Completed: normalized the tool directory, integrated window input/latest master, added Asset Foundry, defined and implemented normalized FBX/glTF/GLB/STL import, and validated project media plus the Digital Forge stress model.
-- Current step: Phase 2.1, creating immutable gpu2 model geometry and texture residency.
+- Completed: normalized the tool directory, integrated window input/latest master, added Asset Foundry, implemented/validated normalized FBX/glTF/GLB/STL import, and added pinned Dear ImGui v1.92.9b as a shallow submodule with an isolated core build target.
+- Current step: Phase 2.1, creating immutable gpu2 model geometry and texture residency; Dear ImGui backend work resumes at Phase 6.2 after the render path exists.
 - Remaining: gpu2 residency and environment-lit shading, E2 snapshot/render integration, viewer replacement, dual-mode camera controls, Dear ImGui submodule/backend/UI, debug display, and final matrix validation.
-- Latest verification: GCC debug build passed; `[fx2][model]` passed 227 assertions across ten cases including project media. The 106 MB Digital Forge GLB passed in 4.12 s with 831344 KiB peak RSS. Known input limitation: Assimp rejects the pre-2011 `media/model/tiny/tiny.fbx`; it remains an explicit compatibility sentinel rather than a false pass.
+- Latest verification: GCC debug configure/build compiled pinned Dear ImGui v1.92.9b into `libimguid.a` without upstream demo/backends. `[fx2][model]` passed 227 assertions; Digital Forge passed in 4.12 s with 831344 KiB peak RSS. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
 
 ---
 
@@ -68,6 +68,7 @@ Phase 1.2: added and tested case-insensitive FBX, glTF, GLB, and STL source clas
 Phase 1.3: imported compact repository FBX, glTF, GLB, and STL triangle geometry with hierarchy and model-space subtree bounds; GCC debug build and 176 focused assertions passed
 Phase 1.4: normalized PBR/default-lit properties, embedded/external textures, generated normals/tangents, and source-attribute flags; GCC debug build and 205 focused assertions passed
 Phase 1.5: project/Asset Foundry corpus passed 227 assertions; 106 MB Digital Forge GLB loaded in 4.12 s at 831344 KiB peak RSS; pre-2011 tiny.fbx recorded as unsupported by Assimp
+Phase 6.1: added shallow Dear ImGui v1.92.9b submodule and isolated core-only static target; GCC debug configure/build passed
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
 In progress: Phase 2.1 — upload immutable model geometry and texture resources through gpu2

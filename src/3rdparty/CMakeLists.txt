@@ -36,5 +36,16 @@ if (NOT ANDROID)
     add_subdirectory(glfw)
 endif()
 
+# Dear ImGui core only. Garnet owns the gpu2/window backend, so upstream demo
+# and renderer/platform backends must not become accidental dependencies.
+add_library(imgui STATIC
+    imgui/imgui.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
+)
+target_include_directories(imgui PUBLIC imgui)
+set_target_properties(imgui PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # Build other 3rd party libs
 add_subdirectory(src)
