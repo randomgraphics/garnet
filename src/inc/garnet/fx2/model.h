@@ -141,4 +141,21 @@ protected:
     using RCRT64::RCRT64;
 };
 
+/// Immutable gpu2 residency for a normalized ModelScene. Creation records all geometry and
+/// texture transfers into one payload; callers submit that payload once before first use.
+struct ModelAsset : RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+
+    AutoRef<const ModelScene>         scene;
+    DynaArray<gpu2::RasterGeometry>   primitives;
+    DynaArray<AutoRef<gpu2::Texture>> textures;
+    AutoRef<gpu2::GpuPayload>         gpuPayload;
+
+    /// Create device-local geometry and texture resources without submitting them.
+    GN_API static AutoRef<ModelAsset> create(AutoRef<gpu2::GpuContext> gpu, AutoRef<const ModelScene> scene);
+
+protected:
+    using RCRT64::RCRT64;
+};
+
 } // namespace GN::fx2

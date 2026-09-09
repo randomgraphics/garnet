@@ -160,3 +160,25 @@ TEST_CASE("fx2::ModelScene imports Asset Foundry Digital Forge stress model", "[
     CHECK_FALSE(scene->nodes.empty());
     CHECK_FALSE(scene->materials.empty());
 }
+
+TEST_CASE("fx2::ModelAsset records immutable geometry and texture uploads once", "[fx2][model][gpu]") {
+    const GN::StrA path = repositoryPath("src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Embedded/BoxTextured.gltf");
+    if (!GN::fs::isFile(path)) SKIP("Assimp model corpus is not initialized");
+    const auto gpu = GN::gpu2::GpuContext::create("model-asset-test",
+                                                  GN::gpu2::GpuContext::CreateParameters {.howToPrintDeviceCaps = GN::gpu2::GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No gpu2 context is available");
+
+    const auto scene = ModelScene::load({.path = path});
+    REQUIRE(scene);
+    const auto asset = ModelAsset::create(gpu, scene);
+    REQUIRE(asset);
+    REQUIRE(asset->gpuPayload);
+    CHECK(asset->scene == scene);
+    CHECK(asset->primitives.size() == scene->primitives.size());
+    CHECK(asset->textures.size() == scene->textures.size());
+    REQUIRE_FALSE(asset->primitives.empty());
+    REQUIRE_FALSE(asset->textures.empty());
+    CHECK(asset->textures[0]);
+    CHECK(asset->primitives[0].vertexCount == scene->primitives[0].vertices.size());
+    CHECK(asset->primitives[0].indexCount == scene->primitives[0].indices.size());
+}

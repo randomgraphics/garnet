@@ -312,6 +312,11 @@ struct Buffer : public RCRT64 {
     /// @return StagedTexture with empty()==true on failure.
     static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, const StrA & path);
 
+    /// Decode an encoded in-memory image into a CPU-visible staging buffer. This is intended
+    /// for embedded model textures and follows the same ownership rules as the file overload.
+    static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, ArrayView<const uint8_t> encoded,
+                                                           const StrA & sourceName);
+
 protected:
     virtual void unmap(const Mapped &) = 0;
 

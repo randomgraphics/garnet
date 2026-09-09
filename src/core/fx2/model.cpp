@@ -7,6 +7,7 @@
 #include <assimp/scene.h>
 #include <glm/common.hpp>
 #include <glm/geometric.hpp>
+#include <cstddef>
 #include <functional>
 #include <memory>
 
@@ -311,6 +312,73 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
             return {};
         }
     return result;
+}
+
+AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<const ModelScene> scene) {
+    if (!gpu || !scene || scene->primitives.empty()) GN_UNLIKELY {
+            GN_ERROR(sLogger, "ModelAsset::create: missing GPU context or model geometry");
+            return {};
+        }
+
+    auto cnc = gpu2::GpuCnC::create({.gpu = gpu});
+    if (!cnc) GN_UNLIKELY return {};
+
+    AutoRef<ModelAsset> result(new ModelAsset(TYPE_INFO(), "model-asset"));
+    result->scene = std::move(scene);
+    for (const ModelScene::Primitive & primitive : result->scene->primitives) {
+        const uint64_t vertexBytes  = primitive.vertices.size() * sizeof(ModelScene::Vertex);
+        const uint64_t indexBytes   = primitive.indices.size() * sizeof(uint32_t);
+        auto           vertexBuffer = gpu2::Buffer::create(primitive.name + ".vertices", {.context = gpu, .size = vertexBytes});
+        auto           indexBuffer  = gpu2::Buffer::create(primitive.name + ".indices", {.context = gpu, .size = indexBytes});
+        if (!vertexBuffer || !indexBuffer) GN_UNLIKELY return {};
+
+        cnc->uploadBuffer(vertexBuffer, 0,
+                          ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(primitive.vertices.data()), static_cast<size_t>(vertexBytes)));
+        cnc->uploadBuffer(indexBuffer, 0,
+                          ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(primitive.indices.data()), static_cast<size_t>(indexBytes)));
+
+        gpu2::RasterGeometry geometry;
+        geometry.format.attributes.append(
+            {.location = 0, .binding = 0, .offset = offsetof(ModelScene::Vertex, position), .format = gpu2::RasterGeometry::AttributeFormat::F32_3});
+        geometry.format.attributes.append(
+            {.location = 1, .binding = 0, .offset = offsetof(ModelScene::Vertex, normal), .format = gpu2::RasterGeometry::AttributeFormat::F32_3});
+        geometry.format.attributes.append(
+            {.location = 2, .binding = 0, .offset = offsetof(ModelScene::Vertex, tangent), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
+        geometry.format.attributes.append(
+            {.location = 3, .binding = 0, .offset = offsetof(ModelScene::Vertex, texcoord), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
+        geometry.format.attributes.append(
+            {.location = 4, .binding = 0, .offset = offsetof(ModelScene::Vertex, color), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
+        geometry.vertices.append({.buffer = vertexBuffer, .offset = 0, .stride = sizeof(ModelScene::Vertex)});
+        geometry.vertexCount = static_cast<uint32_t>(primitive.vertices.size());
+        geometry.indices     = {.buffer = indexBuffer, .offset = 0, .stride = sizeof(uint32_t)};
+        geometry.indexCount  = static_cast<uint32_t>(primitive.indices.size());
+        result->primitives.append(std::move(geometry));
+    }
+
+    for (size_t textureIndex = 0; textureIndex < result->scene->textures.size(); ++textureIndex) {
+        const ModelScene::Texture & source = result->scene->textures[textureIndex];
+        const StrA                  name   = StrA::format("model.texture.{}", textureIndex);
+        gpu2::Buffer::StagedTexture staged;
+        if (!source.path.empty()) {
+            staged = gpu2::Buffer::loadTextureToStagingBuffer(name, gpu, source.path);
+        } else if (!source.embeddedData.empty()) {
+            staged = gpu2::Buffer::loadTextureToStagingBuffer(name, gpu, ArrayView<const uint8_t>(source.embeddedData.data(), source.embeddedData.size()),
+                                                              source.mimeType);
+        }
+        if (staged.empty()) {
+            GN_WARN(sLogger, "ModelAsset::create: texture {} could not be staged", textureIndex);
+            result->textures.append(AutoRef<gpu2::Texture> {});
+            continue;
+        }
+
+        auto texture = gpu2::Texture::create(name, {.context = gpu, .descriptor = staged.descriptor});
+        if (!texture) GN_UNLIKELY return {};
+        cnc->copyBufferToImage(staged, texture);
+        result->textures.append(std::move(texture));
+    }
+
+    result->gpuPayload = cnc->seal();
+    return result->gpuPayload ? result : AutoRef<ModelAsset> {};
 }
 
 } // namespace GN::fx2
