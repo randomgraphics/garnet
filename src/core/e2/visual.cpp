@@ -83,6 +83,8 @@ struct VisualDomainImpl : VisualDomain {
         mSscArtifact.clear();
         mBackbufferArtifact.clear();
         mMomentArtifact.clear();
+        mModelCache.clear();
+        mModelShading.clear();
         mSsc.clear();
         mSwapchain.clear();
         if (mSurface && mOs) {
@@ -155,6 +157,11 @@ struct VisualDomainImpl : VisualDomain {
         mSsc = fx2::SharedShaderConstants::create({.gpu = mGpu});
         if (!mSsc) {
             GN_ERROR(sLogger, "Failed to create FX2 shared shader constants.");
+            return false;
+        }
+        mModelShading = fx2::ModelShading::create(mGpu);
+        if (!mModelShading) {
+            GN_ERROR(sLogger, "Failed to create FX2 model shading.");
             return false;
         }
 
@@ -292,6 +299,30 @@ private:
 
         if (haveCamera) {
             for (auto & r : moment.renderables) {
+                if (r.model) {
+                    const auto model = ensureGpuModel(context, r.model);
+                    if (!model) continue;
+                    if (!mModelShadingPayloadEmitted) {
+                        context.emit(mModelShading->gpuPayload);
+                        mModelShadingPayloadEmitted = true;
+                    }
+
+                    const glm::mat4      instanceTransform = glm::translate(glm::mat4(1.f), moment.scale.toMeters(spatial::toLocal(eye, r.translation))) *
+                                                             glm::mat4_cast(glm::normalize(r.rotation));
+                    DynaArray<glm::mat4> nodeTransforms;
+                    nodeTransforms.resize(r.model->nodes.size());
+                    for (size_t nodeIndex = 0; nodeIndex < r.model->nodes.size(); ++nodeIndex) {
+                        const auto &    node            = r.model->nodes[nodeIndex];
+                        const glm::mat4 parentTransform = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
+                        nodeTransforms[nodeIndex]       = parentTransform * node.transform;
+                        for (uint32_t primitiveIndex : node.primitives) {
+                            auto draw = fx2::ModelShading::getDrawParams(sscSnapshot, mModelShading, model, primitiveIndex,
+                                                                         instanceTransform * nodeTransforms[nodeIndex]);
+                            if (draw.vs && draw.ps) raster->draw(draw);
+                        }
+                    }
+                    continue;
+                }
                 if (!r.mesh) continue;
                 const GpuMesh * gpuMesh = ensureGpuMesh(*r.mesh);
                 if (!gpuMesh) continue;
@@ -349,26 +380,43 @@ private:
         return &inserted.first->second;
     }
 
-    Universe &                           mUniverse;
-    Ref<OperatingDomain>                 mOs;
-    AutoRef<GpuContext>                  mGpu;
-    intptr_t                             mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
-    AutoRef<Swapchain>                   mSwapchain;
-    AutoRef<Texture>                     mDepth;
-    AutoRef<GpuShader>                   mVs, mPs;
-    AutoRef<fx2::SharedShaderConstants>  mSsc;
-    rdg2::ArtifactRef                    mMomentArtifact;
-    rdg2::ArtifactRef                    mBackbufferArtifact;
-    rdg2::ArtifactRef                    mSscArtifact;
-    rdg2::QuestRef                       mFrameBeginQuest;
-    rdg2::QuestRef                       mPrepareSscQuest;
-    rdg2::QuestRef                       mRenderQuest;
-    rdg2::QuestRef                       mFrameEndQuest;
-    RasterTarget                         mRenderTarget;
-    std::unordered_map<int64_t, GpuMesh> mMeshCache;
-    uint32_t                             mFrameCounter = 0;
-    uint32_t                             mWidth        = 1280;
-    uint32_t                             mHeight       = 720;
+    AutoRef<fx2::ModelAsset> ensureGpuModel(rdg2::QuestContext & context, AutoRef<const fx2::ModelScene> scene) {
+        auto found = mModelCache.find(scene->id);
+        if (found != mModelCache.end()) return found->second;
+
+        auto model = fx2::ModelAsset::create(mGpu, std::move(scene));
+        if (!model) {
+            GN_ERROR(sLogger, "Failed to create GPU model asset.");
+            return {};
+        }
+        context.emit(model->gpuPayload);
+        mModelCache.emplace(model->scene->id, model);
+        return model;
+    }
+
+    Universe &                                            mUniverse;
+    Ref<OperatingDomain>                                  mOs;
+    AutoRef<GpuContext>                                   mGpu;
+    intptr_t                                              mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
+    AutoRef<Swapchain>                                    mSwapchain;
+    AutoRef<Texture>                                      mDepth;
+    AutoRef<GpuShader>                                    mVs, mPs;
+    AutoRef<fx2::SharedShaderConstants>                   mSsc;
+    AutoRef<fx2::ModelShading::Asset>                     mModelShading;
+    rdg2::ArtifactRef                                     mMomentArtifact;
+    rdg2::ArtifactRef                                     mBackbufferArtifact;
+    rdg2::ArtifactRef                                     mSscArtifact;
+    rdg2::QuestRef                                        mFrameBeginQuest;
+    rdg2::QuestRef                                        mPrepareSscQuest;
+    rdg2::QuestRef                                        mRenderQuest;
+    rdg2::QuestRef                                        mFrameEndQuest;
+    RasterTarget                                          mRenderTarget;
+    std::unordered_map<int64_t, GpuMesh>                  mMeshCache;
+    std::unordered_map<int64_t, AutoRef<fx2::ModelAsset>> mModelCache;
+    bool                                                  mModelShadingPayloadEmitted = false;
+    uint32_t                                              mFrameCounter               = 0;
+    uint32_t                                              mWidth                      = 1280;
+    uint32_t                                              mHeight                     = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN

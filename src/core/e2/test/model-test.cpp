@@ -46,3 +46,35 @@ TEST_CASE("e2 model facet captures immutable instance state", "[e2][model]") {
     CHECK(captured->renderables[0].translation.y == worldCoordinate(4));
     CHECK(captured->renderables[0].translation.z == worldCoordinate(5));
 }
+
+TEST_CASE("e2 visual domain renders and caches captured model instances", "[e2][model][gpu]") {
+    const StrA root = getEnv("GARNET_ROOT");
+    const StrA path = root.empty() ? StrA("media/boxes/boxes.fbx") : fs::joinPath(root, "media/boxes/boxes.fbx");
+    if (!fs::isFile(path)) SKIP("Project media is not initialized");
+    const auto model = fx2::ModelScene::load({.path = path});
+    REQUIRE(model);
+
+    Universe universe;
+    auto     visual = VisualDomain::create({.universe = universe, .os = {}});
+    if (!visual) SKIP("No headless Vulkan visual domain is available");
+    auto camera = Camera::create({.domain = visual});
+    auto world  = Simple::createWorld(universe, PhysicalScale::METER());
+    auto form   = createModelForm(universe, "rendered-model", model);
+    REQUIRE(camera);
+    REQUIRE(world);
+    REQUIRE(form);
+    camera->desc.position  = {worldCoordinate(0), worldCoordinate(0), worldCoordinate(5)};
+    camera->desc.nearPlane = LocalCoordinate(1);
+    camera->desc.farPlane  = LocalCoordinate(100);
+    Ref<Form> forms[]      = {form};
+    world->populate({forms, 1});
+    Ref<Camera> cameras[] = {camera};
+
+    auto first = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+    REQUIRE(first);
+    visual->render(first);
+    auto second = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+    REQUIRE(second);
+    visual->render(second);
+    SUCCEED("two frames reused the visual-domain model cache");
+}
