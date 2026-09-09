@@ -25,6 +25,21 @@ TEST_CASE("fx2::ModelScene rejects unsupported source extensions", "[fx2][model]
     CHECK(ModelScene::sourceFormatFromPath("scene.fbx.backup") == ModelScene::SourceFormat::UNKNOWN);
 }
 
+TEST_CASE("fx2::ModelScene creates bounded debug axes without renderer dependencies", "[fx2][model]") {
+    const ModelScene::Bounds bounds {.minimum = {-2, -1, -3}, .maximum = {4, 5, 6}, .valid = true};
+    const auto               scene = ModelScene::createDebugVisualization(bounds, 0.01f);
+    REQUIRE(scene);
+    REQUIRE(scene->materials.size() == 1);
+    CHECK(scene->materials[0].workflow == ModelScene::MaterialWorkflow::UNLIT);
+    REQUIRE(scene->primitives.size() == 1);
+    CHECK(scene->primitives[0].sourceHadColors);
+    CHECK(scene->primitives[0].vertices.size() == 15 * 8);
+    CHECK(scene->primitives[0].indices.size() == 15 * 36);
+    CHECK(scene->primitives[0].bounds.valid);
+    REQUIRE(scene->nodes.size() == 1);
+    CHECK(scene->nodes[0].primitives.size() == 1);
+}
+
 static GN::StrA repositoryPath(const char * relativePath) {
     const GN::StrA root = GN::getEnv("GARNET_ROOT");
     return root.empty() ? GN::StrA(relativePath) : GN::fs::joinPath(root, relativePath);

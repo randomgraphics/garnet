@@ -41,6 +41,33 @@ void include(Bounds & bounds, const Bounds & other) {
     include(bounds, other.maximum);
 }
 
+void appendCuboid(ModelScene::Primitive & primitive, const glm::vec3 & minimum, const glm::vec3 & maximum, const glm::vec4 & color) {
+    static constexpr uint32_t INDICES[] = {
+        0, 2, 1, 1, 2, 3, 4, 5, 6, 5, 7, 6, 0, 1, 4, 1, 5, 4, 2, 6, 3, 3, 6, 7, 0, 4, 2, 2, 4, 6, 1, 3, 5, 3, 7, 5,
+    };
+    const uint32_t base = static_cast<uint32_t>(primitive.vertices.size());
+    for (uint32_t corner = 0; corner < 8; ++corner) {
+        ModelScene::Vertex vertex;
+        vertex.position = {
+            (corner & 1) ? maximum.x : minimum.x,
+            (corner & 2) ? maximum.y : minimum.y,
+            (corner & 4) ? maximum.z : minimum.z,
+        };
+        vertex.color = color;
+        primitive.vertices.append(vertex);
+        include(primitive.bounds, vertex.position);
+    }
+    for (uint32_t index : INDICES) primitive.indices.append(base + index);
+}
+
+void appendAxisAlignedSegment(ModelScene::Primitive & primitive, glm::vec3 start, glm::vec3 end, uint32_t axis, float width, const glm::vec4 & color) {
+    glm::vec3 minimum = glm::min(start, end) - glm::vec3(width * 0.5f);
+    glm::vec3 maximum = glm::max(start, end) + glm::vec3(width * 0.5f);
+    minimum[axis]     = glm::min(start[axis], end[axis]);
+    maximum[axis]     = glm::max(start[axis], end[axis]);
+    appendCuboid(primitive, minimum, maximum, color);
+}
+
 Bounds transformBounds(const Bounds & bounds, const glm::mat4 & transform) {
     Bounds result;
     if (!bounds.valid) return result;
@@ -169,6 +196,50 @@ ModelScene::SourceFormat ModelScene::sourceFormatFromPath(const StrA & path) {
     if (extension == ".glb") return SourceFormat::GLB;
     if (extension == ".stl") return SourceFormat::STL;
     return SourceFormat::UNKNOWN;
+}
+
+AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBounds, float lineWidth) {
+    if (!sourceBounds.valid || lineWidth <= 0.0f) return {};
+
+    AutoRef<ModelScene> result(new ModelScene(TYPE_INFO(), "model-debug-visualization"));
+    result->sourcePath = "generated://model-debug-visualization";
+
+    Material material;
+    material.name      = "debug-vertex-color";
+    material.workflow  = MaterialWorkflow::UNLIT;
+    material.baseColor = glm::vec4(1.0f);
+    result->materials.append(material);
+
+    Primitive primitive;
+    primitive.name            = "bounds-and-axes";
+    primitive.sourceHadColors = true;
+    const glm::vec4 boundsColor(1.0f, 0.8f, 0.1f, 1.0f);
+    for (uint32_t varyingAxis = 0; varyingAxis < 3; ++varyingAxis) {
+        const uint32_t fixedAxis1 = (varyingAxis + 1) % 3;
+        const uint32_t fixedAxis2 = (varyingAxis + 2) % 3;
+        for (uint32_t corner = 0; corner < 4; ++corner) {
+            glm::vec3 start   = sourceBounds.minimum;
+            glm::vec3 end     = sourceBounds.minimum;
+            end[varyingAxis]  = sourceBounds.maximum[varyingAxis];
+            start[fixedAxis1] = end[fixedAxis1] = (corner & 1) ? sourceBounds.maximum[fixedAxis1] : sourceBounds.minimum[fixedAxis1];
+            start[fixedAxis2] = end[fixedAxis2] = (corner & 2) ? sourceBounds.maximum[fixedAxis2] : sourceBounds.minimum[fixedAxis2];
+            appendAxisAlignedSegment(primitive, start, end, varyingAxis, lineWidth, boundsColor);
+        }
+    }
+
+    const float axisLength = std::max(glm::length(sourceBounds.maximum - sourceBounds.minimum) * 0.2f, lineWidth * 10.0f);
+    appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(axisLength, 0, 0), 0, lineWidth, glm::vec4(1, 0, 0, 1));
+    appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, axisLength, 0), 1, lineWidth, glm::vec4(0, 1, 0, 1));
+    appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, 0, axisLength), 2, lineWidth, glm::vec4(0, 0.4f, 1, 1));
+    result->primitives.append(std::move(primitive));
+
+    Node node;
+    node.name = "bounds-and-axes";
+    node.primitives.append(0);
+    node.bounds = result->primitives[0].bounds;
+    result->nodes.append(std::move(node));
+    result->bounds = result->primitives[0].bounds;
+    return result;
 }
 
 AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {

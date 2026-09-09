@@ -100,11 +100,15 @@ int main(int argc, const char * argv[]) {
     auto camera = Camera::create({.domain = visual});
     if (!world || !form || !camera) return EXIT_FAILURE;
 
-    const glm::vec3 center = (model->bounds.minimum + model->bounds.maximum) * 0.5f;
-    const float     radius = std::max(glm::length(model->bounds.maximum - model->bounds.minimum) * 0.5f, 0.001f);
+    const glm::vec3 center     = (model->bounds.minimum + model->bounds.maximum) * 0.5f;
+    const float     radius     = std::max(glm::length(model->bounds.maximum - model->bounds.minimum) * 0.5f, 0.001f);
+    const auto      debugScene = fx2::ModelScene::createDebugVisualization(model->bounds, radius * 0.004f);
+    auto            debugForm  = createModelForm(universe, "model-debug-visualization", debugScene);
+    if (!debugForm) return EXIT_FAILURE;
     form->setPosition(worldPosition(world->scale, -center));
-    Ref<Form> forms[] = {form};
-    world->populate({forms, 1});
+    debugForm->setPosition(worldPosition(world->scale, -center));
+    Ref<Form> forms[] = {form, debugForm};
+    world->populate({forms, 2});
 
     camera->desc.position     = worldPosition(world->scale, {0, 0, radius * 2.5f});
     camera->desc.orientation  = glm::quat(1, 0, 0, 0);

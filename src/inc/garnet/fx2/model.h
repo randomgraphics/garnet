@@ -133,6 +133,10 @@ struct ModelScene : RCRT64 {
     /// empty reference when the path cannot be resolved or contains no renderable triangles.
     GN_API static AutoRef<ModelScene> load(const LoadParameters &);
 
+    /// Create unlit triangle geometry for the supplied bounds and a positive XYZ axis tripod.
+    /// Line width is expressed in the same model-local units as the bounds.
+    GN_API static AutoRef<ModelScene> createDebugVisualization(const Bounds & bounds, float lineWidth);
+
     /// Classify a source path by its case-insensitive extension. Returns UNKNOWN for unsupported
     /// or extension-less paths. This function performs no filesystem access.
     GN_API static SourceFormat sourceFormatFromPath(const StrA & path);
