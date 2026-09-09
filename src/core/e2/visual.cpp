@@ -95,6 +95,8 @@ struct VisualDomainImpl : VisualDomain {
 
     Universe & universe() const override { return mUniverse; }
 
+    AutoRef<GpuContext> gpu() const override { return mGpu; }
+
     void setEnvironment(const Environment & environment) override {
         if (!mSsc) return;
         mSsc->set0.envLighting.skyboxPath               = environment.skyboxPath;
@@ -103,6 +105,8 @@ struct VisualDomainImpl : VisualDomain {
         mSsc->set0.envLighting.brdfLutPath              = environment.brdfLutPath;
         mSsc->set0.envLighting.environmentRadianceScale = environment.radianceScale;
     }
+
+    void setOverlay(AutoRef<VisualOverlay> overlay) override { mOverlay = std::move(overlay); }
 
     bool init(const CreateParameters & cp) {
         mOs = cp.os;
@@ -250,6 +254,11 @@ private:
             if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
 
             mRenderTarget.setColorTarget(0, frameRelic->frame.view);
+            auto & blend   = mRenderTarget.colorTargets[0].blendState;
+            blend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
+            blend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+            blend.alphaSrc = RasterTarget::BlendState::ONE;
+            blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
             if (!recordVisualMoment(context, *visualMoment, sscRelic->snapshot)) return rdg2::QuestResult::failed("failed to record visual moment");
 
             // The physical swapchain frame is unchanged; publishing a new relic records the
@@ -359,6 +368,13 @@ private:
             }
         }
 
+        if (mOverlay) {
+            bool ok     = true;
+            auto upload = mOverlay->record(*raster, ok);
+            if (!ok) return false;
+            if (upload) context.emit(upload);
+        }
+
         auto payload = raster->seal();
         if (!payload) return false;
         context.emit(payload);
@@ -412,6 +428,7 @@ private:
     AutoRef<GpuShader>                                    mVs, mPs;
     AutoRef<fx2::SharedShaderConstants>                   mSsc;
     AutoRef<fx2::ModelShading::Asset>                     mModelShading;
+    AutoRef<VisualOverlay>                                mOverlay;
     rdg2::ArtifactRef                                     mMomentArtifact;
     rdg2::ArtifactRef                                     mBackbufferArtifact;
     rdg2::ArtifactRef                                     mSscArtifact;
