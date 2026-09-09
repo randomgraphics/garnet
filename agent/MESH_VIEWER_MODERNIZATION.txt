@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; format-neutral geometry and hierarchy import is complete.
-- Completed: normalized the tool directory, integrated window input and latest master, added Asset Foundry, defined the FX2 model API, classified FBX/glTF/GLB/STL, and imported triangle primitives, hierarchy, transforms, and model-space bounds.
-- Current step: Phase 1.4, normalizing materials, textures, and missing vertex attributes.
-- Remaining: import normalization, real-corpus stress validation, gpu2 residency and environment-lit shading, E2 snapshot/render integration, viewer replacement, dual-mode camera controls, Dear ImGui submodule/backend/UI, debug display, and final matrix validation.
-- Latest verification: GCC debug build passed after Task 1.3; focused `[fx2][model]` tests passed 176 assertions across five cases including compact FBX, glTF, GLB, STL and missing-path handling; changed files were formatted. No current code blocker.
+- Overall status: active implementation; format-neutral model import and content normalization are complete.
+- Completed: normalized the tool directory, integrated window input/latest master, added Asset Foundry, defined the FX2 model API, imported FBX/glTF/GLB/STL hierarchy and geometry, normalized lit/PBR material properties and textures, and generated missing normals/tangents.
+- Current step: Phase 1.5, validating project media and the Asset Foundry stress model.
+- Remaining: real-corpus stress validation, gpu2 residency and environment-lit shading, E2 snapshot/render integration, viewer replacement, dual-mode camera controls, Dear ImGui submodule/backend/UI, debug display, and final matrix validation.
+- Latest verification: GCC debug build passed after Task 1.4; focused `[fx2][model]` tests passed 205 assertions across eight cases including embedded/external textures, default-lit STL, generated normals, and compact FBX/glTF/GLB/STL. No current code blocker.
 
 ---
 
@@ -60,15 +60,16 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.3 — model geometry, hierarchy, transforms, and bounds imported and tested
+Last completed: Phase 1.4 — materials, textures, and missing vertex attributes normalized and tested
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
 Phase 1.2: added and tested case-insensitive FBX, glTF, GLB, and STL source classification
 Phase 1.3: imported compact repository FBX, glTF, GLB, and STL triangle geometry with hierarchy and model-space subtree bounds; GCC debug build and 176 focused assertions passed
+Phase 1.4: normalized PBR/default-lit properties, embedded/external textures, generated normals/tangents, and source-attribute flags; GCC debug build and 205 focused assertions passed
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 1.4 — normalize materials, textures, and missing vertex attributes
+In progress: Phase 1.5 — validate project media and the Asset Foundry stress model
 --- END PROGRESS ---
 
 --- REFERENCE ---

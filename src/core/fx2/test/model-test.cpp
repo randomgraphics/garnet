@@ -73,3 +73,47 @@ TEST_CASE("fx2::ModelScene imports compact repository models", "[fx2][model]") {
 }
 
 TEST_CASE("fx2::ModelScene reports missing supported model", "[fx2][model]") { CHECK_FALSE(ModelScene::load({.path = "missing-model.fbx"})); }
+
+TEST_CASE("fx2::ModelScene normalizes PBR material and embedded textures", "[fx2][model]") {
+    const GN::StrA path = repositoryPath("src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Embedded/BoxTextured.gltf");
+    if (!GN::fs::isFile(path)) SKIP("Assimp model corpus is not initialized");
+
+    const auto scene = ModelScene::load({.path = path});
+    REQUIRE(scene);
+    REQUIRE_FALSE(scene->materials.empty());
+    CHECK(scene->materials[0].workflow == ModelScene::MaterialWorkflow::METALLIC_ROUGHNESS);
+    REQUIRE_FALSE(scene->textures.empty());
+    CHECK_FALSE(scene->textures[0].embeddedData.empty());
+    CHECK(scene->textures[0].path.empty());
+}
+
+TEST_CASE("fx2::ModelScene supplies unit normals when source normals are absent", "[fx2][model]") {
+    const GN::StrA path = repositoryPath("src/3rdparty/assimp/test/models/glTF2/simple_skin/simple_skin.gltf");
+    if (!GN::fs::isFile(path)) SKIP("Assimp model corpus is not initialized");
+
+    const auto scene = ModelScene::load({.path = path});
+    REQUIRE(scene);
+    REQUIRE_FALSE(scene->primitives.empty());
+    CHECK_FALSE(scene->primitives[0].sourceHadNormals);
+    for (const auto & vertex : scene->primitives[0].vertices) CHECK(glm::abs(glm::length(vertex.normal) - 1.0f) < 0.0001f);
+}
+
+TEST_CASE("fx2::ModelScene resolves external textures and default-lit content", "[fx2][model]") {
+    const GN::StrA gltfPath = repositoryPath("src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF/BoxTextured.gltf");
+    const GN::StrA stlPath  = repositoryPath("src/3rdparty/assimp/test/models/STL/triangle.stl");
+    if (!GN::fs::isFile(gltfPath) || !GN::fs::isFile(stlPath)) SKIP("Assimp model corpus is not initialized");
+
+    const auto gltf = ModelScene::load({.path = gltfPath});
+    REQUIRE(gltf);
+    REQUIRE_FALSE(gltf->textures.empty());
+    CHECK_FALSE(gltf->textures[0].path.empty());
+    CHECK(gltf->textures[0].embeddedData.empty());
+    CHECK(GN::fs::isFile(gltf->textures[0].path));
+
+    const auto stl = ModelScene::load({.path = stlPath});
+    REQUIRE(stl);
+    REQUIRE_FALSE(stl->materials.empty());
+    CHECK(stl->materials[0].workflow == ModelScene::MaterialWorkflow::DEFAULT_LIT);
+    CHECK(stl->materials[0].roughness == 1.0f);
+    CHECK(stl->materials[0].metallic == 0.0f);
+}
