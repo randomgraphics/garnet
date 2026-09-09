@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <string>
 
 using namespace GN;
 using namespace GN::e2;
@@ -16,6 +17,7 @@ Logger * sLogger = getLogger("GN.tool.mesh-viewer");
 struct Options {
     StrA path;
     bool headless = false;
+    bool print    = false;
     int  frames   = 3;
 };
 
@@ -24,6 +26,8 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         const StrA argument = argv[i];
         if (argument == "--test") {
             options.headless = true;
+        } else if (argument == "--print") {
+            options.print = true;
         } else if (argument == "--frames" && i + 1 < argc) {
             options.frames = std::max(1, std::atoi(argv[++i]));
         } else if (!argument.empty() && argument[0] == '-') {
@@ -37,7 +41,7 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         }
     }
     if (!options.path.empty()) return true;
-    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--test] [--frames N] <model.fbx|gltf|glb|stl>");
+    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--frames N] <model.fbx|gltf|glb|stl>");
     return false;
 }
 
@@ -47,6 +51,21 @@ WorldVector3 worldPosition(const PhysicalScale & scale, const glm::vec3 & meters
 
 LocalCoordinate localDistance(const PhysicalScale & scale, float meters) { return scale.fromMeters(meters); }
 
+void printScene(const fx2::ModelScene & scene) {
+    GN_INFO(sLogger, "Model: {}", scene.sourcePath);
+    GN_INFO(sLogger, "Nodes: {}, primitives: {}, materials: {}, textures: {}", scene.nodes.size(), scene.primitives.size(), scene.materials.size(),
+            scene.textures.size());
+    GN_INFO(sLogger, "Bounds: ({}, {}, {}) - ({}, {}, {})", scene.bounds.minimum.x, scene.bounds.minimum.y, scene.bounds.minimum.z, scene.bounds.maximum.x,
+            scene.bounds.maximum.y, scene.bounds.maximum.z);
+    for (size_t nodeIndex = 0; nodeIndex < scene.nodes.size(); ++nodeIndex) {
+        const auto & node  = scene.nodes[nodeIndex];
+        size_t       depth = 0;
+        for (int32_t parent = node.parent; parent >= 0 && static_cast<size_t>(parent) < nodeIndex; parent = scene.nodes[parent].parent) ++depth;
+        GN_INFO(sLogger, "{}{} [{} primitive(s)]", std::string(depth * 2, ' '), node.name, node.primitives.size());
+    }
+    for (const StrA & warning : scene.warnings) GN_WARN(sLogger, "Import warning: {}", warning);
+}
+
 } // namespace
 
 int main(int argc, const char * argv[]) {
@@ -55,6 +74,10 @@ int main(int argc, const char * argv[]) {
 
     auto model = fx2::ModelScene::load({.path = options.path});
     if (!model) return EXIT_FAILURE;
+    if (options.print) {
+        printScene(*model);
+        if (!options.headless) return EXIT_SUCCESS;
+    }
 
     Universe             universe;
     Ref<OperatingDomain> os;

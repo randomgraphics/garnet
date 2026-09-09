@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; the legacy viewer shell is replaced and multi-format models render end-to-end through E2/RDG2/gpu2.
-- Completed: implemented the normalized environment-lit model pipeline, E2 capture/render integration, and a legacy-free mesh-viewer executable with bounds-derived fixed camera, Asset Foundry IBL defaults, and finite headless mode.
-- Current step: Phase 4.2, adding format-neutral hierarchy inspection and robust framing diagnostics.
-- Remaining: hierarchy inspection/debug display, dual-mode camera controls, Dear ImGui gpu2 backend/UI, and final matrix validation.
-- Latest verification: GCC debug full build passed; headless viewer runs completed with exit 0 for repository FBX, Asset Foundry glTF, compact GLB, and STL. No legacy mesh/effect pipeline remains in the executable. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
+- Overall status: active implementation; the modern viewer renders and inspects normalized multi-format scenes.
+- Completed: implemented the end-to-end environment-lit pipeline, legacy-free E2 viewer, bounds-derived framing, finite headless mode, and `--print` hierarchy/asset/bounds diagnostics.
+- Current step: Phase 4.3, adding new-stack bounds and coordinate-axis visualization.
+- Remaining: debug visualization, dual-mode camera controls, Dear ImGui gpu2 backend/UI, and final matrix validation.
+- Latest verification: GCC debug build passed; `--print media/boxes/boxes.fbx` reported 8 nodes/primitives/materials, 9 textures, transformed bounds, and correctly indented hierarchy without creating a GPU context. Four-format headless runs previously exited 0. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
 
 ---
 
@@ -60,7 +60,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 4.1 — mesh viewer replaced by fixed-camera E2 application shell
+Last completed: Phase 4.2 — format-neutral hierarchy inspection and bounds framing added
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -76,9 +76,10 @@ Phase 3.1: added renderer-independent ModelVisualFacet and model-form declaratio
 Phase 3.2: implemented model facet/form factories and immutable snapshot capture of model references plus world transforms; GCC debug build and 12 focused assertions passed
 Phase 3.3: added visual-domain ModelAsset cache, node hierarchy draw composition, first-use payload emission, and two-frame RDG2 render coverage; GCC debug and 19 focused assertions passed
 Phase 4.1: removed SampleApp/FatModel/PCH legacy dependencies, added E2 shell and Asset Foundry environment defaults; FBX/glTF/GLB/STL headless runs exited 0
+Phase 4.2: added GPU-free hierarchy/asset/bounds printing and retained robust nonzero radius framing; boxes.fbx reported transformed eight-node hierarchy correctly
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 4.2 — add format-neutral hierarchy inspection and robust framing diagnostics
+In progress: Phase 4.3 — add new-stack bounds and coordinate-axis visualization
 --- END PROGRESS ---
 
 --- REFERENCE ---
