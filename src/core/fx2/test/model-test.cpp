@@ -228,3 +228,31 @@ TEST_CASE("fx2::ModelShading builds draws for glTF FBX and STL materials", "[fx2
         }
     }
 }
+
+TEST_CASE("fx2::ModelShading consumes Asset Foundry environment resources", "[fx2][model][gpu][media]") {
+    const GN::StrA environmentDirectory = repositoryPath("media/asset-foundry/image/envmap/bad-salzbrunn-walking-hall");
+    const GN::StrA skyboxPath           = GN::fs::joinPath(environmentDirectory, "skybox-cube.dds");
+    const GN::StrA irradiancePath       = GN::fs::joinPath(environmentDirectory, "irradiance.dds");
+    const GN::StrA prefilteredPath      = GN::fs::joinPath(environmentDirectory, "prefiltered.dds");
+    const GN::StrA brdfPath             = GN::fs::joinPath(environmentDirectory, "brdf_lut.dds");
+    if (!GN::fs::isFile(skyboxPath) || !GN::fs::isFile(irradiancePath) || !GN::fs::isFile(prefilteredPath) || !GN::fs::isFile(brdfPath)) {
+        SKIP("Asset Foundry environment maps are not initialized");
+    }
+    const auto gpu = GN::gpu2::GpuContext::create("model-environment-test",
+                                                  GN::gpu2::GpuContext::CreateParameters {.howToPrintDeviceCaps = GN::gpu2::GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No gpu2 context is available");
+    const auto ssc = SharedShaderConstants::create({.gpu = gpu});
+    REQUIRE(ssc);
+    ssc->set0.envLighting = {.skyboxPath = skyboxPath, .irradiancePath = irradiancePath, .prefilteredPath = prefilteredPath, .brdfLutPath = brdfPath};
+    const auto snapshot   = ssc->takeSnapshot();
+    REQUIRE(snapshot.set0Resources.size() == 6);
+    REQUIRE(snapshot.set0Resources[2].size() == 1);
+    REQUIRE(snapshot.set0Resources[3].size() == 1);
+    REQUIRE(snapshot.set0Resources[4].size() == 1);
+    REQUIRE(snapshot.set0Resources[5].size() == 1);
+    CHECK(snapshot.set0Resources[2][0].texture()->descriptor().faces == 6);
+    CHECK(snapshot.set0Resources[3][0].texture()->descriptor().faces == 6);
+    CHECK(snapshot.set0Resources[4][0].texture()->descriptor().faces == 6);
+    CHECK(snapshot.set0Resources[5][0].texture()->descriptor().faces == 1);
+    CHECK(snapshot.set0Payloads.size() >= 2);
+}

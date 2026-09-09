@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; CPU import, gpu2 residency, and format-neutral material draw construction are complete.
-- Completed: implemented/validated normalized FBX/glTF/GLB/STL import, pinned Dear ImGui, added batched gpu2 model residency, and built shared model shaders/fallbacks plus per-material UBO draw binding for PBR, general/default-lit, specular-glossiness, and unlit workflows.
-- Current step: Phase 2.3, validating all lit material paths against shared environment maps and establishing viewer environment defaults.
-- Remaining: environment-light validation/defaults, E2 snapshot/render integration, viewer replacement, dual-mode camera controls, Dear ImGui gpu2 backend/UI, debug display, and final matrix validation.
-- Latest verification: GCC debug full build and model shader compilation passed. `[fx2][model][gpu]` passed 42 assertions across glTF, FBX, and STL draw construction with six material bindings. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
+- Overall status: active implementation; FX2 model import, gpu2 residency, material draws, and shared environment lighting are complete.
+- Completed: implemented normalized FBX/glTF/GLB/STL assets, pinned Dear ImGui, added batched gpu2 residency, built all normalized material draw paths, and validated Asset Foundry irradiance/prefiltered/BRDF resources consumed through shared set 0.
+- Current step: Phase 3.1, defining the E2 model form/facet API and immutable visual snapshot contract.
+- Remaining: E2 snapshot/render integration, viewer shell with Asset Foundry environment defaults, dual-mode camera controls, Dear ImGui gpu2 backend/UI, debug display, and final matrix validation.
+- Latest verification: GCC debug full build/model shader compilation passed. `[fx2][model][gpu]` passed 53 assertions; Asset Foundry skybox/irradiance/prefiltered resources were six-face textures and BRDF LUT was 2D. Viewer path policy remains in Phase 4.1 so FX2 does not hard-code application media paths. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
 
 ---
 
@@ -60,7 +60,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 2.2 — normalized model material workflows produce gpu2 draw descriptions
+Last completed: Phase 2.3 — shared Asset Foundry environment lighting validated for model draws
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -71,9 +71,10 @@ Phase 1.5: project/Asset Foundry corpus passed 227 assertions; 106 MB Digital Fo
 Phase 6.1: added shallow Dear ImGui v1.92.9b submodule and isolated core-only static target; GCC debug configure/build passed
 Phase 2.1: added one-payload device-local primitive uploads, external/embedded texture staging, and retained normalized scene ownership; GCC debug and 34 focused GPU assertions passed
 Phase 2.2: added model shaders, material UBOs, shared fallback textures, and glTF/FBX/STL draw construction; GCC debug build and 42 focused assertions passed
+Phase 2.3: validated six-face skybox/irradiance/prefiltered maps and 2D BRDF LUT through model draw set 0; 53 focused assertions passed; viewer defaults assigned in Phase 4.1
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 2.3 — validate shared environment lighting and establish viewer environment defaults
+In progress: Phase 3.1 — define E2 model form/facet API and immutable snapshot contract
 --- END PROGRESS ---
 
 --- REFERENCE ---
