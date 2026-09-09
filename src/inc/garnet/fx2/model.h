@@ -133,6 +133,10 @@ struct ModelScene : RCRT64 {
     /// empty reference when the path cannot be resolved or contains no renderable triangles.
     GN_API static AutoRef<ModelScene> load(const LoadParameters &);
 
+    /// Classify a source path by its case-insensitive extension. Returns UNKNOWN for unsupported
+    /// or extension-less paths. This function performs no filesystem access.
+    GN_API static SourceFormat sourceFormatFromPath(const StrA & path);
+
 protected:
     using RCRT64::RCRT64;
 };

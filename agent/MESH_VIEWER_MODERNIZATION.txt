@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; foundation and public model-scene contract are complete.
-- Completed: normalized tool directory, published execution plan, merged the finalized window-input work and latest master, added the Asset Foundry media submodule, defined the format-neutral FX2 model API, and fixed the node/subtree bounds coordinate contract.
-- Current step: Phase 1.2, implementing source resolution, format validation, and importer failure handling.
+- Overall status: active implementation; foundation, public model-scene contract, and source-format classification are complete.
+- Completed: normalized tool directory, published execution plan, merged the finalized window-input work and latest master, added the Asset Foundry media submodule, defined the format-neutral FX2 model API, fixed the node/subtree bounds coordinate contract, and added case-insensitive FBX/glTF/GLB/STL classification.
+- Current step: Phase 1.3, resolving sources and importing triangle geometry, hierarchy, transforms, and bounds.
 - Remaining: import normalization, gpu2 residency and shading, E2 snapshot/render integration, viewer replacement, controls/debug display, and final matrix validation.
-- Latest verification: GCC debug build passed after the Phase 1.1 API; Phase 1 import work is split into independently verifiable Tasks 1.2-1.5 and the plan passes `git diff --check`. No current code blocker.
+- Latest verification: GCC debug build passed after Task 1.2; focused `[fx2][model]` tests passed all source-format cases; changed files were formatted. No current code blocker.
 
 ---
 
@@ -29,6 +29,10 @@ The importer normalizes Assimp scenes into an immutable, format-neutral FX2 mode
 
 FBX, glTF, GLB, and STL are acceptance formats. glTF metallic-roughness maps to the PBR shading path. FBX material properties normalize into a general lit material. STL and incomplete assets use a deterministic default lit material. Geometry ownership is independent of shading so future inspection modes do not require re-importing assets.
 
+### Environment lighting
+
+The viewer defaults to image-based environment lighting, using the Asset Foundry Bad Salzbrunn skybox, irradiance cube, prefiltered radiance cube, and BRDF LUT through `fx2::SharedShaderConstants`. Imported metallic-roughness and general lit materials both consume the environment. A direct light may be enabled as optional fill, but it is not the primary lighting path. Missing material data uses a neutral rough dielectric material so FBX and STL remain realistically shaded.
+
 ### Input dependency
 
 Interactive camera work consumes the new window-owned input API from `master` (or its eventual integration branch). This assignment will neither copy nor recommit that agent's changes. Asset loading, E2 integration, fixed-camera rendering, and headless tests proceed independently. The dependency is merged once its owner has committed and published a verified milestone.
@@ -46,12 +50,13 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.1 — format-neutral FX2 model scene interface defined
+Last completed: Phase 1.2 — supported model source extensions classified and tested
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
+  Phase 1.2: added and tested case-insensitive FBX, glTF, GLB, and STL source classification
   Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
-In progress: Phase 1.2 — implement FBX, glTF, GLB, and STL import with cross-format repository models
+In progress: Phase 1.3 — resolve model sources and import geometry, hierarchy, transforms, and bounds
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -107,13 +112,14 @@ Phase 1: Format-neutral model import
     Verify: public API compiles through `GNfx2.h`; declarations are renderer- and format-neutral
     Commit: "feat(fx2): define model asset interface (Phase 1.1)"
 
-  Task 1.2: Resolve model sources and reject unsupported or malformed input
+  Task 1.2: Classify supported model source extensions
     - Accept FBX, glTF, GLB, and STL extensions case-insensitively.
-    - Resolve virtual/native paths before calling Assimp and return empty references with actionable diagnostics.
-    Verify: focused tests cover empty, missing, unsupported, malformed, and uppercase-extension paths
-    Commit: "feat(fx2): validate model import sources (Phase 1.2)"
+    - Keep classification CPU-only and independent of Assimp so CLI validation and diagnostics can reuse it.
+    Verify: focused tests cover empty, unsupported, mixed-case, and supported extension paths
+    Commit: "feat(fx2): classify model source formats (Phase 1.2)"
 
-  Task 1.3: Import triangle primitives and preserve the node hierarchy
+  Task 1.3: Resolve sources, import triangle primitives, and preserve the node hierarchy
+    - Resolve virtual/native paths and return empty references with actionable diagnostics for missing or malformed content.
     - Preserve parent-relative node transforms while reporting node/subtree and scene bounds in model space.
     - Retain whether attributes came from the source even when import normalization generates fallback data.
     Verify: compact existing FBX, glTF, GLB, and STL models validate nodes, transforms, vertices, indices, and bounds
@@ -136,6 +142,12 @@ Phase 2: FX2 GPU model rendering
   Task 2.2: Add PBR, general-lit, and default-lit material paths
     Verify: representative glTF, FBX, and STL fixtures produce correct per-primitive draw descriptions
     Commit: "feat(fx2): render normalized model materials (Phase 2.2)"
+
+  Task 2.3: Light all model material paths from the shared environment maps
+    - Use the Asset Foundry skybox, irradiance, prefiltered radiance, and BRDF LUT as viewer defaults.
+    - Keep direct lighting optional and ensure default FBX/STL materials receive image-based lighting.
+    Verify: Damaged Helmet, representative FBX/STL, and Digital Forge renders show environment reflections and diffuse irradiance; missing maps fall back cleanly
+    Commit: "feat(fx2): add environment-lit model shading (Phase 2.3)"
 
 Phase 3: E2 model integration
 ─────────────────────────────────────────────────────────────────────
