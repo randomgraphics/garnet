@@ -1,9 +1,11 @@
 #include <garnet/GNengine2.h>
 #include <garnet/GNfx2.h>
+#include <garnet/GNwin.h>
 
 #include <glm/geometric.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <string>
 
@@ -66,6 +68,10 @@ void printScene(const fx2::ModelScene & scene) {
     for (const StrA & warning : scene.warnings) GN_WARN(sLogger, "Import warning: {}", warning);
 }
 
+enum class NavigationMode { ARCBALL, FLY_BY };
+
+bool keyDown(const win::Window & window, win::KeyCode key) { return window.getKeyStatus(key).down; }
+
 } // namespace
 
 int main(int argc, const char * argv[]) {
@@ -117,9 +123,71 @@ int main(int argc, const char * argv[]) {
     camera->desc.fovYInDegree = 45.0f;
     Ref<Camera> cameras[]     = {camera};
 
+    ArcballCameraController arcball;
+    arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, camera->desc.fovYInDegree);
+    FlyCameraController fly {.position = arcball.eyePosition(), .orientation = arcball.orientation, .movementSpeed = radius};
+    NavigationMode      navigationMode    = NavigationMode::ARCBALL;
+    int                 previousMouseX    = 0;
+    int                 previousMouseY    = 0;
+    int                 previousWheel     = 0;
+    bool                havePointerSample = false;
+    auto                previousFrameTime = std::chrono::steady_clock::now();
+
     for (int frame = 0; options.headless ? frame < options.frames : true; ++frame) {
         if (os && !os->processEvents()) break;
-        auto moment = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+        const auto  now            = std::chrono::steady_clock::now();
+        const float elapsedSeconds = std::min(std::chrono::duration<float>(now - previousFrameTime).count(), 0.1f);
+        previousFrameTime          = now;
+
+        if (os) {
+            win::Window & window = *os->window();
+            for (win::KeyEvent event = window.popLastKeyEvent(); event; event = window.popLastKeyEvent()) {
+                if (!event.status.down && event.key == win::KeyCode::ESCAPE) return EXIT_SUCCESS;
+                if (!event.status.down && event.key == win::KeyCode::R) {
+                    arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, camera->desc.fovYInDegree);
+                    fly = {.position = arcball.eyePosition(), .orientation = arcball.orientation, .movementSpeed = radius};
+                }
+                if (!event.status.down && event.key == win::KeyCode::F) {
+                    if (navigationMode == NavigationMode::ARCBALL) {
+                        fly.position    = arcball.eyePosition();
+                        fly.orientation = arcball.orientation;
+                        navigationMode  = NavigationMode::FLY_BY;
+                    } else {
+                        arcball.pivot       = fly.position + fly.orientation * glm::vec3(0, 0, -arcball.distance);
+                        arcball.orientation = fly.orientation;
+                        navigationMode      = NavigationMode::ARCBALL;
+                    }
+                    GN_INFO(sLogger, "Navigation mode: {}", navigationMode == NavigationMode::ARCBALL ? "arcball" : "fly-by");
+                }
+            }
+
+            int mouseX = 0, mouseY = 0;
+            window.getMousePosition(mouseX, mouseY);
+            const int wheel = window.getAxisStatus()[static_cast<size_t>(win::Axis::MOUSE_WHEEL_0)];
+            if (havePointerSample) {
+                const glm::vec2 delta(mouseX - previousMouseX, mouseY - previousMouseY);
+                const float     viewportHeight = static_cast<float>(std::max(os->clientSize().y, 1u));
+                if (navigationMode == NavigationMode::ARCBALL) {
+                    if (keyDown(window, win::KeyCode::MOUSEBTN_0)) arcball.rotate(delta, viewportHeight);
+                    if (keyDown(window, win::KeyCode::MOUSEBTN_1)) arcball.pan(delta, viewportHeight, camera->desc.fovYInDegree);
+                    arcball.zoom(static_cast<float>(wheel - previousWheel) / 120.0f);
+                } else {
+                    if (keyDown(window, win::KeyCode::MOUSEBTN_1)) fly.rotate(delta, viewportHeight);
+                    const glm::vec3 motion(static_cast<float>(keyDown(window, win::KeyCode::D)) - static_cast<float>(keyDown(window, win::KeyCode::A)), 0,
+                                           static_cast<float>(keyDown(window, win::KeyCode::W)) - static_cast<float>(keyDown(window, win::KeyCode::S)));
+                    fly.move(motion, elapsedSeconds);
+                }
+            }
+            previousMouseX    = mouseX;
+            previousMouseY    = mouseY;
+            previousWheel     = wheel;
+            havePointerSample = true;
+        }
+
+        const glm::vec3 eye      = navigationMode == NavigationMode::ARCBALL ? arcball.eyePosition() : fly.position;
+        camera->desc.position    = worldPosition(world->scale, eye);
+        camera->desc.orientation = navigationMode == NavigationMode::ARCBALL ? arcball.orientation : fly.orientation;
+        auto moment              = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
         if (!moment) return EXIT_FAILURE;
         visual->render(moment);
     }
