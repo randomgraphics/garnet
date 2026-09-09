@@ -135,7 +135,7 @@ struct ModelScene : RCRT64 {
 
     /// Create unlit triangle geometry for the supplied bounds and a positive XYZ axis tripod.
     /// Line width is expressed in the same model-local units as the bounds.
-    GN_API static AutoRef<ModelScene> createDebugVisualization(const Bounds & bounds, float lineWidth);
+    GN_API static AutoRef<ModelScene> createDebugVisualization(const Bounds & bounds, float lineWidth, bool includeBounds = true, bool includeAxes = true);
 
     /// Classify a source path by its case-insensitive extension. Returns UNKNOWN for unsupported
     /// or extension-less paths. This function performs no filesystem access.

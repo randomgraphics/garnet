@@ -74,6 +74,10 @@ struct ModelVisualFacet : VisualFacet {
 
     /// Immutable source scene represented by this facet.
     virtual AutoRef<const fx2::ModelScene> model() const = 0;
+
+    /// Enable or suppress this model's contribution to captured visual moments.
+    virtual void setVisible(bool visible) = 0;
+    virtual bool visible() const          = 0;
 };
 
 /// Create a normal structural form with one ModelVisualFacet attached.

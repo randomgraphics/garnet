@@ -10,7 +10,7 @@ struct ImGuiBackend : e2::VisualOverlay {
 
     struct CreateParameters {
         AutoRef<gpu2::GpuContext> gpu;
-        win::Window &              window;
+        win::Window &             window;
     };
 
     /// Create a backend and a dedicated Dear ImGui context. Only one backend may be current

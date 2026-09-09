@@ -198,8 +198,8 @@ ModelScene::SourceFormat ModelScene::sourceFormatFromPath(const StrA & path) {
     return SourceFormat::UNKNOWN;
 }
 
-AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBounds, float lineWidth) {
-    if (!sourceBounds.valid || lineWidth <= 0.0f) return {};
+AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBounds, float lineWidth, bool includeBounds, bool includeAxes) {
+    if (!sourceBounds.valid || lineWidth <= 0.0f || (!includeBounds && !includeAxes)) return {};
 
     AutoRef<ModelScene> result(new ModelScene(TYPE_INFO(), "model-debug-visualization"));
     result->sourcePath = "generated://model-debug-visualization";
@@ -213,24 +213,28 @@ AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBo
     Primitive primitive;
     primitive.name            = "bounds-and-axes";
     primitive.sourceHadColors = true;
-    const glm::vec4 boundsColor(1.0f, 0.8f, 0.1f, 1.0f);
-    for (uint32_t varyingAxis = 0; varyingAxis < 3; ++varyingAxis) {
-        const uint32_t fixedAxis1 = (varyingAxis + 1) % 3;
-        const uint32_t fixedAxis2 = (varyingAxis + 2) % 3;
-        for (uint32_t corner = 0; corner < 4; ++corner) {
-            glm::vec3 start   = sourceBounds.minimum;
-            glm::vec3 end     = sourceBounds.minimum;
-            end[varyingAxis]  = sourceBounds.maximum[varyingAxis];
-            start[fixedAxis1] = end[fixedAxis1] = (corner & 1) ? sourceBounds.maximum[fixedAxis1] : sourceBounds.minimum[fixedAxis1];
-            start[fixedAxis2] = end[fixedAxis2] = (corner & 2) ? sourceBounds.maximum[fixedAxis2] : sourceBounds.minimum[fixedAxis2];
-            appendAxisAlignedSegment(primitive, start, end, varyingAxis, lineWidth, boundsColor);
+    if (includeBounds) {
+        const glm::vec4 boundsColor(1.0f, 0.8f, 0.1f, 1.0f);
+        for (uint32_t varyingAxis = 0; varyingAxis < 3; ++varyingAxis) {
+            const uint32_t fixedAxis1 = (varyingAxis + 1) % 3;
+            const uint32_t fixedAxis2 = (varyingAxis + 2) % 3;
+            for (uint32_t corner = 0; corner < 4; ++corner) {
+                glm::vec3 start   = sourceBounds.minimum;
+                glm::vec3 end     = sourceBounds.minimum;
+                end[varyingAxis]  = sourceBounds.maximum[varyingAxis];
+                start[fixedAxis1] = end[fixedAxis1] = (corner & 1) ? sourceBounds.maximum[fixedAxis1] : sourceBounds.minimum[fixedAxis1];
+                start[fixedAxis2] = end[fixedAxis2] = (corner & 2) ? sourceBounds.maximum[fixedAxis2] : sourceBounds.minimum[fixedAxis2];
+                appendAxisAlignedSegment(primitive, start, end, varyingAxis, lineWidth, boundsColor);
+            }
         }
     }
 
-    const float axisLength = std::max(glm::length(sourceBounds.maximum - sourceBounds.minimum) * 0.2f, lineWidth * 10.0f);
-    appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(axisLength, 0, 0), 0, lineWidth, glm::vec4(1, 0, 0, 1));
-    appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, axisLength, 0), 1, lineWidth, glm::vec4(0, 1, 0, 1));
-    appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, 0, axisLength), 2, lineWidth, glm::vec4(0, 0.4f, 1, 1));
+    if (includeAxes) {
+        const float axisLength = std::max(glm::length(sourceBounds.maximum - sourceBounds.minimum) * 0.2f, lineWidth * 10.0f);
+        appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(axisLength, 0, 0), 0, lineWidth, glm::vec4(1, 0, 0, 1));
+        appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, axisLength, 0), 1, lineWidth, glm::vec4(0, 1, 0, 1));
+        appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, 0, axisLength), 2, lineWidth, glm::vec4(0, 0.4f, 1, 1));
+    }
     result->primitives.append(std::move(primitive));
 
     Node node;

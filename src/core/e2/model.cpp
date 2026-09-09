@@ -14,8 +14,12 @@ struct ModelVisualFacetImpl final : ModelVisualFacet {
 
     AutoRef<const fx2::ModelScene> model() const override { return mModel; }
 
+    void setVisible(bool visible) override { mVisible.store(visible, std::memory_order_relaxed); }
+    bool visible() const override { return mVisible.load(std::memory_order_relaxed); }
+
     Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
-        Form * owner = form();
+        if (!visible()) return {};
+        Form *  owner = form();
         World * world = owner ? owner->world() : nullptr;
         if (!world) GN_UNLIKELY {
                 GN_WARN(sLogger, "model facet is not attached to a form living in a world; nothing to capture");
@@ -33,6 +37,7 @@ struct ModelVisualFacetImpl final : ModelVisualFacet {
 
 private:
     AutoRef<const fx2::ModelScene> mModel;
+    std::atomic_bool               mVisible = true;
 };
 
 } // namespace
@@ -46,7 +51,7 @@ Ref<ModelVisualFacet> ModelVisualFacet::create(const CreateParameters & paramete
 }
 
 Ref<Form> createModelForm(Universe & universe, const StrA & name, AutoRef<const fx2::ModelScene> model) {
-    auto form = Form::create(universe, name);
+    auto form  = Form::create(universe, name);
     auto facet = ModelVisualFacet::create({.universe = universe, .model = std::move(model)});
     if (!form || !facet || !form->addFacet(facet)) return {};
     return form;

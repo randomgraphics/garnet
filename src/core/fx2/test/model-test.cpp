@@ -38,6 +38,14 @@ TEST_CASE("fx2::ModelScene creates bounded debug axes without renderer dependenc
     CHECK(scene->primitives[0].bounds.valid);
     REQUIRE(scene->nodes.size() == 1);
     CHECK(scene->nodes[0].primitives.size() == 1);
+
+    const auto boundsOnly = ModelScene::createDebugVisualization(bounds, 0.01f, true, false);
+    const auto axesOnly   = ModelScene::createDebugVisualization(bounds, 0.01f, false, true);
+    REQUIRE(boundsOnly);
+    REQUIRE(axesOnly);
+    CHECK(boundsOnly->primitives[0].indices.size() == 12 * 36);
+    CHECK(axesOnly->primitives[0].indices.size() == 3 * 36);
+    CHECK_FALSE(ModelScene::createDebugVisualization(bounds, 0.01f, false, false));
 }
 
 static GN::StrA repositoryPath(const char * relativePath) {

@@ -45,6 +45,15 @@ TEST_CASE("e2 model facet captures immutable instance state", "[e2][model]") {
     CHECK(captured->renderables[0].translation.x == worldCoordinate(3));
     CHECK(captured->renderables[0].translation.y == worldCoordinate(4));
     CHECK(captured->renderables[0].translation.z == worldCoordinate(5));
+
+    auto * modelFacet = RuntimeType::cast<ModelVisualFacet>(form->facets()[0].get());
+    REQUIRE(modelFacet);
+    modelFacet->setVisible(false);
+    CHECK_FALSE(modelFacet->visible());
+    auto hidden       = world->captureVisualMoment({});
+    auto hiddenMoment = RuntimeType::cast<VisualMomentImpl>(hidden.get());
+    REQUIRE(hiddenMoment);
+    CHECK(hiddenMoment->renderables.empty());
 }
 
 TEST_CASE("e2 visual domain renders and caches captured model instances", "[e2][model][gpu]") {
