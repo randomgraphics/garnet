@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: active implementation; FX2 rendering is complete and the public E2 model form/facet contract is defined.
-- Completed: implemented normalized multi-format FX2 assets and environment-lit gpu2 draws, pinned Dear ImGui, and added renderer-independent E2 `ModelVisualFacet` plus model-form creation declarations.
-- Current step: Phase 3.2, implementing model facet capture into immutable visual moments.
-- Remaining: E2 snapshot capture/render integration, viewer shell with Asset Foundry environment defaults, dual-mode camera controls, Dear ImGui gpu2 backend/UI, debug display, and final matrix validation.
-- Latest verification: GCC debug full build passed; `[e2][model]` public-contract test passed and confirms no gpu2/RDG2 types in the creation API. FX2 model GPU tests previously passed 53 assertions. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
+- Overall status: active implementation; FX2 rendering and immutable E2 model-instance capture are complete.
+- Completed: implemented normalized environment-lit FX2 model assets, pinned Dear ImGui, added the public E2 model form/facet contract, and captured model reference plus world-space instance state into sealed visual moments.
+- Current step: Phase 3.3, rendering captured model instances through the existing E2 closed-frame RDG2 plan.
+- Remaining: E2 model rendering, viewer shell/environment defaults, dual-mode camera controls, Dear ImGui gpu2 backend/UI, debug display, and final matrix validation.
+- Latest verification: GCC debug full build passed; `[e2][model]` passed 12 assertions across API and snapshot immutability cases, including mutation of the live form after capture. Known limitation: Assimp rejects pre-2011 `media/model/tiny/tiny.fbx`.
 
 ---
 
@@ -60,7 +60,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 3.1 — public E2 model form/facet creation contract defined
+Last completed: Phase 3.2 — E2 model instances captured into immutable visual moments
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -73,9 +73,10 @@ Phase 2.1: added one-payload device-local primitive uploads, external/embedded t
 Phase 2.2: added model shaders, material UBOs, shared fallback textures, and glTF/FBX/STL draw construction; GCC debug build and 42 focused assertions passed
 Phase 2.3: validated six-face skybox/irradiance/prefiltered maps and 2D BRDF LUT through model draw set 0; 53 focused assertions passed; viewer defaults assigned in Phase 4.1
 Phase 3.1: added renderer-independent ModelVisualFacet and model-form declarations with Doxygen; GCC debug build and public-contract test passed
+Phase 3.2: implemented model facet/form factories and immutable snapshot capture of model references plus world transforms; GCC debug build and 12 focused assertions passed
 Phase 5.1: merged verified window-input dependency commit 8441600b without duplicating its changes
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
-In progress: Phase 3.2 — capture model instances into immutable E2 visual moments
+In progress: Phase 3.3 — render model instances through the existing E2 closed-frame RDG2 plan
 --- END PROGRESS ---
 
 --- REFERENCE ---
