@@ -195,6 +195,7 @@ ModelScene::SourceFormat ModelScene::sourceFormatFromPath(const StrA & path) {
     if (extension == ".gltf") return SourceFormat::GLTF;
     if (extension == ".glb") return SourceFormat::GLB;
     if (extension == ".stl") return SourceFormat::STL;
+    if (extension == ".ase") return SourceFormat::ASE;
     return SourceFormat::UNKNOWN;
 }
 

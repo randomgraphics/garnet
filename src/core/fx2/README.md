@@ -6,7 +6,7 @@ those layers decide when a scene is captured and how work is scheduled.
 
 ## Model pipeline
 
-`ModelScene::load()` imports `.fbx`, `.gltf`, `.glb`, and `.stl` files through
+`ModelScene::load()` imports `.fbx`, `.gltf`, `.glb`, `.stl`, and `.ase` files through
 Assimp into an immutable, format-neutral scene. The normalized representation
 retains the node hierarchy and transforms, indexed primitives, model and
 subtree bounds, materials, external or embedded textures, and import warnings.

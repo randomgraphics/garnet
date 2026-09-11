@@ -46,7 +46,7 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         }
     }
     if (!options.path.empty()) return true;
-    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--frames N] <model.fbx|gltf|glb|stl>");
+    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--frames N] <model.fbx|gltf|glb|stl|ase>");
     return false;
 }
 

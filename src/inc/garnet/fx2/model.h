@@ -24,6 +24,7 @@ struct ModelScene : RCRT64 {
         GLTF,
         GLB,
         STL,
+        ASE,
     };
 
     /// Material workflow inferred from source data.
@@ -129,7 +130,7 @@ struct ModelScene : RCRT64 {
     Bounds               bounds;
     DynaArray<StrA>      warnings;
 
-    /// Import FBX, glTF, GLB, or STL content into a normalized immutable scene. Returns an
+    /// Import FBX, glTF, GLB, STL, or ASE content into a normalized immutable scene. Returns an
     /// empty reference when the path cannot be resolved or contains no renderable triangles.
     GN_API static AutoRef<ModelScene> load(const LoadParameters &);
 

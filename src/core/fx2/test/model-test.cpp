@@ -95,6 +95,15 @@ TEST_CASE("fx2::ModelScene imports compact repository models", "[fx2][model]") {
     }
 }
 
+TEST_CASE("fx2::ModelScene imports repository ASE geometry and materials", "[fx2][model]") {
+    CHECK(ModelScene::sourceFormatFromPath("scene.ase") == ModelScene::SourceFormat::ASE);
+    CHECK(ModelScene::sourceFormatFromPath("scene.AsE") == ModelScene::SourceFormat::ASE);
+    const auto scene = ModelScene::load({.path = repositoryPath("media/boxes/boxes.ase")});
+    checkImportedScene(scene, ModelScene::SourceFormat::ASE);
+    REQUIRE_FALSE(scene->materials.empty());
+    for (const auto & material : scene->materials) { CHECK(material.workflow == ModelScene::MaterialWorkflow::DEFAULT_LIT); }
+}
+
 TEST_CASE("fx2::ModelScene reports missing supported model", "[fx2][model]") { CHECK_FALSE(ModelScene::load({.path = "missing-model.fbx"})); }
 
 TEST_CASE("fx2::ModelScene normalizes PBR material and embedded textures", "[fx2][model]") {
@@ -218,8 +227,9 @@ TEST_CASE("fx2::ModelAsset records immutable geometry and texture uploads once",
     CHECK(draw.resources[1].size() == 6);
 }
 
-TEST_CASE("fx2::ModelShading builds draws for glTF FBX and STL materials", "[fx2][model][gpu]") {
+TEST_CASE("fx2::ModelShading builds draws for glTF FBX STL and ASE materials", "[fx2][model][gpu]") {
     constexpr const char * paths[] = {
+        "media/boxes/boxes.ase",
         "src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Embedded/BoxTextured.gltf",
         "src/3rdparty/assimp/test/models/FBX/phong_cube.fbx",
         "src/3rdparty/assimp/test/models/STL/triangle.stl",

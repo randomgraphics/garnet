@@ -1,6 +1,6 @@
 # Mesh viewer
 
-`GNtool-mesh-viewer` displays `.fbx`, `.gltf`, `.glb`, and `.stl` scenes using
+`GNtool-mesh-viewer` displays `.fbx`, `.gltf`, `.glb`, `.stl`, and `.ase` scenes using
 the modern E2, FX2, RDG2, gpu2, and UI2 stack. It does not use `GNgpu.h`, the
 legacy effect system, `SampleApp`, or `FatModel`.
 
