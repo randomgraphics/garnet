@@ -3,10 +3,10 @@
 ## Overview
 
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
-- Overall status: complete; implementation, validation, and documentation are ready for integration.
+- Overall status: reopened; model viewer work is not yet complete.
 - Completed: implemented the full environment-lit multi-format viewer, dual navigation, independent debug toggles, reusable Dear ImGui backend, and inspection/control UI.
-- Current step: complete; assignment archived after this final verified commit.
-- Remaining: none within the assignment; the documented Clang Vulkan runtime issue is follow-up work.
+- Current step: Windows FBX SDK 2020.3.10 build compatibility fixed and verified; viewer work remains open.
+- Remaining: Windows viewer smoke test reports Vulkan VUID-vkCmdCopyBufferToImage-dstImage-07980 (imageOffset.z = -858993460); existing model.frag formatting failures; retain the documented Clang Vulkan runtime follow-up. Assignment awaits continued work and manual user sign-off.
 - Latest verification: GCC and Clang 21 debug builds passed; GCC internal suite passed 4,507 assertions in 139 test cases with two display-dependent skips; format and CIT lint passed. Two-frame headless rendering passed for project FBX, glTF, GLB, STL, both Asset Foundry humanoid FBX variants, and the 110 MB Digital Forge GLB. The stress GLB completed in 5.30 seconds with 1,114,936 KiB peak RSS. The Clang test binary reproducibly loses the Vulkan device in an existing E2 model render test under NVIDIA and faults in llvmpipe, although the same GCC test and all GCC media renders pass; this compiler-specific runtime issue is recorded for follow-up. Real-window validation is unavailable because neither DISPLAY nor WAYLAND_DISPLAY is exposed. Vulkan validation layers are unavailable. Assimp rejects pre-2011 `media/model/tiny/tiny.fbx` with a clear diagnostic.
 
 ---
@@ -87,7 +87,8 @@ Phase 5.1: merged verified window-input dependency commit 8441600b without dupli
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
  Phase 7.1: GCC/Clang debug builds and formatting/lint passed; GCC internal suite passed 4,507 assertions; seven representative two-frame media renders and the Digital Forge stress GLB passed; unsupported and legacy-FBX failures were clean. Clang Vulkan runtime failure and display/validation-layer environment limitations are documented above.
  Phase 7.2: documented FX2 model and IBL behavior, E2 snapshot/overlay ownership, UI2 backend lifetime, viewer operation, controls, validation, and limitations.
-In progress: none — implementation, validation, documentation, and assignment archival are complete
+In progress: none — FBX SDK build fix verified; viewer runtime follow-up remains open.
+  Phase 8.1: replaced removed FBX SDK object-query, triangulation, and normal-generation APIs in both legacy loaders; Windows Debug build with SDK 2020.3.10 passed; 14 FX2 model tests / 295 assertions passed; both modified loaders pass clang-format. Repository lint reports existing model.frag issues; viewer smoke test reports an invalid Vulkan imageOffset.z.
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -259,6 +260,12 @@ Phase 7: Final validation and documentation
   Task 7.2: Document the settled asset, world, effect, graph, and UI-backend boundaries
     Verify: E2/FX2 docs describe ownership, supported formats, defaults, and deferred skeletal animation
     Commit: "docs(mesh-viewer): document modern viewer architecture (Phase 7.2)"
+
+Phase 8: Windows follow-up
+----------------------------------------
+  Task 8.1: Restore compatibility with the installed FBX SDK 2020.3.10
+    Verify: Windows Debug build; FX2 model tests; formatting check of both modified loaders.
+    Commit: "fix(viewer): restore Windows build and require sign-off before archival" (user requested committing all changes).
 
 --- SUMMARY OF FILES TO TOUCH ---
 

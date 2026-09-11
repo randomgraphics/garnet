@@ -337,26 +337,26 @@ static const char * sGetTextureFileName(const FbxSurfaceMaterial * material, con
     FbxProperty prop = material->FindProperty(textureType);
     if (!prop.IsValid()) return NULL;
 
-    int lLayeredTextureCount = prop.GetSrcObjectCount(FbxLayeredTexture::ClassId);
+    int lLayeredTextureCount = prop.GetSrcObjectCount<FbxLayeredTexture>();
     if (lLayeredTextureCount > 0) {
         // Layered texture
 
         for (int j = 0; j < lLayeredTextureCount; ++j) {
-            FbxLayeredTexture * lLayeredTexture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject(FbxLayeredTexture::ClassId, j));
+            FbxLayeredTexture * lLayeredTexture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject<FbxLayeredTexture>(j));
 
-            int lNbTextures = lLayeredTexture->GetSrcObjectCount(FbxTexture::ClassId);
+            int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
 
             for (int k = 0; k < lNbTextures; ++k) {
-                FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(lLayeredTexture->GetSrcObject(FbxTexture::ClassId, k));
+                FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(lLayeredTexture->GetSrcObject<FbxTexture>(k));
                 if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
             }
         }
     } else {
         // Simple texture
-        int lNbTextures = prop.GetSrcObjectCount(FbxTexture::ClassId);
+        int lNbTextures = prop.GetSrcObjectCount<FbxTexture>();
         for (int j = 0; j < lNbTextures; ++j) {
 
-            FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(prop.GetSrcObject(FbxTexture::ClassId, j));
+            FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(prop.GetSrcObject<FbxTexture>(j));
             if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
         }
     }
@@ -903,7 +903,8 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
     FbxNode * fbxnode = fbxmesh->GetNode();
 
     if (!fbxmesh->IsTriangleMesh()) {
-        fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
+        // Keep the original geometry so scene source-object iteration remains stable.
+        fbxmesh = FbxCast<FbxMesh>(sdk.converter->Triangulate(fbxmesh, false));
         if (NULL == fbxmesh) {
             GN_ERROR(sLogger, "Fail to triangulate fbxmesh node: {}", fbxnode->GetName());
             return;
@@ -916,7 +917,7 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
         GN_ERROR(sLogger, "The fbxmesh does not have a layer: {}", fbxnode->GetName());
         return;
     }
-    if (NULL == layer0->GetNormals()) { fbxmesh->ComputeVertexNormals(); }
+    if (NULL == layer0->GetNormals()) { fbxmesh->GenerateNormals(false, true); }
 
     // Get basic fbxmesh properties
     int *                     fbxIndices   = fbxmesh->GetPolygonVertices();
@@ -1144,9 +1145,9 @@ static void sLoadFbxMesh(FatModel & fatmodel, const StrA & filename, FbxSdkWrapp
 // -----------------------------------------------------------------------------
 static void sLoadFbxMeshes(FatModel & fatmodel, const StrA & filename, FbxSdkWrapper & sdk, FbxScene & scene) {
     // Load meshes
-    int meshCount = FbxGetSrcCount<FbxMesh>(&scene);
+    int meshCount = scene.GetSrcObjectCount<FbxMesh>();
     for (int i = 0; i < meshCount; i++) {
-        FbxMesh * fbxmesh = FbxGetSrc<FbxMesh>(&scene, i);
+        FbxMesh * fbxmesh = scene.GetSrcObject<FbxMesh>(i);
         sLoadFbxMesh(fatmodel, filename, sdk, fbxmesh);
     }
 }
@@ -1182,9 +1183,9 @@ static void sLoadFbxAnimStack(FatModel & fatmodel, FbxAnimStack & fbxanim) {
 // -----------------------------------------------------------------------------
 static void sLoadFbxAnimations(FatModel & fatmodel, FbxScene & fbxscene) {
     // Iterate through all animation stacks in the scene. Load them one by one.
-    int animCount = FbxGetSrcCount<FbxAnimStack>(&fbxscene);
+    int animCount = fbxscene.GetSrcObjectCount<FbxAnimStack>();
     for (int i = 0; i < animCount; i++) {
-        FbxAnimStack * fbxanim = FbxGetSrc<FbxAnimStack>(&fbxscene, i);
+        FbxAnimStack * fbxanim = fbxscene.GetSrcObject<FbxAnimStack>(i);
         sLoadFbxAnimStack(fatmodel, *fbxanim);
     }
 }
@@ -1247,7 +1248,7 @@ static bool sLoadFromFBX(FatModel & fatmodel, File & file, const StrA & filename
     }
 
     // preallocate material array.
-    int nummat = FbxGetSrcCount<FbxSurfaceMaterial>(gScene);
+    int nummat = gScene->GetSrcObjectCount<FbxSurfaceMaterial>();
     fatmodel.materials.reserve((size_t) nummat);
     // fatmodel.materials.resize( 1 );
     // fatmodel.materials[0].name = "=[DEFAULT]=";

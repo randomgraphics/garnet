@@ -90,7 +90,9 @@ an untested backend as verified.
 - Record exact pass, failure, skip, and environment-limitation results.
 - Mark the Overview and PROGRESS block complete only when no requested work
   remains.
-- Move the completed plan to `agent/completed/` with `git mv` semantics and
+- Keep the finished plan active and marked as awaiting manual user sign-off.
+- Only after explicit user sign-off or an explicit archive request, move the
+  plan to `agent/completed/` with `git mv` semantics and
   a current UTC `yyyy-mm-dd-hhmmss-` filename prefix, following
   `garnet-agent-doc-archive`. Always use UTC, never local time, and update live
   references to its old path.

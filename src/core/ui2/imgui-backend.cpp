@@ -209,9 +209,9 @@ struct ImGuiBackendImpl final : ImGuiBackend {
 
     ImTextureID registerTexture(AutoRef<gpu2::Texture> texture) override {
         if (!texture) return ImTextureID_Invalid;
-        const ImTextureID id = ++mNextTextureId;
-        mTextures.emplace(id, std::move(texture));
-        return id;
+        const ImTextureID tid = ++mNextTextureId;
+        mTextures.emplace(tid, std::move(texture));
+        return tid;
     }
 
     void unregisterTexture(ImTextureID texture) override {
