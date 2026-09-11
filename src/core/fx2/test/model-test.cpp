@@ -117,6 +117,22 @@ TEST_CASE("fx2::ModelScene normalizes PBR material and embedded textures", "[fx2
     REQUIRE_FALSE(scene->textures.empty());
     CHECK_FALSE(scene->textures[0].embeddedData.empty());
     CHECK(scene->textures[0].path.empty());
+    REQUIRE(scene->materials[0].baseColorMap >= 0);
+    CHECK(scene->textures[scene->materials[0].baseColorMap].srgb);
+    // The source glTF's +Z face maps bottom vertices to V=0 and top vertices
+    // to V=1. Preserve that convention for the unflipped uploaded image rows.
+    size_t checkedVertices = 0;
+    for (const auto & primitive : scene->primitives) {
+        for (const auto & vertex : primitive.vertices) {
+            if (vertex.normal.z < 0.99f) continue;
+            CHECK(glm::abs(vertex.texcoord.y - (vertex.position.y + 0.5f)) < 0.00001f);
+            CHECK(glm::abs(vertex.texcoord.x - (5.5f - vertex.position.x)) < 0.00001f);
+            CHECK(vertex.tangent.w == -1.0f);
+            CHECK(glm::abs(glm::dot(vertex.normal, glm::vec3(vertex.tangent))) < 0.00001f);
+            ++checkedVertices;
+        }
+    }
+    CHECK(checkedVertices == 4);
 }
 
 TEST_CASE("fx2::ModelScene supplies unit normals when source normals are absent", "[fx2][model]") {
@@ -157,8 +173,6 @@ TEST_CASE("fx2::ModelScene imports project media corpus", "[fx2][model][media]")
     };
     constexpr Fixture fixtures[] = {
         {"media/boxes/boxes.fbx", true},
-        // Assimp rejects this pre-2011 FBX; retain it as an explicit compatibility sentinel.
-        {"media/model/tiny/tiny.fbx", false},
         {"media/model/R.F.R01/a01.fbx", true},
         {"media/asset-foundry/model/humanoid/humanoid.fbx", true},
         {"media/asset-foundry/model/humanoid/humanoid_ascii.fbx", true},

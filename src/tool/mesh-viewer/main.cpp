@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <fstream>
 #include <string>
 
 using namespace GN;
@@ -18,6 +19,7 @@ namespace {
 Logger * sLogger = getLogger("GN.tool.mesh-viewer");
 
 struct Options {
+    StrA snapshot;
     StrA path;
     bool headless     = false;
     bool print        = false;
@@ -29,6 +31,13 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
     for (int i = 1; i < argc; ++i) {
         const StrA argument = argv[i];
         if (argument == "--test") {
+            options.headless = true;
+        } else if (argument == "--snapshot") {
+            if (i + 1 == argc || !argv[i + 1][0] || argv[i + 1][0] == '-' || !options.snapshot.empty()) {
+                GN_ERROR(sLogger, "--snapshot requires one output image filename");
+                return false;
+            }
+            options.snapshot = argv[++i];
             options.headless = true;
         } else if (argument == "--print") {
             options.print = true;
@@ -46,7 +55,7 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         }
     }
     if (!options.path.empty()) return true;
-    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--frames N] <model.fbx|gltf|glb|stl|ase>");
+    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] <model.fbx|gltf|glb|stl|ase>");
     return false;
 }
 
@@ -88,6 +97,22 @@ int main(int argc, const char * argv[]) {
     Options options;
     if (!parseOptions(argc, argv, options)) return EXIT_FAILURE;
 
+    gfx::img::ImageDesc::SaveToStreamParameters imageParameters;
+    if (!options.snapshot.empty()) {
+        StrA extension = fs::extName(options.snapshot);
+        extension.toLower();
+        if (extension == ".png") {
+            imageParameters.format = gfx::img::ImageDesc::FileFormat::PNG;
+        } else if (extension == ".jpg" || extension == ".jpeg") {
+            imageParameters.format = gfx::img::ImageDesc::FileFormat::JPG;
+        } else if (extension == ".bmp") {
+            imageParameters.format = gfx::img::ImageDesc::FileFormat::BMP;
+        } else {
+            GN_ERROR(sLogger, "Snapshot output must use .png, .jpg, .jpeg, or .bmp");
+            return EXIT_FAILURE;
+        }
+    }
+
     auto model = fx2::ModelScene::load({.path = options.path});
     if (!model) return EXIT_FAILURE;
     if (options.print) {
@@ -118,8 +143,9 @@ int main(int argc, const char * argv[]) {
         if (!ui) return EXIT_FAILURE;
         visual->setOverlay(ui);
     }
+    // Camera fitting and orbit positions need sub-meter precision; world units are integers.
 
-    auto world  = Simple::createWorld(universe);
+    auto world  = Simple::createWorld(universe, PhysicalScale::MICROMETER());
     auto form   = createModelForm(universe, "model", model);
     auto camera = Camera::create({.domain = visual});
     if (!world || !form || !camera) return EXIT_FAILURE;
@@ -148,6 +174,7 @@ int main(int argc, const char * argv[]) {
 
     ArcballCameraController arcball;
     arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, camera->desc.fovYInDegree);
+    if (options.headless) arcball.orientation = glm::quat(glm::vec3(glm::radians(-15.0f), glm::radians(25.0f), 0.0f));
     FlyCameraController fly {.position = arcball.eyePosition(), .orientation = arcball.orientation, .movementSpeed = radius};
     NavigationMode      navigationMode    = NavigationMode::ARCBALL;
     int                 previousMouseX    = 0;
@@ -288,6 +315,33 @@ int main(int argc, const char * argv[]) {
         auto moment              = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
         if (!moment) return EXIT_FAILURE;
         visual->render(moment);
+    }
+    if (!options.snapshot.empty()) {
+        auto image = visual->readbackFrame();
+        if (image.empty()) {
+            GN_ERROR(sLogger, "Snapshot failed: no successfully rendered frame available");
+            return EXIT_FAILURE;
+        }
+        std::ofstream output(options.snapshot.data(), std::ios::binary | std::ios::trunc);
+        if (!output) {
+            GN_ERROR(sLogger, "Cannot open snapshot output '{}'", options.snapshot);
+            return EXIT_FAILURE;
+        }
+        // Readback already contains display-encoded bytes. The image writer's
+        // numeric conversion must preserve those bytes, not decode them again.
+        auto savedDescriptor = image.desc();
+        for (auto & plane : savedDescriptor.planes) {
+            if (plane.desc.format.sign0 == gfx::img::PixelFormat::SIGN_GNORM) plane.desc.format.sign0 = gfx::img::PixelFormat::SIGN_UNORM;
+            if (plane.desc.format.sign12 == gfx::img::PixelFormat::SIGN_GNORM) plane.desc.format.sign12 = gfx::img::PixelFormat::SIGN_UNORM;
+        }
+        savedDescriptor.save(imageParameters, output, image.data());
+        const auto bytes = output.tellp();
+        output.close();
+        if (!output || bytes <= 0) {
+            GN_ERROR(sLogger, "Failed to write snapshot '{}'", options.snapshot);
+            return EXIT_FAILURE;
+        }
+        GN_INFO(sLogger, "Saved snapshot: {}", options.snapshot);
     }
     return EXIT_SUCCESS;
 }

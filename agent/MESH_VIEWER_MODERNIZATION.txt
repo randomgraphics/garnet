@@ -5,9 +5,10 @@
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
 - Overall status: reopened; model viewer work is not yet complete.
 - Completed: implemented the full environment-lit multi-format viewer, dual navigation, independent debug toggles, reusable Dear ImGui backend, and inspection/control UI.
-- Current step: ASE support added and verified; viewer work remains open.
-- Remaining: Windows viewer smoke test reports Vulkan VUID-vkCmdCopyBufferToImage-dstImage-07980 (imageOffset.z = -858993460); existing model.frag formatting failures; retain the documented Clang Vulkan runtime follow-up. Assignment awaits continued work and manual user sign-off.
-- Latest verification: GCC and Clang 21 debug builds passed; GCC internal suite passed 4,507 assertions in 139 test cases with two display-dependent skips; format and CIT lint passed. Two-frame headless rendering passed for project FBX, glTF, GLB, STL, both Asset Foundry humanoid FBX variants, and the 110 MB Digital Forge GLB. The stress GLB completed in 5.30 seconds with 1,114,936 KiB peak RSS. The Clang test binary reproducibly loses the Vulkan device in an existing E2 model render test under NVIDIA and faults in llvmpipe, although the same GCC test and all GCC media renders pass; this compiler-specific runtime issue is recorded for follow-up. Real-window validation is unavailable because neither DISPLAY nor WAYLAND_DISPLAY is exposed. Vulkan validation layers are unavailable. Assimp rejects pre-2011 `media/model/tiny/tiny.fbx` with a clear diagnostic.
+- Current step: corrected texture orientation, tangent handedness, reflection mips, environment DDS layout, sRGB input/output, and headless camera framing; verified and awaiting manual user sign-off.
+- Remaining: documented Clang Vulkan runtime follow-up and manual viewer sign-off. Asset Foundry environment repair and speeder glTF export are committed on wip/ibl-dds-layout and referenced by this change.
+- Latest verification: Windows Debug build and CIT lint passed; 874 assertions in 24 FX2/E2/staging cases passed; DDS writer regression passed for half and full float cubemaps. Corrected speeder, humanoid, glTF helmet, ASE boxes, and STL snapshots ran with Vulkan validation and break-on-error enabled without validation errors. Speeder reference and diagnostic snapshots were visually inspected; final output is build/snapshot-speeder-corrected.png.
+- Prior Linux verification: GCC and Clang 21 debug builds passed; GCC internal suite passed 4,507 assertions in 139 test cases with two display-dependent skips; format and CIT lint passed. Two-frame headless rendering passed for project FBX, glTF, GLB, STL, both Asset Foundry humanoid FBX variants, and the 110 MB Digital Forge GLB. The stress GLB completed in 5.30 seconds with 1,114,936 KiB peak RSS. The Clang test binary reproducibly loses the Vulkan device in an existing E2 model render test under NVIDIA and faults in llvmpipe, although the same GCC test and all GCC media renders pass; this compiler-specific runtime issue is recorded for follow-up. Real-window validation is unavailable because neither DISPLAY nor WAYLAND_DISPLAY is exposed. Vulkan validation layers are unavailable. Assimp rejects pre-2011 `media/model/tiny/tiny.fbx` with a clear diagnostic.
 
 ---
 
@@ -49,7 +50,7 @@ Dear ImGui is added as a shallow third-party submodule pinned to an audited upst
 
 ### Test model corpus
 
-Use existing project media and models already present in the repository as the primary integration corpus. In particular, exercise `media/boxes/boxes.fbx`, `media/model/R.F.R01/a01.fbx`, `media/model/tiny/tiny.fbx`, `media/asset-foundry/model/humanoid/humanoid.fbx`, `media/asset-foundry/model/humanoid/humanoid_ascii.fbx`, and `media/asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf`. Use `media/asset-foundry/model/character/speeder-getaway-from-meshy-ai.glb` as the large real-world GLB stress case for hierarchy, materials, textures, memory use, framing, and rendering. Use Assimp's checked-out model corpus for compact GLB and STL coverage, including `glTF2/BoxTextured-glTF-Binary/BoxTextured.glb`, `glTF2/2CylinderEngine-glTF-Binary/2CylinderEngine.glb`, `STL/triangle.stl`, and one nontrivial ASCII and binary STL model.
+Use existing project media and models already present in the repository as the primary integration corpus. In particular, exercise `media/boxes/boxes.fbx`, `media/model/R.F.R01/a01.fbx`, `media/asset-foundry/model/humanoid/humanoid.fbx`, `media/asset-foundry/model/humanoid/humanoid_ascii.fbx`, and `media/asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf`. Use `media/asset-foundry/model/character/speeder-getaway-from-meshy-ai.glb` as the large real-world GLB stress case for hierarchy, materials, textures, memory use, framing, and rendering. Use Assimp's checked-out model corpus for compact GLB and STL coverage, including `glTF2/BoxTextured-glTF-Binary/BoxTextured.glb`, `glTF2/2CylinderEngine-glTF-Binary/2CylinderEngine.glb`, `STL/triangle.stl`, and one nontrivial ASCII and binary STL model.
 
 Tests may add tiny synthetic fixtures only when exact deterministic assertions or malformed-input coverage cannot be expressed with an existing asset. Do not duplicate large media files under a test directory. Automated tests that rely on optional submodule content must report a clear skip when that content is unavailable; repository-owned media smoke tests are mandatory in a fully initialized checkout.
 
@@ -60,7 +61,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 7.2 — architecture, operation, validation, and limitation documentation
+Last completed: Phase 8.5 — texture, lighting, color-space, and natural headless camera corrections verified.
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -87,9 +88,12 @@ Phase 5.1: merged verified window-input dependency commit 8441600b without dupli
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
  Phase 7.1: GCC/Clang debug builds and formatting/lint passed; GCC internal suite passed 4,507 assertions; seven representative two-frame media renders and the Digital Forge stress GLB passed; unsupported and legacy-FBX failures were clean. Clang Vulkan runtime failure and display/validation-layer environment limitations are documented above.
  Phase 7.2: documented FX2 model and IBL behavior, E2 snapshot/overlay ownership, UI2 backend lifetime, viewer operation, controls, validation, and limitations.
-In progress: none — ASE support verified; viewer runtime follow-up and manual user sign-off remain open.
+In progress: none — corrections verified; assignment remains active awaiting manual user sign-off.
   Phase 8.1: replaced removed FBX SDK object-query, triangulation, and normal-generation APIs in both legacy loaders; Windows Debug build with SDK 2020.3.10 passed; 14 FX2 model tests / 295 assertions passed; both modified loaders pass clang-format. Repository lint reports existing model.frag issues; viewer smoke test reports an invalid Vulkan imageOffset.z.
   Phase 8.2: added ASE classification, viewer help and documentation, repository ASE import and GPU draw coverage; Windows Debug build passed; FX2 model suite passed 791 assertions in 15 cases; boxes.ase --print passed (5 nodes, 8 primitives, 8 materials, 9 textures); modified sources pass formatting.
+  Phase 8.3: added --snapshot filename with default 1280x720 headless rendering, PNG/JPEG/BMP output, successful-frame readback, and failure exits; fixed uninitialized staging offsets. Windows Debug build and 53 assertions in 8 tests passed; five model formats visually inspected with Vulkan validation and break-on-error, no Vulkan errors. Logs and images are in build/snapshot-*.
+  Phase 8.4: removed unsupported tiny.fbx and Tiny_skin.dds at user request, along with its active corpus test entry. Historical validation notes retain the reason for removal.
+  Phase 8.5: restored top-left texture UV convention; preserved/generated tangent handedness; enabled reflection mip sampling; fixed generator and existing prefiltered DDS from mip-major to face-major ordering; made color textures/output sRGB with linear data maps; gave headless camera 25-degree yaw and 15-degree elevation with micrometer world precision. Debug build, 874 assertions / 24 cases, DDS writer regression, lint, and validation-enabled snapshots passed. Included in the user-requested commit of all viewer changes.
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -271,6 +275,18 @@ Phase 8: Windows follow-up
   Task 8.2: Add ASE support to the model viewer through FX2
     Verify: Windows Debug build; FX2 model tests including repository ASE geometry and draw creation; viewer --print with boxes.ase.
     Commit: "feat(viewer): add ASE model support (Phase 8.2)"
+
+  Task 8.3: Add headless --snapshot <filename> using default viewer settings
+    Verify: Debug build; E2 readback tests; PNG/JPG/BMP snapshots of representative models with Vulkan validation and break-on-error; invalid output failure checks; inspect output images.
+    Commit: "feat(viewer): add headless snapshots and correct model rendering"
+
+  Task 8.4: Remove the unsupported tiny model and its texture
+    Verify: tiny.fbx and Tiny_skin.dds are absent; no active corpus test references remain; git diff --check passes.
+    Commit: "feat(viewer): add headless snapshots and correct model rendering"
+
+  Task 8.5: Correct model texture rendering and headless camera defaults
+    Verify: Compare speeder reference and headless snapshots; importer regression tests; Vulkan validation with break-on-error; Debug build and formatting.
+    Commit: "feat(viewer): add headless snapshots and correct model rendering"
 
 --- SUMMARY OF FILES TO TOUCH ---
 

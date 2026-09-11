@@ -99,6 +99,7 @@ int32_t appendTexture(ModelScene & result, const aiScene & scene, const aiMateri
     if (AI_SUCCESS != aiGetMaterialTexture(&material, type, 0, &sourcePath)) return -1;
 
     ModelScene::Texture texture;
+    texture.srgb = type == aiTextureType_BASE_COLOR || type == aiTextureType_DIFFUSE || type == aiTextureType_EMISSIVE || type == aiTextureType_SPECULAR;
     if (const aiTexture * embedded = scene.GetEmbeddedTexture(sourcePath.C_Str())) {
         if (embedded->mHeight == 0) {
             texture.embeddedData.append(reinterpret_cast<const uint8_t *>(embedded->pcData), embedded->mWidth);
@@ -139,6 +140,9 @@ void generateNormals(ModelScene::Primitive & primitive) {
 }
 
 void generateTangents(ModelScene::Primitive & primitive) {
+    DynaArray<glm::vec3> bitangents;
+    bitangents.resize(primitive.vertices.size());
+    for (glm::vec3 & bitangent : bitangents) bitangent = glm::vec3(0.0f);
     DynaArray<glm::vec3> accumulated;
     accumulated.resize(primitive.vertices.size());
     for (glm::vec3 & tangent : accumulated) tangent = glm::vec3(0.0f);
@@ -153,18 +157,23 @@ void generateTangents(ModelScene::Primitive & primitive) {
         const glm::vec2 uv2         = primitive.vertices[i2].texcoord - primitive.vertices[i0].texcoord;
         const float     determinant = uv1.x * uv2.y - uv1.y * uv2.x;
         if (glm::abs(determinant) <= 0.000001f) continue;
-        const glm::vec3 tangent = (edge1 * uv2.y - edge2 * uv1.y) / determinant;
+        const glm::vec3 tangent   = (edge1 * uv2.y - edge2 * uv1.y) / determinant;
+        const glm::vec3 bitangent = (edge2 * uv1.x - edge1 * uv2.x) / determinant;
+        bitangents[i0] += bitangent;
+        bitangents[i1] += bitangent;
+        bitangents[i2] += bitangent;
         accumulated[i0] += tangent;
         accumulated[i1] += tangent;
         accumulated[i2] += tangent;
     }
 
     for (size_t i = 0; i < primitive.vertices.size(); ++i) {
-        const glm::vec3 normal        = primitive.vertices[i].normal;
-        glm::vec3       tangent       = accumulated[i] - normal * glm::dot(normal, accumulated[i]);
-        const float     lengthSq      = glm::dot(tangent, tangent);
-        tangent                       = lengthSq > 0.0f ? tangent / glm::sqrt(lengthSq) : glm::vec3(1, 0, 0);
-        primitive.vertices[i].tangent = glm::vec4(tangent, 1.0f);
+        const glm::vec3 normal   = primitive.vertices[i].normal;
+        glm::vec3       tangent  = accumulated[i] - normal * glm::dot(normal, accumulated[i]);
+        const float     lengthSq = glm::dot(tangent, tangent);
+        tangent                  = lengthSq > 0.0f ? tangent / glm::sqrt(lengthSq)
+                                                   : glm::normalize(glm::cross(glm::abs(normal.z) < 0.999f ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0), normal));
+        primitive.vertices[i].tangent = glm::vec4(tangent, glm::dot(glm::cross(normal, tangent), bitangents[i]) < 0.0f ? -1.0f : 1.0f);
     }
 }
 
@@ -260,8 +269,9 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
             return {};
         }
 
-    constexpr unsigned importFlags =
-        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_SortByPType | aiProcess_ValidateDataStructure;
+    // Assimp normalizes UVs to bottom-left; uploaded image rows use a top-left origin.
+    constexpr unsigned importFlags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_SortByPType |
+                                     aiProcess_ValidateDataStructure | aiProcess_FlipUVs;
     std::unique_ptr<const aiScene, decltype(&aiReleaseImport)> imported(aiImportFile(nativePath.data(), importFlags), &aiReleaseImport);
     if (!imported || !imported->mRootNode || !imported->HasMeshes()) GN_UNLIKELY {
             GN_ERROR(sLogger, "ModelScene::load: Assimp failed to import '{}': {}", parameters.path, aiGetErrorString());
@@ -344,8 +354,11 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
                 vertex.normal             = {normal.x, normal.y, normal.z};
             }
             if (primitive.sourceHadTangents) {
-                const aiVector3D & tangent = mesh.mTangents[vertexIndex];
-                vertex.tangent             = {tangent.x, tangent.y, tangent.z, 1.0f};
+                const aiVector3D & tangent   = mesh.mTangents[vertexIndex];
+                vertex.tangent               = {tangent.x, tangent.y, tangent.z, 1.0f};
+                const aiVector3D & bitangent = mesh.mBitangents[vertexIndex];
+                vertex.tangent.w =
+                    glm::dot(glm::cross(vertex.normal, glm::vec3(vertex.tangent)), glm::vec3(bitangent.x, bitangent.y, bitangent.z)) < 0.0f ? -1.0f : 1.0f;
             }
             if (primitive.sourceHadTexcoords) {
                 const aiVector3D & texcoord = mesh.mTextureCoords[0][vertexIndex];
@@ -480,6 +493,11 @@ AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<co
             continue;
         }
 
+        // Choose transfer interpretation by material role, not the file container.
+        using PF        = gfx::img::PixelFormat;
+        const auto sign = source.srgb ? PF::SIGN_GNORM : PF::SIGN_UNORM;
+        if (staged.descriptor.format.sign0 == PF::SIGN_UNORM || staged.descriptor.format.sign0 == PF::SIGN_GNORM) staged.descriptor.format.sign0 = sign;
+        if (staged.descriptor.format.sign12 == PF::SIGN_UNORM || staged.descriptor.format.sign12 == PF::SIGN_GNORM) staged.descriptor.format.sign12 = sign;
         auto texture = gpu2::Texture::create(name, {.context = gpu, .descriptor = staged.descriptor});
         if (!texture) GN_UNLIKELY return {};
         cnc->copyBufferToImage(staged, texture);

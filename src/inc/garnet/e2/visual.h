@@ -96,6 +96,11 @@ struct VisualDomain : Being {
 
     virtual void render(Ref<VisualMoment>) = 0;
 
+    /// Read the last successfully rendered headless frame. Blocks CPU/GPU; intended
+    /// for snapshots and diagnostics. Returns an empty image for windowed domains
+    /// or when the most recent render failed or no frame has been rendered.
+    virtual gfx::img::Image readbackFrame() const = 0;
+
     GN_API static Ref<VisualDomain> create(const CreateParameters &);
 };
 

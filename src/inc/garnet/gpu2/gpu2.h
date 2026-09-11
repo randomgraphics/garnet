@@ -291,11 +291,13 @@ struct Buffer : public RCRT64 {
     /// Pass to GpuCnC::copyBufferToImage() and Texture::create(); keep staging alive
     /// until the GPU copy payload completes.
     struct StagedTexture {
+        // Vector3's default constructor leaves components unset, so region vectors
+        // need explicit components for whole-subresource copies to start at zero.
         struct Region {
             uint32_t          mip             = 0;
             uint32_t          face            = 0;
-            Vector3<uint32_t> imageOffset     = {};
-            Vector3<uint32_t> imageExtent     = {};
+            Vector3<uint32_t> imageOffset     = {0, 0, 0};
+            Vector3<uint32_t> imageExtent     = {0, 0, 0};
             uint64_t          bufferOffset    = 0;
             uint32_t          bufferRowLength = 0; ///< 0 = tight (same as imageExtent.x)
             uint32_t          bufferHeight    = 0; ///< 0 = tight (same as imageExtent.y)

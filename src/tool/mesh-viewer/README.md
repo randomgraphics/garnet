@@ -16,14 +16,29 @@ Useful noninteractive modes are:
 
 ```bash
 GNtool-mesh-viewer --print model.glb
+GNtool-mesh-viewer --snapshot output.png model.glb
 GNtool-mesh-viewer --test --frames 2 model.stl
 GNtool-mesh-viewer --frames 120 model.gltf
 ```
 
 `--print` reports hierarchy, primitive/material/texture counts, bounds, and
-import warnings without creating a GPU unless combined with `--test`.
+import warnings without creating a GPU unless combined with `--test` or `--snapshot`.
 `--test` renders to a headless target. `--frames N` limits either windowed or
 headless execution for smoke testing.
+
+`--snapshot <filename>` automatically enables headless rendering and saves the
+final frame as PNG, JPG/JPEG, or BMP according to the filename extension. It uses
+the default lighting, bounds, and axes from the interactive
+viewer, at 1280x720, with no window or UI. The headless camera is fitted to the
+model and uses an elevated three-quarter view (25 degrees yaw, 15 degrees
+elevation). By default it renders three frames;
+`--frames N` can override that count. Existing output files are overwritten;
+the parent directory must already exist. Import, render/readback, unsupported
+output format, and file-write failures return a nonzero exit code. `--print`
+can be combined with `--snapshot` to also report the imported scene.
+
+Use a Debug build to validate snapshots: gpu2 enables the Vulkan validation
+layer and breaks on Vulkan errors by default in Debug builds.
 
 ## Controls and UI
 
@@ -67,7 +82,7 @@ env/bin/cit.py -l
 
 Known limitations:
 
-- Assimp rejects pre-2011 FBX files, including `media/model/tiny/tiny.fbx`;
+- Assimp rejects pre-2011 FBX files;
 - skeletal animation is not evaluated; animated files display static imported
   geometry;
 - a display server is required for presentation and interactive input;

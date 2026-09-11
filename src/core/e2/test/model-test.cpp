@@ -56,6 +56,33 @@ TEST_CASE("e2 model facet captures immutable instance state", "[e2][model]") {
     CHECK(hiddenMoment->renderables.empty());
 }
 
+TEST_CASE("e2 headless readback contains display-encoded color", "[e2][model][gpu]") {
+    Universe universe;
+    auto     visual = VisualDomain::create({.universe = universe, .os = {}});
+    if (!visual) SKIP("No headless Vulkan visual domain is available");
+    auto world  = Simple::createWorld(universe);
+    auto camera = Camera::create({.domain = visual});
+    REQUIRE(world);
+    REQUIRE(camera);
+    Ref<Camera> cameras[] = {camera};
+    auto        moment    = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+    REQUIRE(moment);
+    visual->render(moment);
+    auto image = visual->readbackFrame();
+    REQUIRE_FALSE(image.empty());
+    CHECK(image.format() == gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB());
+    // The domain clears to linear (0.05, 0.06, 0.09), not these byte values.
+    // Readback must contain the sRGB encoding that a PNG/JPEG viewer displays.
+    const auto * rgba = static_cast<const uint8_t *>(image.data());
+    CHECK(rgba[0] >= 62);
+    CHECK(rgba[0] <= 64);
+    CHECK(rgba[1] >= 68);
+    CHECK(rgba[1] <= 70);
+    CHECK(rgba[2] >= 84);
+    CHECK(rgba[2] <= 86);
+    CHECK(rgba[3] == 255);
+}
+
 TEST_CASE("e2 visual domain renders and caches captured model instances", "[e2][model][gpu]") {
     const StrA root = getEnv("GARNET_ROOT");
     const StrA path = root.empty() ? StrA("media/boxes/boxes.fbx") : fs::joinPath(root, "media/boxes/boxes.fbx");
@@ -66,6 +93,7 @@ TEST_CASE("e2 visual domain renders and caches captured model instances", "[e2][
     Universe universe;
     auto     visual = VisualDomain::create({.universe = universe, .os = {}});
     if (!visual) SKIP("No headless Vulkan visual domain is available");
+    CHECK(visual->readbackFrame().empty());
     auto camera = Camera::create({.domain = visual});
     auto world  = Simple::createWorld(universe, PhysicalScale::METER());
     auto form   = createModelForm(universe, "rendered-model", model);
@@ -85,5 +113,10 @@ TEST_CASE("e2 visual domain renders and caches captured model instances", "[e2][
     auto second = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(second);
     visual->render(second);
-    SUCCEED("two frames reused the visual-domain model cache");
+    auto image = visual->readbackFrame();
+    REQUIRE_FALSE(image.empty());
+    CHECK(image.width() == 1280);
+    CHECK(image.height() == 720);
+    visual->render({});
+    CHECK(visual->readbackFrame().empty());
 }

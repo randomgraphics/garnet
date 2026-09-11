@@ -51,6 +51,8 @@ struct ModelScene : RCRT64 {
 
     /// Texture reference retained from the imported material.
     struct Texture {
+        /// Color textures use sRGB; normal, occlusion, and metal/rough maps are linear data.
+        bool srgb = false;
         /// Resolved disk path for an external texture; empty for embedded content.
         StrA path;
 

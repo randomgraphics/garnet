@@ -76,6 +76,7 @@ struct VisualDomainImpl : VisualDomain {
         // Member destruction alone can't order the surface (a raw handle we own) between the
         // swapchain and the instance, so unwind explicitly while mGpu keeps the instance alive.
         mRenderTarget.setColorTarget(0, {});
+        mLastFrameTexture.clear();
         mFrameEndQuest.clear();
         mRenderQuest.clear();
         mPrepareSscQuest.clear();
@@ -130,6 +131,14 @@ struct VisualDomainImpl : VisualDomain {
 
         Swapchain::CreateDesc scDesc;
         scDesc.setGpu(mGpu).setName("e2-swapchain").setDimensions(mWidth, mHeight);
+        // FX2 shades in linear light. Let the attachment encode display values,
+        // including headless readback, rather than saving linear bytes as an image.
+        auto displayFormat = gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB();
+        if (mSurface) {
+            displayFormat.swizzle0 = gfx::img::PixelFormat::SWIZZLE_Z;
+            displayFormat.swizzle2 = gfx::img::PixelFormat::SWIZZLE_X;
+        }
+        scDesc.setFormat(displayFormat);
         if (mSurface) scDesc.setSurface(mSurface);
         mSwapchain = Swapchain::create(scDesc);
         if (!mSwapchain) {
@@ -182,7 +191,8 @@ struct VisualDomainImpl : VisualDomain {
     }
 
     void render(Ref<VisualMoment> momentBase) override {
-        auto * moment = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
+        mFrameSucceeded = false;
+        auto * moment   = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
         if (!moment) return;
 
         if (mMomentArtifact->publish(AutoRef<rdg2::Entity>(new VisualMomentEntity(std::move(momentBase)))) == rdg2::Artifact::Version::OOO()) {
@@ -198,8 +208,14 @@ struct VisualDomainImpl : VisualDomain {
             return;
         }
 
-        auto execution = rdg2::Execution::run({.plan = plan, .gpu = mGpu, .name = "e2-frame"});
-        if (!execution || execution->status() != rdg2::Execution::Status::SUCCEEDED) { GN_WARN(sLogger, "Visual frame execution failed."); }
+        auto execution  = rdg2::Execution::run({.plan = plan, .gpu = mGpu, .name = "e2-frame"});
+        mFrameSucceeded = execution && execution->status() == rdg2::Execution::Status::SUCCEEDED;
+        if (!mFrameSucceeded) { GN_WARN(sLogger, "Visual frame execution failed."); }
+    }
+
+    gfx::img::Image readbackFrame() const override {
+        if (mOs || !mFrameSucceeded || !mLastFrameTexture) return {};
+        return mLastFrameTexture->readback();
     }
 
 private:
@@ -254,11 +270,12 @@ private:
             if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
 
             mRenderTarget.setColorTarget(0, frameRelic->frame.view);
-            auto & blend   = mRenderTarget.colorTargets[0].blendState;
-            blend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
-            blend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
-            blend.alphaSrc = RasterTarget::BlendState::ONE;
-            blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+            mLastFrameTexture = frameRelic->frame.view.texture();
+            auto & blend      = mRenderTarget.colorTargets[0].blendState;
+            blend.colorSrc    = RasterTarget::BlendState::SRC_ALPHA;
+            blend.colorDst    = RasterTarget::BlendState::INV_SRC_ALPHA;
+            blend.alphaSrc    = RasterTarget::BlendState::ONE;
+            blend.alphaDst    = RasterTarget::BlendState::INV_SRC_ALPHA;
             if (!recordVisualMoment(context, *visualMoment, sscRelic->snapshot)) return rdg2::QuestResult::failed("failed to record visual moment");
 
             // The physical swapchain frame is unchanged; publishing a new relic records the
@@ -420,6 +437,8 @@ private:
     }
 
     Universe &                                            mUniverse;
+    AutoRef<Texture>                                      mLastFrameTexture;
+    bool                                                  mFrameSucceeded = false;
     Ref<OperatingDomain>                                  mOs;
     AutoRef<GpuContext>                                   mGpu;
     intptr_t                                              mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
