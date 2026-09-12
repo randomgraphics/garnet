@@ -219,7 +219,7 @@ TEST_CASE("fx2::ModelAsset records immutable geometry and texture uploads once",
     const auto asset = ModelAsset::create(gpu, scene);
     REQUIRE(asset);
     REQUIRE(asset->gpuPayload);
-    CHECK(asset->scene == scene);
+    CHECK(asset->scene.get() == scene.get());
     CHECK(asset->primitives.size() == scene->primitives.size());
     CHECK(asset->textures.size() == scene->textures.size());
     REQUIRE_FALSE(asset->primitives.empty());

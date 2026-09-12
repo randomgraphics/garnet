@@ -37,7 +37,7 @@ TEST_CASE("e2 model facet captures immutable instance state", "[e2][model]") {
     auto * captured = RuntimeType::cast<VisualMomentImpl>(moment.get());
     REQUIRE(captured);
     REQUIRE(captured->renderables.size() == 1);
-    CHECK(captured->renderables[0].model == model);
+    CHECK(captured->renderables[0].model.get() == model.get());
     CHECK_FALSE(captured->renderables[0].mesh);
     CHECK(captured->renderables[0].translation.x == worldCoordinate(3));
 
