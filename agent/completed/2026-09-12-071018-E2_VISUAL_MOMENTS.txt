@@ -35,7 +35,7 @@ Last completed: Task 2.5 — public SSC snapshots and borrowed RuntimeType conte
   Phase 2.3: Renamed VisualFacet capture API to snapshot(), migrated callers/docs, and documented independence from future facet/form changes; GCC Debug, E2 tests (375 assertions), and lint passed.
   Phase 2.4: Kept VisualOverlay with logical Z accessors, added private tableau scheduling and multiple-environment preparation, updated docs; Debug build, lint, E2/UI2 CIT (415 assertions) passed.
   Phase 2.5: Exposed read-only ssc(), derived RenderContext from RuntimeType, supplied constants to extension moments, and updated docs; Debug build, lint, and E2/UI2/FX2 CIT (1241 assertions) passed.
-In progress: none — implementation and verification complete; user authorized commit/push to feature/mesh-viewer/main; do not archive
+In progress: none — user signed off and task completed. Archived.
 --- END PROGRESS ---
 
 --- REFERENCE ---
