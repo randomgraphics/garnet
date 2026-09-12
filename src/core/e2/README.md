@@ -236,6 +236,24 @@ implementations room to run simulation and rendering at different rates, and on
 different threads, without letting the renderer observe partially updated world
 state.
 
+## Model rendering and overlays
+
+`createModelForm()` attaches a `ModelVisualFacet` containing an immutable FX2
+`ModelScene`. Capture copies the model reference and the form's composed world
+transform into the `VisualMoment`; rendering never reaches back into the live
+form. A `VisualDomain` caches FX2 `ModelAsset` instances by scene identity, so
+multiple moments reuse uploaded geometry and textures. Visibility is an atomic
+facet property and hidden facets contribute no renderable to a new snapshot.
+
+The visual domain translates captured models into FX2 draws, imports them into
+an RDG2 closed graph, and leaves ordering, payload submission, and presentation
+to RDG2. FX2 remains unaware of worlds and render graphs.
+
+`VisualOverlay` is the post-world extension point used by UI2. The overlay
+records into the same raster target after model draws. The overlay owns its
+draw resources while the visual domain owns the active GPU, targets, and frame
+plan; neither side accesses mutable world forms during execution.
+
 ## Threading Model
 
 The API already marks two `World` operations as thread-safe entry points:

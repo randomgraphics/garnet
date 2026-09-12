@@ -36,6 +36,11 @@ TEST_CASE("gpu2::Buffer::loadTextureToStagingBuffer: returns valid StagedTexture
     CHECK(staged.descriptor.faces == 1u);
     CHECK(staged.descriptor.levels >= 1u);
     CHECK_FALSE(staged.regions.empty());
+    for (const auto & region : staged.regions) {
+        CHECK(region.imageOffset.x == 0);
+        CHECK(region.imageOffset.y == 0);
+        CHECK(region.imageOffset.z == 0);
+    }
 }
 
 TEST_CASE("gpu2::Buffer::loadTextureToStagingBuffer: staging buffer contains exact image bytes", "[gpu2][buffer][staging][gpu]") {

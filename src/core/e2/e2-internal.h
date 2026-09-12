@@ -3,6 +3,7 @@
 // This header is private to src/core/e2 and is NOT part of the public e2 interface.
 
 #include <garnet/GNengine2.h>
+#include <garnet/GNfx2.h>
 #include <garnet/GNrdg2.h>
 
 #include <glm/gtc/quaternion.hpp>
@@ -58,6 +59,7 @@ struct VisualMomentImpl : VisualMoment {
 
     struct Renderable {
         std::shared_ptr<const MeshData> mesh;
+        AutoRef<const fx2::ModelScene>  model;
 
         // Transform kept in world units (not a baked float matrix) so the visual domain can do
         // the camera-relative rebasing in exact integer space before converting to physical

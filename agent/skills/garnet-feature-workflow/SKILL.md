@@ -57,6 +57,8 @@ as needed:
 
 ## Finish
 
+- Keep the assignment file active until explicit manual user sign-off or an
+  explicit archive request; after verification, record that it awaits sign-off.
 - Re-check `git status`, branch, and recent log before final handoff.
 - Summarize the feature result, verification, and remaining risks.
 - When the user asks to merge accumulated work, squash merge to the target

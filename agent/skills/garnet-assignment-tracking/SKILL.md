@@ -56,7 +56,9 @@ Rules:
 - For assignment work, prefer one verified task per commit and push when the
   assignment workflow calls for shared progress.
 - Keep the assignment file synchronized with the actual code state.
-- When the assignment is fully done, move it to `agent/completed/` with a
+- Keep finished assignments active and marked as awaiting manual user sign-off.
+- Only after explicit user sign-off or an explicit archive request, move the
+  assignment to `agent/completed/` with a
   current UTC `yyyy-mm-dd-hhmmss-` filename prefix per
   `garnet-agent-doc-archive`.
 

@@ -43,6 +43,8 @@ struct OperatingDomainImpl : OperatingDomain {
 
     Vector2<uint32_t> clientSize() const override { return mWindow ? mWindow->getClientSize() : Vector2<uint32_t>(0, 0); }
 
+    win::Window * window() const override { return mWindow.get(); }
+
     bool processEvents() override { return mWindow ? mWindow->runUntilNoNewEvents() : false; }
 
 private:

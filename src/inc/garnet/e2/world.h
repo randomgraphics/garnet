@@ -4,6 +4,10 @@
 
 #include <functional>
 
+namespace GN::fx2 {
+struct ModelScene;
+}
+
 namespace GN::e2 {
 
 // /// An audio snapshot of something, consumed by audio domain to play sound & music.
@@ -53,6 +57,31 @@ struct VisualFacet : Facet {
 
     virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
 };
+
+/// Visual capability for a form backed by an immutable, format-neutral FX2 model scene.
+/// The facet captures only instance state; GPU residency and RDG2 scheduling remain owned
+/// by the visual domain.
+struct ModelVisualFacet : VisualFacet {
+    GN_E2_DEFINE_A_BEING(VisualFacet);
+
+    struct CreateParameters {
+        Universe &                     universe;
+        AutoRef<const fx2::ModelScene> model;
+    };
+
+    /// Create a detached model facet. Attach it through Form::addFacet().
+    GN_API static Ref<ModelVisualFacet> create(const CreateParameters &);
+
+    /// Immutable source scene represented by this facet.
+    virtual AutoRef<const fx2::ModelScene> model() const = 0;
+
+    /// Enable or suppress this model's contribution to captured visual moments.
+    virtual void setVisible(bool visible) = 0;
+    virtual bool visible() const          = 0;
+};
+
+/// Create a normal structural form with one ModelVisualFacet attached.
+GN_API Ref<Form> createModelForm(Universe & universe, const StrA & name, AutoRef<const fx2::ModelScene> model);
 
 /// The main class that represents a presence in the world. A form owns the structural side
 /// of the simulation: the parent/child hierarchy, the spatial transform, and a flat list of

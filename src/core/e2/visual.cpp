@@ -76,6 +76,7 @@ struct VisualDomainImpl : VisualDomain {
         // Member destruction alone can't order the surface (a raw handle we own) between the
         // swapchain and the instance, so unwind explicitly while mGpu keeps the instance alive.
         mRenderTarget.setColorTarget(0, {});
+        mLastFrameTexture.clear();
         mFrameEndQuest.clear();
         mRenderQuest.clear();
         mPrepareSscQuest.clear();
@@ -83,6 +84,8 @@ struct VisualDomainImpl : VisualDomain {
         mSscArtifact.clear();
         mBackbufferArtifact.clear();
         mMomentArtifact.clear();
+        mModelCache.clear();
+        mModelShading.clear();
         mSsc.clear();
         mSwapchain.clear();
         if (mSurface && mOs) {
@@ -92,6 +95,19 @@ struct VisualDomainImpl : VisualDomain {
     }
 
     Universe & universe() const override { return mUniverse; }
+
+    AutoRef<GpuContext> gpu() const override { return mGpu; }
+
+    void setEnvironment(const Environment & environment) override {
+        if (!mSsc) return;
+        mSsc->set0.envLighting.skyboxPath               = environment.skyboxPath;
+        mSsc->set0.envLighting.irradiancePath           = environment.irradiancePath;
+        mSsc->set0.envLighting.prefilteredPath          = environment.prefilteredPath;
+        mSsc->set0.envLighting.brdfLutPath              = environment.brdfLutPath;
+        mSsc->set0.envLighting.environmentRadianceScale = environment.radianceScale;
+    }
+
+    void setOverlay(AutoRef<VisualOverlay> overlay) override { mOverlay = std::move(overlay); }
 
     bool init(const CreateParameters & cp) {
         mOs = cp.os;
@@ -115,6 +131,14 @@ struct VisualDomainImpl : VisualDomain {
 
         Swapchain::CreateDesc scDesc;
         scDesc.setGpu(mGpu).setName("e2-swapchain").setDimensions(mWidth, mHeight);
+        // FX2 shades in linear light. Let the attachment encode display values,
+        // including headless readback, rather than saving linear bytes as an image.
+        auto displayFormat = gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB();
+        if (mSurface) {
+            displayFormat.swizzle0 = gfx::img::PixelFormat::SWIZZLE_Z;
+            displayFormat.swizzle2 = gfx::img::PixelFormat::SWIZZLE_X;
+        }
+        scDesc.setFormat(displayFormat);
         if (mSurface) scDesc.setSurface(mSurface);
         mSwapchain = Swapchain::create(scDesc);
         if (!mSwapchain) {
@@ -157,12 +181,18 @@ struct VisualDomainImpl : VisualDomain {
             GN_ERROR(sLogger, "Failed to create FX2 shared shader constants.");
             return false;
         }
+        mModelShading = fx2::ModelShading::create(mGpu);
+        if (!mModelShading) {
+            GN_ERROR(sLogger, "Failed to create FX2 model shading.");
+            return false;
+        }
 
         return initFrameGraph();
     }
 
     void render(Ref<VisualMoment> momentBase) override {
-        auto * moment = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
+        mFrameSucceeded = false;
+        auto * moment   = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
         if (!moment) return;
 
         if (mMomentArtifact->publish(AutoRef<rdg2::Entity>(new VisualMomentEntity(std::move(momentBase)))) == rdg2::Artifact::Version::OOO()) {
@@ -178,8 +208,14 @@ struct VisualDomainImpl : VisualDomain {
             return;
         }
 
-        auto execution = rdg2::Execution::run({.plan = plan, .gpu = mGpu, .name = "e2-frame"});
-        if (!execution || execution->status() != rdg2::Execution::Status::SUCCEEDED) { GN_WARN(sLogger, "Visual frame execution failed."); }
+        auto execution  = rdg2::Execution::run({.plan = plan, .gpu = mGpu, .name = "e2-frame"});
+        mFrameSucceeded = execution && execution->status() == rdg2::Execution::Status::SUCCEEDED;
+        if (!mFrameSucceeded) { GN_WARN(sLogger, "Visual frame execution failed."); }
+    }
+
+    gfx::img::Image readbackFrame() const override {
+        if (mOs || !mFrameSucceeded || !mLastFrameTexture) return {};
+        return mLastFrameTexture->readback();
     }
 
 private:
@@ -234,6 +270,12 @@ private:
             if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
 
             mRenderTarget.setColorTarget(0, frameRelic->frame.view);
+            mLastFrameTexture = frameRelic->frame.view.texture();
+            auto & blend      = mRenderTarget.colorTargets[0].blendState;
+            blend.colorSrc    = RasterTarget::BlendState::SRC_ALPHA;
+            blend.colorDst    = RasterTarget::BlendState::INV_SRC_ALPHA;
+            blend.alphaSrc    = RasterTarget::BlendState::ONE;
+            blend.alphaDst    = RasterTarget::BlendState::INV_SRC_ALPHA;
             if (!recordVisualMoment(context, *visualMoment, sscRelic->snapshot)) return rdg2::QuestResult::failed("failed to record visual moment");
 
             // The physical swapchain frame is unchanged; publishing a new relic records the
@@ -292,6 +334,30 @@ private:
 
         if (haveCamera) {
             for (auto & r : moment.renderables) {
+                if (r.model) {
+                    const auto model = ensureGpuModel(context, r.model);
+                    if (!model) continue;
+                    if (!mModelShadingPayloadEmitted) {
+                        context.emit(mModelShading->gpuPayload);
+                        mModelShadingPayloadEmitted = true;
+                    }
+
+                    const glm::mat4      instanceTransform = glm::translate(glm::mat4(1.f), moment.scale.toMeters(spatial::toLocal(eye, r.translation))) *
+                                                             glm::mat4_cast(glm::normalize(r.rotation));
+                    DynaArray<glm::mat4> nodeTransforms;
+                    nodeTransforms.resize(r.model->nodes.size());
+                    for (size_t nodeIndex = 0; nodeIndex < r.model->nodes.size(); ++nodeIndex) {
+                        const auto &    node            = r.model->nodes[nodeIndex];
+                        const glm::mat4 parentTransform = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
+                        nodeTransforms[nodeIndex]       = parentTransform * node.transform;
+                        for (uint32_t primitiveIndex : node.primitives) {
+                            auto draw = fx2::ModelShading::getDrawParams(sscSnapshot, mModelShading, model, primitiveIndex,
+                                                                         instanceTransform * nodeTransforms[nodeIndex]);
+                            if (draw.vs && draw.ps) raster->draw(draw);
+                        }
+                    }
+                    continue;
+                }
                 if (!r.mesh) continue;
                 const GpuMesh * gpuMesh = ensureGpuMesh(*r.mesh);
                 if (!gpuMesh) continue;
@@ -317,6 +383,13 @@ private:
                 dp.immediates   = referenceTo(new SimpleBlob<uint8_t>(sizeof(dc), reinterpret_cast<const uint8_t *>(&dc)));
                 raster->draw(dp);
             }
+        }
+
+        if (mOverlay) {
+            bool ok     = true;
+            auto upload = mOverlay->record(*raster, ok);
+            if (!ok) return false;
+            if (upload) context.emit(upload);
         }
 
         auto payload = raster->seal();
@@ -349,26 +422,46 @@ private:
         return &inserted.first->second;
     }
 
-    Universe &                           mUniverse;
-    Ref<OperatingDomain>                 mOs;
-    AutoRef<GpuContext>                  mGpu;
-    intptr_t                             mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
-    AutoRef<Swapchain>                   mSwapchain;
-    AutoRef<Texture>                     mDepth;
-    AutoRef<GpuShader>                   mVs, mPs;
-    AutoRef<fx2::SharedShaderConstants>  mSsc;
-    rdg2::ArtifactRef                    mMomentArtifact;
-    rdg2::ArtifactRef                    mBackbufferArtifact;
-    rdg2::ArtifactRef                    mSscArtifact;
-    rdg2::QuestRef                       mFrameBeginQuest;
-    rdg2::QuestRef                       mPrepareSscQuest;
-    rdg2::QuestRef                       mRenderQuest;
-    rdg2::QuestRef                       mFrameEndQuest;
-    RasterTarget                         mRenderTarget;
-    std::unordered_map<int64_t, GpuMesh> mMeshCache;
-    uint32_t                             mFrameCounter = 0;
-    uint32_t                             mWidth        = 1280;
-    uint32_t                             mHeight       = 720;
+    AutoRef<fx2::ModelAsset> ensureGpuModel(rdg2::QuestContext & context, AutoRef<const fx2::ModelScene> scene) {
+        auto found = mModelCache.find(scene->id);
+        if (found != mModelCache.end()) return found->second;
+
+        auto model = fx2::ModelAsset::create(mGpu, std::move(scene));
+        if (!model) {
+            GN_ERROR(sLogger, "Failed to create GPU model asset.");
+            return {};
+        }
+        context.emit(model->gpuPayload);
+        mModelCache.emplace(model->scene->id, model);
+        return model;
+    }
+
+    Universe &                                            mUniverse;
+    AutoRef<Texture>                                      mLastFrameTexture;
+    bool                                                  mFrameSucceeded = false;
+    Ref<OperatingDomain>                                  mOs;
+    AutoRef<GpuContext>                                   mGpu;
+    intptr_t                                              mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
+    AutoRef<Swapchain>                                    mSwapchain;
+    AutoRef<Texture>                                      mDepth;
+    AutoRef<GpuShader>                                    mVs, mPs;
+    AutoRef<fx2::SharedShaderConstants>                   mSsc;
+    AutoRef<fx2::ModelShading::Asset>                     mModelShading;
+    AutoRef<VisualOverlay>                                mOverlay;
+    rdg2::ArtifactRef                                     mMomentArtifact;
+    rdg2::ArtifactRef                                     mBackbufferArtifact;
+    rdg2::ArtifactRef                                     mSscArtifact;
+    rdg2::QuestRef                                        mFrameBeginQuest;
+    rdg2::QuestRef                                        mPrepareSscQuest;
+    rdg2::QuestRef                                        mRenderQuest;
+    rdg2::QuestRef                                        mFrameEndQuest;
+    RasterTarget                                          mRenderTarget;
+    std::unordered_map<int64_t, GpuMesh>                  mMeshCache;
+    std::unordered_map<int64_t, AutoRef<fx2::ModelAsset>> mModelCache;
+    bool                                                  mModelShadingPayloadEmitted = false;
+    uint32_t                                              mFrameCounter               = 0;
+    uint32_t                                              mWidth                      = 1280;
+    uint32_t                                              mHeight                     = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN

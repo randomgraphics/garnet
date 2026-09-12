@@ -402,26 +402,26 @@ static const char * sGetTextureFileName(FbxSurfaceMaterial * material, const cha
     FbxProperty prop = material->FindProperty(textureType);
     if (!prop.IsValid()) return NULL;
 
-    int lLayeredTextureCount = prop.GetSrcObjectCount(FbxLayeredTexture::ClassId);
+    int lLayeredTextureCount = prop.GetSrcObjectCount<FbxLayeredTexture>();
     if (lLayeredTextureCount > 0) {
         // Layered texture
 
         for (int j = 0; j < lLayeredTextureCount; ++j) {
-            FbxLayeredTexture * lLayeredTexture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject(FbxLayeredTexture::ClassId, j));
+            FbxLayeredTexture * lLayeredTexture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject<FbxLayeredTexture>(j));
 
-            int lNbTextures = lLayeredTexture->GetSrcObjectCount(FbxTexture::ClassId);
+            int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
 
             for (int k = 0; k < lNbTextures; ++k) {
-                FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(lLayeredTexture->GetSrcObject(FbxTexture::ClassId, k));
+                FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(lLayeredTexture->GetSrcObject<FbxTexture>(k));
                 if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
             }
         }
     } else {
         // Simple texture
-        int lNbTextures = prop.GetSrcObjectCount(FbxTexture::ClassId);
+        int lNbTextures = prop.GetSrcObjectCount<FbxTexture>();
         for (int j = 0; j < lNbTextures; ++j) {
 
-            FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(prop.GetSrcObject(FbxTexture::ClassId, j));
+            FbxFileTexture * lTexture = FbxCast<FbxFileTexture>(prop.GetSrcObject<FbxTexture>(j));
             if (lTexture) { return (const char *) lTexture->GetRelativeFileName(); }
         }
     }
@@ -524,7 +524,8 @@ typedef std::unordered_map<MeshVertexKey, uint32_t> MeshVertexHashMap;
 static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, ModelHierarchyDesc::NodeDesc & gnnode, FbxSdkWrapper & sdk, FbxNode * fbxnode,
                          FbxMesh * fbxmesh, const char * meshName) {
     if (!fbxmesh->IsTriangleMesh()) {
-        fbxmesh = sdk.converter->TriangulateMesh(fbxmesh);
+        // Keep the original geometry so scene source-object iteration remains stable.
+        fbxmesh = FbxCast<FbxMesh>(sdk.converter->Triangulate(fbxmesh, false));
         if (NULL == fbxmesh) {
             GN_ERROR(sLogger, "Fail to triangulate fbxmesh node: {}", meshName);
             return;
@@ -537,7 +538,7 @@ static void sLoadFbxMesh(ModelHierarchyDesc & desc, const StrA & filename, Model
         GN_ERROR(sLogger, "The fbxmesh does not have a layer: {}", meshName);
         return;
     }
-    if (NULL == layer0->GetNormals()) { fbxmesh->ComputeVertexNormals(); }
+    if (NULL == layer0->GetNormals()) { fbxmesh->GenerateNormals(false, true); }
 
     // Get basic fbxmesh properties
     int *                     fbxIndices   = fbxmesh->GetPolygonVertices();
