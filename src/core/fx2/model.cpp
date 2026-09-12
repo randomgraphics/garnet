@@ -99,7 +99,7 @@ int32_t appendTexture(ModelScene & result, const aiScene & scene, const aiMateri
     if (AI_SUCCESS != aiGetMaterialTexture(&material, type, 0, &sourcePath)) return -1;
 
     // External textures have no MIME hint; initialize it explicitly before moving the descriptor.
-    ModelScene::Texture texture {.mimeType = ""};
+    ModelScene::Texture texture {.srgb = false, .path = "", .embeddedData = {}, .mimeType = ""};
     texture.srgb = type == aiTextureType_BASE_COLOR || type == aiTextureType_DIFFUSE || type == aiTextureType_EMISSIVE || type == aiTextureType_SPECULAR;
     if (const aiTexture * embedded = scene.GetEmbeddedTexture(sourcePath.C_Str())) {
         if (embedded->mHeight == 0) {
