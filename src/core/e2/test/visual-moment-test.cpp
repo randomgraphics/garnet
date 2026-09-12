@@ -243,7 +243,7 @@ TEST_CASE("e2 environment moments draw a background without persisting in the do
     if (!visual) SKIP("No headless Vulkan visual domain is available");
     VisualEnvironment::Desc description;
     description.environmentLuminanceScale = 1000.f;
-    auto environment          = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = description});
+    auto environment                      = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = description});
     REQUIRE(environment);
     REQUIRE(RuntimeType::cast<VisualMoment>(environment.get()));
     auto empty = VisualTableau::create(universe);

@@ -135,10 +135,10 @@ struct VisualEnvironment : VisualMoment {
     GN_E2_DEFINE_A_BEING(VisualMoment);
 
     struct Desc {
-        StrA  skyboxPath;
-        StrA  irradiancePath;
-        StrA  prefilteredPath;
-        StrA  brdfLutPath;
+        StrA skyboxPath;
+        StrA irradiancePath;
+        StrA prefilteredPath;
+        StrA brdfLutPath;
         /// Scene-constant scale that maps environment map source values to calibrated scene luminance.
         /// Multiply sampled environment RGB by this to express values in scene-local nits.
         float environmentLuminanceScale = 1.0f;

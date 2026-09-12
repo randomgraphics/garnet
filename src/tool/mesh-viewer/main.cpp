@@ -20,12 +20,12 @@ namespace {
 Logger * sLogger = getLogger("GN.tool.mesh-viewer");
 
 struct Options {
-    StrA snapshot;
-    StrA path;
-    bool headless     = false;
-    bool print        = false;
-    bool finiteFrames = false;
-    int  frames       = 3;
+    StrA  snapshot;
+    StrA  path;
+    bool  headless             = false;
+    bool  print                = false;
+    bool  finiteFrames         = false;
+    int   frames               = 3;
     float environmentLuminance = 250.f;
 };
 
@@ -47,8 +47,8 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
             options.frames       = std::max(1, std::atoi(argv[++i]));
             options.finiteFrames = true;
         } else if ((argument == "--env-luminance" || argument == "--environment-luminance") && i + 1 < argc) {
-            char *       end  = nullptr;
-            const char * text = argv[++i];
+            char *       end             = nullptr;
+            const char * text            = argv[++i];
             options.environmentLuminance = std::strtof(text, &end);
             if (end == text || !end || *end != '\0' || std::isnan(options.environmentLuminance) || std::isinf(options.environmentLuminance)) {
                 GN_ERROR(sLogger, "Unable to parse '--env-luminance' value '{}'", text);
@@ -66,7 +66,9 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         }
     }
     if (!options.path.empty()) return true;
-    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] <model.fbx|gltf|glb|stl|ase>");
+    GN_ERROR(
+        sLogger,
+        "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] <model.fbx|gltf|glb|stl|ase>");
     return false;
 }
 
@@ -140,10 +142,10 @@ int main(int argc, const char * argv[]) {
     auto visual = VisualDomain::create({.universe = universe, .os = os});
     if (!visual) return EXIT_FAILURE;
     VisualEnvironment::Desc environment {
-        .skyboxPath      = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
-        .irradiancePath  = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
-        .prefilteredPath = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
-        .brdfLutPath     = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
+        .skyboxPath                = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
+        .irradiancePath            = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
+        .prefilteredPath           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
+        .brdfLutPath               = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
         .environmentLuminanceScale = options.environmentLuminance,
     };
     auto environmentMoment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environment});

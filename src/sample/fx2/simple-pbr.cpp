@@ -93,7 +93,7 @@ int main(int argc, const char ** argv) {
     rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
 
     bool helmetShadingUploadSubmitted = false;
-    bool helmetUploadSubmitted       = false;
+    bool helmetUploadSubmitted        = false;
 
     int totalFrames = testMode ? 5 : 0;
     int frameIdx    = 0;
@@ -124,8 +124,8 @@ int main(int argc, const char ** argv) {
                 if (draw.vs && draw.ps) r->draw(draw);
             } else {
                 for (size_t nodeIndex = 0; nodeIndex < helmetScene->nodes.size(); ++nodeIndex) {
-                    const auto & node            = helmetScene->nodes[nodeIndex];
-                    const glm::mat4 parentToWorld = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
+                    const auto &    node           = helmetScene->nodes[nodeIndex];
+                    const glm::mat4 parentToWorld  = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
                     const glm::mat4 worldTransform = parentToWorld * node.transform;
                     nodeTransforms[nodeIndex]      = worldTransform;
                     for (uint32_t primitiveIndex : node.primitives) {
