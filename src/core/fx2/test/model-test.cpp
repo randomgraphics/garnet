@@ -193,7 +193,7 @@ TEST_CASE("fx2::ModelScene imports project media corpus", "[fx2][model][media]")
 }
 
 TEST_CASE("fx2::ModelScene imports Asset Foundry Digital Forge stress model", "[fx2][model][media][.stress]") {
-    const GN::StrA path = repositoryPath("media/asset-foundry/model/character/speeder-getaway-from-meshy-ai.glb");
+    const GN::StrA path = repositoryPath("media/asset-foundry/model/speeder-getaway/speeder-getaway-from-meshy-ai.glb");
     if (!GN::fs::isFile(path)) SKIP("Asset Foundry submodule is not initialized");
 
     const auto scene = ModelScene::load({.path = path});
