@@ -1,12 +1,8 @@
-// visual.cpp — the official engine2 visual layer: the concrete Camera and the GPU-backed
-// VisualDomain. The VisualDomain consumes a self-contained VisualMomentImpl snapshot and
-// renders its renderables (lit by its point lights, observed by its first camera) to a
-// window via the gpu2 layer. It is the real visual domain implementation, independent of
-// the Simple world that happens to be exercising it.
+// Visual tableaux keep snapshot organization private to E2. The domain prepares
+// frame resources, then each moment records its own work into the shared raster.
 
 #include "e2-internal.h"
 
-#include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,15 +32,114 @@ struct CameraImpl : Camera {
     explicit CameraImpl(Universe & u): Camera(TYPE_INFO(), u.generateUniqueIdentifier(), "camera") {}
 };
 
+struct SceneResources final : RCRT64 {
+    GN_REGISTER_RUNTIME_TYPE(RCRT64);
+
+    explicit SceneResources(AutoRef<GpuContext> gpu): RCRT64(TYPE_INFO(), "scene-resources"), mGpu(std::move(gpu)) {}
+
+    struct GpuMesh {
+        AutoRef<Buffer> vb;
+        AutoRef<Buffer> ib;
+        uint32_t        indexCount = 0;
+    };
+
+    // Upload a mesh's GPU buffers on first sight; reuse the cached buffers afterwards.
+    const GpuMesh * ensureGpuMesh(const MeshData & mesh) {
+        auto it = mMeshCache.find(mesh.id);
+        if (it != mMeshCache.end()) return &it->second;
+
+        GpuMesh        gm;
+        const uint64_t vbSize = mesh.vertices.size() * sizeof(MeshData::Vertex);
+        const uint64_t ibSize = mesh.indices.size() * sizeof(uint16_t);
+        gm.vb                 = Buffer::create("e2-mesh-vb", {.context = mGpu, .size = vbSize});
+        gm.ib                 = Buffer::create("e2-mesh-ib", {.context = mGpu, .size = ibSize});
+        if (!gm.vb || !gm.ib) {
+            GN_ERROR(sLogger, "Failed to create mesh buffers.");
+            return nullptr;
+        }
+        if (!gm.vb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.vertices.data()), vbSize)) ||
+            !gm.ib->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.indices.data()), ibSize))) {
+            GN_ERROR(sLogger, "Failed to upload mesh buffers.");
+            return nullptr;
+        }
+        gm.indexCount = (uint32_t) mesh.indices.size();
+        auto inserted = mMeshCache.emplace(mesh.id, std::move(gm));
+        return &inserted.first->second;
+    }
+
+    AutoRef<fx2::ModelAsset> ensureGpuModel(VisualMoment::RenderContext & context, AutoRef<const fx2::ModelScene> scene) {
+        auto found = mModelCache.find(scene->id);
+        if (found != mModelCache.end()) return found->second;
+
+        const auto sceneId = scene->id;
+        auto       model   = fx2::ModelAsset::create(mGpu, std::move(scene));
+        if (!model) {
+            GN_ERROR(sLogger, "Failed to create GPU model asset.");
+            return {};
+        }
+        context.upload(model->uploadPayload());
+        mModelCache.emplace(sceneId, model);
+        return model;
+    }
+
+    AutoRef<GpuContext>                                   mGpu;
+    AutoRef<GpuShader>                                    mVs, mPs;
+    AutoRef<fx2::ModelShading::Asset>                     mModelShading;
+    std::unordered_map<int64_t, GpuMesh>                  mMeshCache;
+    std::unordered_map<int64_t, AutoRef<fx2::ModelAsset>> mModelCache;
+    bool                                                  mModelShadingPayloadEmitted = false;
+};
+
+/// Scene resource caches stay private. All moments can access prepared FX2 constants
+/// through VisualMoment::RenderContext without learning about these caches or RDG2.
+struct VisualRecordContext final : VisualMoment::RenderContext {
+    GN_REGISTER_RUNTIME_TYPE(VisualMoment::RenderContext);
+
+    GpuRaster &                                  target;
+    SceneResources &                             resources;
+    const fx2::SharedShaderConstants::Snapshot & snapshot;
+    std::function<void(AutoRef<GpuPayload>)>     emit;
+
+    VisualRecordContext(GpuRaster & raster, SceneResources & resources_, const fx2::SharedShaderConstants::Snapshot & snapshot_,
+                        std::function<void(AutoRef<GpuPayload>)> emit_)
+        : RenderContext(TYPE_INFO()), target(raster), resources(resources_), snapshot(snapshot_), emit(std::move(emit_)) {}
+
+    const fx2::SharedShaderConstants::Snapshot & ssc() const override { return snapshot; }
+
+    GpuRaster & raster() const override { return target; }
+    void        upload(AutoRef<GpuPayload> payload) override { emit(std::move(payload)); }
+};
+
+/// Environment-owned FX2 state keeps texture caches tied to the supplying moment,
+/// so dropping that moment cannot leak the previous frame's lighting into a new root.
+struct VisualEnvironmentImpl final : VisualEnvironment {
+    GN_REGISTER_RUNTIME_TYPE(VisualEnvironment);
+
+    AutoRef<GpuContext>                 gpu;
+    AutoRef<fx2::SharedShaderConstants> constants;
+
+    const Desc description;
+
+    explicit VisualEnvironmentImpl(const CreateParameters & cp)
+        : VisualEnvironment(TYPE_INFO(), cp.universe.generateUniqueIdentifier(), "visual-environment"), gpu(cp.gpu), description(cp.description) {}
+
+    bool record(RenderContext & context) const override {
+        context.raster().draw(constants->getSkyboxDrawParams(context.ssc().set0Resources));
+        return true;
+    }
+};
+
 /// RDG2 relic adapter for E2's immutable, ref-counted visual snapshot. The wrapper is the
 /// only cross-domain representation: RDG2 sees an Entity while E2 retains ownership and
 /// type-checking of the underlying moment.
-struct VisualMomentEntity final : rdg2::Entity {
+struct VisualTableauEntity final : rdg2::Entity {
     GN_REGISTER_RUNTIME_TYPE(rdg2::Entity);
 
-    Ref<VisualMoment> moment;
+    Ref<VisualTableau>           tableau;
+    DynaArray<Ref<VisualMoment>> tasks;
 
-    explicit VisualMomentEntity(Ref<VisualMoment> moment_): Entity(TYPE_INFO(), "visual-moment"), moment(std::move(moment_)) {}
+    VisualTableauEntity(Ref<VisualTableau> tableau_, DynaArray<Ref<VisualMoment>> tasks_)
+        : Entity(TYPE_INFO(), "visual-tableau"), tableau(std::move(tableau_)), tasks(std::move(tasks_)) {}
 };
 
 /// One immutable publication of FX2's frame-global GPU resources. The artifact carrying
@@ -53,9 +148,10 @@ struct VisualMomentEntity final : rdg2::Entity {
 struct SscSnapshotEntity final : rdg2::Entity {
     GN_REGISTER_RUNTIME_TYPE(rdg2::Entity);
 
-    fx2::SharedShaderConstants::Snapshot snapshot;
+    DynaArray<fx2::SharedShaderConstants::Snapshot> snapshots;
 
-    explicit SscSnapshotEntity(fx2::SharedShaderConstants::Snapshot snapshot_): Entity(TYPE_INFO(), "ssc-snapshot"), snapshot(std::move(snapshot_)) {}
+    explicit SscSnapshotEntity(DynaArray<fx2::SharedShaderConstants::Snapshot> snapshots_)
+        : Entity(TYPE_INFO(), "ssc-snapshot"), snapshots(std::move(snapshots_)) {}
 };
 
 #if GN_BUILD_HAS_VULKAN
@@ -83,10 +179,11 @@ struct VisualDomainImpl : VisualDomain {
         mFrameBeginQuest.clear();
         mSscArtifact.clear();
         mBackbufferArtifact.clear();
-        mMomentArtifact.clear();
-        mModelCache.clear();
-        mModelShading.clear();
+        mTableauArtifact.clear();
+        mPendingUploads.clear();
+        mSceneResources.clear();
         mSsc.clear();
+        mAdditionalSceneConstants.clear();
         mSwapchain.clear();
         if (mSurface && mOs) {
             mOs->destroyRenderSurface(mGpu->getVulkanInstanceHandle(), mSurface);
@@ -97,17 +194,6 @@ struct VisualDomainImpl : VisualDomain {
     Universe & universe() const override { return mUniverse; }
 
     AutoRef<GpuContext> gpu() const override { return mGpu; }
-
-    void setEnvironment(const Environment & environment) override {
-        if (!mSsc) return;
-        mSsc->set0.envLighting.skyboxPath               = environment.skyboxPath;
-        mSsc->set0.envLighting.irradiancePath           = environment.irradiancePath;
-        mSsc->set0.envLighting.prefilteredPath          = environment.prefilteredPath;
-        mSsc->set0.envLighting.brdfLutPath              = environment.brdfLutPath;
-        mSsc->set0.envLighting.environmentRadianceScale = environment.radianceScale;
-    }
-
-    void setOverlay(AutoRef<VisualOverlay> overlay) override { mOverlay = std::move(overlay); }
 
     bool init(const CreateParameters & cp) {
         mOs = cp.os;
@@ -146,6 +232,7 @@ struct VisualDomainImpl : VisualDomain {
             return false;
         }
 
+        mSceneResources  = referenceTo(new SceneResources(mGpu));
         auto depthFormat = mGpu->caps().defaultDepthFormat;
         if (depthFormat == gfx::img::PixelFormat::UNKNOWN()) {
             GN_ERROR(sLogger, "GPU reports no usable depth format.");
@@ -169,9 +256,9 @@ struct VisualDomainImpl : VisualDomain {
         mRenderTarget.states.setCullMode(RasterState::CULL_BACK);
         mRenderTarget.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
 
-        mVs = GpuShader::create({.context = mGpu, .name = "e2-box-vs", .binary = kBoxVertSpv, .size = sizeof(kBoxVertSpv), .entry = "main"});
-        mPs = GpuShader::create({.context = mGpu, .name = "e2-box-ps", .binary = kBoxFragSpv, .size = sizeof(kBoxFragSpv), .entry = "main"});
-        if (!mVs || !mPs) {
+        mSceneResources->mVs = GpuShader::create({.context = mGpu, .name = "e2-box-vs", .binary = kBoxVertSpv, .size = sizeof(kBoxVertSpv), .entry = "main"});
+        mSceneResources->mPs = GpuShader::create({.context = mGpu, .name = "e2-box-ps", .binary = kBoxFragSpv, .size = sizeof(kBoxFragSpv), .entry = "main"});
+        if (!mSceneResources->mVs || !mSceneResources->mPs) {
             GN_ERROR(sLogger, "Failed to create box shaders.");
             return false;
         }
@@ -181,8 +268,11 @@ struct VisualDomainImpl : VisualDomain {
             GN_ERROR(sLogger, "Failed to create FX2 shared shader constants.");
             return false;
         }
-        mModelShading = fx2::ModelShading::create(mGpu);
-        if (!mModelShading) {
+        // An absent environment moment contributes no indirect lighting. FX2 retains
+        // valid fallback bindings, but their radiance must not light the scene.
+        mSsc->set0.envLighting.environmentLuminanceScale = 0.f;
+        mSceneResources->mModelShading                   = fx2::ModelShading::create(mGpu);
+        if (!mSceneResources->mModelShading) {
             GN_ERROR(sLogger, "Failed to create FX2 model shading.");
             return false;
         }
@@ -190,12 +280,26 @@ struct VisualDomainImpl : VisualDomain {
         return initFrameGraph();
     }
 
-    void render(Ref<VisualMoment> momentBase) override {
+    void render(Ref<VisualTableau> tableauBase) override {
         mFrameSucceeded = false;
-        auto * moment   = RuntimeType::cast<VisualMomentImpl>(momentBase.get());
-        if (!moment) return;
+        auto * tableau  = RuntimeType::cast<VisualTableauImpl>(tableauBase.get());
+        if (!tableau) return;
 
-        if (mMomentArtifact->publish(AutoRef<rdg2::Entity>(new VisualMomentEntity(std::move(momentBase)))) == rdg2::Artifact::Version::OOO()) {
+        // Pump GPU to retire/recycle completed GPU works from previous frame.
+        mGpu->pump();
+
+        auto tasks = tableau->orderedMoments();
+        for (const auto & task : tasks) {
+            if (!task) GN_UNLIKELY return;
+            if (auto * env = RuntimeType::cast<VisualEnvironmentImpl>(task.get())) {
+                if (env->gpu != mGpu) GN_UNLIKELY {
+                        GN_ERROR(sLogger, "A visual environment must be created for this domain's GPU.");
+                        return;
+                    }
+            }
+        }
+        if (mTableauArtifact->publish(AutoRef<rdg2::Entity>(new VisualTableauEntity(std::move(tableauBase), std::move(tasks)))) ==
+            rdg2::Artifact::Version::OOO()) {
             GN_WARN(sLogger, "Failed to seal visual moment into a render-graph artifact; skipping frame.");
             return;
         }
@@ -210,7 +314,10 @@ struct VisualDomainImpl : VisualDomain {
 
         auto execution  = rdg2::Execution::run({.plan = plan, .gpu = mGpu, .name = "e2-frame"});
         mFrameSucceeded = execution && execution->status() == rdg2::Execution::Status::SUCCEEDED;
-        if (!mFrameSucceeded) { GN_WARN(sLogger, "Visual frame execution failed."); }
+        if (mFrameSucceeded)
+            mPendingUploads.clear();
+        else
+            GN_WARN(sLogger, "Visual frame execution failed.");
     }
 
     gfx::img::Image readbackFrame() const override {
@@ -219,17 +326,11 @@ struct VisualDomainImpl : VisualDomain {
     }
 
 private:
-    struct GpuMesh {
-        AutoRef<Buffer> vb;
-        AutoRef<Buffer> ib;
-        uint32_t        indexCount = 0;
-    };
-
     bool initFrameGraph() {
-        mMomentArtifact     = rdg2::Artifact::create("e2.visual-moment");
+        mTableauArtifact    = rdg2::Artifact::create("e2.visual-tableau");
         mBackbufferArtifact = rdg2::Artifact::create("e2.backbuffer");
         mSscArtifact        = rdg2::Artifact::create("e2.shared-shader-constants");
-        if (!mMomentArtifact || !mBackbufferArtifact || !mSscArtifact) {
+        if (!mTableauArtifact || !mBackbufferArtifact || !mSscArtifact) {
             GN_ERROR(sLogger, "Failed to create persistent visual-domain artifacts.");
             return false;
         }
@@ -238,36 +339,101 @@ private:
 
         rdg2::Quest::CreateParameters prepareSscParameters;
         prepareSscParameters.name = "e2-prepare-ssc";
-        prepareSscParameters.artifactUses.append({.name = "visual-moment", .artifact = mMomentArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        prepareSscParameters.artifactUses.append({.name = "visual-tableau", .artifact = mTableauArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
         prepareSscParameters.artifactUses.append({.name = "ssc", .artifact = mSscArtifact, .access = rdg2::ArtifactAccess::DISCARD_WRITE});
         prepareSscParameters.execute = [this](rdg2::QuestContext & context) {
-            auto momentRelic = context.read<VisualMomentEntity>(mMomentArtifact);
+            auto momentRelic = context.read<VisualTableauEntity>(mTableauArtifact);
             if (!momentRelic) return rdg2::QuestResult::failed("visual moment is unavailable for SSC preparation");
-            auto * visualMoment = RuntimeType::cast<VisualMomentImpl>(momentRelic->moment.get());
-            if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
-
-            auto snapshot = prepareSharedShaderConstants(*visualMoment);
-            if (snapshot.set0Resources.empty()) return rdg2::QuestResult::failed("FX2 SSC snapshot has no resources");
-            for (auto & payload : snapshot.set0Payloads) context.emit(payload);
-            context.publish(mSscArtifact, AutoRef<rdg2::Entity>(new SscSnapshotEntity(std::move(snapshot))));
+            // FX2 consumes one-time uploads when taking a snapshot, before the graph
+            // submits. Replay them if a prior frame failed during task recording.
+            for (const auto & payload : mPendingUploads) context.emit(payload);
+            VisualEnvironmentImpl *  environment      = nullptr;
+            const VisualMomentImpl * firstScene       = nullptr;
+            size_t                   environmentIndex = 0;
+            size_t                   firstSceneIndex  = 0;
+            for (size_t i = 0; i < momentRelic->tasks.size(); ++i) {
+                firstScene = RuntimeType::cast<VisualMomentImpl>(momentRelic->tasks[i].get());
+                if (firstScene) {
+                    firstSceneIndex = i;
+                    break;
+                }
+            }
+            ++mFrameCounter;
+            DynaArray<fx2::SharedShaderConstants::Snapshot> snapshots;
+            snapshots.resize(momentRelic->tasks.size());
+            for (size_t i = 0; i < momentRelic->tasks.size(); ++i) {
+                auto * env = RuntimeType::cast<VisualEnvironmentImpl>(momentRelic->tasks[i].get());
+                if (!env) continue;
+                auto & snapshot = snapshots[i];
+                snapshot        = prepareSharedShaderConstants(*env->constants, firstScene);
+                if (snapshot.set0Resources.empty()) return rdg2::QuestResult::failed("environment snapshot has no resources");
+                for (auto & payload : snapshot.set0Payloads) emitUpload(context, payload);
+                // Scene shaders bind one IBL resource set. Use the last environment
+                // in this frame's unspecified environment order; do not blend sets.
+                environment      = env;
+                environmentIndex = i;
+            }
+            auto prepareSceneSnapshot = [&](fx2::SharedShaderConstants & constants, const VisualMomentImpl * scene) {
+                constants.set0.envLighting.environmentLuminanceScale = environment ? environment->description.environmentLuminanceScale : 0.f;
+                auto snapshot                                        = prepareSharedShaderConstants(constants, scene);
+                if (snapshot.set0Resources.empty()) return snapshot;
+                if (environment) {
+                    // FX2 set 0 reserves bindings 0/1 for scene/camera UBOs and 2..5
+                    // for environment textures. Share only the environment-owned views.
+                    const auto & resources = snapshots[environmentIndex].set0Resources;
+                    for (size_t binding = 2; binding < resources.size(); ++binding) snapshot.set0Resources[binding] = resources[binding];
+                }
+                for (auto & payload : snapshot.set0Payloads) emitUpload(context, payload);
+                return snapshot;
+            };
+            size_t sceneIndex = 0;
+            for (size_t i = 0; i < momentRelic->tasks.size(); ++i) {
+                auto * scene = RuntimeType::cast<VisualMomentImpl>(momentRelic->tasks[i].get());
+                if (!scene) continue;
+                auto constants = mSsc;
+                if (sceneIndex > 0) {
+                    if (mAdditionalSceneConstants.size() < sceneIndex) {
+                        auto extra = fx2::SharedShaderConstants::create({.gpu = mGpu});
+                        if (!extra) return rdg2::QuestResult::failed("failed to create scene constants");
+                        mAdditionalSceneConstants.append(extra);
+                    }
+                    constants = mAdditionalSceneConstants[sceneIndex - 1];
+                }
+                ++sceneIndex;
+                // FX2 snapshots reuse their effect's camera/light buffers. Give every
+                // scene its own effect so all uploads can precede this frame's raster.
+                snapshots[i] = prepareSceneSnapshot(*constants, scene);
+                if (snapshots[i].set0Resources.empty()) return rdg2::QuestResult::failed("scene snapshot has no resources");
+            }
+            fx2::SharedShaderConstants::Snapshot defaultSnapshot;
+            for (auto & snapshot : snapshots) {
+                if (!snapshot.set0Resources.empty()) continue;
+                // Extension moments have no E2 scene payload. Give them the first scene's
+                // prepared constants, or a default camera/light snapshot for standalone use.
+                if (firstScene) {
+                    snapshot = snapshots[firstSceneIndex];
+                } else {
+                    if (defaultSnapshot.set0Resources.empty()) defaultSnapshot = prepareSceneSnapshot(*mSsc, nullptr);
+                    if (defaultSnapshot.set0Resources.empty()) return rdg2::QuestResult::failed("default snapshot has no resources");
+                    snapshot = defaultSnapshot;
+                }
+            }
+            context.publish(mSscArtifact, AutoRef<rdg2::Entity>(new SscSnapshotEntity(std::move(snapshots))));
             return rdg2::QuestResult::succeeded();
         };
         mPrepareSscQuest = rdg2::Quest::create(prepareSscParameters);
 
         rdg2::Quest::CreateParameters renderParameters;
         renderParameters.name = "e2-visual-render";
-        renderParameters.artifactUses.append({.name = "visual-moment", .artifact = mMomentArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
+        renderParameters.artifactUses.append({.name = "visual-tableau", .artifact = mTableauArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
         renderParameters.artifactUses.append({.name = "ssc", .artifact = mSscArtifact, .access = rdg2::ArtifactAccess::READ_ONLY});
         renderParameters.artifactUses.append({.name = "backbuffer", .artifact = mBackbufferArtifact, .access = rdg2::ArtifactAccess::READ_WRITE});
         renderParameters.execute = [this](rdg2::QuestContext & context) {
-            auto momentRelic = context.read<VisualMomentEntity>(mMomentArtifact);
+            auto momentRelic = context.read<VisualTableauEntity>(mTableauArtifact);
             auto sscRelic    = context.read<SscSnapshotEntity>(mSscArtifact);
             auto frameRelic  = context.read<rdg2::SwapchainFrameEntity>(mBackbufferArtifact);
             if (!momentRelic || !sscRelic || !frameRelic)
                 return rdg2::QuestResult::failed("visual moment, SSC snapshot, or acquired backbuffer is unavailable");
-
-            auto * visualMoment = RuntimeType::cast<VisualMomentImpl>(momentRelic->moment.get());
-            if (!visualMoment) return rdg2::QuestResult::failed("unsupported visual moment type");
 
             mRenderTarget.setColorTarget(0, frameRelic->frame.view);
             mLastFrameTexture = frameRelic->frame.view.texture();
@@ -276,7 +442,16 @@ private:
             blend.colorDst    = RasterTarget::BlendState::INV_SRC_ALPHA;
             blend.alphaSrc    = RasterTarget::BlendState::ONE;
             blend.alphaDst    = RasterTarget::BlendState::INV_SRC_ALPHA;
-            if (!recordVisualMoment(context, *visualMoment, sscRelic->snapshot)) return rdg2::QuestResult::failed("failed to record visual moment");
+            auto raster       = GpuRaster::create("e2-visual", {.gpu = mGpu, .target = &mRenderTarget});
+            if (!raster) return rdg2::QuestResult::failed("failed to create visual raster");
+            for (size_t i = 0; i < momentRelic->tasks.size(); ++i) {
+                VisualRecordContext recording(*raster, *mSceneResources, sscRelic->snapshots[i],
+                                              [this, &context](AutoRef<GpuPayload> upload) { emitUpload(context, upload); });
+                if (!momentRelic->tasks[i]->record(recording)) return rdg2::QuestResult::failed("failed to record visual moment");
+            }
+            auto payload = raster->seal();
+            if (!payload) return rdg2::QuestResult::failed("failed to seal visual raster");
+            context.emit(payload);
 
             // The physical swapchain frame is unchanged; publishing a new relic records the
             // semantic transition from acquired to rendered for downstream graph ordering.
@@ -293,175 +468,69 @@ private:
         return true;
     }
 
-    fx2::SharedShaderConstants::Snapshot prepareSharedShaderConstants(const VisualMomentImpl & moment) {
-        const bool         haveCamera = !moment.cameras.empty();
+    fx2::SharedShaderConstants::Snapshot prepareSharedShaderConstants(fx2::SharedShaderConstants & constants, const VisualMomentImpl * moment) {
+        const bool         haveCamera = moment && !moment->cameras.empty();
         const WorldVector3 eye =
-            haveCamera ? moment.cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
+            haveCamera ? moment->cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
 
-        mSsc->set0.frameConstants.frameCounter = (int) ++mFrameCounter;
-        mSsc->set0.directLighting.clear();
-        for (const auto & light : moment.lights) {
-            fx2::SharedShaderConstants::DirectLight direct;
-            direct.type            = fx2::SharedShaderConstants::DirectLight::POINT;
-            direct.point.position  = moment.scale.toMeters(spatial::toLocal(eye, light.position));
-            direct.point.intensity = IntensityRGB {light.color.r, light.color.g, light.color.b, Candela {1.f}};
-            mSsc->set0.directLighting.append(direct);
-        }
-
-        if (haveCamera) {
-            const auto & camera                 = moment.cameras[0];
-            mSsc->set0.camera.cameraPosition    = fx2::Location(0.f);
-            mSsc->set0.camera.cameraOrientation = camera.orientation;
-            mSsc->set0.camera.cameraFov         = ArcDegree(camera.fovYInDegree);
-            mSsc->set0.camera.aspectRatio       = mHeight ? (float) mWidth / (float) mHeight : 1.f;
-            mSsc->set0.camera.nearPlane         = moment.scale.toMeters(camera.nearPlane);
-            mSsc->set0.camera.farPlane          = moment.scale.toMeters(camera.farPlane);
-            mSsc->set0.camera.viewWidthInPixel  = mWidth;
-            mSsc->set0.camera.viewHeightInPixel = mHeight;
-            if (mSsc->set0.camera.nearPlane <= 0.f) mSsc->set0.camera.nearPlane = 0.1f;
-            if (mSsc->set0.camera.farPlane <= mSsc->set0.camera.nearPlane) mSsc->set0.camera.farPlane = mSsc->set0.camera.nearPlane + 1000.f;
-        }
-
-        return mSsc->takeSnapshot();
-    }
-
-    bool recordVisualMoment(rdg2::QuestContext & context, const VisualMomentImpl & moment, const fx2::SharedShaderConstants::Snapshot & sscSnapshot) {
-        const bool         haveCamera = !moment.cameras.empty();
-        const WorldVector3 eye =
-            haveCamera ? moment.cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
-        auto raster = GpuRaster::create("e2-visual", {.gpu = mGpu, .target = &mRenderTarget});
-        if (!raster) return false;
-
-        if (haveCamera) {
-            for (auto & r : moment.renderables) {
-                if (r.model) {
-                    const auto model = ensureGpuModel(context, r.model);
-                    if (!model) continue;
-                    if (!mModelShadingPayloadEmitted) {
-                        context.emit(mModelShading->gpuPayload);
-                        mModelShadingPayloadEmitted = true;
-                    }
-
-                    const glm::mat4      instanceTransform = glm::translate(glm::mat4(1.f), moment.scale.toMeters(spatial::toLocal(eye, r.translation))) *
-                                                             glm::mat4_cast(glm::normalize(r.rotation));
-                    DynaArray<glm::mat4> nodeTransforms;
-                    nodeTransforms.resize(r.model->nodes.size());
-                    for (size_t nodeIndex = 0; nodeIndex < r.model->nodes.size(); ++nodeIndex) {
-                        const auto &    node            = r.model->nodes[nodeIndex];
-                        const glm::mat4 parentTransform = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
-                        nodeTransforms[nodeIndex]       = parentTransform * node.transform;
-                        for (uint32_t primitiveIndex : node.primitives) {
-                            auto draw = fx2::ModelShading::getDrawParams(sscSnapshot, mModelShading, model, primitiveIndex,
-                                                                         instanceTransform * nodeTransforms[nodeIndex]);
-                            if (draw.vs && draw.ps) raster->draw(draw);
-                        }
-                    }
-                    continue;
-                }
-                if (!r.mesh) continue;
-                const GpuMesh * gpuMesh = ensureGpuMesh(*r.mesh);
-                if (!gpuMesh) continue;
-
-                RasterGeometry geom;
-                geom.format.attributes.append(RasterGeometry::VertexAttribute {.location = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-                geom.format.attributes.append(RasterGeometry::VertexAttribute {.location = 1, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
-                geom.vertices.append(RasterGeometry::GeometryBuffer {.buffer = gpuMesh->vb, .offset = 0, .stride = (uint32_t) sizeof(MeshData::Vertex)});
-                geom.indices    = RasterGeometry::GeometryBuffer {.buffer = gpuMesh->ib, .offset = 0, .stride = sizeof(uint16_t)};
-                geom.indexCount = gpuMesh->indexCount;
-
-                DrawConstants dc;
-                dc.model     = glm::translate(glm::mat4(1.f), moment.scale.toMeters(spatial::toLocal(eye, r.translation))) *
-                               glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment.scale.toMeters(r.scaling));
-                dc.baseColor = glm::vec4(r.baseColor, 1.f);
-
-                GpuRaster::DrawParameters dp;
-                dp.vs       = mVs;
-                dp.ps       = mPs;
-                dp.geometry = geom;
-                dp.resources.resize(1);
-                dp.resources[0] = sscSnapshot.set0Resources;
-                dp.immediates   = referenceTo(new SimpleBlob<uint8_t>(sizeof(dc), reinterpret_cast<const uint8_t *>(&dc)));
-                raster->draw(dp);
+        constants.set0.frameConstants.frameCounter = (int) mFrameCounter;
+        constants.set0.directLighting.clear();
+        constants.set0.camera = {};
+        if (moment)
+            for (const auto & light : moment->lights) {
+                fx2::SharedShaderConstants::DirectLight direct;
+                direct.type            = fx2::SharedShaderConstants::DirectLight::POINT;
+                direct.point.position  = moment->scale.toMeters(spatial::toLocal(eye, light.position));
+                direct.point.intensity = IntensityRGB {light.color.r, light.color.g, light.color.b, Candela {1.f}};
+                constants.set0.directLighting.append(direct);
             }
+
+        constants.set0.camera.aspectRatio       = mHeight ? (float) mWidth / (float) mHeight : 1.f;
+        constants.set0.camera.viewWidthInPixel  = mWidth;
+        constants.set0.camera.viewHeightInPixel = mHeight;
+        if (haveCamera) {
+            const auto & camera                     = moment->cameras[0];
+            constants.set0.camera.cameraPosition    = fx2::Location(0.f);
+            constants.set0.camera.cameraOrientation = camera.orientation;
+            constants.set0.camera.cameraFov         = ArcDegree(camera.fovYInDegree);
+            constants.set0.camera.nearPlane         = moment->scale.toMeters(camera.nearPlane);
+            constants.set0.camera.farPlane          = moment->scale.toMeters(camera.farPlane);
+            if (constants.set0.camera.nearPlane <= 0.f) constants.set0.camera.nearPlane = 0.1f;
+            if (constants.set0.camera.farPlane <= constants.set0.camera.nearPlane) constants.set0.camera.farPlane = constants.set0.camera.nearPlane + 1000.f;
         }
 
-        if (mOverlay) {
-            bool ok     = true;
-            auto upload = mOverlay->record(*raster, ok);
-            if (!ok) return false;
-            if (upload) context.emit(upload);
-        }
+        return constants.takeSnapshot();
+    }
 
-        auto payload = raster->seal();
-        if (!payload) return false;
+    void emitUpload(rdg2::QuestContext & context, const AutoRef<GpuPayload> & payload) {
+        if (!payload) return;
+        mPendingUploads.append(payload);
         context.emit(payload);
-        return true;
     }
 
-    // Upload a mesh's GPU buffers on first sight; reuse the cached buffers afterwards.
-    const GpuMesh * ensureGpuMesh(const MeshData & mesh) {
-        auto it = mMeshCache.find(mesh.id);
-        if (it != mMeshCache.end()) return &it->second;
-
-        GpuMesh        gm;
-        const uint64_t vbSize = mesh.vertices.size() * sizeof(MeshData::Vertex);
-        const uint64_t ibSize = mesh.indices.size() * sizeof(uint16_t);
-        gm.vb                 = Buffer::create("e2-mesh-vb", {.context = mGpu, .size = vbSize});
-        gm.ib                 = Buffer::create("e2-mesh-ib", {.context = mGpu, .size = ibSize});
-        if (!gm.vb || !gm.ib) {
-            GN_ERROR(sLogger, "Failed to create mesh buffers.");
-            return nullptr;
-        }
-        if (!gm.vb->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.vertices.data()), vbSize)) ||
-            !gm.ib->setContent(ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(mesh.indices.data()), ibSize))) {
-            GN_ERROR(sLogger, "Failed to upload mesh buffers.");
-            return nullptr;
-        }
-        gm.indexCount = (uint32_t) mesh.indices.size();
-        auto inserted = mMeshCache.emplace(mesh.id, std::move(gm));
-        return &inserted.first->second;
-    }
-
-    AutoRef<fx2::ModelAsset> ensureGpuModel(rdg2::QuestContext & context, AutoRef<const fx2::ModelScene> scene) {
-        auto found = mModelCache.find(scene->id);
-        if (found != mModelCache.end()) return found->second;
-
-        auto model = fx2::ModelAsset::create(mGpu, std::move(scene));
-        if (!model) {
-            GN_ERROR(sLogger, "Failed to create GPU model asset.");
-            return {};
-        }
-        context.emit(model->gpuPayload);
-        mModelCache.emplace(model->scene->id, model);
-        return model;
-    }
-
-    Universe &                                            mUniverse;
-    AutoRef<Texture>                                      mLastFrameTexture;
-    bool                                                  mFrameSucceeded = false;
-    Ref<OperatingDomain>                                  mOs;
-    AutoRef<GpuContext>                                   mGpu;
-    intptr_t                                              mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
-    AutoRef<Swapchain>                                    mSwapchain;
-    AutoRef<Texture>                                      mDepth;
-    AutoRef<GpuShader>                                    mVs, mPs;
-    AutoRef<fx2::SharedShaderConstants>                   mSsc;
-    AutoRef<fx2::ModelShading::Asset>                     mModelShading;
-    AutoRef<VisualOverlay>                                mOverlay;
-    rdg2::ArtifactRef                                     mMomentArtifact;
-    rdg2::ArtifactRef                                     mBackbufferArtifact;
-    rdg2::ArtifactRef                                     mSscArtifact;
-    rdg2::QuestRef                                        mFrameBeginQuest;
-    rdg2::QuestRef                                        mPrepareSscQuest;
-    rdg2::QuestRef                                        mRenderQuest;
-    rdg2::QuestRef                                        mFrameEndQuest;
-    RasterTarget                                          mRenderTarget;
-    std::unordered_map<int64_t, GpuMesh>                  mMeshCache;
-    std::unordered_map<int64_t, AutoRef<fx2::ModelAsset>> mModelCache;
-    bool                                                  mModelShadingPayloadEmitted = false;
-    uint32_t                                              mFrameCounter               = 0;
-    uint32_t                                              mWidth                      = 1280;
-    uint32_t                                              mHeight                     = 720;
+    AutoRef<SceneResources>                        mSceneResources;
+    Universe &                                     mUniverse;
+    AutoRef<Texture>                               mLastFrameTexture;
+    bool                                           mFrameSucceeded = false;
+    Ref<OperatingDomain>                           mOs;
+    AutoRef<GpuContext>                            mGpu;
+    intptr_t                                       mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
+    AutoRef<Swapchain>                             mSwapchain;
+    AutoRef<Texture>                               mDepth;
+    AutoRef<fx2::SharedShaderConstants>            mSsc;
+    DynaArray<AutoRef<fx2::SharedShaderConstants>> mAdditionalSceneConstants;
+    DynaArray<AutoRef<GpuPayload>>                 mPendingUploads;
+    rdg2::ArtifactRef                              mTableauArtifact;
+    rdg2::ArtifactRef                              mBackbufferArtifact;
+    rdg2::ArtifactRef                              mSscArtifact;
+    rdg2::QuestRef                                 mFrameBeginQuest;
+    rdg2::QuestRef                                 mPrepareSscQuest;
+    rdg2::QuestRef                                 mRenderQuest;
+    rdg2::QuestRef                                 mFrameEndQuest;
+    RasterTarget                                   mRenderTarget;
+    uint32_t                                       mFrameCounter = 0;
+    uint32_t                                       mWidth        = 1280;
+    uint32_t                                       mHeight       = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN
@@ -469,6 +538,105 @@ private:
 } // namespace
 
 namespace GN::e2 {
+
+DynaArray<Ref<VisualMoment>> VisualTableauImpl::orderedMoments() const {
+    auto result = moments;
+    if (result.size() < 2) return result;
+    // Stability preserves regular moments' insertion order. Equal-Z overlays and
+    // environments intentionally have no public tie-breaking guarantee.
+    std::stable_sort(result.begin(), result.end(), [](const auto & a, const auto & b) {
+        auto * overlayA = RuntimeType::cast<VisualOverlay>(a.get());
+        auto * overlayB = RuntimeType::cast<VisualOverlay>(b.get());
+        int    phaseA   = overlayA ? 2 : (RuntimeType::cast<VisualEnvironment>(a.get()) ? 1 : 0);
+        int    phaseB   = overlayB ? 2 : (RuntimeType::cast<VisualEnvironment>(b.get()) ? 1 : 0);
+        if (phaseA != phaseB) return phaseA < phaseB;
+        return overlayA && overlayB && overlayA->zOrder() > overlayB->zOrder();
+    });
+    return result;
+}
+
+bool VisualMomentImpl::record(RenderContext & base) const {
+    auto * context = RuntimeType::cast<VisualRecordContext>(&base);
+    if (!context) return false;
+    auto &             resources   = context->resources;
+    auto &             raster      = context->raster();
+    const auto &       sscSnapshot = base.ssc();
+    const auto &       moment      = *this;
+    const bool         haveCamera  = !moment.cameras.empty();
+    const WorldVector3 eye = haveCamera ? moment.cameras[0].position : WorldVector3(WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO());
+
+    if (haveCamera) {
+        for (auto & r : moment.renderables) {
+            if (r.model) {
+                const auto model = resources.ensureGpuModel(base, r.model);
+                if (!model) continue;
+                if (!resources.mModelShadingPayloadEmitted) {
+                    base.upload(resources.mModelShading->uploadPayload());
+                    resources.mModelShadingPayloadEmitted = true;
+                }
+
+                const glm::mat4 instanceTransform =
+                    glm::translate(glm::mat4(1.f), moment.scale.toMeters(spatial::toLocal(eye, r.translation))) * glm::mat4_cast(glm::normalize(r.rotation));
+                DynaArray<glm::mat4> nodeTransforms;
+                nodeTransforms.resize(r.model->nodes.size());
+                for (size_t nodeIndex = 0; nodeIndex < r.model->nodes.size(); ++nodeIndex) {
+                    const auto &    node            = r.model->nodes[nodeIndex];
+                    const glm::mat4 parentTransform = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
+                    nodeTransforms[nodeIndex]       = parentTransform * node.transform;
+                    for (uint32_t primitiveIndex : node.primitives) {
+                        auto draw = fx2::ModelShading::getDrawParams(sscSnapshot, resources.mModelShading, model, primitiveIndex,
+                                                                     instanceTransform * nodeTransforms[nodeIndex]);
+                        if (draw.vs && draw.ps) raster.draw(draw);
+                    }
+                }
+                continue;
+            }
+            if (!r.mesh) continue;
+            const auto * gpuMesh = resources.ensureGpuMesh(*r.mesh);
+            if (!gpuMesh) continue;
+
+            RasterGeometry geom;
+            geom.format.attributes.append(RasterGeometry::VertexAttribute {.location = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+            geom.format.attributes.append(RasterGeometry::VertexAttribute {.location = 1, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
+            geom.vertices.append(RasterGeometry::GeometryBuffer {.buffer = gpuMesh->vb, .offset = 0, .stride = (uint32_t) sizeof(MeshData::Vertex)});
+            geom.indices    = RasterGeometry::GeometryBuffer {.buffer = gpuMesh->ib, .offset = 0, .stride = sizeof(uint16_t)};
+            geom.indexCount = gpuMesh->indexCount;
+
+            DrawConstants dc;
+            dc.model     = glm::translate(glm::mat4(1.f), moment.scale.toMeters(spatial::toLocal(eye, r.translation))) *
+                           glm::mat4_cast(glm::normalize(r.rotation)) * glm::scale(glm::mat4(1.f), moment.scale.toMeters(r.scaling));
+            dc.baseColor = glm::vec4(r.baseColor, 1.f);
+
+            GpuRaster::DrawParameters dp;
+            dp.vs       = resources.mVs;
+            dp.ps       = resources.mPs;
+            dp.geometry = geom;
+            dp.resources.resize(1);
+            dp.resources[0] = sscSnapshot.set0Resources;
+            dp.immediates   = referenceTo(new SimpleBlob<uint8_t>(sizeof(dc), reinterpret_cast<const uint8_t *>(&dc)));
+            raster.draw(dp);
+        }
+    }
+
+    return true;
+}
+
+Ref<VisualTableau> VisualTableau::create(Universe & universe) { return referenceTo(new VisualTableauImpl(universe)); }
+
+Ref<VisualEnvironment> VisualEnvironment::create(const CreateParameters & cp) {
+    if (!cp.gpu) return {};
+    auto moment       = referenceTo(new VisualEnvironmentImpl(cp));
+    moment->constants = fx2::SharedShaderConstants::create({.gpu = cp.gpu});
+    if (!moment->constants) return {};
+    moment->constants->set0.envLighting = {
+        .skyboxPath                = cp.description.skyboxPath,
+        .irradiancePath            = cp.description.irradiancePath,
+        .prefilteredPath           = cp.description.prefilteredPath,
+        .brdfLutPath               = cp.description.brdfLutPath,
+        .environmentLuminanceScale = cp.description.environmentLuminanceScale,
+    };
+    return moment;
+}
 
 rdg2::PlanRef compileVisualFramePlan(rdg2::QuestRef frameBegin, rdg2::QuestRef prepareSsc, rdg2::QuestRef visualRender, rdg2::QuestRef frameEnd) {
     rdg2::Plan::CompileParameters parameters;

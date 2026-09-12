@@ -52,22 +52,19 @@ int main(int argc, const char ** argv) {
     if (!ssc) return -1;
 
     ssc->set0.envLighting = {
-        .skyboxPath               = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
-        .irradiancePath           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
-        .prefilteredPath          = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
-        .brdfLutPath              = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
-        .environmentRadianceScale = 3500.f,
+        .skyboxPath                = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
+        .irradiancePath            = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
+        .prefilteredPath           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
+        .brdfLutPath               = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
+        .environmentLuminanceScale = 3500.f,
     };
 
-    auto helmet = PbrShading::load(gpuContext, {
-                                                   .gltfPath       = "media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf",
-                                                   .albedoPath     = "media::asset-foundry/model/DamagedHelmet/baseColor_1.jpg",
-                                                   .normalPath     = "media::asset-foundry/model/DamagedHelmet/normal_1-gl.jpg",
-                                                   .emissivePath   = "media::asset-foundry/model/DamagedHelmet/emissive_1.jpg",
-                                                   .occlusionPath  = "media::asset-foundry/model/DamagedHelmet/occlusion_1.jpg",
-                                                   .metalRoughPath = "media::asset-foundry/model/DamagedHelmet/metallicRoughness_1.jpg",
-                                               });
-    if (!helmet) return -1;
+    auto helmetScene = ModelScene::load({.path = "media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf"});
+    if (!helmetScene) return -1;
+    auto helmetShading = ModelShading::create(gpuContext);
+    if (!helmetShading) return -1;
+    auto helmetModel = ModelAsset::create(gpuContext, helmetScene);
+    if (!helmetModel) return -1;
 
     // ─── Window + swapchain ───────────────────────────────────────────────────
     std::unique_ptr<win::Window> window;
@@ -95,7 +92,8 @@ int main(int argc, const char ** argv) {
     rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
     rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
 
-    bool helmetUploadSubmitted = false;
+    bool helmetShadingUploadSubmitted = false;
+    bool helmetUploadSubmitted        = false;
 
     int totalFrames = testMode ? 5 : 0;
     int frameIdx    = 0;
@@ -118,19 +116,40 @@ int main(int argc, const char ** argv) {
 
             auto r = GpuRaster::create("simple-pbr", rcp);
             if (!r) return;
-            glm::mat4 helmetMat = glm::mat4(1.f);
-            r->draw(PbrShading::getDrawParams(sscSnapshot, helmet, helmetMat));
+
+            DynaArray<glm::mat4> nodeTransforms;
+            nodeTransforms.resize(helmetScene->nodes.size());
+            if (helmetScene->nodes.empty()) {
+                const auto draw = ModelShading::getDrawParams(sscSnapshot, helmetShading, helmetModel, 0, glm::mat4(1.f));
+                if (draw.vs && draw.ps) r->draw(draw);
+            } else {
+                for (size_t nodeIndex = 0; nodeIndex < helmetScene->nodes.size(); ++nodeIndex) {
+                    const auto &    node           = helmetScene->nodes[nodeIndex];
+                    const glm::mat4 parentToWorld  = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
+                    const glm::mat4 worldTransform = parentToWorld * node.transform;
+                    nodeTransforms[nodeIndex]      = worldTransform;
+                    for (uint32_t primitiveIndex : node.primitives) {
+                        const auto draw = ModelShading::getDrawParams(sscSnapshot, helmetShading, helmetModel, primitiveIndex, worldTransform);
+                        if (!draw.vs || !draw.ps) continue;
+                        r->draw(draw);
+                    }
+                }
+            }
             r->draw(ssc->getSkyboxDrawParams(sscSnapshot.set0Resources));
             renderWorks.append(r->seal());
         };
         drawScene();
 
         // ─── Single frame submit ──────────────────────────────────────────────
-        // Payloads ordered: PBR asset upload → set0 (env + UBO) → render work.
+        // Payloads ordered: model shading init, model upload, set0 (env + UBO) → render work.
         GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
 
+        if (!helmetShadingUploadSubmitted) {
+            if (const auto payload = helmetShading->uploadPayload()) submit.appendWork(payload);
+            helmetShadingUploadSubmitted = true;
+        }
         if (!helmetUploadSubmitted) {
-            submit.appendWork(helmet->gpuPayload);
+            if (const auto payload = helmetModel->uploadPayload()) submit.appendWork(payload);
             helmetUploadSubmitted = true;
         }
 

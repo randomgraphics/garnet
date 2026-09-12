@@ -5,18 +5,7 @@
 namespace GN::e2 {
 
 struct VisualDomain;
-
-/// Optional screen-space contribution appended after world geometry in the E2 raster pass.
-struct VisualOverlay : RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
-
-    /// Append gpu2 draws and return a transient upload payload that must execute first.
-    /// Set `ok` false when recording failed and the entire frame should be abandoned.
-    virtual AutoRef<gpu2::GpuPayload> record(gpu2::GpuRaster & raster, bool & ok) = 0;
-
-protected:
-    using RCRT64::RCRT64;
-};
+struct VisualTableau;
 
 /// Represents a visual observer of the world.
 struct Camera : Being {
@@ -46,27 +35,8 @@ struct Camera : Being {
     GN_API static Ref<Camera> create(const CreateParameters &);
 };
 
-/// A visual snapshot consumed by the graphics domain for rendering.
-struct VisualMoment : Being {
-    GN_E2_DEFINE_A_BEING(Being);
-
-    struct CaptureParameters {
-        Ref<VisualDomain>      domain;
-        ArrayView<Ref<Camera>> cameras;
-        UnitOfTime             expectedRenderTimeShift = {};
-    };
-
-protected:
-    VisualMoment(const RuntimeType::TypeInfo & type, int64_t id, const StrA & name): Being(type, id, name) {}
-};
-
 struct VisualDomain : Being {
     GN_E2_DEFINE_A_BEING(Being);
-
-    struct Reset {
-        uint32_t screenWidthInPixels;
-        uint32_t screenHeightInPixels;
-    };
 
     struct CreateParameters {
         Universe &           universe;
@@ -79,22 +49,8 @@ struct VisualDomain : Being {
     /// GPU context owned by this visual domain, for compatible extension renderers.
     virtual AutoRef<gpu2::GpuContext> gpu() const = 0;
 
-    /// Application-selected image-based lighting resources used for subsequent frames.
-    struct Environment {
-        StrA  skyboxPath;
-        StrA  irradiancePath;
-        StrA  prefilteredPath;
-        StrA  brdfLutPath;
-        float radianceScale = 1.0f;
-    };
-
-    /// Change skybox and image-based lighting resources for subsequent snapshots.
-    virtual void setEnvironment(const Environment &) = 0;
-
-    /// Set or clear the screen-space overlay appended to subsequent frames.
-    virtual void setOverlay(AutoRef<VisualOverlay> overlay) = 0;
-
-    virtual void render(Ref<VisualMoment>) = 0;
+    /// Render an opaque snapshot. Its contents and organization belong to the tableau.
+    virtual void render(Ref<VisualTableau>) = 0;
 
     /// Read the last successfully rendered headless frame. Blocks CPU/GPU; intended
     /// for snapshots and diagnostics. Returns an empty image for windowed domains
@@ -102,6 +58,100 @@ struct VisualDomain : Being {
     virtual gfx::img::Image readbackFrame() const = 0;
 
     GN_API static Ref<VisualDomain> create(const CreateParameters &);
+};
+
+/// One captured item that knows how to record its own rendering work.
+/// Moments hold rendering state; a VisualTableau owns the snapshot's collection.
+struct VisualMoment : Being {
+    GN_E2_DEFINE_A_BEING(Being);
+
+    /// Borrowed services for one recording call; the context has no reference counting
+    /// or object identity. Its raster exposes target dimensions, viewport, and scissor.
+    struct RenderContext : RuntimeType {
+        // RuntimeType is the unregistered root of the runtime-type system.
+        GN_API GN_REGISTER_RUNTIME_TYPE();
+
+        /// The active frame raster. Draws retain referenced resources through submission.
+        virtual gpu2::GpuRaster & raster() const = 0;
+
+        /// Prepared FX2 shared shader bindings for this moment, valid for this call.
+        /// The domain already schedules their uploads; do not submit them again.
+        /// Custom moments use the first scene's constants, or defaults if no scene exists,
+        /// including the tableau's selected environment lighting when present.
+        virtual const fx2::SharedShaderConstants::Snapshot & ssc() const = 0;
+
+        /// Schedule GPU work before the recorded draws. Do not submit directly.
+        virtual void upload(AutoRef<gpu2::GpuPayload>) = 0;
+
+    protected:
+        using RuntimeType::RuntimeType;
+        ~RenderContext() = default; // borrowed, never deleted through this interface
+    };
+
+    /// Record this item's rendering; false abandons the frame. The context is valid
+    /// only for this call. Keep captured state unchanged until domain rendering returns.
+    virtual bool record(RenderContext &) const = 0;
+};
+
+/// An opaque collection of visual moments for one captured scene or snapshot.
+/// Storage, relationships, traversal, and scheduling machinery are implementation details.
+/// Regular moments render in insertion order, followed by environments, then overlays.
+struct VisualTableau : Being {
+    GN_E2_DEFINE_A_BEING(Being);
+
+    struct SnapshotParameters {
+        Ref<VisualDomain>      domain;
+        ArrayView<Ref<Camera>> cameras;
+        UnitOfTime             expectedRenderTimeShift = {};
+    };
+
+    /// Create an empty tableau; worlds normally create populated ones via snapshot().
+    GN_API static Ref<VisualTableau> create(Universe &);
+
+    /// Include an additional renderable item. Complete composition before rendering,
+    /// and do not modify the tableau or its moments until render() returns.
+    virtual void add(Ref<VisualMoment>) = 0;
+};
+
+/// A screen-space visual moment, implemented by overlay renderers such as UI2.
+/// All overlays render after regular moments and environments, from larger Z (far)
+/// to smaller Z (near). Relative rendering order for overlays with equal Z is unspecified.
+struct VisualOverlay : VisualMoment {
+    GN_E2_DEFINE_A_BEING(VisualMoment);
+
+    /// Logical Z used to order overlays, independent of GPU depth coordinates.
+    virtual int32_t zOrder() const = 0;
+
+    /// Set logical Z before rendering; keep it unchanged until render() returns.
+    virtual void setZOrder(int32_t z) = 0;
+};
+
+/// Frame environment task: supplies shared image-based lighting resources and draws
+/// the skybox after regular moments and before overlays. Relative rendering order
+/// among environments is unspecified. Skyboxes use the first scene camera; scene
+/// lighting uses one environment's resources, with unspecified selection if several exist.
+/// Keep this moment alive across frames to reuse its GPU resources. Omit it for no environment.
+struct VisualEnvironment : VisualMoment {
+    GN_E2_DEFINE_A_BEING(VisualMoment);
+
+    struct Desc {
+        StrA skyboxPath;
+        StrA irradiancePath;
+        StrA prefilteredPath;
+        StrA brdfLutPath;
+        /// Scene-constant scale that maps environment map source values to calibrated scene luminance.
+        /// Multiply sampled environment RGB by this to express values in scene-local nits.
+        float environmentLuminanceScale = 1.0f;
+    };
+
+    struct CreateParameters {
+        Universe &                universe;
+        AutoRef<gpu2::GpuContext> gpu;
+        Desc                      description;
+    };
+
+    /// Create a reusable environment for the supplied GPU; returns empty on failure.
+    GN_API static Ref<VisualEnvironment> create(const CreateParameters &);
 };
 
 } // namespace GN::e2

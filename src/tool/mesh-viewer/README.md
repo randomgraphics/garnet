@@ -62,11 +62,19 @@ Escape remains available to exit.
 
 ## Rendering and validation
 
-The viewer normalizes the scene in FX2, creates E2 forms for the model and
-debug geometry, captures immutable visual moments, and lets E2 assemble an
-RDG2 closed frame for upload, rasterization, overlay, submission, and
-presentation. Lit materials use the Asset Foundry Bad Salzbrunn irradiance,
-prefiltered radiance, BRDF LUT, and skybox resources by default.
+The viewer normalizes the scene in FX2 and creates E2 forms for the model and
+debug geometry. `World::snapshot()` returns an opaque `VisualTableau`; the viewer
+adds a reusable `VisualEnvironment` and, in windowed mode, the UI2 `VisualOverlay`.
+E2 renders regular moments in insertion order, then environments, then overlays
+from larger logical Z to smaller Z. The viewer's UI overlay uses the default Z of zero.
+The tableau interface exposes no internal hierarchy or traversal. Each visual
+moment records its own work when E2 executes the RDG2 frame.
+
+The environment moment supplies Asset Foundry Bad Salzbrunn irradiance,
+prefiltered radiance, and BRDF LUT resources to scene shading and draws the skybox.
+Exposure changes replace that moment. The domain interface remains independent
+of concrete scene content. FX2's model GPU residency and shader bookkeeping are
+private; callers retain opaque assets and submit their initialization payloads.
 
 The automated corpus covers project FBX files, Asset Foundry glTF/FBX assets,
 Assimp GLB/STL fixtures, and the Digital Forge/Asset Foundry 110 MB character

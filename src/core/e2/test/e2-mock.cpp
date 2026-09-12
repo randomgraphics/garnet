@@ -16,7 +16,7 @@ struct MockWorld : World {
 
     void stop() override {}
 
-    auto captureVisualMoment(const VisualMoment::CaptureParameters &) -> AutoRef<VisualMoment> override { return {}; }
+    auto snapshot(const VisualTableau::SnapshotParameters &) -> AutoRef<VisualTableau> override { return {}; }
 };
 
 struct MockFacet : Facet {

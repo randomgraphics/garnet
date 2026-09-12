@@ -14,6 +14,8 @@ vec3 gn_tonemap(vec3 radiance) {
 }
 
 void main() {
-    vec3 raw = texture(sscSkyboxCubemap, v_dir).rgb * u_scene.environmentRadianceScale;
+    // Calibrate environment RGB to the photometric scene scale; see scene-ubo.h for how to set it.
+    // Use the same calibration as model lighting; exposure in gn_tonemap() is separate.
+    vec3 raw = texture(sscSkyboxCubemap, v_dir).rgb * u_scene.environmentLuminanceScale;
     o_color  = vec4(gn_tonemap(raw), 1.0);
 }

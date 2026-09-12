@@ -65,12 +65,12 @@ int main(int argc, const char ** argv) {
     for (int frame = 0; totalFrames == 0 || frame < totalFrames; ++frame) {
         if (os && !os->processEvents()) break;
 
-        VisualMoment::CaptureParameters cp;
+        VisualTableau::SnapshotParameters cp;
         cp.domain  = visual;
         cp.cameras = {cameras, 1};
 
-        auto moment = world->captureVisualMoment(cp);
-        visual->render(moment);
+        auto tableau = world->snapshot(cp);
+        visual->render(tableau);
 
         if (testMode) std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }

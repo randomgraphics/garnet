@@ -4,7 +4,7 @@
 
 /// The Simple namespace provides a minimal concrete world used to exercise the engine2
 /// world/visual-moment workflow: a world that evolves on its own cadence and can be
-/// snapshotted into a VisualMoment, plus a couple of trivial form types (a box mesh and a
+/// snapshotted into an opaque VisualTableau, plus a couple of trivial form types (a box mesh and a
 /// point light). It is intentionally tiny; the rendering is performed by the official
 /// VisualDomain implementation, not by anything Simple-specific.
 namespace GN::e2::Simple {

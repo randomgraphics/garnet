@@ -253,9 +253,10 @@ private:
 
     void uploadSnapshot(const Set0Parameters & snap, Snapshot & snapshot) const {
         shader::SceneUBO scene {};
-        scene.frameCounter             = snap.frameConstants.frameCounter;
-        scene.frameDurationMs          = (float) ((double) snap.frameConstants.frameDuration.count() * 1e-3);
-        scene.environmentRadianceScale = snap.envLighting.environmentRadianceScale;
+        scene.frameCounter              = snap.frameConstants.frameCounter;
+        scene.frameDurationMs           = (float) ((double) snap.frameConstants.frameDuration.count() * 1e-3);
+        scene.environmentLuminanceScale = snap.envLighting.environmentLuminanceScale;
+        scene.environmentAmbientFloor   = snap.envLighting.environmentAmbientFloor;
 
         const size_t numLights = std::min((size_t) shader::MAX_SCENE_LIGHTS, snap.directLighting.size());
         scene.numLights        = (uint32_t) numLights;
@@ -300,6 +301,7 @@ private:
             cam.renderTargetSize = glm::vec2((float) snap.camera.viewWidthInPixel, (float) snap.camera.viewHeightInPixel);
             cam.nearPlane        = snap.camera.nearPlane;
             cam.farPlane         = snap.camera.farPlane;
+            cam.exposure         = snap.camera.exposure;
         }
 
         auto stagingScene = gpu2::Buffer::create("ssc2.staging_scene", {.context = mGpu, .size = sizeof(shader::SceneUBO), .mappable = true});
