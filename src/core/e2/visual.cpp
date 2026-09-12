@@ -284,6 +284,10 @@ struct VisualDomainImpl : VisualDomain {
         mFrameSucceeded = false;
         auto * tableau  = RuntimeType::cast<VisualTableauImpl>(tableauBase.get());
         if (!tableau) return;
+
+        // Pump GPU to retire/recycle completed GPU works from previous frame.
+        mGpu->pump();
+
         auto tasks = tableau->orderedMoments();
         for (const auto & task : tasks) {
             if (!task) GN_UNLIKELY return;
