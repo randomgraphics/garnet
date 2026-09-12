@@ -98,27 +98,32 @@ int32_t appendTexture(ModelScene & result, const aiScene & scene, const aiMateri
     aiString sourcePath;
     if (AI_SUCCESS != aiGetMaterialTexture(&material, type, 0, &sourcePath)) return -1;
 
-    // External textures have no MIME hint; initialize it explicitly before moving the descriptor.
-    ModelScene::Texture texture {.srgb = false, .path = "", .embeddedData = {}, .mimeType = ""};
-    texture.srgb = type == aiTextureType_BASE_COLOR || type == aiTextureType_DIFFUSE || type == aiTextureType_EMISSIVE || type == aiTextureType_SPECULAR;
-    if (const aiTexture * embedded = scene.GetEmbeddedTexture(sourcePath.C_Str())) {
-        if (embedded->mHeight == 0) {
-            texture.embeddedData.append(reinterpret_cast<const uint8_t *>(embedded->pcData), embedded->mWidth);
-            texture.mimeType = StrA::format("image/{}", embedded->achFormatHint);
-        } else {
+    const aiTexture * embedded = scene.GetEmbeddedTexture(sourcePath.C_Str());
+    StrA              path;
+    if (embedded) {
+        if (embedded->mHeight != 0) {
             result.warnings.append(StrA::format("Ignoring uncompressed embedded texture '{}'", sourcePath.C_Str()));
             return -1;
         }
     } else {
-        texture.path = fs::resolvePath(modelDirectory, sourcePath.C_Str());
-        if (!fs::isFile(texture.path)) {
+        path = fs::resolvePath(modelDirectory, sourcePath.C_Str());
+        if (!fs::isFile(path)) {
             result.warnings.append(StrA::format("Cannot resolve texture '{}'", sourcePath.C_Str()));
             return -1;
         }
     }
-
     const int32_t index = static_cast<int32_t>(result.textures.size());
-    result.textures.append(std::move(texture));
+    // Construct in place after validation, avoiding a descriptor move and GCC's
+    // false-positive uninitialized MIME-string warning in optimized builds.
+    if (!result.textures.emplace()) return -1;
+    auto & texture = result.textures.back();
+    texture.srgb   = type == aiTextureType_BASE_COLOR || type == aiTextureType_DIFFUSE || type == aiTextureType_EMISSIVE || type == aiTextureType_SPECULAR;
+    if (embedded) {
+        texture.embeddedData.append(reinterpret_cast<const uint8_t *>(embedded->pcData), embedded->mWidth);
+        texture.mimeType = StrA::format("image/{}", embedded->achFormatHint);
+    } else {
+        texture.path = std::move(path);
+    }
     return index;
 }
 
