@@ -17,16 +17,6 @@ namespace GN::fx2 {
 struct ModelScene : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    /// Source container recognized by the importer.
-    enum class SourceFormat : uint8_t {
-        UNKNOWN,
-        FBX,
-        GLTF,
-        GLB,
-        STL,
-        ASE,
-    };
-
     /// Material workflow inferred from source data.
     enum class MaterialWorkflow : uint8_t {
         DEFAULT_LIT,
@@ -83,9 +73,8 @@ struct ModelScene : RCRT64 {
         int32_t          specularMap   = -1;
     };
 
-    /// One normalized vertex. Absent source attributes receive importer-generated or documented
-    /// fallback values; clients should inspect the primitive attribute flags before debugging
-    /// source content.
+    /// One normalized vertex. Absent source attributes receive importer-generated or
+    /// documented fallback values; importer bookkeeping stays private to FX2.
     struct Vertex {
         glm::vec3 position = glm::vec3(0);
         glm::vec3 normal   = glm::vec3(0, 1, 0);
@@ -101,10 +90,6 @@ struct ModelScene : RCRT64 {
         DynaArray<uint32_t> indices;
         uint32_t            material = 0;
         Bounds              bounds;
-        bool                sourceHadNormals   = false;
-        bool                sourceHadTangents  = false;
-        bool                sourceHadTexcoords = false;
-        bool                sourceHadColors    = false;
     };
 
     /// Scene hierarchy node. The transform is relative to the parent; primitive indices refer
@@ -123,7 +108,6 @@ struct ModelScene : RCRT64 {
         StrA path;
     };
 
-    SourceFormat         sourceFormat = SourceFormat::UNKNOWN;
     StrA                 sourcePath;
     DynaArray<Texture>   textures;
     DynaArray<Material>  materials;
@@ -140,10 +124,6 @@ struct ModelScene : RCRT64 {
     /// Line width is expressed in the same model-local units as the bounds.
     GN_API static AutoRef<ModelScene> createDebugVisualization(const Bounds & bounds, float lineWidth, bool includeBounds = true, bool includeAxes = true);
 
-    /// Classify a source path by its case-insensitive extension. Returns UNKNOWN for unsupported
-    /// or extension-less paths. This function performs no filesystem access.
-    GN_API static SourceFormat sourceFormatFromPath(const StrA & path);
-
 protected:
     using RCRT64::RCRT64;
 };
@@ -153,11 +133,8 @@ protected:
 struct ModelAsset : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    AutoRef<const ModelScene>         scene;
-    DynaArray<gpu2::RasterGeometry>   primitives;
-    DynaArray<AutoRef<gpu2::Texture>> textures;
-    DynaArray<AutoRef<gpu2::Buffer>>  materialBuffers;
-    AutoRef<gpu2::GpuPayload>         gpuPayload;
+    /// Initialization work retained by the asset. Submit it once before using its draws.
+    virtual AutoRef<gpu2::GpuPayload> uploadPayload() const = 0;
 
     /// Create device-local geometry and texture resources without submitting them.
     GN_API static AutoRef<ModelAsset> create(AutoRef<gpu2::GpuContext> gpu, AutoRef<const ModelScene> scene);
@@ -172,8 +149,10 @@ struct ModelShading {
 
     /// Opaque shaders and fallback material textures, uploaded once before first use.
     struct Asset : RCRT64 {
-        GN_API                    GN_REGISTER_RUNTIME_TYPE(RCRT64);
-        AutoRef<gpu2::GpuPayload> gpuPayload;
+        GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+
+        /// Initialization work for this shared shading asset; submit once before first use.
+        virtual AutoRef<gpu2::GpuPayload> uploadPayload() const = 0;
 
     protected:
         using RCRT64::RCRT64;

@@ -17,7 +17,7 @@ struct ModelVisualFacetImpl final : ModelVisualFacet {
     void setVisible(bool visible) override { mVisible.store(visible, std::memory_order_relaxed); }
     bool visible() const override { return mVisible.load(std::memory_order_relaxed); }
 
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
+    Ref<VisualMoment> snapshot(const VisualTableau::SnapshotParameters &) override {
         if (!visible()) return {};
         Form *  owner = form();
         World * world = owner ? owner->world() : nullptr;

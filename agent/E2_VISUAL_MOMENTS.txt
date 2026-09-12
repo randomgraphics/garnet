@@ -1,0 +1,199 @@
+# Assignment: Generic E2 visual domain and composed visual moments
+
+---
+## Goals
+Keep the visual domain public interface independent of rendered content. Represent
+world rendering, overlays, and environment lighting/background as visual moments.
+Update active documentation and verify composition and rendering regressions.
+
+---
+## Design
+World::snapshot() returns an opaque VisualTableau. The tableau public interface
+has no storage, hierarchy, enumeration, traversal, or dependency API; applications
+can add visual moments. Its current insertion-ordered storage lives in E2's private
+implementation. Regular moments render in insertion order, then environments,
+then overlays from larger logical Z to smaller Z. Environment ties and equal-Z
+overlay ties have unspecified order. VisualMoment is a separate abstract item with a pure virtual
+record(RenderContext&) operation. The borrowed context derives from RuntimeType
+and exposes raster/upload services plus prepared FX2 shader bindings through ssc().
+Custom moments receive the first scene's constants or defaults when no scene exists;
+scene resource caches and scheduling stay private.
+VisualOverlay and VisualEnvironment remain special moments declared after the
+domain. Multiple environments render; scene lighting selects one environment with
+unspecified selection when several exist. Each scene has separate camera UBOs.
+The new public-interface skill requires actual cross-module contracts in public
+headers and prefers pure virtual behavioral interfaces. FX2 residency, importer
+format classification, and missing-attribute bookkeeping move to private files.
+
+--- PROGRESS (resume "Last completed" / "In progress") ---
+Last completed: Task 2.5 — public SSC snapshots and borrowed RuntimeType contexts verified
+  Phase 0: Scoped domain state removal and caller migration.
+  Phase 1.1: Generic collection, scene/overlay/environment tasks, isolated camera buffers, and retryable uploads; GCC Debug build passed.
+  Phase 1.2: Active E2/RDG2/UI2/mesh-viewer docs updated; full internal suite passed 5093 assertions (146 cases passed, 2 display-dependent skips); CIT lint passed.
+  Phase 2.1: Pulled 071e57954, introduced opaque VisualTableau and World::snapshot(), moved recording to moment implementations, migrated clients/docs.
+  Phase 2.2: Added and validated public-interface skill; hid FX2 residency/importer bookkeeping; GCC Debug, full internal CIT (5075 assertions), lint, and headless snapshot passed.
+  Phase 2.3: Renamed VisualFacet capture API to snapshot(), migrated callers/docs, and documented independence from future facet/form changes; GCC Debug, E2 tests (375 assertions), and lint passed.
+  Phase 2.4: Kept VisualOverlay with logical Z accessors, added private tableau scheduling and multiple-environment preparation, updated docs; Debug build, lint, E2/UI2 CIT (415 assertions) passed.
+  Phase 2.5: Exposed read-only ssc(), derived RenderContext from RuntimeType, supplied constants to extension moments, and updated docs; Debug build, lint, and E2/UI2/FX2 CIT (1241 assertions) passed.
+In progress: none — implementation and verification complete; user authorized commit/push to feature/mesh-viewer/main; do not archive
+--- END PROGRESS ---
+
+--- REFERENCE ---
+src/inc/garnet/e2/visual.h
+src/core/e2/visual.cpp
+src/core/e2/README.md
+src/core/ui2/README.md
+src/tool/mesh-viewer/
+
+--- BUILD / CI ---
+source env/garnet.rc
+build.py d
+env/bin/cit.py -i 'E2*,[ui2]'
+env/bin/cit.py -i
+env/bin/cit.py -l
+
+Verified 2026-09-11:
+- GCC Debug build through build.py d; initial shader compilation needed the installed
+  /home/chenli/code/vulkan-sdk/1.4.357.1/x86_64/bin added to PATH.
+- Fixed pre-existing GCC -Wmissing-field-initializers build failure by value-initializing
+  the FX2 model texture descriptor (all fields retain their empty/default values).
+- Targeted E2/UI2: 397 assertions passed, 41 cases passed, one display-dependent skip.
+- Full internal CIT: 5093 assertions passed, 146 cases passed, two display-dependent
+  skips (window teardown and swapchain presentation). VK_LAYER_PATH pointed to the
+  installed SDK's share/vulkan/explicit_layer.d; no Vulkan validation errors.
+- Mesh viewer: --snapshot /tmp/e2-visual-moments.png --frames 2 media/boxes/boxes.fbx
+  succeeded with Vulkan validation enabled; manually inspected the resulting image.
+- CIT lint, bundled clang-format dry-run for the new untracked test, and git diff
+  --check passed. Wrapper formatting only considers tracked files relative to master.
+- Scanned active Markdown/text documentation, including hidden paths; retained historical
+  completed assignments and retired code unchanged. No active callers of removed setters.
+
+--- WORKFLOW / CONVENTIONS ---
+Keep changes in the current e2/mesh-viewer workspace. Do not commit or push unless
+requested. Keep this assignment active pending explicit user sign-off.
+
+--- TASK BREAKDOWN ---
+Phase 1: Implementation and verification
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Implement moment composition, environment and overlay tasks, and migrate callers.
+    Verify: Debug build and targeted E2/UI2 tests, including ordered clusters and environment removal.
+    Commit: "refactor(e2): compose visual rendering through moments (Phase 1.1)" — only if requested.
+  Task 1.2: Update active design documents and review the final diff.
+    Verify: Scan active documentation for stale domain-owned overlay/environment design; CIT lint.
+    Commit: "docs(e2): explain generic visual moment composition (Phase 1.2)" — only if requested.
+
+Phase 2: Tableau snapshots and public interface cleanup
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Pull upstream, introduce opaque tableaux and World::snapshot(), and move rendering into moments.
+    Verify: GCC Debug build, E2/UI2 regression tests, headless viewer snapshot.
+    Commit: "refactor(e2): separate opaque tableaux from renderable moments (Phase 2.1)" — only if requested.
+  Task 2.2: Add the public-interface skill and hide model renderer implementation details.
+    Verify: Skill validator, FX2 model tests, public-header/caller review, full internal CIT and lint.
+    Commit: "refactor(fx2): narrow model rendering interfaces (Phase 2.2)" — only if requested.
+  Task 2.3: Rename VisualFacet's capture API to snapshot() and document snapshot independence.
+    Verify: GCC Debug build, targeted E2 tests, formatting and stale-name scan.
+    Commit: "refactor(e2): align facet snapshot naming and contract (Phase 2.3)" — only if requested.
+  Task 2.4: Keep VisualOverlay and implement category/Z ordering with multiple environments.
+    Verify: Ordering and environment rendering regressions, E2/UI2 CIT, Debug build and lint.
+    Commit: "feat(e2): order environments and overlays within tableaux (Phase 2.4)" — only if requested.
+  Task 2.5: Expose RenderContext::ssc() and derive the borrowed context from RuntimeType.
+    Verify: Public-context model rendering, camera/environment/default constants, E2/UI2/FX2 tests, Debug build and lint.
+    Commit: "refactor(e2): expose shared shader constants on borrowed render contexts (Phase 2.5)" — only if requested.
+
+--- SUMMARY OF FILES TO TOUCH ---
+Phase 1 (implementation and documentation):
+  src/inc/garnet/e2/visual.h — generic composition and concrete moment interfaces
+  src/core/e2/ — rendering, capture, tests, and architecture documentation
+  src/core/ui2/ — caller tests and documentation
+  src/core/rdg2/README.md — generic moment client composition
+  src/core/fx2/model.cpp — prerequisite GCC aggregate-initialization fix
+  src/tool/mesh-viewer/ — environment and overlay composition
+  agent/E2_VISUAL_MOMENTS.txt — NEW: progress tracking
+
+Phase 2 (tableau and API boundaries):
+  AGENTS.md, agent/skills/ — new public-interface skill and discovery
+  src/inc/garnet/e2/, src/core/e2/ — opaque tableau, snapshot API, self-rendering moments
+  src/inc/garnet/fx2/model.h, src/core/fx2/ — hide residency and importer details
+  src/core/ui2/, src/sample/e2/, src/tool/mesh-viewer/ — updated clients and documentation
+
+Upstream synchronization: pulled feature/mesh-viewer/main to 071e57954 before
+implementation. Retained upstream's in-place texture construction when resolving
+the only autostash conflict; previous local initializer fix is superseded. Git's
+autostash is retained as a recovery copy of the pre-pull changes.
+
+Phase 2 verification:
+- GCC Debug build: PATH includes /home/chenli/code/vulkan-sdk/1.4.357.1/x86_64/bin;
+  source env/garnet.rc; build.py d. Passed with upstream's texture construction.
+- Targeted CIT: env/bin/cit.py -i 'E2*,[ui2],[fx2][model]' passed 1188 assertions,
+  54 cases passed and one display-dependent skip.
+- Full internal CIT: env/bin/cit.py -i passed 5075 assertions, 144 cases passed,
+  two display-dependent skips. Vulkan validation was enabled with VK_LAYER_PATH;
+  no VUID or validation errors in the test or viewer logs.
+- Viewer --snapshot /tmp/visual-tableau.png --frames 2 media/boxes/boxes.fbx
+  succeeded and the image was visually inspected.
+- CIT lint, bundled clang-format checks for new untracked C++ files, and git diff
+  --check passed. Skill quick_validate.py passed using the normal shell Python;
+  the project virtualenv Python lacks PyYAML, so skill validation ran outside it.
+- Active document scan confirmed World uses snapshot(); tableau has no public
+  traversal/hierarchy API. Facet snapshot naming is aligned by Task 2.3.
+- No commits or pushes. The pre-pull autostash remains as a recovery copy.
+
+Task 2.3 verification:
+- GCC Debug build and CIT lint passed.
+- Targeted E2 CIT passed 375 assertions, 38 cases passed, one display-dependent skip.
+- No stale capture API names in active code/docs; bundled clang-format check for
+  the untracked moment test and git diff --check passed.
+
+Task 2.4 verification:
+- GCC Debug build and CIT lint passed.
+- E2/UI2 CIT passed 415 assertions, 40 cases passed, one display-dependent skip.
+  Regression coverage includes interleaved categories, regular insertion order,
+  multiple environments, descending/negative/equal overlay Z, changes between
+  frames, multiple real environment resources, and UI2's default/settable Z.
+- Vulkan validation reported no errors. Active E2/UI2/viewer docs now describe
+  category ordering and unspecified environment/equal-Z overlay ties.
+- Scene lighting still binds one environment's resource set. Selection is
+  unspecified with several environments; their IBL resources are not blended.
+- Bundled clang-format checked the untracked test; git diff --check passed.
+
+Task 2.5 verification:
+- GCC Debug build, CIT lint, bundled clang-format on the untracked moment test,
+  and git diff --check passed.
+- E2/UI2/FX2 CIT passed 1241 assertions, 62 cases passed, one display-dependent skip.
+  An extension moment renders a lit model through public ssc()/raster()/upload()
+  only; tests cover inherited camera clipping, standalone default constants,
+  environment lighting and its removal. Compile-time checks exclude RefCounter
+  from RenderContext's ancestry. No Vulkan validation errors were reported.
+- Environment rendering now uses public ssc(); scene rendering still downcasts
+  solely for E2's private resource cache. No duplicate viewport/scissor API added.
+- Reviewed PbrShading versus ModelShading at the user's request: the former still
+  supplies direct-light calculations absent from the model shader, and the FX2
+  simple-pbr sample still uses it. No PBR consolidation was requested or performed.
+
+Follow-up verification:
+- Ran unfiltered env/bin/cit.py against the Debug binaries: lint, legacy unit
+  tests, internal tests (5114 assertions, 146 cases passed, two display-dependent
+  skips), RDG2 triangle smoke, and gpu2 copy/compute smoke tests all passed.
+- Re-ran build.py d successfully after the user requested Debug-only verification.
+- Inspected Linux Docker availability for the optional windowed viewer test;
+  no windowed test was added after the user's follow-up narrowed this pass to
+  the Debug build. No claim of windowed Docker rendering verification is made.
+
+Next-thread handoff requested by the user:
+- Review FX2 model.h and pbr.h for consolidation. ModelScene/ModelAsset/ModelShading
+  provide the newer model pipeline, but PbrShading's shader still calculates direct
+  scene lighting that the model shader lacks. src/sample/fx2/simple-pbr.cpp remains
+  an active PbrShading caller. Preserve these capabilities when planning migration.
+- The user subsequently requested committing and pushing all visual-refactor changes
+  to feature/mesh-viewer/main before starting the model/PBR thread. Continue from
+  that branch and inspect the workspace state before beginning the next task.
+
+Publication preparation:
+- Fetched origin/feature/mesh-viewer/main and fast-forwarded to 783c6a435, retaining
+  its rapid-vulkan update to 487d6b4 (window-swapchain regression coverage). Updated
+  the clean, shallow submodule checkout without changing local refactor files.
+- Reviewed all staged, unstaged, and untracked task files for the requested commit.
+- Debug build and unfiltered CIT passed again after synchronization: 208 legacy
+  unit tests, 5114 internal assertions (146 cases passed, two display-dependent
+  skips), lint, RDG2 triangle, and gpu2 copy/compute samples. No Vulkan validation
+  errors were reported.

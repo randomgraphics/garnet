@@ -33,8 +33,8 @@ TEST_CASE("e2 model facet captures immutable instance state", "[e2][model]") {
     Ref<Form> forms[] = {form};
     world->populate({forms, 1});
 
-    auto   moment   = world->captureVisualMoment({});
-    auto * captured = RuntimeType::cast<VisualMomentImpl>(moment.get());
+    auto   moment   = world->snapshot({});
+    auto * captured = RuntimeType::cast<VisualMomentImpl>(RuntimeType::cast<VisualTableauImpl>(moment.get())->moments[0].get());
     REQUIRE(captured);
     REQUIRE(captured->renderables.size() == 1);
     CHECK(captured->renderables[0].model.get() == model.get());
@@ -50,8 +50,8 @@ TEST_CASE("e2 model facet captures immutable instance state", "[e2][model]") {
     REQUIRE(modelFacet);
     modelFacet->setVisible(false);
     CHECK_FALSE(modelFacet->visible());
-    auto hidden       = world->captureVisualMoment({});
-    auto hiddenMoment = RuntimeType::cast<VisualMomentImpl>(hidden.get());
+    auto hidden       = world->snapshot({});
+    auto hiddenMoment = RuntimeType::cast<VisualMomentImpl>(RuntimeType::cast<VisualTableauImpl>(hidden.get())->moments[0].get());
     REQUIRE(hiddenMoment);
     CHECK(hiddenMoment->renderables.empty());
 }
@@ -65,7 +65,7 @@ TEST_CASE("e2 headless readback contains display-encoded color", "[e2][model][gp
     REQUIRE(world);
     REQUIRE(camera);
     Ref<Camera> cameras[] = {camera};
-    auto        moment    = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+    auto        moment    = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(moment);
     visual->render(moment);
     auto image = visual->readbackFrame();
@@ -107,10 +107,10 @@ TEST_CASE("e2 visual domain renders and caches captured model instances", "[e2][
     world->populate({forms, 1});
     Ref<Camera> cameras[] = {camera};
 
-    auto first = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+    auto first = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(first);
     visual->render(first);
-    auto second = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+    auto second = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(second);
     visual->render(second);
     auto image = visual->readbackFrame();

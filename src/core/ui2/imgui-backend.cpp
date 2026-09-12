@@ -137,6 +137,9 @@ struct ImGuiBackendImpl final : ImGuiBackend {
     ImGuiBackendImpl(AutoRef<gpu2::GpuContext> gpu, win::Window & window)
         : ImGuiBackend(TYPE_INFO(), "imgui-gpu2-backend"), mGpu(std::move(gpu)), mWindow(window) {}
 
+    int32_t zOrder() const override { return mZOrder; }
+    void    setZOrder(int32_t z) override { mZOrder = z; }
+
     ~ImGuiBackendImpl() override {
         mKeyTether.clear();
         mCharTether.clear();
@@ -190,6 +193,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
 
     void newFrame(float elapsedSeconds) override {
         selectContext();
+        // TODO: This assumes the render size equals the window size, which may not
+        // hold. Query viewport information from VisualMoment::RenderContext instead.
         ImGuiIO &  io              = ImGui::GetIO();
         const auto size            = mWindow.getClientSize();
         io.DisplaySize             = ImVec2(static_cast<float>(size.x), static_cast<float>(size.y));
@@ -228,19 +233,16 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         return ImGui::GetIO().WantCaptureKeyboard;
     }
 
-    AutoRef<gpu2::GpuPayload> record(gpu2::GpuRaster & raster, bool & ok) override {
-        ok = true;
-        if (!mDrawData || !mDrawData->Valid || mDrawData->TotalVtxCount <= 0 || mDrawData->TotalIdxCount <= 0) return {};
+    bool record(e2::VisualMoment::RenderContext & context) const override {
+        auto & raster = context.raster();
+        if (!mDrawData || !mDrawData->Valid || mDrawData->TotalVtxCount <= 0 || mDrawData->TotalIdxCount <= 0) return true;
 
         const uint64_t vertexBytes  = static_cast<uint64_t>(mDrawData->TotalVtxCount) * sizeof(UiVertex);
         const uint64_t indexBytes   = static_cast<uint64_t>(mDrawData->TotalIdxCount) * sizeof(ImDrawIdx);
         auto           vertexBuffer = gpu2::Buffer::create("imgui-frame-vb", {.context = mGpu, .size = vertexBytes});
         auto           indexBuffer  = gpu2::Buffer::create("imgui-frame-ib", {.context = mGpu, .size = indexBytes});
         auto           cnc          = gpu2::GpuCnC::create({.gpu = mGpu});
-        if (!vertexBuffer || !indexBuffer || !cnc) {
-            ok = false;
-            return {};
-        }
+        if (!vertexBuffer || !indexBuffer || !cnc) { return false; }
 
         DynaArray<uint8_t> vertices, indices;
         vertices.resize(vertexBytes);
@@ -328,7 +330,10 @@ struct ImGuiBackendImpl final : ImGuiBackend {
             globalVertexOffset += static_cast<uint64_t>(list->VtxBuffer.Size) * sizeof(UiVertex);
             globalIndexOffset += static_cast<uint64_t>(list->IdxBuffer.Size) * sizeof(ImDrawIdx);
         }
-        return cnc->seal();
+        auto upload = cnc->seal();
+        if (!upload) return false;
+        context.upload(upload);
+        return true;
     }
 
     void onKey(win::KeyEvent event) {
@@ -365,6 +370,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
     AutoRef<gpu2::GpuShader>                                mVs, mPs;
     AutoRef<gpu2::Texture>                                  mFontTexture;
     ImTextureID                                             mNextTextureId = 1;
+    int32_t                                                 mZOrder        = 0;
     std::unordered_map<ImTextureID, AutoRef<gpu2::Texture>> mTextures;
     Tether                                                  mKeyTether;
     Tether                                                  mCharTether;

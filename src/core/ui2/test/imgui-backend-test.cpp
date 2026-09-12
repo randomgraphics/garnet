@@ -26,6 +26,21 @@ struct TestWindow final : GN::win::WindowInput {
     bool                  runUntilNoNewEvents(bool) override { return true; }
 };
 
+struct RecordingContext final : GN::e2::VisualMoment::RenderContext {
+    GN_REGISTER_RUNTIME_TYPE(GN::e2::VisualMoment::RenderContext);
+
+    GN::gpu2::GpuRaster &             target;
+    GN::AutoRef<GN::gpu2::GpuPayload> payload;
+
+    // This standalone UI renderer does not use FX2 bindings.
+    GN::fx2::SharedShaderConstants::Snapshot constants;
+
+    explicit RecordingContext(GN::gpu2::GpuRaster & raster): RenderContext(TYPE_INFO()), target(raster) {}
+    GN::gpu2::GpuRaster &                            raster() const override { return target; }
+    const GN::fx2::SharedShaderConstants::Snapshot & ssc() const override { return constants; }
+    void                                             upload(GN::AutoRef<GN::gpu2::GpuPayload> value) override { payload = std::move(value); }
+};
+
 } // namespace
 
 TEST_CASE("ui2 ImGui backend translates window input and records gpu2 draws", "[ui2][imgui][gpu]") {
@@ -38,6 +53,9 @@ TEST_CASE("ui2 ImGui backend translates window input and records gpu2 draws", "[
     TestWindow window;
     auto       backend = ui2::ImGuiBackend::create({.gpu = gpu, .window = window});
     REQUIRE(backend);
+    CHECK(backend->zOrder() == 0);
+    backend->setZOrder(-5);
+    CHECK(backend->zOrder() == -5);
     window.updateMousePosition(20, 20);
     window.notifyKeyPress(win::KeyCode::A, true);
     window.notifyCharPress(L'A');
@@ -69,9 +87,9 @@ TEST_CASE("ui2 ImGui backend translates window input and records gpu2 draws", "[
     auto raster    = gpu2::GpuRaster::create("imgui-test-raster", {.gpu = gpu, .target = &target});
     REQUIRE(raster);
 
-    bool ok     = false;
-    auto upload = backend->record(*raster, ok);
-    REQUIRE(ok);
+    RecordingContext recording(*raster);
+    REQUIRE(backend->record(recording));
+    auto upload = recording.payload;
     REQUIRE(upload);
     auto draws = raster->seal();
     REQUIRE(draws);
@@ -86,7 +104,6 @@ TEST_CASE("ui2 ImGui backend translates window input and records gpu2 draws", "[
     ImGui::TextUnformatted("overlay draw appended after world geometry");
     ImGui::End();
     backend->render();
-    visual->setOverlay(backend);
 
     auto world      = e2::Simple::createWorld(universe, e2::PhysicalScale::METER());
     auto meters     = [&](float value) { return world->scale.fromMeters(value); };
@@ -102,7 +119,9 @@ TEST_CASE("ui2 ImGui backend translates window input and records gpu2 draws", "[
     camera->desc.nearPlane        = meters(0.1f);
     camera->desc.farPlane         = meters(100.0f);
     e2::Ref<e2::Camera> cameras[] = {camera};
-    auto                moment    = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
+    auto                moment    = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(moment);
+    moment->add(backend);
     visual->render(moment);
+    REQUIRE(!visual->readbackFrame().empty());
 }

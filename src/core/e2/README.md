@@ -22,7 +22,7 @@ GPU objects.
 Simulation and rendering are intentionally independent. The world can evolve at
 its own cadence, with or without a fixed timestep, and the visual layer observes
 that evolution only through self-contained snapshots. At selected intervals, the
-world generates a `VisualMoment` and forwards it to a `VisualDomain` for
+world generates a `VisualTableau` and forwards it to a `VisualDomain` for
 rendering work.
 
 The design aims to keep these concerns separate:
@@ -35,7 +35,8 @@ The design aims to keep these concerns separate:
   hierarchy, the spatial transform, and a flat list of facets.
 - `Facet`: unit of state and behavior attached to a form; the extension point
   for domain-specific aspects such as visuals, audio, or physics.
-- `VisualMoment`: self-contained world snapshot for rendering.
+- `VisualMoment`: one captured item that records its own rendering.
+- `VisualTableau`: an opaque collection of moments for a scene snapshot.
 - Domains: functional subsystems within the universe, such as rendering, audio,
   and operating-system integration.
 
@@ -135,9 +136,9 @@ or loaded in the background before it becomes the current gameplay world. Each
 world is logically independent: its forms, scripts, update cadence, and visual
 moments belong to that world. It owns the main game loop entry point through
 `run()`, accepts new forms through `populate()`, and exposes
-`captureVisualMoment()` for renderer-facing snapshots.
+`snapshot()` for renderer-facing tableaux.
 
-`populate()` and `captureVisualMoment()` are documented as callable from any
+`populate()` and `snapshot()` are documented as callable from any
 thread. Implementations therefore need a synchronization boundary between live
 simulation mutation and snapshot capture.
 
@@ -163,7 +164,7 @@ membership changes, when the facet is added to a form already living in a world,
 or when the owning form is destroyed while in one.
 
 `VisualFacet` is the facet subtype that can contribute visual state for a
-snapshot through `captureVisualMoment()`. Engine implementations discover visual
+snapshot through `snapshot()`. Engine implementations discover visual
 contributors with the internal `queryFacetsByType()` helper, using
 `VisualFacet::TYPE_INFO()` as the requested runtime type. This keeps simulation
 ownership in the form tree while allowing rendering to consume a snapshot built
@@ -181,27 +182,64 @@ operating-system interaction.
 
 Current and planned domain roles include:
 
-- `VisualDomain`: rendering subsystem that consumes `VisualMoment` snapshots.
+- `VisualDomain`: rendering subsystem that consumes opaque `VisualTableau` snapshots.
 - Audio domain: sound and music subsystem. The public audio interfaces are not
   currently active in the headers.
 - `OperatingDomain`: operating-system subsystem for windows, input, and related
   platform services.
 
-The visual domain is split into capture and consumption:
+The visual boundary separates a renderable item from its owning snapshot:
 
-- `Camera` describes how the world is observed.
-- `VisualMoment` represents captured visual state for one or more cameras.
-- `VisualDomain` renders a `VisualMoment`.
+- `VisualMoment` is one item that knows how to record its own rendering.
+- `VisualTableau` is the opaque collection of moments in a captured scene.
+- `World::snapshot(parameters)` produces a `Ref<VisualTableau>`.
+- `VisualDomain::render(tableau)` consumes that opaque snapshot.
 
-`VisualMoment` is intended to be a self-contained snapshot of the world at a
-certain point in time. `VisualMoment::CaptureParameters` carries the target
-`VisualDomain`, camera list, and an expected render-time shift. That time shift
-lets capture code account for the fact that rendering may occur after the
-simulation snapshot is requested.
+The tableau's public interface exposes a factory and `add(moment)`, the operation
+applications need to include environment or UI contributions. It exposes no child
+lists, parent links, dependencies, graph edges, enumeration, or traversal callbacks.
+Its organization and scheduling machinery stay inside E2. The current implementation
+stores an insertion-ordered list and records serially: regular moments first in
+insertion order, then environments, then overlays in descending logical Z order.
+Relative order among environments, or among overlays with equal Z, is unspecified.
+Future internal trees, graphs, and parallel execution do not require exposing
+those structures to other modules.
+A tableau is separate from `VisualMoment` and is not itself a renderable item.
 
-`VisualDomain::CreateParameters` depends on both `Universe` and
-`OperatingDomain`, reflecting that rendering needs global engine context plus OS
-resources such as windows, surfaces, keyboard, or mouse integration.
+`VisualMoment::record(RenderContext&)` is pure virtual. The context is borrowed
+for that call and derives from `RuntimeType`, with no reference counting or object
+identity. Its public methods expose the active gpu2 raster, prerequisite upload
+scheduling, and `ssc()`: a read-only `fx2::SharedShaderConstants::Snapshot` with
+prepared shader bindings. The domain already schedules that snapshot's uploads;
+moments must not resubmit them. Target dimensions, viewport, and scissor are
+available through `raster()` without duplicating those queries on the context.
+
+Each moment provides its own draw logic; the domain's recording loop simply
+invokes that operation. Built-in scene moments receive their own constants;
+extension moments receive the first scene's constants, or a default camera/light
+snapshot if the tableau has no scene moment. The selected environment supplies
+lighting in either case. Environment moments receive their own prepared skybox
+bindings and use the public context directly. The built-in scene renderer alone
+accesses an internal context extension for reusable resource caches; those caches
+and RDG2 scheduling remain private to E2.
+
+`VisualMomentImpl` is the built-in scene moment containing captured cameras,
+renderables, and lights. Simple-world snapshotting merges compatible scene
+contributions and adds other facet-provided moments to the tableau independently.
+`VisualFacet::snapshot()` returns a single self-contained visual moment; the
+world's `snapshot()` assembles the collection. Later changes to the facet or its
+owning form must not affect that moment. Any shared resources must remain
+immutable for the moment's lifetime.
+
+Complete composition before rendering, and keep the tableau and all referenced
+moments unchanged until `render()` returns. Captured data must not refer back to
+mutable world/form state. `VisualTableau::SnapshotParameters` carries the target
+domain, observing cameras, and expected render-time shift for capture.
+
+`VisualDomain::CreateParameters` supplies a universe and an optional OS domain;
+no OS domain selects headless rendering. The domain interface contains no concrete
+content types or content setters. `VisualMoment`, `VisualTableau`, `VisualOverlay`,
+and `VisualEnvironment` are defined after `VisualDomain` in the public header.
 
 ## Expected Data Flow
 
@@ -217,26 +255,29 @@ World::run()
   advances one logical world at its own cadence
   may use a fixed timestep, variable timestep, script-driven updates, or another policy
 
-World::captureVisualMoment(parameters)
+World::snapshot(parameters)
   briefly freezes, synchronizes, or otherwise observes live state
   queries each root Form tree for VisualFacet objects by runtime type
   asks those VisualFacet objects to capture visual data
-  returns a self-contained VisualMoment for a specific point in time
+  returns an opaque VisualTableau for a specific point in time
+  caller may add environment and overlay moments before rendering
 
-VisualDomain::render(moment)
-  seals the snapshot as an imported RDG2 relic
+VisualDomain::render(tableau)
+  obtains the execution order from the private tableau implementation
+  seals the tableau and moment references as an imported RDG2 relic
   builds the concrete closed frame plan (acquire -> render -> present)
-  adapts world-space snapshot values into FX2 render-space effects
+  prepares shared resources and adapts each concrete scene task into FX2 effects
+  invokes each moment's virtual record() in the tableau's internal order
   lets RDG2 gather payloads, submit, and present
 ```
 
 The key rule is that world evolution is independent of rendering. Rendering
-should consume `VisualMoment`, not mutable simulation objects. This gives
+should consume captured tableaux and their moments, not mutable simulation objects. This gives
 implementations room to run simulation and rendering at different rates, and on
 different threads, without letting the renderer observe partially updated world
 state.
 
-## Model rendering and overlays
+## Scene, environment, and overlay moments
 
 `createModelForm()` attaches a `ModelVisualFacet` containing an immutable FX2
 `ModelScene`. Capture copies the model reference and the form's composed world
@@ -245,21 +286,64 @@ form. A `VisualDomain` caches FX2 `ModelAsset` instances by scene identity, so
 multiple moments reuse uploaded geometry and textures. Visibility is an atomic
 facet property and hidden facets contribute no renderable to a new snapshot.
 
-The visual domain translates captured models into FX2 draws, imports them into
-an RDG2 closed graph, and leaves ordering, payload submission, and presentation
-to RDG2. FX2 remains unaware of worlds and render graphs.
+Each scene moment translates captured models into FX2 draws. The visual domain
+invokes moments in the order maintained by the tableau implementation. RDG2 orders the outer frame
+quests and handles payload submission and presentation. FX2 remains unaware of
+worlds, visual moments, and render graphs.
 
-`VisualOverlay` is the post-world extension point used by UI2. The overlay
-records into the same raster target after model draws. The overlay owns its
-draw resources while the visual domain owns the active GPU, targets, and frame
-plan; neither side accesses mutable world forms during execution.
+`VisualOverlay` derives from `VisualMoment`. UI2's backend is one such task;
+add it to the tableau after the world snapshot is captured. All overlays render
+after regular moments and environments, regardless of insertion position.
+`zOrder()` supplies an integer logical Z, independent of GPU depth: larger values
+(farther away) render before smaller values (nearer). `setZOrder()` changes it
+between frames; UI2 starts at zero. Equal-Z overlays have unspecified relative
+order. An overlay records into the
+shared raster target and returns any prerequisite upload payload. It owns its
+draw resources, while the domain owns the GPU, targets, and frame plan. The domain
+does not store an active overlay between frames. UI2 currently exposes finalized
+ImGui draw data, so do not call `newFrame()` again until rendering that tableau returns.
+
+`VisualEnvironment` also derives from `VisualMoment` and has two responsibilities:
+provide reusable graphics resources and image-based lighting data to scene tasks,
+and render the environment background. Create it with the universe, domain GPU,
+and an immutable description containing skybox/IBL paths and exposure. Reuse the
+moment across frames to retain its FX2 texture/resource cache; create a replacement
+to change its description. Resource preparation occurs before drawing any tasks,
+so an environment can light scene geometry regardless of insertion position.
+Its skybox draws after all regular moments and before any overlays, with a depth
+test that preserves the scene.
+
+Multiple environments are allowed, with unspecified relative rendering order.
+Each environment prepares its own resources and uses the first scene's first camera
+for its background. Scene lighting uses one environment's resources; selection is
+unspecified when several are present. Each scene task keeps its own camera/light
+buffers and snapshot, sharing only the selected environment texture views. This
+prevents later scene uploads from overwriting earlier cameras before the combined
+raster executes. An environment created for a different GPU rejects the frame.
+Without an environment moment, no skybox draw is recorded and indirect environment
+radiance is zero.
+
+Typical composition (after UI construction has been finalized):
+
+```cpp
+auto tableau = world->snapshot(snapshotParameters);
+tableau->add(environmentMoment);
+tableau->add(uiBackend);
+visual->render(tableau);
+```
+
+Use `VisualTableau::create(universe)` for a snapshot independent of world capture,
+then add concrete moments. A new moment subclass implements `record()`; it does
+not require adding a type-dispatch branch to the domain's recording loop. One-time
+FX2/model uploads are retained if recording fails and replayed before the next
+frame, then released after successful submission.
 
 ## Threading Model
 
 The API already marks two `World` operations as thread-safe entry points:
 
 - `populate(ArrayView<Ref<Form>>)`
-- `captureVisualMoment(const VisualMoment::CaptureParameters &)`.
+- `snapshot(const VisualTableau::SnapshotParameters &)`.
 
 The concrete implementation should treat `World` as the synchronization owner for
 root form collection changes, recursive form-tree stepping, and visual snapshot
@@ -275,8 +359,8 @@ modules with narrower responsibilities:
 
 ```text
 World / VisualFacet tree
-  -> fixed VisualMoment snapshot (E2 world units and identities)
-  -> VisualDomain composition (E2 backend policy)
+  -> opaque VisualTableau (captured moments; private organization)
+  -> VisualDomain implementation (prepare resources, invoke moment record methods)
        -> FX2 atomic effects (render-space constants and draw work)
        -> RDG2 closed plan (declared ordering, submit, and present)
   -> gpu2
@@ -285,37 +369,39 @@ World / VisualFacet tree
 FX2 is graph-agnostic. It accepts camera-relative float-meter positions and
 produces resource sets, draw parameters, and sealed payloads; it never observes
 a world, visual moment, artifact, or quest. RDG2 is domain-agnostic. It sees
-stable visual-moment, SSC, and backbuffer artifacts plus four generic quests;
+stable tableau, SSC, and backbuffer artifacts plus four generic quests;
 it never interprets cameras, lights, forms, or materials. E2 is
-the adapter: it performs exact integer rebasing, chooses the concrete workload,
-and translates the fixed snapshot into FX2 operations inside the render quest.
+the adapter: the private tableau supplies the workload and order; scene moments perform exact
+integer rebasing and translate captured data into FX2 operations.
 
 The visual domain creates these artifacts and quests once during initialization.
-Each frame publishes its moment relic and compiles a new plan from this outer
+Each frame publishes its tableau relic and compiles a new plan from this outer
 skeleton, allowing frame-specific workload construction without recreating
 long-lived artifact identities:
 
 ```text
 frame-begin   DISCARD_WRITE backbuffer (acquire and await ready payload)
-prepare-ssc   READ visual moment, DISCARD_WRITE SSC (publish snapshot + uploads)
-render        READ visual moment and SSC, READ_WRITE backbuffer (emit raster work)
+prepare-ssc   READ tableau, DISCARD_WRITE SSC (publish task snapshots + uploads)
+render        READ tableau and SSC, READ_WRITE backbuffer (emit raster work)
 frame-end     READ root backbuffer (request present)
 ```
 
 Each call to `render()` publishes only new relics to those persistent artifacts;
-it does not recreate graph identities. The visual moment is published before
+it does not recreate graph identities. The tableau is published before
 the first compilation, so execution reads one sealed relic and never follows
-identities back into mutable simulation state. SSC preparation publishes one
-immutable FX2 resource snapshot per frame, making the frame-global upload and
-its consumer dependency explicit. The render quest republishes the same
+identities back into mutable simulation state. SSC preparation publishes immutable
+FX2 resource snapshots for the scene and environment tasks, making their uploads
+and consumer dependency explicit. An environment moment owns its FX2 constants
+and lighting resources; the domain retains a zero-radiance fallback for tableaux that
+omit an environment. The render quest republishes the same
 physical swapchain-frame entity as a new relic: the new version represents the
 semantic transition from acquired to rendered and provides the dependency edge
 to presentation.
 
 This is the first executable slice, not the final workload model. The current
 moment implementation flattens renderables and lights captured from the form
-tree. Future versions can retain a richer moment tree or sealed asset/material
-manifests, perform discovery/culling before compilation, and generate a concrete
+tree. Future versions can give tableaux a richer private organization or sealed
+asset/material manifests, perform discovery/culling before compilation, and generate a concrete
 set of shadow, depth, and post-processing quests. Those changes belong in E2;
 they do not require graph knowledge in FX2 or engine knowledge in RDG2.
 
@@ -349,7 +435,7 @@ whole world → visual-moment → render path:
   spinning box (a spin-behavior facet plus a box-mesh visual facet) and a point
   light (a single visual facet). The box is cast from a `Mold` recipe to
   exercise that workflow; the light is assembled directly. `populate()` and
-  `captureVisualMoment()` are guarded by a single world mutex, which is the
+  `snapshot()` are guarded by a single world mutex, which is the
   synchronization boundary between live simulation and snapshot capture. The
   sample runs `run()` on its own thread; the world itself does not own a
   thread.
@@ -365,14 +451,15 @@ whole world → visual-moment → render path:
 - `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
   the gpu2 swapchain, depth buffer, box shaders, an FX2 shared-constants effect,
   a geometry cache, and persistent RDG2 artifacts/quests. `render()` publishes
-  a new moment relic, compiles a frame-local plan, and executes it. A dedicated
-  SSC quest rebases every absolute position against the primary camera in exact
-  integer space, publishes the FX2 camera/light snapshot, and emits its upload
-  payloads. The render quest consumes that SSC relic and emits raster work;
+  the tableau and its moment references as a new relic, compiles a frame-local
+  plan, and executes it. A dedicated SSC quest prepares the environment resources
+  and rebases each scene's positions against its first camera in exact integer
+  space, then publishes FX2 camera/light snapshots and emits their upload payloads.
+  The render quest consumes that SSC relic and invokes each moment's record method;
   RDG2 owns their gathered submission and presentation.
 - `e2-internal.h`: private types shared across the implementation, most notably
-  `VisualMomentImpl`, the concrete self-contained snapshot (cameras +
-  renderables + lights) that worlds produce and the visual domain consumes.
+  `VisualMomentImpl`, the concrete scene task (cameras + renderables + lights).
+  `VisualTableauImpl` holds the snapshot organization separately from its moments.
 - `vk-shaders/box.{vert,frag}`: a minimal lit shader that directly includes
   FX2's canonical `camera-ubo.h` and `scene-ubo.h` set-0 definitions, plus E2
   per-draw model/color push constants. The E2 build declares those FX2 headers
@@ -380,7 +467,7 @@ whole world → visual-moment → render path:
 
 The factory functions `Form::create`,
 `Simple::createWorld/createBox/createPointLight`, `OperatingDomain::create`,
-`Camera::create`, and `VisualDomain::create` are all implemented here. The
+`Camera::create`, `VisualTableau::create`, and `VisualDomain::create` are all implemented here. The
 matching sample lives in `src/sample/e2/simple-world.cpp`, and
 `test/simple-world-test.cpp` covers the CPU-side workflow headlessly: population,
 capture contents in world space, independent-cadence advancement, facet
@@ -395,6 +482,9 @@ GPU-required regression test that destroys the visual domain before the OS
 domain and asserts the Vulkan validation layer reports no leaked objects.
 `test/visual-graph-test.cpp` covers the E2-owned fixed frame-plan order and
 verifies RDG2 rejects a render stage whose backbuffer has no acquire producer.
+`test/visual-moment-test.cpp` covers opaque tableau composition, retained custom
+facet contributions, polymorphic recording, independent scene cameras, failed
+recording recovery, and environment removal.
 
 The original smoke test, `test/e2-mock.cpp`, remains: it creates a `Universe`, a
 mock `World`, a factory-created `Form`, and a mock `Facet` to verify the
@@ -404,6 +494,9 @@ callable through the public interfaces.
 ## Development Notes
 
 - Keep client code on the monolithic include: `#include <garnet/GNengine2.h>`.
+- Follow `agent/skills/garnet-public-interface/SKILL.md`: public headers contain
+  only cross-module contracts, with pure virtual behavioral interfaces preferred.
+  Internal storage, caches, scheduling, and concrete types stay in module files.
 - Use `GN::e2::Ref<T>` / `AutoRef<T>` for ownership.
 - Derive public engine objects from `Being` or another direct e2 base type and
   register the direct parent with `GN_REGISTER_RUNTIME_TYPE(...)`.
@@ -412,6 +505,6 @@ callable through the public interfaces.
   molds) and compose capabilities by attaching facets.
 - Preserve the simulation/rendering split: live world state belongs to `World`
   and `Form`; renderer-facing state is captured from `VisualFacet` into a
-  self-contained `VisualMoment`.
+  self-contained moments owned by an opaque `VisualTableau`.
 - When implementing thread-safe world operations, document the synchronization
   invariant at the point where the lock, queue, or snapshot boundary is enforced.

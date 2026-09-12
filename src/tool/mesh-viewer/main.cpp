@@ -128,20 +128,20 @@ int main(int argc, const char * argv[]) {
     }
     auto visual = VisualDomain::create({.universe = universe, .os = os});
     if (!visual) return EXIT_FAILURE;
-    VisualDomain::Environment environment {
+    VisualEnvironment::Desc environment {
         .skyboxPath      = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
         .irradiancePath  = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
         .prefilteredPath = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
         .brdfLutPath     = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
         .radianceScale   = 1.0f,
     };
-    visual->setEnvironment(environment);
+    auto environmentMoment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environment});
+    if (!environmentMoment) return EXIT_FAILURE;
 
     AutoRef<ui2::ImGuiBackend> ui;
     if (os) {
         ui = ui2::ImGuiBackend::create({.gpu = visual->gpu(), .window = *os->window()});
         if (!ui) return EXIT_FAILURE;
-        visual->setOverlay(ui);
     }
     // Camera fitting and orbit positions need sub-meter precision; world units are integers.
 
@@ -227,7 +227,10 @@ int main(int argc, const char * argv[]) {
             if (ImGui::Checkbox("Bounds", &showBounds)) boundsFacet->setVisible(showBounds);
             ImGui::SameLine();
             if (ImGui::Checkbox("Axes", &showAxes)) axesFacet->setVisible(showAxes);
-            if (ImGui::SliderFloat("Environment exposure", &environment.radianceScale, 0.0f, 4.0f, "%.2f")) visual->setEnvironment(environment);
+            if (ImGui::SliderFloat("Environment exposure", &environment.radianceScale, 0.0f, 4.0f, "%.2f")) {
+                environmentMoment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environment});
+                if (!environmentMoment) return EXIT_FAILURE;
+            }
 
             ImGui::SeparatorText("Hierarchy");
             if (ImGui::BeginChild("hierarchy", {0, 190}, ImGuiChildFlags_Borders)) {
@@ -312,9 +315,11 @@ int main(int argc, const char * argv[]) {
         const glm::vec3 eye      = navigationMode == NavigationMode::ARCBALL ? arcball.eyePosition() : fly.position;
         camera->desc.position    = worldPosition(world->scale, eye);
         camera->desc.orientation = navigationMode == NavigationMode::ARCBALL ? arcball.orientation : fly.orientation;
-        auto moment              = world->captureVisualMoment({.domain = visual, .cameras = {cameras, 1}});
-        if (!moment) return EXIT_FAILURE;
-        visual->render(moment);
+        auto tableau             = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
+        if (!tableau) return EXIT_FAILURE;
+        tableau->add(environmentMoment);
+        if (ui) tableau->add(ui);
+        visual->render(tableau);
     }
     if (!options.snapshot.empty()) {
         auto image = visual->readbackFrame();

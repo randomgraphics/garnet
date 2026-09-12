@@ -14,6 +14,7 @@ before starting a task it covers.
 - `garnet-build-test`: build, test, lint, and format through project wrappers.
 - `garnet-assignment-tracking`: create and maintain assignment files in `agent/`.
 - `garnet-agent-doc-archive`: archive finished agent docs into `agent/completed/`.
+- `garnet-public-interface`: public API boundaries, opaque contracts, and implementation-only declarations.
 - `garnet-cpp-style`: C++ coding style and local conventions.
 - `garnet-line-endings`: new files match the hosting OS (CRLF on Windows, LF on Linux).
 - `garnet-rdg-gpu2`: RDG and gpu2 module guidance.

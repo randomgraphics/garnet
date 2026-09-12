@@ -16,8 +16,12 @@ such as STL remain lit and useful.
 
 glTF metallic-roughness, specular-glossiness, conventional FBX materials, and
 unlit materials share the same GPU model asset path. `ModelAsset` creates
-device-local geometry and texture resources once, then emits draw descriptions
-without re-importing or re-uploading immutable content every frame.
+device-local geometry and texture resources once. Its public interface is opaque:
+callers obtain initialization work through `uploadPayload()` and ask `ModelShading`
+for draw descriptions. Buffer/texture arrays, material UBOs, shader implementation,
+and importer format/attribute bookkeeping stay private to FX2. The normalized CPU
+model schema remains public because E2 and the viewer consume it across modules.
+Rendering reuses uploaded content without re-importing it each frame.
 
 ## Environment lighting
 

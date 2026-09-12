@@ -15,25 +15,29 @@ concrete implementation assignments and their verification steps.
 The first milestone was the E2 `VisualMoment` / `VisualDomain` render path. Its
 implementation supplies RDG2's current requirements.
 
-E2 captures a self-contained, immutable `VisualMoment` while the world is at a
-consistent synchronization point. `VisualDomain` must render that snapshot
-without reaching back into mutable world or form state. It adapts the snapshot
-to FX2/gpu2 work and uses RDG2 for the outer frame lifecycle:
+E2 captures an opaque `VisualTableau` through `World::snapshot()` while the world
+is at a consistent synchronization point. The tableau owns the collection of
+`VisualMoment` items, each of which records its own rendering through a virtual
+operation. Its storage, hierarchy, relationships, and scheduling policy are hidden
+inside E2. Applications can add moments, but cannot traverse the internal structure.
+The domain accepts the opaque tableau and uses RDG2 for the outer frame lifecycle.
+Neither resource preparation nor recording reaches back into mutable world/forms.
 
 ```text
 World / VisualFacet tree
-  -> immutable VisualMoment
-  -> VisualDomain
-       -> import moment as an RDG2 relic
+  -> World::snapshot(): opaque VisualTableau containing VisualMoments
+  -> VisualDomain implementation
+       -> import tableau and ordered moment references as an RDG2 relic
        -> frame-begin quest: acquire backbuffer and await readiness
-       -> visual-render quest: read moment, render, publish backbuffer
+       -> prepare-ssc quest: prepare shared environment and per-moment resources
+       -> visual-render quest: invoke moment record methods, publish backbuffer
        -> frame-end quest: request presentation
   -> one gathered gpu2 submission
 ```
 
 This integration requires and verifies that RDG2 can:
 
-- represent the immutable visual moment as imported graph data;
+- represent the captured tableau as imported graph data;
 - express acquire -> render -> present through declared artifact uses;
 - reject a render stage whose required producer is missing;
 - expose the acquired swapchain frame to rendering without E2 performing
@@ -41,8 +45,8 @@ This integration requires and verifies that RDG2 can:
 - gather FX2 and raster payloads in deterministic order;
 - wait on the swapchain acquire payload, submit gathered work once, and present
   after the final payload;
-- keep E2 responsible for interpreting the visual moment and choosing the frame
-  workload.
+- keep tableau organization and moment rendering in E2; RDG2 never learns the
+  internal topology or content types.
 
 The completed E2 refactor and its verification are recorded in
 `agent/completed/E2_VISUAL_BACKEND.txt`.
@@ -50,7 +54,7 @@ The completed E2 refactor and its verification are recorded in
 ## Module Boundary
 
 ```text
-E2                         frame composition and VisualMoment interpretation
+E2                         opaque tableau composition and moment rendering
 FX2                        graph-agnostic effects over gpu2
 RDG2                       declared data/work ordering and execution
 gpu2                       GPU resources, payloads, submit, and present
