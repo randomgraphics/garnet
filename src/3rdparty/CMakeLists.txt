@@ -38,13 +38,22 @@ endif()
 
 # Dear ImGui core only. Garnet owns the gpu2/window backend, so upstream demo
 # and renderer/platform backends must not become accidental dependencies.
-add_library(imgui STATIC
+if(GN_BUILD_IS_STATIC)
+    set(_imgui_library_type STATIC)
+else()
+    # GNcore and its clients must share ImGui's current context across the DLL boundary.
+    set(_imgui_library_type SHARED)
+endif()
+add_library(imgui ${_imgui_library_type}
     imgui/imgui.cpp
     imgui/imgui_draw.cpp
     imgui/imgui_tables.cpp
     imgui/imgui_widgets.cpp
 )
 target_include_directories(imgui PUBLIC imgui)
+if(WIN32 AND NOT GN_BUILD_IS_STATIC)
+    target_compile_definitions(imgui PRIVATE "IMGUI_API=__declspec(dllexport)" INTERFACE "IMGUI_API=__declspec(dllimport)")
+endif()
 set_target_properties(imgui PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Build other 3rd party libs

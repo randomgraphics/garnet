@@ -5,9 +5,9 @@
 - Branch: `feature/mesh-viewer/main`; isolated worktree: `/home/chenli/code/garnet-mesh-viewer`.
 - Overall status: reopened; model viewer work is not yet complete.
 - Completed: implemented the full environment-lit multi-format viewer, dual navigation, independent debug toggles, reusable Dear ImGui backend, and inspection/control UI.
-- Current step: corrected texture orientation, tangent handedness, reflection mips, environment DDS layout, sRGB input/output, and headless camera framing; verified and awaiting manual user sign-off.
+- Current step: Phase 8.6 verified - windowed swapchain acquisition and shared ImGui context fixes; awaiting manual user sign-off.
 - Remaining: documented Clang Vulkan runtime follow-up and manual viewer sign-off. Asset Foundry environment repair and speeder glTF export are committed on wip/ibl-dds-layout and referenced by this change.
-- Latest verification: Windows Debug build and CIT lint passed; 874 assertions in 24 FX2/E2/staging cases passed; DDS writer regression passed for half and full float cubemaps. Corrected speeder, humanoid, glTF helmet, ASE boxes, and STL snapshots ran with Vulkan validation and break-on-error enabled without validation errors. Speeder reference and diagnostic snapshots were visually inspected; final output is build/snapshot-speeder-corrected.png.
+- Latest verification: Windows Debug build and CIT lint passed. Boxes FBX, speeder GLB, humanoid FBX, and R.F.R01 FBX each completed 60 interactive frames with Khronos Vulkan validation and Debug break-on-error enabled, exit 0, and no error messages. UI backend regression passed 12 assertions in 1 case. Headless speeder snapshot passed and was visually inspected: build/snapshot-speeder-swapchain-regression.png.
 - Prior Linux verification: GCC and Clang 21 debug builds passed; GCC internal suite passed 4,507 assertions in 139 test cases with two display-dependent skips; format and CIT lint passed. Two-frame headless rendering passed for project FBX, glTF, GLB, STL, both Asset Foundry humanoid FBX variants, and the 110 MB Digital Forge GLB. The stress GLB completed in 5.30 seconds with 1,114,936 KiB peak RSS. The Clang test binary reproducibly loses the Vulkan device in an existing E2 model render test under NVIDIA and faults in llvmpipe, although the same GCC test and all GCC media renders pass; this compiler-specific runtime issue is recorded for follow-up. Real-window validation is unavailable because neither DISPLAY nor WAYLAND_DISPLAY is exposed. Vulkan validation layers are unavailable. Assimp rejects pre-2011 `media/model/tiny/tiny.fbx` with a clear diagnostic.
 
 ---
@@ -61,7 +61,7 @@ All work lives on `feature/mesh-viewer/main`, based on `master`, in the dedicate
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 8.5 — texture, lighting, color-space, and natural headless camera corrections verified.
+Last completed: Phase 8.6 - interactive Vulkan acquisition and ImGui DLL context fixes verified on Windows Debug.
   Phase 0.1: created and published feature/mesh-viewer/main; renamed meshViewer to mesh-viewer
   Phase 0.2: recorded architecture, validation matrix, and window-input branch ownership
   Phase 1.1: added public hierarchy, primitive, material, texture, bounds, and import declarations; debug build passed
@@ -88,7 +88,7 @@ Phase 5.1: merged verified window-input dependency commit 8441600b without dupli
 Infrastructure: integrated latest remote feature/master CI, assignment-workflow, and rapid-vulkan updates; Phase 1.3 remains active
  Phase 7.1: GCC/Clang debug builds and formatting/lint passed; GCC internal suite passed 4,507 assertions; seven representative two-frame media renders and the Digital Forge stress GLB passed; unsupported and legacy-FBX failures were clean. Clang Vulkan runtime failure and display/validation-layer environment limitations are documented above.
  Phase 7.2: documented FX2 model and IBL behavior, E2 snapshot/overlay ownership, UI2 backend lifetime, viewer operation, controls, validation, and limitations.
-In progress: none — corrections verified; assignment remains active awaiting manual user sign-off.
+In progress: none; fixes verified and submitted for the requested commit/push. Assignment stays active awaiting manual user sign-off.
   Phase 8.1: replaced removed FBX SDK object-query, triangulation, and normal-generation APIs in both legacy loaders; Windows Debug build with SDK 2020.3.10 passed; 14 FX2 model tests / 295 assertions passed; both modified loaders pass clang-format. Repository lint reports existing model.frag issues; viewer smoke test reports an invalid Vulkan imageOffset.z.
   Phase 8.2: added ASE classification, viewer help and documentation, repository ASE import and GPU draw coverage; Windows Debug build passed; FX2 model suite passed 791 assertions in 15 cases; boxes.ase --print passed (5 nodes, 8 primitives, 8 materials, 9 textures); modified sources pass formatting.
   Phase 8.3: added --snapshot filename with default 1280x720 headless rendering, PNG/JPEG/BMP output, successful-frame readback, and failure exits; fixed uninitialized staging offsets. Windows Debug build and 53 assertions in 8 tests passed; five model formats visually inspected with Vulkan validation and break-on-error, no Vulkan errors. Logs and images are in build/snapshot-*.
@@ -287,6 +287,10 @@ Phase 8: Windows follow-up
   Task 8.5: Correct model texture rendering and headless camera defaults
     Verify: Compare speeder reference and headless snapshots; importer regression tests; Vulkan validation with break-on-error; Debug build and formatting.
     Commit: "feat(viewer): add headless snapshots and correct model rendering"
+
+  Task 8.6: Fix interactive swapchain acquisition and shared ImGui context ownership
+    Verify: Passed Windows Debug build and CIT lint; boxes, speeder, humanoid, and R.F.R01 each rendered 60 windowed frames with Vulkan validation and break-on-error, exit 0, no errors. Headless speeder snapshot passed; UI backend regression passed 12 assertions in 1 case.
+    Commit: "fix(viewer): repair interactive Vulkan and ImGui initialization"; rapid-vulkan fix a281ea2 on wip/swapchain-acquire-layout.
 
 --- SUMMARY OF FILES TO TOUCH ---
 
