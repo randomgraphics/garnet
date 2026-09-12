@@ -6,6 +6,7 @@
 #include <glm/geometric.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
@@ -25,6 +26,7 @@ struct Options {
     bool print        = false;
     bool finiteFrames = false;
     int  frames       = 3;
+    float environmentLuminance = 250.f;
 };
 
 bool parseOptions(int argc, const char * const * argv, Options & options) {
@@ -44,6 +46,15 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         } else if (argument == "--frames" && i + 1 < argc) {
             options.frames       = std::max(1, std::atoi(argv[++i]));
             options.finiteFrames = true;
+        } else if ((argument == "--env-luminance" || argument == "--environment-luminance") && i + 1 < argc) {
+            char *       end  = nullptr;
+            const char * text = argv[++i];
+            options.environmentLuminance = std::strtof(text, &end);
+            if (end == text || !end || *end != '\0' || std::isnan(options.environmentLuminance) || std::isinf(options.environmentLuminance)) {
+                GN_ERROR(sLogger, "Unable to parse '--env-luminance' value '{}'", text);
+                return false;
+            }
+            options.environmentLuminance = std::max(0.0f, options.environmentLuminance);
         } else if (!argument.empty() && argument[0] == '-') {
             GN_ERROR(sLogger, "Unknown option '{}'", argument);
             return false;
@@ -55,7 +66,7 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         }
     }
     if (!options.path.empty()) return true;
-    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] <model.fbx|gltf|glb|stl|ase>");
+    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] <model.fbx|gltf|glb|stl|ase>");
     return false;
 }
 
@@ -133,7 +144,7 @@ int main(int argc, const char * argv[]) {
         .irradiancePath  = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
         .prefilteredPath = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
         .brdfLutPath     = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
-        .radianceScale   = 1.0f,
+        .environmentLuminanceScale = options.environmentLuminance,
     };
     auto environmentMoment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environment});
     if (!environmentMoment) return EXIT_FAILURE;
@@ -227,7 +238,7 @@ int main(int argc, const char * argv[]) {
             if (ImGui::Checkbox("Bounds", &showBounds)) boundsFacet->setVisible(showBounds);
             ImGui::SameLine();
             if (ImGui::Checkbox("Axes", &showAxes)) axesFacet->setVisible(showAxes);
-            if (ImGui::SliderFloat("Environment exposure", &environment.radianceScale, 0.0f, 4.0f, "%.2f")) {
+            if (ImGui::SliderFloat("Environment luminance (nits)", &environment.environmentLuminanceScale, 0.0f, 8000.0f, "%.1f")) {
                 environmentMoment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environment});
                 if (!environmentMoment) return EXIT_FAILURE;
             }

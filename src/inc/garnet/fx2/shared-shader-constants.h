@@ -60,14 +60,36 @@ struct SharedShaderConstants : public RCRT64 {
         Distance    farPlane          = 10000.f;
         uint32_t    viewWidthInPixel  = 1;
         uint32_t    viewHeightInPixel = 1;
+        /// Nonnegative linear multiplier applied to lit model RGB before Reinhard tone mapping.
+        /// For lighting calibrated in nits, 0.002 maps a neutral 500-nit value to 0.5; use 1 / L
+        /// to map reference luminance L to 0.5. This is camera exposure, separate from environment
+        /// calibration. Use 1 for no exposure scaling or 0 for black. Unlit visualization bypasses it.
+        float exposure = 0.002f;
     };
 
     struct EnvLightingParameters {
-        StrA  skyboxPath;
-        StrA  irradiancePath;
-        StrA  prefilteredPath;
-        StrA  brdfLutPath;
-        float environmentRadianceScale = 1.f;
+        StrA skyboxPath;
+        StrA irradiancePath;
+        StrA prefilteredPath;
+        StrA brdfLutPath;
+        /// Converts linear environment-map RGB to the scene's photometric scale, separately from camera exposure.
+        /// Set to target luminance / source luminance for a known reference: a neutral source texel of 1
+        /// becomes this many cd/m^2 (nits). Use 1 for maps already calibrated in nits; without a known
+        /// reference, this is only a brightness adjustment and does not establish physical units.
+        /// Use a nonnegative value (0 disables sampled environment lighting). Skybox and derived diffuse/specular
+        /// maps must share the source scale; diffuse maps must store illuminance / pi, not raw lux.
+        float environmentLuminanceScale = 1.f;
+        /// Debug-only minimum per RGB channel for lit model diffuse/specular environment samples, in nits
+        /// on the calibrated scene scale (the diffuse map stores illuminance / pi). Default 0 disables it.
+        /// If a model is unexpectedly black, temporarily set this to 5.f and increase as needed to inspect
+        /// visibility while diagnosing missing/dark environment maps or an incorrect luminance scale.
+        /// Applied with max(sample, floor) AFTER environmentLuminanceScale, so it also works when that
+        /// scale is 0; brighter channels remain unchanged. It is not added to final color or the skybox.
+        /// Material response, AO, camera exposure and tone mapping still apply: zero exposure, black
+        /// materials, invalid normals or other rendering faults can still hide the model. Uniform light
+        /// provides little shape shading. This is a diagnostic aid, not physical lighting or a guaranteed
+        /// visibility mode; restore 0 after debugging. Unlit visualization bypasses it.
+        float environmentAmbientFloor = 0.f;
     };
 
     struct Set0Parameters {

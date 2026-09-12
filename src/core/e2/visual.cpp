@@ -270,8 +270,8 @@ struct VisualDomainImpl : VisualDomain {
         }
         // An absent environment moment contributes no indirect lighting. FX2 retains
         // valid fallback bindings, but their radiance must not light the scene.
-        mSsc->set0.envLighting.environmentRadianceScale = 0.f;
-        mSceneResources->mModelShading                  = fx2::ModelShading::create(mGpu);
+        mSsc->set0.envLighting.environmentLuminanceScale = 0.f;
+        mSceneResources->mModelShading                   = fx2::ModelShading::create(mGpu);
         if (!mSceneResources->mModelShading) {
             GN_ERROR(sLogger, "Failed to create FX2 model shading.");
             return false;
@@ -370,8 +370,8 @@ private:
                 environmentIndex = i;
             }
             auto prepareSceneSnapshot = [&](fx2::SharedShaderConstants & constants, const VisualMomentImpl * scene) {
-                constants.set0.envLighting.environmentRadianceScale = environment ? environment->description.radianceScale : 0.f;
-                auto snapshot                                       = prepareSharedShaderConstants(constants, scene);
+                constants.set0.envLighting.environmentLuminanceScale = environment ? environment->description.environmentLuminanceScale : 0.f;
+                auto snapshot                                        = prepareSharedShaderConstants(constants, scene);
                 if (snapshot.set0Resources.empty()) return snapshot;
                 if (environment) {
                     // FX2 set 0 reserves bindings 0/1 for scene/camera UBOs and 2..5
@@ -625,11 +625,11 @@ Ref<VisualEnvironment> VisualEnvironment::create(const CreateParameters & cp) {
     moment->constants = fx2::SharedShaderConstants::create({.gpu = cp.gpu});
     if (!moment->constants) return {};
     moment->constants->set0.envLighting = {
-        .skyboxPath               = cp.description.skyboxPath,
-        .irradiancePath           = cp.description.irradiancePath,
-        .prefilteredPath          = cp.description.prefilteredPath,
-        .brdfLutPath              = cp.description.brdfLutPath,
-        .environmentRadianceScale = cp.description.radianceScale,
+        .skyboxPath                = cp.description.skyboxPath,
+        .irradiancePath            = cp.description.irradiancePath,
+        .prefilteredPath           = cp.description.prefilteredPath,
+        .brdfLutPath               = cp.description.brdfLutPath,
+        .environmentLuminanceScale = cp.description.environmentLuminanceScale,
     };
     return moment;
 }

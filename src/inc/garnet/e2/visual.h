@@ -139,7 +139,9 @@ struct VisualEnvironment : VisualMoment {
         StrA  irradiancePath;
         StrA  prefilteredPath;
         StrA  brdfLutPath;
-        float radianceScale = 1.0f;
+        /// Scene-constant scale that maps environment map source values to calibrated scene luminance.
+        /// Multiply sampled environment RGB by this to express values in scene-local nits.
+        float environmentLuminanceScale = 1.0f;
     };
 
     struct CreateParameters {
