@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNengine2.h>
 #include "e2/e2-internal.h"
+#include "renderdoc-capture.h"
 
 using namespace GN;
 using namespace GN::e2;
@@ -122,8 +123,9 @@ struct ShadedMoment final : VisualMoment {
 } // namespace
 
 TEST_CASE("e2 extension moments render using public shared shader constants", "[e2][visual-moment][gpu]") {
-    Universe universe;
-    auto     visual = VisualDomain::create({.universe = universe, .os = {}});
+    GN::test::RenderDocCapture renderDocCapture;
+    Universe                   universe;
+    auto                       visual = VisualDomain::create({.universe = universe, .os = {}});
     if (!visual) SKIP("No headless Vulkan visual domain is available");
     auto custom = referenceTo(new ShadedMoment(universe, visual->gpu(), referenceTo(new TestModelScene)));
     REQUIRE(custom->shading);
