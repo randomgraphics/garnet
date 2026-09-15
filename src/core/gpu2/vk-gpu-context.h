@@ -90,6 +90,8 @@ public:
     void submit(const SubmitParameters &) override;
     void pump() override { pumpInternal(false); }
     void waitForIdle() override { pumpInternal(true); }
+    void beginDebugLabel(const char * labelName) override;
+    void endDebugLabel() override;
 
 private:
     void pumpInternal(bool waitForIdle);

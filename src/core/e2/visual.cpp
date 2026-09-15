@@ -118,12 +118,17 @@ struct VisualEnvironmentImpl final : VisualEnvironment {
     AutoRef<GpuContext>                 gpu;
     AutoRef<fx2::SharedShaderConstants> constants;
 
-    const Desc description;
+    const Desc        description;
+    std::atomic<bool> visible {true};
 
     explicit VisualEnvironmentImpl(const CreateParameters & cp)
         : VisualEnvironment(TYPE_INFO(), cp.universe.generateUniqueIdentifier(), "visual-environment"), gpu(cp.gpu), description(cp.description) {}
 
+    void setVisible(bool value) override { visible.store(value, std::memory_order_relaxed); }
+
     bool record(RenderContext & context) const override {
+        // Visibility only controls the background draw; scene lighting still uses this environment's resources.
+        if (!visible.load(std::memory_order_relaxed)) return true;
         context.raster().draw(constants->getSkyboxDrawParams(context.ssc().set0Resources));
         return true;
     }
@@ -251,8 +256,6 @@ struct VisualDomainImpl : VisualDomain {
         depthView.resource = mDepth;
         mRenderTarget.colorTargets.append(RasterTarget::ColorTarget {});
         mRenderTarget.setDepthStencilTarget(depthView);
-        mRenderTarget.setClearColor(0.05f, 0.06f, 0.09f, 1.0f);
-        mRenderTarget.setClearDepth(1.0f);
         mRenderTarget.states.setCullMode(RasterState::CULL_BACK);
         mRenderTarget.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
 
@@ -280,10 +283,13 @@ struct VisualDomainImpl : VisualDomain {
         return initFrameGraph();
     }
 
-    void render(Ref<VisualTableau> tableauBase) override {
+    void renderFrame(const RenderFrameParameters & parameters) override {
         mFrameSucceeded = false;
-        auto * tableau  = RuntimeType::cast<VisualTableauImpl>(tableauBase.get());
+        auto * tableau  = RuntimeType::cast<VisualTableauImpl>(parameters.tableau.get());
         if (!tableau) return;
+
+        mRenderTarget.clearColor = parameters.clearColor;
+        mRenderTarget.setClearDepth(parameters.clearDepth);
 
         // Pump GPU to retire/recycle completed GPU works from previous frame.
         mGpu->pump();
@@ -298,8 +304,7 @@ struct VisualDomainImpl : VisualDomain {
                     }
             }
         }
-        if (mTableauArtifact->publish(AutoRef<rdg2::Entity>(new VisualTableauEntity(std::move(tableauBase), std::move(tasks)))) ==
-            rdg2::Artifact::Version::OOO()) {
+        if (mTableauArtifact->publish(AutoRef<rdg2::Entity>(new VisualTableauEntity(parameters.tableau, std::move(tasks)))) == rdg2::Artifact::Version::OOO()) {
             GN_WARN(sLogger, "Failed to seal visual moment into a render-graph artifact; skipping frame.");
             return;
         }

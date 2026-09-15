@@ -122,6 +122,6 @@ TEST_CASE("ui2 ImGui backend translates window input and records gpu2 draws", "[
     auto                moment    = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(moment);
     moment->add(backend);
-    visual->render(moment);
+    visual->renderFrame({.tableau = moment});
     REQUIRE(!visual->readbackFrame().empty());
 }

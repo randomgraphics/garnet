@@ -332,7 +332,7 @@ int main(int argc, const char * argv[]) {
         if (!tableau) return EXIT_FAILURE;
         tableau->add(environmentMoment);
         if (ui) tableau->add(ui);
-        visual->render(tableau);
+        visual->renderFrame({.tableau = tableau, .clearColor = {{0.05f, 0.06f, 0.09f, 1.f}}});
     }
     if (!options.snapshot.empty()) {
         auto image = visual->readbackFrame();

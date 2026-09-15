@@ -13,7 +13,7 @@ registered texture identifiers before recording indexed draws.
 
 The backend implements E2's `VisualOverlay`, a specialized `VisualMoment`. After
 `backend->render()` finalizes ImGui data, add it with `tableau->add(backend)` to
-the opaque tableau returned by `World::snapshot()`. `VisualDomain::render(tableau)`
+the opaque tableau returned by `World::snapshot()`. `VisualDomain::renderFrame({.tableau = tableau})`
 then invokes each moment's virtual `record()` method. The tableau exposes no
 hierarchy or traversal API, and the domain has no persistent overlay setter.
 

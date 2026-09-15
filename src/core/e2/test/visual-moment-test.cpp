@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNengine2.h>
 #include "e2/e2-internal.h"
+#include "fx2/vk-shaders/camera-ubo.h"
 #include "renderdoc-capture.h"
 
 using namespace GN;
@@ -30,10 +31,11 @@ struct RecordingMoment final : VisualMoment {
 struct RecordingOverlay final : VisualOverlay {
     GN_REGISTER_RUNTIME_TYPE(VisualOverlay);
 
-    DynaArray<int> & order;
-    int              label;
-    int32_t          z;
-    bool             fail = false;
+    DynaArray<int> &              order;
+    int                           label;
+    int32_t                       z;
+    bool                          fail = false;
+    mutable AutoRef<gpu2::Buffer> cameraConstants;
 
     RecordingOverlay(Universe & universe, DynaArray<int> & order_, int label_, int32_t z_ = 0)
         : VisualOverlay(TYPE_INFO(), universe.generateUniqueIdentifier(), "test-overlay"), order(order_), label(label_), z(z_) {}
@@ -41,7 +43,8 @@ struct RecordingOverlay final : VisualOverlay {
     int32_t zOrder() const override { return z; }
     void    setZOrder(int32_t value) override { z = value; }
 
-    bool record(RenderContext &) const override {
+    bool record(RenderContext & context) const override {
+        cameraConstants = context.ssc().set0Resources[1][0].buffer();
         order.append(label);
         return !fail;
     }
@@ -52,11 +55,15 @@ struct RecordingEnvironment final : VisualEnvironment {
 
     DynaArray<int> & order;
     int              label;
+    bool             visible = true;
 
     RecordingEnvironment(Universe & universe, DynaArray<int> & order_, int label_)
         : VisualEnvironment(TYPE_INFO(), universe.generateUniqueIdentifier(), "test-environment"), order(order_), label(label_) {}
 
+    void setVisible(bool value) override { visible = value; }
+
     bool record(RenderContext &) const override {
+        if (!visible) return true;
         order.append(label);
         return true;
     }
@@ -122,18 +129,72 @@ struct ShadedMoment final : VisualMoment {
 
 } // namespace
 
+TEST_CASE("e2 renderFrame applies per-frame clear color and depth", "[e2][visual-moment][gpu]") {
+    Universe universe;
+    auto     visual = VisualDomain::create({.universe = universe, .os = {}});
+    if (!visual) SKIP("No headless Vulkan visual domain is available");
+    auto empty = VisualTableau::create(universe);
+    for (const auto & color : {gpu2::RasterTarget::ClearColorValue {{1.f, 0.f, 0.f, 1.f}}, gpu2::RasterTarget::ClearColorValue {{0.f, 1.f, 0.f, 0.f}}}) {
+        visual->renderFrame({.tableau = empty, .clearColor = color});
+        auto image = visual->readbackFrame();
+        REQUIRE_FALSE(image.empty());
+        const auto * pixels = static_cast<const uint8_t *>(image.data());
+        for (size_t pixel : {size_t(0), size_t(image.width() * image.height() / 2), size_t(image.width() * image.height() - 1)}) {
+            for (size_t channel = 0; channel < 4; ++channel) CHECK(pixels[pixel * 4 + channel] == uint8_t(color.f4[channel] * 255.f));
+        }
+    }
+
+    // Omitting clear values must use the API defaults, not the prior frame's values.
+    visual->renderFrame({.tableau = empty});
+    auto defaultFrame = visual->readbackFrame();
+    REQUIRE_FALSE(defaultFrame.empty());
+    const auto * defaultPixel      = static_cast<const uint8_t *>(defaultFrame.data());
+    const int    expectedDefault[] = {63, 69, 85}; // sRGB encoding of the default linear clear color.
+    for (size_t channel = 0; channel < 3; ++channel) CHECK(std::abs(int(defaultPixel[channel]) - expectedDefault[channel]) <= 1);
+    CHECK(defaultPixel[3] == 255);
+
+    auto world = Simple::createWorld(universe);
+    auto form  = createModelForm(universe, "clear-depth-triangle", referenceTo(new TestModelScene));
+    REQUIRE(form);
+    Ref<Form> forms[] = {form};
+    world->populate({forms, 1});
+    auto camera = Camera::create({.domain = visual});
+    REQUIRE(camera);
+    camera->desc.position = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), spatial::toWorld(LocalCoordinate(4))};
+    Ref<Camera> cameras[] = {camera};
+    auto        tableau   = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
+    // The unlit triangle is black: depth 0 rejects it; depth 1 lets it cover the red clear.
+    for (float depth : {0.f, 1.f, 0.f}) {
+        visual->renderFrame({.tableau = tableau, .clearColor = {{1.f, 0.f, 0.f, 1.f}}, .clearDepth = depth});
+        auto image = visual->readbackFrame();
+        REQUIRE_FALSE(image.empty());
+        const auto * center = static_cast<const uint8_t *>(image.data()) + (image.width() * (image.height() / 2) + image.width() / 2) * 4;
+        CHECK(center[0] == (depth == 0.f ? 255 : 0));
+        CHECK(center[1] == 0);
+        CHECK(center[2] == 0);
+    }
+    visual->renderFrame({.tableau = tableau, .clearColor = {{1.f, 0.f, 0.f, 1.f}}});
+    auto defaultDepthFrame = visual->readbackFrame();
+    REQUIRE_FALSE(defaultDepthFrame.empty());
+    const auto * center = static_cast<const uint8_t *>(defaultDepthFrame.data()) +
+                          (defaultDepthFrame.width() * (defaultDepthFrame.height() / 2) + defaultDepthFrame.width() / 2) * 4;
+    CHECK(center[0] == 0);
+}
+
 TEST_CASE("e2 extension moments render using public shared shader constants", "[e2][visual-moment][gpu]") {
-    GN::test::RenderDocCapture renderDocCapture;
     Universe                   universe;
     auto                       visual = VisualDomain::create({.universe = universe, .os = {}});
+    GN::test::RenderDocCapture renderDocCapture;
     if (!visual) SKIP("No headless Vulkan visual domain is available");
-    auto custom = referenceTo(new ShadedMoment(universe, visual->gpu(), referenceTo(new TestModelScene)));
+    auto debugLabel = gpu2::ScopedDebugLabel(visual->gpu(), "e2 extension moments render using public shared shader constants");
+    auto custom     = referenceTo(new ShadedMoment(universe, visual->gpu(), referenceTo(new TestModelScene)));
     REQUIRE(custom->shading);
     REQUIRE(custom->model);
     VisualEnvironment::Desc environmentDescription;
     environmentDescription.environmentLuminanceScale = 1000.f;
     auto environment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environmentDescription});
     REQUIRE(environment);
+    environment->setVisible(false); // don't render skybox.
     auto world  = Simple::createWorld(universe);
     auto camera = Camera::create({.domain = visual});
     REQUIRE(camera);
@@ -144,7 +205,7 @@ TEST_CASE("e2 extension moments render using public shared shader constants", "[
     auto renderCenter = [&](Ref<VisualTableau> tableau, bool withEnvironment) {
         tableau->add(custom);
         if (withEnvironment) tableau->add(environment);
-        visual->render(tableau);
+        visual->renderFrame({.tableau = tableau, .clearColor = {{0.f, 0.f, 0.f, 1.f}}});
         auto image = visual->readbackFrame();
         REQUIRE_FALSE(image.empty());
         const size_t center = (image.width() * (image.height() / 2) + image.width() / 2) * 4;
@@ -154,7 +215,7 @@ TEST_CASE("e2 extension moments render using public shared shader constants", "[
     CHECK(renderCenter(world->snapshot({.domain = visual, .cameras = {cameras, 1}}), true) > 20);
     // Extension moments must inherit the observing scene's camera, including clipping.
     camera->desc.farPlane = LocalCoordinate(2);
-    CHECK(renderCenter(world->snapshot({.domain = visual, .cameras = {cameras, 1}}), true) > 20);
+    CHECK(renderCenter(world->snapshot({.domain = visual, .cameras = {cameras, 1}}), true) < 20);
     // No scene payload: the public context still supplies valid default camera/IBL bindings.
     CHECK(renderCenter(VisualTableau::create(universe), true) > 20);
     CHECK(renderCenter(VisualTableau::create(universe), false) == 0);
@@ -177,7 +238,7 @@ TEST_CASE("e2 tableaux retain custom snapshot contributions and render each mome
     auto tableau = world->snapshot({});
     REQUIRE(tableau);
     tableau->add(second);
-    visual->render(tableau);
+    visual->renderFrame({.tableau = tableau});
     REQUIRE_FALSE(visual->readbackFrame().empty());
     REQUIRE(order.size() == 2);
     CHECK(order[0] == 1);
@@ -185,13 +246,13 @@ TEST_CASE("e2 tableaux retain custom snapshot contributions and render each mome
 
     first->fail = true;
     order.clear();
-    visual->render(tableau);
+    visual->renderFrame({.tableau = tableau});
     CHECK(visual->readbackFrame().empty());
     REQUIRE(order.size() == 1);
     CHECK(order[0] == 1);
 
     // A new opaque tableau carries no moment state from the prior snapshot.
-    visual->render(VisualTableau::create(universe));
+    visual->renderFrame({.tableau = VisualTableau::create(universe)});
     CHECK_FALSE(visual->readbackFrame().empty());
     CHECK(order.size() == 1);
 }
@@ -212,7 +273,7 @@ TEST_CASE("e2 tableaux order regular moments before environments and overlays by
     tableau->add(referenceTo(new RecordingMoment(universe, order, 2)));
     tableau->add(referenceTo(new RecordingEnvironment(universe, order, 31)));
     tableau->add(referenceTo(new RecordingOverlay(universe, order, 42, 0)));
-    visual->render(tableau);
+    visual->renderFrame({.tableau = tableau});
     REQUIRE_FALSE(visual->readbackFrame().empty());
     REQUIRE(order.size() == 8);
     CHECK(order[0] == 1);
@@ -229,7 +290,7 @@ TEST_CASE("e2 tableaux order regular moments before environments and overlays by
     // Z changes between frames must invalidate the prior overlay order.
     nearOverlay->setZOrder(100);
     order.clear();
-    visual->render(tableau);
+    visual->renderFrame({.tableau = tableau});
     REQUIRE_FALSE(visual->readbackFrame().empty());
     REQUIRE(order.size() == 8);
     CHECK(order[0] == 1);
@@ -251,14 +312,14 @@ TEST_CASE("e2 environment moments draw a background without persisting in the do
     REQUIRE(environment);
     REQUIRE(RuntimeType::cast<VisualMoment>(environment.get()));
     auto empty = VisualTableau::create(universe);
-    visual->render(empty);
+    visual->renderFrame({.tableau = empty});
     auto clear = visual->readbackFrame();
     REQUIRE_FALSE(clear.empty());
     const auto * clearColor = static_cast<const uint8_t *>(clear.data());
 
     auto skyTableau = VisualTableau::create(universe);
     skyTableau->add(environment);
-    visual->render(skyTableau);
+    visual->renderFrame({.tableau = skyTableau});
     auto sky = visual->readbackFrame();
     REQUIRE_FALSE(sky.empty());
     const auto * skyColor = static_cast<const uint8_t *>(sky.data());
@@ -266,7 +327,21 @@ TEST_CASE("e2 environment moments draw a background without persisting in the do
     CHECK(skyColor[1] > clearColor[1]);
     CHECK(skyColor[2] > clearColor[2]);
 
-    visual->render(empty);
+    environment->setVisible(false);
+    visual->renderFrame({.tableau = skyTableau});
+    auto hidden = visual->readbackFrame();
+    REQUIRE_FALSE(hidden.empty());
+    const auto * hiddenColor = static_cast<const uint8_t *>(hidden.data());
+    for (size_t i = 0; i < 4; ++i) CHECK(hiddenColor[i] == clearColor[i]);
+
+    environment->setVisible(true);
+    visual->renderFrame({.tableau = skyTableau});
+    auto shown = visual->readbackFrame();
+    REQUIRE_FALSE(shown.empty());
+    const auto * shownColor = static_cast<const uint8_t *>(shown.data());
+    for (size_t i = 0; i < 4; ++i) CHECK(shownColor[i] == skyColor[i]);
+
+    visual->renderFrame({.tableau = empty});
     auto restored = visual->readbackFrame();
     REQUIRE_FALSE(restored.empty());
     const auto * restoredColor = static_cast<const uint8_t *>(restored.data());
@@ -278,7 +353,7 @@ TEST_CASE("e2 environment moments draw a background without persisting in the do
     multiple->add(environment);
     multiple->add(another);
     multiple->add(environment);
-    visual->render(multiple);
+    visual->renderFrame({.tableau = multiple});
     auto skies = visual->readbackFrame();
     REQUIRE_FALSE(skies.empty());
     const auto * skiesColor = static_cast<const uint8_t *>(skies.data());
@@ -289,9 +364,11 @@ TEST_CASE("e2 scene moments share environment textures but retain independent ca
     Universe universe;
     auto     visual = VisualDomain::create({.universe = universe, .os = {}});
     if (!visual) SKIP("No headless Vulkan visual domain is available");
-    auto world = Simple::createWorld(universe);
-    auto model = referenceTo(new TestModelScene);
-    auto form  = createModelForm(universe, "triangle", model);
+    GN::test::RenderDocCapture renderDocCapture;
+    auto                       debugLabel = gpu2::ScopedDebugLabel(visual->gpu(), "e2 scene moments share environment textures but retain independent cameras");
+    auto                       world      = Simple::createWorld(universe);
+    auto                       model      = referenceTo(new TestModelScene);
+    auto                       form       = createModelForm(universe, "triangle", model);
     REQUIRE(form);
     Ref<Form> forms[] = {form};
     world->populate({forms, 1});
@@ -312,12 +389,25 @@ TEST_CASE("e2 scene moments share environment textures but retain independent ca
     auto           overlay = referenceTo(new RecordingOverlay(universe, order, 1));
     overlay->fail          = true;
     root->add(overlay);
-    visual->render(root);
+    visual->renderFrame({.tableau = root, .clearColor = {{0.f, 0.f, 0.f, 1.f}}});
     REQUIRE(visual->readbackFrame().empty());
     overlay->fail = false;
-    visual->render(root);
+    visual->renderFrame({.tableau = root, .clearColor = {{0.f, 0.f, 0.f, 1.f}}});
     auto lit = visual->readbackFrame();
     REQUIRE_FALSE(lit.empty());
+    REQUIRE(overlay->cameraConstants);
+    auto cameraBytes = overlay->cameraConstants->readContent();
+    REQUIRE(cameraBytes.size() == sizeof(fx2::shader::CameraUBO));
+    fx2::shader::CameraUBO uploadedCamera;
+    memcpy(&uploadedCamera, cameraBytes.data(), sizeof(uploadedCamera));
+    // E2 rebases geometry against the eye, so an unrotated camera has an identity view.
+    for (int column = 0; column < 4; ++column) {
+        for (int row = 0; row < 4; ++row) {
+            CHECK(uploadedCamera.viewMatrix[column][row] == (column == row ? 1.f : 0.f));
+            CHECK(std::isfinite(uploadedCamera.projViewMatrix[column][row]));
+            CHECK(uploadedCamera.projViewMatrix[column][row] == uploadedCamera.projMatrix[column][row]);
+        }
+    }
     const size_t center   = (lit.width() * (lit.height() / 2) + lit.width() / 2) * 4;
     const auto * litPixel = static_cast<const uint8_t *>(lit.data()) + center;
     CHECK(litPixel[0] > 20);
@@ -332,14 +422,14 @@ TEST_CASE("e2 scene moments share environment textures but retain independent ca
     auto * other          = RuntimeType::cast<VisualTableauImpl>(otherScene.get());
     REQUIRE(other);
     for (auto & moment : other->moments) root->add(moment);
-    visual->render(root);
+    visual->renderFrame({.tableau = root, .clearColor = {{0.f, 0.f, 0.f, 1.f}}});
     auto combined = visual->readbackFrame();
     REQUIRE_FALSE(combined.empty());
     const auto * combinedPixel = static_cast<const uint8_t *>(combined.data()) + center;
     for (size_t i = 0; i < 4; ++i) CHECK(combinedPixel[i] == litPixel[i]);
 
     camera->desc.farPlane = LocalCoordinate(100);
-    visual->render(world->snapshot({.domain = visual, .cameras = {cameras, 1}}));
+    visual->renderFrame({.tableau = world->snapshot({.domain = visual, .cameras = {cameras, 1}}), .clearColor = {{0.f, 0.f, 0.f, 1.f}}});
     auto unlit = visual->readbackFrame();
     REQUIRE_FALSE(unlit.empty());
     const auto * unlitPixel = static_cast<const uint8_t *>(unlit.data()) + center;

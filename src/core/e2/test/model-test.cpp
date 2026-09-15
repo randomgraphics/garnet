@@ -67,11 +67,11 @@ TEST_CASE("e2 headless readback contains display-encoded color", "[e2][model][gp
     Ref<Camera> cameras[] = {camera};
     auto        moment    = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(moment);
-    visual->render(moment);
+    visual->renderFrame({.tableau = moment, .clearColor = {{0.05f, 0.06f, 0.09f, 1.f}}});
     auto image = visual->readbackFrame();
     REQUIRE_FALSE(image.empty());
     CHECK(image.format() == gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB());
-    // The domain clears to linear (0.05, 0.06, 0.09), not these byte values.
+    // The requested clear color is linear (0.05, 0.06, 0.09), not these byte values.
     // Readback must contain the sRGB encoding that a PNG/JPEG viewer displays.
     const auto * rgba = static_cast<const uint8_t *>(image.data());
     CHECK(rgba[0] >= 62);
@@ -109,14 +109,14 @@ TEST_CASE("e2 visual domain renders and caches captured model instances", "[e2][
 
     auto first = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(first);
-    visual->render(first);
+    visual->renderFrame({.tableau = first});
     auto second = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
     REQUIRE(second);
-    visual->render(second);
+    visual->renderFrame({.tableau = second});
     auto image = visual->readbackFrame();
     REQUIRE_FALSE(image.empty());
     CHECK(image.width() == 1280);
     CHECK(image.height() == 720);
-    visual->render({});
+    visual->renderFrame({.tableau = {}});
     CHECK(visual->readbackFrame().empty());
 }

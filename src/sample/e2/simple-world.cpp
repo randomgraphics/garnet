@@ -70,7 +70,7 @@ int main(int argc, const char ** argv) {
         cp.cameras = {cameras, 1};
 
         auto tableau = world->snapshot(cp);
-        visual->render(tableau);
+        visual->renderFrame({.tableau = tableau});
 
         if (testMode) std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }

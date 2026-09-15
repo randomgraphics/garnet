@@ -193,7 +193,13 @@ The visual boundary separates a renderable item from its owning snapshot:
 - `VisualMoment` is one item that knows how to record its own rendering.
 - `VisualTableau` is the opaque collection of moments in a captured scene.
 - `World::snapshot(parameters)` produces a `Ref<VisualTableau>`.
-- `VisualDomain::render(tableau)` consumes that opaque snapshot.
+- `VisualDomain::renderFrame({.tableau = tableau})` consumes that opaque snapshot.
+
+Each `renderFrame()` call clears the color and depth targets, renders the tableau,
+and presents for a windowed domain. `RenderFrameParameters` supplies a linear RGBA
+`clearColor` (default `(0.05, 0.06, 0.09, 1)`) and `clearDepth` (default 1) for that call;
+omitted values do not inherit the previous frame's settings. Headless frames are
+available through `readbackFrame()`.
 
 The tableau's public interface exposes a factory and `add(moment)`, the operation
 applications need to include environment or UI contributions. It exposes no child
@@ -232,7 +238,7 @@ owning form must not affect that moment. Any shared resources must remain
 immutable for the moment's lifetime.
 
 Complete composition before rendering, and keep the tableau and all referenced
-moments unchanged until `render()` returns. Captured data must not refer back to
+moments unchanged until `renderFrame()` returns. Captured data must not refer back to
 mutable world/form state. `VisualTableau::SnapshotParameters` carries the target
 domain, observing cameras, and expected render-time shift for capture.
 
@@ -262,7 +268,7 @@ World::snapshot(parameters)
   returns an opaque VisualTableau for a specific point in time
   caller may add environment and overlay moments before rendering
 
-VisualDomain::render(tableau)
+VisualDomain::renderFrame({.tableau = tableau})
   obtains the execution order from the private tableau implementation
   seals the tableau and moment references as an imported RDG2 relic
   builds the concrete closed frame plan (acquire -> render -> present)
@@ -329,7 +335,7 @@ Typical composition (after UI construction has been finalized):
 auto tableau = world->snapshot(snapshotParameters);
 tableau->add(environmentMoment);
 tableau->add(uiBackend);
-visual->render(tableau);
+visual->renderFrame({.tableau = tableau});
 ```
 
 Use `VisualTableau::create(universe)` for a snapshot independent of world capture,
@@ -386,7 +392,7 @@ render        READ tableau and SSC, READ_WRITE backbuffer (emit raster work)
 frame-end     READ root backbuffer (request present)
 ```
 
-Each call to `render()` publishes only new relics to those persistent artifacts;
+Each call to `renderFrame()` publishes only new relics to those persistent artifacts;
 it does not recreate graph identities. The tableau is published before
 the first compilation, so execution reads one sealed relic and never follows
 identities back into mutable simulation state. SSC preparation publishes immutable
@@ -450,7 +456,7 @@ whole world → visual-moment → render path:
   render surface, and event pump.
 - `visual.cpp`: the official `Camera` and `VisualDomain`. The visual domain owns
   the gpu2 swapchain, depth buffer, box shaders, an FX2 shared-constants effect,
-  a geometry cache, and persistent RDG2 artifacts/quests. `render()` publishes
+  a geometry cache, and persistent RDG2 artifacts/quests. `renderFrame()` publishes
   the tableau and its moment references as a new relic, compiles a frame-local
   plan, and executes it. A dedicated SSC quest prepares the environment resources
   and rebases each scene's positions against its first camera in exact integer

@@ -12,10 +12,11 @@ struct Camera : Being {
     GN_E2_DEFINE_A_BEING(Being);
 
     struct Desc {
-        WorldVector3    position;
-        Rotation        orientation;
-        LocalCoordinate nearPlane; ///< clip distances are camera-relative, hence local
-        LocalCoordinate farPlane;
+        WorldVector3 position = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()};
+        /// Identity by default: GLM's default quaternion constructor does not initialize its components.
+        Rotation        orientation = {1.f, 0.f, 0.f, 0.f};
+        LocalCoordinate nearPlane   = LocalCoordinate(1);     ///< Near clip distance in world units.
+        LocalCoordinate farPlane    = LocalCoordinate(10000); ///< Far clip distance in world units.
 
         /// Set to positive for perspective camera, 0 for orthogonal camera.
         /// Values outside [0, 180] are invalid and will be clamped back into valid range.
@@ -43,14 +44,24 @@ struct VisualDomain : Being {
         Ref<OperatingDomain> os;
     };
 
+    /// Clear values and scene contents for one complete frame.
+    struct RenderFrameParameters {
+        Ref<VisualTableau> tableau;
+        /// Linear RGBA clear color; encoded to the render target's color space.
+        gpu2::RasterTarget::ClearColorValue clearColor = {{0.05f, 0.06f, 0.09f, 1.0f}};
+        /// Depth clear value in [0, 1].
+        float clearDepth = 1.0f;
+    };
+
     /// The universe this domain belongs to.
     virtual Universe & universe() const = 0;
 
     /// GPU context owned by this visual domain, for compatible extension renderers.
     virtual AutoRef<gpu2::GpuContext> gpu() const = 0;
 
-    /// Render an opaque snapshot. Its contents and organization belong to the tableau.
-    virtual void render(Ref<VisualTableau>) = 0;
+    /// Clear the frame targets, render the tableau, and present when a window is attached.
+    /// Headless frames remain available through readbackFrame().
+    virtual void renderFrame(const RenderFrameParameters &) = 0;
 
     /// Read the last successfully rendered headless frame. Blocks CPU/GPU; intended
     /// for snapshots and diagnostics. Returns an empty image for windowed domains
@@ -109,7 +120,7 @@ struct VisualTableau : Being {
     GN_API static Ref<VisualTableau> create(Universe &);
 
     /// Include an additional renderable item. Complete composition before rendering,
-    /// and do not modify the tableau or its moments until render() returns.
+    /// and do not modify the tableau or its moments until renderFrame() returns.
     virtual void add(Ref<VisualMoment>) = 0;
 };
 
@@ -122,7 +133,7 @@ struct VisualOverlay : VisualMoment {
     /// Logical Z used to order overlays, independent of GPU depth coordinates.
     virtual int32_t zOrder() const = 0;
 
-    /// Set logical Z before rendering; keep it unchanged until render() returns.
+    /// Set logical Z before rendering; keep it unchanged until renderFrame() returns.
     virtual void setZOrder(int32_t z) = 0;
 };
 
@@ -149,6 +160,10 @@ struct VisualEnvironment : VisualMoment {
         AutoRef<gpu2::GpuContext> gpu;
         Desc                      description;
     };
+
+    /// @brief Set if skybox is rendered or not. If set to false, this environment can still lit others. But
+    /// itself remains hidden (not rendered). Default to true.
+    virtual void setVisible(bool) = 0;
 
     /// Create a reusable environment for the supplied GPU; returns empty on failure.
     GN_API static Ref<VisualEnvironment> create(const CreateParameters &);
