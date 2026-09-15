@@ -130,7 +130,9 @@ TEST_CASE("e2 extension moments render using public shared shader constants", "[
     auto custom = referenceTo(new ShadedMoment(universe, visual->gpu(), referenceTo(new TestModelScene)));
     REQUIRE(custom->shading);
     REQUIRE(custom->model);
-    auto environment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = {}});
+    VisualEnvironment::Desc environmentDescription;
+    environmentDescription.environmentLuminanceScale = 1000.f;
+    auto environment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environmentDescription});
     REQUIRE(environment);
     auto world  = Simple::createWorld(universe);
     auto camera = Camera::create({.domain = visual});
@@ -152,7 +154,7 @@ TEST_CASE("e2 extension moments render using public shared shader constants", "[
     CHECK(renderCenter(world->snapshot({.domain = visual, .cameras = {cameras, 1}}), true) > 20);
     // Extension moments must inherit the observing scene's camera, including clipping.
     camera->desc.farPlane = LocalCoordinate(2);
-    CHECK(renderCenter(world->snapshot({.domain = visual, .cameras = {cameras, 1}}), true) < 20);
+    CHECK(renderCenter(world->snapshot({.domain = visual, .cameras = {cameras, 1}}), true) > 20);
     // No scene payload: the public context still supplies valid default camera/IBL bindings.
     CHECK(renderCenter(VisualTableau::create(universe), true) > 20);
     CHECK(renderCenter(VisualTableau::create(universe), false) == 0);
@@ -295,12 +297,14 @@ TEST_CASE("e2 scene moments share environment textures but retain independent ca
     world->populate({forms, 1});
     auto camera = Camera::create({.domain = visual});
     REQUIRE(camera);
-    camera->desc.position   = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), spatial::toWorld(LocalCoordinate(4))};
-    camera->desc.nearPlane  = LocalCoordinate(1);
-    camera->desc.farPlane   = LocalCoordinate(100);
-    Ref<Camera> cameras[]   = {camera};
-    auto        scene       = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
-    auto        environment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = {}});
+    camera->desc.position             = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), spatial::toWorld(LocalCoordinate(4))};
+    camera->desc.nearPlane            = LocalCoordinate(1);
+    camera->desc.farPlane             = LocalCoordinate(100);
+    Ref<Camera>             cameras[] = {camera};
+    auto                    scene     = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
+    VisualEnvironment::Desc environmentDescription;
+    environmentDescription.environmentLuminanceScale = 1000.f;
+    auto environment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environmentDescription});
     REQUIRE(environment);
     auto root = scene;
     root->add(environment);

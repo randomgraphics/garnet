@@ -2,20 +2,20 @@
 #extension GL_GOOGLE_include_directive : require
 
 #include "scene-ubo.h"
+#include "camera-ubo.h"
 
 layout(location = 0) in vec3 v_dir;
 layout(location = 0) out vec4 o_color;
 
-vec3 gn_tonemap(vec3 radiance) {
-    const float exposure = 0.002;
-    vec3        c        = radiance * exposure;
-    c                    = c / (c + vec3(1.0));
+vec3 gn_tonemap(vec3 radiance, float exposure) {
+    vec3 c = radiance * exposure;
+    c      = c / (c + vec3(1.0));
     return c;
 }
 
 void main() {
     // Calibrate environment RGB to the photometric scene scale; see scene-ubo.h for how to set it.
-    // Use the same calibration as model lighting; exposure in gn_tonemap() is separate.
+    // Use the same calibration as model lighting; camera exposure comes from the shared SSC.
     vec3 raw = texture(sscSkyboxCubemap, v_dir).rgb * u_scene.environmentLuminanceScale;
-    o_color  = vec4(gn_tonemap(raw), 1.0);
+    o_color  = vec4(gn_tonemap(raw, u_camera.exposure), 1.0);
 }
