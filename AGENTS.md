@@ -79,6 +79,9 @@ env/bin/format-all-sources.py       # format all tracked sources
   split it into verifiable steps and track it in `agent/`.
 - Prefer existing project patterns and helper APIs over new abstractions.
 - Warnings are errors. Keep code portable across MSVC, GCC, and Clang.
+- Public headers expose only contracts needed by other modules. Keep implementation-only
+  types and members in private module files, and prefer pure virtual interfaces. Follow
+  `agent/skills/garnet-public-interface/SKILL.md` for API design and review.
 - Public API declarations should use Doxygen comments. Comments should explain
   why, invariants, ownership, API quirks, or non-obvious tradeoffs.
 - When code or build scripts use an unusual structure, workaround, ordering

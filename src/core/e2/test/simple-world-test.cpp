@@ -70,12 +70,12 @@ TEST_CASE("E2 Simple: capture produces a self-contained, populated visual moment
     // Capture with no cameras: a Camera now sources its universe from a (GPU-backed)
     // visual domain, so this CPU-only test exercises the form/snapshot path directly.
     // Camera snapshotting is covered end-to-end by the sample.
-    VisualMoment::CaptureParameters cp;
+    VisualTableau::SnapshotParameters cp;
 
-    auto moment = world->captureVisualMoment(cp);
+    auto moment = world->snapshot(cp);
     REQUIRE(moment);
 
-    auto * impl = RuntimeType::cast<VisualMomentImpl>(moment.get());
+    auto * impl = RuntimeType::cast<VisualMomentImpl>(RuntimeType::cast<VisualTableauImpl>(moment.get())->moments[0].get());
     REQUIRE(impl != nullptr);
     CHECK(impl->cameras.size() == 0);
     CHECK(impl->renderables.size() == 1);
@@ -102,8 +102,8 @@ TEST_CASE("E2 Simple: visual capture walks child forms and composes their transf
     Ref<Form> forms[] = {group};
     world->populate({forms, 1});
 
-    auto   moment = world->captureVisualMoment(VisualMoment::CaptureParameters {});
-    auto * impl   = RuntimeType::cast<VisualMomentImpl>(moment.get());
+    auto   moment = world->snapshot(VisualTableau::SnapshotParameters {});
+    auto * impl   = RuntimeType::cast<VisualMomentImpl>(RuntimeType::cast<VisualTableauImpl>(moment.get())->moments[0].get());
     REQUIRE(impl != nullptr);
     REQUIRE(impl->renderables.size() == 1);
     REQUIRE(impl->lights.size() == 1);
@@ -305,8 +305,8 @@ TEST_CASE("E2 Simple: unit box faces are wound CCW when viewed from outside") {
     Ref<Form> forms[] = {box};
     world->populate({forms, 1});
 
-    auto   moment = world->captureVisualMoment(VisualMoment::CaptureParameters {});
-    auto * impl   = RuntimeType::cast<VisualMomentImpl>(moment.get());
+    auto   moment = world->snapshot(VisualTableau::SnapshotParameters {});
+    auto * impl   = RuntimeType::cast<VisualMomentImpl>(RuntimeType::cast<VisualTableauImpl>(moment.get())->moments[0].get());
     REQUIRE(impl);
     REQUIRE(impl->renderables.size() == 1);
     REQUIRE(impl->renderables[0].mesh);
@@ -339,21 +339,21 @@ TEST_CASE("E2 Simple: the world evolves on its own cadence, independent of captu
     Ref<Form> forms[] = {box};
     world->populate({forms, 1});
 
-    VisualMoment::CaptureParameters cp; // no cameras needed for this check
+    VisualTableau::SnapshotParameters cp; // no cameras needed for this check
 
     // run() blocks, so the test provides the thread — mirroring how a real client drives a world.
     std::thread simThread([&world] { world->run(); });
 
-    auto firstMoment = world->captureVisualMoment(cp);
+    auto firstMoment = world->snapshot(cp);
     std::this_thread::sleep_for(std::chrono::milliseconds(120)); // several simulation ticks
-    auto secondMoment = world->captureVisualMoment(cp);
+    auto secondMoment = world->snapshot(cp);
 
     // Join before any assertion: a failing REQUIRE throws, and an unjoined thread terminates.
     world->stop();
     simThread.join();
 
-    auto * first  = RuntimeType::cast<VisualMomentImpl>(firstMoment.get());
-    auto * second = RuntimeType::cast<VisualMomentImpl>(secondMoment.get());
+    auto * first  = RuntimeType::cast<VisualMomentImpl>(RuntimeType::cast<VisualTableauImpl>(firstMoment.get())->moments[0].get());
+    auto * second = RuntimeType::cast<VisualMomentImpl>(RuntimeType::cast<VisualTableauImpl>(secondMoment.get())->moments[0].get());
     REQUIRE(first);
     REQUIRE(second);
     REQUIRE(first->renderables.size() == 1);

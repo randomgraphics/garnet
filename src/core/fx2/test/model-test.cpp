@@ -1,28 +1,28 @@
 #include <catch2/catch_test_macros.hpp>
-#include <garnet/GNfx2.h>
+#include "fx2/model-internal.h"
 #include <garnet/base/filesys.h>
 
 using namespace GN::fx2;
 
 TEST_CASE("fx2::ModelScene classifies supported source formats", "[fx2][model]") {
-    CHECK(ModelScene::sourceFormatFromPath("scene.fbx") == ModelScene::SourceFormat::FBX);
-    CHECK(ModelScene::sourceFormatFromPath("scene.gltf") == ModelScene::SourceFormat::GLTF);
-    CHECK(ModelScene::sourceFormatFromPath("scene.glb") == ModelScene::SourceFormat::GLB);
-    CHECK(ModelScene::sourceFormatFromPath("scene.stl") == ModelScene::SourceFormat::STL);
+    CHECK(classifyModelSourcePath("scene.fbx") == ModelSourceFormat::FBX);
+    CHECK(classifyModelSourcePath("scene.gltf") == ModelSourceFormat::GLTF);
+    CHECK(classifyModelSourcePath("scene.glb") == ModelSourceFormat::GLB);
+    CHECK(classifyModelSourcePath("scene.stl") == ModelSourceFormat::STL);
 }
 
 TEST_CASE("fx2::ModelScene source classification is case insensitive", "[fx2][model]") {
-    CHECK(ModelScene::sourceFormatFromPath("scene.FBX") == ModelScene::SourceFormat::FBX);
-    CHECK(ModelScene::sourceFormatFromPath("scene.GlTf") == ModelScene::SourceFormat::GLTF);
-    CHECK(ModelScene::sourceFormatFromPath("scene.GLB") == ModelScene::SourceFormat::GLB);
-    CHECK(ModelScene::sourceFormatFromPath("scene.StL") == ModelScene::SourceFormat::STL);
+    CHECK(classifyModelSourcePath("scene.FBX") == ModelSourceFormat::FBX);
+    CHECK(classifyModelSourcePath("scene.GlTf") == ModelSourceFormat::GLTF);
+    CHECK(classifyModelSourcePath("scene.GLB") == ModelSourceFormat::GLB);
+    CHECK(classifyModelSourcePath("scene.StL") == ModelSourceFormat::STL);
 }
 
 TEST_CASE("fx2::ModelScene rejects unsupported source extensions", "[fx2][model]") {
-    CHECK(ModelScene::sourceFormatFromPath("") == ModelScene::SourceFormat::UNKNOWN);
-    CHECK(ModelScene::sourceFormatFromPath("scene") == ModelScene::SourceFormat::UNKNOWN);
-    CHECK(ModelScene::sourceFormatFromPath("scene.obj") == ModelScene::SourceFormat::UNKNOWN);
-    CHECK(ModelScene::sourceFormatFromPath("scene.fbx.backup") == ModelScene::SourceFormat::UNKNOWN);
+    CHECK(classifyModelSourcePath("") == ModelSourceFormat::UNKNOWN);
+    CHECK(classifyModelSourcePath("scene") == ModelSourceFormat::UNKNOWN);
+    CHECK(classifyModelSourcePath("scene.obj") == ModelSourceFormat::UNKNOWN);
+    CHECK(classifyModelSourcePath("scene.fbx.backup") == ModelSourceFormat::UNKNOWN);
 }
 
 TEST_CASE("fx2::ModelScene creates bounded debug axes without renderer dependencies", "[fx2][model]") {
@@ -32,7 +32,6 @@ TEST_CASE("fx2::ModelScene creates bounded debug axes without renderer dependenc
     REQUIRE(scene->materials.size() == 1);
     CHECK(scene->materials[0].workflow == ModelScene::MaterialWorkflow::UNLIT);
     REQUIRE(scene->primitives.size() == 1);
-    CHECK(scene->primitives[0].sourceHadColors);
     CHECK(scene->primitives[0].vertices.size() == 15 * 8);
     CHECK(scene->primitives[0].indices.size() == 15 * 36);
     CHECK(scene->primitives[0].bounds.valid);
@@ -53,9 +52,9 @@ static GN::StrA repositoryPath(const char * relativePath) {
     return root.empty() ? GN::StrA(relativePath) : GN::fs::joinPath(root, relativePath);
 }
 
-static void checkImportedScene(const GN::AutoRef<ModelScene> & scene, ModelScene::SourceFormat format) {
+static void checkImportedScene(const GN::AutoRef<ModelScene> & scene, ModelSourceFormat format) {
     REQUIRE(scene);
-    CHECK(scene->sourceFormat == format);
+    CHECK(classifyModelSourcePath(scene->sourcePath) == format);
     CHECK_FALSE(scene->sourcePath.empty());
     REQUIRE_FALSE(scene->primitives.empty());
     REQUIRE_FALSE(scene->nodes.empty());
@@ -77,14 +76,14 @@ static void checkImportedScene(const GN::AutoRef<ModelScene> & scene, ModelScene
 
 TEST_CASE("fx2::ModelScene imports compact repository models", "[fx2][model]") {
     struct Fixture {
-        const char *             path;
-        ModelScene::SourceFormat format;
+        const char *      path;
+        ModelSourceFormat format;
     };
     constexpr Fixture fixtures[] = {
-        {"src/3rdparty/assimp/test/models/FBX/phong_cube.fbx", ModelScene::SourceFormat::FBX},
-        {"src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Embedded/BoxTextured.gltf", ModelScene::SourceFormat::GLTF},
-        {"src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Binary/BoxTextured.glb", ModelScene::SourceFormat::GLB},
-        {"src/3rdparty/assimp/test/models/STL/triangle.stl", ModelScene::SourceFormat::STL},
+        {"src/3rdparty/assimp/test/models/FBX/phong_cube.fbx", ModelSourceFormat::FBX},
+        {"src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Embedded/BoxTextured.gltf", ModelSourceFormat::GLTF},
+        {"src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Binary/BoxTextured.glb", ModelSourceFormat::GLB},
+        {"src/3rdparty/assimp/test/models/STL/triangle.stl", ModelSourceFormat::STL},
     };
 
     for (const Fixture & fixture : fixtures) {
@@ -96,10 +95,10 @@ TEST_CASE("fx2::ModelScene imports compact repository models", "[fx2][model]") {
 }
 
 TEST_CASE("fx2::ModelScene imports repository ASE geometry and materials", "[fx2][model]") {
-    CHECK(ModelScene::sourceFormatFromPath("scene.ase") == ModelScene::SourceFormat::ASE);
-    CHECK(ModelScene::sourceFormatFromPath("scene.AsE") == ModelScene::SourceFormat::ASE);
+    CHECK(classifyModelSourcePath("scene.ase") == ModelSourceFormat::ASE);
+    CHECK(classifyModelSourcePath("scene.AsE") == ModelSourceFormat::ASE);
     const auto scene = ModelScene::load({.path = repositoryPath("media/boxes/boxes.ase")});
-    checkImportedScene(scene, ModelScene::SourceFormat::ASE);
+    checkImportedScene(scene, ModelSourceFormat::ASE);
     REQUIRE_FALSE(scene->materials.empty());
     for (const auto & material : scene->materials) { CHECK(material.workflow == ModelScene::MaterialWorkflow::DEFAULT_LIT); }
 }
@@ -142,7 +141,6 @@ TEST_CASE("fx2::ModelScene supplies unit normals when source normals are absent"
     const auto scene = ModelScene::load({.path = path});
     REQUIRE(scene);
     REQUIRE_FALSE(scene->primitives.empty());
-    CHECK_FALSE(scene->primitives[0].sourceHadNormals);
     for (const auto & vertex : scene->primitives[0].vertices) CHECK(glm::abs(glm::length(vertex.normal) - 1.0f) < 0.0001f);
 }
 
@@ -195,12 +193,12 @@ TEST_CASE("fx2::ModelScene imports project media corpus", "[fx2][model][media]")
 }
 
 TEST_CASE("fx2::ModelScene imports Asset Foundry Digital Forge stress model", "[fx2][model][media][.stress]") {
-    const GN::StrA path = repositoryPath("media/asset-foundry/model/character/speeder-getaway-from-meshy-ai.glb");
+    const GN::StrA path = repositoryPath("media/asset-foundry/model/speeder-getaway/speeder-getaway-from-meshy-ai.glb");
     if (!GN::fs::isFile(path)) SKIP("Asset Foundry submodule is not initialized");
 
     const auto scene = ModelScene::load({.path = path});
     REQUIRE(scene);
-    CHECK(scene->sourceFormat == ModelScene::SourceFormat::GLB);
+    CHECK(classifyModelSourcePath(scene->sourcePath) == ModelSourceFormat::GLB);
     CHECK(scene->bounds.valid);
     CHECK_FALSE(scene->primitives.empty());
     CHECK_FALSE(scene->nodes.empty());
@@ -218,24 +216,16 @@ TEST_CASE("fx2::ModelAsset records immutable geometry and texture uploads once",
     REQUIRE(scene);
     const auto asset = ModelAsset::create(gpu, scene);
     REQUIRE(asset);
-    REQUIRE(asset->gpuPayload);
-    CHECK(asset->scene.get() == scene.get());
-    CHECK(asset->primitives.size() == scene->primitives.size());
-    CHECK(asset->textures.size() == scene->textures.size());
-    REQUIRE_FALSE(asset->primitives.empty());
-    REQUIRE_FALSE(asset->textures.empty());
-    CHECK(asset->textures[0]);
-    CHECK(asset->primitives[0].vertexCount == scene->primitives[0].vertices.size());
-    CHECK(asset->primitives[0].indexCount == scene->primitives[0].indices.size());
-
+    REQUIRE(asset->uploadPayload());
     const auto shading = ModelShading::create(gpu);
     const auto ssc     = SharedShaderConstants::create({.gpu = gpu});
     REQUIRE(shading);
-    REQUIRE(shading->gpuPayload);
+    REQUIRE(shading->uploadPayload());
     REQUIRE(ssc);
     const auto draw = ModelShading::getDrawParams(ssc->takeSnapshot(), shading, asset, 0, glm::mat4(1.0f));
     CHECK(draw.vs);
     CHECK(draw.ps);
+    CHECK(draw.geometry.vertexCount == scene->primitives[0].vertices.size());
     CHECK(draw.geometry.indexCount == scene->primitives[0].indices.size());
     REQUIRE(draw.resources.size() == 2);
     CHECK(draw.resources[1].size() == 6);
@@ -265,7 +255,7 @@ TEST_CASE("fx2::ModelShading builds draws for glTF FBX STL and ASE materials", "
         REQUIRE(scene);
         const auto model = ModelAsset::create(gpu, scene);
         REQUIRE(model);
-        for (uint32_t primitiveIndex = 0; primitiveIndex < model->primitives.size(); ++primitiveIndex) {
+        for (uint32_t primitiveIndex = 0; primitiveIndex < scene->primitives.size(); ++primitiveIndex) {
             const auto draw = ModelShading::getDrawParams(snapshot, shading, model, primitiveIndex, glm::mat4(1.0f));
             CHECK(draw.vs);
             CHECK(draw.ps);

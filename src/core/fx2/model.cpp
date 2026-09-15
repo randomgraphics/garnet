@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "model-internal.h"
 #include "model-frag.spv.h"
 #include "model-vert.spv.h"
 #include "vk-shaders/model-material-ubo.h"
@@ -202,16 +203,16 @@ AutoRef<gpu2::Texture> makeSolidTexture(AutoRef<gpu2::GpuContext> gpu, gpu2::Gpu
 
 } // namespace
 
-ModelScene::SourceFormat ModelScene::sourceFormatFromPath(const StrA & path) {
+ModelSourceFormat classifyModelSourcePath(const StrA & path) {
     StrA extension = fs::extName(path);
     extension.toLower();
 
-    if (extension == ".fbx") return SourceFormat::FBX;
-    if (extension == ".gltf") return SourceFormat::GLTF;
-    if (extension == ".glb") return SourceFormat::GLB;
-    if (extension == ".stl") return SourceFormat::STL;
-    if (extension == ".ase") return SourceFormat::ASE;
-    return SourceFormat::UNKNOWN;
+    if (extension == ".fbx") return ModelSourceFormat::FBX;
+    if (extension == ".gltf") return ModelSourceFormat::GLTF;
+    if (extension == ".glb") return ModelSourceFormat::GLB;
+    if (extension == ".stl") return ModelSourceFormat::STL;
+    if (extension == ".ase") return ModelSourceFormat::ASE;
+    return ModelSourceFormat::UNKNOWN;
 }
 
 AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBounds, float lineWidth, bool includeBounds, bool includeAxes) {
@@ -227,8 +228,7 @@ AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBo
     result->materials.append(material);
 
     Primitive primitive;
-    primitive.name            = "bounds-and-axes";
-    primitive.sourceHadColors = true;
+    primitive.name = "bounds-and-axes";
     if (includeBounds) {
         const glm::vec4 boundsColor(1.0f, 0.8f, 0.1f, 1.0f);
         for (uint32_t varyingAxis = 0; varyingAxis < 3; ++varyingAxis) {
@@ -263,8 +263,8 @@ AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBo
 }
 
 AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
-    const SourceFormat format = sourceFormatFromPath(parameters.path);
-    if (format == SourceFormat::UNKNOWN) GN_UNLIKELY {
+    const ModelSourceFormat format = classifyModelSourcePath(parameters.path);
+    if (format == ModelSourceFormat::UNKNOWN) GN_UNLIKELY {
             GN_ERROR(sLogger, "ModelScene::load: unsupported model path '{}'", parameters.path);
             return {};
         }
@@ -285,8 +285,7 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
         }
 
     AutoRef<ModelScene> result(new ModelScene(TYPE_INFO(), "model-scene"));
-    result->sourceFormat = format;
-    result->sourcePath   = nativePath;
+    result->sourcePath = nativePath;
 
     const StrA modelDirectory = fs::dirName(nativePath);
     for (uint32_t materialIndex = 0; materialIndex < imported->mNumMaterials; ++materialIndex) {
@@ -315,7 +314,7 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
         }
 
         material.workflow =
-            (format == SourceFormat::GLTF || format == SourceFormat::GLB) ? MaterialWorkflow::METALLIC_ROUGHNESS : MaterialWorkflow::DEFAULT_LIT;
+            (format == ModelSourceFormat::GLTF || format == ModelSourceFormat::GLB) ? MaterialWorkflow::METALLIC_ROUGHNESS : MaterialWorkflow::DEFAULT_LIT;
         if (AI_SUCCESS == aiGetMaterialFloat(&source, AI_MATKEY_GLOSSINESS_FACTOR, &scalar)) {
             material.workflow  = MaterialWorkflow::SPECULAR_GLOSSINESS;
             material.roughness = 1.0f - glm::clamp(scalar, 0.0f, 1.0f);
@@ -341,12 +340,12 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
         if (!mesh.HasPositions() || !mesh.HasFaces()) continue;
 
         Primitive primitive;
-        primitive.name               = mesh.mName.C_Str();
-        primitive.material           = mesh.mMaterialIndex < result->materials.size() ? mesh.mMaterialIndex : 0;
-        primitive.sourceHadNormals   = mesh.HasNormals();
-        primitive.sourceHadTangents  = mesh.HasTangentsAndBitangents();
-        primitive.sourceHadTexcoords = mesh.HasTextureCoords(0);
-        primitive.sourceHadColors    = mesh.HasVertexColors(0);
+        primitive.name                = mesh.mName.C_Str();
+        primitive.material            = mesh.mMaterialIndex < result->materials.size() ? mesh.mMaterialIndex : 0;
+        const bool sourceHadNormals   = mesh.HasNormals();
+        const bool sourceHadTangents  = mesh.HasTangentsAndBitangents();
+        const bool sourceHadTexcoords = mesh.HasTextureCoords(0);
+        const bool sourceHadColors    = mesh.HasVertexColors(0);
         primitive.vertices.resize(mesh.mNumVertices);
 
         for (uint32_t vertexIndex = 0; vertexIndex < mesh.mNumVertices; ++vertexIndex) {
@@ -355,22 +354,22 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
             vertex.position             = {position.x, position.y, position.z};
             include(primitive.bounds, vertex.position);
 
-            if (primitive.sourceHadNormals) {
+            if (sourceHadNormals) {
                 const aiVector3D & normal = mesh.mNormals[vertexIndex];
                 vertex.normal             = {normal.x, normal.y, normal.z};
             }
-            if (primitive.sourceHadTangents) {
+            if (sourceHadTangents) {
                 const aiVector3D & tangent   = mesh.mTangents[vertexIndex];
                 vertex.tangent               = {tangent.x, tangent.y, tangent.z, 1.0f};
                 const aiVector3D & bitangent = mesh.mBitangents[vertexIndex];
                 vertex.tangent.w =
                     glm::dot(glm::cross(vertex.normal, glm::vec3(vertex.tangent)), glm::vec3(bitangent.x, bitangent.y, bitangent.z)) < 0.0f ? -1.0f : 1.0f;
             }
-            if (primitive.sourceHadTexcoords) {
+            if (sourceHadTexcoords) {
                 const aiVector3D & texcoord = mesh.mTextureCoords[0][vertexIndex];
                 vertex.texcoord             = {texcoord.x, texcoord.y};
             }
-            if (primitive.sourceHadColors) {
+            if (sourceHadColors) {
                 const aiColor4D & color = mesh.mColors[0][vertexIndex];
                 vertex.color            = {color.r, color.g, color.b, color.a};
             }
@@ -384,8 +383,8 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
             primitive.indices.append(face.mIndices[2]);
         }
         if (primitive.indices.empty()) continue;
-        if (!primitive.sourceHadNormals) generateNormals(primitive);
-        if (!primitive.sourceHadTangents && primitive.sourceHadTexcoords) generateTangents(primitive);
+        if (!sourceHadNormals) generateNormals(primitive);
+        if (!sourceHadTangents && sourceHadTexcoords) generateTangents(primitive);
 
         meshToPrimitive[meshIndex] = static_cast<uint32_t>(result->primitives.size());
         result->primitives.append(std::move(primitive));
@@ -431,6 +430,23 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
     return result;
 }
 
+namespace {
+
+struct ModelAssetImpl final : ModelAsset {
+    GN_REGISTER_RUNTIME_TYPE(ModelAsset);
+
+    AutoRef<const ModelScene>         scene;
+    DynaArray<gpu2::RasterGeometry>   primitives;
+    DynaArray<AutoRef<gpu2::Texture>> textures;
+    DynaArray<AutoRef<gpu2::Buffer>>  materialBuffers;
+    AutoRef<gpu2::GpuPayload>         gpuPayload;
+
+    ModelAssetImpl(): ModelAsset(TYPE_INFO(), "model-asset") {}
+    AutoRef<gpu2::GpuPayload> uploadPayload() const override { return gpuPayload; }
+};
+
+} // namespace
+
 AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<const ModelScene> scene) {
     if (!gpu || !scene || scene->primitives.empty()) GN_UNLIKELY {
             GN_ERROR(sLogger, "ModelAsset::create: missing GPU context or model geometry");
@@ -440,7 +456,7 @@ AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<co
     auto cnc = gpu2::GpuCnC::create({.gpu = gpu});
     if (!cnc) GN_UNLIKELY return {};
 
-    AutoRef<ModelAsset> result(new ModelAsset(TYPE_INFO(), "model-asset"));
+    AutoRef<ModelAssetImpl> result(new ModelAssetImpl);
     result->scene = std::move(scene);
     for (const ModelScene::Primitive & primitive : result->scene->primitives) {
         const uint64_t vertexBytes  = primitive.vertices.size() * sizeof(ModelScene::Vertex);
@@ -511,7 +527,8 @@ AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<co
     }
 
     result->gpuPayload = cnc->seal();
-    return result->gpuPayload ? result : AutoRef<ModelAsset> {};
+    if (!result->gpuPayload) return {};
+    return result;
 }
 
 namespace {
@@ -527,7 +544,10 @@ struct ModelShadingData {
 
 struct ModelShadingAsset final : ModelShading::Asset {
     GN_REGISTER_RUNTIME_TYPE(Asset);
-    ModelShadingData data;
+    ModelShadingData          data;
+    AutoRef<gpu2::GpuPayload> gpuPayload;
+
+    AutoRef<gpu2::GpuPayload> uploadPayload() const override { return gpuPayload; }
 
     explicit ModelShadingAsset(ModelShadingData value): Asset(TYPE_INFO(), "model-shading"), data(std::move(value)) {}
 };
@@ -556,7 +576,8 @@ AutoRef<ModelShading::Asset> ModelShading::create(AutoRef<gpu2::GpuContext> gpu)
 }
 
 gpu2::GpuRaster::DrawParameters ModelShading::getDrawParams(const SharedShaderConstants::Snapshot & sscSnapshot, AutoRef<const Asset> shading,
-                                                            AutoRef<const ModelAsset> model, uint32_t primitiveIndex, const glm::mat4 & worldTransform) {
+                                                            AutoRef<const ModelAsset> modelBase, uint32_t primitiveIndex, const glm::mat4 & worldTransform) {
+    const auto * model   = RuntimeType::cast<ModelAssetImpl>(modelBase.get());
     const auto * content = RuntimeType::cast<ModelShadingAsset>(shading.get());
     if (!content || !model || primitiveIndex >= model->primitives.size()) GN_UNLIKELY return {};
     const ModelScene::Primitive & primitive = model->scene->primitives[primitiveIndex];

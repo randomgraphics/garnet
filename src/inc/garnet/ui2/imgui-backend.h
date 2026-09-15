@@ -5,6 +5,7 @@
 namespace GN::ui2 {
 
 /// Dear ImGui platform and renderer backend using GN::win input and gpu2 draw payloads.
+/// An overlay with initial zOrder() of zero; setZOrder() controls its order among overlays.
 struct ImGuiBackend : e2::VisualOverlay {
     GN_API GN_REGISTER_RUNTIME_TYPE(e2::VisualOverlay);
 

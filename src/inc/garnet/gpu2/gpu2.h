@@ -110,8 +110,34 @@ struct GpuContext : public RCRT64 {
     /// Wait for GPU idle.
     virtual void waitForIdle() = 0;
 
+    /// Begin a named debug region on the graphics queue; no-op when debug labels are unavailable.
+    /// Names are consumed during this call. Calls must nest and balance with endDebugLabel().
+    /// Serialize label calls with other host operations on this context's graphics queue.
+    virtual void beginDebugLabel(const char * labelName) = 0;
+
+    /// End the innermost graphics-queue debug region; no-op when debug labels are unavailable.
+    virtual void endDebugLabel() = 0;
+
 protected:
     using RCRT64::RCRT64;
+};
+
+/// Stack-scoped graphics-queue debug region. Retains the context until the region ends.
+class ScopedDebugLabel {
+public:
+    /// Begin a region on the supplied context; an empty context is allowed and does nothing.
+    ScopedDebugLabel(AutoRef<GpuContext> gpu, const char * name): mGpu(std::move(gpu)) {
+        if (mGpu) mGpu->beginDebugLabel(name);
+    }
+    ~ScopedDebugLabel() {
+        if (mGpu) mGpu->endDebugLabel();
+    }
+
+    ScopedDebugLabel(const ScopedDebugLabel &)             = delete;
+    ScopedDebugLabel & operator=(const ScopedDebugLabel &) = delete;
+
+private:
+    AutoRef<GpuContext> mGpu;
 };
 
 // -----------------------------

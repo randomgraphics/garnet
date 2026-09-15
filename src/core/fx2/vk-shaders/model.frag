@@ -42,18 +42,31 @@ void main() {
         return;
     }
 
-    vec3 N           = normalize(inNormal);
-    vec3 Ns          = texture(u_normal, inTexCoord).rgb * 2.0 - 1.0;
-    N                = normalize(buildTBN(N) * Ns);
-    vec3  V          = normalize(u_camera.cameraPosition.xyz - inWorldPos);
-    float nv         = max(dot(N, V), 0.0);
-    vec3  f0         = mix(vec3(0.04), baseSample.rgb, metallic);
-    vec3  fr         = fresnelSchlickR(nv, f0, roughness);
-    vec3  kd         = (vec3(1.0) - fr) * (1.0 - metallic);
-    vec3  irradiance = texture(sscIrradianceMap, N).rgb * u_scene.environmentRadianceScale;
-    vec3  reflected  = reflect(-V, N);
-    vec3  radiance   = textureLod(sscPrefilteredEnvMap, reflected, roughness * 4.0).rgb * u_scene.environmentRadianceScale;
-    vec2  brdf       = texture(sscBrdfLut, vec2(nv, roughness)).rg;
-    vec3  lit        = kd * baseSample.rgb * irradiance * ao + radiance * (fr * brdf.x + brdf.y) * ao + emissive;
-    outColor         = vec4(lit / (lit + vec3(1.0)), baseSample.a);
+    vec3 N   = normalize(inNormal);
+    vec3 Ns  = texture(u_normal, inTexCoord).rgb * 2.0 - 1.0;
+    N        = normalize(buildTBN(N) * Ns);
+    vec3  V  = normalize(u_camera.cameraPosition.xyz - inWorldPos);
+    float nv = max(dot(N, V), 0.0);
+    vec3  f0 = mix(vec3(0.04), baseSample.rgb, metallic);
+    vec3  fr = fresnelSchlickR(nv, f0, roughness);
+    vec3  kd = (vec3(1.0) - fr) * (1.0 - metallic);
+    // Calibrate environment RGB to the photometric scene scale; see scene-ubo.h for how to set it.
+    // The diffuse map stores illuminance / pi; camera exposure is a separate operation.
+    vec3 irradiance = texture(sscIrradianceMap, N).rgb * u_scene.environmentLuminanceScale;
+    vec3 reflected  = reflect(-V, N);
+    vec3 radiance   = textureLod(sscPrefilteredEnvMap, reflected, roughness * 4.0).rgb * u_scene.environmentLuminanceScale;
+    // Debug black models by setting envLighting.environmentAmbientFloor to e.g. 5 nits, then increasing
+    // as needed. Keep it 0 for normal rendering. Clamp both IBL terms so metals get a fallback too;
+    // apply after calibration so even a zero environment scale can be diagnosed. This does not repair
+    // invalid materials/normals, zero AO or zero exposure, and does not guarantee visible shape shading.
+    if (u_scene.environmentAmbientFloor > 0.0) {
+        vec3 floorLighting = vec3(u_scene.environmentAmbientFloor);
+        irradiance         = max(irradiance, floorLighting);
+        radiance           = max(radiance, floorLighting);
+    }
+    vec2 brdf = texture(sscBrdfLut, vec2(nv, roughness)).rg;
+    vec3 lit  = kd * baseSample.rgb * irradiance * ao + radiance * (fr * brdf.x + brdf.y) * ao + emissive;
+    // Convert scene luminance to camera-relative values before compressing highlights.
+    lit *= u_camera.exposure;
+    outColor = vec4(lit / (lit + vec3(1.0)), baseSample.a);
 }
