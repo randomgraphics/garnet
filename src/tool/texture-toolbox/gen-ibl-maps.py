@@ -22,7 +22,6 @@ import sys
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # EXR / image loading
 # ---------------------------------------------------------------------------
@@ -189,9 +188,10 @@ def write_dds_cubemap(
         f.write(struct.pack("<I", D3D11_RESOURCE_MISC_TEXTURECUBE))
         f.write(struct.pack("<I", 1))  # arraySize
         f.write(struct.pack("<I", 0))  # miscFlags2
-        # pixel data: DDS layout = all 6 faces for mip0, then all 6 for mip1, etc.
-        for faces in faces_per_mip:
-            for face in faces:
+        # DDS stores the complete mip chain for each cube face before the next face.
+        for face_index in range(6):
+            for faces in faces_per_mip:
+                face = faces[face_index]
                 rgba = (
                     face
                     if face.shape[2] == 4

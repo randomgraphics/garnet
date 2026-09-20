@@ -79,6 +79,9 @@ env/bin/format-all-sources.py       # format all tracked sources
   split it into verifiable steps and track it in `agent/`.
 - Prefer existing project patterns and helper APIs over new abstractions.
 - Warnings are errors. Keep code portable across MSVC, GCC, and Clang.
+- Public headers expose only contracts needed by other modules. Keep implementation-only
+  types and members in private module files, and prefer pure virtual interfaces. Follow
+  `agent/skills/garnet-public-interface/SKILL.md` for API design and review.
 - Public API declarations should use Doxygen comments. Comments should explain
   why, invariants, ownership, API quirks, or non-obvious tradeoffs.
 - When code or build scripts use an unusual structure, workaround, ordering
@@ -126,7 +129,10 @@ Every assignment task should be verifiable with build/test/sample output or a
 clear manual check. Each non-future task needs `Verify:` and `Commit:` lines.
 Update the `PROGRESS` block when starting and completing tasks.
 
-When the work an agent doc describes is finished, superseded, or abandoned,
+Keep agent task files active until the user explicitly signs off the work or
+explicitly requests archival. Completion, verification, merging, supersession,
+or abandonment alone do not authorize archival. While awaiting sign-off, record
+that status in the task file. After user sign-off or an explicit archive request,
 move the doc to `agent/completed/`, prefixing its filename with the current
 UTC timestamp as `yyyy-mm-dd-hhmmss-` (always UTC, never local time).
 That folder is the archive of past work

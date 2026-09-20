@@ -98,13 +98,13 @@ TEST_CASE("PBR: Material::load lined-metal-sheeting", "[rdg][pbr][gpu][media]") 
     auto gpuContext = GpuContext::create("gpu_context", {.howToPrintDeviceCaps = gpuVerbosity});
     if (!gpuContext) SKIP("No Vulkan GPU context available");
 
-    auto fp = fs::openFile("media::pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
-    if (!fp) SKIP("Media not mounted (media::pbr/lined-metal-sheeting not found)");
+    auto fp = fs::openFile("media::asset-foundry/image/pbr/lined-metal-sheeting/lined-metal-sheeting.material", std::ios::in);
+    if (!fp) SKIP("Media not mounted (media::asset-foundry/image/pbr/lined-metal-sheeting not found)");
 
     auto mat = PbrShading::Material::load("lined_metal_sheeting", PbrShading::Material::LoadParameters {
                                                                       .gpu      = gpuContext,
                                                                       .source   = fp,
-                                                                      .basePath = "media::pbr/lined-metal-sheeting",
+                                                                      .basePath = "media::asset-foundry/image/pbr/lined-metal-sheeting",
                                                                   });
     REQUIRE(mat != nullptr);
     Texture * baseColorTex = mat->getBaseColorTexture();

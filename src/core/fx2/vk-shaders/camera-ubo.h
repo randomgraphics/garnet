@@ -11,7 +11,9 @@
 //   renderTargetSize vec2  offset 208  ( 8 bytes)  width, height in pixels
 //   nearPlane        float offset 216  ( 4 bytes)
 //   farPlane         float offset 220  ( 4 bytes)
-//   Total: 224 bytes
+//   exposure          float offset 224 ( 4 bytes) linear multiplier before tone mapping
+//   trailing padding        offset 228 (12 bytes) std140 rounds the block to 16-byte alignment
+//   Total: 240 bytes
 #pragma once
 
 #ifdef __cplusplus
@@ -32,6 +34,13 @@ struct CameraUBO {
     vec2  renderTargetSize; // width, height in pixels
     float nearPlane;
     float farPlane;
+    // Set CameraConstants::exposure to 1 / reference luminance in nits; 0.002 maps 500 nits to 0.5
+    // after Reinhard tone mapping. Separate from environment-map calibration; 1 is unity, 0 is black.
+    float exposure;
+#ifdef __cplusplus
+    // Match std140's trailing block padding without a GLSL array (which would have 16-byte stride).
+    float padding[3];
+#endif
 };
 
 #ifdef __cplusplus
@@ -40,7 +49,7 @@ struct CameraUBO {
     #undef vec2
 
     #include <cstddef>
-static_assert(sizeof(CameraUBO) == 224, "CameraUBO must be 224 bytes");
+static_assert(sizeof(CameraUBO) == 240, "CameraUBO must be 240 bytes");
 static_assert(offsetof(CameraUBO, viewMatrix) == 0);
 static_assert(offsetof(CameraUBO, projMatrix) == 64);
 static_assert(offsetof(CameraUBO, projViewMatrix) == 128);
@@ -48,6 +57,7 @@ static_assert(offsetof(CameraUBO, cameraPosition) == 192);
 static_assert(offsetof(CameraUBO, renderTargetSize) == 208);
 static_assert(offsetof(CameraUBO, nearPlane) == 216);
 static_assert(offsetof(CameraUBO, farPlane) == 220);
+static_assert(offsetof(CameraUBO, exposure) == 224);
 } // namespace GN::fx2::shader
 #endif
 
@@ -61,6 +71,9 @@ layout(std140, set = 0, binding = 1) uniform CameraBlock {
     vec2  renderTargetSize;
     float nearPlane;
     float farPlane;
+    // Set CameraConstants::exposure to 1 / reference luminance in nits; 0.002 maps 500 nits to 0.5
+    // after Reinhard tone mapping. Separate from environment-map calibration; 1 is unity, 0 is black.
+    float exposure;
 }
 u_camera;
 #endif

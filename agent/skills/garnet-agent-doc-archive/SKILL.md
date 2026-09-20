@@ -5,9 +5,9 @@ description: Archive finished agent docs (assignments, specs, plans, tasks) into
 
 # Garnet Agent Doc Archive
 
-`agent/` holds AI agent working documents. Only docs describing ongoing work
-stay at the top level. Every finished agent doc — assignment, spec, plan, task
-list, whatever — moves to `agent/completed/`.
+`agent/` holds AI agent working documents. Keep ongoing work and work awaiting
+manual user sign-off in place. Move a document to `agent/completed/` only after
+the user explicitly signs off the work or explicitly requests its archival.
 
 ## The archive
 
@@ -19,15 +19,11 @@ preserve that structure under `agent/completed/`.
 
 ## When to archive
 
-A doc is finished when the work it tracks is no longer ongoing:
-
-- its PROGRESS block shows all phases complete and the code is merged;
-- the code demonstrably implements the plan (verify against the tree, not just
-  the doc — plan checkboxes are often left unticked);
-- the doc marks itself superseded or the approach was abandoned.
-
-When in doubt, check git history: a doc whose last update predates the shipped
-implementation of its subject is usually finished.
+Implementation completion, passing checks, merges, supersession, abandonment, and
+git history do not authorize archival. After finishing the authorized work,
+record its verification and mark it as awaiting manual user sign-off. Keep the
+document in its active location until that sign-off or an explicit archive
+request arrives.
 
 ## Rules
 

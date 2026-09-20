@@ -1,20 +1,27 @@
 set(GN_INTERNAL_TEST_TARGET GNtest-internal)
 
 add_executable(${GN_INTERNAL_TEST_TARGET}
+    ${CMAKE_CURRENT_SOURCE_DIR}/renderdoc-capture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/renderdoc-test-main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/catch-failed-tests-listener.cpp)
-target_include_directories(${GN_INTERNAL_TEST_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src/core)
+target_include_directories(${GN_INTERNAL_TEST_TARGET} PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/3rdparty/rapid-vulkan/dev/3rd-party/rdc)
 
 target_link_libraries(${GN_INTERNAL_TEST_TARGET} PRIVATE
     GNcore-objects
     GNextern
-    Catch2::Catch2WithMain)
+    Catch2::Catch2)
 if (IS_GNUC)
     target_compile_options(${GN_INTERNAL_TEST_TARGET} PRIVATE -Wno-sign-compare)
 endif()
 if (VULKAN_FOUND)
     target_compile_definitions(${GN_INTERNAL_TEST_TARGET} PRIVATE GN_BUILD_HAS_VULKAN=1)
-    target_include_directories(${GN_INTERNAL_TEST_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src/3rdparty/rapid-vulkan/inc)
+    target_include_directories(${GN_INTERNAL_TEST_TARGET} PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/3rdparty/rapid-vulkan/inc)
 endif()
+target_link_libraries(${GN_INTERNAL_TEST_TARGET} PRIVATE ${CMAKE_DL_LIBS})
 
 file(GLOB_RECURSE internal_test_units CONFIGURE_DEPENDS
     ${CMAKE_SOURCE_DIR}/src/core/*/test/internal-test.cmake)

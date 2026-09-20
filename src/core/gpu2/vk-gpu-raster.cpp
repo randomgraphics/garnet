@@ -53,7 +53,10 @@ static rv::Sampler * ensureLinearSampler(const rv::Device * dev, rv::Ref<rv::Sam
     rv::Sampler::ConstructParameters scp;
     scp.gi = dev->gi();
     scp.setLinear();
-    slot = rv::Ref<rv::Sampler>::make(scp);
+    // Roughness selects prefiltered environment mips; Vulkan's zero default
+    // otherwise clamps every explicit shader LOD to the sharpest level.
+    scp.info.maxLod = VK_LOD_CLAMP_NONE;
+    slot            = rv::Ref<rv::Sampler>::make(scp);
     return slot.get();
 }
 

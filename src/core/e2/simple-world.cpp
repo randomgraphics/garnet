@@ -85,7 +85,7 @@ struct BoxMeshFacet : VisualFacet {
     }
 
     // Called by the world (under its lock) while capturing a moment.
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
+    Ref<VisualMoment> snapshot(const VisualTableau::SnapshotParameters &) override {
         auto * f = form();
         auto * w = f ? f->world() : nullptr;
         if (!w) GN_UNLIKELY {
@@ -116,7 +116,7 @@ struct PointLightFacet : VisualFacet {
     PointLightFacet(Universe & u, const IntensityRGB & color)
         : VisualFacet(TYPE_INFO(), u.generateUniqueIdentifier(), "simple-point-light"), mColor(glm::vec3(color.r, color.g, color.b) * color.intensity.value) {}
 
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) override {
+    Ref<VisualMoment> snapshot(const VisualTableau::SnapshotParameters &) override {
         auto * f = form();
         auto * w = f ? f->world() : nullptr;
         if (!w) GN_UNLIKELY {
@@ -158,7 +158,7 @@ Ref<Mold> createBoxMold(Universe & universe, const LocalVector3 & dimensions) {
 //
 // Threading model: run() executes the fixed-timestep simulation loop synchronously on the
 // calling thread until stop() is called — the world owns no thread; the caller decides where
-// the loop lives. populate() and captureVisualMoment() may be called from any thread; the
+// the loop lives. populate() and snapshot() may be called from any thread; the
 // world's mutex is the synchronization boundary that guards both the form collection and
 // every form's live state, so a captured moment is always internally consistent. The
 // renderer observes the world only through these self-contained snapshots, never through
@@ -206,8 +206,10 @@ struct SimpleWorld : World {
 
     void stop() override { mStop.store(true, std::memory_order_relaxed); }
 
-    Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters & params) override {
-        auto moment = referenceTo(new VisualMomentImpl(universe, scale));
+    Ref<VisualTableau> snapshot(const VisualTableau::SnapshotParameters & params) override {
+        auto tableau = VisualTableau::create(universe);
+        auto moment  = referenceTo(new VisualMomentImpl(universe, scale));
+        tableau->add(moment);
 
         // Snapshot the observing cameras into the moment so the snapshot is self-contained.
         for (auto & cam : params.cameras) {
@@ -224,11 +226,14 @@ struct SimpleWorld : World {
                     GN_WARN(sLogger, "facet {} is not a visual facet; ignored.", facet->name);
                     continue;
                 }
-            auto contribution = visual->captureVisualMoment(params);
+            auto contribution = visual->snapshot(params);
             if (!contribution) GN_UNLIKELY continue;
-            if (auto * vm = RuntimeType::cast<VisualMomentImpl>(contribution.get())) moment->merge(*vm);
+            if (auto * vm = RuntimeType::cast<VisualMomentImpl>(contribution.get()))
+                moment->merge(*vm);
+            else
+                tableau->add(contribution);
         }
-        return moment;
+        return tableau;
     }
 
 private:

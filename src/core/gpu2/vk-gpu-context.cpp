@@ -120,6 +120,8 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     ip.apiVersion = VK_API_VERSION_1_3;
     ip.backtrace  = []() -> std::string { return GN::backtrace().c_str(); };
     ip.setValidation(getVkInstanceValidation(params.debug));
+    // Capture labels remain useful without validation layers; the extension is optional.
+    ip.instanceExtensions[VK_EXT_DEBUG_UTILS_EXTENSION_NAME] = false;
     ip.setPrintVkInfo(getVkDeviceVerbosity(params.howToPrintDeviceCaps));
     mInstance.emplace(ip);
     if (!mInstance->handle()) {
@@ -165,6 +167,19 @@ GpuContextVulkan2::~GpuContextVulkan2() {
     GN_INFO(sLoggerVk, "Wait for GPU idle ...");
     pumpInternal(true);
     GN_INFO(sLoggerVk, "Destroying Vulkan GPU context");
+}
+
+void GpuContextVulkan2::beginDebugLabel(const char * labelName) {
+    // Require both entry points so optional debug support cannot produce an unbalanced region.
+    if (!ready() || !VULKAN_HPP_DEFAULT_DISPATCHER.vkQueueBeginDebugUtilsLabelEXT || !VULKAN_HPP_DEFAULT_DISPATCHER.vkQueueEndDebugUtilsLabelEXT) return;
+    auto * queue = vulkanDevice().graphics();
+    if (queue) queue->handle().beginDebugUtilsLabelEXT(vk::DebugUtilsLabelEXT().setPLabelName(labelName ? labelName : "").setColor({1.f, 1.f, 1.f, 1.f}));
+}
+
+void GpuContextVulkan2::endDebugLabel() {
+    if (!ready() || !VULKAN_HPP_DEFAULT_DISPATCHER.vkQueueBeginDebugUtilsLabelEXT || !VULKAN_HPP_DEFAULT_DISPATCHER.vkQueueEndDebugUtilsLabelEXT) return;
+    auto * queue = vulkanDevice().graphics();
+    if (queue) queue->handle().endDebugUtilsLabelEXT();
 }
 
 void GpuContextVulkan2::submit(const SubmitParameters & sp) {

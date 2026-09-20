@@ -151,14 +151,80 @@ python3 src/tool/texture-toolbox/hdri-to-cubemap.py input.exr output.dds
 
 ---
 
+### gen-ibl-maps.py
+
+Generates the complete image-based lighting set from an equirectangular EXR/HDR
+panorama: `skybox.dds`, `irradiance.dds`, `prefiltered.dds`, and `brdf_lut.dds`.
+The prefiltered cubemap has five roughness mip levels, stored in DDS face-major
+order. Computation runs on the CPU using NumPy.
+
+```powershell
+python.exe src/tool/texture-toolbox/gen-ibl-maps.py input.exr --out-dir output/ibl
+```
+
+Without `--out-dir`, files are written beside the input panorama. Face sizes
+default to 512 for the skybox, 32 for irradiance, and 128 for prefiltered
+reflections; the BRDF LUT is 256 square. Override these with `--skybox-size`,
+`--irr-size`, `--prefilter-size`, and `--lut-size`. Sampling quality and runtime
+are controlled by `--irr-samples`, `--prefilter-samples`, and `--lut-samples`.
+Existing output files are replaced.
+
+### combine-arm-texture.py
+
+Packs three same-sized grayscale PNGs into one RGB texture:
+R = ambient occlusion, G = roughness, B = metallic. Input filenames are
+`<prefix>_ao.png`, `<prefix>_roughness.png`, and `<prefix>_metallic.png`;
+the output is `<prefix>_arm.png` in the same directory.
+
+```powershell
+python.exe src/tool/texture-toolbox/combine-arm-texture.py media/asset-foundry/image/pbr/lined-metal-sheeting
+```
+
+An optional second positional argument supplies the filename prefix; by default
+it is the directory name. Existing output is replaced. Requires Pillow.
+
+### convert-normal-map-dx-gl.py
+
+Converts an 8-bit normal map between DirectX and OpenGL/Vulkan conventions by
+flipping the green channel (`255 - G`), preserving red, blue, and any alpha.
+Requires Pillow.
+
+```powershell
+# Explicit input and output files; the same operation works in either direction.
+python.exe src/tool/texture-toolbox/convert-normal-map-dx-gl.py normal-dx.png normal-gl.png
+
+# Directory mode: infer filenames from the directory name, or supply a prefix.
+python.exe src/tool/texture-toolbox/convert-normal-map-dx-gl.py media/asset-foundry/image/pbr/lined-metal-sheeting --to gl
+```
+
+Directory mode reads `<prefix>_normal-dx.png` and writes
+`<prefix>_normal-gl.png` by default. Use `--to dx` to reverse those names;
+an optional second positional argument overrides the prefix. Existing output
+is replaced. In explicit-file mode, the filenames determine input and output;
+`--to` does not change the green-channel flip.
+
+### test-gen-ibl-maps.py
+
+Checks DDS cubemap serialization for RGBA16F and RGBA32F with distinct face/mip
+values. Uses temporary files and requires NumPy; it does not regenerate assets.
+
+```powershell
+python.exe src/tool/texture-toolbox/test-gen-ibl-maps.py
+```
+
+For the examples above, run from the repository root after initializing the
+environment. On Linux/macOS use `python3` instead of `python.exe`. Each conversion
+script accepts `--help`. The three `.cmd` files are Windows launchers for their
+same-named Python scripts and forward all arguments; they add no options.
+
 ## Dependencies
 
 ```
 PyQt5 >= 5.15           # texture-viewer GUI
-numpy >= 1.24           # both tools
-Pillow >= 9.0           # texture-viewer: common image formats
-OpenEXR >= 3.0          # both tools: EXR loading
-imageio >= 2.28         # hdri-to-cubemap: HDR fallback
+numpy >= 1.24           # DDS/HDR tools, IBL generation, and serialization tests
+Pillow >= 9.0           # common images, ARM packing, normal-map conversion
+OpenEXR >= 3.0          # EXR loading
+imageio >= 2.28         # HDR panorama loading fallback
 texture2ddecoder >= 1.0.6  # texture-viewer: BCn decompression
 ```
 
@@ -176,6 +242,10 @@ src/tool/texture-toolbox/
   hdri-to-cubemap.cmd      Windows launcher
   mipgen.py                entry point
   mipgen.cmd               Windows launcher
+  gen-ibl-maps.py          generate the full environment-lighting DDS set
+  combine-arm-texture.py   pack AO, roughness, and metallic PNGs
+  convert-normal-map-dx-gl.py  flip normal-map green channel
+  test-gen-ibl-maps.py     DDS cubemap writer regression test
   README.md
   texture_viewer/          shared package
     __init__.py
@@ -185,6 +255,9 @@ src/tool/texture-toolbox/
     canvas.py              ImageCanvas widget (zoom / pan / pixel pick)
     main_window.py         MainWindow, LoadingDialog, async load worker
 ```
+
+The `texture_viewer/` files are shared modules, not command-line tools. Launch
+`texture-viewer.py` to use the GUI; `mipgen.py` also uses `dds.py` for DDS I/O.
 
 ---
 

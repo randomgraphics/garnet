@@ -4,6 +4,10 @@
 
 #include <functional>
 
+namespace GN::fx2 {
+struct ModelScene;
+}
+
 namespace GN::e2 {
 
 // /// An audio snapshot of something, consumed by audio domain to play sound & music.
@@ -51,8 +55,36 @@ private:
 struct VisualFacet : Facet {
     GN_E2_DEFINE_A_BEING(Facet);
 
-    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
+    /// Generate a self-contained visual moment capturing this facet's current visible state.
+    /// Future changes to the facet or its owning form must not affect the returned moment.
+    /// Shared resources must remain immutable for the lifetime of the moment.
+    virtual Ref<VisualMoment> snapshot(const VisualTableau::SnapshotParameters &) = 0;
 };
+
+/// Visual capability for a form backed by an immutable, format-neutral FX2 model scene.
+/// The facet captures only instance state; GPU residency and RDG2 scheduling remain owned
+/// by the visual domain.
+struct ModelVisualFacet : VisualFacet {
+    GN_E2_DEFINE_A_BEING(VisualFacet);
+
+    struct CreateParameters {
+        Universe &                     universe;
+        AutoRef<const fx2::ModelScene> model;
+    };
+
+    /// Create a detached model facet. Attach it through Form::addFacet().
+    GN_API static Ref<ModelVisualFacet> create(const CreateParameters &);
+
+    /// Immutable source scene represented by this facet.
+    virtual AutoRef<const fx2::ModelScene> model() const = 0;
+
+    /// Enable or suppress this model's contribution to captured visual moments.
+    virtual void setVisible(bool visible) = 0;
+    virtual bool visible() const          = 0;
+};
+
+/// Create a normal structural form with one ModelVisualFacet attached.
+GN_API Ref<Form> createModelForm(Universe & universe, const StrA & name, AutoRef<const fx2::ModelScene> model);
 
 /// The main class that represents a presence in the world. A form owns the structural side
 /// of the simulation: the parent/child hierarchy, the spatial transform, and a flat list of
@@ -179,8 +211,9 @@ struct World : Being {
     /// Add new actors to the world. Can be called from any thread.
     virtual void populate(ArrayView<Ref<Form>>) = 0;
 
-    /// Briefly freeze the world, snap a visual moment, then continue. Can be called from any thread.
-    virtual Ref<VisualMoment> captureVisualMoment(const VisualMoment::CaptureParameters &) = 0;
+    /// Capture an opaque visual tableau at a consistent point in world evolution.
+    /// Can be called from any thread; the snapshot does not refer back to mutable forms.
+    virtual Ref<VisualTableau> snapshot(const VisualTableau::SnapshotParameters &) = 0;
 
 protected:
     World(const RuntimeType::TypeInfo & type, int64_t id, const StrA & name, const CreateParameters & cp)

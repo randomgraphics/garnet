@@ -43,3 +43,7 @@
 	path = media/asset-foundry
 	url = https://huggingface.co/datasets/bravecandy/asset-foundry
 	shallow = true
+[submodule "src/3rdparty/imgui"]
+	path = src/3rdparty/imgui
+	url = https://github.com/ocornut/imgui.git
+	shallow = true

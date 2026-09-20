@@ -10,6 +10,10 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
+namespace GN::win {
+class Window;
+}
+
 #define GN_E2_DEFINE_A_BEING(baseType) \
 protected:                             \
     using baseType::baseType;          \
@@ -73,6 +77,10 @@ struct OperatingDomain : Being {
 
     /// Current client-area size of the main window, in pixels.
     virtual Vector2<uint32_t> clientSize() const = 0;
+
+    /// Borrow the domain-owned main window for input observation. The pointer remains valid
+    /// until this domain is destroyed and must not be deleted by the caller.
+    virtual win::Window * window() const = 0;
 
     /// Pump the OS event queue once. Returns false when the user has requested the
     /// application to quit (e.g. the main window was closed).

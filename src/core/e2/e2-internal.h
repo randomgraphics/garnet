@@ -45,19 +45,33 @@ struct MeshData {
     DynaArray<uint16_t> indices;
 };
 
-// ---------------------------------------------------------------------------
-// VisualMomentImpl — the official, self-contained visual snapshot
-// ---------------------------------------------------------------------------
-// This is the concrete VisualMoment produced by worlds and consumed by the official
-// VisualDomain. It is a generic scene description (cameras + renderables + lights), not
-// anything specific to the Simple world. Forms contribute single-entry moments which the
-// world merges into one aggregate snapshot.
+/// Storage preserves insertion order; the private scheduler groups environments and
+/// overlays without exposing the collection's representation to other modules.
+struct VisualTableauImpl final : VisualTableau {
+    GN_REGISTER_RUNTIME_TYPE(VisualTableau);
 
+    DynaArray<Ref<VisualMoment>> moments;
+
+    explicit VisualTableauImpl(Universe & universe): VisualTableau(TYPE_INFO(), universe.generateUniqueIdentifier(), "visual-tableau") {}
+
+    void add(Ref<VisualMoment> moment) override {
+        if (moment) moments.append(std::move(moment));
+    }
+
+    DynaArray<Ref<VisualMoment>> orderedMoments() const;
+};
+
+// ---------------------------------------------------------------------------
+// VisualMomentImpl — the built-in, self-contained scene task
+// ---------------------------------------------------------------------------
+// Captures cameras, renderables, and lights independently of Simple world, then
+// records their draws itself. Other task types remain separate items in the tableau.
 struct VisualMomentImpl : VisualMoment {
     GN_REGISTER_RUNTIME_TYPE(VisualMoment);
 
     struct Renderable {
         std::shared_ptr<const MeshData> mesh;
+        AutoRef<const fx2::ModelScene>  model;
 
         // Transform kept in world units (not a baked float matrix) so the visual domain can do
         // the camera-relative rebasing in exact integer space before converting to physical
@@ -85,6 +99,8 @@ struct VisualMomentImpl : VisualMoment {
     DynaArray<Light>        lights;
 
     VisualMomentImpl(Universe & u, PhysicalScale scale_): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment"), scale(scale_) {}
+
+    bool record(RenderContext &) const override;
 
     /// Append another moment's renderables and lights into this one.
     void merge(const VisualMomentImpl & other) {

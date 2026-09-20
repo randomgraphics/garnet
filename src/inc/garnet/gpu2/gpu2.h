@@ -110,8 +110,34 @@ struct GpuContext : public RCRT64 {
     /// Wait for GPU idle.
     virtual void waitForIdle() = 0;
 
+    /// Begin a named debug region on the graphics queue; no-op when debug labels are unavailable.
+    /// Names are consumed during this call. Calls must nest and balance with endDebugLabel().
+    /// Serialize label calls with other host operations on this context's graphics queue.
+    virtual void beginDebugLabel(const char * labelName) = 0;
+
+    /// End the innermost graphics-queue debug region; no-op when debug labels are unavailable.
+    virtual void endDebugLabel() = 0;
+
 protected:
     using RCRT64::RCRT64;
+};
+
+/// Stack-scoped graphics-queue debug region. Retains the context until the region ends.
+class ScopedDebugLabel {
+public:
+    /// Begin a region on the supplied context; an empty context is allowed and does nothing.
+    ScopedDebugLabel(AutoRef<GpuContext> gpu, const char * name): mGpu(std::move(gpu)) {
+        if (mGpu) mGpu->beginDebugLabel(name);
+    }
+    ~ScopedDebugLabel() {
+        if (mGpu) mGpu->endDebugLabel();
+    }
+
+    ScopedDebugLabel(const ScopedDebugLabel &)             = delete;
+    ScopedDebugLabel & operator=(const ScopedDebugLabel &) = delete;
+
+private:
+    AutoRef<GpuContext> mGpu;
 };
 
 // -----------------------------
@@ -291,11 +317,13 @@ struct Buffer : public RCRT64 {
     /// Pass to GpuCnC::copyBufferToImage() and Texture::create(); keep staging alive
     /// until the GPU copy payload completes.
     struct StagedTexture {
+        // Vector3's default constructor leaves components unset, so region vectors
+        // need explicit components for whole-subresource copies to start at zero.
         struct Region {
             uint32_t          mip             = 0;
             uint32_t          face            = 0;
-            Vector3<uint32_t> imageOffset     = {};
-            Vector3<uint32_t> imageExtent     = {};
+            Vector3<uint32_t> imageOffset     = {0, 0, 0};
+            Vector3<uint32_t> imageExtent     = {0, 0, 0};
             uint64_t          bufferOffset    = 0;
             uint32_t          bufferRowLength = 0; ///< 0 = tight (same as imageExtent.x)
             uint32_t          bufferHeight    = 0; ///< 0 = tight (same as imageExtent.y)
@@ -311,6 +339,11 @@ struct Buffer : public RCRT64 {
     /// Uses rapid-image to decode; supports DDS, KTX, and common formats.
     /// @return StagedTexture with empty()==true on failure.
     static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, const StrA & path);
+
+    /// Decode an encoded in-memory image into a CPU-visible staging buffer. This is intended
+    /// for embedded model textures and follows the same ownership rules as the file overload.
+    static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, ArrayView<const uint8_t> encoded,
+                                                           const StrA & sourceName);
 
 protected:
     virtual void unmap(const Mapped &) = 0;

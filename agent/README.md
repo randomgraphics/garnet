@@ -28,7 +28,9 @@ consistent and machine-parseable.
 
 Example: `RDG2_RENDER_GRAPH_EXECUTION.txt`
 
-Only ongoing assignments live at the top of `agent/`. Finished ones are archived
+Ongoing assignments and finished work awaiting manual user sign-off live at the
+top of `agent/`. Archive only after explicit user sign-off or an explicit archive
+request. Record awaiting-sign-off status while keeping the file active. Archive
 in `agent/completed/` with a current UTC timestamp prefix:
 `yyyy-mm-dd-hhmmss-ORIGINAL_FILENAME.txt`. Always use UTC, never local time.
 Existing archived files retain their historical names (older ones may carry
