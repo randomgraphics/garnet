@@ -18,14 +18,10 @@ namespace {
 
 struct StoredDraw {
     AutoRef<GpuShader>  vs, hs, ds, gs, ps;
-    RasterState         states;
-    RasterGeometry      geometry;
-    GpuResourceTable    resources;
+    uint32_t            stateIndex         = 0;
+    uint32_t            geometryIndex      = 0;
+    uint32_t            resourceTableIndex = ~0u;
     AutoRef<const Blob> immediates;
-
-    // Populated during pass 1 (collectPassResources); read during pass 2 (recordDraw).
-    std::vector<int64_t> invalidResourceIds;     ///< resource IDs rejected by tracker; skip their bindings
-    bool                 geometryHazard = false; ///< true if any vertex/index buffer was rejected; skip the draw
 };
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
@@ -105,15 +101,22 @@ static RasterTarget checkRasterTarget(const RasterTarget * target) {
 
 class GpuRasterPayloadVulkan final : public GpuPayloadVulkan {
 public:
-    GpuRasterPayloadVulkan(const StrA & name, RasterPsoFactory * factory, RasterTarget rt, DynaArray<StoredDraw> draws)
-        : GpuPayloadVulkan(name), mPsoFactory(factory), mRenderTarget(std::move(rt)), mDraws(std::move(draws)) {}
+    GpuRasterPayloadVulkan(const StrA & name, RasterPsoFactory * factory, RasterTarget rt, DynaArray<StoredDraw> draws, DynaArray<RasterGeometry> geoms,
+                           DynaArray<GpuResourceTable> resTables, DynaArray<RasterState> states)
+        : GpuPayloadVulkan(name), mPsoFactory(factory), mRenderTarget(std::move(rt)), mDraws(std::move(draws)), mGeometries(std::move(geoms)),
+          mResourceTables(std::move(resTables)), mStates(std::move(states)) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
 
 private:
-    RasterPsoFactory *    mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
-    RasterTarget          mRenderTarget;
-    DynaArray<StoredDraw> mDraws;
+    RasterPsoFactory *                mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
+    RasterTarget                      mRenderTarget;
+    DynaArray<StoredDraw>             mDraws;
+    DynaArray<RasterGeometry>         mGeometries;
+    DynaArray<GpuResourceTable>       mResourceTables;
+    DynaArray<RasterState>            mStates;
+    std::vector<bool>                 mGeomHazards;
+    std::vector<std::vector<int64_t>> mTableInvalidIds;
 
     // Pass 1: register render targets and per-draw resources into the batch tracker.
     // Returns false if any render target has a hazard; the caller should skip the pass.
@@ -124,28 +127,82 @@ private:
     bool buildAndBeginRendering(vk::CommandBuffer vkcb, GpuResourceStateTrackerVulkan & tracker, vk::Extent2D & outExt, PassFormats & outFormats);
 
     // Record one draw call into the already-active dynamic render pass.
-    void recordDraw(size_t di, const StoredDraw & d, const RecordContext & ctx, rv::Ref<rv::Sampler> & defaultSampler, vk::Extent2D ext,
-                    const PassFormats & formats);
+    rv::Ref<const rv::DrawPack> recordDraw(size_t di, const StoredDraw & d, const RecordContext & ctx, rv::Ref<rv::Sampler> & defaultSampler, vk::Extent2D ext,
+                                           const PassFormats & formats);
 };
+
+static inline bool sameGeometry(const RasterGeometry & a, const RasterGeometry & b) {
+    if (a.vertexCount != b.vertexCount || a.indexCount != b.indexCount || a.instanceCount != b.instanceCount) return false;
+    if (a.indices.buffer.get() != b.indices.buffer.get() || a.indices.offset != b.indices.offset || a.indices.stride != b.indices.stride) return false;
+    if (a.vertices.size() != b.vertices.size() || a.instances.size() != b.instances.size()) return false;
+    for (size_t i = 0; i < a.vertices.size(); ++i) {
+        if (a.vertices[i].buffer.get() != b.vertices[i].buffer.get() || a.vertices[i].offset != b.vertices[i].offset ||
+            a.vertices[i].stride != b.vertices[i].stride)
+            return false;
+    }
+    for (size_t i = 0; i < a.instances.size(); ++i) {
+        if (a.instances[i].buffer.get() != b.instances[i].buffer.get() || a.instances[i].offset != b.instances[i].offset ||
+            a.instances[i].stride != b.instances[i].stride)
+            return false;
+    }
+    if (a.format != b.format) return false;
+    return true;
+}
+
+static inline bool sameResources(const GpuResourceTable & a, const GpuResourceTable & b) {
+    if (a.size() != b.size()) return false;
+    for (size_t s = 0; s < a.size(); ++s) {
+        if (a[s].size() != b[s].size()) return false;
+        for (size_t slot = 0; slot < a[s].size(); ++slot) {
+            if (a[s][slot].size() != b[s][slot].size()) return false;
+            for (size_t i = 0; i < a[s][slot].size(); ++i) {
+                if (a[s][slot][i] != b[s][slot][i]) return false;
+            }
+        }
+    }
+    return true;
+}
+
+static inline bool isReadOnlyResourceTable(const GpuResourceTable & table) {
+    for (const auto & set : table) {
+        for (const auto & slot : set) {
+            for (const auto & view : slot) {
+                if (view.empty()) continue;
+                if (view.isTexture() && view.imageView.type == GpuResourceView::ImageView::STORAGE) return false;
+                if (view.isBuffer() && view.bufferView.type == GpuResourceView::BufferView::STORAGE) return false;
+            }
+        }
+    }
+    return true;
+}
 
 bool GpuRasterPayloadVulkan::collectPassResources(GpuResourceStateTrackerVulkan & tracker) {
     if (!tracker.addRasterTarget(mRenderTarget)) return false;
-    for (size_t di = 0; di < mDraws.size(); ++di) {
-        StoredDraw & d = mDraws[di];
-        // Promote any read-only depth-stencil attachment to read-write if this draw's
-        // merged state requires writes. Must happen before registering other resources
-        // so the barrier covers the promoted layout from the start.
-        tracker.upgradeForDrawRasterState(d.states);
-        d.invalidResourceIds = tracker.addGpuResourceTable(d.resources);
-        if (!d.invalidResourceIds.empty()) {
-            GN_ERROR(sLogger,
-                     "RasterPassPayload: draw {} has {} shader resource(s) with layout hazards; "
-                     "those bindings will be skipped during recording",
-                     di, d.invalidResourceIds.size());
+
+    // Promote read-only depth-stencil attachment to read-write if any draw writes depth/stencil.
+    for (const auto & s : mStates) {
+        if ((s.depthState && s.depthState->writeEnabled()) || (s.stencilState && s.stencilState->enabled())) {
+            tracker.upgradeForDrawRasterState(s);
+            break;
         }
-        d.geometryHazard = !tracker.addRasterGeometry(d.geometry);
-        if (d.geometryHazard) { GN_ERROR(sLogger, "RasterPassPayload: draw {} has vertex/index buffer layout hazard; draw will be skipped", di); }
     }
+
+    // 1. Process unique geometries
+    mGeomHazards.resize(mGeometries.size());
+    for (size_t g = 0; g < mGeometries.size(); ++g) {
+        mGeomHazards[g] = !tracker.addRasterGeometry(mGeometries[g]);
+        if (mGeomHazards[g]) { GN_ERROR(sLogger, "RasterPassPayload: geometry {} has vertex/index buffer layout hazard", g); }
+    }
+
+    // 2. Process unique resource tables
+    mTableInvalidIds.resize(mResourceTables.size());
+    for (size_t r = 0; r < mResourceTables.size(); ++r) {
+        mTableInvalidIds[r] = tracker.addGpuResourceTable(mResourceTables[r]);
+        if (!mTableInvalidIds[r].empty()) {
+            GN_ERROR(sLogger, "RasterPassPayload: resource table {} has {} shader resource(s) with layout hazards", r, mTableInvalidIds[r].size());
+        }
+    }
+
     return true;
 }
 
@@ -227,44 +284,45 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
     return true;
 }
 
-void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const RecordContext & ctx, rv::Ref<rv::Sampler> & defaultSampler, vk::Extent2D ext,
-                                        const PassFormats & formats) {
+rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const RecordContext & ctx,
+                                                               rv::Ref<rv::Sampler> & defaultSampler, vk::Extent2D ext, const PassFormats & formats) {
     // Early exit: nothing to draw.
-    const RasterGeometry & geom = d.geometry;
-    if (geom.vertexCount == 0 && geom.indexCount == 0) GN_UNLIKELY return;
-    if (geom.instanceCount == 0 && !geom.instances.empty()) GN_UNLIKELY return;
+    const RasterGeometry & geom = mGeometries[d.geometryIndex];
+    if (geom.vertexCount == 0 && geom.indexCount == 0) GN_UNLIKELY return {};
+    if (geom.instanceCount == 0 && !geom.instances.empty()) GN_UNLIKELY return {};
 
     auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
     auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
     if (!vsVk || !vsVk->rvShader()) GN_UNLIKELY {
             GN_ERROR(sLogger, "RasterPassPayload: draw {} missing Vulkan vertex shader", di);
-            return;
+            return {};
         }
 
     // Viewport/scissor — self-contained per draw (baseline merged with overrides at record time).
-    vk::CommandBuffer vkcb = ctx.cmd.handle();
-    {
-        vk::Viewport vp = rsViewportToVk(*d.states.viewport, ext);
+    const RasterState & drawStates = mStates[d.stateIndex];
+    vk::CommandBuffer   vkcb       = ctx.cmd.handle();
+    if (drawStates.viewport && drawStates.scissorRect) {
+        vk::Viewport vp = rsViewportToVk(*drawStates.viewport, ext);
         vkcb.setViewport(0, 1, &vp);
-        vk::Rect2D sc = rsScissorToVk(*d.states.scissorRect, ext);
+        vk::Rect2D sc = rsScissorToVk(*drawStates.scissorRect, ext);
         vkcb.setScissor(0, 1, &sc);
     }
 
     // --- Pipeline (get-or-create from factory) ---
     if (!mPsoFactory) GN_UNLIKELY {
             GN_ERROR(sLogger, "RasterPassPayload: draw {} has no PSO factory", di);
-            return;
+            return {};
         }
     Gpu2RasterPsoCreateParams psoParams {
         .vs           = vsVk,
         .ps           = psVk,
-        .state        = d.states,
+        .state        = drawStates,
         .geometry     = geom,
         .formats      = formats,
         .colorTargets = mRenderTarget.colorTargets,
     };
     rv::Ref<const rv::GraphicsPipeline> pipeline = mPsoFactory->getOrCreate(psoParams);
-    if (!pipeline || !pipeline->handle()) GN_UNLIKELY return;
+    if (!pipeline || !pipeline->handle()) GN_UNLIKELY return {};
 
     rv::Drawable::ConstructParameters dcp;
     dcp.setPipeline(pipeline);
@@ -280,46 +338,51 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
     }
 
     // --- Descriptor binding from resource table ---
-    // Resources rejected by the tracker during pass 1 are in d.invalidResourceIds and skipped.
+    // Resources rejected by the tracker during pass 1 are in mTableInvalidIds and skipped.
+    static const std::vector<int64_t> sEmptyInvalidIds;
+    const auto & invalidResourceIds = (d.resourceTableIndex < mTableInvalidIds.size()) ? mTableInvalidIds[d.resourceTableIndex] : sEmptyInvalidIds;
     rv::Ref<const rv::Sampler> linSampler(ensureLinearSampler(ctx.dev, defaultSampler)); // TODO: implement sampler class.
-    for (size_t setIdx = 0; setIdx < d.resources.size(); ++setIdx) {
-        const auto & set = d.resources[setIdx];
-        for (size_t bindingIdx = 0; bindingIdx < set.size(); ++bindingIdx) {
-            const auto & slot = set[bindingIdx];
-            if (slot.empty()) continue;
-            rv::DescriptorIdentifier descId((uint32_t) setIdx, (uint32_t) bindingIdx);
-            if (slot[0].isTexture()) {
-                std::vector<rv::ImageSampler> imgs;
-                imgs.reserve(slot.size());
-                for (const auto & view : slot) {
-                    if (view.empty() || !view.isTexture()) continue;
-                    auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
-                    if (!tex) continue;
-                    if (std::find(d.invalidResourceIds.begin(), d.invalidResourceIds.end(), tex->id) != d.invalidResourceIds.end()) continue;
-                    vk::ImageLayout layout =
-                        (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral : vk::ImageLayout::eShaderReadOnlyOptimal;
-                    rv::ImageSampler is;
-                    is.view    = tex->nativeView(view.imageView);
-                    is.layout  = layout;
-                    is.sampler = linSampler;
-                    imgs.push_back(is);
+    if (d.resourceTableIndex < mResourceTables.size()) {
+        const auto & resTable = mResourceTables[d.resourceTableIndex];
+        for (size_t setIdx = 0; setIdx < resTable.size(); ++setIdx) {
+            const auto & set = resTable[setIdx];
+            for (size_t bindingIdx = 0; bindingIdx < set.size(); ++bindingIdx) {
+                const auto & slot = set[bindingIdx];
+                if (slot.empty()) continue;
+                rv::DescriptorIdentifier descId((uint32_t) setIdx, (uint32_t) bindingIdx);
+                if (slot[0].isTexture()) {
+                    std::vector<rv::ImageSampler> imgs;
+                    imgs.reserve(slot.size());
+                    for (const auto & view : slot) {
+                        if (view.empty() || !view.isTexture()) continue;
+                        auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
+                        if (!tex) continue;
+                        if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), tex->id) != invalidResourceIds.end()) continue;
+                        vk::ImageLayout layout =
+                            (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral : vk::ImageLayout::eShaderReadOnlyOptimal;
+                        rv::ImageSampler is;
+                        is.view    = tex->nativeView(view.imageView);
+                        is.layout  = layout;
+                        is.sampler = linSampler;
+                        imgs.push_back(is);
+                    }
+                    if (!imgs.empty()) drawable.t(descId, vk::ArrayProxy<const rv::ImageSampler>((uint32_t) imgs.size(), imgs.data()));
+                } else if (slot[0].isBuffer()) {
+                    std::vector<rv::BufferView> bufs;
+                    bufs.reserve(slot.size());
+                    for (const auto & view : slot) {
+                        if (view.empty() || !view.isBuffer()) continue;
+                        auto * buf = RuntimeType::cast<BufferVulkan>(view.buffer().get());
+                        if (!buf) continue;
+                        if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), buf->id) != invalidResourceIds.end()) continue;
+                        rv::BufferView bv;
+                        bv.buffer = buf->rvBuffer();
+                        bv.offset = (vk::DeviceSize) view.bufferView.offset;
+                        bv.size   = view.bufferView.size ? (vk::DeviceSize) view.bufferView.size : vk::DeviceSize(-1);
+                        bufs.push_back(bv);
+                    }
+                    if (!bufs.empty()) drawable.b(descId, vk::ArrayProxy<const rv::BufferView>((uint32_t) bufs.size(), bufs.data()));
                 }
-                if (!imgs.empty()) drawable.t(descId, vk::ArrayProxy<const rv::ImageSampler>((uint32_t) imgs.size(), imgs.data()));
-            } else if (slot[0].isBuffer()) {
-                std::vector<rv::BufferView> bufs;
-                bufs.reserve(slot.size());
-                for (const auto & view : slot) {
-                    if (view.empty() || !view.isBuffer()) continue;
-                    auto * buf = RuntimeType::cast<BufferVulkan>(view.buffer().get());
-                    if (!buf) continue;
-                    if (std::find(d.invalidResourceIds.begin(), d.invalidResourceIds.end(), buf->id) != d.invalidResourceIds.end()) continue;
-                    rv::BufferView bv;
-                    bv.buffer = buf->rvBuffer();
-                    bv.offset = (vk::DeviceSize) view.bufferView.offset;
-                    bv.size   = view.bufferView.size ? (vk::DeviceSize) view.bufferView.size : vk::DeviceSize(-1);
-                    bufs.push_back(bv);
-                }
-                if (!bufs.empty()) drawable.b(descId, vk::ArrayProxy<const rv::BufferView>((uint32_t) bufs.size(), bufs.data()));
             }
         }
     }
@@ -369,9 +432,32 @@ void GpuRasterPayloadVulkan::recordDraw(size_t di, const StoredDraw & d, const R
     rv::Ref<const rv::DrawPack> pack = drawable.compile();
     if (!pack || pack->empty()) GN_UNLIKELY {
             GN_ERROR(sLogger, "RasterPassPayload: Drawable::compile produced empty DrawPack");
-            return;
+            return {};
         }
     ctx.cmd.render(pack);
+    return pack;
+}
+
+struct CachedDrawConfig {
+    rv::Ref<const rv::Pipeline>    pipeline;
+    rv::Ref<const rv::DrawPack>    pack;
+    const StoredDraw *             firstDraw = nullptr;
+    std::vector<vk::DescriptorSet> descriptorSets;
+    std::vector<vk::Buffer>        vertexBuffers;
+    std::vector<vk::DeviceSize>    vertexOffsets;
+    vk::Buffer                     indexBuffer {};
+    vk::DeviceSize                 indexOffset   = 0;
+    vk::IndexType                  indexType     = vk::IndexType::eUint16;
+    uint32_t                       indexCount    = 0;
+    uint32_t                       vertexCount   = 0;
+    uint32_t                       instanceCount = 1;
+};
+
+static inline bool matchesConfig(const StoredDraw & d, const CachedDrawConfig & cfg) {
+    if (!cfg.firstDraw) return false;
+    const StoredDraw & f = *cfg.firstDraw;
+    return d.vs.get() == f.vs.get() && d.ps.get() == f.ps.get() && d.stateIndex == f.stateIndex && d.geometryIndex == f.geometryIndex &&
+           d.resourceTableIndex == f.resourceTableIndex;
 }
 
 void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
@@ -382,7 +468,6 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
 
     // Pass 1: register this pass's resources into the shared batch tracker.
     // The tracker already holds committed state from prior payloads, so it produces
-    // correct "from" layouts for all barriers without any extra bookkeeping.
     if (!collectPassResources(tracker)) return;
 
     // Single pre-pass barrier covering all attachments and shader resources.
@@ -394,13 +479,170 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     if (!buildAndBeginRendering(vkcb, tracker, ext, formats)) return;
 
     rv::Ref<rv::Sampler> defaultSampler;
+
+    std::vector<CachedDrawConfig>  configs;
+    int                            activeConfigIndex = -1;
+    vk::Pipeline                   boundPipeline {};
+    std::vector<vk::DescriptorSet> boundSets;
+    std::vector<vk::Buffer>        boundVertexBuffers;
+    std::vector<vk::DeviceSize>    boundVertexOffsets;
+    vk::Buffer                     boundIndexBuffer {};
+    vk::DeviceSize                 boundIndexOffset = 0;
+    vk::IndexType                  boundIndexType   = vk::IndexType::eUint16;
+    RasterState::Viewport          boundVp {};
+    RasterState::ScissorRect       boundSc {};
+    bool                           hasBoundVpSc = false;
+
     for (size_t di = 0; di < mDraws.size(); ++di) {
         const StoredDraw & d = mDraws[di];
-        if (d.geometryHazard) continue;
-        recordDraw(di, d, ctx, defaultSampler, ext, formats);
+        if (d.geometryIndex < mGeomHazards.size() && mGeomHazards[d.geometryIndex]) continue;
+
+        // Fastest path: matches current active hardware state.
+        if (activeConfigIndex >= 0 && matchesConfig(d, configs[activeConfigIndex])) {
+            const auto & cfg = configs[activeConfigIndex];
+            if (d.immediates && !d.immediates->empty()) {
+                if (d.immediates->size() > 128) GN_UNLIKELY {
+                        GN_ERROR(sLogger, "RasterPassPayload: immediates size {} exceeds 128", d.immediates->size());
+                    }
+                else {
+                    vkcb.pushConstants(cfg.pipeline->layout(), vk::ShaderStageFlagBits::eAllGraphics, 0, (uint32_t) d.immediates->size(), d.immediates->data());
+                }
+            }
+            if (cfg.indexCount > 0) {
+                vkcb.drawIndexed(cfg.indexCount, cfg.instanceCount, 0, 0, 0);
+            } else {
+                vkcb.draw(cfg.vertexCount, cfg.instanceCount, 0, 0);
+            }
+            continue;
+        }
+
+        // Fast path: matches a previously cached configuration.
+        int foundIndex = -1;
+        for (size_t c = 0; c < configs.size(); ++c) {
+            if ((int) c == activeConfigIndex) continue;
+            if (matchesConfig(d, configs[c])) {
+                foundIndex = (int) c;
+                break;
+            }
+        }
+
+        if (foundIndex >= 0) {
+            const auto & cfg     = configs[foundIndex];
+            const auto & dStates = mStates[d.stateIndex];
+
+            // Viewport & scissor
+            if (dStates.viewport && (!hasBoundVpSc || boundVp != *dStates.viewport)) {
+                vk::Viewport vp = rsViewportToVk(*dStates.viewport, ext);
+                vkcb.setViewport(0, 1, &vp);
+                boundVp = *dStates.viewport;
+            }
+            if (dStates.scissorRect && (!hasBoundVpSc || boundSc != *dStates.scissorRect)) {
+                vk::Rect2D sc = rsScissorToVk(*dStates.scissorRect, ext);
+                vkcb.setScissor(0, 1, &sc);
+                boundSc = *dStates.scissorRect;
+            }
+            hasBoundVpSc = true;
+
+            // Pipeline
+            if (boundPipeline != cfg.pipeline->handle()) {
+                vkcb.bindPipeline(vk::PipelineBindPoint::eGraphics, cfg.pipeline->handle());
+                boundPipeline = cfg.pipeline->handle();
+                boundSets.clear();
+            }
+
+            // Descriptors
+            if (boundSets.size() < cfg.descriptorSets.size()) boundSets.resize(cfg.descriptorSets.size());
+            for (uint32_t s = 0; s < (uint32_t) cfg.descriptorSets.size(); ++s) {
+                if (cfg.descriptorSets[s] && cfg.descriptorSets[s] != boundSets[s]) {
+                    vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, cfg.pipeline->layout(), s, 1, &cfg.descriptorSets[s], 0, nullptr);
+                    boundSets[s] = cfg.descriptorSets[s];
+                }
+            }
+
+            // Vertex buffers
+            if (!cfg.vertexBuffers.empty() && (cfg.vertexBuffers != boundVertexBuffers || cfg.vertexOffsets != boundVertexOffsets)) {
+                vkcb.bindVertexBuffers(0, (uint32_t) cfg.vertexBuffers.size(), cfg.vertexBuffers.data(), cfg.vertexOffsets.data());
+                boundVertexBuffers = cfg.vertexBuffers;
+                boundVertexOffsets = cfg.vertexOffsets;
+            }
+
+            // Index buffer
+            if (cfg.indexBuffer && (cfg.indexBuffer != boundIndexBuffer || cfg.indexOffset != boundIndexOffset || cfg.indexType != boundIndexType)) {
+                vkcb.bindIndexBuffer(cfg.indexBuffer, cfg.indexOffset, cfg.indexType);
+                boundIndexBuffer = cfg.indexBuffer;
+                boundIndexOffset = cfg.indexOffset;
+                boundIndexType   = cfg.indexType;
+            }
+
+            // Push constants
+            if (d.immediates && !d.immediates->empty()) {
+                if (d.immediates->size() > 128) GN_UNLIKELY {
+                        GN_ERROR(sLogger, "RasterPassPayload: immediates size {} exceeds 128", d.immediates->size());
+                    }
+                else {
+                    vkcb.pushConstants(cfg.pipeline->layout(), vk::ShaderStageFlagBits::eAllGraphics, 0, (uint32_t) d.immediates->size(), d.immediates->data());
+                }
+            }
+
+            // Draw
+            if (cfg.indexCount > 0) {
+                vkcb.drawIndexed(cfg.indexCount, cfg.instanceCount, 0, 0, 0);
+            } else {
+                vkcb.draw(cfg.vertexCount, cfg.instanceCount, 0, 0);
+            }
+
+            activeConfigIndex = foundIndex;
+            continue;
+        }
+
+        // Slow path: first time encountering this configuration in this pass.
+        auto pack = recordDraw(di, d, ctx, defaultSampler, ext, formats);
+        if (!pack || !pack->pipeline) continue;
+
+        const auto & geom    = mGeometries[d.geometryIndex];
+        const auto & dStates = mStates[d.stateIndex];
+
+        CachedDrawConfig newCfg;
+        newCfg.pipeline  = pack->pipeline;
+        newCfg.pack      = pack;
+        newCfg.firstDraw = &d;
+        newCfg.descriptorSets.resize(pack->descriptors.size());
+        for (size_t s = 0; s < pack->descriptors.size(); ++s) {
+            if (!pack->descriptors[s].writes.empty()) { newCfg.descriptorSets[s] = pack->descriptors[s].writes[0].dstSet; }
+        }
+        newCfg.vertexBuffers.resize(pack->vertexBuffers.size());
+        for (size_t i = 0; i < pack->vertexBuffers.size(); ++i) {
+            newCfg.vertexBuffers[i] = pack->vertexBuffers[i] ? pack->vertexBuffers[i]->handle() : vk::Buffer {};
+        }
+        newCfg.vertexOffsets = pack->vertexOffsets;
+        newCfg.indexBuffer   = pack->indexBuffer ? pack->indexBuffer->handle() : vk::Buffer {};
+        newCfg.indexOffset   = pack->indexOffset;
+        newCfg.indexType     = pack->indexType;
+        newCfg.indexCount    = geom.indexCount;
+        newCfg.vertexCount   = geom.vertexCount;
+        newCfg.instanceCount = geom.instanceCount;
+
+        // Update hardware tracking state
+        boundPipeline      = newCfg.pipeline->handle();
+        boundSets          = newCfg.descriptorSets;
+        boundVertexBuffers = newCfg.vertexBuffers;
+        boundVertexOffsets = newCfg.vertexOffsets;
+        boundIndexBuffer   = newCfg.indexBuffer;
+        boundIndexOffset   = newCfg.indexOffset;
+        boundIndexType     = newCfg.indexType;
+        if (dStates.viewport) boundVp = *dStates.viewport;
+        if (dStates.scissorRect) boundSc = *dStates.scissorRect;
+        hasBoundVpSc = true;
+
+        configs.push_back(std::move(newCfg));
+        activeConfigIndex = (int) configs.size() - 1;
     }
 
     vkcb.endRendering();
+}
+
+static inline bool isRasterStateEmpty(const RasterState & s) {
+    return !s.fillMode && !s.cullMode && !s.frontFace && !s.depthState && !s.stencilState && !s.viewport && !s.scissorRect;
 }
 
 class GpuRasterVulkan2 final : public GpuRaster {
@@ -412,6 +654,7 @@ public:
         if (!mGpu) return;
         if (mRenderTarget.empty()) return;
         mDraws.reserve(cp.numberOfDrawsHint);
+        mStates.append(mRenderTarget.states);
         mValid = true;
     }
 
@@ -424,18 +667,81 @@ public:
             GN_ERROR(sLogger, "GpuRasterVulkan2::draw: already sealed");
             return;
         }
+
+        uint32_t stateIdx = 0;
+        if (!isRasterStateEmpty(dp.states)) {
+            RasterState merged = mRenderTarget.states;
+            mergeRenderState(merged, dp.states);
+            if (mLastStateIndex < mStates.size() && mStates[mLastStateIndex] == merged) {
+                stateIdx = mLastStateIndex;
+            } else {
+                bool found = false;
+                for (uint32_t i = 0; i < (uint32_t) mStates.size(); ++i) {
+                    if (mStates[i] == merged) {
+                        stateIdx = i;
+                        found    = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    stateIdx = (uint32_t) mStates.size();
+                    mStates.append(std::move(merged));
+                }
+                mLastStateIndex = stateIdx;
+            }
+        }
+
+        uint32_t geomIdx = 0;
+        if (mLastGeometryIndex < mGeometries.size() && sameGeometry(mGeometries[mLastGeometryIndex], dp.geometry)) {
+            geomIdx = mLastGeometryIndex;
+        } else {
+            bool found = false;
+            for (uint32_t i = 0; i < (uint32_t) mGeometries.size(); ++i) {
+                if (sameGeometry(mGeometries[i], dp.geometry)) {
+                    geomIdx = i;
+                    found   = true;
+                    break;
+                }
+            }
+            if (!found) {
+                geomIdx = (uint32_t) mGeometries.size();
+                mGeometries.append(dp.geometry);
+            }
+            mLastGeometryIndex = geomIdx;
+        }
+
+        uint32_t resIdx = ~0u;
+        if (!dp.resources.empty()) {
+            if (mLastResourceIndex < mResourceTables.size() && sameResources(mResourceTables[mLastResourceIndex], dp.resources)) {
+                resIdx = mLastResourceIndex;
+            } else {
+                bool found = false;
+                for (uint32_t i = 0; i < (uint32_t) mResourceTables.size(); ++i) {
+                    if (sameResources(mResourceTables[i], dp.resources)) {
+                        resIdx = i;
+                        found  = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    resIdx = (uint32_t) mResourceTables.size();
+                    mResourceTables.append(dp.resources);
+                }
+                mLastResourceIndex = resIdx;
+            }
+        }
+
         mDraws.resize(mDraws.size() + 1);
-        StoredDraw & s = mDraws.back();
-        s.vs           = dp.vs;
-        s.hs           = dp.hs;
-        s.ds           = dp.ds;
-        s.gs           = dp.gs;
-        s.ps           = dp.ps;
-        s.geometry     = dp.geometry;
-        s.resources    = dp.resources;
-        s.states       = mRenderTarget.states;
-        mergeRenderState(s.states, dp.states);
-        s.immediates = dp.immediates;
+        StoredDraw & s       = mDraws.back();
+        s.vs                 = dp.vs;
+        s.hs                 = dp.hs;
+        s.ds                 = dp.ds;
+        s.gs                 = dp.gs;
+        s.ps                 = dp.ps;
+        s.stateIndex         = stateIdx;
+        s.geometryIndex      = geomIdx;
+        s.resourceTableIndex = resIdx;
+        s.immediates         = dp.immediates;
     }
 
     AutoRef<GpuPayload> seal() override {
@@ -446,15 +752,22 @@ public:
         mSealed        = true;
         auto   vkGpu   = mGpu.staticCastTo<GpuContextVulkan2>();
         auto * factory = (vkGpu && vkGpu->ready()) ? &vkGpu->psoFactory() : nullptr;
-        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", factory, std::move(mRenderTarget), std::move(mDraws)));
+        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", factory, std::move(mRenderTarget), std::move(mDraws), std::move(mGeometries),
+                                                              std::move(mResourceTables), std::move(mStates)));
     }
 
 private:
-    AutoRef<GpuContextVulkan2> mGpu;
-    RasterTarget               mRenderTarget;
-    bool                       mValid  = false;
-    bool                       mSealed = false;
-    DynaArray<StoredDraw>      mDraws;
+    AutoRef<GpuContextVulkan2>  mGpu;
+    RasterTarget                mRenderTarget;
+    bool                        mValid  = false;
+    bool                        mSealed = false;
+    DynaArray<StoredDraw>       mDraws;
+    DynaArray<RasterGeometry>   mGeometries;
+    DynaArray<GpuResourceTable> mResourceTables;
+    DynaArray<RasterState>      mStates;
+    uint32_t                    mLastGeometryIndex = 0;
+    uint32_t                    mLastResourceIndex = ~0u;
+    uint32_t                    mLastStateIndex    = 0;
 };
 
 } // namespace

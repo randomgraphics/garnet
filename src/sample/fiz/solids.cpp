@@ -432,6 +432,7 @@ int main(int argc, const char ** argv) {
     float baseline1ThreadMs = 0.0f;
     float currentStepMs     = 0.0f;
     float avgStepMs         = 0.0f;
+    float avgDrawMs         = 0.0f;
     float avgFps            = 0.0f;
 
     // Camera control
@@ -542,8 +543,8 @@ int main(int argc, const char ** argv) {
             size_t   bodyCount     = arena.entities.size() > 5 ? arena.entities.size() - 5 : 0;
             size_t   activeCount   = arena.engine->activeBodyCount();
 
-            std::string title = StrA::format("Garnet Fiz | Bodies: {} ({} active) | Physics: {:.2f} ms [{} threads] | FPS: {:.0f}", bodyCount, activeCount,
-                                             avgStepMs, activeThreads, avgFps)
+            std::string title = StrA::format("Garnet Fiz | Bodies: {} ({} active) | Physics: {:.2f} ms [{} threads] | Draw: {:.2f} ms | FPS: {:.0f}", bodyCount,
+                                             activeCount, avgStepMs, activeThreads, avgDrawMs, avgFps)
                                     .data();
 
             if (baseline1ThreadMs > 0.0f && activeThreads > 1) {
@@ -576,6 +577,7 @@ int main(int argc, const char ** argv) {
             if (modelAssets[k]) { baseDraw[k] = ModelShading::getDrawParams(sscSnapshot, modelShading, modelAssets[k], 0, glm::mat4(1.0f)); }
         }
 
+        auto                        tRaster0 = std::chrono::high_resolution_clock::now();
         GpuRaster::CreateParameters rcp;
         rcp.gpu    = gpuContext;
         rcp.target = &rasterTarget;
@@ -588,8 +590,8 @@ int main(int argc, const char ** argv) {
                     // Containment boundary walls are invisible physics barriers so they don't occlude the scene or skybox.
                     continue;
                 }
-                const auto & base = baseDraw[e.kind];
-                if (!base.vs || !base.ps) continue;
+                auto & draw = baseDraw[e.kind];
+                if (!draw.vs || !draw.ps) continue;
 
                 Transform t = e.solid->transform();
 
@@ -599,7 +601,6 @@ int main(int argc, const char ** argv) {
                 const glm::mat4     normalTransform = glm::transpose(glm::inverse(worldTransform));
                 const PushConstants constants {worldTransform, normalTransform};
 
-                auto draw       = base;
                 draw.immediates = pushConstantPool.allocate(reinterpret_cast<const uint8_t *>(&constants));
                 r->draw(draw);
             }
@@ -608,6 +609,9 @@ int main(int argc, const char ** argv) {
             r->draw(ssc->getSkyboxDrawParams(sscSnapshot.set0Resources));
             renderWorks.append(r->seal());
         }
+        auto  tRaster1 = std::chrono::high_resolution_clock::now();
+        float drawMs   = std::chrono::duration<float, std::milli>(tRaster1 - tRaster0).count();
+        avgDrawMs      = (avgDrawMs == 0.0f) ? drawMs : (avgDrawMs * 0.95f + drawMs * 0.05f);
 
         // Submit GPU work
         GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
@@ -630,7 +634,10 @@ int main(int argc, const char ** argv) {
         if (!renderWorks.empty() && renderWorks.back()) swapchain->present(*renderWorks.back());
     }
 
-    if (testMode) { GN_INFO(sLogger, "Test mode completed successfully: {} steps simulated, avg physics time: {:.2f} ms", frameIdx, avgStepMs); }
+    if (testMode) {
+        GN_INFO(sLogger, "Test mode completed successfully: {} steps simulated, avg physics time: {:.2f} ms, avg draw time: {:.2f} ms", frameIdx, avgStepMs,
+                avgDrawMs);
+    }
 
     gpuContext->waitForIdle();
     swapchain.clear();

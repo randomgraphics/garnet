@@ -78,6 +78,7 @@ private:
         rv::Image::State incoming;
         /// Per-pass intended states. Cleared by emitPrePassBarriers() between payloads.
         std::unordered_map<uint64_t, rv::Image::State::PlaneState> registered;
+        bool                                                       hasWrite = false;
     };
     std::unordered_map<int64_t, TrackedTexture> mTextures;
 
@@ -98,6 +99,7 @@ private:
     bool addBuffer(TrackedBuffer b);
 
     std::unordered_map<int64_t, TrackedBuffer> mBuffers;
+    bool                                       mHasReadOnlyDepthStencil = false;
 };
 
 } // namespace GN::gpu2
