@@ -315,8 +315,25 @@ private:
 } // namespace
 
 int main(int argc, const char ** argv) {
-    bool testMode = (argc > 1) && (argv[1][0] == 't');
-    if (testMode) { GN_INFO(sLogger, "Running GNsample-fiz-solids in test mode"); }
+    std::setvbuf(stdout, nullptr, _IONBF, 0);
+    std::setvbuf(stderr, nullptr, _IONBF, 0);
+
+    bool testMode  = false;
+    int  framesArg = 0;
+    if (argc > 1) {
+        if (argv[1][0] == 't') {
+            testMode = true;
+        } else {
+            framesArg = std::atoi(argv[1]);
+        }
+    }
+
+    if (testMode) {
+        GN_INFO(sLogger, "Running GNsample-fiz-solids in test mode");
+    } else {
+        GN_INFO(sLogger, "Interactive visual mode: Press ESC to quit, [1,2,4,8,0] for threads, [B] spawn, [Space] wrecking ball, [R] "
+                         "reset");
+    }
 
     enableCRTMemoryCheck();
 
@@ -410,7 +427,7 @@ int main(int argc, const char ** argv) {
     // ─── Main Render & Simulation Loop ───────────────────────────────────────
     auto      lastTime    = std::chrono::high_resolution_clock::now();
     int       frameIdx    = 0;
-    const int totalFrames = testMode ? 60 : 0;
+    const int totalFrames = testMode ? 60 : framesArg;
 
     while (totalFrames == 0 || frameIdx < totalFrames) {
         ++frameIdx;
@@ -418,6 +435,8 @@ int main(int argc, const char ** argv) {
 
         // Input Handling
         if (window) {
+            if (window->getKeyStatus(win::KeyCode::ESCAPE).down) break;
+
             // [1], [2], [4], [8], [0] = Thread count switches
             if (window->getKeyStatus(win::KeyCode::_1).down && arena.configuredThreads != 1) {
                 arena.reset(1, arena.entities.size() > 5 ? arena.entities.size() - 5 : 1000);
@@ -498,18 +517,20 @@ int main(int argc, const char ** argv) {
             size_t   bodyCount     = arena.entities.size() > 5 ? arena.entities.size() - 5 : 0;
             size_t   activeCount   = arena.engine->activeBodyCount();
 
-            std::string title = StrA::format("Garnet Fiz | Bodies: %zu (%zu active) | Physics: %.2f ms [%u threads] | FPS: %.0f", bodyCount, activeCount,
+            std::string title = StrA::format("Garnet Fiz | Bodies: {} ({} active) | Physics: {:.2f} ms [{} threads] | FPS: {:.0f}", bodyCount, activeCount,
                                              avgStepMs, activeThreads, avgFps)
                                     .data();
 
             if (baseline1ThreadMs > 0.0f && activeThreads > 1) {
                 float speedup = baseline1ThreadMs / std::max(0.001f, avgStepMs);
-                title += StrA::format(" | Speedup: %.1fx", speedup).data();
+                title += StrA::format(" | Speedup: {:.1f}x", speedup).data();
             }
 
 #if GN_BUILD_HAS_MSW
             ::SetWindowTextA((HWND) window->getWindowHandle(), title.c_str());
 #endif
+
+            if (frameIdx % 60 == 0) { GN_INFO(sLogger, "{}", title); }
         }
 
         // ─── Render Frame ────────────────────────────────────────────────────
