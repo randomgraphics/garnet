@@ -183,6 +183,8 @@ void GpuContextVulkan2::endDebugLabel() {
 }
 
 void GpuContextVulkan2::submit(const SubmitParameters & sp) {
+    if (sp.autoPump) { pump(); }
+
     if (!ready()) GN_UNLIKELY {
             GN_ERROR(sLoggerVk, "GpuContextVulkan2::submit failed: device not ready, name='{}'", sp.name);
             return;
