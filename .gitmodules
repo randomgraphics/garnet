@@ -50,3 +50,4 @@
 [submodule "src/3rdparty/jolt"]
 	path = src/3rdparty/jolt
 	url = https://github.com/jrouwe/JoltPhysics.git
+	shallow = true

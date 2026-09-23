@@ -62,8 +62,8 @@ to engine worlds or scene hierarchies:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: none — initial architectural specification and documentation
-In progress: Phase 1.1 — Jolt Physics integration into 3rdparty build
+Last completed: Phase 1.1 — Jolt Physics integration into 3rdparty build
+In progress: Phase 1.2 — Establish GNfiz module structure and public headers
 --- END PROGRESS ---
 
 --- REFERENCE ---
