@@ -93,4 +93,26 @@ TEST_CASE("GpuPayloadVulkan: unsubmitted dependency is skipped but submission st
     CHECK(!dep->semaphore());          // dep remains unsubmitted
 }
 
+TEST_CASE("GpuContext: submit autoPump pumps previous completed submissions", "[gpu2][submit][gpu]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    auto p1 = AutoRef<InstrumentedPayload>::make("p1");
+
+    std::atomic<bool> done1 = false;
+    gpu->submit(GpuContext::SubmitParameters("submit1").appendWork(p1).setOnComplete([&] { done1 = true; }).setAutoPump(false));
+    CHECK(!done1);
+
+    // With autoPump=false, submitting another job must NOT pump submit1
+    gpu->submit(GpuContext::SubmitParameters("check-no-pump").setAutoPump(false));
+    CHECK(!done1);
+
+    // Submitting with default autoPump=true will pump and retire submit1 once its fence signals
+    for (int i = 0; i < 500 && !done1; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        gpu->submit(GpuContext::SubmitParameters("check-auto-pump")); // default autoPump is true
+    }
+    CHECK(done1);
+}
+
 #endif // GN_BUILD_HAS_VULKAN

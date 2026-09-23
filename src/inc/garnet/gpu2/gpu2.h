@@ -77,8 +77,14 @@ struct GpuContext : public RCRT64 {
         DynaArray<AutoRef<GpuPayload>> work;                    ///< Sealed GPU payloads to execute (in order)
         DynaArray<AutoRef<GpuPayload>> dependencies;            ///< GPU-side dependencies. Backend inserts semaphore as needed.
         std::function<void()>          onComplete;              ///< Optional CPU callback fired (from any thread) when the GPU fence signals.
+        bool                           autoPump = true;         ///< When true, pump() is called before submitting new work to retire completed submissions.
 
         SubmitParameters(const StrA & name_): name(name_) {}
+
+        SubmitParameters & setAutoPump(bool ap) {
+            autoPump = ap;
+            return *this;
+        }
 
         SubmitParameters & appendWork(AutoRef<GpuPayload> w) {
             if (w) work.append(w);
@@ -101,7 +107,9 @@ struct GpuContext : public RCRT64 {
     /// Submit GPU work. Command buffer allocation, queue selection, fence and semaphore
     /// management are internal. Each GpuPayload in \p work is associated with the resulting
     /// fence/semaphore so it can be waited on by subsequent submit() or present() calls.
-    virtual void submit(const SubmitParameters &) = 0;
+    /// When \p sp.autoPump is true, the GPU context is pumped before submitting the new job
+    /// to retire completed submissions and recycle resources.
+    virtual void submit(const SubmitParameters & sp) = 0;
 
     /// Check pending GPU submissions and fire onComplete callbacks for any whose fence has signaled.
     /// Called by the L1 graph's wait loop while sleeping on manual-complete nodes.
