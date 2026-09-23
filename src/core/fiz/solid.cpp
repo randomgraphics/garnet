@@ -210,7 +210,8 @@ static JPH::ShapeRefC createJoltShape(const Hull * hull) {
 class SolidEngineImpl;
 
 class SolidImpl : public Solid {
-    GN_FIZ_DEFINE_A_BEING(Solid);
+    GN_REGISTER_RUNTIME_TYPE(Solid);
+    using Solid::Solid;
 
 public:
     SolidImpl(SolidEngineImpl * engine, const SolidDesc & desc, JPH::BodyID bodyId, Scalar mass)
@@ -264,7 +265,8 @@ private:
 };
 
 class SolidEngineImpl : public SolidEngine {
-    GN_FIZ_DEFINE_A_BEING(SolidEngine);
+    GN_REGISTER_RUNTIME_TYPE(SolidEngine);
+    using SolidEngine::SolidEngine;
 
 public:
     SolidEngineImpl(const SolidEngineDesc & desc): SolidEngine(TYPE_INFO(), "SolidEngine"), mGravity(desc.gravity), mSimulationMode(desc.simulationMode) {

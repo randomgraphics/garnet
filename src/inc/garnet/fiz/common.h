@@ -6,13 +6,6 @@
 #include <chrono>
 #include <cstdint>
 
-#define GN_FIZ_DEFINE_A_BEING(baseType) \
-protected:                              \
-    using baseType::baseType;           \
-                                        \
-public:                                 \
-    GN_API GN_REGISTER_RUNTIME_TYPE(baseType);
-
 namespace GN::fiz {
 
 /// Canonical unit of discrete integer time across GNfiz and GNengine2.
@@ -32,9 +25,6 @@ using Quaternion = GN::Quaternion<Scalar>;
 using Matrix44   = GN::Matrix44<Scalar>;
 using Box        = GN::Box<Scalar>;
 using Sphere     = GN::Sphere<Scalar>;
-
-/// Reference counted runtime type base for fiz objects.
-using Being = GN::RCRT64;
 
 /// Transform representation in physical simulation coordinates.
 struct Transform {

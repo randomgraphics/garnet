@@ -11,9 +11,13 @@ namespace GN::fiz {
 enum class HullType : uint8_t { BOX, SPHERE, CAPSULE, CYLINDER, CONVEX, MESH };
 
 /// Abstract base class for collision and simulation geometries.
-struct Hull : public Being {
-    GN_FIZ_DEFINE_A_BEING(Being);
+struct Hull : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
+protected:
+    using RCRT64::RCRT64;
+
+public:
     virtual HullType type() const            = 0;
     virtual Box      localAabb() const       = 0;
     virtual Scalar   calculateVolume() const = 0;
@@ -29,45 +33,69 @@ struct Hull : public Being {
 
 /// Axis-aligned box collision geometry.
 struct BoxHull : public Hull {
-    GN_FIZ_DEFINE_A_BEING(Hull);
+    GN_API GN_REGISTER_RUNTIME_TYPE(Hull);
 
+protected:
+    using Hull::Hull;
+
+public:
     virtual const Vector3 & halfExtents() const = 0;
 };
 
 /// Spherical collision geometry.
 struct SphereHull : public Hull {
-    GN_FIZ_DEFINE_A_BEING(Hull);
+    GN_API GN_REGISTER_RUNTIME_TYPE(Hull);
 
+protected:
+    using Hull::Hull;
+
+public:
     virtual Scalar radius() const = 0;
 };
 
 /// Capsule collision geometry (oriented along Y axis).
 struct CapsuleHull : public Hull {
-    GN_FIZ_DEFINE_A_BEING(Hull);
+    GN_API GN_REGISTER_RUNTIME_TYPE(Hull);
 
+protected:
+    using Hull::Hull;
+
+public:
     virtual Scalar radius() const     = 0;
     virtual Scalar halfHeight() const = 0;
 };
 
 /// Cylinder collision geometry (oriented along Y axis).
 struct CylinderHull : public Hull {
-    GN_FIZ_DEFINE_A_BEING(Hull);
+    GN_API GN_REGISTER_RUNTIME_TYPE(Hull);
 
+protected:
+    using Hull::Hull;
+
+public:
     virtual Scalar radius() const     = 0;
     virtual Scalar halfHeight() const = 0;
 };
 
 /// Convex polyhedron collision geometry.
 struct ConvexHull : public Hull {
-    GN_FIZ_DEFINE_A_BEING(Hull);
+    GN_API GN_REGISTER_RUNTIME_TYPE(Hull);
 
+protected:
+    using Hull::Hull;
+
+public:
     virtual const std::vector<Vector3> & vertices() const = 0;
 };
 
 /// Arbitrary indexed triangle mesh collision geometry (primarily for static scenery).
 struct MeshHull : public Hull {
-    GN_FIZ_DEFINE_A_BEING(Hull);
+    GN_API GN_REGISTER_RUNTIME_TYPE(Hull);
 
+protected:
+    using Hull::Hull;
+
+public:
     virtual const std::vector<Vector3> &  vertices() const = 0;
     virtual const std::vector<uint32_t> & indices() const  = 0;
 };

@@ -7,7 +7,8 @@ namespace GN::fiz {
 static constexpr float PI = 3.14159265358979323846f;
 
 class BoxHullImpl : public BoxHull {
-    GN_FIZ_DEFINE_A_BEING(BoxHull);
+    GN_REGISTER_RUNTIME_TYPE(BoxHull);
+    using BoxHull::BoxHull;
 
 public:
     BoxHullImpl(const Vector3 & halfExtents): BoxHull(TYPE_INFO(), "BoxHull"), mHalfExtents(halfExtents) {}
@@ -22,7 +23,8 @@ private:
 };
 
 class SphereHullImpl : public SphereHull {
-    GN_FIZ_DEFINE_A_BEING(SphereHull);
+    GN_REGISTER_RUNTIME_TYPE(SphereHull);
+    using SphereHull::SphereHull;
 
 public:
     SphereHullImpl(Scalar radius): SphereHull(TYPE_INFO(), "SphereHull"), mRadius(radius) {}
@@ -40,7 +42,8 @@ private:
 };
 
 class CapsuleHullImpl : public CapsuleHull {
-    GN_FIZ_DEFINE_A_BEING(CapsuleHull);
+    GN_REGISTER_RUNTIME_TYPE(CapsuleHull);
+    using CapsuleHull::CapsuleHull;
 
 public:
     CapsuleHullImpl(Scalar radius, Scalar halfHeight): CapsuleHull(TYPE_INFO(), "CapsuleHull"), mRadius(radius), mHalfHeight(halfHeight) {}
@@ -60,7 +63,8 @@ private:
 };
 
 class CylinderHullImpl : public CylinderHull {
-    GN_FIZ_DEFINE_A_BEING(CylinderHull);
+    GN_REGISTER_RUNTIME_TYPE(CylinderHull);
+    using CylinderHull::CylinderHull;
 
 public:
     CylinderHullImpl(Scalar radius, Scalar halfHeight): CylinderHull(TYPE_INFO(), "CylinderHull"), mRadius(radius), mHalfHeight(halfHeight) {}
@@ -80,7 +84,8 @@ private:
 };
 
 class ConvexHullImpl : public ConvexHull {
-    GN_FIZ_DEFINE_A_BEING(ConvexHull);
+    GN_REGISTER_RUNTIME_TYPE(ConvexHull);
+    using ConvexHull::ConvexHull;
 
 public:
     ConvexHullImpl(const Vector3 * points, size_t count): ConvexHull(TYPE_INFO(), "ConvexHull") {
@@ -101,7 +106,8 @@ private:
 };
 
 class MeshHullImpl : public MeshHull {
-    GN_FIZ_DEFINE_A_BEING(MeshHull);
+    GN_REGISTER_RUNTIME_TYPE(MeshHull);
+    using MeshHull::MeshHull;
 
 public:
     MeshHullImpl(const Vector3 * vertices, size_t vertexCount, const uint32_t * indices, size_t indexCount): MeshHull(TYPE_INFO(), "MeshHull") {

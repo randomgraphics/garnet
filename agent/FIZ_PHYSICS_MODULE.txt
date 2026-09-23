@@ -97,7 +97,7 @@ python env/bin/format-all-sources.py -d # Format touched files
 - Subheaders reject direct inclusion with guard macros (`__GN_INSIDE_FIZ_H__`).
 - Pure virtual public interfaces; private concrete implementations live in `src/core/fiz/`
   and `src/core/e2/`.
-- Use `AutoRef<T>` / `Ref<T>` for ownership; use `Being` and `RuntimeType` for RTTI.
+- Use `AutoRef<T>` / `Ref<T>` for ownership; use `RCRT64` and `RuntimeType` for RTTI.
 - Sample assets must be 100% CC0 (Public Domain), directly checked in with provenance/credits.
 - Run `format-all-sources.py -d` before each commit.
 

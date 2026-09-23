@@ -32,9 +32,13 @@ struct SolidDesc {
 };
 
 /// Rigid body instance governed by 6-DOF Newtonian mechanics and contact constraints.
-struct Solid : public Being {
-    GN_FIZ_DEFINE_A_BEING(Being);
+struct Solid : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
+protected:
+    using RCRT64::RCRT64;
+
+public:
     virtual Transform transform() const                                               = 0;
     virtual void      setTransform(const Transform & transform, bool activate = true) = 0;
 
@@ -80,9 +84,13 @@ struct SolidEngineDesc {
 };
 
 /// Simulation engine managing rigid bodies, spatial acceleration, and constraint resolution.
-struct SolidEngine : public Being {
-    GN_FIZ_DEFINE_A_BEING(Being);
+struct SolidEngine : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
+protected:
+    using RCRT64::RCRT64;
+
+public:
     static GN_API AutoRef<SolidEngine> create(const SolidEngineDesc & desc = {});
 
     virtual AutoRef<Solid> createSolid(const SolidDesc & desc) = 0;
