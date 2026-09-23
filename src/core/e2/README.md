@@ -183,6 +183,7 @@ operating-system interaction.
 Current and planned domain roles include:
 
 - `VisualDomain`: rendering subsystem that consumes opaque `VisualTableau` snapshots.
+- `PhysicalDomain`: physics and environmental simulation subsystem providing independent time evolution, queries, and lookahead predictions.
 - Audio domain: sound and music subsystem. The public audio interfaces are not
   currently active in the headers.
 - `OperatingDomain`: operating-system subsystem for windows, input, and related
@@ -247,29 +248,158 @@ no OS domain selects headless rendering. The domain interface contains no concre
 content types or content setters. `VisualMoment`, `VisualTableau`, `VisualOverlay`,
 and `VisualEnvironment` are defined after `VisualDomain` in the public header.
 
+### Physical Domain And Physics Integration
+
+`PhysicalDomain` models the physical laws, dynamics, and continuous environmental
+fields that govern living forms across a universe.
+
+#### Architectural Principles: Singleton Engine & Data Ownership
+
+- **Singleton Operating Engine**: Like `VisualDomain`, `PhysicalDomain` is a
+  universe-level singleton service. It owns only the computational machinery:
+  thread pools, Jolt job dispatchers, and compiled `gpu2` compute shader pipelines.
+- **Zero Simulation Data Ownership**: `PhysicalDomain` holds **no** world simulation
+  data (no bodies, colliders, islands, or velocities).
+- **Data Owned by `World`, `Form`, and `Facet`**:
+  - `Form` and `PhysicalFacet` own local physical attributes (mass, collision hulls, material tempers).
+  - `World` owns the connected physical system representing the world's physical graph
+    (broadphase BVH, island graphs, constraints, GPU particle/grid buffers), organized
+    into a **`PhysicalTableau`** (analogous to `VisualTableau`).
+  - A single `PhysicalDomain` seamlessly services multiple independent worlds (e.g., active level,
+    background-loading level, editor preview) without cross-contamination.
+
+#### Dual-Snapshot Symmetry & World Serialization
+
+The engine establishes a profound reader-writer symmetry between rendering and physics:
+
+1. **Physical Snapshot (Ingress Write: `PhysicalDomain -> World`)**:
+   - The physical solver computes at its own high cadence (e.g. 200 Hz).
+   - At the main world's logic cadence (e.g. 30 Hz / 60 Hz), the world requests a
+     **`PhysicalSnapshot`** sampled/interpolated precisely at the world's simulation timestamp.
+   - The world applies this snapshot to batch-update the positions and rotations of its `Form`s.
+   - This is a **WRITE** operation to the world's state.
+2. **Visual Snapshot (Egress Read: `World -> VisualDomain`)**:
+   - `World::snapshot()` captures an immutable `VisualTableau` for the renderer.
+   - This is a **READ** operation on the world's state.
+3. **Serialization Invariant**:
+   - Because applying a `PhysicalSnapshot` writes to `Form` transforms while capturing a
+     `VisualTableau` reads from them, these phases **must be serialized** within each world step:
+     `[Ingress Physical Write] -> [World/Gameplay live()] -> [Egress Visual Read]`.
+   - This guarantees the renderer never observes half-updated, torn, or non-deterministic world state.
+
+#### 128-bit Coordinate Rebasing to 32-bit Float
+
+Garnet's 128-bit integer coordinates (`WorldCoordinate`) must be translated to the 32-bit
+float coordinates (`glm::vec3` / `fiz::Vector3`) that physics solvers and GPUs require,
+mirroring the camera-relative rebasing used in rendering. Crucially, `fiz` is **unit-agnostic**:
+`e2` uses `PhysicalScale` to convert 128-bit integer world units into the target floating-point scalar
+units (meters for terrestrial worlds, astronomical units for planetary orbits, or micrometers for micro-scale physics):
+
+- **Ingress (`World -> fiz`)**: Each simulation zone establishes an integer 128-bit anchor
+  $O_{sim}$. Coordinates are rebased in exact integer arithmetic and scaled into float units:
+  $$\mathbf{P}_{fiz} = \text{scale.toPhysical}(\text{spatial::toLocal}(\mathbf{P}_{world}, \mathbf{O}_{sim}))$$
+- **Egress (`fiz -> World Snapshot`)**: Simulated float coordinates convert back to local integer counts
+  and re-anchor into 128-bit world space:
+  $$\mathbf{P}'_{world} = \text{spatial::toWorld}(\text{scale.fromPhysical}(\mathbf{P}'_{fiz}), \mathbf{O}_{sim})$$
+- **Floating Origin**: Anchoring locally to $O_{sim}$ guarantees maximum floating-point precision anywhere
+  in a planetary or cosmic-scale world, completely eliminating float32 jitter at scale.
+
+#### Integer Time, 100% Forward Determinism & $T$-Symmetry
+
+- **Canonical Temporal Unit (`UnitOfTime`)**: `e2` inherits `UnitOfTime` directly from
+  `GN::fiz::UnitOfTime` (`using UnitOfTime = GN::fiz::UnitOfTime;`, typed as `std::chrono::nanoseconds`).
+  Simulations advance by discrete 64-bit integer nanosecond steps, eliminating floating-point
+  time accumulation drift.
+- **100% Strict Forward Determinism**: Given an initial physical state $S_0$ and a sequence of discrete
+  integer timestamps, the simulation is guaranteed to reach the exact same, bit-identical state
+  every single run. Force summation, contact sorting, and constraint resolution order are strictly stable
+  across worker threads.
+- **$T$-Symmetry (Time-Reversibility Where Physically Permissible)**: Physical laws in `fiz`
+  strive for time-direction neutrality. Conservative systems (gravity, orbital mechanics, elastic
+  springs, conservative XPBD constraints) support negative integer timesteps ($-\Delta t$) via
+  symplectic integrators (e.g., Velocity Verlet), returning to identical initial states without
+  history caches. Where physical laws themselves introduce thermodynamic dissipation (e.g. inelastic
+  energy loss or plastic deformation), physical entropy is respected.
+- **Time Scaling & Decoupled Cadence**:
+  - `setTimeScale(scale)`: controls simulation pace (`1.0` normal, `0.1` slow-motion, `0.0` paused, negative for backward simulation).
+  - `stepOnce()`: frame-by-frame debug step.
+  - $\alpha$-state interpolation between consecutive physics steps ensures high-refresh displays (144+ Hz) render buttery smooth without jitter even when world logic ticks at 30 Hz.
+
+#### Generic `PhysicalFacet` & Minimal Subclassing Rule
+
+Rather than creating a separate `Facet` subclass for every individual physical effect
+or solver provided by `fiz` (which leads to redundant class proliferation), `e2` favors
+a **generic, unified `PhysicalFacet`**:
+
+- **Subclassing Rule**: A `Facet` class is subclassed **if and only if** external
+  application/gameplay code requires unique public methods or variables on that class
+  (e.g., a `CharacterPhysicalFacet` exposing `jump()`, `walk()`, and `isGrounded()`).
+- **Generic Physical Representation**: For standard physical presences (rigid solids,
+  bouncy gels, cloth, hair, or fluid emitters), forms attach the generic `PhysicalFacet`,
+  configured with appropriate descriptors and effect types from `fiz`.
+- **Core Responsibilities**:
+  - Exposes common application-facing controls: `applyForce()`, `applyImpulse()`,
+    `velocity()`, `setVelocity()`, `setTemper()`.
+  - Automatically handles world lifecycle (`enterWorld()` and `leaveWorld()`) by registering
+    with the world's `PhysicalTableau`.
+  - Coordinates bidirectional transform synchronization (`syncToForm()` / `syncFromForm()`)
+    between `Form`'s spatial hierarchy and physical simulation states.
+
+#### Query and Prediction Interfaces
+
+- **Immediate Spatial Queries**: `raycast(...)`, `sweep(...)` (capsule, sphere, box), and `overlap(...)` tests.
+- **Environmental Field Queries**: sampling water surface height and currents (`sampleWaterHeight`),
+  buoyancy forces (`calculateBuoyancy`), and wind vectors.
+- **Lookahead & Speculative Prediction**:
+  - `predictTrajectory(...)`: analytical/kinematic projection of ballistic arcs and impact points.
+  - `predictCollision(...)`: continuous collision detection (CCD) lookahead testing whether
+    a body will collide within a future time window $\Delta t$.
+  - `createSpeculativeSandbox()`: forks an isolated lightweight "ghost" simulation sandbox
+    to step candidate actions ahead in time without mutating the live world state.
+
+#### Architectural Separation with `GNfiz`
+
+`PhysicalDomain`, `PhysicalTableau`, and `PhysicalFacet` in E2 define engine semantics,
+world lifecycle, and spatial synchronization. Low-level, atomic, platform-specific algorithms
+and solvers live entirely inside the standalone `GNfiz` module (`GN::fiz`). E2 consumes `fiz`,
+but `fiz` remains completely independent of E2.
+
 ## Expected Data Flow
 
-The intended frame-level flow is:
+The intended frame-level flow across simulation, physics, and rendering is:
 
 ```text
 Universe
   is the root item for engine2
   owns global lifetime context
-  may contain multiple worlds and functional domains
+  may contain multiple worlds and functional domains (VisualDomain, PhysicalDomain, OperatingDomain)
+
+PhysicalDomain (Operating Engine)
+  advances each World's PhysicalTableau at high frequency (e.g. 200 Hz) via Jolt / GPU compute
+  operates on 32-bit float coordinates rebased from 128-bit simulation anchors
+  publishes sampled PhysicalSnapshot instances at discrete integer timestamps
 
 World::run()
-  advances one logical world at its own cadence
-  may use a fixed timestep, variable timestep, script-driven updates, or another policy
+  advances one logical world at its own cadence (e.g. 30 Hz or 60 Hz)
 
-World::snapshot(parameters)
-  briefly freezes, synchronizes, or otherwise observes live state
-  queries each root Form tree for VisualFacet objects by runtime type
-  asks those VisualFacet objects to capture visual data
-  returns an opaque VisualTableau for a specific point in time
-  caller may add environment and overlay moments before rendering
+  1. Ingress Physical Write:
+     queries PhysicalDomain for a PhysicalSnapshot at the world's current timestamp
+     re-anchors float coordinates back to 128-bit world coordinates
+     batch-updates Form transforms and PhysicalFacets (WRITE operation)
+
+  2. World Gameplay Evolution:
+     Form::live() advances attached facets in attach order
+     gameplay logic, AI, and scripts react to updated physical positions
+     gameplay can apply new impulses, forces, or velocities to PhysicalFacets
+
+  3. Egress Visual Read:
+     World::snapshot(parameters) captures an immutable VisualTableau (READ operation)
+     briefly observes live state and queries each Form tree for VisualFacet objects
+     re-bases positions against the observing camera in exact integer space
+     forwards the sealed VisualTableau to VisualDomain for rendering work
 
 VisualDomain::renderFrame({.tableau = tableau})
-  obtains the execution order from the private tableau implementation
+  consumes the immutable VisualTableau without blocking world evolution
   seals the tableau and moment references as an imported RDG2 relic
   builds the concrete closed frame plan (acquire -> render -> present)
   prepares shared resources and adapts each concrete scene task into FX2 effects
@@ -277,11 +407,9 @@ VisualDomain::renderFrame({.tableau = tableau})
   lets RDG2 gather payloads, submit, and present
 ```
 
-The key rule is that world evolution is independent of rendering. Rendering
-should consume captured tableaux and their moments, not mutable simulation objects. This gives
-implementations room to run simulation and rendering at different rates, and on
-different threads, without letting the renderer observe partially updated world
-state.
+The key rule is strict serialization on the World: `[Ingress Physical Write] -> [World live()] -> [Egress Visual Read]`.
+This guarantees that rendering consumes captured tableaux and moments without observing partially updated or torn world
+states, while allowing physical simulation, world logic, and rendering to execute at their own independent cadences.
 
 ## Scene, environment, and overlay moments
 

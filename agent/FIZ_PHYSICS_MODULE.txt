@@ -1,0 +1,219 @@
+# Assignment: Physics Module (fiz) & E2 Physical Domain
+
+---
+
+## Goals
+
+This assignment establishes Garnet's physics and continuous media simulation
+architecture. The work introduces two complementary layers:
+
+1. `GNfiz` (`GN::fiz`): a standalone, low-level physics module under `src/core/fiz/`
+   and `src/inc/garnet/GNfiz.h` occupying the same architectural tier as `gpu2`
+   and `fx2`. It delivers atomic, reusable, world-agnostic simulation routines:
+   - Rigid-body mechanics (`Solid`, `Hull`, `Temper`) backed by Jolt Physics.
+   - Soft and bouncy volumetric bodies (`Gel`) via GPU XPBD tetrahedral volume constraints.
+   - Flexible 2D/1D bodies (`Weft` cloth and `Strand` hair) via GPU XPBD compute pipelines.
+   - Gaseous media (`Plume` smoke and `Blaze` fire) via 3D Eulerian Navier-Stokes grids.
+   - Liquids (`Current` SPH/FLIP particles and `Tide` FFT ocean wave spectra).
+2. `PhysicalDomain`, `PhysicalTableau` & `PhysicalFacet`: high-level simulation integration in
+   `engine2` (`GN::e2`) under `src/inc/garnet/e2/physical.h`.
+   - Independent simulation timeline, decoupled from main game loop and rendering.
+   - Canonical `UnitOfTime` (integer nanoseconds) with true mathematical $T$-symmetry
+     (negative integer stepping $-\Delta t$ with bit-identical determinism and zero history cache).
+   - Support for time scaling (`timeScale`), slow motion, pausing, and single-stepping.
+   - Alpha-state interpolation for jitter-free rendering at high display refresh rates.
+   - Rich query and prediction interfaces: raycasting, shape sweeps, volume overlaps,
+     water/wind field sampling, ballistic trajectory lookahead, and speculative
+     ghost sandboxes.
+
+---
+
+## Design
+
+### Low-Level Architecture: `GNfiz`
+
+The `fiz` module provides pure data-driven physics primitives without any coupling
+to engine worlds or scene hierarchies:
+- Defines the canonical `UnitOfTime = std::chrono::nanoseconds;` for all physics/simulation.
+- 100% strict forward determinism: bit-identical reproducible results from identical initial states and integer timestamps.
+- $T$-symmetry where physically permissible: solvers support negative integer durations ($-\Delta t$) for conservative laws via symplectic integrators.
+- Operates in unit-agnostic 32-bit floating-point precision (`Scalar`), independent of E2's 128-bit coordinate space (user defines whether 1.0 is meters, AU, or micrometers).
+- Exposes pure virtual interfaces in `src/inc/garnet/fiz/*.h` guarded by `__GN_INSIDE_FIZ_H__`.
+- Encapsulates Jolt Physics C++ bindings, avoiding leaking external headers into client code.
+- GPU simulations emit `gpu2` compute resources that convert directly into `rdg2` artifacts
+  for rendering with zero CPU readback.
+
+### High-Level Architecture: `e2::PhysicalDomain`, `PhysicalTableau` & `PhysicalFacet`
+
+- **Singleton Operating Engine**: `PhysicalDomain` is a singleton service owned by `Universe`,
+  holding zero simulation data (no bodies, colliders, or islands).
+- **Data Ownership**: `World` owns the connected simulation graph (`PhysicalTableau`), while
+  `Form` and `PhysicalFacet` own local physical attributes.
+- **Dual-Snapshot Symmetry & World Serialization**:
+  - Ingress Physical Write: World requests `PhysicalSnapshot` at its logic cadence (30/60 Hz)
+    and batch-updates Form transforms (WRITE).
+  - Egress Visual Read: World captures `VisualTableau` for `VisualDomain` (READ).
+  - Ingress writes and egress reads are serialized within each world step, preventing torn states.
+- **128-bit Coordinate Rebasing**: Anchors simulation zones to 128-bit $O_{sim}$ and scales into
+  32-bit float meters for `fiz`, eliminating floating-point jitter across planetary-scale worlds.
+- **Query & Prediction**: Thread-safe spatial queries (raycast, sweep, overlap), environmental
+  field sampling, and speculative ghost sandboxes.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: none — initial architectural specification and documentation
+In progress: Phase 1.1 — Jolt Physics integration into 3rdparty build
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Key design and specification documents:
+- `src/core/fiz/README.md`: canonical design and API guide for GNfiz.
+- `src/core/e2/README.md`: canonical design for Engine2, including PhysicalDomain.
+- `src/inc/garnet/e2/visual.h`: reference pattern for domain, tableau, and moment.
+- `src/inc/garnet/e2/world.h`: reference pattern for Form, Facet, and World evolution.
+- `src/inc/garnet/GNengine2.h`: monolithic header entry for engine2.
+
+--- BUILD / CI ---
+
+```bash
+python env/bin/build.py d              # Debug build
+python env/bin/build.py p              # Profile / RelWithDebInfo build
+python env/bin/cit.py -l               # Formatting / lint check
+python env/bin/cit.py -t               # Test suite execution
+python env/bin/format-all-sources.py -d # Format touched files
+```
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep changes small, modular, and verifiable at every step.
+- All code must build cleanly with zero warnings (`/WX` on MSVC, `-Werror` on GCC/Clang).
+- Monolithic header convention: public access strictly via `GNfiz.h` and `GNengine2.h`.
+- Subheaders reject direct inclusion with guard macros (`__GN_INSIDE_FIZ_H__`).
+- Pure virtual public interfaces; private concrete implementations live in `src/core/fiz/`
+  and `src/core/e2/`.
+- Use `AutoRef<T>` / `Ref<T>` for ownership; use `Being` and `RuntimeType` for RTTI.
+- Sample assets must be 100% CC0 (Public Domain), directly checked in with provenance/credits.
+- Run `format-all-sources.py -d` before each commit.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: Jolt Integration & Core Solid Dynamics (GNfiz)
+─────────────────────────────────────────────────────
+  Task 1.1: Add Jolt Physics to 3rdparty and configure CMake
+    - Integrate shallow Jolt submodule or package in `src/3rdparty/`.
+    - Configure CMake compile options and ensure clean multi-platform compilation.
+    Verify: `python env/bin/build.py -C d` builds 3rdparty Jolt successfully.
+    Commit: "3rdparty: integrate Jolt Physics build (Phase 1.1)"
+
+  Task 1.2: Establish GNfiz module structure and public headers
+    - Create `src/inc/garnet/GNfiz.h` and `src/inc/garnet/fiz/common.h`.
+    - Create `temper.h`, `hull.h`, and `solid.h` interfaces.
+    - Wire `src/core/fiz/CMakeLists.txt` into `GNcore-objects`.
+    Verify: `python env/bin/build.py d` builds with new empty fiz module headers.
+    Commit: "fiz: scaffold GNfiz module and solid public interfaces (Phase 1.2)"
+
+  Task 1.3: Implement SolidEngine and Jolt backend wrapper
+    - Implement `BoxHull`, `SphereHull`, `CapsuleHull`, and `ConvexHull`.
+    - Implement Jolt body management and step simulation in `src/core/fiz/`.
+    - Add unit tests in `src/core/fiz/test/solid-test.cpp`.
+    Verify: `python env/bin/cit.py -t` passes all solid unit tests.
+    Commit: "fiz: implement solid rigid body mechanics via Jolt (Phase 1.3)"
+
+  Task 1.4: Implement standalone rigid body sample (GNsample-fiz-solids)
+    - Standalone sample app under `src/sample/fiz/solids.cpp`, entirely uncoupled from E2.
+    - Demonstrates thousands of colliding/stacking boxes, spheres, capsules, and hulls.
+    Verify: `GNsample-fiz-solids` runs and renders dynamic rigid bodies with physics.
+    Commit: "sample: add standalone fiz solids sample app (Phase 1.4)"
+
+  Task 1.5: Implement core deterministic and symmetry unit test suite (GNtest-internal)
+    - `deterministic-forward-test.cpp`: 10 repeated runs bit-identical, thread-count invariance (1, 2, 4, 8 threads).
+    - `t-reversal-symmetry-test.cpp`: conservative motion reversal, planetary orbits, energy conservation.
+    - `integer-time-test.cpp`: zero-drift integer nanosecond accumulation and exact cancellation.
+    - `scale-and-coordinate-test.cpp`: numerical stability across AU, meter, and nanometer scales.
+    - `solid-collision-test.cpp`: stacking stability, friction angles, restitution, CCD anti-tunneling.
+    Verify: `python env/bin/cit.py -t` passes all deterministic tests with bit-identical assertions.
+    Commit: "fiz: implement deterministic and T-symmetry unit tests (Phase 1.5)"
+
+Phase 2: E2 PhysicalDomain, PhysicalTableau & PhysicalFacet Integration
+─────────────────────────────────────────────────────
+  Task 2.1: Define E2 PhysicalDomain, PhysicalTableau, and generic PhysicalFacet API
+    - Create `src/inc/garnet/e2/physical.h` and include in `GNengine2.h`.
+    - Define singleton `PhysicalDomain`, World-owned `PhysicalTableau`, and `PhysicalSnapshot`.
+    - Define generic `PhysicalFacet` with descriptor configuration; enforce subclassing only for unique external APIs.
+    Verify: `python env/bin/build.py d` builds without compilation errors.
+    Commit: "e2: declare PhysicalDomain, Tableau, and generic Facet interfaces (Phase 2.1)"
+
+  Task 2.2: Implement 128-bit coordinate translation and serialized PhysicalSnapshot write
+    - Implement $O_{sim}$ simulation anchor rebasing and PhysicalScale toMeters/fromMeters.
+    - Implement World ingress `PhysicalSnapshot` application serialized before visual snapshot.
+    Verify: Unit tests in `src/core/e2/test/physical-domain-test.cpp` pass with verified transforms.
+    Commit: "e2: implement coordinate rebasing and serialized physical write (Phase 2.2)"
+
+  Task 2.3: Implement decoupled integer clock, T-symmetric stepping, and prediction queries
+    - Implement integer nanosecond stepping, signed $\pm \Delta t$ time reversibility, and $\alpha$-interpolation.
+    - Implement raycast, shape sweep, overlap tests, ballistic trajectory prediction, and ghost sandbox.
+    Verify: Time-reversibility and spatial query tests in `physical-domain-test.cpp` pass.
+    Commit: "e2: implement T-symmetric stepping and prediction queries (Phase 2.3)"
+
+Phase 3: Deformable & Flexible Bodies — XPBD Gel, Cloth & Hair (GNfiz) — FUTURE
+─────────────────────────────────────────────────────
+  Task 3.1: GPU XPBD Gel (soft & bouncy volumetric body) simulation compute pipeline
+  Task 3.2: GPU XPBD Weft (cloth) simulation compute pipeline
+  Task 3.3: GPU Strand (hair/fur) guide-chain dynamics and interpolation
+  Task 3.4: Configure generic PhysicalFacet with Gel, Weft, and Strand descriptors
+  Task 3.5: Standalone gel/soft-body sample in `src/sample/fiz/gel.cpp` (GNsample-fiz-gel)
+  Task 3.6: Standalone cloth sample in `src/sample/fiz/cloth.cpp` (GNsample-fiz-cloth)
+  Task 3.7: Standalone hair sample in `src/sample/fiz/hair.cpp` (GNsample-fiz-hair)
+  Task 3.8: Implement Gel soft-body incompressibility and recovery unit test (`gel-softbody-test.cpp`)
+
+Phase 4: Liquids & Gaseous Media — Fluid Simulation (GNfiz) — FUTURE
+─────────────────────────────────────────────────────
+  Task 4.1: GPU 2D IFFT Tide (ocean) wave spectrum and displacement maps
+  Task 4.2: GPU 3D Eulerian Plume & Blaze (smoke/fire) grid solver
+  Task 4.3: GPU Current (SPH/FLIP) particle liquid simulation
+  Task 4.4: RDG2 zero-readback volumetric & ocean surface integration
+  Task 4.5: Standalone ocean sample in `src/sample/fiz/ocean.cpp` (GNsample-fiz-ocean)
+  Task 4.6: Standalone smoke/fire sample in `src/sample/fiz/smoke-fire.cpp` (GNsample-fiz-smoke-fire)
+  Task 4.7: Standalone fluid particles sample in `src/sample/fiz/fluid-particles.cpp` (GNsample-fiz-fluid-particles)
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (Jolt Integration & Core Solid Dynamics):
+  src/3rdparty/CMakeLists.txt            — add Jolt build target
+  src/core/CMakeLists.txt                — include fiz/CMakeLists.txt
+  src/core/fiz/CMakeLists.txt            — NEW: fiz library build script
+  src/core/fiz/pch.h                     — NEW: precompiled header
+  src/core/fiz/pch.cpp                   — NEW: precompiled header source
+  src/core/fiz/solid-engine-jolt.h       — NEW: Jolt wrapper internal header
+  src/core/fiz/solid-engine-jolt.cpp     — NEW: Jolt wrapper implementation
+  src/core/fiz/hull.cpp                  — NEW: collision hull implementations
+  src/core/fiz/test/solid-test.cpp       — NEW: solid dynamics unit test
+  src/inc/garnet/GNfiz.h                 — NEW: monolithic fiz header
+  src/inc/garnet/fiz/common.h            — NEW: common types and macros
+  src/inc/garnet/fiz/temper.h            — NEW: material temper interface
+  src/inc/garnet/fiz/hull.h              — NEW: collision hulls interface
+  src/inc/garnet/fiz/solid.h             — NEW: solid body interface
+  src/inc/garnet/fiz/gel.h               — NEW: gel/soft body interface
+  src/inc/garnet/fiz/domain.h            — NEW: standalone physical domain
+  src/sample/CMakeLists.txt              — add_subdirectory(fiz)
+  src/sample/fiz/CMakeLists.txt          — NEW: standalone fiz samples build script
+  src/sample/fiz/solids.cpp              — NEW: standalone rigid body physics sample
+
+Phase 2 (E2 PhysicalDomain, PhysicalTableau & PhysicalFacet Integration):
+  src/inc/garnet/GNengine2.h             — include e2/physical.h
+  src/inc/garnet/e2/physical.h           — NEW: PhysicalDomain, PhysicalTableau, PhysicalSnapshot, and PhysicalFacet headers
+  src/core/e2/CMakeLists.txt             — add physical.cpp to source list
+  src/core/e2/physical.cpp               — NEW: PhysicalDomain and PhysicalFacet implementation
+  src/core/e2/test/physical-domain-test.cpp — NEW: E2 physical domain tests
+
+Phase 3 (Deformable & Flexible Bodies & Samples):
+  src/sample/fiz/gel.cpp                 — NEW: standalone gel/soft-body sample
+  src/sample/fiz/cloth.cpp               — NEW: standalone cloth sample
+  src/sample/fiz/hair.cpp                — NEW: standalone hair sample
+
+Phase 4 (Fluids, Ocean & Samples):
+  src/sample/fiz/ocean.cpp               — NEW: standalone ocean sample
+  src/sample/fiz/smoke-fire.cpp          — NEW: standalone smoke & fire sample
+  src/sample/fiz/fluid-particles.cpp     — NEW: standalone fluid particles sample
