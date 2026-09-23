@@ -83,6 +83,9 @@ GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 # do not apply to this parent target.
 include(rdg2/CMakeLists.txt)
 
+# GNfiz physics module sources
+include(fiz/CMakeLists.txt)
+
 # engine2 (e2) sources + its GLSL shaders. Same in-parent-scope include rationale as rdg2.
 include(e2/CMakeLists.txt)
 include(ui2/CMakeLists.txt)
@@ -241,6 +244,9 @@ add_core_libs(Threads::Threads)
 add_core_libs(assimp)
 add_core_libs(freetype)
 add_core_libs(imgui)
+if (TARGET Jolt)
+    add_core_libs(Jolt)
+endif()
 
 find_package(Iconv)
 if (Iconv_FOUND)

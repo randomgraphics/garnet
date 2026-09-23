@@ -144,7 +144,38 @@ Newtonian-Eulerian mechanics:
   - 2D Shallow Water Equations (SWE) for near-shore shallow waves, boat wakes,
     and obstacle ripples.
 
+## Shared Geometry & Procedural Object Data Flow
+
+To maximize efficiency and eliminate redundant VRAM allocations, GPU-based physics
+and visual rendering share geometry data seamlessly:
+
+### 1. Zero-Copy Shared GPU Geometry Buffer
+- **Unified Buffer Allocation**: For deformable volumetric bodies (`Gel`), cloth (`Weft`),
+  hair rods (`Strand`), and ocean surfaces (`Tide`), the simulation compute shader writes
+  updated vertex positions, normals, and tangents directly into a `gpu2::Buffer`
+  (bound as an SSBO / Storage Buffer during compute dispatch).
+- **Direct Rendering Consumption**: In `rdg2`, this exact same `gpu2::Buffer` is declared
+  as a shared artifact. A GPU pipeline barrier (`Compute Write -> Vertex / Index / Shader Read`)
+  transitions the resource, allowing raster passes to bind it immediately as a Vertex/Index
+  Buffer or Storage Buffer for rendering.
+- **Zero CPU Readback & Zero GPU Duplication**: Physics and rendering share the exact same
+  underlying GPU memory without CPU involvement or duplicate GPU copies.
+
+### 2. Procedural Objects: Stream-Out vs. Dual Evaluation
+For procedural geometry (marching cubes, terrain tessellation, fractured meshes, procedural foliage/hair):
+- **Stream-Out Architecture (Approach B, Default)**: The procedural generator runs **once**.
+  The resulting vertices and indices are streamed out / stored into a unified GPU storage buffer
+  first, and then passed simultaneously to both `VisualDomain` and `PhysicalDomain` (`GNfiz`).
+  - **100% Bit-Identical Guaranteed**: The visible silhouette and physical collision boundaries
+    match identically down to the last float.
+  - **Optimal Compute**: Saves 50% procedural generation overhead by evaluating geometry once.
+- **Dual Evaluation (Approach A, Opt-In)**: Rerunning procedural evaluation twice is reserved
+  only as an explicit opt-in for trivial, purely analytical functions (e.g., mathematical planes or
+  simple trigonometric ripples) where intermediate buffer memory would be wasteful compared to
+  evaluating a simple formula inline.
+
 ## Standalone Usage Example
+
 
 ```cpp
 #include <garnet/GNfiz.h>

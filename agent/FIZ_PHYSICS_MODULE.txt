@@ -42,6 +42,10 @@ to engine worlds or scene hierarchies:
 - Encapsulates Jolt Physics C++ bindings, avoiding leaking external headers into client code.
 - GPU simulations emit `gpu2` compute resources that convert directly into `rdg2` artifacts
   for rendering with zero CPU readback.
+- Shared GPU Geometry & Procedural Streaming: GPU simulations (`Gel`, `Weft`, `Strand`, `Tide`)
+  share vertex buffers directly with rendering (zero CPU readback, zero GPU duplication);
+  procedural generators stream out once to shared GPU buffers to guarantee bit-identical
+  physical-visual alignment and 50% compute savings.
 
 ### High-Level Architecture: `e2::PhysicalDomain`, `PhysicalTableau` & `PhysicalFacet`
 
@@ -62,8 +66,8 @@ to engine worlds or scene hierarchies:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.1 — Jolt Physics integration into 3rdparty build
-In progress: Phase 1.2 — Establish GNfiz module structure and public headers
+Last completed: Phase 1.2 — Establish GNfiz module structure and public headers
+In progress: Phase 1.3 — Implement SolidEngine and Jolt backend wrapper
 --- END PROGRESS ---
 
 --- REFERENCE ---

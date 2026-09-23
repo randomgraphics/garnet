@@ -357,12 +357,29 @@ a **generic, unified `PhysicalFacet`**:
   - `createSpeculativeSandbox()`: forks an isolated lightweight "ghost" simulation sandbox
     to step candidate actions ahead in time without mutating the live world state.
 
+#### Shared GPU Geometry & Procedural Mesh Sharing
+
+To maximize GPU throughput and avoid memory duplication between rendering and physics:
+- **Zero-Copy Mesh Sharing**: For GPU XPBD soft bodies (`Gel`), cloth (`Weft`), and water surfaces (`Tide`),
+  the simulation compute shaders write vertex positions and normals directly into a `gpu2::Buffer`.
+  In `rdg2`, this buffer is passed directly to the rasterization pass as a vertex/storage buffer.
+  Physics and rendering share the exact same VRAM allocation with zero CPU readback.
+- **Procedural Objects**:
+  - **Stream-Out Once (Default)**: For procedural models (marching cubes, terrain tessellation, fractured meshes),
+    the procedural generation pass runs **once**. The resulting vertices are streamed out into a shared
+    storage buffer, which is then referenced simultaneously by `PhysicalTableau` and `VisualTableau`.
+    This guarantees 100% bit-identical collision and visual alignment while cutting procedural compute costs in half.
+  - **Dual Evaluation (Opt-In)**: Rerunning procedural evaluation separately in visual and physical passes
+    is reserved only for trivial, purely analytical functions (e.g., mathematical planes or simple sine waves)
+    where allocating intermediate buffer memory is unnecessary.
+
 #### Architectural Separation with `GNfiz`
 
 `PhysicalDomain`, `PhysicalTableau`, and `PhysicalFacet` in E2 define engine semantics,
 world lifecycle, and spatial synchronization. Low-level, atomic, platform-specific algorithms
 and solvers live entirely inside the standalone `GNfiz` module (`GN::fiz`). E2 consumes `fiz`,
 but `fiz` remains completely independent of E2.
+
 
 ## Expected Data Flow
 
