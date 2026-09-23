@@ -449,3 +449,160 @@ public:
         TS_ASSERT_EQUALS(1, blob->getref());
     }
 };
+
+class FixedBlobTest : public CxxTest::TestSuite {
+    struct Element {
+        static inline size_t count = 0;
+        static inline size_t ctor  = 0;
+        static inline size_t cctor = 0;
+        static inline size_t dtor  = 0;
+        static inline size_t cop   = 0;
+
+        static void clear() {
+            count = 0;
+            ctor  = 0;
+            cctor = 0;
+            dtor  = 0;
+            cop   = 0;
+        }
+
+        bool constructed;
+        int  i = 0;
+
+        Element(): constructed(true) {
+            ++ctor;
+            ++count;
+        }
+
+        Element(int i_): constructed(true), i(i_) {
+            ++ctor;
+            ++count;
+        }
+
+        Element(const Element & o): constructed(true), i(o.i) {
+            if (!o.constructed) { GN_UNEXPECTED(); }
+            ++cctor;
+            ++count;
+        }
+
+        Element & operator=(const Element & o) {
+            if (!constructed || !o.constructed) { GN_UNEXPECTED(); }
+            i = o.i;
+            ++cop;
+            return *this;
+        }
+
+        ~Element() {
+            if (!constructed) { GN_UNEXPECTED(); }
+            constructed = false;
+            ++dtor;
+            --count;
+        }
+    };
+
+public:
+    void testFixedBlobBasic() {
+        using namespace GN;
+
+        FixedBlob<int> pool(4);
+        TS_ASSERT_EQUALS(4, pool.count());
+        TS_ASSERT_EQUALS(4 * sizeof(int), pool.blobSize());
+        TS_ASSERT_EQUALS(0, pool.pooledCount());
+
+        int  values[4] = {10, 20, 30, 40};
+        auto b1        = pool.allocate(values);
+        TS_ASSERT(b1);
+        TS_ASSERT_EQUALS(4 * sizeof(int), b1->size());
+        TS_ASSERT_EQUALS(1, pool.pooledCount());
+
+        auto acc1 = b1->accessor<int>();
+        TS_ASSERT_EQUALS(10, acc1[0]);
+        TS_ASSERT_EQUALS(20, acc1[1]);
+        TS_ASSERT_EQUALS(30, acc1[2]);
+        TS_ASSERT_EQUALS(40, acc1[3]);
+
+        // b1 is active, so allocate creates a new blob
+        auto b2 = pool.allocate();
+        TS_ASSERT(b2);
+        TS_ASSERT_EQUALS(2, pool.pooledCount());
+
+        // Release b1 so its refcount returns to 1 (held only by pool)
+        b1.clear();
+
+        // Next allocation should reuse b1 instead of creating a 3rd blob
+        int  newValues[4] = {100, 200, 300, 400};
+        auto b3           = pool.allocate(newValues);
+        TS_ASSERT(b3);
+        TS_ASSERT_EQUALS(2, pool.pooledCount());
+
+        auto acc3 = b3->accessor<int>();
+        TS_ASSERT_EQUALS(100, acc3[0]);
+        TS_ASSERT_EQUALS(200, acc3[1]);
+        TS_ASSERT_EQUALS(300, acc3[2]);
+        TS_ASSERT_EQUALS(400, acc3[3]);
+    }
+
+    void testFixedBlobWithObjects() {
+        using namespace GN;
+
+        Element::clear();
+
+        {
+            FixedBlob<Element> pool(2);
+            TS_ASSERT_EQUALS(0, Element::count);
+
+            Element data[2] = {Element(1), Element(2)};
+            TS_ASSERT_EQUALS(2, Element::count);
+            TS_ASSERT_EQUALS(2, Element::ctor);
+
+            auto b1 = pool.allocate(data);
+            TS_ASSERT_EQUALS(4, Element::count); // 2 data + 2 in b1
+            TS_ASSERT_EQUALS(2, Element::cctor);
+
+            // Release b1 (destructs elements and returns raw buffer to free list)
+            b1.clear();
+            TS_ASSERT_EQUALS(2, Element::count); // only data[2] alive
+
+            // Allocate again, reusing b1's buffer from free list with data2
+            Element data2[2] = {Element(10), Element(20)};
+            auto    b2       = pool.allocate(data2);
+            TS_ASSERT_EQUALS(1, pool.pooledCount());
+            TS_ASSERT_EQUALS(1, pool.activeCount());
+            TS_ASSERT_EQUALS(0, pool.freeCount());
+            TS_ASSERT_EQUALS(6, Element::count); // data[2], data2[2], b2[2]
+            TS_ASSERT_EQUALS(4, Element::cctor);
+
+            b2.clear();
+            TS_ASSERT_EQUALS(4, Element::count); // data[2], data2[2]
+            TS_ASSERT_EQUALS(1, pool.freeCount());
+            TS_ASSERT_EQUALS(0, pool.activeCount());
+        }
+
+        // After pool and local arrays destruction, all elements must be destructed
+        TS_ASSERT_EQUALS(0, Element::count);
+    }
+
+    void testFixedBlobPoolDestroyedBeforeBlobs() {
+        using namespace GN;
+
+        Element::clear();
+        AutoRef<Blob> b;
+        {
+            FixedBlob<Element> pool(2);
+            Element            data[2] = {Element(5), Element(6)};
+            b                          = pool.allocate(data);
+            TS_ASSERT_EQUALS(4, Element::count); // 2 in data, 2 in b
+            TS_ASSERT(b);
+            TS_ASSERT_EQUALS(2 * sizeof(Element), b->size());
+            // pool is destroyed here; should detach b and destruct its elements
+        }
+        // Elements in b are destructed when pool died
+        TS_ASSERT_EQUALS(0, Element::count);
+        TS_ASSERT_EQUALS(0, b->size());
+        TS_ASSERT(nullptr == b->data());
+
+        // Releasing b now should be completely safe
+        b.clear();
+        TS_ASSERT_EQUALS(0, Element::count);
+    }
+};

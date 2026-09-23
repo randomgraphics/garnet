@@ -1,28 +1,11 @@
-﻿TODO
-====
-
-- A render graph based render pipeline
+﻿Bucket List
+===========
 
 - Integrate with NVIIDA DLSS:
   - need a rendering pipeline that is able to generate depth and motion vector
 
-- Modernization:
-  - replace some custom classes with 3rdparty library:
-    - custom log -> spdlog (https://github.com/gabime/spdlog)
-    - remove custom Dictionary, since it is significantly slower than std counterparts.
-  - keepers:
-    - autoptr:
-      - it is much faster and more memory effecient than use std::shared_ptr directly.
-    - custom string class Str<T>:
-      - compatible with nullptr (won't throw exception when assigned a null pointer to it.)
-      - memory footprint compatible with raw char pointer. An array of Str classes can be safely cast
-        to array of raw pointers.
-    - custom vector class: DynaArray<T>
-      - memory footprint compatible with raw pointer. An array of DynaArray can be safely cast to
-        array of raw pointers.
-    - custom 2d/3d/4d vector class: do support custom lenght unit: like Vector3<MyWorldUnit>
-
-- ripple effect sample is currently broken: report empty vertex layout error.
+- A simple text renderer, either in fx2 or in gpu2.h that renders simple ascii text, no external font file dependencies.
+  This is to facillitate simple screen log requirement like FPS and etc.
 
 # ============================================================
 # The following are achieved TODO list from long long time ago
@@ -77,6 +60,7 @@
     - Generated from shader components
 
 - p1
+  - ipple effect sample is currently broken: report empty vertex layout error.
   - anti-alias demo.
   - thread and sync objects unit tests.
   - update skinned mesh bounding box with animation

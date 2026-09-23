@@ -71,6 +71,15 @@ static AutoRef<ModelScene> createBoxScene(const glm::vec3 & halfExtents, const g
         {0.0f, -1.0f, 0.0f}  // Y-
     };
 
+    static const glm::vec4 faceTangents[6] = {
+        {1.0f, 0.0f, 0.0f, 1.0f},  // Z+
+        {-1.0f, 0.0f, 0.0f, 1.0f}, // Z-
+        {0.0f, 0.0f, -1.0f, 1.0f}, // X+
+        {0.0f, 0.0f, 1.0f, 1.0f},  // X-
+        {1.0f, 0.0f, 0.0f, 1.0f},  // Y+
+        {1.0f, 0.0f, 0.0f, 1.0f}   // Y-
+    };
+
     static const glm::vec3 faceVertices[6][4] = {// Z+
                                                  {{-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1}},
                                                  // Z-
@@ -90,7 +99,7 @@ static AutoRef<ModelScene> createBoxScene(const glm::vec3 & halfExtents, const g
             ModelScene::Vertex vert;
             vert.position = faceVertices[f][v] * halfExtents;
             vert.normal   = faceNormals[f];
-            vert.tangent  = glm::vec4(1, 0, 0, 1);
+            vert.tangent  = faceTangents[f];
             vert.texcoord = glm::vec2((v == 1 || v == 2) ? 1.0f : 0.0f, (v >= 2) ? 1.0f : 0.0f);
             vert.color    = color;
             primitive.vertices.append(vert);
@@ -158,12 +167,12 @@ static AutoRef<ModelScene> createSphereScene(float radius, int slices, int stack
             uint32_t second = first + slices + 1;
 
             primitive.indices.append(first);
-            primitive.indices.append(second);
             primitive.indices.append(first + 1);
+            primitive.indices.append(second);
 
             primitive.indices.append(second);
-            primitive.indices.append(second + 1);
             primitive.indices.append(first + 1);
+            primitive.indices.append(second + 1);
         }
     }
 
@@ -196,7 +205,7 @@ static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, co
     return ssc->takeSnapshot();
 }
 
-enum ModelKind : uint8_t { MODEL_FLOOR = 0, MODEL_BOX = 1, MODEL_SPHERE = 2, MODEL_WALL = 3, MODEL_COUNT = 4 };
+enum ModelKind : uint8_t { MODEL_FLOOR = 0, MODEL_BOX = 1, MODEL_SPHERE = 2, MODEL_PROJECTILE = 3, MODEL_WALL = 4, MODEL_COUNT = 5 };
 
 struct SimulatedEntity {
     AutoRef<Solid> solid;
@@ -297,7 +306,7 @@ public:
         desc.temper.friction    = 0.2f;
 
         auto solid = engine->createSolid(desc);
-        entities.push_back({solid, MODEL_SPHERE});
+        entities.push_back({solid, MODEL_PROJECTILE});
     }
 
 private:
@@ -332,7 +341,7 @@ int main(int argc, const char ** argv) {
         GN_INFO(sLogger, "Running GNsample-fiz-solids in test mode");
     } else {
         GN_INFO(sLogger, "Interactive visual mode: Press ESC to quit, [1,2,4,8,0] for threads, [B] spawn, [Space] wrecking ball, [R] "
-                         "reset");
+                         "reset, [A/D/W/S/Q/E] camera");
     }
 
     enableCRTMemoryCheck();
@@ -360,12 +369,14 @@ int main(int argc, const char ** argv) {
     auto modelShading = ModelShading::create(gpuContext);
     if (!modelShading) return -1;
 
-    // Build procedural 3D model assets: Floor, Box, Sphere, Wall
+    // Build procedural 3D model assets: Floor, Box, Sphere, Projectile, Wall
     AutoRef<ModelAsset> modelAssets[MODEL_COUNT];
     modelAssets[MODEL_FLOOR] = ModelAsset::create(gpuContext, createBoxScene({40.0f, 1.0f, 40.0f}, {0.25f, 0.28f, 0.32f, 1.0f}, 0.1f, 0.8f));
     modelAssets[MODEL_BOX]   = ModelAsset::create(gpuContext, createBoxScene({0.6f, 0.6f, 0.6f}, {0.92f, 0.68f, 0.20f, 1.0f}, 0.3f, 0.4f)); // Golden boxes
     modelAssets[MODEL_SPHERE] =
         ModelAsset::create(gpuContext, createSphereScene(0.6f, 16, 12, {0.20f, 0.75f, 0.85f, 1.0f}, 0.5f, 0.2f)); // Cyan metallic spheres
+    modelAssets[MODEL_PROJECTILE] =
+        ModelAsset::create(gpuContext, createSphereScene(1.8f, 24, 18, {0.95f, 0.25f, 0.20f, 1.0f}, 0.8f, 0.2f)); // Heavy red wrecker ball
     modelAssets[MODEL_WALL] = ModelAsset::create(gpuContext, createBoxScene({1.0f, 1.0f, 1.0f}, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f));
 
     for (int k = 0; k < MODEL_COUNT; ++k) {
@@ -420,9 +431,16 @@ int main(int argc, const char ** argv) {
 
     // Camera control
     float     orbitAngle   = 0.4f;
-    float     cameraDist   = 48.0f;
-    float     cameraHeight = 18.0f;
+    float     cameraDist   = 32.0f;
+    float     cameraHeight = 14.0f;
     glm::vec3 cameraCenter(0.0f, 6.0f, 0.0f);
+
+    // Fixed-size blob pool for push constants to eliminate per-object allocation overhead
+    struct PushConstants {
+        glm::mat4 world;
+        glm::mat4 normal;
+    };
+    FixedBlob<uint8_t> pushConstantPool(sizeof(PushConstants));
 
     // ─── Main Render & Simulation Loop ───────────────────────────────────────
     auto      lastTime    = std::chrono::high_resolution_clock::now();
@@ -484,11 +502,13 @@ int main(int argc, const char ** argv) {
             }
             rWasDown = rDown;
 
-            // Camera orbit keys
+            // Camera orbit and zoom keys
             if (window->getKeyStatus(win::KeyCode::LEFT).down || window->getKeyStatus(win::KeyCode::A).down) orbitAngle -= 0.02f;
             if (window->getKeyStatus(win::KeyCode::RIGHT).down || window->getKeyStatus(win::KeyCode::D).down) orbitAngle += 0.02f;
             if (window->getKeyStatus(win::KeyCode::UP).down || window->getKeyStatus(win::KeyCode::W).down) cameraHeight = std::min(45.0f, cameraHeight + 0.3f);
             if (window->getKeyStatus(win::KeyCode::DOWN).down || window->getKeyStatus(win::KeyCode::S).down) cameraHeight = std::max(2.0f, cameraHeight - 0.3f);
+            if (window->getKeyStatus(win::KeyCode::Q).down) cameraDist = std::min(70.0f, cameraDist + 0.4f);
+            if (window->getKeyStatus(win::KeyCode::E).down) cameraDist = std::max(6.0f, cameraDist - 0.4f);
         } else {
             // Auto orbit in headless / test mode
             orbitAngle += 0.01f;
@@ -545,31 +565,38 @@ int main(int argc, const char ** argv) {
         DynaArray<AutoRef<GpuPayload>> renderWorks;
         renderWorks.append(sscSnapshot.set0Payloads);
 
+        // Pre-create base draw parameters for each model kind once per frame
+        GpuRaster::DrawParameters baseDraw[MODEL_COUNT];
+        for (int k = 0; k < MODEL_COUNT; ++k) {
+            if (modelAssets[k]) { baseDraw[k] = ModelShading::getDrawParams(sscSnapshot, modelShading, modelAssets[k], 0, glm::mat4(1.0f)); }
+        }
+
         GpuRaster::CreateParameters rcp;
         rcp.gpu    = gpuContext;
         rcp.target = &rasterTarget;
         auto r     = GpuRaster::create("fiz-solids-raster", rcp);
         if (r) {
-            // Draw all physical solids
+            // Draw all physical solids (walls are kept as invisible collision barriers)
             for (const auto & e : arena.entities) {
                 if (!e.solid) continue;
+                if (e.kind == MODEL_WALL) {
+                    // Containment boundary walls are invisible physics barriers so they don't occlude the scene or skybox.
+                    continue;
+                }
+                const auto & base = baseDraw[e.kind];
+                if (!base.vs || !base.ps) continue;
+
                 Transform t = e.solid->transform();
 
                 glm::mat4 worldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
                                            glm::mat4_cast(glm::quat(t.orientation.w, t.orientation.v.x, t.orientation.v.y, t.orientation.v.z));
 
-                if (e.kind == MODEL_WALL) {
-                    // Wall half-extents scaling
-                    const auto & aabb = e.solid->aabb();
-                    glm::vec3    halfExtents(aabb.w * 0.5f, aabb.h * 0.5f, aabb.d * 0.5f);
-                    worldTransform = glm::scale(worldTransform, halfExtents);
-                }
+                const glm::mat4     normalTransform = glm::transpose(glm::inverse(worldTransform));
+                const PushConstants constants {worldTransform, normalTransform};
 
-                auto model = modelAssets[e.kind];
-                if (model) {
-                    auto draw = ModelShading::getDrawParams(sscSnapshot, modelShading, model, 0, worldTransform);
-                    if (draw.vs && draw.ps) r->draw(draw);
-                }
+                auto draw       = base;
+                draw.immediates = pushConstantPool.allocate(reinterpret_cast<const uint8_t *>(&constants));
+                r->draw(draw);
             }
 
             // Skybox

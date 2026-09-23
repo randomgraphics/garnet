@@ -14,11 +14,6 @@ namespace GN {
 ///
 class Blob : public RefCounter {
 public:
-    // Type definitions
-    struct ImplBase {
-        virtual ~ImplBase() {};
-    };
-
     // Disable copy semantics
     GN_NO_COPY(Blob);
     GN_NO_MOVE(Blob);
@@ -27,8 +22,6 @@ public:
     virtual ~Blob() {
         mData = nullptr;
         mSize = 0;
-        delete mImpl;
-        mImpl = 0;
     }
 
     template<typename T>
@@ -45,117 +38,222 @@ public:
     void * data() const { return mData; }
 
     // Clear the blob. Make it empty.
-    void clear() {
+    virtual void clear() {
         mData = nullptr;
         mSize = 0;
-        delete mImpl;
-        mImpl = 0;
     }
 
 protected:
-    void *     mData = nullptr;
-    size_t     mSize = 0; ///< size in bytes
-    ImplBase * mImpl = nullptr;
+    void * mData = nullptr;
+    size_t mSize = 0; ///< size in bytes
 
     Blob() {}
 };
 
 template<typename T, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
 class SimpleBlob : public Blob {
-    typedef Blob Base;
+public:
+    // Copy constructor from raw data array
+    explicit SimpleBlob(size_t count = 0, const T * data = nullptr) {
+        if (count > 0) {
+            // allocate raw memory
+            mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
+            if (!mData) {
+                GN_ERROR(getLogger("GN.base.Blob"), "Failed to allocate memory for blob of {} bytes", count * sizeof(T));
+            } else if (data) {
+                // copy construct the data array.
+                details::inplaceCopyConstructArray(count, static_cast<T *>(mData), data);
+                mSize = count * sizeof(T);
+            } else {
+                // default construct the data array.
+                details::inplaceDefaultConstructArray(count, static_cast<T *>(mData));
+                mSize = count * sizeof(T);
+            }
+        }
+    }
 
-    struct Impl : Base::ImplBase {
-        size_t mSize = 0;
-        T *    mData = nullptr;
+    ~SimpleBlob() override { destroy(); }
 
-        Impl(size_t size, T * data): mSize(size), mData(data) {}
+    void clear() override { destroy(); }
 
-        ~Impl() override {
-            if (mData) {
-                details::inplaceDestructArray(mSize, mData);
-                OBJECT_ALLOCATOR::sDeallocate(mData);
+private:
+    void destroy() {
+        if (mData) {
+            details::inplaceDestructArray(mSize / sizeof(T), static_cast<T *>(mData));
+            OBJECT_ALLOCATOR::sDeallocate(mData);
+            mData = nullptr;
+            mSize = 0;
+        }
+    }
+};
+
+template<typename T, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
+class DynaArrayBlob : public Blob {
+private:
+    DynaArray<T, size_t, OBJECT_ALLOCATOR> mArray;
+
+    DynaArray<T, size_t, OBJECT_ALLOCATOR> &       array() { return mArray; }
+    const DynaArray<T, size_t, OBJECT_ALLOCATOR> & array() const { return mArray; }
+
+public:
+    DynaArrayBlob() = default;
+
+    ~DynaArrayBlob() override {
+        mData = nullptr;
+        mSize = 0;
+    }
+
+    void clear() override {
+        mArray.clear();
+        mData = nullptr;
+        mSize = 0;
+    }
+
+    size_t count() const { return mArray.size(); }
+
+    DynaArrayBlob & reserve(size_t count) {
+        auto reservedSize = std::max(count, mSize / sizeof(T));
+        mArray.reserve(reservedSize);
+        mData = mArray.data(); // in case the array is reallocated
+        return *this;
+    }
+
+    DynaArrayBlob & resize(size_t count) {
+        mArray.resize(count);
+        mData = mArray.data();
+        mSize = mArray.size() * sizeof(T);
+        return *this;
+    }
+
+    DynaArrayBlob & append(const T & value) {
+        mArray.append(value);
+        mData = mArray.data();
+        mSize = mArray.size() * sizeof(T);
+        return *this;
+    }
+};
+
+template<typename T, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
+class FixedBlob {
+public:
+    explicit FixedBlob(size_t count = 1): mBlobSizeInT(count) {
+        if (0 == count) mBlobSizeInT = 1;
+    }
+
+    ~FixedBlob() {
+        // Detach all active blobs and free their data buffers
+        for (auto * b = mActiveHead; b != nullptr;) {
+            auto * next = b->mNext;
+            b->mOwner   = nullptr;
+            T * ptr     = static_cast<T *>(b->data());
+            if (ptr) {
+                for (size_t i = 0; i < mBlobSizeInT; ++i) { OBJECT_ALLOCATOR::sDestruct(ptr + i); }
+                OBJECT_ALLOCATOR::sDeallocate(ptr);
+                b->clear();
+            }
+            b = next;
+        }
+        mActiveHead = nullptr;
+
+        // Free all idle buffers in the free list
+        for (T * ptr : mFreeList) { OBJECT_ALLOCATOR::sDeallocate(ptr); }
+        mFreeList.clear();
+        mTotalBuffers = 0;
+    }
+
+    GN_NO_COPY(FixedBlob);
+    GN_NO_MOVE(FixedBlob);
+
+    AutoRef<Blob> allocate(const T * data = nullptr) {
+        T * ptr = nullptr;
+        if (!mFreeList.empty()) {
+            ptr = mFreeList.back();
+            mFreeList.popBack();
+        } else {
+            ptr = OBJECT_ALLOCATOR::sAllocate(mBlobSizeInT);
+            if (!ptr) GN_UNLIKELY {
+                    GN_ERROR(getLogger("GN.base.Blob"), "Failed to allocate memory for fixed blob of {} bytes", mBlobSizeInT * sizeof(T));
+                    return {};
+                }
+            ++mTotalBuffers;
+        }
+
+        // Call ctor or copy ctor for each item in the blob
+        if (data) {
+            details::inplaceCopyConstructArray(mBlobSizeInT, ptr, data);
+        } else {
+            details::inplaceDefaultConstructArray(mBlobSizeInT, ptr);
+        }
+
+        return AutoRef<Blob>(new PooledBlob(mBlobSizeInT * sizeof(T), ptr, this));
+    }
+
+    /// Number of elements of type T in each blob
+    size_t count() const { return mBlobSizeInT; }
+
+    /// Size of each blob in bytes
+    size_t blobSize() const { return mBlobSizeInT * sizeof(T); }
+
+    /// Total number of pooled buffers allocated
+    size_t pooledCount() const { return mTotalBuffers; }
+
+    /// Number of free buffers currently in the pool
+    size_t freeCount() const { return mFreeList.size(); }
+
+    /// Number of active buffers currently in use
+    size_t activeCount() const { return mTotalBuffers - mFreeList.size(); }
+
+private:
+    struct PooledBlob : Blob {
+        FixedBlob *  mOwner = nullptr;
+        PooledBlob * mPrev  = nullptr;
+        PooledBlob * mNext  = nullptr;
+
+        PooledBlob(size_t sz, void * ptr, FixedBlob * owner): mOwner(owner) {
+            mSize = sz;
+            mData = ptr;
+            if (mOwner) {
+                mNext = mOwner->mActiveHead;
+                if (mNext) mNext->mPrev = this;
+                mOwner->mActiveHead = this;
+            }
+        }
+
+        ~PooledBlob() override { releaseToPool(); }
+
+        void clear() override { releaseToPool(); }
+
+    private:
+        void releaseToPool() {
+            if (mOwner) {
+                // Unlink from active list
+                if (mPrev)
+                    mPrev->mNext = mNext;
+                else
+                    mOwner->mActiveHead = mNext;
+                if (mNext) mNext->mPrev = mPrev;
+                mPrev = nullptr;
+                mNext = nullptr;
+
+                if (mData) {
+                    T * ptr = static_cast<T *>(mData);
+                    for (size_t i = 0; i < mOwner->mBlobSizeInT; ++i) { OBJECT_ALLOCATOR::sDestruct(ptr + i); }
+                    mOwner->mFreeList.append(ptr);
+                }
             }
             mData = nullptr;
             mSize = 0;
         }
     };
 
-public:
-    // Copy constructor from raw data array
-    explicit SimpleBlob(size_t count = 0, const T * data = nullptr) {
-        if (count > 0) {
-            // allocate raw memory
-            Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count));
-            if (!Base::mData) {
-                GN_ERROR(getLogger("GN.base.Blob"), "Failed to allocate memory for blob of {} bytes", count * sizeof(T));
-            } else if (data) {
-                // copy construct the data array.
-                details::inplaceCopyConstructArray(count, (T *) Base::mData, data);
-                Base::mSize = count * sizeof(T);
-                Base::mImpl = new Impl(count, (T *) Base::mData);
-            } else {
-                // default construct the data array.
-                details::inplaceDefaultConstructArray(count, (T *) Base::mData);
-                Base::mSize = count * sizeof(T);
-                Base::mImpl = new Impl(count, (T *) Base::mData);
-            }
-        }
-    }
-
-    // // Copy constructor from single initial value
-    // SimpleBlob(size_t count, const T & value) {
-    //     if (count > 0) {
-    //         Base::mData = static_cast<T *>(OBJECT_ALLOCATOR::sAllocate(count * sizeof(T)));
-    //         if (!Base::mData) GN_UNLIKELY {
-    //                 GN_ERROR(getLogger("GN.base.Blob"))("Failed to allocate memory for blob of size %zu", count * sizeof(T));
-    //                 Base::mSize = 0;
-    //             }
-    //         else { details::inplaceCopyConstructArray(count, Base::mData, value); }
-    //     }
-    // }
+    size_t         mBlobSizeInT;
+    size_t         mTotalBuffers = 0;
+    DynaArray<T *> mFreeList;
+    PooledBlob *   mActiveHead = nullptr;
 };
 
 template<typename T, class OBJECT_ALLOCATOR = CxxObjectAllocator<T>>
-class DynaArrayBlob : public Blob {
-private:
-    typedef Blob Base;
-
-    struct Impl : Base::ImplBase {
-        DynaArray<T, size_t, OBJECT_ALLOCATOR> array;
-    };
-
-    DynaArray<T, size_t, OBJECT_ALLOCATOR> &       array() { return static_cast<Impl *>(Base::mImpl)->array; }
-    const DynaArray<T, size_t, OBJECT_ALLOCATOR> & array() const { return static_cast<Impl *>(Base::mImpl)->array; }
-
-public:
-    DynaArrayBlob() { Base::mImpl = new Impl(); }
-
-    size_t count() const { return array().size(); }
-
-    DynaArrayBlob & reserve(size_t count) {
-        auto   reservedSize = std::max(count, Base::mSize);
-        auto & a            = array();
-        a.reserve(reservedSize);
-        Base::mData = a.data(); // in case the array is reallocated
-        return *this;
-    }
-
-    DynaArrayBlob & resize(size_t count) {
-        auto & a = array();
-        a.resize(count);
-        Base::mData = a.data(); // in case the array is reallocated
-        Base::mSize = a.size() * sizeof(T);
-        return *this;
-    }
-
-    DynaArrayBlob & append(const T & value) {
-        auto & a = array();
-        a.append(value);
-        Base::mData = a.data(); // in case the array is reallocated
-        Base::mSize = a.size() * sizeof(T);
-        return *this;
-    }
-};
+using FixedBlobAllocator = FixedBlob<T, OBJECT_ALLOCATOR>;
 
 } // namespace GN
 
