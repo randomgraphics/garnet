@@ -66,8 +66,8 @@ to engine worlds or scene hierarchies:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.4 — Implement standalone rigid body sample (GNsample-fiz-solids)
-In progress: Phase 1.5 — Implement core deterministic and symmetry unit test suite (GNtest-internal)
+Last completed: Phase 1.5 — Implement core deterministic and symmetry unit test suite (GNtest-internal)
+In progress: Phase 2.1 — Define E2 PhysicalDomain, PhysicalTableau, and generic PhysicalFacet API
 --- END PROGRESS ---
 
 --- REFERENCE ---
