@@ -66,8 +66,8 @@ to engine worlds or scene hierarchies:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.2 — Establish GNfiz module structure and public headers
-In progress: Phase 1.3 — Implement SolidEngine and Jolt backend wrapper
+Last completed: Phase 1.3 — Implement SolidEngine and Jolt backend wrapper
+In progress: Phase 1.4 — Implement standalone rigid body sample (GNsample-fiz-solids)
 --- END PROGRESS ---
 
 --- REFERENCE ---

@@ -42,7 +42,7 @@ struct Transform {
     Quaternion orientation = Quaternion::sIdentity();
 
     Transform() = default;
-    Transform(const Vector3 & p, const Quaternion & q) : position(p), orientation(q) {}
+    Transform(const Vector3 & p, const Quaternion & q): position(p), orientation(q) {}
 };
 
 /// Discrete collision layers for broadphase filtering.

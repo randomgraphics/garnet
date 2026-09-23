@@ -8,22 +8,15 @@
 namespace GN::fiz {
 
 /// Shape classification enum for collision hulls.
-enum class HullType : uint8_t {
-    BOX,
-    SPHERE,
-    CAPSULE,
-    CYLINDER,
-    CONVEX,
-    MESH
-};
+enum class HullType : uint8_t { BOX, SPHERE, CAPSULE, CYLINDER, CONVEX, MESH };
 
 /// Abstract base class for collision and simulation geometries.
 struct Hull : public Being {
     GN_FIZ_DEFINE_A_BEING(Being);
 
-    virtual HullType type() const = 0;
-    virtual Box localAabb() const = 0;
-    virtual Scalar calculateVolume() const = 0;
+    virtual HullType type() const            = 0;
+    virtual Box      localAabb() const       = 0;
+    virtual Scalar   calculateVolume() const = 0;
 
     /// Factory methods creating individual concrete hull types.
     static GN_API AutoRef<Hull> createBox(const Vector3 & halfExtents);
@@ -52,7 +45,7 @@ struct SphereHull : public Hull {
 struct CapsuleHull : public Hull {
     GN_FIZ_DEFINE_A_BEING(Hull);
 
-    virtual Scalar radius() const = 0;
+    virtual Scalar radius() const     = 0;
     virtual Scalar halfHeight() const = 0;
 };
 
@@ -60,7 +53,7 @@ struct CapsuleHull : public Hull {
 struct CylinderHull : public Hull {
     GN_FIZ_DEFINE_A_BEING(Hull);
 
-    virtual Scalar radius() const = 0;
+    virtual Scalar radius() const     = 0;
     virtual Scalar halfHeight() const = 0;
 };
 
@@ -75,8 +68,8 @@ struct ConvexHull : public Hull {
 struct MeshHull : public Hull {
     GN_FIZ_DEFINE_A_BEING(Hull);
 
-    virtual const std::vector<Vector3> & vertices() const = 0;
-    virtual const std::vector<uint32_t> & indices() const = 0;
+    virtual const std::vector<Vector3> &  vertices() const = 0;
+    virtual const std::vector<uint32_t> & indices() const  = 0;
 };
 
 } // namespace GN::fiz
