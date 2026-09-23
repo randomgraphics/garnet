@@ -329,19 +329,24 @@ int main(int argc, const char ** argv) {
 
     bool testMode  = false;
     int  framesArg = 0;
-    if (argc > 1) {
-        if (argv[1][0] == 't') {
+    bool vsync     = false;
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "test") == 0 || argv[i][0] == 't') {
             testMode = true;
+        } else if (std::strcmp(argv[i], "--vsync") == 0 || std::strcmp(argv[i], "-v") == 0) {
+            vsync = true;
         } else {
-            framesArg = std::atoi(argv[1]);
+            framesArg = std::atoi(argv[i]);
         }
     }
 
     if (testMode) {
         GN_INFO(sLogger, "Running GNsample-fiz-solids in test mode");
     } else {
-        GN_INFO(sLogger, "Interactive visual mode: Press ESC to quit, [1,2,4,8,0] for threads, [B] spawn, [Space] wrecking ball, [R] "
-                         "reset, [A/D/W/S/Q/E] camera");
+        GN_INFO(sLogger,
+                "Interactive visual mode (vsync {}): Press ESC to quit, [1,2,4,8,0] for threads, [B] spawn, [Space] wrecking ball, [R] "
+                "reset, [A/D/W/S/Q/E] camera",
+                vsync ? "on" : "off");
     }
 
     enableCRTMemoryCheck();
@@ -398,7 +403,7 @@ int main(int argc, const char ** argv) {
         if (!surface) return -1;
     }
 
-    Swapchain::CreateDesc scDesc {.gpu = gpuContext, .width = W, .height = H};
+    Swapchain::CreateDesc scDesc {.gpu = gpuContext, .width = W, .height = H, .vsync = vsync};
     if (surface) scDesc.setSurface(surface);
     auto swapchain = Swapchain::create(scDesc);
     if (!swapchain) return -1;

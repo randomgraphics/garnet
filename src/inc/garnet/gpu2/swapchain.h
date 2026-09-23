@@ -17,6 +17,8 @@ struct Swapchain : RCRT64 {
         gfx::img::PixelFormat format  = gfx::img::PixelFormat::UNKNOWN();
         uint32_t              width   = 1280;
         uint32_t              height  = 720;
+        /// Whether to enable vertical sync. Defaults to true. Ignored for headless swapchains.
+        bool vsync = true;
 
         CreateDesc & setGpu(AutoRef<GpuContext> g) {
             gpu = std::move(g);
@@ -37,6 +39,10 @@ struct Swapchain : RCRT64 {
         CreateDesc & setDimensions(uint32_t w, uint32_t h) {
             width  = w;
             height = h;
+            return *this;
+        }
+        CreateDesc & setVsync(bool enabled) {
+            vsync = enabled;
             return *this;
         }
     };
