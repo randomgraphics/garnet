@@ -1,5 +1,23 @@
 # Assignment: Physics Module (fiz) & E2 Physical Domain
 
+## Overview
+
+- Branch: `feature/phys/main`
+- Status: Phase 3 Completed (Awaiting user sign-off)
+- Completed work:
+  - Phase 1 (Jolt Integration & Core Solid Dynamics).
+  - Phase 3 (Gel Soft-Body Dynamics via XPBD & Bouncy Ball Simulation).
+  - `GelMesh` and `Gel` interfaces refactored to return slice-safe `ArrayView<const T>` (`GelMesh::vertices()`, `faces()`, `tetrahedra()`, `edges()`, and `Gel::surfaceIndices()`).
+  - Demo updated to a single big bouncy ball ($R = 2.0\text{m}$, dropped from $Y = 10.0\text{m}$) falling to the ground, squashing, and bouncing up and down.
+  - Dynamic strain color mapping (ruby jelly to bright shockwave gold) and window title telemetry (Height, Squash %, Volume Error %, Physics ms, FPS).
+  - Fixed `GelMesh::createSphere` topology with distinct pole vertices, outward-facing surface faces, positive signed volume determinants, and lumped center vertex mass.
+  - Decoupled `mVolumeConstraints` and pneumatic `mPressure` in `GelSolverImpl::createGel` to eliminate solver conflict.
+  - Verified 100% pass on internal test suite (`cit.py -t`, 168 test cases, 6198 assertions), headless verification (`GNsample-fiz-gel t`, 180 frames, freefall/impact/rebound/volume stability: YES, avg physics 0.37 ms), and code style (`cit.py -l`).
+- Current step: Phase 3 complete — Awaiting user sign-off.
+- Remaining work: Phase 2 (E2 PhysicalDomain Integration), Phase 4 (Cloth & Hair), Phase 5 (Fluids & Ocean).
+- Latest verification results: `python env/bin/cit.py -t` passed all 168 tests cleanly; `GNsample-fiz-gel.exe t` headless test passed cleanly; `python env/bin/cit.py -l` passed formatting check.
+- Known blockers: None.
+
 ---
 
 ## Goals
@@ -55,7 +73,6 @@ to engine worlds or scene hierarchies:
   `Form` and `PhysicalFacet` own local physical attributes.
 - **Dual-Snapshot Symmetry & World Serialization**:
   - Ingress Physical Write: World requests `PhysicalSnapshot` at its logic cadence (30/60 Hz)
-    and batch-updates Form transforms (WRITE).
   - Egress Visual Read: World captures `VisualTableau` for `VisualDomain` (READ).
   - Ingress writes and egress reads are serialized within each world step, preventing torn states.
 - **128-bit Coordinate Rebasing**: Anchors simulation zones to 128-bit $O_{sim}$ and scales into
@@ -66,8 +83,8 @@ to engine worlds or scene hierarchies:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.5 — Implement core deterministic and symmetry unit test suite (GNtest-internal)
-In progress: Phase 2.1 — Define E2 PhysicalDomain, PhysicalTableau, and generic PhysicalFacet API
+Last completed: Phase 3.5 — Verify headless & interactive correctness, verify FPS performance, and optimize
+In progress: Awaiting user sign-off for Phase 3 (Gel Soft-Body Dynamics)
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -140,39 +157,54 @@ Phase 1: Jolt Integration & Core Solid Dynamics (GNfiz)
     Verify: `python env/bin/cit.py -t` passes all deterministic tests with bit-identical assertions.
     Commit: "fiz: implement deterministic and T-symmetry unit tests (Phase 1.5)"
 
-Phase 2: E2 PhysicalDomain, PhysicalTableau & PhysicalFacet Integration
+Phase 2: E2 PhysicalDomain, PhysicalTableau & PhysicalFacet Integration — FUTURE
 ─────────────────────────────────────────────────────
   Task 2.1: Define E2 PhysicalDomain, PhysicalTableau, and generic PhysicalFacet API
-    - Create `src/inc/garnet/e2/physical.h` and include in `GNengine2.h`.
-    - Define singleton `PhysicalDomain`, World-owned `PhysicalTableau`, and `PhysicalSnapshot`.
-    - Define generic `PhysicalFacet` with descriptor configuration; enforce subclassing only for unique external APIs.
-    Verify: `python env/bin/build.py d` builds without compilation errors.
-    Commit: "e2: declare PhysicalDomain, Tableau, and generic Facet interfaces (Phase 2.1)"
-
   Task 2.2: Implement 128-bit coordinate translation and serialized PhysicalSnapshot write
-    - Implement $O_{sim}$ simulation anchor rebasing and PhysicalScale toMeters/fromMeters.
-    - Implement World ingress `PhysicalSnapshot` application serialized before visual snapshot.
-    Verify: Unit tests in `src/core/e2/test/physical-domain-test.cpp` pass with verified transforms.
-    Commit: "e2: implement coordinate rebasing and serialized physical write (Phase 2.2)"
-
   Task 2.3: Implement decoupled integer clock, T-symmetric stepping, and prediction queries
-    - Implement integer nanosecond stepping, signed $\pm \Delta t$ time reversibility, and $\alpha$-interpolation.
-    - Implement raycast, shape sweep, overlap tests, ballistic trajectory prediction, and ghost sandbox.
-    Verify: Time-reversibility and spatial query tests in `physical-domain-test.cpp` pass.
-    Commit: "e2: implement T-symmetric stepping and prediction queries (Phase 2.3)"
 
-Phase 3: Deformable & Flexible Bodies — XPBD Gel, Cloth & Hair (GNfiz) — FUTURE
+Phase 3: Gel Soft-Body Dynamics (GNfiz)
 ─────────────────────────────────────────────────────
-  Task 3.1: GPU XPBD Gel (soft & bouncy volumetric body) simulation compute pipeline
-  Task 3.2: GPU XPBD Weft (cloth) simulation compute pipeline
-  Task 3.3: GPU Strand (hair/fur) guide-chain dynamics and interpolation
-  Task 3.4: Configure generic PhysicalFacet with Gel, Weft, and Strand descriptors
-  Task 3.5: Standalone gel/soft-body sample in `src/sample/fiz/gel.cpp` (GNsample-fiz-gel)
-  Task 3.6: Standalone cloth sample in `src/sample/fiz/cloth.cpp` (GNsample-fiz-cloth)
-  Task 3.7: Standalone hair sample in `src/sample/fiz/hair.cpp` (GNsample-fiz-hair)
-  Task 3.8: Implement Gel soft-body incompressibility and recovery unit test (`gel-softbody-test.cpp`)
+  Task 3.1: Define Gel, GelMesh, and GelSolver public interfaces
+    - Create `src/inc/garnet/fiz/gel.h` and include in `GNfiz.h`.
+    - Declare `GelVertex`, `GelFace`, `GelTetrahedron`, `GelEdge`, `GelMesh`, `GelDesc`, `Gel`, `GelSolverDesc`, `GelSolver`.
+    Verify: `python env/bin/build.py d` builds with new gel public headers.
+    Commit: "fiz: declare Gel, GelMesh, and GelSolver public interfaces (Phase 3.1)"
 
-Phase 4: Liquids & Gaseous Media — Fluid Simulation (GNfiz) — FUTURE
+  Task 3.2: Implement Gel soft-body dynamics and Jolt backend solver
+    - Implement `GelMeshImpl`, `GelImpl`, and `GelSolverImpl` in `src/core/fiz/gel.cpp`.
+    - Support XPBD volume constraints (incompressibility), edge springs, pneumatic pressure, deformation extraction, and mutual collision with rigid bodies.
+    Verify: `python env/bin/build.py d` compiles Gel implementation cleanly.
+    Commit: "fiz: implement Gel soft-body dynamics and solver (Phase 3.2)"
+
+  Task 3.3: Implement Gel soft-body incompressibility and recovery unit test suite
+    - Create `src/core/fiz/test/gel-softbody-test.cpp` and wire into `internal-test.cmake`.
+    - Verify hydrostatic volume preservation under impact (±0.5%), elastic shape recovery, bounciness, and forward determinism.
+    Verify: `python env/bin/cit.py -t` passes all Gel soft-body tests.
+    Commit: "fiz: implement Gel soft-body incompressibility and recovery unit tests (Phase 3.3)"
+
+  Task 3.4: Implement standalone visual gel sample application (GNsample-fiz-gel)
+    - Create `src/sample/fiz/gel.cpp` and wire into `src/sample/fiz/CMakeLists.txt`.
+    - Render deformed gel meshes with dynamically updated vertices and normals.
+    - Support interactive mode (camera orbit/zoom, projectile launching, resetting) and headless test mode (`t`).
+    Verify: `GNsample-fiz-gel t` runs headless test and passes with zero error.
+    Commit: "sample: add standalone fiz gel soft-body visual sample app (Phase 3.4)"
+
+  Task 3.5: Verify headless & interactive correctness, verify FPS performance, and optimize
+    - Validate headless and interactive execution.
+    - Measure physics ms, draw ms, and FPS telemetry.
+    - Optimize dynamic vertex buffer uploads and solver stepping.
+    Verify: High framerate (60+ FPS) achieved and verified; clean exit.
+    Commit: "fiz, sample: verify correctness, optimize gel rendering, and verify FPS (Phase 3.5)"
+
+Phase 4: Deformable Cloth & Hair (GNfiz) — FUTURE
+─────────────────────────────────────────────────────
+  Task 4.1: GPU XPBD Weft (cloth) simulation compute pipeline
+  Task 4.2: GPU Strand (hair/fur) guide-chain dynamics and interpolation
+  Task 4.3: Standalone cloth sample in `src/sample/fiz/cloth.cpp` (GNsample-fiz-cloth)
+  Task 4.4: Standalone hair sample in `src/sample/fiz/hair.cpp` (GNsample-fiz-hair)
+
+Phase 5: Liquids & Gaseous Media — Fluid Simulation (GNfiz) — FUTURE
 ─────────────────────────────────────────────────────
   Task 4.1: GPU 2D IFFT Tide (ocean) wave spectrum and displacement maps
   Task 4.2: GPU 3D Eulerian Plume & Blaze (smoke/fire) grid solver

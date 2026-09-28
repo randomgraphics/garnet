@@ -13,6 +13,7 @@ namespace GN::fiz {}
     #include "fiz/temper.h"
     #include "fiz/hull.h"
     #include "fiz/solid.h"
+    #include "fiz/gel.h"
     #undef __GN_INSIDE_FIZ_H__
 
 #endif // __GN_FIZ_GNFIZ_H__
