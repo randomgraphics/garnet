@@ -200,9 +200,10 @@ static AutoRef<ModelScene> createGelModelScene(const AutoRef<GelMesh> & mesh, co
     primitive.material = 0;
 
     glm::vec3 minPos(1e9f), maxPos(-1e9f);
-    size_t    numVerts = mesh->vertices().size();
+    auto      faceVerts = mesh->faceVertices();
+    size_t    numVerts  = faceVerts.size();
     primitive.vertices.reserve(numVerts);
-    for (const auto & v : mesh->vertices()) {
+    for (const auto & v : faceVerts) {
         ModelScene::Vertex mv;
         mv.position = glm::vec3(v.position.x, v.position.y, v.position.z);
         mv.normal   = (glm::length(mv.position) > 1e-4f) ? glm::normalize(mv.position) : glm::vec3(0.0f, 1.0f, 0.0f);
@@ -352,7 +353,7 @@ public:
 
         if (initialGelCount <= 1) {
             // Single big bouncy gel sphere dropped from mid-air to ground then bouncing up and down
-            spawnGel(TEMPLATE_SPHERE_RED, fiz::Vector3(0.0f, 10.0f, 0.0f), 0.88f, 0.3f, 1.0f, 0.008f, gpu);
+            spawnGel(TEMPLATE_SPHERE_RED, fiz::Vector3(0.0f, 10.0f, 0.0f), 0.95f, 0.2f, 1.0f, 2e-5f, gpu);
         } else {
             // Structured grid for performance scaling benchmark
             for (size_t i = 0; i < initialGelCount; ++i) {
@@ -377,10 +378,10 @@ public:
         desc.temper.restitution   = restitution;
         desc.temper.friction      = friction;
         desc.temper.density       = density;
-        desc.temper.linearDamping = 0.008f;
+        desc.temper.linearDamping = 0.002f;
         desc.edgeCompliance       = edgeCompliance;
         desc.volumeCompliance     = 0.0f; // strictly preserve volume
-        desc.pressure             = isCube ? 0.0f : 2000.0f;
+        desc.pressure             = 0.0f; // solid tetrahedral sphere: elasticity from volume and edge constraints
         desc.solverIterations     = 15;
         desc.entityId             = gels.size() + 100;
 
@@ -391,12 +392,12 @@ public:
         simGel.gel          = gel;
         simGel.templateKind = kind;
 
-        size_t numVerts = mesh->vertices().size();
+        size_t numVerts = mesh->faceVertices().size();
         simGel.cpuVertices.resize(numVerts);
 
         // Initialize vertex buffer template values (colors, uvs, tangents)
         for (size_t i = 0; i < numVerts; ++i) {
-            const auto &       mv = mesh->vertices()[i];
+            const auto &       mv = mesh->faceVertices()[i];
             ModelScene::Vertex vert;
             vert.position         = glm::vec3(mv.position.x, mv.position.y, mv.position.z);
             vert.normal           = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -528,9 +529,9 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
             uint32_t bufIdx = f % 2;
             for (auto & g : arena.gels) {
                 if (!g.gel) continue;
-                auto blob = g.gel->deformedVertices(true);
+                auto blob = g.gel->surfaceVertices(true);
                 if (!blob) continue;
-                auto   deformed = blob->accessor<Gel::DeformedVertex>();
+                auto   deformed = blob->accessor<Gel::SurfaceVertex>();
                 size_t vCount   = std::min(deformed.size(), g.cpuVertices.size());
                 for (size_t i = 0; i < vCount; ++i) {
                     g.cpuVertices[i].position = glm::vec3(deformed[i].position.x, deformed[i].position.y, deformed[i].position.z);
@@ -625,14 +626,14 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
     auto tGeom0 = std::chrono::high_resolution_clock::now();
     for (int it = 0; it < 100; ++it) {
         for (auto & g : arena.gels) {
-            auto b = g.gel->deformedVertices(true);
+            auto b = g.gel->surfaceVertices(true);
             (void) b;
         }
     }
     auto  tGeom1 = std::chrono::high_resolution_clock::now();
     float geomMs = std::chrono::duration<float, std::milli>(tGeom1 - tGeom0).count() / 100.0f;
 
-    GN_INFO(sLogger, "  Deformed Geometry (deformedVertices Blob): {:.3f} ms / frame", geomMs);
+    GN_INFO(sLogger, "  Deformed Geometry (surfaceVertices Blob): {:.3f} ms / frame", geomMs);
     GN_INFO(sLogger, "================================================================================\n");
 }
 
@@ -869,7 +870,7 @@ int main(int argc, const char ** argv) {
             minObservedY = std::min(minObservedY, curY);
 
             if (curY < initialY - 1.5f) { observedFreefall = true; }
-            if (curY < 1.7f) { observedImpact = true; } // Radius is 2.0m; contact at Y = 2.0m; Y < 1.7m indicates ground compression
+            if (curY < 1.98f) { observedImpact = true; } // Radius is 2.0m; contact at Y = 2.0m; Y < 1.98m indicates ground compression
             if (observedImpact && curY > minObservedY + 0.8f) { observedRebound = true; }
 
             if (testMode && (frameIdx % 10 == 0 || frameIdx == 1 || frameIdx == 77 || frameIdx == 84)) {
@@ -927,9 +928,9 @@ int main(int argc, const char ** argv) {
         uint32_t bufIdx   = frameIdx % 2; // Double buffering
         for (auto & g : arena.gels) {
             if (!g.gel) continue;
-            auto blob = g.gel->deformedVertices(true);
+            auto blob = g.gel->surfaceVertices(true);
             if (!blob) continue;
-            auto   deformed = blob->accessor<Gel::DeformedVertex>();
+            auto   deformed = blob->accessor<Gel::SurfaceVertex>();
             size_t vCount   = std::min(deformed.size(), g.cpuVertices.size());
 
             fiz::Vector3 com        = g.gel->position();

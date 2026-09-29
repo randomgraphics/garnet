@@ -8,30 +8,6 @@ namespace GN::fiz {
 struct Solid;
 struct SolidDesc;
 
-/// Single particle vertex within a soft-body tetrahedral mesh.
-struct GelVertex {
-    Vector3 position = {0.0f, 0.0f, 0.0f};
-    Vector3 velocity = {0.0f, 0.0f, 0.0f};
-    Scalar  invMass  = 1.0f;
-};
-
-/// Triangular surface face of a soft body, used for visual rendering and surface contacts.
-struct GelFace {
-    uint32_t indices[3] = {0, 0, 0};
-};
-
-/// Tetrahedral volume constraint enforcing hydrostatic incompressibility via XPBD.
-struct GelTetrahedron {
-    uint32_t indices[4] = {0, 0, 0, 0};
-    Scalar   compliance = 0.0f; ///< XPBD volume inverse stiffness (0.0 = strictly incompressible).
-};
-
-/// Distance spring edge constraint restoring the rest length of adjacent particles.
-struct GelEdge {
-    uint32_t indices[2] = {0, 0};
-    Scalar   compliance = 0.0f; ///< XPBD edge inverse stiffness (0.0 = rigid, >0.0 = elastic).
-};
-
 /// Static tetrahedral and surface mesh definition for instantiating soft volumetric bodies.
 struct GelMesh : public RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
@@ -40,25 +16,68 @@ protected:
     using RCRT64::RCRT64;
 
 public:
+    /// Single particle vertex within a soft-body tetrahedral mesh.
+    struct Vertex {
+        Vector3 position = {0.0f, 0.0f, 0.0f};
+        Vector3 velocity = {0.0f, 0.0f, 0.0f};
+        Scalar  invMass  = 1.0f;
+    };
+
+    /// Triangular surface face of a soft body, used for visual rendering and surface contacts.
+    struct Face {
+        uint32_t indices[3] = {0, 0, 0};
+    };
+
+    /// Tetrahedral volume constraint enforcing hydrostatic incompressibility via XPBD.
+    struct Tetrahedron {
+        uint32_t indices[4] = {0, 0, 0, 0};
+        Scalar   compliance = 0.0f; ///< XPBD volume inverse stiffness (0.0 = strictly incompressible).
+    };
+
+    /// Distance spring edge constraint restoring the rest length of adjacent particles.
+    struct Edge {
+        uint32_t indices[2] = {0, 0};
+        Scalar   compliance = 0.0f; ///< XPBD edge inverse stiffness (0.0 = rigid, >0.0 = elastic).
+    };
+
+    /// Range of face (surface) vertices within vertices().
+    struct FaceVertexRange {
+        size_t offset = 0;
+        size_t count  = 0;
+    };
+
     /// Creates a tetrahedralized soft-body cube lattice.
+    /// Surface vertices are placed first in vertices(), followed by internal vertices.
     /// \param gridSize Number of vertices along each cube axis (minimum 2, typically 3 to 6).
     /// \param size Total side length of the cube.
     static GN_API AutoRef<GelMesh> createCube(uint32_t gridSize = 4, Scalar size = 1.0f);
 
     /// Creates a soft-body sphere with radial tetrahedral volume constraints.
+    /// Surface vertices are placed first in vertices(), followed by the center vertex.
     /// \param radius Radius of the sphere.
     /// \param slices Longitudinal segments around the Y axis.
     /// \param stacks Latitudinal segments from south pole to north pole.
     static GN_API AutoRef<GelMesh> createSphere(Scalar radius = 0.5f, uint32_t slices = 12, uint32_t stacks = 8);
 
-    /// Creates a custom soft-body mesh from explicit vertices, surface faces, tetrahedra, and edges.
-    static GN_API AutoRef<GelMesh> create(const DynaArray<GelVertex> & vertices, const DynaArray<GelFace> & faces, const DynaArray<GelTetrahedron> & tetrahedra,
-                                          const DynaArray<GelEdge> & edges = {});
+    /// Creates a hollow inflatable soft-body spherical shell (zero internal tetrahedra) for pneumatic balloons and sports balls.
+    /// \param radius Radius of the sphere shell.
+    /// \param slices Longitudinal segments around the Y axis.
+    /// \param stacks Latitudinal segments from south pole to north pole.
+    static GN_API AutoRef<GelMesh> createHollowSphere(Scalar radius = 0.5f, uint32_t slices = 12, uint32_t stacks = 8);
 
-    virtual ArrayView<const GelVertex>      vertices() const   = 0;
-    virtual ArrayView<const GelFace>        faces() const      = 0;
-    virtual ArrayView<const GelTetrahedron> tetrahedra() const = 0;
-    virtual ArrayView<const GelEdge>        edges() const      = 0;
+    /// Creates a custom soft-body mesh from explicit vertices, surface faces, tetrahedra, and edges.
+    /// \note This function internally reorganizes vertices to group all surface vertices referenced by
+    ///       faces at the beginning of the vertex array. Consequently, the vertex indices returned by
+    ///       faces(), tetrahedra(), and edges() may differ from those passed into this function.
+    static GN_API AutoRef<GelMesh> create(ArrayView<const Vertex> vertices, ArrayView<const Face> faces, ArrayView<const Tetrahedron> tetrahedra,
+                                          ArrayView<const Edge> edges = {});
+
+    virtual ArrayView<const Vertex>      vertices() const        = 0;
+    virtual FaceVertexRange              faceVertexRange() const = 0;
+    virtual ArrayView<const Vertex>      faceVertices() const    = 0;
+    virtual ArrayView<const Face>        faces() const           = 0;
+    virtual ArrayView<const Tetrahedron> tetrahedra() const      = 0;
+    virtual ArrayView<const Edge>        edges() const           = 0;
 
     /// Computes the un-deformed rest volume of the tetrahedral mesh.
     virtual Scalar restVolume() const = 0;
@@ -89,7 +108,7 @@ protected:
 
 public:
     /// Deformed surface vertex containing simulated position and computed normal.
-    struct DeformedVertex {
+    struct SurfaceVertex {
         Vector3 position;
         Vector3 normal;
     };
@@ -106,8 +125,8 @@ public:
 
     virtual Box aabb() const = 0;
 
-    /// Returns a Blob holding an array of DeformedVertex (position and normal) in world or COM space.
-    virtual AutoRef<Blob> deformedVertices(bool worldSpace = true) const = 0;
+    /// Returns a Blob holding an array of SurfaceVertex (position and normal) for all surface vertices in world or COM space.
+    virtual AutoRef<Blob> surfaceVertices(bool worldSpace = true) const = 0;
 
     /// View of the surface triangle index buffer (3 indices per face).
     virtual ArrayView<const uint32_t> surfaceIndices() const = 0;
@@ -117,6 +136,10 @@ public:
 
     /// Un-deformed rest volume.
     virtual Scalar restVolume() const = 0;
+
+    /// Internal pneumatic gas pressure (N/m²). Greater than 0.0 for inflatable balloons and sports balls.
+    virtual Scalar pressure() const             = 0;
+    virtual void   setPressure(Scalar pressure) = 0;
 
     virtual bool isActive() const = 0;
     virtual void activate()       = 0;

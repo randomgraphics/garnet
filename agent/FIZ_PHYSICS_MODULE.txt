@@ -167,7 +167,7 @@ Phase 3: Gel Soft-Body Dynamics (GNfiz)
 ─────────────────────────────────────────────────────
   Task 3.1: Define Gel, GelMesh, and GelSolver public interfaces
     - Create `src/inc/garnet/fiz/gel.h` and include in `GNfiz.h`.
-    - Declare `GelVertex`, `GelFace`, `GelTetrahedron`, `GelEdge`, `GelMesh`, `GelDesc`, `Gel`, `GelSolverDesc`, `GelSolver`.
+    - Declare `GelMesh::Vertex`, `Face`, `Tetrahedron`, `Edge`, `GelMesh`, `GelDesc`, `Gel`, `GelSolverDesc`, `GelSolver`.
     Verify: `python env/bin/build.py d` builds with new gel public headers.
     Commit: "fiz: declare Gel, GelMesh, and GelSolver public interfaces (Phase 3.1)"
 

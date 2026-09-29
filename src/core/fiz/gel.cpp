@@ -23,18 +23,24 @@ class GelMeshImpl : public GelMesh {
     using GelMesh::GelMesh;
 
 public:
-    DynaArray<GelVertex>      mVertices;
-    DynaArray<GelFace>        mFaces;
-    DynaArray<GelTetrahedron> mTetrahedra;
-    DynaArray<GelEdge>        mEdges;
-    Scalar                    mRestVolume = 0.0f;
+    DynaArray<Vertex>      mVertices;
+    DynaArray<Face>        mFaces;
+    DynaArray<Tetrahedron> mTetrahedra;
+    DynaArray<Edge>        mEdges;
+    FaceVertexRange        mFaceVertexRange = {0, 0};
+    Scalar                 mRestVolume      = 0.0f;
 
     GelMeshImpl(): GelMesh(TYPE_INFO(), "GelMesh") {}
 
-    ArrayView<const GelVertex>      vertices() const override { return mVertices; }
-    ArrayView<const GelFace>        faces() const override { return mFaces; }
-    ArrayView<const GelTetrahedron> tetrahedra() const override { return mTetrahedra; }
-    ArrayView<const GelEdge>        edges() const override { return mEdges; }
+    ArrayView<const Vertex> vertices() const override { return mVertices; }
+    FaceVertexRange         faceVertexRange() const override { return mFaceVertexRange; }
+    ArrayView<const Vertex> faceVertices() const override {
+        if (mFaceVertexRange.count == 0 || mFaceVertexRange.offset + mFaceVertexRange.count > mVertices.size()) return {};
+        return ArrayView<const Vertex>(mVertices.data() + mFaceVertexRange.offset, mFaceVertexRange.count);
+    }
+    ArrayView<const Face>        faces() const override { return mFaces; }
+    ArrayView<const Tetrahedron> tetrahedra() const override { return mTetrahedra; }
+    ArrayView<const Edge>        edges() const override { return mEdges; }
 
     Scalar restVolume() const override { return mRestVolume; }
 };
@@ -46,20 +52,45 @@ AutoRef<GelMesh> GelMesh::createCube(uint32_t gridSize, Scalar size) {
     Scalar h      = size / static_cast<Scalar>(N - 1);
     Scalar offset = -0.5f * size;
 
-    // 1. Grid vertices
+    auto                  oldIdx = [N](uint32_t x, uint32_t y, uint32_t z) -> uint32_t { return x + y * N + z * N * N; };
+    std::vector<uint32_t> gridToNewIdx(N * N * N);
+
+    // 1. Assign indices to surface vertices first [0, surfaceCount)
+    uint32_t surfaceCount = 0;
     for (uint32_t z = 0; z < N; ++z) {
         for (uint32_t y = 0; y < N; ++y) {
             for (uint32_t x = 0; x < N; ++x) {
-                GelVertex v;
-                v.position = {offset + static_cast<Scalar>(x) * h, offset + static_cast<Scalar>(y) * h, offset + static_cast<Scalar>(z) * h};
-                v.velocity = {0.0f, 0.0f, 0.0f};
-                v.invMass  = 1.0f;
-                mesh->mVertices.append(v);
+                if (x == 0 || x == N - 1 || y == 0 || y == N - 1 || z == 0 || z == N - 1) { gridToNewIdx[oldIdx(x, y, z)] = surfaceCount++; }
             }
         }
     }
 
-    auto vIdx = [N](uint32_t x, uint32_t y, uint32_t z) -> uint32_t { return x + y * N + z * N * N; };
+    // 2. Assign indices to internal tetrahedral vertices [surfaceCount, N^3)
+    uint32_t totalCount = surfaceCount;
+    for (uint32_t z = 0; z < N; ++z) {
+        for (uint32_t y = 0; y < N; ++y) {
+            for (uint32_t x = 0; x < N; ++x) {
+                if (!(x == 0 || x == N - 1 || y == 0 || y == N - 1 || z == 0 || z == N - 1)) { gridToNewIdx[oldIdx(x, y, z)] = totalCount++; }
+            }
+        }
+    }
+
+    // 3. Populate mVertices in the new sorted order
+    mesh->mVertices.resize(N * N * N);
+    for (uint32_t z = 0; z < N; ++z) {
+        for (uint32_t y = 0; y < N; ++y) {
+            for (uint32_t x = 0; x < N; ++x) {
+                uint32_t newIdx = gridToNewIdx[oldIdx(x, y, z)];
+                Vertex   v;
+                v.position              = {offset + static_cast<Scalar>(x) * h, offset + static_cast<Scalar>(y) * h, offset + static_cast<Scalar>(z) * h};
+                v.velocity              = {0.0f, 0.0f, 0.0f};
+                v.invMass               = 1.0f;
+                mesh->mVertices[newIdx] = v;
+            }
+        }
+    }
+
+    auto vIdx = [&](uint32_t x, uint32_t y, uint32_t z) -> uint32_t { return gridToNewIdx[oldIdx(x, y, z)]; };
 
     // Set of edges to prevent duplicates
     struct EdgeKey {
@@ -74,7 +105,7 @@ AutoRef<GelMesh> GelMesh::createCube(uint32_t gridSize, Scalar size) {
         if (u == v) return;
         uint32_t mn = std::min(u, v);
         uint32_t mx = std::max(u, v);
-        if (edgeSet.insert({mn, mx}).second) { mesh->mEdges.append(GelEdge {{mn, mx}, 0.0f}); }
+        if (edgeSet.insert({mn, mx}).second) { mesh->mEdges.append(Edge {{mn, mx}, 0.0f}); }
     };
 
     // 2. Axial and shear edges
@@ -119,7 +150,7 @@ AutoRef<GelMesh> GelMesh::createCube(uint32_t gridSize, Scalar size) {
         for (uint32_t y = 0; y < N - 1; ++y) {
             for (uint32_t x = 0; x < N - 1; ++x) {
                 for (int t = 0; t < 6; ++t) {
-                    GelTetrahedron tet;
+                    Tetrahedron tet;
                     for (int i = 0; i < 4; ++i) { tet.indices[i] = vIdx(x + tetIndices[t][i][0], y + tetIndices[t][i][1], z + tetIndices[t][i][2]); }
                     tet.compliance = 0.0f;
                     mesh->mTetrahedra.append(tet);
@@ -129,7 +160,7 @@ AutoRef<GelMesh> GelMesh::createCube(uint32_t gridSize, Scalar size) {
     }
 
     // 4. Surface boundary faces
-    auto addFace = [&](uint32_t i0, uint32_t i1, uint32_t i2) { mesh->mFaces.append(GelFace {{i0, i1, i2}}); };
+    auto addFace = [&](uint32_t i0, uint32_t i1, uint32_t i2) { mesh->mFaces.append(Face {{i0, i1, i2}}); };
 
     for (uint32_t y = 0; y < N - 1; ++y) {
         for (uint32_t x = 0; x < N - 1; ++x) {
@@ -167,7 +198,8 @@ AutoRef<GelMesh> GelMesh::createCube(uint32_t gridSize, Scalar size) {
         }
     }
 
-    mesh->mRestVolume = size * size * size;
+    mesh->mFaceVertexRange = {0, surfaceCount};
+    mesh->mRestVolume      = size * size * size;
     return mesh;
 }
 
@@ -176,15 +208,9 @@ AutoRef<GelMesh> GelMesh::createSphere(Scalar radius, uint32_t slices, uint32_t 
     uint32_t nStacks = std::max(3u, stacks);
     auto     mesh    = AutoRef<GelMeshImpl>(new GelMeshImpl);
 
-    // Vertex 0: Center vertex. In a star tetrahedral decomposition, the center vertex
-    // is shared by all tetrahedra (25% of total volume), so its lumped mass is ~N/4 times
-    // that of an individual surface vertex. Setting invMass inversely proportional to face
-    // count prevents XPBD constraint over-correction and numerical explosion.
-    mesh->mVertices.append(GelVertex {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
-
-    // Vertex 1: North pole (single distinct vertex)
-    const uint32_t northPole = static_cast<uint32_t>(mesh->mVertices.size());
-    mesh->mVertices.append(GelVertex {{0.0f, radius, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
+    // 1. Surface vertices: North pole (index 0)
+    const uint32_t northPole = 0;
+    mesh->mVertices.append(Vertex {{0.0f, radius, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
 
     // Intermediate latitude rings (1 to nStacks - 1)
     std::vector<uint32_t> ringStart(nStacks - 1);
@@ -200,18 +226,26 @@ AutoRef<GelMesh> GelMesh::createSphere(Scalar radius, uint32_t slices, uint32_t 
             float cosTheta = std::cos(theta);
 
             Vector3 pos(radius * sinPhi * cosTheta, radius * cosPhi, radius * sinPhi * sinTheta);
-            mesh->mVertices.append(GelVertex {pos, {0.0f, 0.0f, 0.0f}, 1.0f});
+            mesh->mVertices.append(Vertex {pos, {0.0f, 0.0f, 0.0f}, 1.0f});
         }
     }
 
-    // South pole (single distinct vertex)
+    // South pole
     const uint32_t southPole = static_cast<uint32_t>(mesh->mVertices.size());
-    mesh->mVertices.append(GelVertex {{0.0f, -radius, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
+    mesh->mVertices.append(Vertex {{0.0f, -radius, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
+
+    const uint32_t surfaceCount = static_cast<uint32_t>(mesh->mVertices.size());
+
+    // 2. Interior tetrahedral vertices: Center vertex placed AFTER all surface vertices
+    // In a star tetrahedral decomposition, the center vertex is shared by all tetrahedra (25% of total volume),
+    // so its lumped mass is ~N/4 times that of an individual surface vertex.
+    const uint32_t centerVertex = surfaceCount;
+    mesh->mVertices.append(Vertex {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
 
     auto addSurfaceTriangle = [&](uint32_t f0, uint32_t f1, uint32_t f2) {
-        mesh->mFaces.append(GelFace {{f0, f1, f2}});
+        mesh->mFaces.append(Face {{f0, f1, f2}});
 
-        // Tetrahedron (0, f0, f1, f2)
+        // Tetrahedron (centerVertex, f0, f1, f2)
         // Ensure strictly positive signed volume determinant for Jolt's XPBD volume constraint solver
         const Vector3 & p0 = mesh->mVertices[f0].position;
         const Vector3 & p1 = mesh->mVertices[f1].position;
@@ -219,9 +253,9 @@ AutoRef<GelMesh> GelMesh::createSphere(Scalar radius, uint32_t slices, uint32_t 
         Vector3         c(p1.y * p2.z - p1.z * p2.y, p1.z * p2.x - p1.x * p2.z, p1.x * p2.y - p1.y * p2.x);
         Scalar          det = p0.x * c.x + p0.y * c.y + p0.z * c.z;
         if (det < 0.0f) {
-            mesh->mTetrahedra.append(GelTetrahedron {{0, f1, f0, f2}, 0.0f});
+            mesh->mTetrahedra.append(Tetrahedron {{centerVertex, f1, f0, f2}, 0.0f});
         } else {
-            mesh->mTetrahedra.append(GelTetrahedron {{0, f0, f1, f2}, 0.0f});
+            mesh->mTetrahedra.append(Tetrahedron {{centerVertex, f0, f1, f2}, 0.0f});
         }
     };
 
@@ -254,7 +288,7 @@ AutoRef<GelMesh> GelMesh::createSphere(Scalar radius, uint32_t slices, uint32_t 
     }
 
     // Assign appropriate lumped inverse mass to center vertex
-    if (!mesh->mFaces.empty()) { mesh->mVertices[0].invMass = 4.0f / static_cast<float>(mesh->mFaces.size()); }
+    if (!mesh->mFaces.empty()) { mesh->mVertices[centerVertex].invMass = 4.0f / static_cast<float>(mesh->mFaces.size()); }
 
     struct EdgeKey {
         uint32_t a, b;
@@ -268,11 +302,11 @@ AutoRef<GelMesh> GelMesh::createSphere(Scalar radius, uint32_t slices, uint32_t 
         if (u == v) return;
         uint32_t mn = std::min(u, v);
         uint32_t mx = std::max(u, v);
-        if (edgeSet.insert({mn, mx}).second) { mesh->mEdges.append(GelEdge {{mn, mx}, 0.0f}); }
+        if (edgeSet.insert({mn, mx}).second) { mesh->mEdges.append(Edge {{mn, mx}, 0.0f}); }
     };
 
     // Radial spokes from center to all surface vertices
-    for (uint32_t v = 1; v < mesh->mVertices.size(); ++v) { addEdge(0, v); }
+    for (uint32_t v = 0; v < surfaceCount; ++v) { addEdge(centerVertex, v); }
 
     // Surface face boundary edges
     for (const auto & f : mesh->mFaces) {
@@ -292,19 +326,162 @@ AutoRef<GelMesh> GelMesh::createSphere(Scalar radius, uint32_t slices, uint32_t 
         }
     }
 
-    mesh->mRestVolume = (4.0f / 3.0f) * PI * radius * radius * radius;
+    mesh->mFaceVertexRange = {0, surfaceCount};
+    mesh->mRestVolume      = (4.0f / 3.0f) * PI * radius * radius * radius;
     return mesh;
 }
 
-AutoRef<GelMesh> GelMesh::create(const DynaArray<GelVertex> & vertices, const DynaArray<GelFace> & faces, const DynaArray<GelTetrahedron> & tetrahedra,
-                                 const DynaArray<GelEdge> & edges) {
-    auto mesh         = AutoRef<GelMeshImpl>(new GelMeshImpl);
-    mesh->mVertices   = vertices;
-    mesh->mFaces      = faces;
-    mesh->mTetrahedra = tetrahedra;
-    mesh->mEdges      = edges;
+AutoRef<GelMesh> GelMesh::createHollowSphere(Scalar radius, uint32_t slices, uint32_t stacks) {
+    uint32_t nSlices = std::max(4u, slices);
+    uint32_t nStacks = std::max(3u, stacks);
+    auto     mesh    = AutoRef<GelMeshImpl>(new GelMeshImpl);
 
-    if (mesh->mEdges.empty()) {
+    // North pole vertex (index 0)
+    const uint32_t northPole = 0;
+    mesh->mVertices.append(Vertex {{0.0f, radius, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
+
+    // Intermediate latitude rings (1 to nStacks - 1)
+    std::vector<uint32_t> ringStart(nStacks - 1);
+    for (uint32_t r = 1; r < nStacks; ++r) {
+        float phi        = PI * static_cast<float>(r) / static_cast<float>(nStacks);
+        float sinPhi     = std::sin(phi);
+        float cosPhi     = std::cos(phi);
+        ringStart[r - 1] = static_cast<uint32_t>(mesh->mVertices.size());
+
+        for (uint32_t s = 0; s < nSlices; ++s) {
+            float theta    = 2.0f * PI * static_cast<float>(s) / static_cast<float>(nSlices);
+            float sinTheta = std::sin(theta);
+            float cosTheta = std::cos(theta);
+
+            Vector3 pos(radius * sinPhi * cosTheta, radius * cosPhi, radius * sinPhi * sinTheta);
+            mesh->mVertices.append(Vertex {pos, {0.0f, 0.0f, 0.0f}, 1.0f});
+        }
+    }
+
+    // South pole vertex
+    const uint32_t southPole = static_cast<uint32_t>(mesh->mVertices.size());
+    mesh->mVertices.append(Vertex {{0.0f, -radius, 0.0f}, {0.0f, 0.0f, 0.0f}, 1.0f});
+
+    auto addSurfaceTriangle = [&](uint32_t f0, uint32_t f1, uint32_t f2) { mesh->mFaces.append(Face {{f0, f1, f2}}); };
+
+    // 1. North cap faces (outward pointing normals)
+    for (uint32_t s = 0; s < nSlices; ++s) {
+        uint32_t sNext = (s + 1) % nSlices;
+        addSurfaceTriangle(northPole, ringStart[0] + sNext, ringStart[0] + s);
+    }
+
+    // 2. Intermediate quad bands
+    for (uint32_t r = 0; r + 1 < nStacks - 1; ++r) {
+        uint32_t r0 = ringStart[r];
+        uint32_t r1 = ringStart[r + 1];
+        for (uint32_t s = 0; s < nSlices; ++s) {
+            uint32_t sNext = (s + 1) % nSlices;
+            uint32_t i0    = r0 + s;
+            uint32_t i1    = r1 + s;
+            uint32_t i2    = r1 + sNext;
+            uint32_t i3    = r0 + sNext;
+            addSurfaceTriangle(i0, i2, i1);
+            addSurfaceTriangle(i0, i3, i2);
+        }
+    }
+
+    // 3. South cap faces
+    uint32_t lastRing = ringStart[nStacks - 2];
+    for (uint32_t s = 0; s < nSlices; ++s) {
+        uint32_t sNext = (s + 1) % nSlices;
+        addSurfaceTriangle(southPole, lastRing + s, lastRing + sNext);
+    }
+
+    struct EdgeKey {
+        uint32_t a, b;
+        bool     operator==(const EdgeKey & o) const { return a == o.a && b == o.b; }
+    };
+    struct EdgeHash {
+        size_t operator()(const EdgeKey & k) const { return (static_cast<size_t>(k.a) << 32) ^ static_cast<size_t>(k.b); }
+    };
+    std::unordered_set<EdgeKey, EdgeHash> edgeSet;
+    auto                                  addEdge = [&](uint32_t u, uint32_t v) {
+        if (u == v) return;
+        uint32_t mn = std::min(u, v);
+        uint32_t mx = std::max(u, v);
+        if (edgeSet.insert({mn, mx}).second) { mesh->mEdges.append(Edge {{mn, mx}, 0.0f}); }
+    };
+
+    // Surface face boundary edges
+    for (const auto & f : mesh->mFaces) {
+        addEdge(f.indices[0], f.indices[1]);
+        addEdge(f.indices[1], f.indices[2]);
+        addEdge(f.indices[2], f.indices[0]);
+    }
+
+    // Quad cross-diagonals for shear stability of the rubber membrane
+    for (uint32_t r = 0; r + 1 < nStacks - 1; ++r) {
+        uint32_t r0 = ringStart[r];
+        uint32_t r1 = ringStart[r + 1];
+        for (uint32_t s = 0; s < nSlices; ++s) {
+            uint32_t sNext = (s + 1) % nSlices;
+            addEdge(r0 + s, r1 + sNext);
+            addEdge(r1 + s, r0 + sNext);
+        }
+    }
+
+    mesh->mFaceVertexRange = {0, static_cast<uint32_t>(mesh->mVertices.size())};
+    mesh->mRestVolume      = (4.0f / 3.0f) * PI * radius * radius * radius;
+    return mesh;
+}
+
+AutoRef<GelMesh> GelMesh::create(ArrayView<const Vertex> vertices, ArrayView<const Face> faces, ArrayView<const Tetrahedron> tetrahedra,
+                                 ArrayView<const Edge> edges) {
+    auto mesh = AutoRef<GelMeshImpl>(new GelMeshImpl);
+
+    const size_t      V = vertices.size();
+    std::vector<bool> isSurface(V, false);
+    for (const auto & f : faces) {
+        if (f.indices[0] < V) isSurface[f.indices[0]] = true;
+        if (f.indices[1] < V) isSurface[f.indices[1]] = true;
+        if (f.indices[2] < V) isSurface[f.indices[2]] = true;
+    }
+
+    std::vector<uint32_t> oldToNew(V, 0);
+    uint32_t              surfaceCount = 0;
+    for (uint32_t i = 0; i < V; ++i) {
+        if (isSurface[i]) { oldToNew[i] = surfaceCount++; }
+    }
+    uint32_t totalCount = surfaceCount;
+    for (uint32_t i = 0; i < V; ++i) {
+        if (!isSurface[i]) { oldToNew[i] = totalCount++; }
+    }
+
+    mesh->mVertices.resize(static_cast<uint32_t>(V));
+    for (uint32_t i = 0; i < V; ++i) { mesh->mVertices[oldToNew[i]] = vertices[i]; }
+
+    mesh->mFaces.reserve(static_cast<uint32_t>(faces.size()));
+    for (const auto & f : faces) {
+        Face nf;
+        nf.indices[0] = (f.indices[0] < V) ? oldToNew[f.indices[0]] : f.indices[0];
+        nf.indices[1] = (f.indices[1] < V) ? oldToNew[f.indices[1]] : f.indices[1];
+        nf.indices[2] = (f.indices[2] < V) ? oldToNew[f.indices[2]] : f.indices[2];
+        mesh->mFaces.append(nf);
+    }
+
+    mesh->mTetrahedra.reserve(static_cast<uint32_t>(tetrahedra.size()));
+    for (const auto & t : tetrahedra) {
+        Tetrahedron nt;
+        for (int i = 0; i < 4; ++i) { nt.indices[i] = (t.indices[i] < V) ? oldToNew[t.indices[i]] : t.indices[i]; }
+        nt.compliance = t.compliance;
+        mesh->mTetrahedra.append(nt);
+    }
+
+    if (!edges.empty()) {
+        mesh->mEdges.reserve(static_cast<uint32_t>(edges.size()));
+        for (const auto & e : edges) {
+            Edge ne;
+            ne.indices[0] = (e.indices[0] < V) ? oldToNew[e.indices[0]] : e.indices[0];
+            ne.indices[1] = (e.indices[1] < V) ? oldToNew[e.indices[1]] : e.indices[1];
+            ne.compliance = e.compliance;
+            mesh->mEdges.append(ne);
+        }
+    } else {
         struct EdgeKey {
             uint32_t a, b;
             bool     operator==(const EdgeKey & o) const { return a == o.a && b == o.b; }
@@ -317,14 +494,14 @@ AutoRef<GelMesh> GelMesh::create(const DynaArray<GelVertex> & vertices, const Dy
             if (u == v) return;
             uint32_t mn = std::min(u, v);
             uint32_t mx = std::max(u, v);
-            if (edgeSet.insert({mn, mx}).second) { mesh->mEdges.append(GelEdge {{mn, mx}, 0.0f}); }
+            if (edgeSet.insert({mn, mx}).second) { mesh->mEdges.append(Edge {{mn, mx}, 0.0f}); }
         };
-        for (const auto & f : faces) {
+        for (const auto & f : mesh->mFaces) {
             addEdge(f.indices[0], f.indices[1]);
             addEdge(f.indices[1], f.indices[2]);
             addEdge(f.indices[2], f.indices[0]);
         }
-        for (const auto & t : tetrahedra) {
+        for (const auto & t : mesh->mTetrahedra) {
             addEdge(t.indices[0], t.indices[1]);
             addEdge(t.indices[0], t.indices[2]);
             addEdge(t.indices[0], t.indices[3]);
@@ -334,12 +511,14 @@ AutoRef<GelMesh> GelMesh::create(const DynaArray<GelVertex> & vertices, const Dy
         }
     }
 
+    mesh->mFaceVertexRange = {0, surfaceCount};
+
     Scalar totalVol = 0.0f;
-    for (const auto & t : tetrahedra) {
-        const auto & p0 = vertices[t.indices[0]].position;
-        const auto & p1 = vertices[t.indices[1]].position;
-        const auto & p2 = vertices[t.indices[2]].position;
-        const auto & p3 = vertices[t.indices[3]].position;
+    for (const auto & t : mesh->mTetrahedra) {
+        const auto & p0 = mesh->mVertices[t.indices[0]].position;
+        const auto & p1 = mesh->mVertices[t.indices[1]].position;
+        const auto & p2 = mesh->mVertices[t.indices[2]].position;
+        const auto & p3 = mesh->mVertices[t.indices[3]].position;
         Vector3      v1 = p1 - p0;
         Vector3      v2 = p2 - p0;
         Vector3      v3 = p3 - p0;
@@ -386,12 +565,15 @@ public:
 
     Box aabb() const override;
 
-    AutoRef<Blob> deformedVertices(bool worldSpace = true) const override;
+    AutoRef<Blob> surfaceVertices(bool worldSpace = true) const override;
 
     ArrayView<const uint32_t> surfaceIndices() const override { return mSurfaceIndices; }
 
     Scalar currentVolume() const override;
     Scalar restVolume() const override { return mMesh ? mMesh->restVolume() : 0.0f; }
+
+    Scalar pressure() const override;
+    void   setPressure(Scalar pressure) override;
 
     bool isActive() const override;
     void activate() override;
@@ -720,7 +902,7 @@ Box GelImpl::aabb() const {
     return Box(b.mMin.GetX(), b.mMin.GetY(), b.mMin.GetZ(), b.mMax.GetX() - b.mMin.GetX(), b.mMax.GetY() - b.mMin.GetY(), b.mMax.GetZ() - b.mMin.GetZ());
 }
 
-AutoRef<Blob> GelImpl::deformedVertices(bool worldSpace) const {
+AutoRef<Blob> GelImpl::surfaceVertices(bool worldSpace) const {
     if (mBodyId.IsInvalid() || !mSolver || !mMesh) return {};
 
     JPH::BodyLockRead lock(mSolver->bodyLockInterface(), mBodyId);
@@ -731,30 +913,32 @@ AutoRef<Blob> GelImpl::deformedVertices(bool worldSpace) const {
     if (!mp) return {};
 
     const auto & verts = mp->GetVertices();
-    size_t       n     = verts.size();
-    if (n == 0) return {};
+    auto         range = mMesh->faceVertexRange();
+    size_t       n     = range.count;
+    if (n == 0 || range.offset + n > verts.size()) return {};
 
-    auto blob = referenceTo(new SimpleBlob<DeformedVertex>(n));
-    auto span = blob->accessor<DeformedVertex>();
+    auto blob = referenceTo(new SimpleBlob<SurfaceVertex>(n));
+    auto span = blob->accessor<SurfaceVertex>();
 
     JPH::RVec3 com = body.GetCenterOfMassPosition();
 
-    // 1. Extract deformed positions and initialize normals
+    // 1. Extract deformed positions for surface vertices and initialize normals
     for (size_t i = 0; i < n; ++i) {
+        size_t vertIdx = range.offset + i;
         if (worldSpace) {
-            JPH::RVec3 wp    = com + verts[i].mPosition;
+            JPH::RVec3 wp    = com + verts[vertIdx].mPosition;
             span[i].position = Vector3(static_cast<float>(wp.GetX()), static_cast<float>(wp.GetY()), static_cast<float>(wp.GetZ()));
         } else {
-            span[i].position = Vector3(verts[i].mPosition.GetX(), verts[i].mPosition.GetY(), verts[i].mPosition.GetZ());
+            span[i].position = Vector3(verts[vertIdx].mPosition.GetX(), verts[vertIdx].mPosition.GetY(), verts[vertIdx].mPosition.GetZ());
         }
         span[i].normal = Vector3(0.0f, 0.0f, 0.0f);
     }
 
     // 2. Accumulate deformed surface normals from face topology
     for (const auto & f : mMesh->faces()) {
-        uint32_t i0 = f.indices[0];
-        uint32_t i1 = f.indices[1];
-        uint32_t i2 = f.indices[2];
+        uint32_t i0 = f.indices[0] - static_cast<uint32_t>(range.offset);
+        uint32_t i1 = f.indices[1] - static_cast<uint32_t>(range.offset);
+        uint32_t i2 = f.indices[2] - static_cast<uint32_t>(range.offset);
 
         if (i0 < n && i1 < n && i2 < n) {
             Vector3 e1 = span[i1].position - span[i0].position;
@@ -792,6 +976,28 @@ Scalar GelImpl::currentVolume() const {
 
     float vol = mp->GetVolume();
     return std::abs(vol);
+}
+
+Scalar GelImpl::pressure() const {
+    if (mBodyId.IsInvalid() || !mSolver) return 0.0f;
+    JPH::BodyLockRead lock(mSolver->bodyLockInterface(), mBodyId);
+    if (!lock.Succeeded()) return 0.0f;
+
+    const JPH::Body & body = lock.GetBody();
+    const auto *      mp   = static_cast<const JPH::SoftBodyMotionProperties *>(body.GetMotionProperties());
+    if (!mp) return 0.0f;
+
+    return mp->GetPressure();
+}
+
+void GelImpl::setPressure(Scalar pressure) {
+    if (mBodyId.IsInvalid() || !mSolver) return;
+    JPH::BodyLockWrite lock(mSolver->bodyLockInterface(), mBodyId);
+    if (!lock.Succeeded()) return;
+
+    JPH::Body & body = lock.GetBody();
+    auto *      mp   = static_cast<JPH::SoftBodyMotionProperties *>(body.GetMotionProperties());
+    if (mp) mp->SetPressure(std::max(0.0f, pressure));
 }
 
 bool GelImpl::isActive() const {
