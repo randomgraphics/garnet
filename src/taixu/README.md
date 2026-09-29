@@ -46,7 +46,146 @@
 
 ---
 
-## 二、 UI 设计底线原则：零 3D 门槛，UI 仅作为 AI 输入的辅助
+## 二、 平台定位对比：Taixu 与现有体系的根本区别
+
+Taixu 与商业游戏引擎、Roblox、Second Life 和 Minecraft 都存在一定程度的重叠，但目标并不是复制其中任何一种产品。
+
+它们分别代表了几种不同的 3D 内容创建模式：
+* **Unreal / Unity**：Developer builds the experience（开发者开发，玩家体验）
+* **Roblox**：Creator builds the game（创作者做游戏，玩家玩游戏）
+* **Second Life**：Resident builds the virtual world（居民手动建造虚拟世界）
+* **Minecraft**：Player builds inside the game（玩家在规则方块网格内建造）
+* **Taixu**：**Player describes intent; AI builds and modifies the world**（玩家描述意图，AI 在高品质实时世界中现场建造与演化）
+
+### 1. 商业游戏引擎（Unreal / Unity）
+* **传统模式**：`Idea → Editor → Assets → Code/Script → Build → Package → Application → User`。Creator 与 Player 是两个完全隔离的角色。即使引入 AI，也仅是“AI 辅助开发者操作复杂的 Editor”。
+* **Taixu 的区别**：**AI is part of the world itself.** 用户不需要成为专业游戏开发者。用户一进入世界，就已经处于创作环境之中（*“在河对面建一个村庄”*、*“给这里增加一座桥”*），没有传统意义上生硬的 `Editor Mode → Build → Run` 边界。**The world itself is the editor.**
+
+### 2. Roblox
+* **Roblox 模式**：通过 Roblox Studio 创建 Experience 并发布，极大降低了门槛。但它仍然存在明显的 **Creator / Player 分离**（Studio 是创作端，Client 是消费端）。
+* **Taixu 的区别**：**Player ≈ Creator**。任何用户在当前 World 中都可以通过 AI 实时修改或扩展世界。创作（Creation）直接成为漫游与探索（Gameplay / Exploration）本身的一部分。
+
+### 3. Second Life
+* **Second Life 模式**：很早就提出了“居民既是玩家也是创造者”，但其根本痛点在于**创作依赖手动 3D 制作技能（Manual 3D authoring skills）**。用户必须学习 Primitive、Transform、Texture、Script 等专业概念，导致真正的创作者依旧是少数专业群体。
+* **Taixu 的区别**：**User manipulates meaning and intent.** 用户不需要学习 3D 制作软件。用户说 *“在湖边给我造一个木屋”*，系统自动完成资产挑选、几何生成、摆件布局、材质、光照、碰撞、LOD 与性能优化。
+
+### 4. Minecraft
+* **Minecraft 模式**：交互理念与 Taixu 高度一致——**The game itself is the editor**。但 Minecraft 能够做到这一点，是以牺牲真实视觉为代价的：它依赖高度受限的**体素方块世界（Block World）**。
+* **Taixu 的区别**：探索一个根本性命题——**如果 AI 可以承担传统 3D 编辑的复杂性，我们是否可以获得 Minecraft 的即时创造体验，而摆脱 Minecraft 的格子限制？**
+  * Minecraft：`Simple Representation → Simple Editing`
+  * Taixu：`Complex 3D Representation + AI Abstraction → Simple Editing`
+  用户依然享有极其轻松直接的创造乐趣，但底层世界是由高精网格、物理、PBR 材质、动态光照与程序化系统组成的真实连续 3D 空间。
+
+### 5. 核心架构差异：语义世界模型（Semantic World Model）
+传统引擎主要把世界看作 `Scene Graph + Components + Assets`；Minecraft 把世界看作 `Blocks + Entities`；Roblox 把世界看作 `Instances + Scripts`。
+
+Taixu 引入了更高维度的表述：**Semantic World Model（语义世界模型）**。
+* 物体不仅仅是 `Mesh_02341`，更知道自己是 `Wooden Cabin`；
+* 并进一步理解空间拓扑与常识关系：木屋有一扇门、木屋包含房间、房间包含家具、木屋隶属于小村庄、村庄依傍着河流、河流连通着湖泊；
+* **AI 操作的是这些语义概念与空间关系，而 Renderer 最终看到的是 Mesh、Material 与 Light**。这是 Taixu 与传统游戏引擎之间最根本的架构分野。
+
+### 6. Taixu 的创作循环（The Creation Loop）
+* 传统引擎：`Developer → Editor → Code/Assets → Build → Player`
+* Roblox：`Creator → Roblox Studio → Publish → Player`
+* Minecraft：`Player → Block Interaction → World Changes`
+* **Taixu**：`Player → Intent → AI → World Changes → Player`
+  随之立即进入新的闭环：
+  $$\textbf{Explore} \longrightarrow \textbf{Imagine} \longrightarrow \textbf{Describe} \longrightarrow \textbf{Generate} \longrightarrow \textbf{Explore}$$
+  这个沉浸式探索与创造循环本身就是产品的核心体验。
+
+### 7. 平台对比总表
+
+| 维度 | 商业引擎 (Unreal / Unity) | Roblox | Second Life | Minecraft | **Taixu (太虚)** |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **主要创作者** | 专业开发者 | 创作者 | 虚拟居民 | 游戏玩家 | **玩家即创作者 (Player ≈ Creator)** |
+| **创作界面** | 专业 Editor + 代码 | Roblox Studio + 脚本 | 世界内手工对象编辑面板 | 直接方块破坏/放置交互 | **自然语言 + 沉浸直觉辅助 (Natural Language + Intuitive Assist)** |
+| **创作发生在体验内部** | 否（完全分离） | 大多否（分 Studio 与 Client） | 是 | 是 | **是（The world itself is the editor）** |
+| **AI 原生架构** | 否（仅外挂辅助插件） | 否 | 否 | 否 | **是（AI 是世界核心运转协议）** |
+| **世界表达体系** | 场景图 / 资产 / 实体组件 | 实例树 / 脚本 | 对象网格 / 脚本 | 体素方块 / 实体 | **语义世界模型 + 运行时渲染管线** |
+
+### 8. 定位合成与终极假设
+Taixu 是已有优秀思想的集大成与升华：
+* 借鉴 **Game Engines**：高品质、低延迟、现代实时 3D 渲染内核；
+* 借鉴 **Roblox**：创作者平台、分发机制与社交生态；
+* 借鉴 **Second Life**：用户自由构建、持久共存的世界与社交在场感；
+* 借鉴 **Minecraft**：世界即编辑器（The world itself is the editor）；
+* 注入 **AI-native 语义世界生成** 作为全新基石。
+
+> **终极检验假设**：  
+> **Can AI remove the complexity barrier of creating rich 3D worlds?**  
+> （AI 是否能够彻底打破创造丰富 3D 世界的技术门槛？）  
+> 用户不再需要学习任何 3D 软件，甚至不需要意识到自己正在使用一个“编辑器”。用户只需：**Explore. Imagine. Describe.**，太虚负责将意图转化为即刻可进入、可交互、可继续修改的真实 3D 世界。
+
+---
+
+## 三、 产品与治理设计原则
+
+AI 会让 3D 内容的生产成本急剧趋近于零。优质内容容易爆发，但垃圾、骚扰、违规内容的成本也同样归零。单纯依靠传统的“生成 $\rightarrow$ 审查 $\rightarrow$ 封禁”模式无法支撑平台的可持续治理。太虚确立以下核心产品与治理原则：
+
+### 1. Creation 与 Publication 严格分离
+> **Create anything privately; publish under accountability.**  
+> （私下创作拥有广泛自由；公开发布必须承担责任。）
+
+用户在自己的私人世界（Private World）中进行实验与构思，与将内容推向公共空间是两个截然不同的行为层级。避免为了公共空间的合规治理，而过度绑架或扼杀私人创作的自由度。
+
+### 2. Creator Identity 与长期声誉绑定
+不仅依靠被动内容审核，而是建立**长期、可追责的创作者身份体系**：
+$$\text{Real Identity} \longrightarrow \text{Verified Account} \longrightarrow \text{Persistent Creator Identity} \longrightarrow \text{Public Pseudonym}$$
+* **目的并非公开实名**：普通用户看到的依然可以是昵称/代号；
+* **核心在于建立长效约束**：持续身份（Persistent Identity）、追责机制（Accountability）、声誉积累（Reputation）、创作历史（Creation History）与发布成本（Publishing Cost）；
+* 优秀作品积累长期声誉，恶意滥用与劣质垃圾同样损耗长期身份，借助现实社交契约极大提升恶意发布的社会成本。
+
+### 3. 创作自由 vs 分发责任（Graduated Distribution）
+> **Freedom to create is broad. Freedom to distribute is earned.**  
+> （创作的自由很广阔，但分发的自由需要凭声誉获取。）
+
+系统不需要在 AI 生成的每一步都过度卡脖子，而是将治理重心收敛在**分发层（Distribution Layer）**：
+* **私人创作（Private Creation）**：极少限制，充分挥洒创意；
+* **好友共享（Share with Friends）**：开始受到基础内容规范约束；
+* **公开发布（Public World）**：需满足公共社区内容标准；
+* **发现与推荐（Discovery / Recommendation）**：要求更高的 Creator 声誉与内容质量；
+* **大规模全网分发（Large-scale Distribution）**：执行最高级别的安全、品质与身份认证标准。
+
+### 4. 社交图谱（Social Graph）本身就是治理架构
+太虚不需要从第一天起就构造一个完全匿名、所有人混杂的大公域。世界围绕：
+$$\text{Creator} \longrightarrow \text{Friends} \longrightarrow \text{Followers} \longrightarrow \text{Communities} \longrightarrow \text{Public Discovery}$$
+逐渐生长与扩散。社交图谱不仅是社交功能，更是内容治理机制的关键组成部分。
+
+---
+
+## 四、 移动端兼容性：Must Have 架构约束
+
+移动端支持绝不能被视为项目后期的“外围移植特性（Porting Feature）”，而必须作为**第一天就焊死在架构底座中的强硬约束（Architectural Constraint）**：
+
+> **Every Taixu world must be consumable on a modern mobile device. Creation may use more powerful compute, but viewing and interaction cannot require a PC.**  
+> （每一个太虚世界都必须能在现代移动设备上流畅消费。创作可以使用更强大的计算力，但漫游与交互绝不能强制依赖 PC。）
+
+### 1. 核心底线：Consumable（可消费、可交互）
+手机端初期不一定拥有 PC 端所有重型专业编辑操作，但必须保证：
+* 能够秒开进入 World；
+* 能够流畅漫游与交互 World；
+* 拥有基础的创造能力；
+* **能够通过自然语言 Prompt 指挥 AI 修改 World**。
+
+### 2. AI 创作天然契合移动端
+传统 3D 软件在手机上无法施展，是因为庞杂的工具栏、属性面板、Gizmo 轴向手柄、材质节点图无法塞进触摸屏。
+而在太虚中，创作的核心界面是**自然语言**（*“在这里建一座木屋”、“把森林延伸到山脚”*）。**AI-driven Creation 第一次让手机真正有机会成为可用的 3D 世界创作设备，而不仅仅是只读播放器。**
+
+### 3. 跨设备伸缩性由系统负责（System-Owned Scalability）
+创作者绝不需要手工分别制作“PC 版”、“手机版”、“高画质版”、“低画质版”：
+> **Creator creates one world; Taixu decides how that world is rendered on each device.**  
+> （创作者只需创造一个世界；太虚系统负责决定它在不同设备上如何高效呈现。）
+
+底层运行时根据设备算力与热功耗自动调度：几何 LOD、纹理分辨率、材质着色复杂度、光影品质、阴影开销、物理更新频率、对象密度、视距裁剪与流式步长。
+
+### 4. AI 生成器必须理解运行时预算（Runtime Budget）
+移动端性能保障绝不能只由渲染器最后死扛。**AI 在生成世界的那一刻，本身就必须理解目标运行时的性能预算**。
+AI 生成协议中天生内嵌性能约束：禁止无节制生成数千万面低价值道具、滥用海量 8K 贴图、制造数千个无意义独立 Draw Call。AI 生成公式始终兼顾：
+$$\textbf{Semantic Intent} + \textbf{Visual Quality} + \textbf{Runtime Budget}$$
+
+---
+
+## 五、 UI 设计底线原则：零 3D 门槛，UI 仅作为 AI 输入的辅助
 
 **太虚绝对不要专业 3D 建模软件那种满屏面板、复杂坐标与参数滑块。** 我们的目标用户是对 3D 建模、空间拓扑、着色器没有任何先验知识的普通人。
 
@@ -65,7 +204,7 @@ UI 在太虚中存在的**唯一使命**，是帮助普通用户更轻松地向 
 
 ---
 
-## 三、 典型使用场景与用户体验
+## 六、 典型使用场景与用户体验
 
 ### 场景 1：在第一人称世界里“边逛边造”
 * **体验**：双击启动，没有资源解压与漫长预热，1 秒内直接置身于三维视口中，按 WASD 和鼠标自由走动。
@@ -99,19 +238,37 @@ UI 在太虚中存在的**唯一使命**，是帮助普通用户更轻松地向 
 
 ---
 
-## 四、 产品运行环境
+## 七、 运行环境与需求分级
 
-* **核心与首发形态（轻量级桌面原生客户端）**：
-  以桌面端原生应用（Windows / Linux）为主要开发与运行环境。充分利用本地硬件底层 GPU（基于 Vulkan）实现零延迟的 60+ FPS 流畅沉浸漫游与毫秒级冷启动。
-* **与本地 AI 生态直接连通**：
-  通过本地通信通道无缝接入运行在同一台机器上的 AI 助手工具链（MCP Server / 本地 Agent / Cursor / Claude 等），无网络跨域或浏览器沙箱限制。
-* **网页端定位（轻量只读分发 $\rightarrow$ 远期全功能探索）**：
-  * **近期/中期**：作为“成果分发与查看”手段（如将场景导出为通用轻量网页 3D 格式，或通过 WebRTC 视频流进行只读漫游）；
-  * **远期目标**：**全功能网页端（Full-featured Web Client）同样作为长远目标保留**（即直接在浏览器中实现完整的第一人称创作与漫游），但其工程可行性、性能损耗（WebGPU / Wasm 生态成熟度）与具体实现路线，需要在后续阶段进一步深入调研与评估。
+### 1. 运行平台定位
+* **桌面原生客户端（首发与核心主力）**：以桌面端原生应用（Windows / Linux）为主要开发与运行基石，充分利用硬件底层 Vulkan 驱动，实现零延迟 60+ FPS 与秒级冷启动；本地直接畅通对接 AI 工具链（MCP / 本地 Agent）。
+* **移动端（Must Have 核心约束）**：所有世界必须能在现代移动设备上流畅消费，支持第一人称漫游并直接用自然语言 Prompt 驱动 AI 创造与修改。
+* **网页端（轻量只读分发 $\rightarrow$ 远期全功能探索）**：近期作为只读分发手段（轻量 Web 3D 格式导出或 WebRTC 推流漫游）；全功能网页端作为远期探索目标保留，后续深入调研可行性与性能瓶颈。
+
+### 2. 需求优先级分级管理（Requirement Levels）
+为了保证庞大架构稳步推进而不失控，所有特性遵循严格的三级演进管理：
+
+* **第一级：Must Have（强架构约束）**
+  *如果后期再加会导致底层架构推倒重来的核心特性，必须从第一天就纳入底层架构设计*：
+  * Mobile Compatibility（移动端可消费性）
+  * Runtime Scalability（设备性能自适应伸缩）
+  * World Streaming（由近及远、大世界动态流式加载）
+  * AI-editable Scene Representation（AI 原生可编辑的场景语义表述）
+* **第二级：Core Product Principle（核心产品原则）**
+  *决定太虚是什么、以及为什么根本不同于传统游戏引擎和 UGC 平台的核心基石*：
+  * The world itself is the editor（世界本身即编辑器）
+  * AI-native Creation（AI 原生驱动，非外挂插件）
+  * Creation / Publication Separation（创作与发布权责分离）
+  * Persistent Creator Identity & Reputation（长效创作者身份与声誉体系）
+  * Reputation-based Distribution（基于声誉的梯级分发）
+  * Social Graph as Governance（社交图谱作为内容治理基石）
+* **第三级：Later Feature（后期渐进特性）**
+  *不影响底层核心架构、可以随着产品演进逐步扩充的业务功能*：
+  * 丰富的社交动作与角色表情、复杂的物理玩具交互、商业化道具结算等。
 
 ---
 
-## 五、 非目标（Non-Goals：太虚明确不想做什么）
+## 八、 非目标（Non-Goals：太虚明确不想做什么）
 
 为了保持轻量、极速与纯粹，太虚划定了清晰的边界，明确以下方向**不属于**本项目的目标：
 
