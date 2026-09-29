@@ -2,8 +2,11 @@
 // Features deformable cubes and spheres with XPBD edge and volume constraints, mutual solid-gel collisions,
 // dynamic GPU vertex buffer streaming, PBR shading, and interactive projectile impacts.
 //
-// Usage: GNsample-fiz-gel [t]
-//   t — headless test mode: runs simulation for 80 steps, asserts volume preservation and rebound, and exits cleanly.
+// Usage: GNsample-fiz-gel [options] [frames]
+//   test | t           — headless test mode: runs simulation for 180 steps, asserts volume preservation and rebound, and exits cleanly.
+//   benchmark | bench  — multi-thread and workload profiling mode
+//   --vsync | -v       — enable vertical sync (default: disabled)
+//   --scale | -s <val> — simulation time scale relative to real time (default: 1.0, e.g. 0.5 for half-speed slowmo)
 
 #include <garnet/GNfiz.h>
 #include <garnet/GNfx2.h>
@@ -643,10 +646,11 @@ int main(int argc, const char ** argv) {
     std::setvbuf(stdout, nullptr, _IONBF, 0);
     std::setvbuf(stderr, nullptr, _IONBF, 0);
 
-    bool testMode      = false;
-    bool benchmarkMode = false;
-    int  framesArg     = 0;
-    bool vsync         = false;
+    bool  testMode      = false;
+    bool  benchmarkMode = false;
+    int   framesArg     = 0;
+    bool  vsync         = false;
+    float timeScale     = 1.0f;
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "test") == 0 || argv[i][0] == 't') {
             testMode = true;
@@ -654,10 +658,17 @@ int main(int argc, const char ** argv) {
             benchmarkMode = true;
         } else if (std::strcmp(argv[i], "--vsync") == 0 || std::strcmp(argv[i], "-v") == 0) {
             vsync = true;
+        } else if ((std::strcmp(argv[i], "--scale") == 0 || std::strcmp(argv[i], "-s") == 0) && i + 1 < argc) {
+            timeScale = static_cast<float>(std::atof(argv[++i]));
+        } else if (std::strncmp(argv[i], "--scale=", 8) == 0) {
+            timeScale = static_cast<float>(std::atof(argv[i] + 8));
+        } else if (std::strncmp(argv[i], "-s=", 3) == 0) {
+            timeScale = static_cast<float>(std::atof(argv[i] + 3));
         } else {
             framesArg = std::atoi(argv[i]);
         }
     }
+    timeScale = std::max(0.0f, timeScale);
 
     if (testMode) {
         GN_INFO(sLogger, "Running GNsample-fiz-gel in test mode (headless verification)");
@@ -665,9 +676,9 @@ int main(int argc, const char ** argv) {
         GN_INFO(sLogger, "Running GNsample-fiz-gel in benchmark mode (multi-thread and workload profiling)");
     } else {
         GN_INFO(sLogger,
-                "Interactive visual mode (vsync {}): Press ESC to quit, [1,2,4,8,0] for threads, [B] spawn gels, [Space] launch "
-                "cannonball, [R] reset, [A/D/W/S/Q/E] camera",
-                vsync ? "on" : "off");
+                "Interactive visual mode (vsync {}, scale {:.2f}x): Press ESC to quit, [1,2,4,8,0] threads, [B] spawn gels, [Space] launch "
+                "cannonball, [R] reset, [ [ / ] ] scale, [P] pause, [A/D/W/S/Q/E] camera",
+                vsync ? "on" : "off", timeScale);
     }
 
     enableCRTMemoryCheck();
@@ -769,9 +780,10 @@ int main(int argc, const char ** argv) {
     if (!arena.gels.empty()) { initialY = arena.gels[0].gel->position().y; }
 
     // ─── Main Render & Simulation Loop ───────────────────────────────────────
-    auto      lastTime    = std::chrono::high_resolution_clock::now();
-    int       frameIdx    = 0;
-    const int totalFrames = testMode ? 180 : framesArg;
+    auto      lastTime        = std::chrono::high_resolution_clock::now();
+    double    timeAccumulator = 0.0;
+    int       frameIdx        = 0;
+    const int totalFrames     = testMode ? 180 : framesArg;
 
     while (totalFrames == 0 || frameIdx < totalFrames) {
         ++frameIdx;
@@ -840,18 +852,42 @@ int main(int argc, const char ** argv) {
             if (window->getKeyStatus(win::KeyCode::DOWN).down || window->getKeyStatus(win::KeyCode::S).down) cameraHeight = std::max(1.0f, cameraHeight - 0.3f);
             if (window->getKeyStatus(win::KeyCode::Q).down) cameraDist = std::min(60.0f, cameraDist + 0.4f);
             if (window->getKeyStatus(win::KeyCode::E).down) cameraDist = std::max(5.0f, cameraDist - 0.4f);
+
+            // [ / ] = Adjust time scale, [P] = Pause / Resume
+            static bool lbracketWasDown = false;
+            bool        lbracketDown    = window->getKeyStatus(win::KeyCode::LBRACKET).down;
+            if (lbracketDown && !lbracketWasDown) {
+                timeScale = std::max(0.0f, timeScale - 0.25f);
+                GN_INFO(sLogger, "Simulation time scale: {:.2f}x", timeScale);
+            }
+            lbracketWasDown = lbracketDown;
+
+            static bool rbracketWasDown = false;
+            bool        rbracketDown    = window->getKeyStatus(win::KeyCode::RBRACKET).down;
+            if (rbracketDown && !rbracketWasDown) {
+                timeScale += 0.25f;
+                GN_INFO(sLogger, "Simulation time scale: {:.2f}x", timeScale);
+            }
+            rbracketWasDown = rbracketDown;
+
+            static bool  pWasDown    = false;
+            static float pausedScale = 1.0f;
+            bool         pDown       = window->getKeyStatus(win::KeyCode::P).down;
+            if (pDown && !pWasDown) {
+                if (timeScale > 0.0f) {
+                    pausedScale = timeScale;
+                    timeScale   = 0.0f;
+                    GN_INFO(sLogger, "Simulation paused");
+                } else {
+                    timeScale = (pausedScale > 0.0f) ? pausedScale : 1.0f;
+                    GN_INFO(sLogger, "Simulation resumed: {:.2f}x", timeScale);
+                }
+            }
+            pWasDown = pDown;
         } else {
             // Auto orbit in test mode
             orbitAngle += 0.01f;
         }
-
-        // ─── Step Physics with High-Precision Timing ─────────────────────────
-        const auto stepStart = std::chrono::high_resolution_clock::now();
-        arena.solver->step(UnitOfTime(16'666'667)); // 60 Hz integer step
-        const auto stepEnd = std::chrono::high_resolution_clock::now();
-
-        currentStepMs = std::chrono::duration<float, std::milli>(stepEnd - stepStart).count();
-        avgStepMs     = (avgStepMs == 0.0f) ? currentStepMs : (avgStepMs * 0.9f + currentStepMs * 0.1f);
 
         // Frame rate calculation
         auto  now        = std::chrono::high_resolution_clock::now();
@@ -859,6 +895,44 @@ int main(int argc, const char ** argv) {
         lastTime         = now;
         float instantFps = frameDt > 0.0f ? 1.0f / frameDt : 60.0f;
         avgFps           = (avgFps == 0.0f) ? instantFps : (avgFps * 0.95f + instantFps * 0.05f);
+
+        // ─── Step Physics with Fixed Timestep Accumulator ────────────────────
+        constexpr UnitOfTime kPhysicsStep(16'666'667); // 60 Hz fixed tick
+        constexpr double     kFixedStepSec = 1.0 / 60.0;
+
+        if (testMode) {
+            // Headless test mode maintains deterministic single-step progression
+            const auto stepStart = std::chrono::high_resolution_clock::now();
+            arena.solver->step(kPhysicsStep);
+            const auto stepEnd = std::chrono::high_resolution_clock::now();
+
+            currentStepMs = std::chrono::duration<float, std::milli>(stepEnd - stepStart).count();
+            avgStepMs     = (avgStepMs == 0.0f) ? currentStepMs : (avgStepMs * 0.9f + currentStepMs * 0.1f);
+        } else {
+            float clampedDt = std::max(0.0f, std::min(frameDt, 0.1f));
+            timeAccumulator += static_cast<double>(clampedDt) * static_cast<double>(timeScale);
+
+            constexpr int kMaxSubsteps = 5;
+            int           substeps     = 0;
+            float         totalStepMs  = 0.0f;
+
+            while (timeAccumulator >= kFixedStepSec && substeps < kMaxSubsteps) {
+                const auto stepStart = std::chrono::high_resolution_clock::now();
+                arena.solver->step(kPhysicsStep);
+                const auto stepEnd = std::chrono::high_resolution_clock::now();
+
+                totalStepMs += std::chrono::duration<float, std::milli>(stepEnd - stepStart).count();
+                timeAccumulator -= kFixedStepSec;
+                ++substeps;
+            }
+
+            if (substeps >= kMaxSubsteps) { timeAccumulator = std::fmod(timeAccumulator, kFixedStepSec); }
+
+            if (substeps > 0) {
+                currentStepMs = totalStepMs / static_cast<float>(substeps);
+                avgStepMs     = (avgStepMs == 0.0f) ? currentStepMs : (avgStepMs * 0.9f + currentStepMs * 0.1f);
+            }
+        }
 
         // Verification checks on Gel 0 in headless test mode
         if (!arena.gels.empty()) {
@@ -900,8 +974,9 @@ int main(int argc, const char ** argv) {
             }
 
             std::string title =
-                StrA::format("Garnet Fiz Gel — Bouncy Ball | Height: {:.2f} m | Squash: {:.1f}% | Vol Err: {:.2f}% | Phys: {:.2f} ms | FPS: {:.0f}", curY,
-                             squashPct, volErrPct, avgStepMs, avgFps)
+                StrA::format(
+                    "Garnet Fiz Gel — Bouncy Ball | Height: {:.2f} m | Squash: {:.1f}% | Vol Err: {:.2f}% | Phys: {:.2f} ms | FPS: {:.0f} | Sim: {:.2f}x", curY,
+                    squashPct, volErrPct, avgStepMs, avgFps, timeScale)
                     .data();
 
 #if GN_BUILD_HAS_MSW
