@@ -2,6 +2,7 @@
 #extension GL_GOOGLE_include_directive : require
 
 #include "camera-ubo.h"
+#include "cel-shading-ubo.h"
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
@@ -23,6 +24,7 @@ pc;
 
 void main() {
     vec4 worldPos = pc.worldTransform * vec4(inPosition, 1.0);
+    worldPos.xyz += u_cel.outlineParams.xyz * 1e-9;
     outWorldPos   = worldPos.xyz;
     outNormal     = mat3(pc.normalTransform) * inNormal;
     outTangent    = vec4(mat3(pc.worldTransform) * inTangent.xyz, inTangent.w * sign(determinant(mat3(pc.worldTransform))));
