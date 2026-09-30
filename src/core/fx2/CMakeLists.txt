@@ -13,6 +13,8 @@ if(VULKAN_FOUND)
 
     GN_compile_glsl_shaders(_fx2_shader_hdrs
         SOURCES ${_fx2_shader_dir}/model.vert ${_fx2_shader_dir}/model.frag
+                ${_fx2_shader_dir}/cel-model.vert ${_fx2_shader_dir}/cel-model.frag
+                ${_fx2_shader_dir}/cel-outline.vert ${_fx2_shader_dir}/cel-outline.frag
                 ${_fx2_shader_dir}/skybox.vert ${_fx2_shader_dir}/skybox.frag
         OUT_DIR ${_fx2_shader_out_dir}
         INCLUDE_DIRS ${_fx2_shader_dir}
