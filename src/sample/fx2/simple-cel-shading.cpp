@@ -36,7 +36,7 @@ static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, co
     sun.directional.irradiance  = {1.0f, 0.98f, 0.95f, {1.0f}};
     ssc->set0.directLighting.append(sun);
 
-    ssc->set0.envLighting.environmentAmbientFloor      = 0.1f;
+    ssc->set0.envLighting.environmentAmbientFloor   = 0.1f;
     ssc->set0.envLighting.environmentLuminanceScale = 1200.0f;
 
     return ssc->takeSnapshot();
@@ -174,9 +174,7 @@ int main(int argc, const char ** argv) {
                     const glm::mat4 parentToWorld  = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
                     const glm::mat4 worldTransform = parentToWorld * node.transform;
                     nodeTransforms[nodeIndex]      = worldTransform;
-                    for (uint32_t primitiveIndex : node.primitives) {
-                        renderPrimitive(primitiveIndex, worldTransform);
-                    }
+                    for (uint32_t primitiveIndex : node.primitives) { renderPrimitive(primitiveIndex, worldTransform); }
                 }
             }
 

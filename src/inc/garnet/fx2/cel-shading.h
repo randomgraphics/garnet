@@ -109,7 +109,8 @@ struct CelModelShading {
     /// Uses frontface culling (CULL_FRONT) to render extruded backfaces forming a silhouette outline.
     /// Returns empty DrawParameters if outlineWidth <= 0.0f or if the primitive is not outlineable.
     GN_API static gpu2::GpuRaster::DrawParameters getOutlineDrawParams(const SharedShaderConstants::Snapshot & sscSnapshot, AutoRef<const Asset> shading,
-                                                                       AutoRef<const ModelAsset> model, uint32_t primitiveIndex, const glm::mat4 & worldTransform);
+                                                                       AutoRef<const ModelAsset> model, uint32_t primitiveIndex,
+                                                                       const glm::mat4 & worldTransform);
 };
 
 } // namespace GN::fx2

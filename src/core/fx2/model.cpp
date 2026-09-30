@@ -413,7 +413,6 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
     return result;
 }
 
-
 AutoRef<ModelAsset> ModelAsset::create(AutoRef<gpu2::GpuContext> gpu, AutoRef<const ModelScene> scene) {
     if (!gpu || !scene || scene->primitives.empty()) GN_UNLIKELY {
             GN_ERROR(sLogger, "ModelAsset::create: missing GPU context or model geometry");

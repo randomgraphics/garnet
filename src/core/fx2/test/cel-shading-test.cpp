@@ -23,16 +23,14 @@ TEST_CASE("fx2::CelModelShading default config has valid anime parameters", "[fx
     CHECK(config.outlineColor.a == 1.0f);
 }
 
-TEST_CASE("fx2::CelModelShading rejects null GPU context", "[fx2][cel]") {
-    CHECK_FALSE(CelModelShading::create(nullptr));
-}
+TEST_CASE("fx2::CelModelShading rejects null GPU context", "[fx2][cel]") { CHECK_FALSE(CelModelShading::create(nullptr)); }
 
 TEST_CASE("fx2::CelModelShading builds surface and inverted-hull outline draws", "[fx2][cel][gpu]") {
     const StrA path = repositoryPath("src/3rdparty/assimp/test/models/glTF2/BoxTextured-glTF-Embedded/BoxTextured.gltf");
     if (!fs::isFile(path)) SKIP("Assimp model corpus is not initialized");
 
-    const auto gpu = gpu2::GpuContext::create("cel-shading-test",
-                                              gpu2::GpuContext::CreateParameters {.howToPrintDeviceCaps = gpu2::GpuContext::Verbosity::SILENCE});
+    const auto gpu =
+        gpu2::GpuContext::create("cel-shading-test", gpu2::GpuContext::CreateParameters {.howToPrintDeviceCaps = gpu2::GpuContext::Verbosity::SILENCE});
     if (!gpu) SKIP("No gpu2 context is available");
 
     const auto scene = ModelScene::load({.path = path});

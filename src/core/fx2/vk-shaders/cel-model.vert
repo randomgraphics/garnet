@@ -25,10 +25,10 @@ pc;
 void main() {
     vec4 worldPos = pc.worldTransform * vec4(inPosition, 1.0);
     worldPos.xyz += u_cel.outlineParams.xyz * 1e-9;
-    outWorldPos   = worldPos.xyz;
-    outNormal     = mat3(pc.normalTransform) * inNormal;
-    outTangent    = vec4(mat3(pc.worldTransform) * inTangent.xyz, inTangent.w * sign(determinant(mat3(pc.worldTransform))));
-    outTexCoord   = inTexCoord;
-    outColor      = inColor;
-    gl_Position   = u_camera.projViewMatrix * worldPos;
+    outWorldPos = worldPos.xyz;
+    outNormal   = mat3(pc.normalTransform) * inNormal;
+    outTangent  = vec4(mat3(pc.worldTransform) * inTangent.xyz, inTangent.w * sign(determinant(mat3(pc.worldTransform))));
+    outTexCoord = inTexCoord;
+    outColor    = inColor;
+    gl_Position = u_camera.projViewMatrix * worldPos;
 }

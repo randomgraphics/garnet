@@ -20,7 +20,7 @@ layout(push_constant, std430) uniform PC {
 pc;
 
 void main() {
-    vec4 worldPos = pc.worldTransform * vec4(inPosition, 1.0);
+    vec4 worldPos    = pc.worldTransform * vec4(inPosition, 1.0);
     vec3 worldNormal = normalize(mat3(pc.normalTransform) * inNormal);
 
     vec4 clipPos = u_camera.projViewMatrix * worldPos;
@@ -30,10 +30,10 @@ void main() {
     vec2 clipNormal = mat2(u_camera.projMatrix) * viewNormal.xy;
 
     float normalLen = length(clipNormal);
-    vec2 normalDir = normalLen > 1e-5 ? clipNormal / normalLen : vec2(0.0);
+    vec2  normalDir = normalLen > 1e-5 ? clipNormal / normalLen : vec2(0.0);
 
     float aspect = u_camera.renderTargetSize.y > 0.0 ? (u_camera.renderTargetSize.x / u_camera.renderTargetSize.y) : 1.0;
-    vec2 offset = vec2(normalDir.x / aspect, normalDir.y) * u_cel.outlineParams.x * clipPos.w;
+    vec2  offset = vec2(normalDir.x / aspect, normalDir.y) * u_cel.outlineParams.x * clipPos.w;
 
     clipPos.xy += offset;
 

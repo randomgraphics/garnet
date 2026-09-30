@@ -54,11 +54,12 @@ Exposed in `src/inc/garnet/fx2/cel-shading.h` and included in monolithic `GNfx2.
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 3.2
-In progress: Task 4.1
+Last completed: Task 4.1
+In progress: Awaiting user sign-off
 Phase 1: Shaders and UBO Layout
 Phase 2: FX2 C++ API and Implementation
 Phase 3: Sample & Tests
+Phase 4: Code Quality and Final Verification
 --- END PROGRESS ---
 
 --- REFERENCE ---

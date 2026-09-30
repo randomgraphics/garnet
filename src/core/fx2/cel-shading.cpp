@@ -66,15 +66,13 @@ struct CelModelShadingAsset final : CelModelShading::Asset {
 
 } // namespace
 
-AutoRef<CelModelShading::Asset> CelModelShading::create(AutoRef<gpu2::GpuContext> gpu) {
-    return create(gpu, Config {});
-}
+AutoRef<CelModelShading::Asset> CelModelShading::create(AutoRef<gpu2::GpuContext> gpu) { return create(gpu, Config {}); }
 
 AutoRef<CelModelShading::Asset> CelModelShading::create(AutoRef<gpu2::GpuContext> gpu, const Config & config) {
     if (!gpu) GN_UNLIKELY {
-        GN_ERROR(sLogger, "CelModelShading::create: missing GPU context");
-        return {};
-    }
+            GN_ERROR(sLogger, "CelModelShading::create: missing GPU context");
+            return {};
+        }
 
     CelShadingData data;
     data.surfaceVs = gpu2::GpuShader::create({.context = gpu, .name = "cel-model.vert", .binary = kCelModelVertSpv, .size = sizeof(kCelModelVertSpv)});
@@ -160,7 +158,8 @@ gpu2::GpuRaster::DrawParameters CelModelShading::getDrawParams(const SharedShade
 }
 
 gpu2::GpuRaster::DrawParameters CelModelShading::getOutlineDrawParams(const SharedShaderConstants::Snapshot & sscSnapshot, AutoRef<const Asset> shading,
-                                                                      AutoRef<const ModelAsset> modelBase, uint32_t primitiveIndex, const glm::mat4 & worldTransform) {
+                                                                      AutoRef<const ModelAsset> modelBase, uint32_t primitiveIndex,
+                                                                      const glm::mat4 & worldTransform) {
     const auto * model   = RuntimeType::cast<ModelAssetImpl>(modelBase.get());
     const auto * content = RuntimeType::cast<CelModelShadingAsset>(shading.get());
     if (!content || !model || primitiveIndex >= model->primitives.size()) GN_UNLIKELY return {};

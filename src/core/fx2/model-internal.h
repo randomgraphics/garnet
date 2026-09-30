@@ -31,8 +31,7 @@ struct ModelAssetImpl final : ModelAsset {
     AutoRef<gpu2::GpuPayload> uploadPayload() const override { return gpuPayload; }
 };
 
-inline AutoRef<gpu2::Texture> makeSolidTexture(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & cnc, const StrA & name,
-                                               const std::array<uint8_t, 4> & color) {
+inline AutoRef<gpu2::Texture> makeSolidTexture(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & cnc, const StrA & name, const std::array<uint8_t, 4> & color) {
     gpu2::Texture::Descriptor descriptor;
     descriptor.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(1, 1).setFaces(1).setLevels(1);
     auto texture = gpu2::Texture::create(name, {.context = gpu, .descriptor = descriptor});
