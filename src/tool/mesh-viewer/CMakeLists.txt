@@ -1,6 +1,2 @@
 add_executable(GNtool-mesh-viewer main.cpp model-scene.cpp model-geometry.cpp scene-renderer.cpp navigation.cpp)
 target_link_libraries(GNtool-mesh-viewer GNcore assimp)
-if(GN_BUILD_TESTS)
-    add_executable(GNtest-mesh-viewer test/model-scene-test.cpp model-scene.cpp model-geometry.cpp)
-    target_link_libraries(GNtest-mesh-viewer GNcore assimp Catch2::Catch2WithMain)
-endif()

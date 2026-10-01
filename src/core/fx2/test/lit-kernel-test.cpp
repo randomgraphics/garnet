@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNfx2.h>
 #include <limits>
+#include <glm/gtc/packing.hpp>
 using namespace GN;
 using namespace GN::fx2;
 using namespace GN::gpu2;
@@ -15,7 +16,7 @@ struct LitRecordingRaster final : GpuRaster {
     AutoRef<GpuPayload>  seal() override { return {}; }
 };
 } // namespace
-TEST_CASE("fx2 typed lit kernels preserve state and isolate invocation uniforms", "[fx2][kernel][gpu]") {
+TEST_CASE("fx2 typed lit kernels preserve state and isolate invocation uniforms", "[fx2][lit][kernel][gpu]") {
     auto gpu = GpuContext::create("lit-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!gpu) SKIP("No gpu2 device available");
     auto init = GpuCnC::create({.gpu = gpu});
@@ -67,7 +68,14 @@ TEST_CASE("fx2 typed lit kernels preserve state and isolate invocation uniforms"
     CHECK(raster.draws[4].states == outline);
     gpu->waitForIdle();
 }
-TEST_CASE("fx2 lit kernels render position-normal buffers with independent private values", "[fx2][kernel][gpu]") {
+TEST_CASE("fx2 lit kernels render position-normal buffers with independent private values", "[fx2][lit][kernel][gpu]") {
+    bool generated = false, half = false;
+    SECTION("position-normal input") {}
+    SECTION("generated float geometry") { generated = true; }
+    SECTION("generated half geometry") {
+        generated = true;
+        half      = true;
+    }
     auto gpu = GpuContext::create("lit-render-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!gpu) SKIP("No gpu2 device available");
     auto init = GpuCnC::create({.gpu = gpu});
@@ -116,6 +124,23 @@ TEST_CASE("fx2 lit kernels render position-normal buffers with independent priva
             common.color                 = {0, 0, 0, 1};
             common.emissive              = side ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
             common.worldFromObject[3][0] = float(side);
+            if (generated) {
+                if (side == 0) {
+                    LitKernelInputs::CubeCreateOptions options;
+                    options.width   = 0.8f;
+                    options.height  = 1;
+                    options.depth   = 0.2f;
+                    options.half    = half;
+                    common.geometry = LitKernelInputs::createBox(gpu, *uploads, options);
+                } else {
+                    LitKernelInputs::SphereCreateOptions options;
+                    options.radius  = 0.4f;
+                    options.half    = half;
+                    common.geometry = LitKernelInputs::createSphere(gpu, *uploads, options);
+                }
+                REQUIRE(common.geometry.indexCount > 0);
+                common.worldFromObject[3][0] -= 0.5f;
+            }
             if (kind == 0) {
                 PbrKernel::Inputs i;
                 static_cast<LitKernelInputs &>(i) = common;
@@ -150,4 +175,156 @@ TEST_CASE("fx2 lit kernels render position-normal buffers with independent priva
         CHECK(right[0] < 5);
         CHECK(right[1] > 100);
     }
+}
+
+TEST_CASE("fx2 generated lit geometry preserves packed attributes and surface frames", "[fx2][lit][geometry][gpu]") {
+    auto gpu = GpuContext::create("lit-geometry-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No gpu2 device available");
+    for (int shape = 0; shape < 3; ++shape)
+        for (bool half : {false, true})
+            for (bool ccw : {false, true}) {
+                CAPTURE(shape, half, ccw);
+                auto uploads = GpuCnC::create({.gpu = gpu});
+                REQUIRE(uploads);
+                LitKernelInputs::CubeCreateOptions box;
+                box.width   = 2;
+                box.height  = 4;
+                box.depth   = 6;
+                box.half    = half;
+                box.ccw     = ccw;
+                box.colored = true;
+                box.color   = {0.25f, 0.5f, 1};
+                LitKernelInputs::SphereCreateOptions sphere;
+                static_cast<LitKernelInputs::GeometryCreateOptions &>(sphere) = box;
+                sphere.radius                                                 = 2;
+                sphere.slices                                                 = 12;
+                sphere.stacks                                                 = 6;
+                sphere.subDivides                                             = 1;
+                sphere.type   = shape == 2 ? LitKernelInputs::SphereCreateOptions::ICO : LitKernelInputs::SphereCreateOptions::UV;
+                auto geometry = shape == 0 ? LitKernelInputs::createBox(gpu, *uploads, box) : LitKernelInputs::createSphere(gpu, *uploads, sphere);
+                REQUIRE(geometry.vertices.size() == 1);
+                REQUIRE(geometry.format.attributes.size() == 5);
+                CHECK(geometry.indexCount == (shape == 0 ? 36u : shape == 1 ? 360u : 240u));
+                CHECK(geometry.indices.stride == 2);
+                gpu->submit(GpuContext::SubmitParameters("lit.geometry").appendWork(uploads->seal()));
+                const auto vertices = geometry.vertices[0].buffer->readContent();
+                const auto indices  = geometry.indices.buffer->readContent();
+                REQUIRE(vertices.size() == size_t(geometry.vertexCount) * geometry.vertices[0].stride);
+                REQUIRE(indices.size() == size_t(geometry.indexCount) * geometry.indices.stride);
+                auto attribute = [&](uint32_t vertex, uint32_t location) {
+                    const auto &   a     = geometry.format.attributes[location];
+                    const uint32_t count = location == 2 ? 2 : location < 2 ? 3 : 4;
+                    glm::vec4      value(0);
+                    for (uint32_t c = 0; c < count; ++c) {
+                        const auto * src = vertices.data() + vertex * geometry.vertices[0].stride + a.offset + c * (half ? 2 : 4);
+                        if (half) {
+                            uint16_t v;
+                            memcpy(&v, src, 2);
+                            value[c] = glm::unpackHalf1x16(v);
+                        } else {
+                            memcpy(&value[c], src, 4);
+                        }
+                    }
+                    return value;
+                };
+                for (uint32_t v = 0; v < geometry.vertexCount; ++v) {
+                    const auto p = glm::vec3(attribute(v, 0)), n = glm::vec3(attribute(v, 1));
+                    const auto t = attribute(v, 3);
+                    CHECK(std::abs(glm::length(n) - 1) < 0.002f);
+                    CHECK(std::abs(glm::length(glm::vec3(t)) - 1) < 0.002f);
+                    CHECK(std::abs(glm::dot(n, glm::vec3(t))) < 0.002f);
+                    CHECK(attribute(v, 4) == glm::vec4(box.color, 1));
+                    if (shape == 0) {
+                        CHECK(std::abs(p.x) == 1);
+                        CHECK(std::abs(p.y) == 2);
+                        CHECK(std::abs(p.z) == 3);
+                    } else
+                        CHECK(std::abs(glm::length(p) - 2) < 0.002f);
+                }
+                for (uint32_t i = 0; i < geometry.indexCount; i += 3) {
+                    uint16_t ids[3];
+                    memcpy(ids, indices.data() + i * 2, sizeof(ids));
+                    glm::vec3 p[3], n[3];
+                    glm::vec2 uv[3];
+                    for (int j = 0; j < 3; ++j) {
+                        REQUIRE(ids[j] < geometry.vertexCount);
+                        p[j]  = attribute(ids[j], 0);
+                        n[j]  = attribute(ids[j], 1);
+                        uv[j] = attribute(ids[j], 2);
+                    }
+                    const float facing = glm::dot(glm::cross(p[1] - p[0], p[2] - p[0]), n[0] + n[1] + n[2]);
+                    CHECK((ccw ? facing : -facing) > 0);
+                    CHECK(std::max({uv[0].x, uv[1].x, uv[2].x}) - std::min({uv[0].x, uv[1].x, uv[2].x}) <= (shape ? 0.501f : 1.001f));
+                    const auto  duv1 = uv[1] - uv[0], duv2 = uv[2] - uv[0];
+                    const float det = duv1.x * duv2.y - duv1.y * duv2.x;
+                    REQUIRE(std::abs(det) > 0.00001f);
+                    const auto bitangent = ((p[2] - p[0]) * duv1.x - (p[1] - p[0]) * duv2.x) / det;
+                    const auto tangent   = attribute(ids[0], 3);
+                    CHECK(glm::dot(glm::cross(n[0], glm::vec3(tangent)) * tangent.w, bitangent) > 0);
+                }
+            }
+}
+
+TEST_CASE("fx2 lit geometry handles optional attributes and rejects invalid options", "[fx2][lit][geometry][gpu]") {
+    auto gpu = GpuContext::create("lit-options-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No gpu2 device available");
+    auto uploads = GpuCnC::create({.gpu = gpu});
+    REQUIRE(uploads);
+    for (uint32_t mask = 0; mask < 32; ++mask) {
+        CAPTURE(mask);
+        LitKernelInputs::CubeCreateOptions options;
+        options.uv          = (mask & 1) != 0;
+        options.normal      = (mask & 2) != 0;
+        options.tangent     = (mask & 4) != 0;
+        options.colored     = (mask & 8) != 0;
+        options.half        = (mask & 16) != 0;
+        const auto geometry = LitKernelInputs::createBox(gpu, *uploads, options);
+        REQUIRE(geometry.vertexCount == 24);
+        const bool enabled[] = {true, options.normal, options.uv, options.tangent && options.normal && options.uv, options.colored};
+        uint32_t   offset = 0, index = 0;
+        for (uint32_t location = 0; location < 5; ++location) {
+            if (!enabled[location]) continue;
+            REQUIRE(index < geometry.format.attributes.size());
+            const auto & attribute = geometry.format.attributes[index++];
+            CHECK(attribute.location == location);
+            CHECK(attribute.offset == offset);
+            const uint32_t count = location == 2 ? 2 : location < 2 ? 3 : 4;
+            CHECK(uint32_t(attribute.format) ==
+                  uint32_t(options.half ? RasterGeometry::AttributeFormat::F16_1 : RasterGeometry::AttributeFormat::F32_1) + count - 1);
+            offset += count * (options.half ? 2 : 4);
+        }
+        CHECK(index == geometry.format.attributes.size());
+        CHECK(offset == geometry.vertices[0].stride);
+    }
+    LitKernelInputs::CubeCreateOptions box;
+    box.width = 0;
+    CHECK(LitKernelInputs::createBox(gpu, *uploads, box).vertices.empty());
+    box.width = std::numeric_limits<float>::infinity();
+    CHECK(LitKernelInputs::createBox(gpu, *uploads, box).vertices.empty());
+    box.width   = 1;
+    box.half    = true;
+    box.colored = true;
+    box.color.x = 70000;
+    CHECK(LitKernelInputs::createBox(gpu, *uploads, box).vertices.empty());
+    CHECK(LitKernelInputs::createBox({}, *uploads).vertices.empty());
+    LitKernelInputs::SphereCreateOptions sphere;
+    sphere.slices = 2;
+    CHECK(LitKernelInputs::createSphere(gpu, *uploads, sphere).vertices.empty());
+    sphere.slices = std::numeric_limits<uint32_t>::max();
+    CHECK(LitKernelInputs::createSphere(gpu, *uploads, sphere).vertices.empty());
+    sphere.stacks = std::numeric_limits<uint32_t>::max();
+    CHECK(LitKernelInputs::createSphere(gpu, *uploads, sphere).vertices.empty());
+    sphere.type       = LitKernelInputs::SphereCreateOptions::ICO;
+    sphere.subDivides = 9;
+    CHECK(LitKernelInputs::createSphere(gpu, *uploads, sphere).vertices.empty());
+    sphere.type = static_cast<LitKernelInputs::SphereCreateOptions::Type>(10);
+    CHECK(LitKernelInputs::createSphere(gpu, *uploads, sphere).vertices.empty());
+    sphere           = {};
+    sphere.slices    = 256;
+    sphere.stacks    = 256;
+    const auto large = LitKernelInputs::createSphere(gpu, *uploads, sphere);
+    CHECK(large.vertexCount == 257 * 257);
+    CHECK(large.indices.stride == 4);
+    gpu->submit(GpuContext::SubmitParameters("lit.options").appendWork(uploads->seal()));
+    gpu->waitForIdle();
 }

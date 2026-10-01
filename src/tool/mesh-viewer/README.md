@@ -105,7 +105,7 @@ GLB stress model. Run the primary checks with:
 build.py d
 build.py --clang d
 build/linux.gcc.d/bin/GNtest-internal
-build/linux.gcc.d/bin/GNtest-mesh-viewer
+build/linux.gcc.d/bin/GNtest-internal "[viewer]"
 env/bin/format-all-sources.py -dqn
 env/bin/cit.py -l
 ```
