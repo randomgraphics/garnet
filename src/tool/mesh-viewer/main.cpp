@@ -1,9 +1,11 @@
-#include <garnet/GNengine2.h>
+#include "model-scene.h"
+#include "scene-renderer.h"
+#include "navigation.h"
 #include <garnet/GNfx2.h>
-#include <garnet/GNui2.h>
 #include <garnet/GNwin.h>
 
 #include <glm/geometric.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -13,26 +15,53 @@
 #include <string>
 
 using namespace GN;
-using namespace GN::e2;
+using namespace GN::gpu2;
+using namespace GN::viewer;
 
 namespace {
 
 Logger * sLogger = getLogger("GN.tool.mesh-viewer");
 
 struct Options {
-    StrA  snapshot;
-    StrA  path;
-    bool  headless             = false;
-    bool  print                = false;
-    bool  finiteFrames         = false;
-    int   frames               = 3;
-    float environmentLuminance = 250.f;
+    viewer::Shading surface = viewer::Shading::IMPORTED;
+    StrA            snapshot;
+    StrA            path;
+    bool            headless             = false;
+    bool            print                = false;
+    bool            finiteFrames         = false;
+    int             frames               = 3;
+    float           environmentLuminance = 250.f;
+    float           exposure             = 0;
 };
 
 bool parseOptions(int argc, const char * const * argv, Options & options) {
     for (int i = 1; i < argc; ++i) {
         const StrA argument = argv[i];
-        if (argument == "--test") {
+        if (argument == "--box" || argument == "--sphere") {
+            options.path = argument;
+        } else if (argument == "--surface" && i + 1 < argc) {
+            const StrA choice = argv[++i];
+            if (choice == "pbr")
+                options.surface = viewer::Shading::PBR;
+            else if (choice == "cel")
+                options.surface = viewer::Shading::CEL;
+            else if (choice == "unlit")
+                options.surface = viewer::Shading::UNLIT;
+            else if (choice == "lambertian")
+                options.surface = viewer::Shading::LAMBERTIAN;
+            else {
+                GN_ERROR(sLogger, "Unknown surface '{}'", choice);
+                return false;
+            }
+        } else if (argument == "--exposure" && i + 1 < argc) {
+            const char * text = argv[++i];
+            char *       end  = nullptr;
+            options.exposure  = std::strtof(text, &end);
+            if (end == text || *end != '\0' || !std::isfinite(options.exposure) || options.exposure <= 0) {
+                GN_ERROR(sLogger, "--exposure requires a positive finite number");
+                return false;
+            }
+        } else if (argument == "--test") {
             options.headless = true;
         } else if (argument == "--snapshot") {
             if (i + 1 == argc || !argv[i + 1][0] || argv[i + 1][0] == '-' || !options.snapshot.empty()) {
@@ -65,20 +94,63 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
             return false;
         }
     }
+    if (options.exposure == 0) options.exposure = options.surface == viewer::Shading::CEL ? 1.f : 0.002f;
     if (!options.path.empty()) return true;
-    GN_ERROR(
-        sLogger,
-        "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] <model.fbx|gltf|glb|stl|ase>");
+    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] "
+                      "[--surface pbr|cel|unlit|lambertian] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
     return false;
 }
 
-WorldVector3 worldPosition(const PhysicalScale & scale, const glm::vec3 & meters) {
-    return {spatial::toWorld(scale.fromMeters(meters.x)), spatial::toWorld(scale.fromMeters(meters.y)), spatial::toWorld(scale.fromMeters(meters.z))};
-}
+// The viewer owns presentation directly; destruction must drain GPU work before the
+// swapchain/surface/window disappear, including early error returns.
+struct FrameHost {
+    AutoRef<GpuContext>          gpu;
+    std::unique_ptr<win::Window> window;
+    intptr_t                     surface = 0;
+    AutoRef<Swapchain>           swapchain;
+    AutoRef<Texture>             depth, lastFrame;
+    uint32_t                     width = 1280, height = 720;
 
-LocalCoordinate localDistance(const PhysicalScale & scale, float meters) { return scale.fromMeters(meters); }
+    ~FrameHost() {
+        if (gpu) gpu->waitForIdle();
+        swapchain.clear();
+        if (surface) window->destroyVulkanSurfaceHandle(gpu->getVulkanInstanceHandle(), surface);
+    }
+    bool resize(uint32_t w, uint32_t h) {
+        gpu->waitForIdle();
+        swapchain.clear();
+        auto format = gfx::img::PixelFormat::RGBA_8_8_8_8_SRGB();
+        if (surface) {
+            format.swizzle0 = gfx::img::PixelFormat::SWIZZLE_Z;
+            format.swizzle2 = gfx::img::PixelFormat::SWIZZLE_X;
+        }
+        Swapchain::CreateDesc desc {.gpu = gpu, .width = w, .height = h};
+        desc.setFormat(format).setSurface(surface);
+        swapchain = Swapchain::create(desc);
+        depth     = Texture::create("viewer.depth",
+                                    {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gpu->caps().defaultDepthFormat).setDimensions(w, h)});
+        width     = w;
+        height    = h;
+        return swapchain && depth;
+    }
+    bool initialize(bool headless) {
+        gpu = GpuContext::create("mesh-viewer", {});
+        if (!gpu) return false;
+        if (!headless) {
+            window.reset(win::createWindow({.caption = "Garnet Mesh Viewer", .clientWidth = width, .clientHeight = height}));
+            if (!window) return false;
+            window->show();
+            surface = window->createVulkanSurfaceHandle(gpu->getVulkanInstanceHandle());
+            if (!surface) return false;
+            const auto size = window->getClientSize();
+            width           = size.x;
+            height          = size.y;
+        }
+        return resize(width, height);
+    }
+};
 
-void printScene(const fx2::ModelScene & scene) {
+void printScene(const viewer::ModelScene & scene) {
     GN_INFO(sLogger, "Model: {}", scene.sourcePath);
     GN_INFO(sLogger, "Nodes: {}, primitives: {}, materials: {}, textures: {}", scene.nodes.size(), scene.primitives.size(), scene.materials.size(),
             scene.textures.size());
@@ -96,13 +168,6 @@ void printScene(const fx2::ModelScene & scene) {
 enum class NavigationMode { ARCBALL, FLY_BY };
 
 bool keyDown(const win::Window & window, win::KeyCode key) { return window.getKeyStatus(key).down; }
-
-Ref<ModelVisualFacet> modelFacet(const Ref<Form> & form) {
-    for (const auto & facet : form->facets()) {
-        if (auto * model = RuntimeType::cast<ModelVisualFacet>(facet.get())) return referenceTo(model);
-    }
-    return {};
-}
 
 } // namespace
 
@@ -126,67 +191,36 @@ int main(int argc, const char * argv[]) {
         }
     }
 
-    auto model = fx2::ModelScene::load({.path = options.path});
+    auto model = options.path == "--box" || options.path == "--sphere" ? viewer::ModelScene::createProcedural(options.path == "--sphere")
+                                                                       : viewer::ModelScene::load({.path = options.path});
     if (!model) return EXIT_FAILURE;
     if (options.print) {
         printScene(*model);
         if (!options.headless) return EXIT_SUCCESS;
     }
 
-    Universe             universe;
-    Ref<OperatingDomain> os;
-    if (!options.headless) {
-        os = OperatingDomain::create({.universe = universe, .caption = "Garnet Mesh Viewer", .width = 1280, .height = 720});
-        if (!os) return EXIT_FAILURE;
-    }
-    auto visual = VisualDomain::create({.universe = universe, .os = os});
-    if (!visual) return EXIT_FAILURE;
-    VisualEnvironment::Desc environment {
-        .skyboxPath                = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
-        .irradiancePath            = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
-        .prefilteredPath           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
-        .brdfLutPath               = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
-        .environmentLuminanceScale = options.environmentLuminance,
-    };
-    auto environmentMoment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environment});
-    if (!environmentMoment) return EXIT_FAILURE;
-
-    AutoRef<ui2::ImGuiBackend> ui;
-    if (os) {
-        ui = ui2::ImGuiBackend::create({.gpu = visual->gpu(), .window = *os->window()});
+    FrameHost host;
+    if (!host.initialize(options.headless)) return EXIT_FAILURE;
+    SceneRenderer renderer;
+    if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
+    auto &                     ssc         = renderer.ssc;
+    auto &                     environment = ssc->set0.envLighting;
+    AutoRef<fx2::ImGuiBackend> ui;
+    if (host.window) {
+        ui = fx2::ImGuiBackend::create({.gpu = host.gpu, .window = *host.window});
         if (!ui) return EXIT_FAILURE;
     }
-    // Camera fitting and orbit positions need sub-meter precision; world units are integers.
-
-    auto world  = Simple::createWorld(universe, PhysicalScale::MICROMETER());
-    auto form   = createModelForm(universe, "model", model);
-    auto camera = Camera::create({.domain = visual});
-    if (!world || !form || !camera) return EXIT_FAILURE;
-
-    const glm::vec3 center      = (model->bounds.minimum + model->bounds.maximum) * 0.5f;
-    const float     radius      = std::max(glm::length(model->bounds.maximum - model->bounds.minimum) * 0.5f, 0.001f);
-    const auto      boundsScene = fx2::ModelScene::createDebugVisualization(model->bounds, radius * 0.004f, true, false);
-    const auto      axesScene   = fx2::ModelScene::createDebugVisualization(model->bounds, radius * 0.004f, false, true);
-    auto            boundsForm  = createModelForm(universe, "model-bounds", boundsScene);
-    auto            axesForm    = createModelForm(universe, "model-axes", axesScene);
-    const auto      boundsFacet = modelFacet(boundsForm);
-    const auto      axesFacet   = modelFacet(axesForm);
-    if (!boundsForm || !axesForm || !boundsFacet || !axesFacet) return EXIT_FAILURE;
-    form->setPosition(worldPosition(world->scale, -center));
-    boundsForm->setPosition(worldPosition(world->scale, -center));
-    axesForm->setPosition(worldPosition(world->scale, -center));
-    Ref<Form> forms[] = {form, boundsForm, axesForm};
-    world->populate({forms, 3});
-
-    camera->desc.position     = worldPosition(world->scale, {0, 0, radius * 2.5f});
-    camera->desc.orientation  = glm::quat(1, 0, 0, 0);
-    camera->desc.nearPlane    = localDistance(world->scale, std::max(radius / 1000.0f, 0.0001f));
-    camera->desc.farPlane     = localDistance(world->scale, std::max(radius * 20.0f, 1.0f));
-    camera->desc.fovYInDegree = 45.0f;
-    Ref<Camera> cameras[]     = {camera};
+    const glm::vec3 center     = (model->bounds.minimum + model->bounds.maximum) * 0.5f;
+    const float     radius     = std::max(glm::length(model->bounds.maximum - model->bounds.minimum) * 0.5f, 0.001f);
+    auto &          camera     = ssc->set0.camera;
+    camera.nearPlane           = std::max(radius / 1000.0f, 0.0001f);
+    camera.farPlane            = std::max(radius * 20.0f, 1.0f);
+    constexpr float fovDegrees = 45.f;
+    camera.cameraFov           = ArcDegree(fovDegrees);
+    camera.exposure            = options.exposure;
 
     ArcballCameraController arcball;
-    arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, camera->desc.fovYInDegree);
+    arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, fovDegrees);
     if (options.headless) arcball.orientation = glm::quat(glm::vec3(glm::radians(-15.0f), glm::radians(25.0f), 0.0f));
     FlyCameraController fly {.position = arcball.eyePosition(), .orientation = arcball.orientation, .movementSpeed = radius};
     NavigationMode      navigationMode    = NavigationMode::ARCBALL;
@@ -200,7 +234,7 @@ int main(int argc, const char * argv[]) {
     auto                previousFrameTime = std::chrono::steady_clock::now();
 
     auto resetToFit = [&] {
-        arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, camera->desc.fovYInDegree);
+        arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, fovDegrees);
         fly = {.position = arcball.eyePosition(), .orientation = arcball.orientation, .movementSpeed = radius};
     };
     auto setNavigationMode = [&](NavigationMode mode) {
@@ -216,7 +250,12 @@ int main(int argc, const char * argv[]) {
     };
 
     for (int frame = 0; options.headless || options.finiteFrames ? frame < options.frames : true; ++frame) {
-        if (os && !os->processEvents()) break;
+        if (host.window) {
+            if (!host.window->runUntilNoNewEvents()) break;
+            const auto size = host.window->getClientSize();
+            if (!size.x || !size.y) continue;
+            if ((size.x != host.width || size.y != host.height) && !host.resize(size.x, size.y)) return EXIT_FAILURE;
+        }
         const auto  now            = std::chrono::steady_clock::now();
         const float elapsedSeconds = std::min(std::chrono::duration<float>(now - previousFrameTime).count(), 0.1f);
         previousFrameTime          = now;
@@ -237,13 +276,11 @@ int main(int argc, const char * argv[]) {
             if (ImGui::Button("Reset to fit")) resetToFit();
             ImGui::SameLine();
             ImGui::TextDisabled("F / R");
-            if (ImGui::Checkbox("Bounds", &showBounds)) boundsFacet->setVisible(showBounds);
+            ImGui::Checkbox("Bounds", &showBounds);
             ImGui::SameLine();
-            if (ImGui::Checkbox("Axes", &showAxes)) axesFacet->setVisible(showAxes);
-            if (ImGui::SliderFloat("Environment luminance (nits)", &environment.environmentLuminanceScale, 0.0f, 8000.0f, "%.1f")) {
-                environmentMoment = VisualEnvironment::create({.universe = universe, .gpu = visual->gpu(), .description = environment});
-                if (!environmentMoment) return EXIT_FAILURE;
-            }
+            ImGui::Checkbox("Axes", &showAxes);
+            ImGui::SliderFloat("Camera exposure", &camera.exposure, 0.0001f, 10.f, "%.4f", ImGuiSliderFlags_Logarithmic);
+            ImGui::SliderFloat("Environment luminance (nits)", &environment.environmentLuminanceScale, 0.0f, 8000.0f, "%.1f");
 
             ImGui::SeparatorText("Hierarchy");
             if (ImGui::BeginChild("hierarchy", {0, 190}, ImGuiChildFlags_Borders)) {
@@ -289,8 +326,8 @@ int main(int argc, const char * argv[]) {
             ui->render();
         }
 
-        if (os) {
-            win::Window & window = *os->window();
+        if (host.window) {
+            win::Window & window = *host.window;
             for (win::KeyEvent event = window.popLastKeyEvent(); event; event = window.popLastKeyEvent()) {
                 if (!event.status.down && event.key == win::KeyCode::ESCAPE) return EXIT_SUCCESS;
                 if (!captureKeyboard && !event.status.down && event.key == win::KeyCode::R) resetToFit();
@@ -305,10 +342,10 @@ int main(int argc, const char * argv[]) {
             const int wheel = window.getAxisStatus()[static_cast<size_t>(win::Axis::MOUSE_WHEEL_0)];
             if (havePointerSample) {
                 const glm::vec2 delta(mouseX - previousMouseX, mouseY - previousMouseY);
-                const float     viewportHeight = static_cast<float>(std::max(os->clientSize().y, 1u));
+                const float     viewportHeight = static_cast<float>(std::max(host.window->getClientSize().y, 1u));
                 if (!captureMouse && navigationMode == NavigationMode::ARCBALL) {
                     if (keyDown(window, win::KeyCode::MOUSEBTN_0)) arcball.rotate(delta, viewportHeight);
-                    if (keyDown(window, win::KeyCode::MOUSEBTN_1)) arcball.pan(delta, viewportHeight, camera->desc.fovYInDegree);
+                    if (keyDown(window, win::KeyCode::MOUSEBTN_1)) arcball.pan(delta, viewportHeight, fovDegrees);
                     arcball.zoom(static_cast<float>(wheel - previousWheel) / 120.0f);
                 } else if (!captureMouse && navigationMode == NavigationMode::FLY_BY) {
                     if (keyDown(window, win::KeyCode::MOUSEBTN_1)) fly.rotate(delta, viewportHeight);
@@ -325,17 +362,54 @@ int main(int argc, const char * argv[]) {
             havePointerSample = true;
         }
 
-        const glm::vec3 eye      = navigationMode == NavigationMode::ARCBALL ? arcball.eyePosition() : fly.position;
-        camera->desc.position    = worldPosition(world->scale, eye);
-        camera->desc.orientation = navigationMode == NavigationMode::ARCBALL ? arcball.orientation : fly.orientation;
-        auto tableau             = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
-        if (!tableau) return EXIT_FAILURE;
-        tableau->add(environmentMoment);
-        if (ui) tableau->add(ui);
-        visual->renderFrame({.tableau = tableau, .clearColor = {{0.05f, 0.06f, 0.09f, 1.f}}});
+        camera.cameraPosition                  = navigationMode == NavigationMode::ARCBALL ? arcball.eyePosition() : fly.position;
+        camera.cameraOrientation               = navigationMode == NavigationMode::ARCBALL ? arcball.orientation : fly.orientation;
+        camera.viewWidthInPixel                = host.width;
+        camera.viewHeightInPixel               = host.height;
+        camera.aspectRatio                     = static_cast<float>(host.width) / host.height;
+        ssc->set0.frameConstants.frameCounter  = frame;
+        ssc->set0.frameConstants.frameDuration = std::chrono::duration_cast<fx2::Microseconds>(std::chrono::duration<float>(elapsedSeconds));
+        const auto shared                      = ssc->takeSnapshot();
+        auto       acquired                    = host.swapchain->prepare();
+        if (acquired.view.empty()) return EXIT_FAILURE;
+        host.lastFrame = acquired.view.texture();
+        RasterTarget    target;
+        GpuResourceView depth;
+        depth.resource = host.depth;
+        target.setColorTarget(0, acquired.view).setDepthStencilTarget(depth).setClearDepth(1.f).setClearColor(0.05f, 0.06f, 0.09f, 1.f);
+        auto & blend   = target.colorTargets[0].blendState;
+        blend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
+        blend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+        blend.alphaSrc = RasterTarget::BlendState::ONE;
+        blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+        auto raster    = GpuRaster::create("viewer.frame", {.gpu = host.gpu, .target = &target});
+        if (!raster) return EXIT_FAILURE;
+        auto privateUploads = GpuCnC::create({.gpu = host.gpu});
+        if (!privateUploads || !renderer.record(*raster, *privateUploads, shared.set0Resources, showBounds, showAxes)) return EXIT_FAILURE;
+        auto privatePayload = privateUploads->seal();
+        if (!privatePayload) return EXIT_FAILURE;
+        AutoRef<GpuPayload> uiUpload;
+        if (ui && !ui->record(*raster, uiUpload)) return EXIT_FAILURE;
+        auto rendered = raster->seal();
+        if (!rendered) return EXIT_FAILURE;
+        GpuContext::SubmitParameters submit("mesh-viewer.frame");
+        if (renderer.initialization) submit.appendWork(renderer.initialization);
+        submit.appendWork(privatePayload);
+        for (const auto & payload : shared.set0Payloads) {
+            if (!payload) return EXIT_FAILURE;
+            submit.appendWork(payload);
+        }
+        if (uiUpload) submit.appendWork(uiUpload);
+        // SSC's single UBO pair is safe because each frame's uploads precede its
+        // raster and the next frame's uploads follow it in GPU submission order.
+        submit.appendWork(rendered).waitFor(acquired.ready);
+        host.gpu->submit(submit);
+        renderer.initialization.clear();
+        host.swapchain->present(*rendered);
     }
+    host.gpu->waitForIdle();
     if (!options.snapshot.empty()) {
-        auto image = visual->readbackFrame();
+        auto image = host.lastFrame ? host.lastFrame->readback() : gfx::img::Image {};
         if (image.empty()) {
             GN_ERROR(sLogger, "Snapshot failed: no successfully rendered frame available");
             return EXIT_FAILURE;

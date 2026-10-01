@@ -1,3 +1,4 @@
+// Suspended: excluded from the build pending E2 Simple-world design review.
 // simple-world.cpp — a minimal concrete world used to verify the engine2 world and
 // visual-moment workflow. Behavior and visible state live in facets attached to plain
 // structural forms: a spinning box (spin behavior + box mesh) and a point light. The box is

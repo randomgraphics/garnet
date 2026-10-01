@@ -164,10 +164,23 @@ binding paths, indexed draw coverage, and file-path shader loading.
 
 ## FX2 Module
 
-FX2 (`GN::fx2`) owns graph-agnostic rendering effects such as shared shader
-constants, skybox drawing, and PBR assets. Public include `GNfx2.h`,
-implementation `src/core/fx2/`, public headers `src/inc/garnet/fx2/`. FX2
-depends on gpu2 only and must not include or reference RDG2.
+FX2 (`GN::fx2`) owns graph-agnostic typed rendering kernels, shared shader
+constants, and the ImGui backend. Public include `GNfx2.h`, implementation
+`src/core/fx2/`, public headers `src/inc/garnet/fx2/`. FX2 depends on gpu2 only
+and must not include or reference RDG2 or E2.
+
+- Kernels consume GPU buffers/textures and typed immediate values. FX2 has no
+  Geometry, Surface, or asset ownership layer; callers prepare resources.
+- Raster and compute implementations are distinct kernel types, selected by callers.
+- Mesh raster effects append draws to a caller-owned raster; image kernels produce
+  ordered payloads. FX2 does not submit or present GPU work.
+- Raster state inherits caller policy except documented algorithm-required overrides.
+- SSC retains one GPU scene/camera buffer pair per instance. Order uploads and
+  consumers as upload A -> all consumers A -> upload B -> all consumers B.
+  Retaining snapshots does not preserve independent GPU values. Preserve one-time
+  initialization payloads if a recording is abandoned.
+- Use typed public kernel APIs in tools/samples, never private shader ABI headers.
+
 
 ## gpu2 Module
 

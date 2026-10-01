@@ -21,6 +21,9 @@ struct Camera : Being {
         /// Set to positive for perspective camera, 0 for orthogonal camera.
         /// Values outside [0, 180] are invalid and will be clamped back into valid range.
         float fovYInDegree = 60.0f;
+        /// Nonnegative linear exposure before lit-surface tone mapping. Unlit surfaces bypass it.
+        /// The default maps a neutral 500-nit input to half the display's linear range.
+        float exposure = 0.002f;
     };
 
     /// Mutable observer description. May be updated at any time, e.g. to move or re-orient
@@ -87,8 +90,8 @@ struct VisualMoment : Being {
 
         /// Prepared FX2 shared shader bindings for this moment, valid for this call.
         /// The domain already schedules their uploads; do not submit them again.
-        /// Custom moments use the first scene's constants, or defaults if no scene exists,
-        /// including the tableau's selected environment lighting when present.
+        /// Custom moments receive default camera/light constants and the tableau's selected
+        /// environment. Effects needing another view supply their own SSC bindings.
         virtual const fx2::SharedShaderConstants::Snapshot & ssc() const = 0;
 
         /// Schedule GPU work before the recorded draws. Do not submit directly.
@@ -124,7 +127,7 @@ struct VisualTableau : Being {
     virtual void add(Ref<VisualMoment>) = 0;
 };
 
-/// A screen-space visual moment, implemented by overlay renderers such as UI2.
+/// A screen-space visual moment, implemented by application overlay adapters.
 /// All overlays render after regular moments and environments, from larger Z (far)
 /// to smaller Z (near). Relative rendering order for overlays with equal Z is unspecified.
 struct VisualOverlay : VisualMoment {
@@ -139,7 +142,7 @@ struct VisualOverlay : VisualMoment {
 
 /// Frame environment task: supplies shared image-based lighting resources and draws
 /// the skybox after regular moments and before overlays. Relative rendering order
-/// among environments is unspecified. Skyboxes use the first scene camera; scene
+/// among environments is unspecified. Skyboxes use the default camera; scene
 /// lighting uses one environment's resources, with unspecified selection if several exist.
 /// Keep this moment alive across frames to reuse its GPU resources. Omit it for no environment.
 struct VisualEnvironment : VisualMoment {
