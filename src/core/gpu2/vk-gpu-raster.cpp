@@ -477,6 +477,31 @@ struct CachedDrawConfig {
     uint32_t                       instanceCount = 1;
 };
 
+static void pushImmediates(vk::CommandBuffer command, const rv::Pipeline & pipeline, const Blob & data) {
+    if (data.empty()) return;
+    if (data.size() > 128 || data.size() % 4 != 0) GN_UNLIKELY {
+            GN_ERROR(sLogger, "RasterPassPayload: immediates size {} must be a multiple of 4 and at most 128", data.size());
+            return;
+        }
+    // Cached draws bypass Drawable's reflection. Vulkan requires exactly the stages whose
+    // declared ranges overlap each updated byte, including stages with partially overlapping ranges.
+    auto stagesAt = [&](uint32_t offset) {
+        vk::ShaderStageFlags stages;
+        for (const auto & [stage, range] : pipeline.reflection().constants) {
+            if (range.begin <= offset && offset < range.end) stages |= stage;
+        }
+        return stages;
+    };
+    const auto size = static_cast<uint32_t>(data.size());
+    for (uint32_t begin = 0; begin < size;) {
+        const auto stages = stagesAt(begin);
+        uint32_t   end    = begin + 4;
+        while (end < size && stagesAt(end) == stages) end += 4;
+        if (stages) command.pushConstants(pipeline.layout(), stages, begin, end - begin, static_cast<const uint8_t *>(data.data()) + begin);
+        begin = end;
+    }
+}
+
 static inline bool matchesConfig(const StoredDraw & d, const CachedDrawConfig & cfg) {
     if (!cfg.firstDraw) return false;
     const StoredDraw & f = *cfg.firstDraw;
@@ -524,14 +549,7 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         // Fastest path: matches current active hardware state.
         if (activeConfigIndex >= 0 && matchesConfig(d, configs[activeConfigIndex])) {
             const auto & cfg = configs[activeConfigIndex];
-            if (d.immediates && !d.immediates->empty()) {
-                if (d.immediates->size() > 128) GN_UNLIKELY {
-                        GN_ERROR(sLogger, "RasterPassPayload: immediates size {} exceeds 128", d.immediates->size());
-                    }
-                else {
-                    vkcb.pushConstants(cfg.pipeline->layout(), vk::ShaderStageFlagBits::eAllGraphics, 0, (uint32_t) d.immediates->size(), d.immediates->data());
-                }
-            }
+            if (d.immediates) pushImmediates(vkcb, *cfg.pipeline, *d.immediates);
             if (cfg.indexCount > 0) {
                 vkcb.drawIndexed(cfg.indexCount, cfg.instanceCount, 0, 0, 0);
             } else {
@@ -599,14 +617,7 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
             }
 
             // Push constants
-            if (d.immediates && !d.immediates->empty()) {
-                if (d.immediates->size() > 128) GN_UNLIKELY {
-                        GN_ERROR(sLogger, "RasterPassPayload: immediates size {} exceeds 128", d.immediates->size());
-                    }
-                else {
-                    vkcb.pushConstants(cfg.pipeline->layout(), vk::ShaderStageFlagBits::eAllGraphics, 0, (uint32_t) d.immediates->size(), d.immediates->data());
-                }
-            }
+            if (d.immediates) pushImmediates(vkcb, *cfg.pipeline, *d.immediates);
 
             // Draw
             if (cfg.indexCount > 0) {

@@ -328,3 +328,93 @@ TEST_CASE("fx2 lit geometry handles optional attributes and rejects invalid opti
     gpu->submit(GpuContext::SubmitParameters("lit.options").appendWork(uploads->seal()));
     gpu->waitForIdle();
 }
+
+TEST_CASE("fx2 lit surfaces and cel bands survive a later skybox", "[fx2][lit][gpu]") {
+    auto gpu = GpuContext::create("lit-depth-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No gpu2 device available");
+    auto initialization = GpuCnC::create({.gpu = gpu});
+    REQUIRE(initialization);
+    auto pbr    = PbrKernel::create(gpu, *initialization);
+    auto cel    = CelKernel::create(gpu, *initialization);
+    auto skybox = SkyboxKernel::create(gpu);
+    auto ssc    = SharedShaderConstants::create({.gpu = gpu});
+    REQUIRE(pbr);
+    REQUIRE(cel);
+    REQUIRE(skybox);
+    REQUIRE(ssc);
+    ssc->set0.camera.cameraPosition   = {0, 0, 3};
+    ssc->set0.camera.viewWidthInPixel = ssc->set0.camera.viewHeightInPixel = 128;
+    ssc->set0.camera.aspectRatio                                           = 1;
+    ssc->set0.envLighting.environmentLuminanceScale                        = 0;
+    // PBR uses image-based lighting; supply a calibrated floor without external texture assets.
+    ssc->set0.envLighting.environmentAmbientFloor = 500;
+    SharedShaderConstants::DirectLight sun;
+    sun.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
+    sun.directional.orientation = glm::quat(glm::vec3(0.6f, 0.8f, 0));
+    sun.directional.irradiance  = {1, 0.98f, 0.95f, {500}};
+    ssc->set0.directLighting.append(sun);
+    auto geometry = LitKernelInputs::createSphere(gpu, *initialization);
+    REQUIRE(geometry.indexCount > 0);
+    gpu->submit(GpuContext::SubmitParameters("lit-depth.init").appendWork(initialization->seal()));
+    for (int kind = 0; kind < 2; ++kind) {
+        CAPTURE(kind);
+        auto output = Texture::create(
+            "lit-depth.color",
+            {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(128, 128).setLevels(1)});
+        auto depth = Texture::create(
+            "lit-depth.depth",
+            {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::D_32_FLOAT()).setDimensions(128, 128).setLevels(1)});
+        REQUIRE(output);
+        REQUIRE(depth);
+        GpuResourceView colorView, depthView;
+        colorView.resource = output;
+        depthView.resource = depth;
+        RasterTarget target;
+        target.setColorTarget(0, colorView).setDepthStencilTarget(depthView).setClearDepth(1).setClearColor(0, 0, 0, 1);
+        target.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
+        auto raster              = GpuRaster::create("lit-depth.raster", {.gpu = gpu, .target = &target});
+        auto uploads             = GpuCnC::create({.gpu = gpu});
+        REQUIRE(raster);
+        REQUIRE(uploads);
+        const auto shared = ssc->takeSnapshot();
+        if (kind == 0) {
+            PbrKernel::Inputs input;
+            input.geometry = geometry;
+            input.color    = {0.8f, 0.3f, 0.08f, 1};
+            REQUIRE(pbr->record(*raster, *uploads, shared.set0Resources, input));
+        } else {
+            CelKernel::Inputs input;
+            input.geometry     = geometry;
+            input.color        = {0.8f, 0.3f, 0.08f, 1};
+            input.outlineWidth = 0.01f;
+            input.rimIntensity = 150;
+            REQUIRE(cel->record(*raster, *uploads, shared.set0Resources, input));
+        }
+        REQUIRE(skybox->record(*raster, shared.set0Resources));
+        GpuContext::SubmitParameters submit("lit-depth.render");
+        for (const auto & payload : shared.set0Payloads) submit.appendWork(payload);
+        submit.appendWork(uploads->seal()).appendWork(raster->seal());
+        gpu->submit(submit);
+        const auto image = output->readback();
+        REQUIRE_FALSE(image.empty());
+        if (const auto path = getEnv("GN_FX2_TEST_SNAPSHOT"); !path.empty()) image.save(StrA::format("{}-{}.png", path, kind).data());
+        const auto * pixels  = static_cast<const uint8_t *>(image.data());
+        uint32_t     visible = 0, litBand = 0, shadowBand = 0;
+        for (uint32_t y = 20; y < 108; ++y)
+            for (uint32_t x = 20; x < 108; ++x) {
+                const auto * pixel = pixels + (y * 128 + x) * 4;
+                if (pixel[0] > 30) {
+                    ++visible;
+                    if (pixel[0] > 108) ++litBand;
+                    if (pixel[0] > 70 && pixel[0] < 90) ++shadowBand;
+                }
+            }
+        CHECK(visible > 1000);
+        CHECK(pixels[0] == 0);
+        CHECK(pixels[(64 * 128 + 64) * 4] > 30);
+        if (kind == 1) {
+            CHECK(litBand > 100);
+            CHECK(shadowBand > 100);
+        }
+    }
+}
