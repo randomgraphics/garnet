@@ -24,14 +24,15 @@ endif()
 target_link_libraries(${GN_INTERNAL_TEST_TARGET} PRIVATE ${CMAKE_DL_LIBS})
 
 file(GLOB_RECURSE internal_test_units CONFIGURE_DEPENDS
-    ${CMAKE_SOURCE_DIR}/src/core/*/test/internal-test.cmake)
+    ${CMAKE_SOURCE_DIR}/src/core/*/test/internal-test.cmake
+    ${CMAKE_SOURCE_DIR}/src/tool/*/test/internal-test.cmake)
 list(SORT internal_test_units)
 
 foreach(internal_test_cmake IN LISTS internal_test_units)
     # internal-test.cmake fragments are included in this directory scope, so provide
     # explicit per-fragment source and binary roots instead of relying on CMAKE_CURRENT_*.
     get_filename_component(GN_INTERNAL_TEST_SOURCE_DIR ${internal_test_cmake} DIRECTORY)
-    file(RELATIVE_PATH _test_rel ${CMAKE_SOURCE_DIR}/src/core ${GN_INTERNAL_TEST_SOURCE_DIR})
+    file(RELATIVE_PATH _test_rel ${CMAKE_SOURCE_DIR}/src ${GN_INTERNAL_TEST_SOURCE_DIR})
     string(REPLACE "/" "-" _test_bin_name ${_test_rel})
     set(GN_INTERNAL_TEST_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${_test_bin_name})
     include(${internal_test_cmake})

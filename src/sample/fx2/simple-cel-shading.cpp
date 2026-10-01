@@ -34,7 +34,8 @@ static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, co
     SharedShaderConstants::DirectLight sun;
     sun.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
     sun.directional.orientation = glm::quat(glm::vec3(0.6f, 0.8f, 0.0f));
-    sun.directional.irradiance  = {1.0f, 0.98f, 0.95f, {1.0f}};
+    // SSC uses photometric lighting and defaults to exposure 0.002 (a 500-nit reference).
+    sun.directional.irradiance = {1.0f, 0.98f, 0.95f, {500.0f}};
     ssc->set0.directLighting.append(sun);
 
     ssc->set0.envLighting.environmentAmbientFloor   = 0.1f;
@@ -81,6 +82,7 @@ int main(int argc, const char ** argv) {
     inputs.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
     inputs.color             = {0.8f, 0.3f, 0.08f, 1};
     inputs.outlineWidth      = 0.01f;
+    inputs.rimIntensity      = 150.0f; // Keep the stylized rim visible at the same camera exposure.
     auto initialization      = initializationRecorder->seal();
     if (!initialization) return -1;
 
