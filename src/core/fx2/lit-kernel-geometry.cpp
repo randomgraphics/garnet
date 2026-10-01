@@ -330,6 +330,8 @@ bool validSize(const char * name, float value, bool half) {
 }
 } // namespace
 
+gpu2::RasterGeometry LitKernelInputs::createBox(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads) { return createBox(gpu, uploads, CubeCreateOptions {}); }
+
 gpu2::RasterGeometry LitKernelInputs::createBox(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads, const CubeCreateOptions & options) {
     if (!validOptions(gpu, options) || !validSize("width", options.width, options.half) || !validSize("height", options.height, options.half) ||
         !validSize("depth", options.depth, options.half))
@@ -339,6 +341,10 @@ gpu2::RasterGeometry LitKernelInputs::createBox(AutoRef<gpu2::GpuContext> gpu, g
     glm::vec4             vertColor(options.color, 1.0f);
     generateBox(verts, idx, options.width, options.height, options.depth, options.ccw, vertColor);
     return buildGeometry(gpu, uploads, verts, idx, options);
+}
+
+gpu2::RasterGeometry LitKernelInputs::createSphere(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads) {
+    return createSphere(gpu, uploads, SphereCreateOptions {});
 }
 
 gpu2::RasterGeometry LitKernelInputs::createSphere(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads, const SphereCreateOptions & options) {

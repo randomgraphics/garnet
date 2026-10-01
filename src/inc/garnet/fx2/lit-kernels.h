@@ -55,13 +55,17 @@ struct LitKernelInputs {
     /// Generate a box mesh suitable for lit kernel rendering. Uploads vertex/index data via \p uploads.
     /// Submit uploads before rendering; this call does not submit or wait. The recorder must use the same device.
     /// Returns empty for invalid/non-finite dimensions or colors, half values beyond 65504, or allocation failure.
-    static GN_API gpu2::RasterGeometry createBox(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads, const CubeCreateOptions & options = {});
+    static GN_API gpu2::RasterGeometry createBox(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads, const CubeCreateOptions & options);
+    /// Generate a box with default options. An overload avoids nested-type default-argument restrictions on GCC/Clang.
+    static GN_API gpu2::RasterGeometry createBox(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads);
     /// Generate a sphere mesh suitable for lit kernel rendering. Uploads vertex/index data via \p uploads.
     /// Submit uploads before rendering; the recorder must use the same device. No submission or wait occurs here.
     /// UV meshes are limited to 4,194,304 vertices before generation; ICO subdivision is limited to 8.
     /// Seam/pole vertices are duplicated for texture mapping; ICO seam U can exceed 1 (use repeat sampling).
     /// Returns empty for invalid options, non-finite values, half values beyond 65504, or allocation failure.
-    static GN_API gpu2::RasterGeometry createSphere(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads, const SphereCreateOptions & options = {});
+    static GN_API gpu2::RasterGeometry createSphere(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads, const SphereCreateOptions & options);
+    /// Generate a UV sphere with default options.
+    static GN_API gpu2::RasterGeometry createSphere(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & uploads);
 };
 /// Metallic/roughness PBR raster effect. Inherits caller raster state.
 struct PbrKernel : Kernel {
