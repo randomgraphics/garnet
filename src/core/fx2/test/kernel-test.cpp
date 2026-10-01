@@ -111,6 +111,13 @@ TEST_CASE("fx2 unlit reuses one raster and inherits alpha blending", "[fx2][kern
     f.inputs.color           = {0, 1, 0, 1};
     f.inputs.worldFromObject = glm::translate(glm::mat4(1), glm::vec3(1, 0, 0));
     REQUIRE(f.unlit->record(*raster, shared.set0Resources, f.inputs));
+    // Switch configuration, then return to it: exercise both raster push-constant cache paths.
+    f.inputs.states.cullMode = RasterState::CULL_FRONT;
+    f.inputs.worldFromObject = glm::translate(glm::mat4(1), glm::vec3(4, 0, 0));
+    REQUIRE(f.unlit->record(*raster, shared.set0Resources, f.inputs));
+    f.inputs.states          = {};
+    f.inputs.worldFromObject = glm::translate(glm::mat4(1), glm::vec3(1, 0, 0));
+    REQUIRE(f.unlit->record(*raster, shared.set0Resources, f.inputs));
     f.inputs.color = {0, 0, 1, 1}; // Changing caller data cannot affect already recorded draws.
     auto payload   = raster->seal();
     REQUIRE(payload);
