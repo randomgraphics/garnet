@@ -10,10 +10,6 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
-namespace GN::win {
-class Window;
-}
-
 #define GN_E2_DEFINE_A_BEING(baseType) \
 protected:                             \
     using baseType::baseType;          \

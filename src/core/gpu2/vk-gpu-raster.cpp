@@ -26,9 +26,21 @@ struct StoredDraw {
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
 
+static bool attachmentExtent(const GpuResourceView & view, vk::Extent2D & extent) {
+    auto texture = view.texture();
+    if (!texture) return false;
+    const auto & d     = texture->descriptor();
+    const auto & range = view.imageView.range;
+    if (range.i.mip >= d.levels || range.i.mip >= 32 || range.i.face >= d.faces || range.e.numMipLevels != 1 || range.e.numArrayLayers != 1) return false;
+    // Dynamic rendering area and default viewport must match the attached mip,
+    // not the base image, or downsampling can rasterize outside its destination.
+    extent = vk::Extent2D(std::max(1u, d.width >> range.i.mip), std::max(1u, d.height >> range.i.mip));
+    return d.width && d.height;
+}
+
 static inline bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
                                           vk::Format * outVkFormat) {
-    if (v.empty() || !v.isTexture()) return false;
+    if (v.empty() || !v.isTexture() || !attachmentExtent(v, *outExt)) return false;
     auto * base = RuntimeType::cast<TextureVulkanBase>(v.texture().get());
     if (!base || !base->nativeImage()) return false;
     gfx::img::PixelFormat pf = v.imageView.format;
@@ -39,7 +51,6 @@ static inline bool resolveColorAttachment(const GpuResourceView & v, vk::Image *
     if (!view) return false;
     *outImage    = base->nativeImage();
     *outView     = view;
-    *outExt      = vk::Extent2D(base->descriptor().width, base->descriptor().height);
     *outVkFormat = fmt;
     return true;
 }
@@ -94,6 +105,17 @@ static RasterTarget checkRasterTarget(const RasterTarget * target) {
     }
     if (target->empty()) {
         GN_ERROR(sLogger, "GpuRasterVulkan2: no color/depth target defined.");
+        return {};
+    }
+    vk::Extent2D extent;
+    for (const auto & color : target->colorTargets) {
+        if (!attachmentExtent(color.view(), extent)) {
+            GN_ERROR(sLogger, "GpuRasterVulkan2: invalid color attachment subresource.");
+            return {};
+        }
+    }
+    if (target->depthStencilTarget.texture && !attachmentExtent(target->depthStencilTarget.view(), extent)) {
+        GN_ERROR(sLogger, "GpuRasterVulkan2: invalid depth/stencil attachment subresource.");
         return {};
     }
     return *target;
@@ -255,6 +277,8 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
     bool                        hasDepth = false;
     const GpuResourceView       dst      = mRenderTarget.depthStencilTarget.view();
     if (dst.isTexture() && dst.texture()) {
+        vk::Extent2D depthExtent;
+        if (!attachmentExtent(dst, depthExtent)) return false;
         auto *        depthTex  = RuntimeType::cast<TextureVulkanBase>(dst.texture().get());
         vk::ImageView depthView = depthTex ? depthTex->nativeView(dst.imageView) : vk::ImageView {};
         if (depthTex && depthView) {
@@ -267,8 +291,8 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
                 .setLoadOp(vk::AttachmentLoadOp::eClear)
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
                 .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(mRenderTarget.clearDepth, mRenderTarget.clearStencil)));
-            outExt.width  = std::min(outExt.width, depthTex->descriptor().width);
-            outExt.height = std::min(outExt.height, depthTex->descriptor().height);
+            outExt.width  = std::min(outExt.width, depthExtent.width);
+            outExt.height = std::min(outExt.height, depthExtent.height);
             hasDepth      = true;
         }
     }

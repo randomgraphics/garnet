@@ -329,7 +329,10 @@ static rv::Ref<rv::GraphicsPipeline> buildPipeline(const Gpu2RasterPsoCreatePara
     // Vertex input: vertex buffers first, then instance buffers (mirrors binding index assignment).
     for (const auto & vb : params.geometry.vertices) gcp.addVertexBuffer(vb.stride);
     for (const auto & ib : params.geometry.instances) gcp.addInstanceBuffer(ib.stride);
-    for (const auto & a : params.geometry.format.attributes) gcp.setVertexAttribute(a.location, a.binding, a.offset, vertexAttributeFormatToVk(a.format));
+    // Shader locations can be sparse (e.g. position at 0 and color at 4).
+    // setVertexAttribute() expands by location and leaves invalid holes, whereas
+    // Vulkan expects a compact array of descriptions with explicit locations.
+    for (const auto & a : params.geometry.format.attributes) gcp.va.emplace_back(a.location, a.binding, vertexAttributeFormatToVk(a.format), a.offset);
 
     // Per-color-target blend state and write mask.
     // Must match the color format count passed to setDynamicRendering.

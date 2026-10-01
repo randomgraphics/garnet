@@ -88,7 +88,6 @@ include(fiz/CMakeLists.txt)
 
 # engine2 (e2) sources + its GLSL shaders. Same in-parent-scope include rationale as rdg2.
 include(e2/CMakeLists.txt)
-include(ui2/CMakeLists.txt)
 
 # OpenGL GPU Sources
 if(GN_BUILD_HAS_OGL)
@@ -126,12 +125,6 @@ if(TARGET GNcore-rdg-shaders)
 endif()
 if(TARGET GNcore-fx2-shaders)
     add_dependencies(GNcore-objects GNcore-fx2-shaders)
-endif()
-if(TARGET GNcore-e2-shaders)
-    add_dependencies(GNcore-objects GNcore-e2-shaders)
-endif()
-if(TARGET GNcore-ui2-shaders)
-    add_dependencies(GNcore-objects GNcore-ui2-shaders)
 endif()
 
 # =======================

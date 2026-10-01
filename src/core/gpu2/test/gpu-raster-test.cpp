@@ -49,3 +49,54 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
         CHECK(px.a == 255u);
     }
 }
+
+TEST_CASE("GPU2: raster validates attachment subresources and clips to depth mip extent", "[gpu2][raster][gpu]") {
+    auto gpu = GpuContext::create("mip-target-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No GPU context available");
+    auto color = Texture::create(
+        "mip-color", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(8, 8).setLevels(4)});
+    REQUIRE(color);
+    GpuResourceView colorView;
+    colorView.resource = color;
+    RasterTarget target;
+    target.setColorTarget(0, colorView);
+    target.colorTargets[0].target.mip = 4;
+    CHECK_FALSE(GpuRaster::create("invalid-color-mip", {.gpu = gpu, .target = &target}));
+    target.colorTargets[0].target.mip  = 0;
+    target.colorTargets[0].target.face = 1;
+    CHECK_FALSE(GpuRaster::create("invalid-color-face", {.gpu = gpu, .target = &target}));
+    target.colorTargets[0].target.face = 0;
+    const auto depthFormat             = gpu->caps().defaultDepthFormat;
+    if (depthFormat == gfx::img::PixelFormat::UNKNOWN()) SKIP("No depth attachment format");
+    auto depth = Texture::create("mip-depth", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(depthFormat).setDimensions(8, 8).setLevels(4)});
+    REQUIRE(depth);
+    GpuResourceView depthView;
+    depthView.resource = depth;
+    target.setDepthStencilTarget(depthView);
+    target.depthStencilTarget.mip = 4;
+    CHECK_FALSE(GpuRaster::create("invalid-depth-mip", {.gpu = gpu, .target = &target}));
+    target.depthStencilTarget.mip  = 0;
+    target.depthStencilTarget.face = 1;
+    CHECK_FALSE(GpuRaster::create("invalid-depth-face", {.gpu = gpu, .target = &target}));
+    target.depthStencilTarget.face = 0;
+    target.setClearColor(1, 0, 0, 1);
+    auto initial = GpuRaster::create("clear-base-red", {.gpu = gpu, .target = &target});
+    REQUIRE(initial);
+    // A smaller depth mip limits rendering even when the color attachment remains mip zero.
+    target.depthStencilTarget.mip = 1;
+    target.setClearColor(0, 0, 1, 1);
+    auto smaller = GpuRaster::create("clear-depth-mip-blue", {.gpu = gpu, .target = &target});
+    REQUIRE(smaller);
+    gpu->submit(GpuContext::SubmitParameters("depth-mip-extent").appendWork(initial->seal()).appendWork(smaller->seal()));
+    gpu->waitForIdle();
+    auto image = color->readback();
+    REQUIRE_FALSE(image.empty());
+    auto pixels = image.plane().toRGBA8(image.data());
+    REQUIRE(pixels.size() == 64);
+    for (uint32_t y = 0; y < 8; ++y)
+        for (uint32_t x = 0; x < 8; ++x) {
+            const bool covered = x < 4 && y < 4;
+            CHECK(pixels[y * 8 + x].r == (covered ? 0 : 255));
+            CHECK(pixels[y * 8 + x].b == (covered ? 255 : 0));
+        }
+}

@@ -1,3 +1,4 @@
+// Suspended: excluded from the build pending E2 Simple-world design review.
 // CPU-only verification of the engine2 world / visual-moment workflow using the Simple
 // world. No GPU or window is involved: this exercises form population, the background
 // simulation cadence, and self-contained snapshot capture.
