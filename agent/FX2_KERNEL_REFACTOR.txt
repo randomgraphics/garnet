@@ -440,6 +440,19 @@ that submodule reference and all staged implementation, tests, and documentation
 on wip/cell-shading. Keep this assignment active pending explicit sign-off or
 an archive request.
 
+PR publication follow-up (2026-10-01):
+- rapid-vulkan PR #56 merged into main as bd7c239 after all required CI checks,
+  including Linux, Android, and Windows builds. The merged tree matches the
+  locally verified PR head. Completed source branch removed locally/remotely.
+- Garnet now references bd7c239 on rapid-vulkan main. The whole wip/cell-shading
+  branch is being submitted to Garnet master as explicitly requested; do not
+  merge that parent PR without authorization.
+- Latest parent Debug build and headless CIT passed with the newer automatic
+  GPU pumping and Windows declaration/export fixes: 130 internal cases passed,
+  2 display-dependent skips, 5322 assertions; viewer 14 cases/2863 assertions.
+  Logs: /tmp/garnet-pr-build.log and /tmp/garnet-pr-cit.log.
+- Commit: "build: advance rapid-vulkan to merged descriptor layout fixes".
+
 --- WORKFLOW / CONVENTIONS ---
 Preserve all existing user edits and the dirty rapid-vulkan submodule.
 Follow AGENTS.md and relevant module/API/build skills before implementation.
