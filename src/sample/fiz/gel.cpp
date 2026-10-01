@@ -9,7 +9,7 @@
 //   --scale | -s <val> — simulation time scale relative to real time (default: 1.0, e.g. 0.5 for half-speed slowmo)
 
 #include <garnet/GNfiz.h>
-#include <garnet/GNfx2.h>
+#include "render-helpers.h"
 #include <garnet/GNwin.h>
 #include <garnet/GNutil.h>
 
@@ -35,211 +35,42 @@ using namespace GN::fiz;
 using namespace GN::fx2;
 using namespace GN::gpu2;
 using namespace GN::util;
+using namespace fizsample;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.fiz.gel");
 
 namespace {
 
-static constexpr float PI = 3.14159265358979323846f;
-
-// ─── Procedural ModelScene Builders ──────────────────────────────────────────
-
-struct ProceduralScene : ModelScene {
-    explicit ProceduralScene(const StrA & name): ModelScene(ModelScene::TYPE_INFO(), name) {}
+// Dynamic gel vertices are sample-owned and use only public kernel attribute locations.
+struct GelVertex {
+    glm::vec3 position, normal;
+    glm::vec4 color = glm::vec4(1);
 };
 
-static AutoRef<ModelScene> createBoxScene(const glm::vec3 & halfExtents, const glm::vec4 & color, float metallic = 0.2f, float roughness = 0.5f) {
-    AutoRef<ModelScene> result(new ProceduralScene("box-scene"));
-    result->sourcePath = "generated://box";
-
-    ModelScene::Material material;
-    material.name      = "box-mat";
-    material.workflow  = ModelScene::MaterialWorkflow::DEFAULT_LIT;
-    material.baseColor = color;
-    material.metallic  = metallic;
-    material.roughness = roughness;
-    result->materials.append(material);
-
-    ModelScene::Primitive primitive;
-    primitive.name     = "box-prim";
-    primitive.material = 0;
-    primitive.bounds   = {-halfExtents, halfExtents, true};
-
-    static const glm::vec3 faceNormals[6] = {
-        {0.0f, 0.0f, 1.0f},  // Z+
-        {0.0f, 0.0f, -1.0f}, // Z-
-        {1.0f, 0.0f, 0.0f},  // X+
-        {-1.0f, 0.0f, 0.0f}, // X-
-        {0.0f, 1.0f, 0.0f},  // Y+
-        {0.0f, -1.0f, 0.0f}  // Y-
-    };
-
-    static const glm::vec4 faceTangents[6] = {
-        {1.0f, 0.0f, 0.0f, 1.0f},  // Z+
-        {-1.0f, 0.0f, 0.0f, 1.0f}, // Z-
-        {0.0f, 0.0f, -1.0f, 1.0f}, // X+
-        {0.0f, 0.0f, 1.0f, 1.0f},  // X-
-        {1.0f, 0.0f, 0.0f, 1.0f},  // Y+
-        {1.0f, 0.0f, 0.0f, 1.0f}   // Y-
-    };
-
-    static const glm::vec3 faceVertices[6][4] = {
-        {{-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1}},     // Z+
-        {{1, -1, -1}, {-1, -1, -1}, {-1, 1, -1}, {1, 1, -1}}, // Z-
-        {{1, -1, 1}, {1, -1, -1}, {1, 1, -1}, {1, 1, 1}},     // X+
-        {{-1, -1, -1}, {-1, -1, 1}, {-1, 1, 1}, {-1, 1, -1}}, // X-
-        {{-1, 1, 1}, {1, 1, 1}, {1, 1, -1}, {-1, 1, -1}},     // Y+
-        {{-1, -1, -1}, {1, -1, -1}, {1, -1, 1}, {-1, -1, 1}}  // Y-
-    };
-
-    for (int f = 0; f < 6; ++f) {
-        uint32_t baseIdx = static_cast<uint32_t>(primitive.vertices.size());
-        for (int v = 0; v < 4; ++v) {
-            ModelScene::Vertex vert;
-            vert.position = faceVertices[f][v] * halfExtents;
-            vert.normal   = faceNormals[f];
-            vert.tangent  = faceTangents[f];
-            vert.texcoord = glm::vec2((v == 1 || v == 2) ? 1.0f : 0.0f, (v >= 2) ? 1.0f : 0.0f);
-            vert.color    = color;
-            primitive.vertices.append(vert);
-        }
-        primitive.indices.append(baseIdx + 0);
-        primitive.indices.append(baseIdx + 1);
-        primitive.indices.append(baseIdx + 2);
-        primitive.indices.append(baseIdx + 0);
-        primitive.indices.append(baseIdx + 2);
-        primitive.indices.append(baseIdx + 3);
-    }
-
-    result->primitives.append(std::move(primitive));
-
-    ModelScene::Node node;
-    node.name = "root";
-    node.primitives.append(0);
-    node.bounds = result->primitives[0].bounds;
-    result->nodes.append(std::move(node));
-
+static PbrKernel::Inputs gelInputs(AutoRef<GpuContext> gpu, GpuCnC & uploads, const AutoRef<GelMesh> & mesh, glm::vec4 color, float metallic, float roughness) {
+    PbrKernel::Inputs result;
+    if (!mesh) return result;
+    DynaArray<uint32_t> indices;
+    for (const auto & face : mesh->faces())
+        for (int i = 0; i < 3; ++i) indices.append(face.indices[i]);
+    auto ib = Buffer::create("gel.indices", {.context = gpu, .size = indices.size() * sizeof(uint32_t)});
+    if (!ib) return result;
+    uploads.uploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(indices.data()), indices.size() * sizeof(uint32_t)});
+    result.geometry.indices     = {.buffer = ib, .stride = sizeof(uint32_t)};
+    result.geometry.indexCount  = static_cast<uint32_t>(indices.size());
+    result.geometry.vertexCount = static_cast<uint32_t>(mesh->faceVertices().size());
+    // Each instance supplies its own deformed buffer before recording a draw.
+    result.geometry.vertices.append({.stride = sizeof(GelVertex)});
+    using F = RasterGeometry::AttributeFormat;
+    result.geometry.format.attributes.append({.location = 0, .offset = offsetof(GelVertex, position), .format = F::F32_3});
+    result.geometry.format.attributes.append({.location = 1, .offset = offsetof(GelVertex, normal), .format = F::F32_3});
+    result.geometry.format.attributes.append({.location = 4, .offset = offsetof(GelVertex, color), .format = F::F32_4});
+    result.color          = color;
+    result.useVertexColor = true;
+    result.metallic       = metallic;
+    result.roughness      = roughness;
     return result;
 }
-
-static AutoRef<ModelScene> createSphereScene(float radius, int slices, int stacks, const glm::vec4 & color, float metallic = 0.3f, float roughness = 0.2f) {
-    AutoRef<ModelScene> result(new ProceduralScene("sphere-scene"));
-    result->sourcePath = "generated://sphere";
-
-    ModelScene::Material material;
-    material.name      = "sphere-mat";
-    material.workflow  = ModelScene::MaterialWorkflow::DEFAULT_LIT;
-    material.baseColor = color;
-    material.metallic  = metallic;
-    material.roughness = roughness;
-    result->materials.append(material);
-
-    ModelScene::Primitive primitive;
-    primitive.name     = "sphere-prim";
-    primitive.material = 0;
-    primitive.bounds   = {glm::vec3(-radius), glm::vec3(radius), true};
-
-    for (int i = 0; i <= stacks; ++i) {
-        float phi    = PI * static_cast<float>(i) / static_cast<float>(stacks);
-        float sinPhi = std::sin(phi);
-        float cosPhi = std::cos(phi);
-
-        for (int j = 0; j <= slices; ++j) {
-            float theta    = 2.0f * PI * static_cast<float>(j) / static_cast<float>(slices);
-            float sinTheta = std::sin(theta);
-            float cosTheta = std::cos(theta);
-
-            glm::vec3          n(sinPhi * cosTheta, cosPhi, sinPhi * sinTheta);
-            ModelScene::Vertex vert;
-            vert.position = n * radius;
-            vert.normal   = n;
-            vert.tangent  = glm::vec4(-sinTheta, 0.0f, cosTheta, 1.0f);
-            vert.texcoord = glm::vec2(static_cast<float>(j) / slices, static_cast<float>(i) / stacks);
-            vert.color    = color;
-            primitive.vertices.append(vert);
-        }
-    }
-
-    for (int i = 0; i < stacks; ++i) {
-        for (int j = 0; j < slices; ++j) {
-            uint32_t first  = static_cast<uint32_t>((i * (slices + 1)) + j);
-            uint32_t second = first + slices + 1;
-
-            primitive.indices.append(first);
-            primitive.indices.append(first + 1);
-            primitive.indices.append(second);
-
-            primitive.indices.append(second);
-            primitive.indices.append(first + 1);
-            primitive.indices.append(second + 1);
-        }
-    }
-
-    result->primitives.append(std::move(primitive));
-
-    ModelScene::Node node;
-    node.name = "root";
-    node.primitives.append(0);
-    node.bounds = result->primitives[0].bounds;
-    result->nodes.append(std::move(node));
-
-    return result;
-}
-
-static AutoRef<ModelScene> createGelModelScene(const AutoRef<GelMesh> & mesh, const glm::vec4 & color, float metallic = 0.2f, float roughness = 0.3f) {
-    AutoRef<ModelScene> result(new ProceduralScene("gel-template-scene"));
-    result->sourcePath = "generated://gel-template";
-
-    ModelScene::Material material;
-    material.name      = "gel-template-mat";
-    material.workflow  = ModelScene::MaterialWorkflow::DEFAULT_LIT;
-    material.baseColor = color;
-    material.metallic  = metallic;
-    material.roughness = roughness;
-    result->materials.append(material);
-
-    ModelScene::Primitive primitive;
-    primitive.name     = "gel-template-prim";
-    primitive.material = 0;
-
-    glm::vec3 minPos(1e9f), maxPos(-1e9f);
-    auto      faceVerts = mesh->faceVertices();
-    size_t    numVerts  = faceVerts.size();
-    primitive.vertices.reserve(numVerts);
-    for (const auto & v : faceVerts) {
-        ModelScene::Vertex mv;
-        mv.position = glm::vec3(v.position.x, v.position.y, v.position.z);
-        mv.normal   = (glm::length(mv.position) > 1e-4f) ? glm::normalize(mv.position) : glm::vec3(0.0f, 1.0f, 0.0f);
-        mv.tangent  = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        mv.texcoord = glm::vec2(0.5f, 0.5f);
-        mv.color    = color;
-        primitive.vertices.append(mv);
-
-        minPos = glm::min(minPos, mv.position);
-        maxPos = glm::max(maxPos, mv.position);
-    }
-    primitive.bounds = {minPos, maxPos, true};
-
-    size_t numFaces = mesh->faces().size();
-    primitive.indices.reserve(numFaces * 3);
-    for (const auto & f : mesh->faces()) {
-        primitive.indices.append(f.indices[0]);
-        primitive.indices.append(f.indices[1]);
-        primitive.indices.append(f.indices[2]);
-    }
-
-    result->primitives.append(std::move(primitive));
-
-    ModelScene::Node node;
-    node.name = "root";
-    node.primitives.append(0);
-    node.bounds = result->primitives[0].bounds;
-    result->nodes.append(std::move(node));
-
-    return result;
-}
-
-// ─── Shared Shader Constants Helper ──────────────────────────────────────────
 
 static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, const RasterTarget & target, const glm::vec3 & eye, const glm::vec3 & targetPos,
                                                  int frameIdx) {
@@ -276,15 +107,10 @@ struct SimulatedSolid {
 };
 
 struct SimulatedGel {
-    AutoRef<Gel>                    gel;
-    TemplateKind                    templateKind = TEMPLATE_CUBE_GREEN;
-    AutoRef<Buffer>                 dynamicVb[2]; // Double-buffered GPU vertex buffer
-    std::vector<ModelScene::Vertex> cpuVertices;
-};
-
-struct PushConstants {
-    glm::mat4 world;
-    glm::mat4 normal;
+    AutoRef<Gel>           gel;
+    TemplateKind           templateKind = TEMPLATE_CUBE_GREEN;
+    AutoRef<Buffer>        dynamicVb[2]; // Double-buffered GPU vertex buffer
+    std::vector<GelVertex> cpuVertices;
 };
 
 // ─── Simulation Arena ────────────────────────────────────────────────────────
@@ -299,30 +125,37 @@ public:
     AutoRef<GelMesh> meshCube;
     AutoRef<GelMesh> meshSphere;
 
-    AutoRef<ModelAsset> gelTemplateAssets[TEMPLATE_COUNT];
-    AutoRef<ModelAsset> rigidAssets[RIGID_COUNT];
+    PbrKernel::Inputs gelTemplateAssets[TEMPLATE_COUNT];
+    PbrKernel::Inputs rigidAssets[RIGID_COUNT];
 
-    void initMeshesAndAssets(AutoRef<GpuContext> gpu) {
+    bool initMeshesAndAssets(AutoRef<GpuContext> gpu, GpuCnC & uploads) {
         // Soft body meshes
         meshCube   = GelMesh::createCube(4, 1.4f);
         meshSphere = GelMesh::createSphere(2.0f, 20, 14); // Single big bouncy ball (radius 2.0m)
 
+        if (!meshCube || !meshSphere) return false;
+
         // Gel template visual assets (PBR colored jelly materials)
         // Emerald green cube
-        gelTemplateAssets[TEMPLATE_CUBE_GREEN] = ModelAsset::create(gpu, createGelModelScene(meshCube, {0.15f, 0.85f, 0.40f, 1.0f}, 0.2f, 0.3f));
+        gelTemplateAssets[TEMPLATE_CUBE_GREEN] = gelInputs(gpu, uploads, meshCube, {0.15f, 0.85f, 0.40f, 1.0f}, 0.2f, 0.3f);
         // Sapphire blue cube
-        gelTemplateAssets[TEMPLATE_CUBE_BLUE] = ModelAsset::create(gpu, createGelModelScene(meshCube, {0.20f, 0.50f, 0.95f, 1.0f}, 0.3f, 0.25f));
+        gelTemplateAssets[TEMPLATE_CUBE_BLUE] = gelInputs(gpu, uploads, meshCube, {0.20f, 0.50f, 0.95f, 1.0f}, 0.3f, 0.25f);
         // Ruby red sphere (radiant jelly)
-        gelTemplateAssets[TEMPLATE_SPHERE_RED] = ModelAsset::create(gpu, createGelModelScene(meshSphere, {0.95f, 0.20f, 0.35f, 1.0f}, 0.4f, 0.2f));
+        gelTemplateAssets[TEMPLATE_SPHERE_RED] = gelInputs(gpu, uploads, meshSphere, {0.95f, 0.20f, 0.35f, 1.0f}, 0.4f, 0.2f);
         // Amber gold sphere
-        gelTemplateAssets[TEMPLATE_SPHERE_AMBER] = ModelAsset::create(gpu, createGelModelScene(meshSphere, {0.95f, 0.70f, 0.15f, 1.0f}, 0.3f, 0.3f));
+        gelTemplateAssets[TEMPLATE_SPHERE_AMBER] = gelInputs(gpu, uploads, meshSphere, {0.95f, 0.70f, 0.15f, 1.0f}, 0.3f, 0.3f);
         // Amethyst purple sphere
-        gelTemplateAssets[TEMPLATE_SPHERE_PURPLE] = ModelAsset::create(gpu, createGelModelScene(meshSphere, {0.70f, 0.25f, 0.90f, 1.0f}, 0.35f, 0.25f));
+        gelTemplateAssets[TEMPLATE_SPHERE_PURPLE] = gelInputs(gpu, uploads, meshSphere, {0.70f, 0.25f, 0.90f, 1.0f}, 0.35f, 0.25f);
 
         // Rigid body assets
-        rigidAssets[RIGID_FLOOR]      = ModelAsset::create(gpu, createBoxScene({30.0f, 1.0f, 30.0f}, {0.20f, 0.22f, 0.25f, 1.0f}, 0.1f, 0.8f));
-        rigidAssets[RIGID_WALL]       = ModelAsset::create(gpu, createBoxScene({1.0f, 1.0f, 1.0f}, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f));
-        rigidAssets[RIGID_PROJECTILE] = ModelAsset::create(gpu, createSphereScene(1.5f, 20, 16, {0.95f, 0.15f, 0.10f, 1.0f}, 0.7f, 0.2f));
+        rigidAssets[RIGID_FLOOR]      = boxInputs(gpu, uploads, {30.0f, 1.0f, 30.0f}, {0.20f, 0.22f, 0.25f, 1.0f}, 0.1f, 0.8f);
+        rigidAssets[RIGID_WALL]       = boxInputs(gpu, uploads, {1.0f, 1.0f, 1.0f}, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f);
+        rigidAssets[RIGID_PROJECTILE] = sphereInputs(gpu, uploads, 1.5f, 20, 16, {0.95f, 0.15f, 0.10f, 1.0f}, 0.7f, 0.2f);
+        for (const auto & input : gelTemplateAssets)
+            if (!input.geometry.indexCount) return false;
+        for (const auto & input : rigidAssets)
+            if (!input.geometry.indexCount) return false;
+        return true;
     }
 
     void reset(uint32_t workerThreads, AutoRef<GpuContext> gpu, size_t initialGelCount = 1) {
@@ -400,17 +233,15 @@ public:
 
         // Initialize vertex buffer template values (colors, uvs, tangents)
         for (size_t i = 0; i < numVerts; ++i) {
-            const auto &       mv = mesh->faceVertices()[i];
-            ModelScene::Vertex vert;
+            const auto & mv = mesh->faceVertices()[i];
+            GelVertex    vert;
             vert.position         = glm::vec3(mv.position.x, mv.position.y, mv.position.z);
             vert.normal           = glm::vec3(0.0f, 1.0f, 0.0f);
-            vert.tangent          = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-            vert.texcoord         = glm::vec2(0.5f, 0.5f);
             vert.color            = glm::vec4(1.0f);
             simGel.cpuVertices[i] = vert;
         }
 
-        const uint64_t vbBytes = numVerts * sizeof(ModelScene::Vertex);
+        const uint64_t vbBytes = numVerts * sizeof(GelVertex);
         for (int b = 0; b < 2; ++b) {
             simGel.dynamicVb[b] = Buffer::create(StrA::format("gel-dyn-vb-{}-{}", gels.size(), b), {.context = gpu, .size = vbBytes});
         }
@@ -447,7 +278,7 @@ private:
     }
 };
 
-static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShaderConstants * ssc, AutoRef<ModelShading::Asset> modelShading,
+static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShaderConstants * ssc, AutoRef<PbrKernel> pbr, AutoRef<GpuPayload> initialization,
                          AutoRef<Swapchain> swapchain, RasterTarget & rasterTarget, const uint32_t hwThreads) {
     GN_INFO(sLogger, "================================================================================");
     GN_INFO(sLogger, "  GNfiz Gel XPBD Soft-Body Dynamics & GPU Rendering Benchmark");
@@ -456,17 +287,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
 
     // Initial asset uploads
     GpuContext::SubmitParameters initSubmit("bench-init-upload");
-    if (const auto p = modelShading->uploadPayload()) initSubmit.appendWork(p);
-    for (int k = 0; k < TEMPLATE_COUNT; ++k) {
-        if (arena.gelTemplateAssets[k]) {
-            if (const auto p = arena.gelTemplateAssets[k]->uploadPayload()) initSubmit.appendWork(p);
-        }
-    }
-    for (int k = 0; k < RIGID_COUNT; ++k) {
-        if (arena.rigidAssets[k]) {
-            if (const auto p = arena.rigidAssets[k]->uploadPayload()) initSubmit.appendWork(p);
-        }
-    }
+    initSubmit.appendWork(initialization);
     gpu->submit(initSubmit);
     gpu->waitForIdle();
 
@@ -509,8 +330,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
             "FPS");
     GN_INFO(sLogger, "  -------+--------------+--------------+-------------+------------+-------------+---------");
 
-    const size_t       bodyCounts[] = {5, 10, 20, 40};
-    FixedBlob<uint8_t> pushConstantPool(sizeof(PushConstants));
+    const size_t bodyCounts[] = {5, 10, 20, 40};
 
     for (size_t numGels : bodyCounts) {
         arena.reset(0, gpu, numGels);
@@ -548,7 +368,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
             auto cnc = GpuCnC::create({.gpu = gpu});
             for (auto & g : arena.gels) {
                 if (!g.gel) continue;
-                const uint64_t vbBytes = g.cpuVertices.size() * sizeof(ModelScene::Vertex);
+                const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);
                 cnc->uploadBuffer(g.dynamicVb[bufIdx], 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(g.cpuVertices.data()), vbBytes));
             }
             auto uploadPayload = cnc->seal();
@@ -564,29 +384,22 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
             renderWorks.append(sscSnapshot.set0Payloads);
             if (uploadPayload) renderWorks.append(uploadPayload);
 
-            GpuRaster::DrawParameters gelBaseDraws[TEMPLATE_COUNT];
-            for (int k = 0; k < TEMPLATE_COUNT; ++k) {
-                if (arena.gelTemplateAssets[k]) {
-                    gelBaseDraws[k] = ModelShading::getDrawParams(sscSnapshot, modelShading, arena.gelTemplateAssets[k], 0, glm::mat4(1.0f));
-                }
-            }
-
             GpuRaster::CreateParameters rcp;
-            rcp.gpu    = gpu;
-            rcp.target = &rasterTarget;
-            auto r     = GpuRaster::create("bench-raster", rcp);
+            rcp.gpu            = gpu;
+            rcp.target         = &rasterTarget;
+            auto kernelUploads = GpuCnC::create({.gpu = gpu});
+            auto r             = GpuRaster::create("bench-raster", rcp);
             if (r) {
                 for (const auto & g : arena.gels) {
                     if (!g.gel) continue;
-                    auto draw = gelBaseDraws[g.templateKind];
-                    if (!draw.vs || !draw.ps) continue;
-                    const PushConstants constants {glm::mat4(1.0f), glm::mat4(1.0f)};
-                    draw.immediates                  = pushConstantPool.allocate(reinterpret_cast<const uint8_t *>(&constants));
+                    auto draw = arena.gelTemplateAssets[g.templateKind];
+                    if (!draw.geometry.indexCount) continue;
                     draw.geometry.vertices[0].buffer = g.dynamicVb[bufIdx];
-                    draw.geometry.vertices[0].stride = sizeof(ModelScene::Vertex);
+                    draw.geometry.vertices[0].stride = sizeof(GelVertex);
                     draw.geometry.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
-                    r->draw(draw);
+                    if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) GN_ERROR(sLogger, "Failed to record PBR draw");
                 }
+                renderWorks.append(kernelUploads->seal());
                 renderWorks.append(r->seal());
             }
 
@@ -703,12 +516,15 @@ int main(int argc, const char ** argv) {
         .environmentLuminanceScale = 3000.f,
     };
 
-    auto modelShading = ModelShading::create(gpuContext);
-    if (!modelShading) return -1;
+    auto initialization = GpuCnC::create({.gpu = gpuContext});
+    if (!initialization) return -1;
+    auto pbr    = PbrKernel::create(gpuContext, *initialization);
+    auto skybox = SkyboxKernel::create(gpuContext);
+    if (!pbr || !skybox) return -1;
 
     // Initialize Gel and Rigid assets
     GelArena arena;
-    arena.initMeshesAndAssets(gpuContext);
+    if (!arena.initMeshesAndAssets(gpuContext, *initialization)) return -1;
 
     // ─── Window & Swapchain ──────────────────────────────────────────────────
     std::unique_ptr<win::Window> window;
@@ -736,13 +552,15 @@ int main(int argc, const char ** argv) {
     RasterTarget rasterTarget;
     rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
     rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.08f, 0.09f, 0.12f, 1.f).setClearDepth(1.f);
+    // Lit kernels inherit depth policy; depth writes keep the later skybox behind the solids.
+    rasterTarget.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
 
     bool initialUploadsSubmitted = false;
 
     const uint32_t hwThreads = std::max(1u, std::thread::hardware_concurrency());
 
     if (benchmarkMode) {
-        runBenchmark(arena, gpuContext, ssc.get(), modelShading, swapchain, rasterTarget, hwThreads);
+        runBenchmark(arena, gpuContext, ssc.get(), pbr, initialization->seal(), swapchain, rasterTarget, hwThreads);
         gpuContext->waitForIdle();
         swapchain.clear();
         if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
@@ -766,8 +584,6 @@ int main(int argc, const char ** argv) {
     float     cameraDist   = 16.0f;
     float     cameraHeight = 6.0f;
     glm::vec3 cameraCenter(0.0f, 4.5f, 0.0f);
-
-    FixedBlob<uint8_t> pushConstantPool(sizeof(PushConstants));
 
     // Headless test verification state
     bool  observedFreefall = false;
@@ -1037,7 +853,7 @@ int main(int argc, const char ** argv) {
         auto cnc      = GpuCnC::create({.gpu = gpuContext});
         for (auto & g : arena.gels) {
             if (!g.gel) continue;
-            const uint64_t vbBytes = g.cpuVertices.size() * sizeof(ModelScene::Vertex);
+            const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);
             cnc->uploadBuffer(g.dynamicVb[bufIdx], 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(g.cpuVertices.data()), vbBytes));
         }
 
@@ -1047,61 +863,44 @@ int main(int argc, const char ** argv) {
         float uploadMs = std::chrono::duration<float, std::milli>(tUpload1 - tUpload0).count();
         avgUploadMs    = (avgUploadMs == 0.0f) ? uploadMs : (avgUploadMs * 0.95f + uploadMs * 0.05f);
 
-        // Pre-create base draw parameters
-        GpuRaster::DrawParameters gelBaseDraws[TEMPLATE_COUNT];
-        for (int k = 0; k < TEMPLATE_COUNT; ++k) {
-            if (arena.gelTemplateAssets[k]) {
-                gelBaseDraws[k] = ModelShading::getDrawParams(sscSnapshot, modelShading, arena.gelTemplateAssets[k], 0, glm::mat4(1.0f));
-            }
-        }
-
-        GpuRaster::DrawParameters rigidBaseDraws[RIGID_COUNT];
-        for (int k = 0; k < RIGID_COUNT; ++k) {
-            if (arena.rigidAssets[k]) { rigidBaseDraws[k] = ModelShading::getDrawParams(sscSnapshot, modelShading, arena.rigidAssets[k], 0, glm::mat4(1.0f)); }
-        }
-
         auto                        tRaster0 = std::chrono::high_resolution_clock::now();
         GpuRaster::CreateParameters rcp;
-        rcp.gpu    = gpuContext;
-        rcp.target = &rasterTarget;
-        auto r     = GpuRaster::create("fiz-gel-raster", rcp);
+        rcp.gpu            = gpuContext;
+        rcp.target         = &rasterTarget;
+        auto kernelUploads = GpuCnC::create({.gpu = gpuContext});
+        auto r             = GpuRaster::create("fiz-gel-raster", rcp);
         if (r) {
             // Draw rigid solids
             for (const auto & e : arena.solids) {
                 if (!e.solid || e.kind == RIGID_WALL) continue; // Boundary walls are invisible collision barriers
-                auto & draw = rigidBaseDraws[e.kind];
-                if (!draw.vs || !draw.ps) continue;
+                auto draw = arena.rigidAssets[e.kind];
+                if (!draw.geometry.indexCount) continue;
 
                 Transform t              = e.solid->transform();
                 glm::mat4 worldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
                                            glm::mat4_cast(glm::quat(t.orientation.w, t.orientation.v.x, t.orientation.v.y, t.orientation.v.z));
-
-                const glm::mat4     normalTransform = glm::transpose(glm::inverse(worldTransform));
-                const PushConstants constants {worldTransform, normalTransform};
-
-                draw.immediates = pushConstantPool.allocate(reinterpret_cast<const uint8_t *>(&constants));
-                r->draw(draw);
+                draw.worldFromObject     = worldTransform;
+                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) GN_ERROR(sLogger, "Failed to record PBR draw");
             }
 
             // Draw deformable soft body gels
             for (const auto & g : arena.gels) {
                 if (!g.gel) continue;
-                auto draw = gelBaseDraws[g.templateKind];
-                if (!draw.vs || !draw.ps) continue;
+                auto draw = arena.gelTemplateAssets[g.templateKind];
+                if (!draw.geometry.indexCount) continue;
 
                 // Deformed vertices are in world coordinates; world transform is identity
-                const PushConstants constants {glm::mat4(1.0f), glm::mat4(1.0f)};
-                draw.immediates                  = pushConstantPool.allocate(reinterpret_cast<const uint8_t *>(&constants));
                 draw.geometry.vertices[0].buffer = g.dynamicVb[bufIdx];
                 draw.geometry.vertices[0].offset = 0;
-                draw.geometry.vertices[0].stride = sizeof(ModelScene::Vertex);
+                draw.geometry.vertices[0].stride = sizeof(GelVertex);
                 draw.geometry.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
 
-                r->draw(draw);
+                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) GN_ERROR(sLogger, "Failed to record PBR draw");
             }
 
             // Skybox
-            r->draw(ssc->getSkyboxDrawParams(sscSnapshot.set0Resources));
+            if (!skybox->record(*r, sscSnapshot.set0Resources)) GN_ERROR(sLogger, "Failed to record skybox");
+            renderWorks.append(kernelUploads->seal());
             renderWorks.append(r->seal());
         }
 
@@ -1112,13 +911,7 @@ int main(int argc, const char ** argv) {
         // Submit GPU work
         GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
         if (!initialUploadsSubmitted) {
-            if (const auto p = modelShading->uploadPayload()) submit.appendWork(p);
-            for (int k = 0; k < TEMPLATE_COUNT; ++k) {
-                if (const auto p = arena.gelTemplateAssets[k]->uploadPayload()) submit.appendWork(p);
-            }
-            for (int k = 0; k < RIGID_COUNT; ++k) {
-                if (const auto p = arena.rigidAssets[k]->uploadPayload()) submit.appendWork(p);
-            }
+            submit.appendWork(initialization->seal());
             initialUploadsSubmitted = true;
         }
 
