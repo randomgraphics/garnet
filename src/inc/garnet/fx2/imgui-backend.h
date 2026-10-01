@@ -5,7 +5,7 @@
 #include <imgui.h>
 
 namespace GN::win {
-struct Window;
+class Window;
 }
 
 namespace GN::fx2 {
