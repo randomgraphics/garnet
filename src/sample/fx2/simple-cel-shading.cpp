@@ -1,3 +1,4 @@
+#include "sample-sphere.h"
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 #include <garnet/GNutil.h>
@@ -57,6 +58,8 @@ int main(int argc, const char ** argv) {
     // ─── Shared shader constants ──────────────────────────────────────────────
     auto ssc = SharedShaderConstants::create({.gpu = gpuContext});
     if (!ssc) return -1;
+    auto skybox = SkyboxKernel::create(gpuContext);
+    if (!skybox) return -1;
 
     ssc->set0.envLighting = {
         .skyboxPath                = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
@@ -66,41 +69,20 @@ int main(int argc, const char ** argv) {
         .environmentLuminanceScale = 1200.f,
     };
 
-    StrA modelPath = "media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf";
-    if (argc > 1 && argv[1][0] != 't') {
-        modelPath = argv[1];
-    } else if (argc > 2) {
-        modelPath = argv[2];
-    }
-
-    auto modelScene = ModelScene::load({.path = modelPath});
-    if (!modelScene) {
-        GN_WARN(sLogger, "Failed to load requested model '{}', falling back to DamagedHelmet.gltf", modelPath);
-        modelScene = ModelScene::load({.path = "media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf"});
-        if (!modelScene) return -1;
-    }
-
-    CelModelShading::Config celConfig;
-    celConfig.shadowThreshold     = 0.5f;
-    celConfig.shadowFeather       = 0.02f;
-    celConfig.deepShadowThreshold = 0.25f;
-    celConfig.deepShadowFeather   = 0.02f;
-    celConfig.shadowTint          = glm::vec3(0.6f, 0.65f, 0.8f);
-    celConfig.deepShadowTint      = glm::vec3(0.4f, 0.42f, 0.55f);
-    celConfig.specularThreshold   = 0.75f;
-    celConfig.specularShininess   = 40.0f;
-    celConfig.specularIntensity   = 1.2f;
-    celConfig.rimIntensity        = 0.6f;
-    celConfig.rimThreshold        = 0.65f;
-    celConfig.rimFeather          = 0.05f;
-    celConfig.rimTint             = glm::vec3(1.0f, 0.98f, 1.0f);
-    celConfig.outlineWidth        = 0.0035f;
-    celConfig.outlineColor        = glm::vec4(0.12f, 0.1f, 0.14f, 1.0f);
-
-    auto celShading = CelModelShading::create(gpuContext, celConfig);
-    if (!celShading) return -1;
-    auto modelAsset = ModelAsset::create(gpuContext, modelScene);
-    if (!modelAsset) return -1;
+    auto initializationRecorder = GpuCnC::create({.gpu = gpuContext});
+    if (!initializationRecorder) return -1;
+    auto kernel = CelKernel::create(gpuContext, *initializationRecorder);
+    if (!kernel) return -1;
+    CelKernel::Inputs inputs;
+    inputs.geometry = createSampleSphere(gpuContext, *initializationRecorder);
+    if (!inputs.geometry.indexCount) return -1;
+    inputs.states.cullMode   = RasterState::CULL_BACK;
+    inputs.states.frontFace  = RasterState::FRONT_CCW;
+    inputs.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
+    inputs.color             = {0.8f, 0.3f, 0.08f, 1};
+    inputs.outlineWidth      = 0.01f;
+    auto initialization      = initializationRecorder->seal();
+    if (!initialization) return -1;
 
     // ─── Window + swapchain ───────────────────────────────────────────────────
     std::unique_ptr<win::Window> window;
@@ -127,9 +109,6 @@ int main(int argc, const char ** argv) {
     rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
     rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.1f, 0.12f, 0.16f, 1.f).setClearDepth(1.f);
 
-    bool celShadingUploadSubmitted = false;
-    bool modelUploadSubmitted      = false;
-
     int totalFrames = testMode ? 5 : 0;
     int frameIdx    = 0;
     while (totalFrames == 0 || frameIdx < totalFrames) {
@@ -141,68 +120,23 @@ int main(int argc, const char ** argv) {
 
         rasterTarget.setColorTarget(0, frame.view);
         SharedShaderConstants::Snapshot sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
-        DynaArray<AutoRef<GpuPayload>>  renderWorks;
-
-        auto drawScene = [&]() {
-            renderWorks.append(sscSnapshot.set0Payloads);
-
-            GpuRaster::CreateParameters rcp;
-            rcp.gpu    = gpuContext;
-            rcp.target = &rasterTarget;
-
-            auto r = GpuRaster::create("simple-cel", rcp);
-            if (!r) return;
-
-            DynaArray<glm::mat4> nodeTransforms;
-            nodeTransforms.resize(modelScene->nodes.size());
-
-            auto renderPrimitive = [&](uint32_t primIndex, const glm::mat4 & transform) {
-                // Pass 1: Surface cel shading (cull back)
-                const auto surfaceDraw = CelModelShading::getDrawParams(sscSnapshot, celShading, modelAsset, primIndex, transform);
-                if (surfaceDraw.vs && surfaceDraw.ps) r->draw(surfaceDraw);
-
-                // Pass 2: Inverted-hull outline (cull front)
-                const auto outlineDraw = CelModelShading::getOutlineDrawParams(sscSnapshot, celShading, modelAsset, primIndex, transform);
-                if (outlineDraw.vs && outlineDraw.ps) r->draw(outlineDraw);
-            };
-
-            if (modelScene->nodes.empty()) {
-                renderPrimitive(0, glm::mat4(1.0f));
-            } else {
-                for (size_t nodeIndex = 0; nodeIndex < modelScene->nodes.size(); ++nodeIndex) {
-                    const auto &    node           = modelScene->nodes[nodeIndex];
-                    const glm::mat4 parentToWorld  = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
-                    const glm::mat4 worldTransform = parentToWorld * node.transform;
-                    nodeTransforms[nodeIndex]      = worldTransform;
-                    for (uint32_t primitiveIndex : node.primitives) { renderPrimitive(primitiveIndex, worldTransform); }
-                }
-            }
-
-            r->draw(ssc->getSkyboxDrawParams(sscSnapshot.set0Resources));
-            renderWorks.append(r->seal());
-        };
-        drawScene();
-
-        GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
-
-        if (!celShadingUploadSubmitted) {
-            if (const auto payload = celShading->uploadPayload()) submit.appendWork(payload);
-            celShadingUploadSubmitted = true;
+        auto                            uploads     = GpuCnC::create({.gpu = gpuContext});
+        auto                            raster      = GpuRaster::create("sample.frame", {.gpu = gpuContext, .target = &rasterTarget});
+        if (!uploads || !raster || !kernel->record(*raster, *uploads, sscSnapshot.set0Resources, inputs) || !skybox->record(*raster, sscSnapshot.set0Resources))
+            return -1;
+        auto parameters = uploads->seal();
+        auto rendered   = raster->seal();
+        if (!parameters || !rendered) return -1;
+        GpuContext::SubmitParameters submit("sample.frame");
+        if (initialization) submit.appendWork(initialization);
+        for (const auto & payload : sscSnapshot.set0Payloads) {
+            if (!payload) return -1;
+            submit.appendWork(payload);
         }
-        if (!modelUploadSubmitted) {
-            if (const auto payload = modelAsset->uploadPayload()) submit.appendWork(payload);
-            modelUploadSubmitted = true;
-        }
-
-        for (size_t i = 0; i < renderWorks.size(); ++i) {
-            if (!renderWorks[i]) continue;
-            if (i + 1 == renderWorks.size())
-                submit.appendWork(renderWorks[i]).waitFor(frame.ready);
-            else
-                submit.appendWork(renderWorks[i]);
-        }
+        submit.appendWork(parameters).appendWork(rendered).waitFor(frame.ready);
         gpuContext->submit(submit);
-        if (!renderWorks.empty() && renderWorks.back()) swapchain->present(*renderWorks.back());
+        initialization.clear();
+        swapchain->present(*rendered);
     }
 
     gpuContext->waitForIdle();

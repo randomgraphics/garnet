@@ -30,21 +30,21 @@ mat3 buildTBN(vec3 normal) {
 }
 
 void main() {
-    vec4  baseSample = texture(u_baseColor, inTexCoord) * u_material.baseColor * inColor;
-    vec3  emissive   = texture(u_emissive, inTexCoord).rgb * u_material.emissiveAndMetallic.rgb;
-    vec3  arm        = texture(u_metalRough, inTexCoord).rgb;
-    float metallic   = clamp(arm.b * u_material.emissiveAndMetallic.a, 0.0, 1.0);
-    float roughness  = clamp(arm.g * u_material.roughnessAlphaWorkflow.x, 0.04, 1.0);
-    float ao         = texture(u_occlusion, inTexCoord).r;
-    uint  workflow   = uint(u_material.roughnessAlphaWorkflow.z + 0.5);
-    if (workflow == 3u) {
-        outColor = vec4(baseSample.rgb + emissive, baseSample.a);
-        return;
-    }
+    uint flags      = uint(u_material.roughnessAlphaWorkflow.z + 0.5);
+    vec4 baseSample = texture(u_baseColor, inTexCoord) * u_material.baseColor;
+    if ((flags & 2u) != 0u) baseSample *= inColor;
+    if (baseSample.a < u_material.roughnessAlphaWorkflow.y) discard;
+    if ((flags & 4u) != 0u) baseSample.a = 1.0;
+    vec3  emissive  = texture(u_emissive, inTexCoord).rgb * u_material.emissiveAndMetallic.rgb;
+    vec3  arm       = texture(u_metalRough, inTexCoord).rgb;
+    float metallic  = clamp(arm.b * u_material.emissiveAndMetallic.a, 0.0, 1.0);
+    float roughness = clamp(arm.g * u_material.roughnessAlphaWorkflow.x, 0.04, 1.0);
+    float ao        = texture(u_occlusion, inTexCoord).r;
 
-    vec3 N   = normalize(inNormal);
-    vec3 Ns  = texture(u_normal, inTexCoord).rgb * 2.0 - 1.0;
-    N        = normalize(buildTBN(N) * Ns);
+    vec3 N  = normalize(inNormal);
+    vec3 Ns = texture(u_normal, inTexCoord).rgb * 2.0 - 1.0;
+    if ((flags & 1u) != 0u) N = normalize(buildTBN(N) * Ns);
+    if (!gl_FrontFacing) N = -N;
     vec3  V  = normalize(u_camera.cameraPosition.xyz - inWorldPos);
     float nv = max(dot(N, V), 0.0);
     vec3  f0 = mix(vec3(0.04), baseSample.rgb, metallic);

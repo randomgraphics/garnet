@@ -1,7 +1,7 @@
 # Mesh viewer
 
 `GNtool-mesh-viewer` displays `.fbx`, `.gltf`, `.glb`, `.stl`, and `.ase` scenes using
-the modern E2, FX2, RDG2, gpu2, and UI2 stack. It does not use `GNgpu.h`, the
+FX2 shared constants, gpu2, and the FX2 ImGui backend. It does not use `GNgpu.h`, the
 legacy effect system, `SampleApp`, or `FatModel`.
 
 ## Run
@@ -19,6 +19,8 @@ GNtool-mesh-viewer --print model.glb
 GNtool-mesh-viewer --snapshot output.png model.glb
 GNtool-mesh-viewer --test --frames 2 model.stl
 GNtool-mesh-viewer --frames 120 model.gltf
+GNtool-mesh-viewer --surface cel --sphere
+GNtool-mesh-viewer --surface unlit --box --snapshot box.png
 ```
 
 `--print` reports hierarchy, primitive/material/texture counts, bounds, and
@@ -62,19 +64,38 @@ Escape remains available to exit.
 
 ## Rendering and validation
 
-The viewer normalizes the scene in FX2 and creates E2 forms for the model and
-debug geometry. `World::snapshot()` returns an opaque `VisualTableau`; the viewer
-adds a reusable `VisualEnvironment` and, in windowed mode, the UI2 `VisualOverlay`.
-E2 renders regular moments in insertion order, then environments, then overlays
-from larger logical Z to smaller Z. The viewer's UI overlay uses the default Z of zero.
-The tableau interface exposes no internal hierarchy or traversal. Each visual
-moment records its own work when E2 executes the RDG2 frame.
+The viewer retains the imported hierarchy and complete cumulative affine
+transforms, including rotation, scale, reflection, and shear. Vertex/index
+buffers are shared by instances; shaders apply world and inverse-transpose
+normal transforms. Singular transforms are rejected.
 
-The environment moment supplies Asset Foundry Bad Salzbrunn irradiance,
-prefiltered radiance, and BRDF LUT resources to scene shading and draws the skybox.
-Exposure changes replace that moment. The domain interface remains independent
-of concrete scene content. FX2's model GPU residency and shader bookkeeping are
-private; callers retain opaque assets and submit their initialization payloads.
+`--surface` chooses PBR, cel, unlit, or Lambertian shading for model primitives.
+It is a retained command-line spelling, not an FX2 Surface object. Without it,
+imported unlit materials remain unlit and other materials use PBR. `--box` and
+`--sphere` generate tool-owned CPU meshes. Bounds and axes use unlit shading.
+
+Camera exposure defaults to 1 for explicitly selected cel shading and 0.002
+otherwise. Use `--exposure <value>` or the UI slider to change it. Lit output
+uses camera exposure; unlit output bypasses it.
+
+The viewer owns import, source hierarchy, inspection, navigation, window and
+swapchain lifetime, resource uploads, and frame submission. It has no E2 or
+RDG2 dependency. Each frame submits SSC and ImGui uploads before model/debug,
+skybox, and ImGui draws in one raster payload. SSC uses one scene/camera UBO
+pair: the next frame's upload follows the previous frame's consumers.
+
+`fx2::ImGuiBackend` consumes the native window and records gpu2 draws directly.
+It is not an E2 overlay. Camera controls honor its keyboard/mouse capture.
+
+Rendering is split into three application-owned stages:
+
+1. `model-scene.cpp` and `model-geometry.cpp` import/generate CPU data and validate hierarchy without creating a GPU.
+2. `SceneRenderer::prepare()` uploads each primitive and texture once, retains complete instance transforms, and creates typed FX2 kernels.
+3. `SceneRenderer::record()` appends typed PBR/cel/Lambertian/unlit and skybox draws to the frame's shared raster pass. Both interactive and headless modes call this same function. The main loop handles camera/UI updates, presentation, and ordered submission.
+
+The renderer uses only public FX2/gpu2 headers. There are no viewer-owned shader programs, descriptor layouts, material UBOs, or FX2 geometry/surface assets. The small `RenderModel` records are viewer data: GPU buffer bindings, sampled texture views, typed parameter values, and affine instances. Buffers and textures remain shared across instances. Culling and mirrored front-face selection are caller state; kernels only override state required by their algorithms.
+
+Each frame submits private parameter uploads and SSC uploads before the raster that consumes them. Initialization remains retained until the first successful submission. SSC has one GPU version, so a later frame's shared uploads must follow the previous frame's consumers; collecting several frames' SSC uploads before their rasters would be incorrect.
 
 The automated corpus covers project FBX files, Asset Foundry glTF/FBX assets,
 Assimp GLB/STL fixtures, and the Digital Forge/Asset Foundry 110 MB character
@@ -84,6 +105,7 @@ GLB stress model. Run the primary checks with:
 build.py d
 build.py --clang d
 build/linux.gcc.d/bin/GNtest-internal
+build/linux.gcc.d/bin/GNtest-mesh-viewer
 env/bin/format-all-sources.py -dqn
 env/bin/cit.py -l
 ```
@@ -95,6 +117,3 @@ Known limitations:
   geometry;
 - a display server is required for presentation and interactive input;
 - Vulkan validation output requires the Khronos validation layer installed;
-- on the current Linux validation host, Clang-built E2 model rendering loses
-  the Vulkan device on NVIDIA and faults in llvmpipe, while GCC builds pass the
-  complete internal suite and media render matrix.

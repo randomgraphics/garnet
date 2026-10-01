@@ -5,14 +5,6 @@
 #include <garnet/GNengine2.h>
 #include <garnet/GNrdg2.h>
 
-#include <glm/gtc/quaternion.hpp>
-#include <glm/mat3x3.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
-
-#include <memory>
-
 namespace GN::e2 {
 
 /// Compile the fixed outer frame skeleton used by the visual backend. Keeping this helper
@@ -28,23 +20,6 @@ inline void queryFacetsByType(Form & root, const RuntimeType::TypeInfo & type, D
     for (auto & child : root.children()) queryFacetsByType(*child, type, result);
 }
 
-// ---------------------------------------------------------------------------
-// MeshData — CPU-side geometry shared across frames
-// ---------------------------------------------------------------------------
-// Forms hand the same MeshData instance to every visual moment they contribute to. The
-// visual domain caches GPU buffers keyed by MeshData::id, so geometry is uploaded once.
-
-struct MeshData {
-    struct Vertex {
-        glm::vec3 position;
-        glm::vec3 normal;
-    };
-
-    int64_t             id = 0; ///< stable identity used as the visual domain's GPU-cache key
-    DynaArray<Vertex>   vertices;
-    DynaArray<uint16_t> indices;
-};
-
 /// Storage preserves insertion order; the private scheduler groups environments and
 /// overlays without exposing the collection's representation to other modules.
 struct VisualTableauImpl final : VisualTableau {
@@ -59,61 +34,6 @@ struct VisualTableauImpl final : VisualTableau {
     }
 
     DynaArray<Ref<VisualMoment>> orderedMoments() const;
-};
-
-// ---------------------------------------------------------------------------
-// VisualMomentImpl — the built-in, self-contained scene task
-// ---------------------------------------------------------------------------
-// Captures cameras, renderables, and lights independently of Simple world, then
-// records their draws itself. Other task types remain separate items in the tableau.
-struct VisualMomentImpl : VisualMoment {
-    GN_REGISTER_RUNTIME_TYPE(VisualMoment);
-
-    struct Renderable {
-        std::shared_ptr<const MeshData> mesh;
-        AutoRef<const fx2::ModelScene>  model;
-
-        // Transform kept in world units (not a baked float matrix) so the visual domain can do
-        // the camera-relative rebasing in exact integer space before converting to physical
-        // floats. The translation is an absolute coordinate; the scaling is an extent, so it is
-        // local and converts directly.
-        WorldVector3 translation;
-        glm::quat    rotation = {1.f, 0.f, 0.f, 0.f};
-        LocalVector3 scaling  = {LocalCoordinate(1), LocalCoordinate(1), LocalCoordinate(1)};
-
-        glm::vec3 baseColor = glm::vec3(0.8f);
-    };
-
-    struct Light {
-        WorldVector3 position;          ///< position in world units
-        glm::vec3    color = {1, 1, 1}; ///< RGB already pre-scaled by luminous intensity
-    };
-
-    /// Physical size of one world unit for all lengths carried by this moment. Lengths stay in
-    /// integer world units until the visual domain converts them, so the absolute-to-camera-
-    /// relative rebasing happens in exact integer space before scaling.
-    const PhysicalScale scale;
-
-    DynaArray<Camera::Desc> cameras;
-    DynaArray<Renderable>   renderables;
-    DynaArray<Light>        lights;
-
-    VisualMomentImpl(Universe & u, PhysicalScale scale_): VisualMoment(TYPE_INFO(), u.generateUniqueIdentifier(), "visual-moment"), scale(scale_) {}
-
-    bool record(RenderContext &) const override;
-
-    /// Append another moment's renderables and lights into this one.
-    void merge(const VisualMomentImpl & other) {
-        for (auto & r : other.renderables) renderables.append(r);
-        for (auto & l : other.lights) lights.append(l);
-    }
-};
-
-// Per-draw push constants used by box.vert. Per-frame camera and lighting constants are
-// owned by fx2::SharedShaderConstants and deliberately do not have an E2-local duplicate.
-struct DrawConstants {
-    glm::mat4 model;
-    glm::vec4 baseColor; ///< rgb base color, a unused
 };
 
 } // namespace GN::e2

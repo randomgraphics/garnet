@@ -11,10 +11,30 @@ if(VULKAN_FOUND)
 
     file(GLOB _fx2_shader_headers "${_fx2_shader_dir}/*.h")
 
+    set(_fx2_lit_shaders)
+    foreach(_effect model cel-model cel-outline)
+        foreach(_variant RANGE 0 7)
+            list(APPEND _fx2_lit_shaders ${_fx2_shader_dir}/${_effect}-kernel-${_variant}.vert)
+        endforeach()
+    endforeach()
+
+    foreach(_variant RANGE 0 6)
+        list(APPEND _fx2_lit_shaders ${_fx2_shader_dir}/cel-model-kernel-${_variant}.frag)
+    endforeach()
+
     GN_compile_glsl_shaders(_fx2_shader_hdrs
-        SOURCES ${_fx2_shader_dir}/model.vert ${_fx2_shader_dir}/model.frag
-                ${_fx2_shader_dir}/cel-model.vert ${_fx2_shader_dir}/cel-model.frag
-                ${_fx2_shader_dir}/cel-outline.vert ${_fx2_shader_dir}/cel-outline.frag
+        SOURCES ${_fx2_lit_shaders}
+                ${_fx2_shader_dir}/image-kernel.vert
+                ${_fx2_shader_dir}/blur-kernel.frag ${_fx2_shader_dir}/blur-kernel.comp
+                ${_fx2_shader_dir}/mipmap-kernel.frag ${_fx2_shader_dir}/mipmap-kernel.comp
+                ${_fx2_shader_dir}/unlit-kernel-plain.vert ${_fx2_shader_dir}/unlit-kernel-color.vert
+                ${_fx2_shader_dir}/unlit-kernel-texture.vert ${_fx2_shader_dir}/unlit-kernel-texture-color.vert
+                ${_fx2_shader_dir}/unlit-kernel-plain.frag ${_fx2_shader_dir}/unlit-kernel-texture.frag
+                ${_fx2_shader_dir}/imgui.vert ${_fx2_shader_dir}/imgui.frag
+                ${_fx2_shader_dir}/model.frag
+                ${_fx2_shader_dir}/lambertian.frag
+                ${_fx2_shader_dir}/cel-model.frag
+                ${_fx2_shader_dir}/cel-outline.frag
                 ${_fx2_shader_dir}/skybox.vert ${_fx2_shader_dir}/skybox.frag
         OUT_DIR ${_fx2_shader_out_dir}
         INCLUDE_DIRS ${_fx2_shader_dir}

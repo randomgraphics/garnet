@@ -17,7 +17,9 @@ layout(location = 1) in vec4 inColor;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec4  baseSample  = texture(u_baseColor, inTexCoord) * u_material.baseColor * inColor;
+    uint flags      = uint(u_material.roughnessAlphaWorkflow.z + 0.5);
+    vec4 baseSample = texture(u_baseColor, inTexCoord) * u_material.baseColor;
+    if ((flags & 2u) != 0u) baseSample *= inColor;
     float alphaCutoff = u_material.roughnessAlphaWorkflow.y;
     if (alphaCutoff > 0.0 && baseSample.a < alphaCutoff) { discard; }
 

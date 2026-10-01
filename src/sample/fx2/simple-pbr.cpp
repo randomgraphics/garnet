@@ -1,3 +1,4 @@
+#include "sample-sphere.h"
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 #include <garnet/GNutil.h>
@@ -46,10 +47,12 @@ int main(int argc, const char ** argv) {
     if (!gpuContext) return -1;
 
     // ─── Shared shader constants ──────────────────────────────────────────────
-    // SSC owns the skybox shaders and env texture loading. Set envLighting paths
+    // SSC owns shared environment texture loading. SkyboxKernel owns drawing. Set envLighting paths
     // before the first takeSnapshot(); path changes are loaded synchronously by takeSnapshot().
     auto ssc = SharedShaderConstants::create({.gpu = gpuContext});
     if (!ssc) return -1;
+    auto skybox = SkyboxKernel::create(gpuContext);
+    if (!skybox) return -1;
 
     ssc->set0.envLighting = {
         .skyboxPath                = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
@@ -59,12 +62,21 @@ int main(int argc, const char ** argv) {
         .environmentLuminanceScale = 3500.f,
     };
 
-    auto helmetScene = ModelScene::load({.path = "media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf"});
-    if (!helmetScene) return -1;
-    auto helmetShading = ModelShading::create(gpuContext);
-    if (!helmetShading) return -1;
-    auto helmetModel = ModelAsset::create(gpuContext, helmetScene);
-    if (!helmetModel) return -1;
+    auto initializationRecorder = GpuCnC::create({.gpu = gpuContext});
+    if (!initializationRecorder) return -1;
+    auto kernel = PbrKernel::create(gpuContext, *initializationRecorder);
+    if (!kernel) return -1;
+    PbrKernel::Inputs inputs;
+    inputs.geometry = createSampleSphere(gpuContext, *initializationRecorder);
+    if (!inputs.geometry.indexCount) return -1;
+    inputs.states.cullMode   = RasterState::CULL_BACK;
+    inputs.states.frontFace  = RasterState::FRONT_CCW;
+    inputs.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
+    inputs.color             = {0.8f, 0.3f, 0.08f, 1};
+    inputs.metallic          = 0.85f;
+    inputs.roughness         = 0.25f;
+    auto initialization      = initializationRecorder->seal();
+    if (!initialization) return -1;
 
     // ─── Window + swapchain ───────────────────────────────────────────────────
     std::unique_ptr<win::Window> window;
@@ -92,9 +104,6 @@ int main(int argc, const char ** argv) {
     rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
     rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.05f, 0.05f, 0.1f, 1.f).setClearDepth(1.f);
 
-    bool helmetShadingUploadSubmitted = false;
-    bool helmetUploadSubmitted        = false;
-
     int totalFrames = testMode ? 5 : 0;
     int frameIdx    = 0;
     while (totalFrames == 0 || frameIdx < totalFrames) {
@@ -106,63 +115,23 @@ int main(int argc, const char ** argv) {
 
         rasterTarget.setColorTarget(0, frame.view);
         SharedShaderConstants::Snapshot sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
-        DynaArray<AutoRef<GpuPayload>>  renderWorks;
-        auto                            drawScene = [&]() {
-            renderWorks.append(sscSnapshot.set0Payloads);
-
-            GpuRaster::CreateParameters rcp;
-            rcp.gpu    = gpuContext;
-            rcp.target = &rasterTarget;
-
-            auto r = GpuRaster::create("simple-pbr", rcp);
-            if (!r) return;
-
-            DynaArray<glm::mat4> nodeTransforms;
-            nodeTransforms.resize(helmetScene->nodes.size());
-            if (helmetScene->nodes.empty()) {
-                const auto draw = ModelShading::getDrawParams(sscSnapshot, helmetShading, helmetModel, 0, glm::mat4(1.f));
-                if (draw.vs && draw.ps) r->draw(draw);
-            } else {
-                for (size_t nodeIndex = 0; nodeIndex < helmetScene->nodes.size(); ++nodeIndex) {
-                    const auto &    node           = helmetScene->nodes[nodeIndex];
-                    const glm::mat4 parentToWorld  = node.parent >= 0 ? nodeTransforms[static_cast<size_t>(node.parent)] : glm::mat4(1.f);
-                    const glm::mat4 worldTransform = parentToWorld * node.transform;
-                    nodeTransforms[nodeIndex]      = worldTransform;
-                    for (uint32_t primitiveIndex : node.primitives) {
-                        const auto draw = ModelShading::getDrawParams(sscSnapshot, helmetShading, helmetModel, primitiveIndex, worldTransform);
-                        if (!draw.vs || !draw.ps) continue;
-                        r->draw(draw);
-                    }
-                }
-            }
-            r->draw(ssc->getSkyboxDrawParams(sscSnapshot.set0Resources));
-            renderWorks.append(r->seal());
-        };
-        drawScene();
-
-        // ─── Single frame submit ──────────────────────────────────────────────
-        // Payloads ordered: model shading init, model upload, set0 (env + UBO) → render work.
-        GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
-
-        if (!helmetShadingUploadSubmitted) {
-            if (const auto payload = helmetShading->uploadPayload()) submit.appendWork(payload);
-            helmetShadingUploadSubmitted = true;
+        auto                            uploads     = GpuCnC::create({.gpu = gpuContext});
+        auto                            raster      = GpuRaster::create("sample.frame", {.gpu = gpuContext, .target = &rasterTarget});
+        if (!uploads || !raster || !kernel->record(*raster, *uploads, sscSnapshot.set0Resources, inputs) || !skybox->record(*raster, sscSnapshot.set0Resources))
+            return -1;
+        auto parameters = uploads->seal();
+        auto rendered   = raster->seal();
+        if (!parameters || !rendered) return -1;
+        GpuContext::SubmitParameters submit("sample.frame");
+        if (initialization) submit.appendWork(initialization);
+        for (const auto & payload : sscSnapshot.set0Payloads) {
+            if (!payload) return -1;
+            submit.appendWork(payload);
         }
-        if (!helmetUploadSubmitted) {
-            if (const auto payload = helmetModel->uploadPayload()) submit.appendWork(payload);
-            helmetUploadSubmitted = true;
-        }
-
-        // set0 payloads (env uploads + UBO) then render work; last payload waits for frame.ready.
-        for (size_t i = 0; i < renderWorks.size(); ++i) {
-            if (!renderWorks[i]) continue;
-            if (i + 1 == renderWorks.size())
-                submit.appendWork(renderWorks[i]).waitFor(frame.ready);
-            else
-                submit.appendWork(renderWorks[i]);
-        }
+        submit.appendWork(parameters).appendWork(rendered).waitFor(frame.ready);
         gpuContext->submit(submit);
-        if (!renderWorks.empty() && renderWorks.back()) swapchain->present(*renderWorks.back());
+        initialization.clear();
+        swapchain->present(*rendered);
     }
 
     // Drain the GPU before AutoRef destructors release Vulkan resources, then destroy the

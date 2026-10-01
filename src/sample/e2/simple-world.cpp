@@ -1,3 +1,4 @@
+// Suspended: excluded from the build pending E2 Simple-world design review.
 // simple-world.cpp — engine2 sample demonstrating the world / visual-moment workflow.
 //
 // It builds a Simple world containing one spinning box and one point light, runs the world's
