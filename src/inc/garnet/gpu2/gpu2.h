@@ -322,7 +322,7 @@ struct Buffer : public RCRT64 {
     virtual std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const = 0;
 
     /// Result of loading a texture image file into a CPU-visible staging buffer.
-    /// Pass to GpuCnC::copyBufferToImage() and Texture::create(); keep staging alive
+    /// Pass to GpuCnC::recordCopyBufferToImage() and Texture::create(); keep staging alive
     /// until the GPU copy payload completes.
     struct StagedTexture {
         // Vector3's default constructor leaves components unset, so region vectors

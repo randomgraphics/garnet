@@ -126,3 +126,55 @@ Payloads retain their buffers/textures until completion. The backend disables
 headless run). The mesh viewer uses public typed effects and owns import,
 navigation, GPU resource preparation, and frame submission. No tool should
 include FX2's private shader headers or recreate effect parameter packing.
+
+## TODO: Bindless Resource Management (GpuRaster & GpuCnC)
+
+To support rendering thousands of unique items at high frame rates (>400 FPS)
+without CPU-side descriptor thrashing or per-draw allocation overhead, FX2 and
+gpu2 will evolve toward a **bindless resource architecture** managed by `GpuRaster`
+and `GpuCnC`:
+
+### Architecture & Direction
+
+1. **Pass-Level Bindless in `GpuRaster`**:
+   - `GpuRaster` already aggregates every texture and buffer active within a pass
+     during resource collection (`collectPassResources()`).
+   - Rather than assembling per-draw `GpuResourceTable` descriptors and compiling
+     unique descriptor sets per item, `GpuRaster` will manage a single pass-wide
+     bindless descriptor set (e.g. Set 1: unbounded descriptor arrays for textures
+     and material storage buffers).
+   - Individual draws push 32-bit indices (`materialId`, `textureId`, `worldMatrix`)
+     via push constants / immediates, reducing CPU descriptor management per draw
+     to zero.
+
+2. **Bindless for Compute in `GpuCnC`**:
+   - Compute pipelines (`GpuCnC::recordCompute`) will share the same bindless
+     descriptor model (`VK_PIPELINE_BIND_POINT_COMPUTE`).
+   - Dispatches index inputs/outputs dynamically via push constants, eliminating
+     per-dispatch `GpuResourceTable` and `DrawPack` compilation.
+
+3. **Optimized Transfers in `GpuCnC`**:
+   - Copy and upload operations (`recordUploadBuffer`, `recordCopyBufferToBuffer`)
+     are fixed-function DMA operations that do not use descriptors.
+   - Migrate upload staging from individual `Buffer` allocations to a persistent,
+     mapped ring staging buffer.
+   - Updating buffer contents via `GpuCnC` transfers does not invalidate bindless
+     descriptors (handles remain unchanged); only standard pipeline barriers
+     (`TRANSFER_WRITE` -> `SHADER_READ`) are emitted.
+
+### Action Items
+
+- [ ] **GpuRaster pass-wide bindless descriptor set**: Build and bind a single
+      bindless descriptor set per raster pass using `VK_EXT_descriptor_indexing`.
+- [ ] **FX2 material parameter storage buffer**: Replace per-draw `Buffer::create`
+      for `ModelMaterialUBO` with a shared material SSBO or dynamic uniform buffer
+      suballocation indexed by `materialId`.
+- [ ] **Shader ABI & push constant indexing**: Update lit kernels to look up textures
+      and material parameters through push constant indices.
+- [ ] **GpuCnC compute bindless support**: Enable compute dispatches to consume
+      bindless descriptor sets without building ad-hoc resource tables.
+- [ ] **GpuCnC persistent staging ring allocator**: Replace per-upload staging
+      buffer creations with a persistent host-visible ring buffer.
+- [ ] **Backend allocation cleanup**: Eliminate red-black tree allocations (`std::set`)
+      in rapid-vulkan `DrawPack::Dependencies` and pool descriptor snapshot blobs.
+

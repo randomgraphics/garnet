@@ -85,7 +85,7 @@ int main() {
     cp.resources  = resources;
     cp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(pc), reinterpret_cast<const uint8_t *>(&pc)));
     cp.x          = GROUPS;
-    cnc->compute(cp);
+    cnc->recordCompute(cp);
     submitAndWait(gpu.get(), cnc->seal());
 
     // Read back and verify.

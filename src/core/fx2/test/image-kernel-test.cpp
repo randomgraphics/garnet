@@ -137,7 +137,7 @@ TEST_CASE("fx2 mipmap kernels cover odd edges and retain mip zero", "[fx2][image
             GpuCnC::Region region;
             region.mip                            = level;
             region.imageExtent                    = {expected.width(coord), expected.height(coord), 1};
-            auto                           future = download->downloadImage(output, {&region, 1});
+            auto                           future = download->recordDownloadImage(output, {&region, 1});
             DynaArray<AutoRef<GpuPayload>> reads;
             reads.append(download->seal());
             submit(gpu, reads);

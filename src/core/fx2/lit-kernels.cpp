@@ -145,12 +145,13 @@ struct Implementation {
             }
             GpuCnC::Region r;
             r.imageExtent = {1, 1, 1};
-            initialization.copyBufferToImage({.src = b, .dst = t, .regions = {&r, 1}});
+            initialization.recordCopyBufferToImage({.src = b, .dst = t, .regions = {&r, 1}});
             (i ? normal : white) = t;
         }
         return true;
     }
-    bool record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Settings & s) const {
+    bool record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Settings & s,
+                ArrayView<const glm::mat4> additionalTransforms = {}) const {
         const auto &                   in       = s.common;
         const auto &                   g        = in.geometry;
         std::array<GpuResourceView, 5> maps     = {in.colorMap, in.normalMap, s.emissiveMap, s.occlusionMap, s.metalRoughMap};
@@ -174,10 +175,14 @@ struct Implementation {
                  (!in.useVertexColor || attribute(g, 4, 4));
         valid &= g.instanceCount > 0 && (g.indexCount ? g.indices.buffer && (g.indices.stride == 2 || g.indices.stride == 4) : g.vertexCount > 0);
         valid &= finite(in.color) && finite(in.emissive) && std::isfinite(in.alphaCutoff) && in.alphaCutoff >= 0 && in.alphaCutoff <= 1;
-        for (int c = 0; c < 4; ++c)
-            for (int r = 0; r < 4; ++r) valid &= std::isfinite(in.worldFromObject[c][r]);
-        const float determinant = glm::determinant(in.worldFromObject);
-        valid &= std::isfinite(determinant) && determinant != 0;
+        auto validateMatrix = [&](const glm::mat4 & m) {
+            for (int c = 0; c < 4; ++c)
+                for (int r = 0; r < 4; ++r) valid &= std::isfinite(m[c][r]);
+            const float determinant = glm::determinant(m);
+            valid &= std::isfinite(determinant) && determinant != 0;
+        };
+        validateMatrix(in.worldFromObject);
+        for (const auto & m : additionalTransforms) validateMatrix(m);
         valid &= std::isfinite(s.metallic) && s.metallic >= 0 && s.metallic <= 1 && std::isfinite(s.roughness) && s.roughness >= 0 && s.roughness <= 1 &&
                  std::isfinite(s.ambient) && s.ambient >= 0;
         if (kind == Kind::CEL) {
@@ -214,22 +219,14 @@ struct Implementation {
             cel              = Buffer::create("cel-kernel.parameters", {.context = gpu, .size = sizeof(c)});
             if (!cel) return false;
         }
-        uploads.uploadBuffer(material, 0, {reinterpret_cast<const uint8_t *>(&u), sizeof(u)});
-        if (cel) uploads.uploadBuffer(cel, 0, {reinterpret_cast<const uint8_t *>(&c), sizeof(c)});
-        GpuRaster::DrawParameters draw;
+        uploads.recordUploadBuffer(material, 0, {reinterpret_cast<const uint8_t *>(&u), sizeof(u)});
+        if (cel) uploads.recordUploadBuffer(cel, 0, {reinterpret_cast<const uint8_t *>(&c), sizeof(c)});
+        GpuResourceTable          drawResources;
+        GpuRaster::DrawParameters draw {.geometry = g, .resources = drawResources};
         const size_t              variant = (textured ? 1 : 0) + (in.normalMap.empty() ? 0 : 2) + (in.useVertexColor ? 4 : 0);
-        draw.vs                           = vertex[variant];
-        draw.ps                           = kind == Kind::CEL ? celFragment[variant] : fragment;
-        draw.geometry                     = g;
-        draw.states                       = in.states;
-        struct Push {
-            glm::mat4 world, normal;
-        };
-        Push push {in.worldFromObject, glm::transpose(glm::inverse(in.worldFromObject))};
-        draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(push), reinterpret_cast<const uint8_t *>(&push)));
-        draw.resources.resize(2);
-        draw.resources[0] = shared;
-        auto & set        = draw.resources[1];
+        drawResources.resize(2);
+        drawResources[0] = shared;
+        auto & set       = drawResources[1];
         set.resize(cel ? 7 : 6);
         for (size_t i = 0; i < 5; ++i) {
             if (maps[i].empty()) {
@@ -247,13 +244,31 @@ struct Implementation {
             mv.setBufferViewSize(sizeof(c));
             set[6].append(mv);
         }
-        raster.draw(draw);
+
+        struct Push {
+            glm::mat4 world, normal;
+        };
+
+        auto recordPass = [&](AutoRef<GpuShader> vs, AutoRef<GpuShader> ps, const RasterState & states) {
+            draw.vs     = vs;
+            draw.ps     = ps;
+            draw.states = states;
+            Push push {in.worldFromObject, glm::transpose(glm::inverse(in.worldFromObject))};
+            draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(push), reinterpret_cast<const uint8_t *>(&push)));
+            raster.recordDraw(draw);
+            for (const auto & matrix : additionalTransforms) {
+                Push extraPush {matrix, glm::transpose(glm::inverse(matrix))};
+                draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(extraPush), reinterpret_cast<const uint8_t *>(&extraPush)));
+                raster.recordDraw(draw);
+            }
+        };
+
+        recordPass(vertex[variant], kind == Kind::CEL ? celFragment[variant] : fragment, in.states);
         if (cel && s.cel.outlineWidth > 0) {
-            draw.vs                = outlineVertex[variant];
-            draw.ps                = outlineFragment;
-            draw.states.cullMode   = RasterState::CULL_FRONT;
-            draw.states.depthState = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, true};
-            raster.draw(draw);
+            RasterState outlineStates = in.states;
+            outlineStates.cullMode    = RasterState::CULL_FRONT;
+            outlineStates.depthState  = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, true};
+            recordPass(outlineVertex[variant], outlineFragment, outlineStates);
         }
         return true;
     }
@@ -266,7 +281,8 @@ public:
     PbrImpl(): PbrKernel(TYPE_INFO(), "pbr-kernel") {}
     Execution execution() const override { return Execution::RASTER; }
     bool      initialize(AutoRef<GpuContext> gpu, GpuCnC & init) { return impl.initialize(gpu, init, Kind::PBR); }
-    bool      record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Inputs & in) const override {
+    bool      record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Inputs & in,
+                     ArrayView<const glm::mat4> additionalTransforms) const override {
         Settings s;
         s.common        = in;
         s.metallic      = in.metallic;
@@ -274,7 +290,7 @@ public:
         s.emissiveMap   = in.emissiveMap;
         s.occlusionMap  = in.occlusionMap;
         s.metalRoughMap = in.metalRoughMap;
-        return impl.record(raster, uploads, shared, s);
+        return impl.record(raster, uploads, shared, s, additionalTransforms);
     }
 };
 class LambertianImpl final : public LambertianKernel {
@@ -285,11 +301,12 @@ public:
     LambertianImpl(): LambertianKernel(TYPE_INFO(), "lambertian-kernel") {}
     Execution execution() const override { return Execution::RASTER; }
     bool      initialize(AutoRef<GpuContext> gpu, GpuCnC & init) { return impl.initialize(gpu, init, Kind::LAMBERTIAN); }
-    bool      record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Inputs & in) const override {
+    bool      record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Inputs & in,
+                     ArrayView<const glm::mat4> additionalTransforms) const override {
         Settings s;
         s.common  = in;
         s.ambient = in.ambientIntensity;
-        return impl.record(raster, uploads, shared, s);
+        return impl.record(raster, uploads, shared, s, additionalTransforms);
     }
 };
 class CelImpl final : public CelKernel {
@@ -300,13 +317,14 @@ public:
     CelImpl(): CelKernel(TYPE_INFO(), "cel-kernel") {}
     Execution execution() const override { return Execution::RASTER; }
     bool      initialize(AutoRef<GpuContext> gpu, GpuCnC & init) { return impl.initialize(gpu, init, Kind::CEL); }
-    bool      record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Inputs & in) const override {
+    bool      record(GpuRaster & raster, GpuCnC & uploads, const GpuResourceSet & shared, const Inputs & in,
+                     ArrayView<const glm::mat4> additionalTransforms) const override {
         Settings s;
         s.common       = in;
         s.cel          = in;
         s.emissiveMap  = in.emissiveMap;
         s.occlusionMap = in.occlusionMap;
-        return impl.record(raster, uploads, shared, s);
+        return impl.record(raster, uploads, shared, s, additionalTransforms);
     }
 };
 } // namespace

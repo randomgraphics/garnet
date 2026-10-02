@@ -30,7 +30,7 @@ TEST_CASE("GPU2/CnC async: uploadBuffer copies content into device-local buffer"
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    cnc->uploadBuffer(dst, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(expected.data()), SIZE));
+    cnc->recordUploadBuffer(dst, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(expected.data()), SIZE));
     submitAndWait(gpu, "upload", cnc->seal());
 
     std::vector<uint8_t> raw = dst->readContent();
@@ -53,8 +53,8 @@ TEST_CASE("GPU2/CnC async: uploadBuffer honors destination offset", "[gpu2][cnc]
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    cnc->uploadBuffer(dst, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(zeros.data()), SIZE));
-    cnc->uploadBuffer(dst, 2 * sizeof(uint32_t), ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(payload), sizeof(payload)));
+    cnc->recordUploadBuffer(dst, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(zeros.data()), SIZE));
+    cnc->recordUploadBuffer(dst, 2 * sizeof(uint32_t), ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(payload), sizeof(payload)));
     submitAndWait(gpu, "upload-offset", cnc->seal());
 
     std::vector<uint8_t> raw = dst->readContent();
@@ -92,7 +92,7 @@ TEST_CASE("GPU2/CnC async: downloadBuffer returns buffer content via future", "[
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    auto future = cnc->downloadBuffer(src);
+    auto future = cnc->recordDownloadBuffer(src);
     submitAndWait(gpu, "download", cnc->seal());
 
     REQUIRE(future.valid());
@@ -118,7 +118,7 @@ TEST_CASE("GPU2/CnC async: downloadBuffer honors offset and size", "[gpu2][cnc][
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    auto future = cnc->downloadBuffer(src, 3 * sizeof(uint32_t), 2 * sizeof(uint32_t));
+    auto future = cnc->recordDownloadBuffer(src, 3 * sizeof(uint32_t), 2 * sizeof(uint32_t));
     submitAndWait(gpu, "download-range", cnc->seal());
 
     AutoRef<const Blob> blob = future.get();
@@ -146,8 +146,8 @@ TEST_CASE("GPU2/CnC async: upload then download round-trips through device-local
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    cnc->uploadBuffer(dst, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(expected.data()), SIZE));
-    auto future = cnc->downloadBuffer(dst); // depends on the upload; tracker must serialize the two transfers
+    cnc->recordUploadBuffer(dst, 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(expected.data()), SIZE));
+    auto future = cnc->recordDownloadBuffer(dst); // depends on the upload; tracker must serialize the two transfers
     submitAndWait(gpu, "roundtrip", cnc->seal());
 
     AutoRef<const Blob> blob = future.get();
@@ -192,13 +192,13 @@ TEST_CASE("GPU2/CnC async: downloadImage reads back texture pixels", "[gpu2][cnc
 
     auto up = GpuCnC::create({.gpu = gpu});
     REQUIRE(up);
-    up->copyBufferToImage({.src = staging, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+    up->recordCopyBufferToImage({.src = staging, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
     submitAndWait(gpu, "img-upload", up->seal());
 
     // Download the texture back into a blob.
     auto down = GpuCnC::create({.gpu = gpu});
     REQUIRE(down);
-    auto future = down->downloadImage(tex, ArrayView<const GpuCnC::Region>(&region, 1));
+    auto future = down->recordDownloadImage(tex, ArrayView<const GpuCnC::Region>(&region, 1));
     submitAndWait(gpu, "img-download", down->seal());
 
     GpuCnC::TextureContent content = future.get();
@@ -231,7 +231,7 @@ TEST_CASE("GPU2/CnC async: dropping payload without submit resolves downloadBuff
     {
         auto cnc = GpuCnC::create({.gpu = gpu});
         REQUIRE(cnc);
-        future                      = cnc->downloadBuffer(src);
+        future                      = cnc->recordDownloadBuffer(src);
         AutoRef<GpuPayload> payload = cnc->seal();
         REQUIRE(payload);
         // payload + cnc go out of scope here without ever being submitted.
@@ -258,7 +258,7 @@ TEST_CASE("GPU2/CnC async: dropping payload without submit resolves downloadImag
     {
         auto cnc = GpuCnC::create({.gpu = gpu});
         REQUIRE(cnc);
-        future                      = cnc->downloadImage(tex, ArrayView<const GpuCnC::Region>(&region, 1));
+        future                      = cnc->recordDownloadImage(tex, ArrayView<const GpuCnC::Region>(&region, 1));
         AutoRef<GpuPayload> payload = cnc->seal();
         REQUIRE(payload);
         // dropped without submission
@@ -289,8 +289,8 @@ TEST_CASE("GPU2/CnC async: tearing down the GpuContext resolves a pending downlo
 
         auto cnc = GpuCnC::create({.gpu = gpu});
         REQUIRE(cnc);
-        bufFuture                   = cnc->downloadBuffer(src);
-        imgFuture                   = cnc->downloadImage(tex, ArrayView<const GpuCnC::Region>(&region, 1));
+        bufFuture                   = cnc->recordDownloadBuffer(src);
+        imgFuture                   = cnc->recordDownloadImage(tex, ArrayView<const GpuCnC::Region>(&region, 1));
         AutoRef<GpuPayload> payload = cnc->seal();
         REQUIRE(payload);
         // Everything (payload, cnc, resources, and finally the GpuContext) is destroyed at scope exit
@@ -316,7 +316,7 @@ TEST_CASE("GPU2/CnC async: downloadBuffer with out-of-range offset resolves to e
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    auto future = cnc->downloadBuffer(src, /*offset=*/128); // beyond the 64-byte buffer
+    auto future = cnc->recordDownloadBuffer(src, /*offset=*/128); // beyond the 64-byte buffer
     REQUIRE(future.valid());
     AutoRef<const Blob> blob = future.get(); // resolved synchronously, no submit needed
     CHECK(!blob);

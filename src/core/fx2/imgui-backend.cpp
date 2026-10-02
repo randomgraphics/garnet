@@ -269,8 +269,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
             vertexOffset += listVertexBytes;
             indexOffset += listIndexBytes;
         }
-        cnc->uploadBuffer(vertexBuffer, 0, {vertices.data(), vertices.size()});
-        cnc->uploadBuffer(indexBuffer, 0, {indices.data(), indices.size()});
+        cnc->recordUploadBuffer(vertexBuffer, 0, {vertices.data(), vertices.size()});
+        cnc->recordUploadBuffer(indexBuffer, 0, {indices.data(), indices.size()});
 
         struct PushConstants {
             glm::vec2 scale;
@@ -299,32 +299,34 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 const auto texture = mTextures.find(command.GetTexID());
                 if (texture == mTextures.end()) continue;
 
-                gpu2::GpuRaster::DrawParameters draw;
+                gpu2::RasterGeometry            drawGeometry;
+                gpu2::GpuResourceTable          drawResources;
+                gpu2::GpuRaster::DrawParameters draw {.geometry = drawGeometry, .resources = drawResources};
                 draw.vs = mVs;
                 draw.ps = mPs;
-                draw.geometry.format.attributes.append(
+                drawGeometry.format.attributes.append(
                     {.location = 0, .binding = 0, .offset = offsetof(UiVertex, position), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
-                draw.geometry.format.attributes.append(
+                drawGeometry.format.attributes.append(
                     {.location = 1, .binding = 0, .offset = offsetof(UiVertex, texcoord), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
-                draw.geometry.format.attributes.append(
+                drawGeometry.format.attributes.append(
                     {.location = 2, .binding = 0, .offset = offsetof(UiVertex, color), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
-                draw.geometry.vertices.append({.buffer = vertexBuffer,
-                                               .offset = globalVertexOffset + static_cast<uint64_t>(command.VtxOffset) * sizeof(UiVertex),
-                                               .stride = sizeof(UiVertex)});
-                draw.geometry.indices    = {.buffer = indexBuffer,
-                                            .offset = globalIndexOffset + static_cast<uint64_t>(command.IdxOffset) * sizeof(ImDrawIdx),
-                                            .stride = sizeof(ImDrawIdx)};
-                draw.geometry.indexCount = command.ElemCount;
-                draw.states.cullMode     = gpu2::RasterState::CULL_NONE;
-                draw.states.depthState   = gpu2::RasterState::DepthState {};
+                drawGeometry.vertices.append({.buffer = vertexBuffer,
+                                              .offset = globalVertexOffset + static_cast<uint64_t>(command.VtxOffset) * sizeof(UiVertex),
+                                              .stride = sizeof(UiVertex)});
+                drawGeometry.indices    = {.buffer = indexBuffer,
+                                           .offset = globalIndexOffset + static_cast<uint64_t>(command.IdxOffset) * sizeof(ImDrawIdx),
+                                           .stride = sizeof(ImDrawIdx)};
+                drawGeometry.indexCount = command.ElemCount;
+                draw.states.cullMode    = gpu2::RasterState::CULL_NONE;
+                draw.states.depthState  = gpu2::RasterState::DepthState {};
                 draw.states.scissorRect =
                     gpu2::RasterState::ScissorRect {.x = x, .y = y, .width = static_cast<uint32_t>(clipZ - x), .height = static_cast<uint32_t>(clipW - y)};
-                draw.resources.resize(1);
-                draw.resources[0].resize(1);
-                draw.resources[0][0].resize(1);
-                draw.resources[0][0][0].resource = texture->second;
-                draw.immediates                  = referenceTo(new SimpleBlob<uint8_t>(sizeof(constants), reinterpret_cast<const uint8_t *>(&constants)));
-                raster.draw(draw);
+                drawResources.resize(1);
+                drawResources[0].resize(1);
+                drawResources[0][0].resize(1);
+                drawResources[0][0][0].resource = texture->second;
+                draw.immediates                 = referenceTo(new SimpleBlob<uint8_t>(sizeof(constants), reinterpret_cast<const uint8_t *>(&constants)));
+                raster.recordDraw(draw);
             }
             globalVertexOffset += static_cast<uint64_t>(list->VtxBuffer.Size) * sizeof(UiVertex);
             globalIndexOffset += static_cast<uint64_t>(list->IdxBuffer.Size) * sizeof(ImDrawIdx);

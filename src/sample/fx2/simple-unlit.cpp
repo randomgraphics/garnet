@@ -50,7 +50,7 @@ int main(int argc, const char * argv[]) {
     auto        vertices    = Buffer::create("unlit.positions", {.context = host.gpu, .size = sizeof(positions)});
     auto        upload      = GpuCnC::create({.gpu = host.gpu});
     if (!vertices || !upload) return 1;
-    upload->uploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(positions), sizeof(positions)});
+    upload->recordUploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(positions), sizeof(positions)});
     auto initialization = upload->seal();
     if (!initialization) return 1;
     fx2::UnlitKernel::Inputs input;

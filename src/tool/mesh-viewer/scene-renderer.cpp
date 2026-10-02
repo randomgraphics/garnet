@@ -15,7 +15,7 @@ AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, GpuCnC & cnc, const ModelS
     if (staging.descriptor.format.sign0 == PF::SIGN_UNORM || staging.descriptor.format.sign0 == PF::SIGN_GNORM) staging.descriptor.format.sign0 = sign;
     if (staging.descriptor.format.sign12 == PF::SIGN_UNORM || staging.descriptor.format.sign12 == PF::SIGN_GNORM) staging.descriptor.format.sign12 = sign;
     auto texture = Texture::create("viewer.texture", {.context = gpu, .descriptor = staging.descriptor});
-    if (texture) cnc.copyBufferToImage(staging, texture);
+    if (texture) cnc.recordCopyBufferToImage(staging, texture);
     return texture;
 }
 } // namespace
@@ -61,8 +61,8 @@ bool RenderModel::prepare(AutoRef<GpuContext> gpu, GpuCnC & cnc, const ModelScen
         auto vb = Buffer::create("viewer.vertices", {.context = gpu, .size = primitive.vertices.size() * sizeof(ModelScene::Vertex)});
         auto ib = Buffer::create("viewer.indices", {.context = gpu, .size = primitive.indices.size() * sizeof(uint32_t)});
         if (!vb || !ib) return false;
-        cnc.uploadBuffer(vb, 0, {reinterpret_cast<const uint8_t *>(primitive.vertices.data()), primitive.vertices.size() * sizeof(ModelScene::Vertex)});
-        cnc.uploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(primitive.indices.data()), primitive.indices.size() * sizeof(uint32_t)});
+        cnc.recordUploadBuffer(vb, 0, {reinterpret_cast<const uint8_t *>(primitive.vertices.data()), primitive.vertices.size() * sizeof(ModelScene::Vertex)});
+        cnc.recordUploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(primitive.indices.data()), primitive.indices.size() * sizeof(uint32_t)});
         RasterGeometry mesh;
         mesh.vertices.append({.buffer = vb, .offset = 0, .stride = sizeof(ModelScene::Vertex)});
         mesh.indices     = {.buffer = ib, .offset = 0, .stride = sizeof(uint32_t)};

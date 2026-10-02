@@ -100,20 +100,20 @@ public:
                 return false;
             }
         UnlitPush                 values {input.worldFromObject, input.color, glm::vec4(input.emissive, input.alphaCutoff)};
-        GpuRaster::DrawParameters draw;
-        draw.vs       = vertex[(textured ? 2 : 0) + (input.useVertexColor ? 1 : 0)];
-        draw.ps       = fragment[textured ? 1 : 0];
-        draw.geometry = g;
-        draw.states   = input.states;
-        draw.resources.resize(textured ? 2 : 1);
-        draw.resources[0] = shared;
+        GpuResourceTable          drawResources;
+        GpuRaster::DrawParameters draw {.geometry = g, .resources = drawResources};
+        draw.vs     = vertex[(textured ? 2 : 0) + (input.useVertexColor ? 1 : 0)];
+        draw.ps     = fragment[textured ? 1 : 0];
+        draw.states = input.states;
+        drawResources.resize(textured ? 2 : 1);
+        drawResources[0] = shared;
         if (textured) {
-            draw.resources[1].resize(1);
-            draw.resources[1][0].append(input.colorMap);
+            drawResources[1].resize(1);
+            drawResources[1][0].append(input.colorMap);
         }
         draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(values), reinterpret_cast<const uint8_t *>(&values)));
         // Empty overrides intentionally preserve the caller's complete raster policy.
-        raster.draw(draw);
+        raster.recordDraw(draw);
         return true;
     }
 };
@@ -138,14 +138,16 @@ public:
                 GN_ERROR(logger, "SkyboxKernel: expected SSC scene/camera uniforms and a skybox cubemap");
                 return false;
             }
-        GpuRaster::DrawParameters draw;
-        draw.vs                   = vertex;
-        draw.ps                   = fragment;
-        draw.states.depthState    = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, false};
-        draw.states.cullMode      = RasterState::CULL_NONE;
-        draw.geometry.vertexCount = 3;
-        draw.resources.append(shared);
-        raster.draw(draw);
+        RasterGeometry            drawGeometry;
+        GpuResourceTable          drawResources;
+        GpuRaster::DrawParameters draw {.geometry = drawGeometry, .resources = drawResources};
+        draw.vs                  = vertex;
+        draw.ps                  = fragment;
+        draw.states.depthState   = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, false};
+        draw.states.cullMode     = RasterState::CULL_NONE;
+        drawGeometry.vertexCount = 3;
+        drawResources.append(shared);
+        raster.recordDraw(draw);
         return true;
     }
 };

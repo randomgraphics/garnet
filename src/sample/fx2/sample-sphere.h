@@ -30,8 +30,8 @@ inline GN::gpu2::RasterGeometry createSampleSphere(GN::AutoRef<GN::gpu2::GpuCont
     auto vb = Buffer::create("sample.vertices", {.context = gpu, .size = vertices.size() * sizeof(Vertex)});
     auto ib = Buffer::create("sample.indices", {.context = gpu, .size = indices.size() * sizeof(uint32_t)});
     if (!vb || !ib) return {};
-    uploads.uploadBuffer(vb, 0, {reinterpret_cast<const uint8_t *>(vertices.data()), vertices.size() * sizeof(Vertex)});
-    uploads.uploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(indices.data()), indices.size() * sizeof(uint32_t)});
+    uploads.recordUploadBuffer(vb, 0, {reinterpret_cast<const uint8_t *>(vertices.data()), vertices.size() * sizeof(Vertex)});
+    uploads.recordUploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(indices.data()), indices.size() * sizeof(uint32_t)});
     RasterGeometry geometry;
     geometry.vertices.append({.buffer = vb, .offset = 0, .stride = sizeof(Vertex)});
     geometry.indices     = {.buffer = ib, .offset = 0, .stride = sizeof(uint32_t)};

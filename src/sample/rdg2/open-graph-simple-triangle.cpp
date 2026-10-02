@@ -149,13 +149,15 @@ int main(int argc, const char ** argv) {
             rcp.gpu    = gpuContext;
             rcp.target = &rasterTarget;
 
-            GpuRaster::DrawParameters drawParams;
-            drawParams.vs                   = vsContent->shader;
-            drawParams.ps                   = psContent->shader;
-            drawParams.geometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
+            RasterGeometry            drawParamsGeometry;
+            GpuResourceTable          drawParamsResources;
+            GpuRaster::DrawParameters drawParams {.geometry = drawParamsGeometry, .resources = drawParamsResources};
+            drawParams.vs                  = vsContent->shader;
+            drawParams.ps                  = psContent->shader;
+            drawParamsGeometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
 
             auto r = GpuRaster::create("open-graph-simple-triangle", rcp);
-            r->draw(drawParams);
+            r->recordDraw(drawParams);
             colorPassWork = r->seal();
         };
         auto colorPassNode = graph->addNode(NodeDesc("main color pass", colorPassAction).dependsOn(solidVsReady).dependsOn(solidPsReady));

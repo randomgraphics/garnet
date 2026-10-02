@@ -42,7 +42,7 @@ int main(int argc, const char * argv[]) {
     }
     GpuCnC::Region region;
     region.imageExtent = {width, height, 1};
-    upload->copyBufferToImage({.src = staging, .dst = source, .regions = {&region, 1}});
+    upload->recordCopyBufferToImage({.src = staging, .dst = source, .regions = {&region, 1}});
     DynaArray<AutoRef<GpuPayload>> work;
     auto                           initialization = upload->seal();
     if (!initialization) return 1;

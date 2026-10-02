@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNfx2.h>
 #include <limits>
+#include <thread>
 #include <glm/gtc/packing.hpp>
 using namespace GN;
 using namespace GN::fx2;
@@ -8,10 +9,19 @@ using namespace GN::gpu2;
 namespace {
 struct LitRecordingRaster final : GpuRaster {
     GN_REGISTER_RUNTIME_TYPE(GpuRaster);
-    RasterTarget              destination;
-    DynaArray<DrawParameters> draws;
+    RasterTarget destination;
+    struct RecordedDraw {
+        AutoRef<GpuShader>  vs, hs, ds, gs, ps;
+        RasterState         states;
+        RasterGeometry      geometry;
+        GpuResourceTable    resources;
+        AutoRef<const Blob> immediates;
+        RecordedDraw(const DrawParameters & p)
+            : vs(p.vs), hs(p.hs), ds(p.ds), gs(p.gs), ps(p.ps), states(p.states), geometry(p.geometry), resources(p.resources), immediates(p.immediates) {}
+    };
+    DynaArray<RecordedDraw> draws;
     LitRecordingRaster(): GpuRaster(TYPE_INFO(), "lit-recording") {}
-    void                 draw(const DrawParameters & d) override { draws.append(d); }
+    void                 recordDraw(const DrawParameters & d) override { draws.append(d); }
     const RasterTarget & target() const override { return destination; }
     AutoRef<GpuPayload>  seal() override { return {}; }
 };
@@ -97,7 +107,7 @@ TEST_CASE("fx2 lit kernels render position-normal buffers with independent priva
     const float data[]                                                     = {-1, -1, 0, 0, 0, 1, 0, -1, 0, 0, 0, 1, -.5f, 1, 0, 0, 0, 1};
     auto        vertices                                                   = Buffer::create("lit.vertices", {.context = gpu, .size = sizeof(data)});
     REQUIRE(vertices);
-    init->uploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(data), sizeof(data)});
+    init->recordUploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(data), sizeof(data)});
     gpu->submit(GpuContext::SubmitParameters("lit.init").appendWork(init->seal()));
     for (int kind = 0; kind < 3; ++kind) {
         CAPTURE(kind);
@@ -174,6 +184,97 @@ TEST_CASE("fx2 lit kernels render position-normal buffers with independent priva
         CHECK(left[1] < 5);
         CHECK(right[0] < 5);
         CHECK(right[1] > 100);
+    }
+}
+
+TEST_CASE("fx2 renders 1024 independent materials in one raster", "[fx2][lit][kernel][gpu]") {
+    auto gpu = GpuContext::create("many-materials", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No gpu2 device available");
+    auto initialization = GpuCnC::create({.gpu = gpu});
+    REQUIRE(initialization);
+    auto pbr = PbrKernel::create(gpu, *initialization);
+    auto ssc = SharedShaderConstants::create({.gpu = gpu});
+    REQUIRE(pbr);
+    REQUIRE(ssc);
+    constexpr uint32_t grid = 32, tile = 4, extent = grid * tile;
+    ssc->set0.camera.cameraPosition   = {0, 0, 1};
+    ssc->set0.camera.cameraFov        = ArcDegree(90);
+    ssc->set0.camera.aspectRatio      = 1;
+    ssc->set0.camera.viewWidthInPixel = ssc->set0.camera.viewHeightInPixel = extent;
+    ssc->set0.camera.exposure                                              = 1;
+    ssc->set0.envLighting.environmentLuminanceScale                        = 0;
+    const float vertices[]                                                 = {-1, -1, 0, 0, 0, 1, 3, -1, 0, 0, 0, 1, -1, 3, 0, 0, 0, 1};
+    auto        buffer = Buffer::create("many-materials.vertices", {.context = gpu, .size = sizeof(vertices)});
+    REQUIRE(buffer);
+    initialization->recordUploadBuffer(buffer, 0, {reinterpret_cast<const uint8_t *>(vertices), sizeof(vertices)});
+    gpu->submit(GpuContext::SubmitParameters("many-materials.init").appendWork(initialization->seal()));
+    auto output = Texture::create(
+        "many-materials.output",
+        {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(extent, extent).setLevels(1)});
+    REQUIRE(output);
+    GpuResourceView view;
+    view.resource = output;
+    RasterTarget target;
+    target.setColorTarget(0, view).setClearColor(0, 0, 0, 1);
+    target.states.cullMode     = RasterState::CULL_NONE;
+    constexpr size_t   workers = 4;
+    AutoRef<GpuRaster> rasters[workers];
+    AutoRef<GpuCnC>    uploads[workers];
+    bool               recorded[workers] {};
+    for (size_t i = 0; i < workers; ++i) {
+        rasters[i] = GpuRaster::create("many-materials.render", {.gpu = gpu, .target = &target, .numberOfDrawsHint = grid * grid});
+        uploads[i] = GpuCnC::create({.gpu = gpu});
+        REQUIRE(rasters[i]);
+        REQUIRE(uploads[i]);
+    }
+    const auto        shared = ssc->takeSnapshot();
+    PbrKernel::Inputs input;
+    input.geometry.vertices.append({.buffer = buffer, .offset = 0, .stride = 24});
+    input.geometry.vertexCount = 3;
+    input.geometry.format.attributes.append({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    input.geometry.format.attributes.append({.location = 1, .binding = 0, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
+    input.color = {0, 0, 0, 1};
+    // Each worker owns its recorder; the kernel and immutable GPU inputs are shared.
+    // Catch assertions stay on the joining thread because worker assertions are unsupported.
+    std::thread threads[workers];
+    for (size_t i = 0; i < workers; ++i) {
+        threads[i] = std::thread([&, i, local = input]() mutable {
+            bool ok = true;
+            for (uint32_t y = 0; y < grid; ++y) {
+                for (uint32_t x = 0; x < grid; ++x) {
+                    local.emissive           = {0.01f * (x + 1), 0.01f * (y + 1), 0};
+                    local.states.viewport    = RasterState::Viewport {float(x * tile), float(y * tile), float(tile), float(tile)};
+                    local.states.scissorRect = RasterState::ScissorRect {int32_t(x * tile), int32_t(y * tile), tile, tile};
+                    ok                       = pbr->record(*rasters[i], *uploads[i], shared.set0Resources, local) && ok;
+                }
+            }
+            recorded[i] = ok;
+        });
+    }
+    for (auto & thread : threads) thread.join();
+    for (size_t worker = 0; worker < workers; ++worker) {
+        CAPTURE(worker);
+        REQUIRE(recorded[worker]);
+        GpuContext::SubmitParameters submit("many-materials.render");
+        for (const auto & payload : shared.set0Payloads) submit.appendWork(payload);
+        submit.appendWork(uploads[worker]->seal()).appendWork(rasters[worker]->seal());
+        gpu->submit(submit);
+        gpu->waitForIdle();
+        const auto image = output->readback();
+        REQUIRE_FALSE(image.empty());
+        const auto pixels = image.plane().toRGBA8(image.data());
+        const auto pixel  = [&](uint32_t x, uint32_t y) { return pixels[(y * tile + tile / 2) * extent + x * tile + tile / 2]; };
+        for (uint32_t y = 0; y < grid; ++y) {
+            for (uint32_t x = 0; x < grid; ++x) {
+                CAPTURE(x, y);
+                const auto p = pixel(x, y);
+                CHECK(p.r > 0);
+                CHECK(p.g > 0);
+                CHECK(p.b == 0);
+                if (x) CHECK(p.r > pixel(x - 1, y).r);
+                if (y) CHECK(p.g > pixel(x, y - 1).g);
+            }
+        }
     }
 }
 

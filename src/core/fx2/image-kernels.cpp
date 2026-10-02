@@ -59,7 +59,7 @@ struct ImageImplementation {
             p.immediates = immediate;
             p.x          = (values.dimensions[2] + 7) / 8;
             p.y          = (values.dimensions[3] + 7) / 8;
-            cnc->compute(p);
+            cnc->recordCompute(p);
             return cnc->seal();
         }
         RasterTarget target;
@@ -67,13 +67,13 @@ struct ImageImplementation {
         target.states.cullMode = RasterState::CULL_NONE;
         auto raster            = GpuRaster::create("image-filter", {.gpu = gpu, .target = &target});
         if (!raster) return {};
-        GpuRaster::DrawParameters p;
-        p.vs                   = vertex;
-        p.ps                   = shader;
-        p.geometry.vertexCount = 3;
-        p.resources            = resources;
-        p.immediates           = immediate;
-        raster->draw(p);
+        RasterGeometry            pGeometry;
+        GpuRaster::DrawParameters p {.geometry = pGeometry, .resources = resources};
+        p.vs                  = vertex;
+        p.ps                  = shader;
+        pGeometry.vertexCount = 3;
+        p.immediates          = immediate;
+        raster->recordDraw(p);
         return raster->seal();
     }
     bool record(const GaussianBlurInputs & input, DynaArray<AutoRef<GpuPayload>> & work) const {

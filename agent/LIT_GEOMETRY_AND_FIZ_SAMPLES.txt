@@ -8,7 +8,7 @@ Keep geometry generation in FX2, with deferred uploads and optional packed attri
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
 Last completed: Tasks 1.1 and 1.3 verified; Task 1.2 implemented and both samples built.
-In progress: Awaiting manual user verification of fiz samples. FX2/gpu2 and FX2 sample fixes are verified and approved for commit; fiz fixes remain uncommitted.
+In progress: Fiz fixes approved for commit by the user. Awaiting explicit assignment sign-off; keep this document active.
 Phase 1.1: Complete. Lit tests pass: 10456 assertions across 4 cases, including full/half generated geometry rendered through all three lit kernels.
 Phase 1.2: Pending manual verification. Gel headless test passed 180 steps. Solids headless test stalled after physics initialization and was stopped; no physics behavior changed.
 Phase 1.3: Complete. Viewer tests pass inside GNtest-internal: 2869 assertions across 15 cases.
@@ -23,7 +23,7 @@ src/sample/fiz/gel.cpp
 --- BUILD / CI ---
 Initialize env/garnet.ps1; use env/bin/build.py and env/bin/cit.py.
 --- WORKFLOW / CONVENTIONS ---
-Preserve user changes and rapid-vulkan submodule edits. Commit FX2 and viewer changes together as requested. Leave fiz sample changes uncommitted pending explicit user verification.
+Preserve user changes and rapid-vulkan submodule edits. Commit FX2 and viewer changes together as requested. Commit fiz sample changes separately as subsequently requested by the user.
 Keep this assignment active pending user sign-off.
 --- TASK BREAKDOWN ---
 Phase 1: Geometry and sample migration
@@ -32,12 +32,12 @@ Phase 1: Geometry and sample migration
     Commit: "feat(fx2): add lit geometry helpers and consolidate viewer tests"
   Task 1.2: Migrate fiz rendering and benchmark paths to typed kernels.
     Verify: Build both fiz samples and run offscreen smoke checks.
-    Commit: Deferred until the user manually verifies fiz changes.
+    Commit: "fix(fiz): migrate samples to typed FX2 kernels and restore depth writes"
   Task 1.3: Run viewer-private model tests in GNtest-internal through a wrapper and tool-local CMake fragment.
     Verify: Build GNtest-internal and run [viewer].
     Commit: Together with Task 1.1 as requested.
   Task 1.4: Fix sample depth policy, cached raster push-constant stage masks, and Cel lighting; verify rendered pixels.
     Verify: FX2/gpu2 tests, sample builds and offscreen rendering checks.
-    Commit: "fix(fx2): correct cached push constants and cel sample lighting"; exclude fiz sample changes pending manual review.
+    Commit: "fix(fx2): correct cached push constants and cel sample lighting"; fiz sample changes are committed separately under Task 1.2.
 --- SUMMARY OF FILES TO TOUCH ---
 FX2 geometry header, implementation, tests; fiz sample rendering code.
