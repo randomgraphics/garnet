@@ -42,6 +42,7 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
                                                 vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer;
 
     rv::Buffer::ConstructParameters cp;
+    cp.name  = name.c_str();
     cp.gi    = dev.gi();
     cp.size  = params.size;
     cp.usage = kAllUsages;
@@ -54,7 +55,6 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
         reset();
         return false;
     }
-    rv::setVkHandleName(dev.gi()->device, mRvBuffer->handle(), name.c_str());
 
     gpuState = BufferStateVulkan::UNDEFINED();
     return true;

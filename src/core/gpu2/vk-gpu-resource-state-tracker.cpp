@@ -101,6 +101,10 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
         }
         if (hazardFound) return false;
     }
+    if (!tracked.activeThisPass) {
+        tracked.activeThisPass = true;
+        mActiveTextures.push_back(&tracked);
+    }
     if (state.isWrite()) tracked.hasWrite = true;
 
     // Lazy: only compute the representative incoming layout if verbose logging is actually active.
@@ -191,7 +195,8 @@ bool GpuResourceStateTrackerVulkan::addBuffer(TrackedBuffer b) {
         b.activeThisPass  = true;
         GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: register buffer '{}' as '{}' committed={} pass={}", b.buf->name, b.usageName,
                    vk::to_string(b.committedAccess), vk::to_string(b.passAccess));
-        mBuffers.emplace(b.buf->id, std::move(b));
+        auto entry = mBuffers.emplace(b.buf->id, std::move(b)).first;
+        mActiveBuffers.push_back(&entry->second);
         return true;
     }
     auto & existing = it->second;
@@ -206,6 +211,7 @@ bool GpuResourceStateTrackerVulkan::addBuffer(TrackedBuffer b) {
         if (!checkBufferHazard(b)) return false;
     }
     if (!existing.activeThisPass) {
+        mActiveBuffers.push_back(&existing);
         // Cross-payload re-registration: log the committed state this payload inherits.
         GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: re-register buffer '{}' as '{}' committed={} pass={}", b.buf->name, b.usageName,
                    vk::to_string(existing.committedAccess), vk::to_string(b.passAccess));
@@ -479,8 +485,8 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
     vk::PipelineStageFlags             srcStages = {};
     vk::PipelineStageFlags             dstStages = {};
 
-    for (auto & [id, b] : mBuffers) {
-        if (!b.activeThisPass) continue; // not registered this pass; skip
+    for (auto * active : mActiveBuffers) {
+        auto & b = *active;
 
         if (b.committedAccess != b.passAccess || b.committedStages != b.passStages) {
             vk::Buffer vkBuf = b.buf->nativeBuffer();
@@ -515,8 +521,10 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
         GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer '{}' pass state reset", b.buf->name);
     }
 
-    for (auto & [id, tracked] : mTextures) {
-        vk::Image vkImg = tracked.tex->nativeImage();
+    for (auto * active : mActiveTextures) {
+        auto & tracked         = *active;
+        tracked.activeThisPass = false;
+        vk::Image vkImg        = tracked.tex->nativeImage();
         if (!vkImg) GN_UNLIKELY {
                 GN_WARN(sLogger, "GpuResourceStateTrackerVulkan: texture '{}' has no VkImage handle; skipping barrier", tracked.tex->name);
                 continue;
@@ -565,6 +573,8 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
         tracked.registered.clear();
         tracked.hasWrite = false;
     }
+    mActiveBuffers.clear();
+    mActiveTextures.clear();
     mHasReadOnlyDepthStencil = false;
 
     if (bufferBarriers.empty() && barriers.empty()) return;

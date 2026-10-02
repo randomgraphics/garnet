@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.raster");
 
@@ -139,6 +140,16 @@ private:
     DynaArray<RasterState>            mStates;
     std::vector<bool>                 mGeomHazards;
     std::vector<std::vector<int64_t>> mTableInvalidIds;
+    struct DrawableTemplate {
+        const rv::GraphicsPipeline * pipeline;
+        uint32_t                     geometryIndex;
+        bool                         hasImmediates;
+        rv::Ref<rv::Drawable>        drawable;
+    };
+    // Payload-local scratch; previously compiled DrawPacks retain immutable descriptor snapshots.
+    std::unordered_multimap<size_t, DrawableTemplate> mDrawableTemplates;
+    std::vector<rv::ImageSampler>                     mImageArguments;
+    std::vector<rv::BufferView>                       mBufferArguments;
 
     // Pass 1: register render targets and per-draw resources into the batch tracker.
     // Returns false if any render target has a hazard; the caller should skip the pass.
@@ -169,6 +180,32 @@ static inline bool sameGeometry(const RasterGeometry & a, const RasterGeometry &
     }
     if (a.format != b.format) return false;
     return true;
+}
+
+static size_t mixHash(size_t hash, size_t value) { return hash ^ (value + 0x9e3779b9 + (hash << 6) + (hash >> 2)); }
+
+static size_t hashResources(const GpuResourceTable & table) {
+    size_t hash = table.size();
+    for (const auto & set : table) {
+        hash = mixHash(hash, set.size());
+        for (const auto & slot : set) {
+            hash = mixHash(hash, slot.size());
+            for (const auto & view : slot) {
+                hash = mixHash(hash, std::hash<const void *> {}(view.resource.get()));
+                hash = mixHash(hash, std::hash<const void *> {}(view.combinedTextureSampler.get()));
+                hash = mixHash(hash, view.imageView.type);
+                hash = mixHash(hash, view.imageView.range.i.mip);
+                hash = mixHash(hash, view.imageView.range.i.face);
+                hash = mixHash(hash, view.imageView.range.e.numMipLevels);
+                hash = mixHash(hash, view.imageView.range.e.numArrayLayers);
+                hash = mixHash(hash, std::hash<gfx::img::PixelFormat> {}(view.imageView.format));
+                hash = mixHash(hash, view.bufferView.type);
+                hash = mixHash(hash, std::hash<uint64_t> {}(view.bufferView.offset));
+                hash = mixHash(hash, std::hash<uint64_t> {}(view.bufferView.size));
+            }
+        }
+    }
+    return hash;
 }
 
 static inline bool sameResources(const GpuResourceTable & a, const GpuResourceTable & b) {
@@ -348,9 +385,55 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
     rv::Ref<const rv::GraphicsPipeline> pipeline = mPsoFactory->getOrCreate(psoParams);
     if (!pipeline || !pipeline->handle()) GN_UNLIKELY return {};
 
-    rv::Drawable::ConstructParameters dcp;
-    dcp.setPipeline(pipeline);
-    rv::Drawable drawable(dcp);
+    static const std::vector<int64_t> emptyInvalidIds;
+    const auto & invalidResourceIds = d.resourceTableIndex < mTableInvalidIds.size() ? mTableInvalidIds[d.resourceTableIndex] : emptyInvalidIds;
+    bool         complete           = invalidResourceIds.empty();
+    const auto & reflection         = pipeline->reflection();
+    // A reused drawable must overwrite every required argument; malformed tables use a fresh drawable for validation.
+    for (size_t set = 0; complete && set < reflection.descriptors.size(); ++set) {
+        for (size_t binding = 0; complete && binding < reflection.descriptors[set].size(); ++binding) {
+            const auto & reflected = reflection.descriptors[set][binding];
+            if (reflected.empty()) continue;
+            if (d.resourceTableIndex >= mResourceTables.size() || set >= mResourceTables[d.resourceTableIndex].size() ||
+                binding >= mResourceTables[d.resourceTableIndex][set].size()) {
+                complete = false;
+                break;
+            }
+            const auto & slot = mResourceTables[d.resourceTableIndex][set][binding];
+            if (slot.empty() || slot.size() < reflected.binding.descriptorCount) {
+                complete = false;
+                break;
+            }
+            for (const auto & view : slot) {
+                if (!RuntimeType::cast<BufferVulkan>(view.resource.get()) && !RuntimeType::cast<TextureVulkanBase>(view.resource.get())) {
+                    complete = false;
+                    break;
+                }
+            }
+        }
+    }
+    const bool hasImmediates = d.immediates && !d.immediates->empty();
+    auto       templateHash  = mixHash(std::hash<const void *> {}(pipeline.get()), d.geometryIndex);
+    templateHash             = mixHash(templateHash, hasImmediates);
+    rv::Ref<rv::Drawable> drawableRef;
+    if (complete) {
+        const auto range = mDrawableTemplates.equal_range(templateHash);
+        for (auto it = range.first; it != range.second; ++it) {
+            const auto & entry = it->second;
+            if (entry.pipeline == pipeline.get() && entry.geometryIndex == d.geometryIndex && entry.hasImmediates == hasImmediates) {
+                drawableRef = entry.drawable;
+                break;
+            }
+        }
+    }
+    const bool initializeGeometry = !drawableRef;
+    if (!drawableRef) {
+        rv::Drawable::ConstructParameters dcp;
+        dcp.setPipeline(pipeline);
+        drawableRef = new rv::Drawable(dcp);
+        if (complete) mDrawableTemplates.emplace(templateHash, DrawableTemplate {pipeline.get(), d.geometryIndex, hasImmediates, drawableRef});
+    }
+    auto & drawable = *drawableRef;
 
     // Push constants.
     if (d.immediates && !d.immediates->empty()) {
@@ -363,8 +446,6 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
 
     // --- Descriptor binding from resource table ---
     // Resources rejected by the tracker during pass 1 are in mTableInvalidIds and skipped.
-    static const std::vector<int64_t> sEmptyInvalidIds;
-    const auto & invalidResourceIds = (d.resourceTableIndex < mTableInvalidIds.size()) ? mTableInvalidIds[d.resourceTableIndex] : sEmptyInvalidIds;
     rv::Ref<const rv::Sampler> linSampler(ensureLinearSampler(ctx.dev, defaultSampler)); // TODO: implement sampler class.
     if (d.resourceTableIndex < mResourceTables.size()) {
         const auto & resTable = mResourceTables[d.resourceTableIndex];
@@ -375,7 +456,8 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                 if (slot.empty()) continue;
                 rv::DescriptorIdentifier descId((uint32_t) setIdx, (uint32_t) bindingIdx);
                 if (slot[0].isTexture()) {
-                    std::vector<rv::ImageSampler> imgs;
+                    auto & imgs = mImageArguments;
+                    imgs.clear();
                     imgs.reserve(slot.size());
                     for (const auto & view : slot) {
                         if (view.empty() || !view.isTexture()) continue;
@@ -392,7 +474,8 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                     }
                     if (!imgs.empty()) drawable.t(descId, vk::ArrayProxy<const rv::ImageSampler>((uint32_t) imgs.size(), imgs.data()));
                 } else if (slot[0].isBuffer()) {
-                    std::vector<rv::BufferView> bufs;
+                    auto & bufs = mBufferArguments;
+                    bufs.clear();
                     bufs.reserve(slot.size());
                     for (const auto & view : slot) {
                         if (view.empty() || !view.isBuffer()) continue;
@@ -413,46 +496,47 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
 
     // --- Vertex and instance buffer binding ---
     // Binding order mirrors gcp.addVertexBuffer / addInstanceBuffer above.
-    {
-        std::vector<rv::BufferView> vbViews;
-        vbViews.reserve(geom.vertices.size() + geom.instances.size());
-        auto pushGeomBuf = [&](const RasterGeometry::GeometryBuffer & gb) {
-            rv::BufferView bv;
-            if (gb.buffer) {
-                if (auto * buf = RuntimeType::cast<BufferVulkan>(gb.buffer.get())) {
-                    bv.buffer = buf->rvBuffer();
-                    bv.offset = (vk::DeviceSize) gb.offset;
+    if (initializeGeometry) {
+        {
+            std::vector<rv::BufferView> vbViews;
+            vbViews.reserve(geom.vertices.size() + geom.instances.size());
+            auto pushGeomBuf = [&](const RasterGeometry::GeometryBuffer & gb) {
+                rv::BufferView bv;
+                if (gb.buffer) {
+                    if (auto * buf = RuntimeType::cast<BufferVulkan>(gb.buffer.get())) {
+                        bv.buffer = buf->rvBuffer();
+                        bv.offset = (vk::DeviceSize) gb.offset;
+                    }
                 }
-            }
-            vbViews.push_back(bv);
-        };
-        for (const auto & vb : geom.vertices) pushGeomBuf(vb);
-        for (const auto & ib : geom.instances) pushGeomBuf(ib);
-        if (!vbViews.empty()) drawable.v(vk::ArrayProxy<const rv::BufferView>((uint32_t) vbViews.size(), vbViews.data()));
-    }
-
-    // --- Index buffer binding ---
-    if (geom.indexCount > 0 && geom.indices.buffer) {
-        if (auto * buf = RuntimeType::cast<BufferVulkan>(geom.indices.buffer.get())) {
-            rv::BufferView bv;
-            bv.buffer             = buf->rvBuffer();
-            bv.offset             = (vk::DeviceSize) geom.indices.offset;
-            vk::IndexType idxType = (geom.indices.stride == 2) ? vk::IndexType::eUint16 : vk::IndexType::eUint32;
-            drawable.i(bv, idxType);
+                vbViews.push_back(bv);
+            };
+            for (const auto & vb : geom.vertices) pushGeomBuf(vb);
+            for (const auto & ib : geom.instances) pushGeomBuf(ib);
+            if (!vbViews.empty()) drawable.v(vk::ArrayProxy<const rv::BufferView>((uint32_t) vbViews.size(), vbViews.data()));
         }
+
+        // --- Index buffer binding ---
+        if (geom.indexCount > 0 && geom.indices.buffer) {
+            if (auto * buf = RuntimeType::cast<BufferVulkan>(geom.indices.buffer.get())) {
+                rv::BufferView bv;
+                bv.buffer             = buf->rvBuffer();
+                bv.offset             = (vk::DeviceSize) geom.indices.offset;
+                vk::IndexType idxType = (geom.indices.stride == 2) ? vk::IndexType::eUint16 : vk::IndexType::eUint32;
+                drawable.i(bv, idxType);
+            }
+        }
+
+        // --- Draw call ---
+        rv::GraphicsPipeline::DrawParameters drawParams;
+        if (geom.indexCount > 0) {
+            drawParams.setIndexed(geom.indexCount, 0, 0);
+        } else {
+            drawParams.setNonIndexed(geom.vertexCount, 0);
+        }
+        drawParams.setInstance(geom.instanceCount);
+
+        drawable.draw(drawParams);
     }
-
-    // --- Draw call ---
-    rv::GraphicsPipeline::DrawParameters drawParams;
-    if (geom.indexCount > 0) {
-        drawParams.setIndexed(geom.indexCount, 0, 0);
-    } else {
-        drawParams.setNonIndexed(geom.vertexCount, 0);
-    }
-    drawParams.setInstance(geom.instanceCount);
-
-    drawable.draw(drawParams);
-
     rv::Ref<const rv::DrawPack> pack = drawable.compile();
     if (!pack || pack->empty()) GN_UNLIKELY {
             GN_ERROR(sLogger, "RasterPassPayload: Drawable::compile produced empty DrawPack");
@@ -529,7 +613,9 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
 
     rv::Ref<rv::Sampler> defaultSampler;
 
-    std::vector<CachedDrawConfig>  configs;
+    std::vector<CachedDrawConfig>           configs;
+    std::unordered_multimap<size_t, size_t> configIndex;
+    configIndex.reserve(mDraws.size());
     int                            activeConfigIndex = -1;
     vk::Pipeline                   boundPipeline {};
     std::vector<vk::DescriptorSet> boundSets;
@@ -559,8 +645,15 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         }
 
         // Fast path: matches a previously cached configuration.
-        int foundIndex = -1;
-        for (size_t c = 0; c < configs.size(); ++c) {
+        int    foundIndex      = -1;
+        size_t configHash      = std::hash<const void *> {}(d.vs.get());
+        configHash             = mixHash(configHash, std::hash<const void *> {}(d.ps.get()));
+        configHash             = mixHash(configHash, d.stateIndex);
+        configHash             = mixHash(configHash, d.geometryIndex);
+        configHash             = mixHash(configHash, d.resourceTableIndex);
+        const auto configRange = configIndex.equal_range(configHash);
+        for (auto it = configRange.first; it != configRange.second; ++it) {
+            const size_t c = it->second;
             if ((int) c == activeConfigIndex) continue;
             if (matchesConfig(d, configs[c])) {
                 foundIndex = (int) c;
@@ -669,6 +762,7 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         if (dStates.scissorRect) boundSc = *dStates.scissorRect;
         hasBoundVpSc = true;
 
+        configIndex.emplace(configHash, configs.size());
         configs.push_back(std::move(newCfg));
         activeConfigIndex = (int) configs.size() - 1;
     }
@@ -689,6 +783,7 @@ public:
         if (!mGpu) return;
         if (mRenderTarget.empty()) return;
         mDraws.reserve(cp.numberOfDrawsHint);
+        mResourceTableIndex.reserve(cp.numberOfDrawsHint);
         mStates.append(mRenderTarget.states);
         mValid = true;
     }
@@ -751,7 +846,11 @@ public:
                 resIdx = mLastResourceIndex;
             } else {
                 bool found = false;
-                for (uint32_t i = 0; i < (uint32_t) mResourceTables.size(); ++i) {
+                // Unique per-draw materials must not scan every preceding table. Equality still resolves hash collisions.
+                const auto hash  = hashResources(dp.resources);
+                const auto range = mResourceTableIndex.equal_range(hash);
+                for (auto it = range.first; it != range.second; ++it) {
+                    const uint32_t i = it->second;
                     if (sameResources(mResourceTables[i], dp.resources)) {
                         resIdx = i;
                         found  = true;
@@ -761,6 +860,7 @@ public:
                 if (!found) {
                     resIdx = (uint32_t) mResourceTables.size();
                     mResourceTables.append(dp.resources);
+                    mResourceTableIndex.emplace(hash, resIdx);
                 }
                 mLastResourceIndex = resIdx;
             }
@@ -792,17 +892,18 @@ public:
     }
 
 private:
-    AutoRef<GpuContextVulkan2>  mGpu;
-    RasterTarget                mRenderTarget;
-    bool                        mValid  = false;
-    bool                        mSealed = false;
-    DynaArray<StoredDraw>       mDraws;
-    DynaArray<RasterGeometry>   mGeometries;
-    DynaArray<GpuResourceTable> mResourceTables;
-    DynaArray<RasterState>      mStates;
-    uint32_t                    mLastGeometryIndex = 0;
-    uint32_t                    mLastResourceIndex = ~0u;
-    uint32_t                    mLastStateIndex    = 0;
+    AutoRef<GpuContextVulkan2>                mGpu;
+    RasterTarget                              mRenderTarget;
+    bool                                      mValid  = false;
+    bool                                      mSealed = false;
+    DynaArray<StoredDraw>                     mDraws;
+    DynaArray<RasterGeometry>                 mGeometries;
+    DynaArray<GpuResourceTable>               mResourceTables;
+    std::unordered_multimap<size_t, uint32_t> mResourceTableIndex;
+    DynaArray<RasterState>                    mStates;
+    uint32_t                                  mLastGeometryIndex = 0;
+    uint32_t                                  mLastResourceIndex = ~0u;
+    uint32_t                                  mLastStateIndex    = 0;
 };
 
 } // namespace

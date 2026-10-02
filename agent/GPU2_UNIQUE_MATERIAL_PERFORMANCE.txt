@@ -1,0 +1,92 @@
+# Assignment: Optimize GPU2 rendering many independent materials
+---
+## Goals
+Reduce CPU rendering cost for 1024 independent materials while preserving per-draw
+buffers and resource tables. Work toward the user's historical 400 FPS target.
+---
+## Design
+Use collision-checked hash indexes for resource tables and draw configurations.
+Visit only resources active in each barrier pass while preserving cross-pass state.
+Reuse payload-local drawable argument storage and immutable descriptor snapshots.
+Keep VMA host-visible allocations mapped across short-lived staging maps.
+
+DrawParameters borrows geometry and resource tables by const reference; raster state
+remains an inline value. draw() snapshots descriptions and retains GPU resources
+before returning. Later edits/destruction of inputs cannot affect recorded draws.
+GPU buffer contents themselves are not snapshotted. Both owning description types
+retain move construction/assignment that transfers their array storage.
+
+Independent recorders own mutable caches; no new shared recording locks. VMA/driver
+internal synchronization remains. Concurrent submission or mutation of one recorder
+is not covered. The experimental shared-mutex buffer pool was removed.
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 2.2 - Cleaned and verified the user-requested optimization checkpoint.
+Phase 1.1: Indexed resource/configuration lookup and active barrier registrations.
+Phase 1.2: Reused drawable descriptors and kept VMA staging allocations mapped.
+Phase 1.3: Borrowed draw inputs; verified snapshot lifetimes and ownership transfers.
+Phase 2.1: Three timing runs plus 1000 independent wall-time stack samples captured.
+Phase 2.2: Full debug/profile builds, 85 GPU2/FX2 tests (52976 assertions), 60-frame solids run, formatting and diff checks passed.
+In progress: None for this checkpoint; further optimization deferred by user. Assignment remains active.
+--- END PROGRESS ---
+--- REFERENCE ---
+src/core/gpu2/vk-gpu-raster.cpp
+src/core/gpu2/vk-gpu-resource-state-tracker.h/.cpp
+src/3rdparty/rapid-vulkan/inc/rapid-vulkan/rapid-vulkan.cpp
+build/solids-profile/borrowed/report.txt (local raw-profile artifact directory)
+agent/GPU2_VMA_SUBALLOCATION.txt (earlier allocator work)
+--- BUILD / CI ---
+python.exe env/bin/build.py -C d
+python.exe env/bin/build.py -C p --target GNsample-fiz-solids
+build/windows.vc.d/bin/Debug/GNtest-internal.exe "[gpu2],[fx2]"
+python.exe env/bin/format-all-sources.py -dqn
+--- WORKFLOW / CONVENTIONS ---
+Preserve user changes. Commit rapid-vulkan on wip/draw-compilation, then update the
+parent gitlink in the Garnet optimization commit. No push/PR requested for this round.
+Keep this assignment active; the 400 FPS goal remains outstanding.
+--- TASK BREAKDOWN ---
+Phase 1: Remove rendering overhead without merging independent materials
+  Task 1.1: Index draw descriptions and active barrier resources.
+    Verify: GPU2 hazard/resource regression tests and independent-material rendering.
+    Commit: "perf(gpu2): reduce independent-material recording overhead"
+  Task 1.2: Reuse descriptor snapshots and persist host-visible VMA mappings.
+    Verify: GPU2/FX2 rendering and simultaneous partial-map/fallback tests.
+    Commit: "perf: reuse descriptor snapshots and persistent VMA mappings"
+  Task 1.3: Borrow descriptions while retaining self-contained recorded payloads.
+    Verify: Input mutation/destruction test; geometry/table storage-transfer tests;
+      four threads each record and render 1024 independent materials.
+    Commit: Included in the GPU2 optimization commit.
+Phase 2: Measure and preserve a verified checkpoint
+  Task 2.1: Measure timing and capture remaining hot paths.
+    Verify: Three 60-frame profile runs and 1000 sampled stacks; restore instrumentation.
+    Commit: Results included in the GPU2 optimization commit.
+  Task 2.2: Clean up and commit the verified optimization checkpoint.
+    Verify: Debug build, GPU2/FX2 tests, profile sample, formatting, clean Git status.
+    Commit: Parent commit includes the rapid-vulkan optimization revision.
+--- PROFILE RESULTS ---
+Windows/MSVC RelWithDebInfo, RTX 4090, offscreen test mode, fixed physics timestep,
+1024 dynamic bodies / 1026 draws, no material deduplication. Means from frames 4-60
+of three runs, with logging but no sampler attached:
+  Physics: 0.410 ms; draw recording: 5.395 ms; submission: 9.429 ms.
+  Summed frame phases: 15.389 ms (runs 15.680 / 15.839 / 14.649 ms).
+  Start-to-start interval including cleanup/logging: 15.660 ms, equivalent 63.9 FPS.
+  Historical pre-index baseline: 55.137 ms; current phase time is 3.58x faster.
+  Earlier rvalue-overload run: 13.129 ms; current phase time is 17.2% slower.
+Historical comparisons are not same-session controlled A/B. Borrowed unique tables
+now require a snapshot copy where rvalue inputs could transfer arrays; this is a
+plausible contributor, not an isolated measurement of the API change.
+
+Separate quiet run: 1000 main-thread wall-time samples, includes waits and sampling
+overhead. Draw compilation/command recording: 25.7%; buffer creation: 9.6%; raster
+snapshots/interning: 7.4%; resource collection: 6.9%; barriers: 4.0%.
+CPU heap allocation/free leaves total 26.9%, overlapping those categories.
+Buffer destructor appears in 3.6% of stacks, vmaDestroyBuffer in 2.9%; neither is a
+vkFreeMemory-only measurement. Do not attribute all submission cleanup to buffers.
+Remaining opportunity: CPU allocation, descriptor setup, and submission cleanup.
+Temporary timers were removed and the profile executable rebuilt after capture.
+Future: Remove per-draw resource-table allocations in image/lit kernels without
+shared mutable scratch, recording locks, or loss of concurrent recording support.
+User explicitly deferred this follow-up until after the current checkpoint commit.
+--- SUMMARY OF FILES TO TOUCH ---
+GPU2 raster/state tracker/buffer implementation, public draw contract, FX2 callers,
+RDG2 sample callers, focused tests, rapid-vulkan implementation, assignment records.

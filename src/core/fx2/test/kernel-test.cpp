@@ -16,8 +16,17 @@ struct CustomKernel final : Kernel {
 
 struct RecordingRaster final : GpuRaster {
     GN_REGISTER_RUNTIME_TYPE(GpuRaster);
-    RasterTarget              destination;
-    DynaArray<DrawParameters> draws;
+    RasterTarget destination;
+    struct RecordedDraw {
+        AutoRef<GpuShader>  vs, hs, ds, gs, ps;
+        RasterState         states;
+        RasterGeometry      geometry;
+        GpuResourceTable    resources;
+        AutoRef<const Blob> immediates;
+        RecordedDraw(const DrawParameters & p)
+            : vs(p.vs), hs(p.hs), ds(p.ds), gs(p.gs), ps(p.ps), states(p.states), geometry(p.geometry), resources(p.resources), immediates(p.immediates) {}
+    };
+    DynaArray<RecordedDraw> draws;
     RecordingRaster(): GpuRaster(TYPE_INFO(), "recording-raster") {}
     void                 draw(const DrawParameters & draw) override { draws.append(draw); }
     const RasterTarget & target() const override { return destination; }

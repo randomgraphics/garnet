@@ -71,7 +71,8 @@ public:
 
 private:
     struct TrackedTexture {
-        TextureVulkanBase * tex = nullptr;
+        bool                activeThisPass = false;
+        TextureVulkanBase * tex            = nullptr;
         /// Running batch baseline. Initialized from tex->getState() on first registration.
         /// Updated in-place by emitPrePassBarriers() whenever a barrier is emitted for a plane,
         /// so subsequent payloads always see the correct "from" state without extra bookkeeping.
@@ -99,7 +100,10 @@ private:
     bool addBuffer(TrackedBuffer b);
 
     std::unordered_map<int64_t, TrackedBuffer> mBuffers;
-    bool                                       mHasReadOnlyDepthStencil = false;
+    // unordered_map rehashing preserves element addresses; these lists only visit registrations for the current pass.
+    std::vector<TrackedBuffer *>  mActiveBuffers;
+    std::vector<TrackedTexture *> mActiveTextures;
+    bool                          mHasReadOnlyDepthStencil = false;
 };
 
 } // namespace GN::gpu2

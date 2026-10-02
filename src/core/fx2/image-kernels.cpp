@@ -67,12 +67,12 @@ struct ImageImplementation {
         target.states.cullMode = RasterState::CULL_NONE;
         auto raster            = GpuRaster::create("image-filter", {.gpu = gpu, .target = &target});
         if (!raster) return {};
-        GpuRaster::DrawParameters p;
-        p.vs                   = vertex;
-        p.ps                   = shader;
-        p.geometry.vertexCount = 3;
-        p.resources            = resources;
-        p.immediates           = immediate;
+        RasterGeometry            pGeometry;
+        GpuRaster::DrawParameters p {.geometry = pGeometry, .resources = resources};
+        p.vs                  = vertex;
+        p.ps                  = shader;
+        pGeometry.vertexCount = 3;
+        p.immediates          = immediate;
         raster->draw(p);
         return raster->seal();
     }

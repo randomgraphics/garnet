@@ -70,11 +70,12 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
     resources[0][0].resize(1);
     resources[0][0][0] = rttView;
 
-    GpuRaster::DrawParameters dp;
-    dp.vs                   = vs;
-    dp.ps                   = ps;
-    dp.geometry.vertexCount = 3; // fullscreen triangle from gl_VertexIndex, no vertex buffer
-    dp.resources            = resources;
+    RasterGeometry            dpGeometry;
+    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = resources};
+    dp.vs                  = vs;
+    dp.ps                  = ps;
+    dpGeometry.vertexCount = 3; // fullscreen triangle from gl_VertexIndex, no vertex buffer
+
     raster2->draw(dp);
     AutoRef<GpuPayload> p2 = raster2->seal();
 
@@ -141,11 +142,12 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     resources[0][0].resize(1);
     resources[0][0][0] = rttView;
 
-    GpuRaster::DrawParameters dp;
-    dp.vs                   = vs;
-    dp.ps                   = ps;
-    dp.geometry.vertexCount = 3;
-    dp.resources            = resources;
+    RasterGeometry            dpGeometry;
+    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = resources};
+    dp.vs                  = vs;
+    dp.ps                  = ps;
+    dpGeometry.vertexCount = 3;
+
     raster2->draw(dp);
     AutoRef<GpuPayload> p2 = raster2->seal();
 
@@ -194,10 +196,12 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     auto raster = GpuRaster::create("rtt-mrt", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
 
-    GpuRaster::DrawParameters dp;
-    dp.vs                   = vs;
-    dp.ps                   = ps;
-    dp.geometry.vertexCount = 3;
+    RasterGeometry            dpGeometry;
+    GpuResourceTable          dpResources;
+    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = dpResources};
+    dp.vs                  = vs;
+    dp.ps                  = ps;
+    dpGeometry.vertexCount = 3;
     raster->draw(dp);
     AutoRef<GpuPayload> p = raster->seal();
 
@@ -228,6 +232,72 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
             CHECK(px.b == 0u);
             CHECK(px.a == 255u);
         }
+    }
+}
+
+TEST_CASE("GPU2 RTT: borrowed draw inputs are snapshotted before returning", "[gpu2][raster][gpu]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+    auto output = makeRgba8Tex(gpu, "snapshot-output", 12, 4);
+    REQUIRE(output);
+    AutoRef<GpuPayload> payload;
+    {
+        // The sealed payload must retain resources after all caller-owned descriptions disappear.
+        auto red   = makeRgba8Tex(gpu, "snapshot-red", 1, 1);
+        auto green = makeRgba8Tex(gpu, "snapshot-green", 1, 1);
+        REQUIRE(red);
+        REQUIRE(green);
+        GpuResourceView redView, greenView, outputView;
+        redView.resource    = red;
+        greenView.resource  = green;
+        outputView.resource = output;
+        RasterTarget redTarget, greenTarget, target;
+        redTarget.setColorTarget(0, redView).setClearColor(1, 0, 0, 1);
+        greenTarget.setColorTarget(0, greenView).setClearColor(0, 1, 0, 1);
+        auto clearRed   = GpuRaster::create("snapshot-clear-red", {.gpu = gpu, .target = &redTarget});
+        auto clearGreen = GpuRaster::create("snapshot-clear-green", {.gpu = gpu, .target = &greenTarget});
+        REQUIRE(clearRed);
+        REQUIRE(clearGreen);
+        submitAndWait(gpu, "snapshot-init", clearRed->seal(), clearGreen->seal());
+        target.setColorTarget(0, outputView).setClearColor(0, 0, 0, 1);
+        auto raster = GpuRaster::create("snapshot-draws", {.gpu = gpu, .target = &target});
+        REQUIRE(raster);
+        RasterGeometry geometry;
+        geometry.vertexCount = 3;
+        GpuResourceTable resources;
+        resources.resize(1);
+        resources[0].resize(1);
+        resources[0][0].append(redView);
+        GpuRaster::DrawParameters draw {.geometry = geometry, .resources = resources};
+        draw.vs = makeShader(gpu, "snapshot-vs", kRttFullscreenVertSpv, sizeof(kRttFullscreenVertSpv));
+        draw.ps = makeShader(gpu, "snapshot-ps", kRttFullscreenFragSpv, sizeof(kRttFullscreenFragSpv));
+        REQUIRE(draw.vs);
+        REQUIRE(draw.ps);
+        draw.states.cullMode    = RasterState::CULL_NONE;
+        draw.states.scissorRect = RasterState::ScissorRect {0, 0, 4, 4};
+        raster->draw(draw);
+        resources[0][0][0]      = greenView;
+        geometry.vertexCount    = 0;
+        draw.states.scissorRect = RasterState::ScissorRect {4, 0, 4, 4};
+        raster->draw(draw);
+        geometry.vertexCount    = 3;
+        draw.states.scissorRect = RasterState::ScissorRect {8, 0, 4, 4};
+        raster->draw(draw);
+        geometry.vertexCount = 0;
+        resources.clear();
+        payload = raster->seal();
+    }
+    REQUIRE(payload);
+    submitAndWait(gpu, "snapshot-render", payload);
+    auto image = output->readback();
+    REQUIRE_FALSE(image.empty());
+    auto pixels = image.plane().toRGBA8(image.data());
+    REQUIRE(pixels.size() == 48);
+    for (size_t i = 0; i < pixels.size(); ++i) {
+        CAPTURE(i);
+        CHECK(pixels[i].r == (i % 12 < 4 ? 255 : 0));
+        CHECK(pixels[i].g == (i % 12 >= 8 ? 255 : 0));
+        CHECK(pixels[i].b == 0);
     }
 }
 

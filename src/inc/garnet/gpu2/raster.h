@@ -483,14 +483,16 @@ public:
         AutoRef<GpuShader> vs, hs, ds, gs, ps;
         RasterState states; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
                             ///< RasterTarget's baseline state.
-        RasterGeometry      geometry;
-        GpuResourceTable    resources;
-        AutoRef<const Blob> immediates; ///< reference counted immediate constants.
+        const RasterGeometry &   geometry;   ///< Borrowed; must remain valid through each draw() call.
+        const GpuResourceTable & resources;  ///< Borrowed; edits between calls affect only subsequent draws.
+        AutoRef<const Blob>      immediates; ///< reference counted immediate constants.
     };
+    /// Snapshot draw descriptions and retain referenced GPU resources before returning.
+    /// Later edits or destruction of inputs do not affect recorded draws or the sealed payload.
+    /// GPU contents are not copied. Concurrent recording requires separate recorders and immutable shared inputs.
     virtual void draw(const DrawParameters &) = 0;
 
-    /// @brief Get the render target associated with this raster. The target is immutable and fully defined at creation time. It can be used to inspect the
-    /// target attachments and their properties, but not to modify them.
+    /// Get the immutable render target retained by this recorder.
     virtual const RasterTarget & target() const = 0;
 
     /// Finalize the render pass. Returns a payload to pass to GpuContext::submit().

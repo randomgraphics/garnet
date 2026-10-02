@@ -216,20 +216,20 @@ struct Implementation {
         }
         uploads.uploadBuffer(material, 0, {reinterpret_cast<const uint8_t *>(&u), sizeof(u)});
         if (cel) uploads.uploadBuffer(cel, 0, {reinterpret_cast<const uint8_t *>(&c), sizeof(c)});
-        GpuRaster::DrawParameters draw;
+        GpuResourceTable          drawResources;
+        GpuRaster::DrawParameters draw {.geometry = g, .resources = drawResources};
         const size_t              variant = (textured ? 1 : 0) + (in.normalMap.empty() ? 0 : 2) + (in.useVertexColor ? 4 : 0);
         draw.vs                           = vertex[variant];
         draw.ps                           = kind == Kind::CEL ? celFragment[variant] : fragment;
-        draw.geometry                     = g;
         draw.states                       = in.states;
         struct Push {
             glm::mat4 world, normal;
         };
         Push push {in.worldFromObject, glm::transpose(glm::inverse(in.worldFromObject))};
         draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(push), reinterpret_cast<const uint8_t *>(&push)));
-        draw.resources.resize(2);
-        draw.resources[0] = shared;
-        auto & set        = draw.resources[1];
+        drawResources.resize(2);
+        drawResources[0] = shared;
+        auto & set       = drawResources[1];
         set.resize(cel ? 7 : 6);
         for (size_t i = 0; i < 5; ++i) {
             if (maps[i].empty()) {

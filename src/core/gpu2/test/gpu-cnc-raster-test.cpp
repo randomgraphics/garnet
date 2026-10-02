@@ -87,11 +87,12 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     rasterResources[0][0].resize(1);
     rasterResources[0][0][0] = sourceView;
 
-    GpuRaster::DrawParameters dp;
-    dp.vs                   = vs;
-    dp.ps                   = ps;
-    dp.geometry.vertexCount = 3;
-    dp.resources            = rasterResources;
+    RasterGeometry            dpGeometry;
+    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = rasterResources};
+    dp.vs                  = vs;
+    dp.ps                  = ps;
+    dpGeometry.vertexCount = 3;
+
     raster->draw(dp);
     AutoRef<GpuPayload> p2 = raster->seal();
 
