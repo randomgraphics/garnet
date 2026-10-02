@@ -8,9 +8,9 @@ using namespace GN::gpu2;
 
 TEST_CASE("GPU2: geometry and resource tables transfer storage on move", "[gpu2][raster]") {
     RasterGeometry geometry;
-    geometry.format.attributes.append({.location = 3});
-    geometry.vertices.append({.offset = 16, .stride = 24});
-    geometry.instances.append({.offset = 32, .stride = 48});
+    geometry.format.attributes.append(RasterGeometry::VertexAttribute {.location = 3});
+    geometry.vertices.append(RasterGeometry::GeometryBuffer {.offset = 16, .stride = 24});
+    geometry.instances.append(RasterGeometry::GeometryBuffer {.offset = 32, .stride = 48});
     geometry.indices.offset   = 64;
     geometry.vertexCount      = 7;
     geometry.instanceCount    = 2;
