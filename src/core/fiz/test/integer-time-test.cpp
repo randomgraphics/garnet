@@ -9,18 +9,11 @@ using namespace GN::fiz;
 
 TEST_CASE("fiz UnitOfTime preserves exact integer nanosecond timeline without drift", "[fiz][time]") {
     SECTION("Zero drift integer accumulation vs float accumulation") {
-        // In standard 32-bit float accumulators, dt = 1/60 accumulates significant rounding error
-        float       floatAccumulator = 0.0f;
-        const float floatDt          = 1.0f / 60.0f;
-
         UnitOfTime       intAccumulator(0);
         const UnitOfTime intDt(16'666'667); // 16.666667 ms
 
         // Accumulate 3600 frames (1 minute of 60 Hz simulation)
-        for (int i = 0; i < 3600; ++i) {
-            floatAccumulator += floatDt;
-            intAccumulator += intDt;
-        }
+        for (int i = 0; i < 3600; ++i) { intAccumulator += intDt; }
 
         // Exact expected integer nanoseconds: 3600 * 16666667 = 60000001200 ns
         int64_t expectedNs = 3600LL * 16'666'667LL;

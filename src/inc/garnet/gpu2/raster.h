@@ -447,7 +447,7 @@ struct RasterGeometry {
     };
 
     struct GeometryBuffer {
-        AutoRef<Buffer> buffer;
+        AutoRef<Buffer> buffer = {};
         uint64_t        offset = 0;
         uint32_t        stride = 0;
     };
