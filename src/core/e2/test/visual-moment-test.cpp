@@ -69,6 +69,7 @@ struct RecordingEnvironment final : VisualEnvironment {
     }
 };
 
+#if 0 // Old mutable VisualFacet belongs to the suspended SimpleWorld tests below.
 struct CustomVisualFacet final : VisualFacet {
     GN_REGISTER_RUNTIME_TYPE(VisualFacet);
 
@@ -79,6 +80,8 @@ struct CustomVisualFacet final : VisualFacet {
 
     Ref<VisualMoment> snapshot(const VisualTableau::SnapshotParameters &) override { return contribution; }
 };
+
+#endif
 
 #if 0 // Suspended with E2 Simple world; do not migrate these helpers during FX2 work.
 AutoRef<fx2::Geometry> triangleGeometry() {

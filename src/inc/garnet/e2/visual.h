@@ -27,7 +27,7 @@ struct Camera : Being {
     };
 
     /// Mutable observer description. May be updated at any time, e.g. to move or re-orient
-    /// the camera; the value is read when a world captures a visual moment.
+    /// the camera; presentation reads this value when capturing a visual moment.
     Desc desc;
 
     struct CreateParameters {
@@ -43,8 +43,8 @@ struct VisualDomain : Being {
     GN_E2_DEFINE_A_BEING(Being);
 
     struct CreateParameters {
-        Universe &           universe;
-        Ref<OperatingDomain> os;
+        Universe &    universe;
+        Ref<Platform> os;
     };
 
     /// Clear values and scene contents for one complete frame.
@@ -119,7 +119,7 @@ struct VisualTableau : Being {
         UnitOfTime             expectedRenderTimeShift = {};
     };
 
-    /// Create an empty tableau; worlds normally create populated ones via snapshot().
+    /// Create an empty tableau; presentation adapters populate it from a retained PrimeView.
     GN_API static Ref<VisualTableau> create(Universe &);
 
     /// Include an additional renderable item. Complete composition before rendering,

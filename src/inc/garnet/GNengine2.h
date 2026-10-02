@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "GNfx2.h"
+#include "GNfiz.h"
 
 // engine2 subheaders below must only be included through this file (__GN_INSIDE_ENGINE2_H__ is checked there).
 #define __GN_INSIDE_ENGINE2_H__ 1
@@ -16,6 +17,7 @@
 #include "e2/visual.h"
 #include "e2/world.h"
 #include "e2/universe.h"
+#include "e2/dynamics.h"
 // Simple world is suspended; it is not part of the active engine2 API.
 // #include "e2/simple.h"
 #undef __GN_INSIDE_ENGINE2_H__

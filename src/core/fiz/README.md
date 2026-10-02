@@ -32,9 +32,12 @@ entity, or game-engine architecture.
   on raw numerical coordinates, geometry buffers, and `gpu2` resources. 128-bit world coordinate
   rebasing is handled entirely at the E2 boundary.
 - **Dual Consumption**:
-  - **With E2**: consumed by `e2::PhysicalDomain` and `e2::PhysicalFacet` to
-    provide world-lifecycle management, scene hierarchy synchronization, and
-    gameplay integration.
+  - **With E2**: consumed by a World DynamicsLaw through the contracts in
+    [`../e2/README.md`](../e2/README.md). The Law reads the starting Prime,
+    solves in a local workspace and writes final Facet state to Slate. Physics
+    substeps belong to the World tick; independent mutable Form writeback is
+    superseded. Mutable solver continuation state requires explicit ownership.
+    The initial World MVP halts on failure rather than promising backend rollback.
   - **Standalone**: usable independently in offline baking tools, unit tests,
     dedicated headless servers, or lightweight non-E2 applications.
 - **Zero CPU-GPU Readback for GPU Simulations**: flexible bodies, volumetric
@@ -162,7 +165,9 @@ and visual rendering share geometry data seamlessly:
 For procedural geometry (marching cubes, terrain tessellation, fractured meshes, procedural foliage/hair):
 - **Stream-Out Architecture (Approach B, Default)**: The procedural generator runs **once**.
   The resulting vertices and indices are streamed out / stored into a unified GPU storage buffer
-  first, and then passed simultaneously to both `VisualDomain` and `PhysicalDomain` (`GNfiz`).
+  first, and then shared by rendering and the DynamicsLaw/GNfiz adapter with explicit
+  resource version/lifetime and GPU synchronization. A retained CPU reference alone
+  does not preserve immutable contents of an overwritten GPU buffer.
   - **100% Bit-Identical Guaranteed**: The visible silhouette and physical collision boundaries
     match identically down to the last float.
   - **Optimal Compute**: Saves 50% procedural generation overhead by evaluating geometry once.

@@ -373,7 +373,7 @@ private:
     Universe &                          mUniverse;
     AutoRef<Texture>                    mLastFrameTexture;
     bool                                mFrameSucceeded = false;
-    Ref<OperatingDomain>                mOs;
+    Ref<Platform>                       mOs;
     AutoRef<GpuContext>                 mGpu;
     intptr_t                            mSurface = 0; ///< owned; destroyed in ~VisualDomainImpl between swapchain and GPU context
     AutoRef<Swapchain>                  mSwapchain;
