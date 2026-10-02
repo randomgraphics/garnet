@@ -79,7 +79,10 @@ struct PbrKernel : Kernel {
     /// Appends draws and copies private values into prerequisite uploads. Schedule uploads before this raster.
     /// Shared bindings follow SSC's single-version ordering. Resources must belong to this kernel's device.
     /// False appends no draws. Private parameter buffers are unique to each invocation.
-    virtual bool record(gpu2::GpuRaster &, gpu2::GpuCnC & prerequisiteUploads, const gpu2::GpuResourceSet & shared, const Inputs &) const = 0;
+    /// Always draws using \c Inputs::worldFromObject; any matrices in \p additionalTransforms append additional draws
+    /// sharing the same uploaded parameter buffer.
+    virtual bool record(gpu2::GpuRaster &, gpu2::GpuCnC & prerequisiteUploads, const gpu2::GpuResourceSet & shared, const Inputs &,
+                        ArrayView<const glm::mat4> additionalTransforms = {}) const = 0;
 
 protected:
     using Kernel::Kernel;
@@ -95,7 +98,10 @@ struct LambertianKernel : Kernel {
     /// Appends draws and copies private values into prerequisite uploads. Schedule uploads before this raster.
     /// Shared bindings follow SSC's single-version ordering. Resources must belong to this kernel's device.
     /// False appends no draws. Private parameter buffers are unique to each invocation.
-    virtual bool record(gpu2::GpuRaster &, gpu2::GpuCnC & prerequisiteUploads, const gpu2::GpuResourceSet & shared, const Inputs &) const = 0;
+    /// Always draws using \c Inputs::worldFromObject; any matrices in \p additionalTransforms append additional draws
+    /// sharing the same uploaded parameter buffer.
+    virtual bool record(gpu2::GpuRaster &, gpu2::GpuCnC & prerequisiteUploads, const gpu2::GpuResourceSet & shared, const Inputs &,
+                        ArrayView<const glm::mat4> additionalTransforms = {}) const = 0;
 
 protected:
     using Kernel::Kernel;
@@ -126,7 +132,10 @@ struct CelKernel : Kernel {
     /// Appends draws and copies private values into prerequisite uploads. Schedule uploads before this raster.
     /// Shared bindings follow SSC's single-version ordering. Resources must belong to this kernel's device.
     /// False appends no draws. Private parameter buffers are unique to each invocation.
-    virtual bool record(gpu2::GpuRaster &, gpu2::GpuCnC & prerequisiteUploads, const gpu2::GpuResourceSet & shared, const Inputs &) const = 0;
+    /// Always draws using \c Inputs::worldFromObject; any matrices in \p additionalTransforms append additional draws
+    /// sharing the same uploaded parameter buffer.
+    virtual bool record(gpu2::GpuRaster &, gpu2::GpuCnC & prerequisiteUploads, const gpu2::GpuResourceSet & shared, const Inputs &,
+                        ArrayView<const glm::mat4> additionalTransforms = {}) const = 0;
 
 protected:
     using Kernel::Kernel;

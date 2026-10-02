@@ -303,10 +303,11 @@ int main(int argc, const char ** argv) {
     glm::vec3 cameraCenter(0.0f, 6.0f, 0.0f);
 
     // ─── Main Render & Simulation Loop ───────────────────────────────────────
-    auto      lastTime        = std::chrono::high_resolution_clock::now();
-    double    timeAccumulator = 0.0;
-    int       frameIdx        = 0;
-    const int totalFrames     = testMode ? 60 : framesArg;
+    auto                   lastTime        = std::chrono::high_resolution_clock::now();
+    double                 timeAccumulator = 0.0;
+    int                    frameIdx        = 0;
+    const int              totalFrames     = testMode ? 60 : framesArg;
+    std::vector<glm::mat4> modelTransforms[MODEL_COUNT];
 
     while (totalFrames == 0 || frameIdx < totalFrames) {
         ++frameIdx;
@@ -496,22 +497,32 @@ int main(int argc, const char ** argv) {
         auto kernelUploads = GpuCnC::create({.gpu = gpuContext});
         auto r             = GpuRaster::create("fiz-solids-raster", rcp);
         if (r) {
-            // Draw all physical solids (walls are kept as invisible collision barriers)
+            for (int k = 0; k < MODEL_COUNT; ++k) modelTransforms[k].clear();
+
+            // Collect physical solid transforms grouped by model kind
             for (const auto & e : arena.entities) {
                 if (!e.solid) continue;
                 if (e.kind == MODEL_WALL) {
                     // Containment boundary walls are invisible physics barriers so they don't occlude the scene or skybox.
                     continue;
                 }
-                auto draw = modelAssets[e.kind];
-                if (!draw.geometry.indexCount) continue;
+                if (e.kind >= MODEL_COUNT || !modelAssets[e.kind].geometry.indexCount) continue;
 
                 Transform t = e.solid->transform();
 
-                glm::mat4 worldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
-                                           glm::mat4_cast(glm::quat(t.orientation.w, t.orientation.v.x, t.orientation.v.y, t.orientation.v.z));
-                draw.worldFromObject     = worldTransform;
-                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) GN_ERROR(sLogger, "Failed to record PBR draw");
+                glm::mat4 worldTransform = glm::mat4_cast(glm::quat(t.orientation.w, t.orientation.v.x, t.orientation.v.y, t.orientation.v.z));
+                worldTransform[3]        = glm::vec4(t.position.x, t.position.y, t.position.z, 1.0f);
+                modelTransforms[e.kind].push_back(worldTransform);
+            }
+
+            // Draw all physical solids in per-model batches sharing material and pipeline configuration
+            for (int k = 0; k < MODEL_COUNT; ++k) {
+                if (modelTransforms[k].empty()) continue;
+                modelAssets[k].worldFromObject = modelTransforms[k][0];
+                ArrayView<const glm::mat4> additionalTransforms(modelTransforms[k].data() + 1, modelTransforms[k].size() - 1);
+                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, modelAssets[k], additionalTransforms)) {
+                    GN_ERROR(sLogger, "Failed to record PBR draw for model {}", k);
+                }
             }
 
             // Skybox

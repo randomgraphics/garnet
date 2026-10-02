@@ -1,0 +1,51 @@
+# Assignment: Optimize performance of fiz solid demo
+---
+## Goals
+Eliminate CPU rendering overhead in the fiz solid demo, maximizing frame rate and achieving > 400 FPS (sub-2.5 ms per frame) for 1024 colliding rigid bodies.
+---
+## Design
+1. Extend FX2 lit raster kernels (`PbrKernel`, `LambertianKernel`, `CelKernel`) to accept optional batch transforms `ArrayView<const glm::mat4> transforms = {}`.
+   - When multiple instance transforms are supplied, allocate and upload uniform parameters once and construct the resource table once.
+   - Emit draws with per-instance world matrices and transpose inverse normal matrices via immediates push constants.
+   - Consecutive draws with matching configuration (geometry, state, resource table, shaders) hit the GPU raster payload fast-path cache, avoiding pipeline rebinds, descriptor set allocations/writes, and buffer rebinds.
+2. Update `src/sample/fiz/solids.cpp` to group simulated entities by `ModelKind`, batching per-model world transforms into retained vectors.
+   - Optimize transform composition: set translation directly into matrix column 3 instead of performing full 4x4 matrix multiplications.
+   - Record batches via `pbr->record` with the batched transforms.
+3. Verify headless test mode, test suite, and interactive performance telemetry.
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Tasks 1.1 and 2.1 updated and verified.
+- Primary draw always uses Inputs::worldFromObject; ArrayView<const glm::mat4> additionalTransforms specifies extra draws.
+- RelWithDebInfo profile run achieves 0.44 ms physics time and 0.29–0.53 ms draw time (< 1.0 ms total frame time, > 1000 FPS).
+- Temporary profiler sessions and scratch logs in build/solids-profile cleaned up.
+- All 22 FX2 test cases (31,782 assertions) passed.
+In progress: Awaiting user sign-off.
+--- END PROGRESS ---
+--- REFERENCE ---
+src/inc/garnet/fx2/lit-kernels.h
+src/core/fx2/lit-kernels.cpp
+src/core/gpu2/vk-gpu-raster.cpp
+src/sample/fiz/solids.cpp
+agent/GPU2_UNIQUE_MATERIAL_PERFORMANCE.txt
+--- BUILD / CI ---
+python env/bin/build.py r
+build/windows.vc.r/bin/Release/GNtest-internal.exe "[fx2]"
+build/windows.vc.r/bin/Release/GNsample-fiz-solids.exe test
+--- WORKFLOW / CONVENTIONS ---
+Follow AGENTS.md and agent/skills/ rules.
+Keep changes small, local, and portable.
+Preserve user changes.
+--- TASK BREAKDOWN ---
+Phase 1: FX2 batch transform support
+  Task 1.1: Add batch transforms to PbrKernel, LambertianKernel, and CelKernel interfaces and implementation.
+    Verify: Build release, run `GNtest-internal.exe "[fx2]"`.
+    Commit: "feat(fx2): support batch instance transforms in lit raster kernels"
+Phase 2: Fiz solids demo optimization
+  Task 2.1: Group entities by ModelKind and record batched transforms in solids.cpp.
+    Verify: Run solids test mode and compare profile metrics.
+    Commit: "perf(fiz): batch model draws in solids sample"
+--- SUMMARY OF FILES TO TOUCH ---
+src/inc/garnet/fx2/lit-kernels.h
+src/core/fx2/lit-kernels.cpp
+src/sample/fiz/solids.cpp
+agent/FIZ_SOLIDS_PERFORMANCE.txt
