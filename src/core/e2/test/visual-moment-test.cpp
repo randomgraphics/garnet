@@ -120,7 +120,7 @@ struct ShadedMoment final : VisualMoment {
         if (draws.empty()) return false;
         for (const auto & draw : draws) {
             if (!draw.vs || !draw.ps) return false;
-            context.raster().draw(draw);
+            context.raster().recordDraw(draw);
         }
         return true;
     }

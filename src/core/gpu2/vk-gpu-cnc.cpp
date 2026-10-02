@@ -479,9 +479,9 @@ public:
 
     GpuCncVulkan2(const StrA & entityName, const CreateParameters & cp): GpuCnC(TYPE_INFO(), entityName), mGpu(cp.gpu) {}
 
-    void compute(const ComputeParameters & cp) override {
+    void recordCompute(const ComputeParameters & cp) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::compute: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordCompute: already sealed");
                 return;
             }
         StoredCompute op;
@@ -494,17 +494,17 @@ public:
         mOps.emplace_back(std::move(op));
     }
 
-    void copyBufferToBuffer(const BufferToBuffer & p) override {
+    void recordCopyBufferToBuffer(const BufferToBuffer & p) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::copyBufferToBuffer: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordCopyBufferToBuffer: already sealed");
                 return;
             }
         mOps.emplace_back(StoredBufferToBuffer {p.src, p.dst, p.srcOffset, p.dstOffset, p.size});
     }
 
-    void copyBufferToImage(const BufferToImage & p) override {
+    void recordCopyBufferToImage(const BufferToImage & p) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::copyBufferToImage: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordCopyBufferToImage: already sealed");
                 return;
             }
         StoredBufferToImage op;
@@ -514,25 +514,25 @@ public:
         mOps.emplace_back(std::move(op));
     }
 
-    void uploadBuffer(AutoRef<Buffer> dst, uint64_t offset, AutoRef<const Blob> content) override {
+    void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, AutoRef<const Blob> content) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: already sealed");
                 return;
             }
         if (!dst || !content || content->empty()) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: null destination or empty content");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: null destination or empty content");
                 return;
             }
         const uint64_t size    = content->size();
         auto           staging = createStaging("upload_stg", size);
         if (!staging) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: staging buffer allocation failed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: staging buffer allocation failed");
                 return;
             }
         {
             auto m = staging->map();
             if (!m.data()) GN_UNLIKELY {
-                    GN_ERROR(sLogger, "GpuCncVulkan2::uploadBuffer: failed to map staging buffer");
+                    GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: failed to map staging buffer");
                     return;
                 }
             memcpy(m.data(), content->data(), (size_t) size);
@@ -546,32 +546,32 @@ public:
         mOps.emplace_back(std::move(op));
     }
 
-    std::future<AutoRef<const Blob>> downloadBuffer(AutoRef<Buffer> src, uint64_t offset, uint64_t size) override {
+    std::future<AutoRef<const Blob>> recordDownloadBuffer(AutoRef<Buffer> src, uint64_t offset, uint64_t size) override {
         // On any early return below, `result` destructs and resolves the future with an empty blob.
         DownloadResult<AutoRef<const Blob>> result;
         auto                                future = result.future();
 
         auto * srcVk = RuntimeType::cast<BufferVulkan>(src.get());
         if (mSealed || !srcVk) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: {}", mSealed ? "already sealed" : "null/invalid source buffer");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordDownloadBuffer: {}", mSealed ? "already sealed" : "null/invalid source buffer");
                 return future;
             }
 
         const uint64_t bufSize = srcVk->bufferSize();
         if (offset > bufSize) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: offset {} exceeds buffer size {}", offset, bufSize);
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordDownloadBuffer: offset {} exceeds buffer size {}", offset, bufSize);
                 return future;
             }
         if (size == uint64_t(~0)) size = bufSize - offset;
         if (offset + size > bufSize) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: range [{}, {}) exceeds buffer size {}", offset, offset + size, bufSize);
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordDownloadBuffer: range [{}, {}) exceeds buffer size {}", offset, offset + size, bufSize);
                 return future;
             }
         if (size == 0) return future; // nothing to download => empty blob; not an error.
 
         auto staging = createStaging("download_stg", size);
         if (!staging) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::downloadBuffer: staging buffer allocation failed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordDownloadBuffer: staging buffer allocation failed");
                 return future;
             }
 
@@ -585,14 +585,14 @@ public:
         return future;
     }
 
-    std::future<TextureContent> downloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) override {
+    std::future<TextureContent> recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) override {
         // On any early return below, `result` destructs and resolves the future with an empty content.
         DownloadResult<TextureContent> result;
         auto                           future = result.future();
 
         auto * srcVk = RuntimeType::cast<TextureVulkanBase>(src.get());
         if (mSealed || !srcVk || regions.empty()) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::downloadImage: {}",
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordDownloadImage: {}",
                          mSealed ? "already sealed" : (!srcVk ? "null/invalid source texture" : "no regions specified"));
                 return future;
             }
@@ -638,13 +638,13 @@ public:
         }
 
         if (cursor == 0) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::downloadImage: regions describe zero bytes");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordDownloadImage: regions describe zero bytes");
                 return future;
             }
 
         auto staging = createStaging("download_img_stg", cursor);
         if (!staging) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::downloadImage: staging buffer allocation failed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordDownloadImage: staging buffer allocation failed");
                 return future;
             }
 

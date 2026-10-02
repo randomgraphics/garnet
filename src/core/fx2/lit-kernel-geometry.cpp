@@ -64,9 +64,9 @@ RasterGeometry buildGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, const Dy
     auto ib = Buffer::create("lit-geom.indices", {.context = gpu, .size = cpuIndices.size() * indexStride});
     if (!vb || !ib) return {};
     // Allocate both resources before recording so allocation failure leaves uploads unchanged.
-    uploads.uploadBuffer(vb, 0, {packed.data(), packed.size()});
+    uploads.recordUploadBuffer(vb, 0, {packed.data(), packed.size()});
     const auto * indexData = use16 ? reinterpret_cast<const uint8_t *>(indices16.data()) : reinterpret_cast<const uint8_t *>(cpuIndices.data());
-    uploads.uploadBuffer(ib, 0, {indexData, cpuIndices.size() * indexStride});
+    uploads.recordUploadBuffer(ib, 0, {indexData, cpuIndices.size() * indexStride});
     geometry.vertices.append({.buffer = vb, .offset = 0, .stride = stride});
     geometry.indices     = {.buffer = ib, .offset = 0, .stride = indexStride};
     geometry.vertexCount = static_cast<uint32_t>(cpuVerts.size());

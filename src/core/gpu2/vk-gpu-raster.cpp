@@ -359,7 +359,7 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
             return {};
         }
 
-    // Viewport/scissor — self-contained per draw (baseline merged with overrides at record time).
+    // Viewport/scissor — self-contained per recordDraw (baseline merged with overrides at record time).
     const RasterState & drawStates = mStates[d.stateIndex];
     vk::CommandBuffer   vkcb       = ctx.cmd.handle();
     if (drawStates.viewport && drawStates.scissorRect) {
@@ -792,9 +792,9 @@ public:
 
     const RasterTarget & target() const override { return mRenderTarget; }
 
-    void draw(const DrawParameters & dp) override {
+    void recordDraw(const DrawParameters & dp) override {
         if (mSealed) {
-            GN_ERROR(sLogger, "GpuRasterVulkan2::draw: already sealed");
+            GN_ERROR(sLogger, "GpuRasterVulkan2::recordDraw: already sealed");
             return;
         }
 

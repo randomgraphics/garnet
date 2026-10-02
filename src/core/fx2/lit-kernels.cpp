@@ -145,7 +145,7 @@ struct Implementation {
             }
             GpuCnC::Region r;
             r.imageExtent = {1, 1, 1};
-            initialization.copyBufferToImage({.src = b, .dst = t, .regions = {&r, 1}});
+            initialization.recordCopyBufferToImage({.src = b, .dst = t, .regions = {&r, 1}});
             (i ? normal : white) = t;
         }
         return true;
@@ -214,8 +214,8 @@ struct Implementation {
             cel              = Buffer::create("cel-kernel.parameters", {.context = gpu, .size = sizeof(c)});
             if (!cel) return false;
         }
-        uploads.uploadBuffer(material, 0, {reinterpret_cast<const uint8_t *>(&u), sizeof(u)});
-        if (cel) uploads.uploadBuffer(cel, 0, {reinterpret_cast<const uint8_t *>(&c), sizeof(c)});
+        uploads.recordUploadBuffer(material, 0, {reinterpret_cast<const uint8_t *>(&u), sizeof(u)});
+        if (cel) uploads.recordUploadBuffer(cel, 0, {reinterpret_cast<const uint8_t *>(&c), sizeof(c)});
         GpuResourceTable          drawResources;
         GpuRaster::DrawParameters draw {.geometry = g, .resources = drawResources};
         const size_t              variant = (textured ? 1 : 0) + (in.normalMap.empty() ? 0 : 2) + (in.useVertexColor ? 4 : 0);
@@ -247,13 +247,13 @@ struct Implementation {
             mv.setBufferViewSize(sizeof(c));
             set[6].append(mv);
         }
-        raster.draw(draw);
+        raster.recordDraw(draw);
         if (cel && s.cel.outlineWidth > 0) {
             draw.vs                = outlineVertex[variant];
             draw.ps                = outlineFragment;
             draw.states.cullMode   = RasterState::CULL_FRONT;
             draw.states.depthState = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, true};
-            raster.draw(draw);
+            raster.recordDraw(draw);
         }
         return true;
     }

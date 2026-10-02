@@ -269,8 +269,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
             vertexOffset += listVertexBytes;
             indexOffset += listIndexBytes;
         }
-        cnc->uploadBuffer(vertexBuffer, 0, {vertices.data(), vertices.size()});
-        cnc->uploadBuffer(indexBuffer, 0, {indices.data(), indices.size()});
+        cnc->recordUploadBuffer(vertexBuffer, 0, {vertices.data(), vertices.size()});
+        cnc->recordUploadBuffer(indexBuffer, 0, {indices.data(), indices.size()});
 
         struct PushConstants {
             glm::vec2 scale;
@@ -326,7 +326,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 drawResources[0][0].resize(1);
                 drawResources[0][0][0].resource = texture->second;
                 draw.immediates                 = referenceTo(new SimpleBlob<uint8_t>(sizeof(constants), reinterpret_cast<const uint8_t *>(&constants)));
-                raster.draw(draw);
+                raster.recordDraw(draw);
             }
             globalVertexOffset += static_cast<uint64_t>(list->VtxBuffer.Size) * sizeof(UiVertex);
             globalIndexOffset += static_cast<uint64_t>(list->IdxBuffer.Size) * sizeof(ImDrawIdx);

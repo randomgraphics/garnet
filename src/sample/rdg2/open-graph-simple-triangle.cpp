@@ -157,7 +157,7 @@ int main(int argc, const char ** argv) {
             drawParamsGeometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
 
             auto r = GpuRaster::create("open-graph-simple-triangle", rcp);
-            r->draw(drawParams);
+            r->recordDraw(drawParams);
             colorPassWork = r->seal();
         };
         auto colorPassNode = graph->addNode(NodeDesc("main color pass", colorPassAction).dependsOn(solidVsReady).dependsOn(solidPsReady));

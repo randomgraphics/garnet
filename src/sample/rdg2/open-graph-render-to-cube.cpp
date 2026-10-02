@@ -208,7 +208,7 @@ public:
                     dpGeometry.vertexCount = 3; // fullscreen triangle, no VBO
 
                     auto rast = GpuRaster::create("cubemap-face", rcp);
-                    rast->draw(dp);
+                    rast->recordDraw(dp);
                     outPayloads.push_back(rast->seal());
                 }
                 mCtx.graph->publishArtifact(mCubemapReady, AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
@@ -251,7 +251,7 @@ public:
                 dpGeometry.vertexCount = 3;
 
                 auto rast = GpuRaster::create("cubemap-all-faces", rcp);
-                rast->draw(dp);
+                rast->recordDraw(dp);
                 outPayloads.push_back(rast->seal());
                 mCtx.graph->publishArtifact(mCubemapReady, AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
             });
@@ -389,7 +389,7 @@ public:
                          dp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(model), reinterpret_cast<const uint8_t *>(&model)));
 
                          auto rast = GpuRaster::create("cube-display", rcp);
-                         rast->draw(dp);
+                         rast->recordDraw(dp);
                          outPayload = rast->seal();
                      })
                 .dependsOn(cubemapToken)

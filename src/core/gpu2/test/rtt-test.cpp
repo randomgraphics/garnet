@@ -76,7 +76,7 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
     dp.ps                  = ps;
     dpGeometry.vertexCount = 3; // fullscreen triangle from gl_VertexIndex, no vertex buffer
 
-    raster2->draw(dp);
+    raster2->recordDraw(dp);
     AutoRef<GpuPayload> p2 = raster2->seal();
 
     // Submit both passes as one batch. The batch tracker transitions rtt from
@@ -148,7 +148,7 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     dp.ps                  = ps;
     dpGeometry.vertexCount = 3;
 
-    raster2->draw(dp);
+    raster2->recordDraw(dp);
     AutoRef<GpuPayload> p2 = raster2->seal();
 
     submitAndWait(gpu, "rtt-test", p1, p2);
@@ -202,7 +202,7 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     dp.vs                  = vs;
     dp.ps                  = ps;
     dpGeometry.vertexCount = 3;
-    raster->draw(dp);
+    raster->recordDraw(dp);
     AutoRef<GpuPayload> p = raster->seal();
 
     submitAndWait(gpu, "rtt-test", p);
@@ -275,14 +275,14 @@ TEST_CASE("GPU2 RTT: borrowed draw inputs are snapshotted before returning", "[g
         REQUIRE(draw.ps);
         draw.states.cullMode    = RasterState::CULL_NONE;
         draw.states.scissorRect = RasterState::ScissorRect {0, 0, 4, 4};
-        raster->draw(draw);
+        raster->recordDraw(draw);
         resources[0][0][0]      = greenView;
         geometry.vertexCount    = 0;
         draw.states.scissorRect = RasterState::ScissorRect {4, 0, 4, 4};
-        raster->draw(draw);
+        raster->recordDraw(draw);
         geometry.vertexCount    = 3;
         draw.states.scissorRect = RasterState::ScissorRect {8, 0, 4, 4};
-        raster->draw(draw);
+        raster->recordDraw(draw);
         geometry.vertexCount = 0;
         resources.clear();
         payload = raster->seal();

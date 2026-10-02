@@ -59,7 +59,7 @@ struct ImageImplementation {
             p.immediates = immediate;
             p.x          = (values.dimensions[2] + 7) / 8;
             p.y          = (values.dimensions[3] + 7) / 8;
-            cnc->compute(p);
+            cnc->recordCompute(p);
             return cnc->seal();
         }
         RasterTarget target;
@@ -73,7 +73,7 @@ struct ImageImplementation {
         p.ps                  = shader;
         pGeometry.vertexCount = 3;
         p.immediates          = immediate;
-        raster->draw(p);
+        raster->recordDraw(p);
         return raster->seal();
     }
     bool record(const GaussianBlurInputs & input, DynaArray<AutoRef<GpuPayload>> & work) const {

@@ -113,7 +113,7 @@ public:
         }
         draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(values), reinterpret_cast<const uint8_t *>(&values)));
         // Empty overrides intentionally preserve the caller's complete raster policy.
-        raster.draw(draw);
+        raster.recordDraw(draw);
         return true;
     }
 };
@@ -147,7 +147,7 @@ public:
         draw.states.cullMode     = RasterState::CULL_NONE;
         drawGeometry.vertexCount = 3;
         drawResources.append(shared);
-        raster.draw(draw);
+        raster.recordDraw(draw);
         return true;
     }
 };

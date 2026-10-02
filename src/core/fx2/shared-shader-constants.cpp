@@ -58,7 +58,7 @@ static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2
         reg.bufferOffset = f * 4ULL;
         regions.append(reg);
     }
-    cnc.copyBufferToImage({.src = staging, .dst = tex, .regions = regions});
+    cnc.recordCopyBufferToImage({.src = staging, .dst = tex, .regions = regions});
     return tex; // staging reference held by cnc until seal()
 }
 
@@ -190,7 +190,7 @@ private:
             if (stg.empty()) return;
             auto tex = gpu2::Texture::create(texName, {.context = mGpu, .descriptor = stg.descriptor});
             if (!tex) return;
-            cnc->copyBufferToImage(stg, tex);
+            cnc->recordCopyBufferToImage(stg, tex);
             outTex              = tex;
             loadedAnyEnvTexture = true;
         };
@@ -301,8 +301,8 @@ private:
 
         auto cnc = gpu2::GpuCnC::create({.gpu = mGpu});
         if (!cnc) GN_UNLIKELY return;
-        cnc->copyBufferToBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
-        cnc->copyBufferToBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
+        cnc->recordCopyBufferToBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
+        cnc->recordCopyBufferToBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
         snapshot.set0Payloads.append(cnc->seal());
     }
 };

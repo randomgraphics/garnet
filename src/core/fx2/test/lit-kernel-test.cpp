@@ -21,7 +21,7 @@ struct LitRecordingRaster final : GpuRaster {
     };
     DynaArray<RecordedDraw> draws;
     LitRecordingRaster(): GpuRaster(TYPE_INFO(), "lit-recording") {}
-    void                 draw(const DrawParameters & d) override { draws.append(d); }
+    void                 recordDraw(const DrawParameters & d) override { draws.append(d); }
     const RasterTarget & target() const override { return destination; }
     AutoRef<GpuPayload>  seal() override { return {}; }
 };
@@ -107,7 +107,7 @@ TEST_CASE("fx2 lit kernels render position-normal buffers with independent priva
     const float data[]                                                     = {-1, -1, 0, 0, 0, 1, 0, -1, 0, 0, 0, 1, -.5f, 1, 0, 0, 0, 1};
     auto        vertices                                                   = Buffer::create("lit.vertices", {.context = gpu, .size = sizeof(data)});
     REQUIRE(vertices);
-    init->uploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(data), sizeof(data)});
+    init->recordUploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(data), sizeof(data)});
     gpu->submit(GpuContext::SubmitParameters("lit.init").appendWork(init->seal()));
     for (int kind = 0; kind < 3; ++kind) {
         CAPTURE(kind);
@@ -206,7 +206,7 @@ TEST_CASE("fx2 renders 1024 independent materials in one raster", "[fx2][lit][ke
     const float vertices[]                                                 = {-1, -1, 0, 0, 0, 1, 3, -1, 0, 0, 0, 1, -1, 3, 0, 0, 0, 1};
     auto        buffer = Buffer::create("many-materials.vertices", {.context = gpu, .size = sizeof(vertices)});
     REQUIRE(buffer);
-    initialization->uploadBuffer(buffer, 0, {reinterpret_cast<const uint8_t *>(vertices), sizeof(vertices)});
+    initialization->recordUploadBuffer(buffer, 0, {reinterpret_cast<const uint8_t *>(vertices), sizeof(vertices)});
     gpu->submit(GpuContext::SubmitParameters("many-materials.init").appendWork(initialization->seal()));
     auto output = Texture::create(
         "many-materials.output",

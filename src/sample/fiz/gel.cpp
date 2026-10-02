@@ -55,7 +55,7 @@ static PbrKernel::Inputs gelInputs(AutoRef<GpuContext> gpu, GpuCnC & uploads, co
         for (int i = 0; i < 3; ++i) indices.append(face.indices[i]);
     auto ib = Buffer::create("gel.indices", {.context = gpu, .size = indices.size() * sizeof(uint32_t)});
     if (!ib) return result;
-    uploads.uploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(indices.data()), indices.size() * sizeof(uint32_t)});
+    uploads.recordUploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(indices.data()), indices.size() * sizeof(uint32_t)});
     result.geometry.indices     = {.buffer = ib, .stride = sizeof(uint32_t)};
     result.geometry.indexCount  = static_cast<uint32_t>(indices.size());
     result.geometry.vertexCount = static_cast<uint32_t>(mesh->faceVertices().size());
@@ -369,7 +369,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
             for (auto & g : arena.gels) {
                 if (!g.gel) continue;
                 const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);
-                cnc->uploadBuffer(g.dynamicVb[bufIdx], 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(g.cpuVertices.data()), vbBytes));
+                cnc->recordUploadBuffer(g.dynamicVb[bufIdx], 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(g.cpuVertices.data()), vbBytes));
             }
             auto uploadPayload = cnc->seal();
             auto tU1           = std::chrono::high_resolution_clock::now();
@@ -854,7 +854,7 @@ int main(int argc, const char ** argv) {
         for (auto & g : arena.gels) {
             if (!g.gel) continue;
             const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);
-            cnc->uploadBuffer(g.dynamicVb[bufIdx], 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(g.cpuVertices.data()), vbBytes));
+            cnc->recordUploadBuffer(g.dynamicVb[bufIdx], 0, ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(g.cpuVertices.data()), vbBytes));
         }
 
         auto uploadPayload = cnc->seal();
