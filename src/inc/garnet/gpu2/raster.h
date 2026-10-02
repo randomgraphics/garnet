@@ -483,12 +483,12 @@ public:
     GN_API static AutoRef<GpuRaster> create(const StrA & name, const CreateParameters &);
 
     struct DrawParameters {
-        AutoRef<GpuShader> vs, hs, ds, gs, ps;
-        RasterState states; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
-                            ///< RasterTarget's baseline state.
-        const RasterGeometry &   geometry;   ///< Borrowed; must remain valid through each recordDraw() call.
-        const GpuResourceTable & resources;  ///< Borrowed; edits between calls affect only subsequent draws.
-        AutoRef<const Blob>      immediates; ///< reference counted immediate constants.
+        AutoRef<GpuShader> vs = {}, hs = {}, ds = {}, gs = {}, ps = {};
+        RasterState states = {}; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
+                                 ///< RasterTarget's baseline state.
+        const RasterGeometry &   geometry;        ///< Borrowed; must remain valid through each recordDraw() call.
+        const GpuResourceTable & resources;       ///< Borrowed; edits between calls affect only subsequent draws.
+        AutoRef<const Blob>      immediates = {}; ///< reference counted immediate constants.
     };
     /// Record a draw without executing it; snapshot descriptions and retain GPU resources before returning.
     /// Later edits or destruction of inputs do not affect recorded draws or the sealed payload.

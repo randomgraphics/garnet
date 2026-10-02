@@ -222,19 +222,6 @@ static inline bool sameResources(const GpuResourceTable & a, const GpuResourceTa
     return true;
 }
 
-static inline bool isReadOnlyResourceTable(const GpuResourceTable & table) {
-    for (const auto & set : table) {
-        for (const auto & slot : set) {
-            for (const auto & view : slot) {
-                if (view.empty()) continue;
-                if (view.isTexture() && view.imageView.type == GpuResourceView::ImageView::STORAGE) return false;
-                if (view.isBuffer() && view.bufferView.type == GpuResourceView::BufferView::STORAGE) return false;
-            }
-        }
-    }
-    return true;
-}
-
 bool GpuRasterPayloadVulkan::collectPassResources(GpuResourceStateTrackerVulkan & tracker) {
     if (!tracker.addRasterTarget(mRenderTarget)) return false;
 
