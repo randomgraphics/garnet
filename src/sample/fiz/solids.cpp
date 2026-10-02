@@ -526,7 +526,7 @@ int main(int argc, const char ** argv) {
             }
 
             // Skybox
-            if (!skybox->record(*r, sscSnapshot.set0Resources)) GN_ERROR(sLogger, "Failed to record skybox");
+            if (!skybox->record(*r, sscSnapshot.set0Resources)) { GN_ERROR(sLogger, "Failed to record skybox"); }
             renderWorks.append(kernelUploads->seal());
             renderWorks.append(r->seal());
         }

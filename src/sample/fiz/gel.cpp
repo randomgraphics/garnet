@@ -397,7 +397,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, SharedShader
                     draw.geometry.vertices[0].buffer = g.dynamicVb[bufIdx];
                     draw.geometry.vertices[0].stride = sizeof(GelVertex);
                     draw.geometry.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
-                    if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) GN_ERROR(sLogger, "Failed to record PBR draw");
+                    if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
                 }
                 renderWorks.append(kernelUploads->seal());
                 renderWorks.append(r->seal());
@@ -880,7 +880,7 @@ int main(int argc, const char ** argv) {
                 glm::mat4 worldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
                                            glm::mat4_cast(glm::quat(t.orientation.w, t.orientation.v.x, t.orientation.v.y, t.orientation.v.z));
                 draw.worldFromObject     = worldTransform;
-                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) GN_ERROR(sLogger, "Failed to record PBR draw");
+                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
             }
 
             // Draw deformable soft body gels
@@ -895,11 +895,11 @@ int main(int argc, const char ** argv) {
                 draw.geometry.vertices[0].stride = sizeof(GelVertex);
                 draw.geometry.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
 
-                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) GN_ERROR(sLogger, "Failed to record PBR draw");
+                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
             }
 
             // Skybox
-            if (!skybox->record(*r, sscSnapshot.set0Resources)) GN_ERROR(sLogger, "Failed to record skybox");
+            if (!skybox->record(*r, sscSnapshot.set0Resources)) { GN_ERROR(sLogger, "Failed to record skybox"); }
             renderWorks.append(kernelUploads->seal());
             renderWorks.append(r->seal());
         }
