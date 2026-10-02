@@ -25,7 +25,7 @@ TEST_CASE("GPU2: geometry and resource tables transfer storage on move", "[gpu2]
     CHECK(geometry.format.attributes.empty());
     CHECK(geometry.vertices.empty());
     CHECK(geometry.instances.empty());
-    geometry.vertices.append({});
+    geometry.vertices.append(RasterGeometry::GeometryBuffer {});
     geometry = std::move(moved);
     CHECK(geometry.format.attributes.data() == attributes);
     CHECK(geometry.vertices.data() == vertices);
