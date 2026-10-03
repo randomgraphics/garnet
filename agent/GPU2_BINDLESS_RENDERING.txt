@@ -50,7 +50,7 @@ descriptor set compilation, per-draw table scanning, and per-draw heap allocatio
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 4: High-performance bindless sample showcase demonstrating 40,000 draws, 256 textures, UPDATE_AFTER_BIND streaming, 3D lighting, and real-time telemetry.
+Last completed: Phase 4: Alternating dual-pipeline stress test (10k-100k draws switching between lit cube and holographic gem shaders) defeating instancing, live UPDATE_AFTER_BIND streaming, and frame-rate dependent animation.
 In progress: Awaiting manual user sign-off.
 --- END PROGRESS ---
 
@@ -131,6 +131,15 @@ Phase 4: Sample Application Demonstration
     rendering multiple objects with distinct bindless textures and push constant parameters.
     Verify: Sample builds and renders smoothly at high frame rate with 256 textures and up to 40k draws.
     Commit: sample(gpu2): add bindless rendering demonstration sample
+
+[x] Task 4.2: Implement alternating dual-pipeline anti-instancing benchmark (10k-100k draws alternating
+    every single draw between solid lit cube and holographic gemstone shaders sharing Set 0 bindless heap).
+    Verify: Headless test passes with verifyBackbuffer: PASSED (draws=2000, rendered non-background pixels=127473).
+    Commit: feat(sample): alternate draws between 2 distinct pipelines up to 100k draws to demonstrate bindless advantage over instancing
+
+[x] Task 4.3: Make animation speed frame-rate dependent so higher FPS directly yields faster simulation.
+    Verify: Sim and camera orbit speed advances proportionally to FPS.
+    Commit: feat(sample): make animation speed frame-rate dependent
 
 --- SUMMARY OF FILES TO TOUCH ---
 
