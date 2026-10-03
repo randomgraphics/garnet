@@ -136,9 +136,16 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     dp.addDeviceExtension("VK_KHR_dynamic_rendering");
 #endif
     dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true).setSynchronization2(true));
-    // Allow depth and stencil planes of a D+S image to be transitioned independently;
-    // without this, separate-aspect barriers on D+S formats are a validation error.
-    dp.addFeature(vk::PhysicalDeviceVulkan12Features().setSeparateDepthStencilLayouts(true).setTimelineSemaphore(true));
+    dp.addFeature(vk::PhysicalDeviceVulkan12Features()
+                      .setSeparateDepthStencilLayouts(true)
+                      .setTimelineSemaphore(true)
+                      .setBufferDeviceAddress(true)
+                      .setDescriptorIndexing(true)
+                      .setRuntimeDescriptorArray(true)
+                      .setShaderSampledImageArrayNonUniformIndexing(true)
+                      .setDescriptorBindingPartiallyBound(true)
+                      .setDescriptorBindingVariableDescriptorCount(true)
+                      .setDescriptorBindingSampledImageUpdateAfterBind(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
     if (!mDevice->handle()) return;

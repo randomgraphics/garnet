@@ -1,0 +1,161 @@
+# Assignment: GPU2 and FX2 Bindless Raster and Transient Data Architecture
+
+---
+
+## Goals
+
+Transform GPU2 and FX2 into a high-performance, bindless rendering pipeline capable
+of rendering thousands of unique materials at >400 FPS by eliminating per-draw descriptor
+thrashing, per-draw heap allocations, and per-draw GPU buffer creations.
+
+1. General Transient Data Manager: Introduce a pooled transient buffer allocator
+   suballocating from recyclable backing buffers (based on the retired `TransientArena`),
+   integrated into `GpuRaster`, `GpuCnC`, and `GpuPayload`.
+2. Vulkan Buffer Device Address & Descriptor Indexing: Enable Vulkan 1.2 core features
+   for 64-bit GPU virtual addresses (`bufferDeviceAddress`) and unbounded descriptor arrays.
+3. Pass-Wide Bindless Descriptor Set in `GpuRaster`: Bind pass-wide texture arrays once
+   per render pass, eliminating per-draw descriptor set binding.
+4. Modernized FX2 Shader ABI: Update lit kernels and shaders to consume material parameters
+   via 64-bit Buffer Device Addresses and bindless texture indices in push constants.
+
+---
+
+## Design
+
+### 1. General Transient Data Manager (`TransientArena` / `TransientBuffer`)
+- Re-architect transient buffer allocation based on the proven `TransientArenaVulkan` design.
+- Backing buffers (`VkBuffer` + host-visible/device-addressable memory) are preallocated
+  and recycled across frames once live suballocations drop to zero.
+- `TransientBuffer` represents an aligned slice `[offset, offset + size)` of a backing buffer:
+  - Supports CPU mapping (`map()` / `unmap()`, `setContent()`).
+  - Supports 64-bit GPU virtual address querying (`gpuAddress()`).
+  - Carries Vulkan handles (`nativeBuffer()`, `offset()`, `size()`).
+- The transient manager is owned by / attached to `GpuRaster` and `GpuCnC` recorders, and
+  its allocated backing buffers are retained by `GpuPayload` until execution completes.
+- In `GpuCnC`: `recordUploadBuffer` uses transient staging slices instead of allocating
+  new `Buffer` objects.
+
+### 2. Vulkan Core Feature Activation
+- Enable `bufferDeviceAddress = VK_TRUE` and descriptor indexing features
+  (`descriptorIndexing`, `runtimeDescriptorArray`, `shaderSampledImageArrayNonUniformIndexing`,
+  `descriptorBindingPartiallyBound`) in `vk::PhysicalDeviceVulkan12Features` during device
+  creation in `vk-gpu-context.cpp`.
+- Backing buffers enable `VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT`.
+
+### 3. Pass-Wide Bindless Descriptor Set in `GpuRaster`
+- During `collectPassResources()`, `GpuRasterPayloadVulkan` aggregates all textures into a
+  pass-wide bindless descriptor array (e.g. Set 1, binding 0: `sampler2D u_textures[]`).
+- The bindless descriptor set is bound once at the start of the pass.
+- Individual draw calls do not assemble or bind unique `GpuResourceTable` descriptor sets.
+
+### 4. FX2 Shader ABI with Buffer Device Address
+- Shaders use `#extension GL_EXT_buffer_reference : require` to declare typed material
+  references (e.g. `layout(buffer_reference, std430) readonly buffer MaterialRef`).
+- Push constants (within the 128-byte guarantee) carry:
+  - `mat4 worldTransform` (64 bytes)
+  - `mat3x4 normalTransform` (48 bytes)
+  - `uint64_t materialAddress` (8 bytes)
+  - `uint32_t flags` / padding (8 bytes)
+- In `lit-kernels.cpp`:
+  - Material parameters and texture IDs are written into a transient buffer suballocation.
+  - The suballocation's 64-bit GPU address is passed directly into the push constant block.
+  - Per-draw `Buffer::create("lit-kernel.parameters", ...)` is completely eliminated.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 1.1 — enabled Vulkan 1.2 bufferDeviceAddress and descriptor indexing.
+  Phase 1.1: enabled Vulkan 1.2 bufferDeviceAddress and descriptor indexing (63 tests / 21194 assertions pass).
+In progress: Phase 1.2 — implement TransientArena and TransientBuffer in gpu2.
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+src/core/gpu2/vk-gpu-context.cpp
+src/core/gpu2/vk-buffer.cpp
+src/core/gpu2/vk-gpu-raster.cpp
+src/core/gpu2/vk-gpu-cnc.cpp
+src/core/fx2/lit-kernels.cpp
+src/core/fx2/vk-shaders/model.frag
+src/core/fx2/vk-shaders/model-kernel.h
+src/core/fx2/vk-shaders/model-material-ubo.h
+
+--- BUILD / CI ---
+
+python.exe env/bin/build.py -C d
+build/windows.vc.d/bin/Debug/GNtest-internal.exe "[gpu2],[fx2]"
+python.exe env/bin/format-all-sources.py -dqn
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep changes local, incremental, and verifiable.
+- Warnings are errors. Maintain portability.
+- Public headers follow garnet-public-interface design rules.
+- Test each phase thoroughly before proceeding to the next.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: Vulkan Core Features & Transient Data Manager Foundation
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Enable bufferDeviceAddress and descriptor indexing in Vulkan 1.2 device creation.
+    Verify: Debug build and GNtest-internal.exe "[gpu2]" pass.
+    Commit: "feat(gpu2): enable Vulkan 1.2 bufferDeviceAddress and descriptor indexing (Phase 1.1)"
+
+  Task 1.2: Implement TransientArena and TransientBuffer in gpu2 with device address support.
+    Verify: Unit tests in gpu-transient-buffer-test.cpp verifying suballocations, mapping, and GPU addresses.
+    Commit: "feat(gpu2): implement TransientArena and TransientBuffer (Phase 1.2)"
+
+  Task 1.3: Integrate TransientArena into GpuPayload and GpuCnC upload/staging paths.
+    Verify: GNtest-internal.exe "[gpu2]" pass with upload/copy tests using transient staging.
+    Commit: "feat(gpu2): use transient buffer manager for GpuCnC staging (Phase 1.3)"
+
+Phase 2: Pass-Wide Bindless Descriptor Set in GpuRaster
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Implement pass-wide texture descriptor indexing and layout in GpuRaster.
+    Verify: GpuRaster tests verifying bindless descriptor set construction and hazard tracking.
+    Commit: "feat(gpu2): implement pass-wide bindless descriptor set in GpuRaster (Phase 2.1)"
+
+  Task 2.2: Optimize draw execution loop to skip per-draw descriptor binding for bindless draws.
+    Verify: GNtest-internal.exe "[gpu2]" pass with multiple draws sharing pass descriptor set.
+    Commit: "perf(gpu2): bypass per-draw descriptor rebinding for bindless draws (Phase 2.2)"
+
+Phase 3: FX2 Modernized Shader ABI & Lit Kernel Bindless Recording
+─────────────────────────────────────────────────────────────────────
+  Task 3.1: Update FX2 lit shader headers and fragment shaders with GL_EXT_buffer_reference and bindless textures.
+    Verify: Shader compilation check and shader reflection validation.
+    Commit: "feat(fx2): modernize lit shaders with buffer references and bindless indexing (Phase 3.1)"
+
+  Task 3.2: Refactor lit-kernels.cpp to record draws using transient material buffers and GPU addresses.
+    Verify: GNtest-internal.exe "[fx2]" pass and GNsample-fx2-pbr headless execution.
+    Commit: "feat(fx2): convert lit kernels to bindless transient recording (Phase 3.2)"
+
+Phase 4: Verification and Performance Benchmarking
+─────────────────────────────────────────────────────────────────────
+  Task 4.1: Benchmark 1024 unique materials in GNsample-fiz-solids and verify performance improvement toward >400 FPS.
+    Verify: Timing run comparison in offscreen test mode with GNsample-fiz-solids.
+    Commit: "perf(fx2): benchmark bindless raster performance (Phase 4.1)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (Vulkan Core Features & Transient Data Manager Foundation):
+  src/core/gpu2/vk-gpu-context.cpp         — enable bufferDeviceAddress and descriptor indexing features
+  src/core/gpu2/vk-transient-buffer.h      — NEW: TransientArena and TransientBuffer interface & Vulkan implementation
+  src/core/gpu2/vk-transient-buffer.cpp    — NEW: backing buffer management and recycling
+  src/core/gpu2/CMakeLists.txt             — register vk-transient-buffer.cpp
+  src/core/gpu2/vk-gpu-cnc.cpp             — integrate transient arena into upload/staging
+  src/core/gpu2/test/gpu-transient-buffer-test.cpp — NEW: test transient buffer allocations
+
+Phase 2 (Pass-Wide Bindless Descriptor Set in GpuRaster):
+  src/inc/garnet/gpu2/raster.h             — public bindless draw parameters / helpers
+  src/core/gpu2/vk-gpu-raster.cpp          — pass-wide bindless descriptor set creation & single-bind draw loop
+  src/core/gpu2/test/gpu-raster-test.cpp   — tests for pass-wide bindless rasterization
+
+Phase 3 (FX2 Modernized Shader ABI & Lit Kernel Bindless Recording):
+  src/core/fx2/vk-shaders/model-material-ubo.h — buffer reference struct definition
+  src/core/fx2/vk-shaders/model-kernel.h       — updated push constant layout
+  src/core/fx2/vk-shaders/model.frag           — bindless texture sampling & buffer reference loading
+  src/core/fx2/vk-shaders/cel-model.frag       — bindless cel shading loading
+  src/core/fx2/lit-kernels.cpp                 — use transient buffer allocation and push GPU addresses
+
+Phase 4 (Verification and Performance Benchmarking):
+  agent/GPU2_FX2_BINDLESS_RASTER.txt       — updated progress and benchmark results
