@@ -342,7 +342,7 @@ Last completed: Phases 0–7 implementation and available validation (2026-09-30
     independent E2 custom moments verified without restoring Simple world.
   Phase 7: Canonical FX2/viewer/E2 docs updated, GCC Debug build and full headless
     CIT pass. Formatting and dependency audits pass. Publication authorized by user.
-In progress: none. Awaiting user review/sign-off; keep this assignment active.
+In progress: Complete. Work signed off by user.
 Limits: Two display-dependent tests skipped; interactive resize/navigation/UI
   capture not exercised. Vulkan/Linux is tested. Web/mobile/other native backend
   execution, shader lowering, and device capability coverage remain platform

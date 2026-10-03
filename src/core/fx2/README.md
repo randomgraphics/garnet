@@ -107,7 +107,7 @@ Generated image effects filter color channels including alpha independently;
 premultiply colors before filtering when transparent-edge semantics require it.
 Normal-map reduction and depth pyramids need distinct algorithms. Callers allocate
 mip storage up front; mip generation does not resize textures. Image algorithm
-verification is tracked in `agent/FX2_KERNEL_REFACTOR.txt`.
+verification is tracked in `agent/completed/2026-10-03-214942-FX2_KERNEL_REFACTOR.txt`.
 
 ## ImGui backend
 
