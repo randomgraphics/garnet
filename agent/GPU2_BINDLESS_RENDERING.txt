@@ -50,8 +50,8 @@ descriptor set compilation, per-draw table scanning, and per-draw heap allocatio
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1: bindless::DescriptorHeap interface, Vulkan implementation, and unit tests (all passed).
-In progress: Phase 2: Bindless Raster Recorder & Pipeline Layout Caching.
+Last completed: Phase 4: High-performance bindless sample showcase demonstrating 40,000 draws, 256 textures, UPDATE_AFTER_BIND streaming, 3D lighting, and real-time telemetry.
+In progress: Awaiting manual user sign-off.
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -100,36 +100,36 @@ Phase 1: Persistent Global Descriptor Heap (`bindless::DescriptorHeap`)
 
 Phase 2: Bindless Raster Recorder & Pipeline Layout Caching
 ───────────────────────────────────────────────────────────
-[ ] Task 2.1: Declare `bindless::Raster` in `<garnet/gpu2/bindless.h>` with plain POD
+[x] Task 2.1: Declare `bindless::Raster` in `<garnet/gpu2/bindless.h>` with plain POD
     `CreateParameters`, `DrawParameters`, and `retainResource()`.
     Verify: Header compiles cleanly.
     Commit: feat(gpu2): declare bindless::Raster public interface
 
-[ ] Task 2.2: Implement internal pipeline layout caching and fast conflict check in `gpu2`.
+[x] Task 2.2: Implement internal pipeline layout caching and fast conflict check in `gpu2`.
     Verify: Conflicting `passResources` fails fast; compatible configurations reuse cached layout.
     Commit: feat(gpu2): internal pipeline layout caching and conflict check for bindless::Raster
 
-[ ] Task 2.3: Implement direct Vulkan command recording in `VkBindlessRaster` bypassing `rv::Drawable`.
+[x] Task 2.3: Implement direct Vulkan command recording in `VkBindlessRaster` bypassing `rv::Drawable`.
     Verify: Draws record push constants and geometry bindings directly without descriptor thrashing.
     Commit: feat(gpu2): implement VkBindlessRaster direct command recording
 
 Phase 3: Bindless Payload, Automatic Barriers & Verification
 ────────────────────────────────────────────────────────────
-[ ] Task 3.1: Implement `VkBindlessPayload` with pass-level descriptor binding, automatic
+[x] Task 3.1: Implement `VkBindlessPayload` with pass-level descriptor binding, automatic
     attachment transitions at `beginRendering` and `endRendering`, and resource retention.
     Verify: Work submits and renders correctly through `GpuContext::submit()`.
     Commit: feat(gpu2): implement VkBindlessPayload with automatic attachment transitions
 
-[ ] Task 3.2: Comprehensive unit tests in `GNtest-internal` for single-draw, multi-draw, and
+[x] Task 3.2: Comprehensive unit tests in `GNtest-internal` for single-draw, multi-draw, and
     attachment state transitions.
     Verify: `GNtest-internal.exe "[gpu2]"` passes all tests.
     Commit: test(gpu2): add comprehensive bindless raster unit tests
 
 Phase 4: Sample Application Demonstration
 ─────────────────────────────────────────
-[ ] Task 4.1: Create a runnable sample in `src/sample/` demonstrating the bindless renderer
+[x] Task 4.1: Create a runnable sample in `src/sample/` demonstrating the bindless renderer
     rendering multiple objects with distinct bindless textures and push constant parameters.
-    Verify: Sample builds and renders smoothly at high frame rate.
+    Verify: Sample builds and renders smoothly at high frame rate with 256 textures and up to 40k draws.
     Commit: sample(gpu2): add bindless rendering demonstration sample
 
 --- SUMMARY OF FILES TO TOUCH ---
