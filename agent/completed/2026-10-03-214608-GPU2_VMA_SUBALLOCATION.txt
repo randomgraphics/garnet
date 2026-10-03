@@ -11,16 +11,8 @@ Preserve dedicated-allocation fallback and all GPU resource lifetimes. Do not ad
 buffer pools, persistent staging maps, or material deduplication in this task.
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 3.1 - Bundled VMA 3.4.0 built and passed 81 GPU2/FX2 tests plus the solids sample.
-  Phase 0: Inspected existing VMA support and isolated rapid-vulkan work on wip/vma-suballocation.
-  Phase 1.1: Enabled VMA with loaded Vulkan functions, device API version capped at 1.3, mapping offsets, and balanced teardown.
-  Phase 1.2: GPU2/FX2 tests passed (81 cases, 32168 assertions); includes simultaneous maps and dedicated fallback.
-  Phase 2.1: Measured dedicated control and three VMA runs; captured 500 quiet-run stacks; removed temporary instrumentation.
-  Phase 1.1: Removed vmaApiVersion as requested; profile/debug builds, 2 VMA tests (16969 assertions), and 60-frame solids run passed.
-  Phase 3.1: Vendored upstream v3.4.0 (3aa921224c154a0d2c43912bc88e1c42ce1f7607); debug/profile builds, 81 tests (32168 assertions), and 60-frame solids run passed.
-Phase 3.2: rapid-vulkan PR #57 merged to main as 4021ec9afc553613a3f346e62997e8b5c144c9d4.
-Phase 3.3: Garnet regression tests and gitlink included in the verified optimization checkpoint; 85 GPU2/FX2 cases passed.
-In progress: None - awaiting assignment sign-off. Further rendering work is tracked in GPU2_UNIQUE_MATERIAL_PERFORMANCE.txt.
+Last completed: Phase 3.3 - Garnet regression tests and gitlink included in verified optimization checkpoint; 85 GPU2/FX2 cases passed. User signed off.
+In progress: Complete.
 --- END PROGRESS ---
 --- REFERENCE ---
 build/solids-profile/report.txt: original profile baseline and raw capture paths.

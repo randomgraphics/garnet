@@ -21,13 +21,8 @@ internal synchronization remains. Concurrent submission or mutation of one recor
 is not covered. The experimental shared-mutex buffer pool was removed.
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 2.2 - Cleaned and verified the user-requested optimization checkpoint.
-Phase 1.1: Indexed resource/configuration lookup and active barrier registrations.
-Phase 1.2: Reused drawable descriptors and kept VMA staging allocations mapped.
-Phase 1.3: Borrowed draw inputs; verified snapshot lifetimes and ownership transfers.
-Phase 2.1: Three timing runs plus 1000 independent wall-time stack samples captured.
-Phase 2.2: Full debug/profile builds, 85 GPU2/FX2 tests (52976 assertions), 60-frame solids run, formatting and diff checks passed.
-In progress: None for this checkpoint; further optimization deferred by user. Assignment remains active.
+Last completed: Phase 2.2 - Cleaned and verified the user-requested optimization checkpoint. Independent material CPU bottleneck solved by GPU2 bindless rendering architecture (`GN::gpu2::bindless`). User signed off.
+In progress: Complete. Superseded/solved by bindless rendering subsystem.
 --- END PROGRESS ---
 --- REFERENCE ---
 src/core/gpu2/vk-gpu-raster.cpp
