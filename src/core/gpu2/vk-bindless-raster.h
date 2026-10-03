@@ -18,6 +18,7 @@ public:
 
     ~VkBindlessRaster() override;
 
+    void                reserve(size_t drawCount, size_t immediateBytes = 0) override;
     void                recordDraw(const DrawParameters & params) override;
     void                retainCleanup(std::function<void()> cleanup) override;
     AutoRef<GpuPayload> seal() override;

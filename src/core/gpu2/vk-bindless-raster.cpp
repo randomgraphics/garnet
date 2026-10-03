@@ -20,6 +20,11 @@ VkBindlessRaster::~VkBindlessRaster() {
     }
 }
 
+void VkBindlessRaster::reserve(size_t drawCount, size_t immediateBytes) {
+    mDraws.reserve(drawCount);
+    if (immediateBytes > 0) { mImmediateData.reserve(immediateBytes); }
+}
+
 void VkBindlessRaster::recordDraw(const DrawParameters & params) {
     if (mSealed) GN_UNLIKELY {
             GN_ERROR(sLogger, "VkBindlessRaster::recordDraw: cannot record draws into a sealed raster");

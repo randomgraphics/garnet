@@ -21,6 +21,8 @@ if(VULKAN_FOUND)
         bindless_spv_headers
         SOURCES shaders/bindless-sample.vert
                 shaders/bindless-sample.frag
+                shaders/bindless-sample-gem.vert
+                shaders/bindless-sample-gem.frag
         COMMENT "Compiling gpu2 bindless sample shaders"
     )
     add_custom_target(GNsample-gpu2-bindless-shaders DEPENDS "${bindless_spv_headers}")

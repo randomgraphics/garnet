@@ -113,6 +113,12 @@ public:
         ArrayView<const uint8_t> immediates    = {}; ///< Inline uniform data (root constants / push constants).
     };
 
+    /// Optional hint to pre-allocate storage for expected draws and immediate data to eliminate vector reallocations.
+    virtual void reserve(size_t drawCount, size_t immediateBytes = 0) {
+        (void) drawCount;
+        (void) immediateBytes;
+    }
+
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;
 

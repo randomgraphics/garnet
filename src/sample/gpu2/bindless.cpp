@@ -18,6 +18,8 @@
 
 #include "bindless-sample-vert.spv.h"
 #include "bindless-sample-frag.spv.h"
+#include "bindless-sample-gem-vert.spv.h"
+#include "bindless-sample-gem-frag.spv.h"
 
 using namespace GN;
 using namespace GN::gpu2;
@@ -37,9 +39,9 @@ struct PushConstants {
     float    rotation[4];  // 16 bytes: orientation quaternion (qx, qy, qz, qw)
     float    colorTint[4]; // 16 bytes: RGBA color multiplier
     uint32_t textureId;    // 4 bytes:  bindless descriptor slot in Set 0
-    float    shininess;    // 4 bytes:  specular exponent
+    float    shininess;    // 4 bytes:  specular exponent / effect param
     float    uvScale[2];   // 8 bytes:  UV coordinate scaling
-    float    lightDir[4];  // 16 bytes: normalized light dir (xyz) + ambient intensity (w)
+    float    lightDir[4];  // 16 bytes: normalized light dir (xyz) + time/ambient (w)
 };
 static_assert(sizeof(PushConstants) == 128, "PushConstants size must be exactly 128 bytes");
 
@@ -258,10 +260,9 @@ static gfx::img::Image makeDynamicTextureImage(uint32_t w, uint32_t h, uint32_t 
     return img;
 }
 
-// ─── 3D Cube Geometry ────────────────────────────────────────────────────────
+// ─── 3D Geometry: Solid Cube & Holographic Octahedron Crystal ────────────────
 
 static void createCubeGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & outVb, AutoRef<Buffer> & outIb, RasterGeometry & outGeom) {
-    // 24 vertices for a unit cube [-0.5, 0.5]^3 with normals and UVs
     const Vertex vertices[24] = {
         // Front (+Z)
         {{-0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
@@ -349,6 +350,90 @@ static void createCubeGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & outVb,
     outGeom.indexCount     = 36;
 }
 
+static void createOctahedronGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & outVb, AutoRef<Buffer> & outIb, RasterGeometry & outGeom) {
+    const glm::vec3 top(0.0f, 0.9f, 0.0f);
+    const glm::vec3 bottom(0.0f, -0.9f, 0.0f);
+    const glm::vec3 c0(0.65f, 0.0f, 0.0f);
+    const glm::vec3 c1(0.0f, 0.0f, 0.65f);
+    const glm::vec3 c2(-0.65f, 0.0f, 0.0f);
+    const glm::vec3 c3(0.0f, 0.0f, -0.65f);
+
+    const glm::vec3 triangles[8][3] = {
+        // Top 4 faces (CCW from outside)
+        {top, c1, c0},
+        {top, c2, c1},
+        {top, c3, c2},
+        {top, c0, c3},
+        // Bottom 4 faces (CCW from outside)
+        {bottom, c0, c1},
+        {bottom, c1, c2},
+        {bottom, c2, c3},
+        {bottom, c3, c0},
+    };
+
+    Vertex   vertices[24];
+    uint16_t indices[24];
+
+    for (int f = 0; f < 8; ++f) {
+        glm::vec3 v0   = triangles[f][0];
+        glm::vec3 v1   = triangles[f][1];
+        glm::vec3 v2   = triangles[f][2];
+        glm::vec3 norm = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+
+        vertices[f * 3 + 0] = {{v0.x, v0.y, v0.z}, {norm.x, norm.y, norm.z}, {0.5f, 1.0f}};
+        vertices[f * 3 + 1] = {{v1.x, v1.y, v1.z}, {norm.x, norm.y, norm.z}, {0.0f, 0.0f}};
+        vertices[f * 3 + 2] = {{v2.x, v2.y, v2.z}, {norm.x, norm.y, norm.z}, {1.0f, 0.0f}};
+
+        indices[f * 3 + 0] = static_cast<uint16_t>(f * 3 + 0);
+        indices[f * 3 + 1] = static_cast<uint16_t>(f * 3 + 1);
+        indices[f * 3 + 2] = static_cast<uint16_t>(f * 3 + 2);
+    }
+
+    outVb = Buffer::create("gem-vb", {.context = gpu, .size = sizeof(vertices), .mappable = true});
+    outIb = Buffer::create("gem-ib", {.context = gpu, .size = sizeof(indices), .mappable = true});
+    GN_ASSERT(outVb && outIb);
+
+    {
+        auto mv = outVb->map();
+        if (mv.data()) std::memcpy(mv.data(), vertices, sizeof(vertices));
+        auto mi = outIb->map();
+        if (mi.data()) std::memcpy(mi.data(), indices, sizeof(indices));
+    }
+
+    outGeom.format.attributes.clear();
+    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+        .location = 0,
+        .binding  = 0,
+        .offset   = 0,
+        .format   = RasterGeometry::AttributeFormat::F32_3,
+    });
+    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+        .location = 1,
+        .binding  = 0,
+        .offset   = sizeof(float) * 3,
+        .format   = RasterGeometry::AttributeFormat::F32_3,
+    });
+    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+        .location = 2,
+        .binding  = 0,
+        .offset   = sizeof(float) * 6,
+        .format   = RasterGeometry::AttributeFormat::F32_2,
+    });
+
+    outGeom.vertices.clear();
+    RasterGeometry::GeometryBuffer geomVb;
+    geomVb.buffer = outVb;
+    geomVb.offset = 0;
+    geomVb.stride = sizeof(Vertex);
+    outGeom.vertices.append(geomVb);
+    outGeom.vertexCount = 24;
+
+    outGeom.indices.buffer = outIb;
+    outGeom.indices.offset = 0;
+    outGeom.indices.stride = sizeof(uint16_t);
+    outGeom.indexCount     = 24;
+}
+
 // ─── Backbuffer Verification for Test Mode ───────────────────────────────────
 
 static bool verifyBackbuffer(const GpuResourceView & view, uint32_t /*width*/, uint32_t /*height*/, uint32_t drawCount) {
@@ -368,8 +453,6 @@ static bool verifyBackbuffer(const GpuResourceView & view, uint32_t /*width*/, u
         return false;
     }
 
-    // Count non-background pixels (rendered cubes should color thousands of pixels)
-    // Clear color is dark space: (10, 10, 18, 255)
     uint32_t nonBackgroundCount = 0;
     for (const auto & px : pixels) {
         if (px.r > 25 || px.g > 25 || px.b > 35) { ++nonBackgroundCount; }
@@ -402,7 +485,7 @@ int main(int argc, const char ** argv) {
 
     if (!testMode) {
         window.reset(createWindow(WindowCreateParameters {
-            .caption      = "Garnet - GPU2 Bindless Rendering Demonstration",
+            .caption      = "Garnet - GPU2 Bindless Rendering Demonstration (Alternating Pipelines)",
             .clientWidth  = W,
             .clientHeight = H,
         }));
@@ -484,15 +567,20 @@ int main(int argc, const char ** argv) {
         GN_ASSERT(streamingTextures[s]);
     }
 
-    // 6. Geometry buffers
-    AutoRef<Buffer> vb, ib;
-    RasterGeometry  geom;
-    createCubeGeometry(gpu, vb, ib, geom);
+    // 6. Geometry buffers for two distinct meshes: Cube and Crystal Octahedron
+    AutoRef<Buffer> cubeVb, cubeIb, gemVb, gemIb;
+    RasterGeometry  cubeGeom, gemGeom;
+    createCubeGeometry(gpu, cubeVb, cubeIb, cubeGeom);
+    createOctahedronGeometry(gpu, gemVb, gemIb, gemGeom);
 
-    // 7. Shaders
-    auto vs = GpuShader::create({.context = gpu, .name = "bindless-vs", .binary = kBindlessSampleVertSpv, .size = sizeof(kBindlessSampleVertSpv)});
-    auto ps = GpuShader::create({.context = gpu, .name = "bindless-ps", .binary = kBindlessSampleFragSpv, .size = sizeof(kBindlessSampleFragSpv)});
-    if (!vs || !ps) {
+    // 7. Shaders for 2 Distinct Pipelines:
+    //    Pipeline 1: Solid Lit 3D Cubes (Blinn-Phong directional lighting + specular)
+    //    Pipeline 2: Holographic 3D Crystals (normal-extruding vertex wave + chromatic dispersion + Fresnel rim glow)
+    auto vsCube = GpuShader::create({.context = gpu, .name = "cube-vs", .binary = kBindlessSampleVertSpv, .size = sizeof(kBindlessSampleVertSpv)});
+    auto psCube = GpuShader::create({.context = gpu, .name = "cube-ps", .binary = kBindlessSampleFragSpv, .size = sizeof(kBindlessSampleFragSpv)});
+    auto vsGem  = GpuShader::create({.context = gpu, .name = "gem-vs", .binary = kBindlessSampleGemVertSpv, .size = sizeof(kBindlessSampleGemVertSpv)});
+    auto psGem  = GpuShader::create({.context = gpu, .name = "gem-ps", .binary = kBindlessSampleGemFragSpv, .size = sizeof(kBindlessSampleGemFragSpv)});
+    if (!vsCube || !psCube || !vsGem || !psGem) {
         std::fprintf(stderr, "Failed to create bindless shaders\n");
         return -1;
     }
@@ -507,26 +595,26 @@ int main(int argc, const char ** argv) {
     rt.states.setCullMode(RasterState::CULL_BACK);
     rt.states.setFrontFace(RasterState::FRONT_CCW);
 
-    // 9. Pre-generate up to 40,000 Swarm Objects in astronomical spiral arms
-    constexpr uint32_t       MAX_OBJECTS = 40000;
+    // 9. Pre-generate up to 100,000 Swarm Objects alternating between Cubes and Crystals
+    constexpr uint32_t       MAX_OBJECTS = 100000;
     std::vector<SwarmObject> swarm(MAX_OBJECTS);
 
     std::mt19937                   rng(1337);
-    std::uniform_real_distribution distRadius(3.5f, 48.0f);
+    std::uniform_real_distribution distRadius(3.5f, 54.0f);
     std::uniform_real_distribution distSpeed(0.15f, 0.75f);
     std::uniform_real_distribution distAngle(0.0f, 6.2831853f);
-    std::uniform_real_distribution distVertAmp(0.5f, 8.0f);
+    std::uniform_real_distribution distVertAmp(0.5f, 9.0f);
     std::uniform_real_distribution distVertFreq(0.4f, 1.8f);
     std::uniform_real_distribution distSpinSpeed(0.5f, 3.5f);
     std::uniform_real_distribution distScale(0.35f, 0.70f);
     std::uniform_real_distribution distAxis(-1.0f, 1.0f);
     std::uniform_real_distribution distShininess(16.0f, 64.0f);
-    std::uniform_real_distribution distTint(0.85f, 1.0f);
+    std::uniform_real_distribution distTint(0.80f, 1.0f);
 
     for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
         SwarmObject & obj = swarm[i];
         obj.orbitRadius   = distRadius(rng);
-        obj.orbitSpeed    = distSpeed(rng) * (obj.orbitRadius > 20.0f ? 0.4f : 0.9f);
+        obj.orbitSpeed    = distSpeed(rng) * (obj.orbitRadius > 22.0f ? 0.35f : 0.85f);
         obj.orbitPhase    = distAngle(rng);
         obj.verticalAmp   = distVertAmp(rng);
         obj.verticalFreq  = distVertFreq(rng);
@@ -543,14 +631,15 @@ int main(int argc, const char ** argv) {
     }
 
     // Application state
-    uint32_t activeDrawCount  = testMode ? 1000 : 10000;
+    // Default: 20,000 draws (10,000 Cubes + 10,000 Crystals alternating every draw call!)
+    uint32_t activeDrawCount  = testMode ? 2000 : 20000;
     bool     streamingEnabled = true;
     bool     animPaused       = false;
     bool     autoCameraOrbit  = true;
 
-    float cameraDistance  = 42.0f;
+    float cameraDistance  = 46.0f;
     float cameraAngle     = 0.0f;
-    float cameraElevation = 0.45f; // radians above horizon
+    float cameraElevation = 0.40f;
     float simTime         = 0.0f;
 
     float avgFps      = 0.0f;
@@ -562,7 +651,6 @@ int main(int argc, const char ** argv) {
     int totalFrames  = (testMode || windowedTest) ? 10 : 0;
     int frameCounter = 0;
 
-    // Track previous key states for edge-triggered toggles
     bool prevKeyStates[static_cast<size_t>(KeyCode::NUM_KEYS)] = {};
     auto isKeyJustPressed                                      = [&](KeyCode code) -> bool {
         if (!window) return false;
@@ -586,26 +674,26 @@ int main(int argc, const char ** argv) {
         if (window) {
             if (window->getKeyStatus(KeyCode::ESCAPE).down) break;
 
-            // Draw count presets: 1 -> 1k, 2 -> 5k, 3 -> 10k, 4 -> 20k, 5 -> 40k
-            if (isKeyJustPressed(KeyCode::_1)) activeDrawCount = 1000;
-            if (isKeyJustPressed(KeyCode::_2)) activeDrawCount = 5000;
-            if (isKeyJustPressed(KeyCode::_3)) activeDrawCount = 10000;
-            if (isKeyJustPressed(KeyCode::_4)) activeDrawCount = 20000;
-            if (isKeyJustPressed(KeyCode::_5)) activeDrawCount = 40000;
+            // Draw count presets: 1 -> 10k, 2 -> 25k, 3 -> 50k, 4 -> 75k, 5 -> 100k
+            if (isKeyJustPressed(KeyCode::_1)) activeDrawCount = 10000;
+            if (isKeyJustPressed(KeyCode::_2)) activeDrawCount = 25000;
+            if (isKeyJustPressed(KeyCode::_3)) activeDrawCount = 50000;
+            if (isKeyJustPressed(KeyCode::_4)) activeDrawCount = 75000;
+            if (isKeyJustPressed(KeyCode::_5)) activeDrawCount = 100000;
 
-            // Fine adjustments with UP / DOWN arrows (+/- 1000 draws)
-            if (isKeyJustPressed(KeyCode::UP) && activeDrawCount + 1000 <= MAX_OBJECTS) { activeDrawCount += 1000; }
-            if (isKeyJustPressed(KeyCode::DOWN) && activeDrawCount >= 2000) { activeDrawCount -= 1000; }
+            // Fine adjustments with UP / DOWN arrows (±5000 draws)
+            if (isKeyJustPressed(KeyCode::UP) && activeDrawCount + 5000 <= MAX_OBJECTS) { activeDrawCount += 5000; }
+            if (isKeyJustPressed(KeyCode::DOWN) && activeDrawCount >= 5000) { activeDrawCount -= 5000; }
 
             // Feature toggles
             if (isKeyJustPressed(KeyCode::SPACEBAR)) animPaused = !animPaused;
             if (isKeyJustPressed(KeyCode::S)) streamingEnabled = !streamingEnabled;
             if (isKeyJustPressed(KeyCode::C)) autoCameraOrbit = !autoCameraOrbit;
             if (isKeyJustPressed(KeyCode::R)) {
-                cameraDistance  = 42.0f;
-                cameraElevation = 0.45f;
+                cameraDistance  = 46.0f;
+                cameraElevation = 0.40f;
                 cameraAngle     = 0.0f;
-                activeDrawCount = 10000;
+                activeDrawCount = 20000;
             }
 
             // Interactive Camera Controls
@@ -614,17 +702,16 @@ int main(int argc, const char ** argv) {
             if (window->getKeyStatus(KeyCode::W).down) { cameraElevation = std::min(1.45f, cameraElevation + 0.02f); }
             if (window->getKeyStatus(KeyCode::PAGEUP).down) { cameraElevation = std::min(1.45f, cameraElevation + 0.02f); }
             if (window->getKeyStatus(KeyCode::PAGEDOWN).down) { cameraElevation = std::max(-1.45f, cameraElevation - 0.02f); }
-            if (window->getKeyStatus(KeyCode::Q).down) { cameraDistance = std::min(120.0f, cameraDistance + 0.5f); }
-            if (window->getKeyStatus(KeyCode::E).down) { cameraDistance = std::max(6.0f, cameraDistance - 0.5f); }
+            if (window->getKeyStatus(KeyCode::Q).down) { cameraDistance = std::min(140.0f, cameraDistance + 0.6f); }
+            if (window->getKeyStatus(KeyCode::E).down) { cameraDistance = std::max(6.0f, cameraDistance - 0.6f); }
         }
 
         if (!animPaused) {
             simTime += frameDt;
-            if (autoCameraOrbit) { cameraAngle += frameDt * 0.25f; }
+            if (autoCameraOrbit) { cameraAngle += frameDt * 0.22f; }
         }
 
         // ─── Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action) ───
-        // In-place updates to descriptor heap slots while render loop is executing
         if (streamingEnabled && !testMode) {
             for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
                 auto dynImg = makeDynamicTextureImage(TEX_SIZE, TEX_SIZE, s, simTime);
@@ -672,9 +759,15 @@ int main(int argc, const char ** argv) {
             return -1;
         }
 
-        // ─── High-Throughput Draw Call Recording Benchmark ───────────────────
-        // Records thousands of draws with distinct textures inSet 0 and push constants.
-        // Bypasses descriptor set switching entirely!
+        // Pre-allocate storage for high draw counts (up to 100k) to eliminate vector reallocations
+        raster->reserve(activeDrawCount, activeDrawCount * sizeof(PushConstants));
+
+        // ─── Alternating Pipeline Draw Call Recording Benchmark ─────────────
+        // Every single draw alternates between:
+        //   - Even draw: Pipeline 1 (Solid Lit Cube) + Cube Geometry
+        //   - Odd draw:  Pipeline 2 (Holographic Crystal Gem) + Gem Geometry
+        // Instancing CANNOT batch across alternating pipelines.
+        // Bindless binds Set 0 once and switches pipelines with zero descriptor rebinding!
         auto tRecordStart = std::chrono::high_resolution_clock::now();
 
         for (uint32_t i = 0; i < activeDrawCount; ++i) {
@@ -688,7 +781,6 @@ int main(int argc, const char ** argv) {
             float     spinAngle = obj.spinSpeed * simTime;
             glm::quat q         = glm::angleAxis(spinAngle, obj.spinAxis);
 
-            // Construct model matrix: translate * rotate * scale
             float x2 = q.x + q.x, y2 = q.y + q.y, z2 = q.z + q.z;
             float xx = q.x * x2, xy = q.x * y2, xz = q.x * z2;
             float yy = q.y * y2, yz = q.y * z2, zz = q.z * z2;
@@ -713,6 +805,8 @@ int main(int argc, const char ** argv) {
 
             glm::mat4 mvp = viewProj * model;
 
+            bool isGem = (i & 1) != 0;
+
             PushConstants pc {};
             std::memcpy(pc.mvp, glm::value_ptr(mvp), sizeof(pc.mvp));
             pc.rotation[0]  = q.x;
@@ -730,12 +824,13 @@ int main(int argc, const char ** argv) {
             pc.lightDir[0]  = lightDir.x;
             pc.lightDir[1]  = lightDir.y;
             pc.lightDir[2]  = lightDir.z;
-            pc.lightDir[3]  = ambient;
+            pc.lightDir[3]  = isGem ? simTime : ambient; // Gem shader uses lightDir.w as time
 
+            // Alternating draw call: switches vertex shader, fragment shader, and geometry buffer!
             raster->recordDraw({
-                .vs         = vs,
-                .ps         = ps,
-                .geometry   = geom,
+                .vs         = isGem ? vsGem : vsCube,
+                .ps         = isGem ? psGem : psCube,
+                .geometry   = isGem ? gemGeom : cubeGeom,
                 .immediates = ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(&pc), sizeof(pc)),
             });
         }
@@ -767,8 +862,8 @@ int main(int argc, const char ** argv) {
         // ─── Real-Time Telemetry HUD ─────────────────────────────────────────
         if (window && frameCounter % 10 == 0) {
             std::string title =
-                StrA::format("Garnet Bindless | Draws: {} | Textures: {} | CPU Record: {:.2f} ms | Frame: {:.2f} ms ({:.0f} FPS) | Stream: {} | "
-                             "[1-5]: Draws, [S]: Stream, [Space]: Pause, [WASD]: Orbit",
+                StrA::format("Garnet Bindless | Draws: {} (Alternating Pipelines) | Textures: {} | CPU Record: {:.2f} ms | Frame: {:.2f} ms ({:.0f} FPS) "
+                             "| Stream: {} | [1-5]: 10k-100k, [S]: Stream, [Space]: Pause, [WASD]: Orbit",
                              activeDrawCount, heap->size(), avgRecordMs, avgFrameMs, avgFps, streamingEnabled ? "ON" : "OFF")
                     .data();
 
