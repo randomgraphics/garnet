@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-format-utils.h"
+#include "vk-texture.h"
 #include <unordered_map>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
@@ -376,6 +377,157 @@ vk::ImageAspectFlags aspectFromViewFormat(gfx::img::PixelFormat viewFmt, gfx::im
     if (textureFmt == PF::D_16_UNORM() || textureFmt == PF::DX_24_8_UNORM() || textureFmt == PF::D_32_FLOAT()) { return vk::ImageAspectFlagBits::eDepth; }
 
     return vk::ImageAspectFlagBits::eColor;
+}
+
+vk::CompareOp compareToVk(RasterState::Compare c) {
+    switch (c) {
+    case RasterState::Compare::NEVER:
+        return vk::CompareOp::eNever;
+    case RasterState::Compare::LESS:
+        return vk::CompareOp::eLess;
+    case RasterState::Compare::LESS_EQUAL:
+        return vk::CompareOp::eLessOrEqual;
+    case RasterState::Compare::EQUAL:
+        return vk::CompareOp::eEqual;
+    case RasterState::Compare::GREATER_EQUAL:
+        return vk::CompareOp::eGreaterOrEqual;
+    case RasterState::Compare::GREATER:
+        return vk::CompareOp::eGreater;
+    case RasterState::Compare::NOT_EQUAL:
+        return vk::CompareOp::eNotEqual;
+    case RasterState::Compare::ALWAYS:
+        return vk::CompareOp::eAlways;
+    default:
+        return vk::CompareOp::eAlways;
+    }
+}
+
+vk::StencilOp stencilOpToVk(RasterState::StencilState::Op op) {
+    switch (op) {
+    case RasterState::StencilState::KEEP:
+        return vk::StencilOp::eKeep;
+    case RasterState::StencilState::ZERO:
+        return vk::StencilOp::eZero;
+    case RasterState::StencilState::REPLACE:
+        return vk::StencilOp::eReplace;
+    case RasterState::StencilState::INC_SAT:
+        return vk::StencilOp::eIncrementAndClamp;
+    case RasterState::StencilState::DEC_SAT:
+        return vk::StencilOp::eDecrementAndClamp;
+    case RasterState::StencilState::INVERT:
+        return vk::StencilOp::eInvert;
+    case RasterState::StencilState::INC:
+        return vk::StencilOp::eIncrementAndWrap;
+    case RasterState::StencilState::DEC:
+        return vk::StencilOp::eDecrementAndWrap;
+    default:
+        return vk::StencilOp::eKeep;
+    }
+}
+
+vk::BlendFactor blendArgToVk(RasterTarget::BlendState::Arg a) {
+    using Arg = RasterTarget::BlendState::Arg;
+    switch (a) {
+    case Arg::ZERO:
+        return vk::BlendFactor::eZero;
+    case Arg::ONE:
+        return vk::BlendFactor::eOne;
+    case Arg::SRC_COLOR:
+        return vk::BlendFactor::eSrcColor;
+    case Arg::INV_SRC_COLOR:
+        return vk::BlendFactor::eOneMinusSrcColor;
+    case Arg::SRC_ALPHA:
+        return vk::BlendFactor::eSrcAlpha;
+    case Arg::INV_SRC_ALPHA:
+        return vk::BlendFactor::eOneMinusSrcAlpha;
+    case Arg::DEST_ALPHA:
+        return vk::BlendFactor::eDstAlpha;
+    case Arg::INV_DEST_ALPHA:
+        return vk::BlendFactor::eOneMinusDstAlpha;
+    case Arg::DEST_COLOR:
+        return vk::BlendFactor::eDstColor;
+    case Arg::INV_DEST_COLOR:
+        return vk::BlendFactor::eOneMinusDstColor;
+    case Arg::BLEND_FACTOR:
+        return vk::BlendFactor::eConstantColor;
+    case Arg::INV_BLEND_FACTOR:
+        return vk::BlendFactor::eOneMinusConstantColor;
+    default:
+        return vk::BlendFactor::eOne;
+    }
+}
+
+vk::BlendOp blendOpToVk(RasterTarget::BlendState::Op o) {
+    using Op = RasterTarget::BlendState::Op;
+    switch (o) {
+    case Op::ADD:
+        return vk::BlendOp::eAdd;
+    case Op::SUB:
+        return vk::BlendOp::eSubtract;
+    case Op::REV_SUB:
+        return vk::BlendOp::eReverseSubtract;
+    case Op::MIN:
+        return vk::BlendOp::eMin;
+    case Op::MAX:
+        return vk::BlendOp::eMax;
+    default:
+        return vk::BlendOp::eAdd;
+    }
+}
+
+vk::ColorComponentFlags writeMaskToVk(uint8_t w) {
+    vk::ColorComponentFlags f;
+    if (w & 1) f |= vk::ColorComponentFlagBits::eR;
+    if (w & 2) f |= vk::ColorComponentFlagBits::eG;
+    if (w & 4) f |= vk::ColorComponentFlagBits::eB;
+    if (w & 8) f |= vk::ColorComponentFlagBits::eA;
+    return f ? f : (vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
+}
+
+bool attachmentExtent(const GpuResourceView & view, vk::Extent2D & extent) {
+    auto texture = view.texture();
+    if (!texture) return false;
+    const auto & d     = texture->descriptor();
+    const auto & range = view.imageView.range;
+    if (range.i.mip >= d.levels || range.i.mip >= 32 || range.i.face >= d.faces || range.e.numMipLevels != 1 || range.e.numArrayLayers != 1) { return false; }
+    extent = vk::Extent2D(std::max(1u, d.width >> range.i.mip), std::max(1u, d.height >> range.i.mip));
+    return d.width && d.height;
+}
+
+bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt, vk::Format * outVkFormat) {
+    if (v.empty() || !v.isTexture() || !attachmentExtent(v, *outExt)) return false;
+    auto * base = RuntimeType::cast<TextureVulkanBase>(v.texture().get());
+    if (!base || !base->nativeImage()) return false;
+    gfx::img::PixelFormat pf = v.imageView.format;
+    if (pf == gfx::img::PixelFormat::UNKNOWN()) pf = base->descriptor().format;
+    vk::Format fmt = pixelFormatToVkFormat(pf);
+    if (fmt == vk::Format::eUndefined) return false;
+    vk::ImageView view = base->nativeView(v.imageView);
+    if (!view) return false;
+    *outImage    = base->nativeImage();
+    *outView     = view;
+    *outVkFormat = fmt;
+    return true;
+}
+
+vk::Viewport rsViewportToVk(const RasterState::Viewport & vp, vk::Extent2D ext) {
+    return vk::Viewport(vp.x, vp.y, (vp.width == FLT_MAX) ? (float) ext.width : vp.width, (vp.height == FLT_MAX) ? (float) ext.height : vp.height, vp.minDepth,
+                        vp.maxDepth);
+}
+
+vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2D ext) {
+    return vk::Rect2D(vk::Offset2D(sr.x, sr.y),
+                      vk::Extent2D((sr.width == (~0u)) ? ext.width : (uint32_t) sr.width, (sr.height == (~0u)) ? ext.height : (uint32_t) sr.height));
+}
+
+void mergeRenderState(RasterState & dst, const RasterState & src) {
+    if (src.fillMode) dst.fillMode = src.fillMode;
+    if (src.cullMode) dst.cullMode = src.cullMode;
+    if (src.frontFace) dst.frontFace = src.frontFace;
+    if (src.depthState) dst.depthState = src.depthState;
+    if (src.stencilState) dst.stencilState = src.stencilState;
+    if (src.viewport) dst.viewport = src.viewport;
+    if (src.scissorRect) dst.scissorRect = src.scissorRect;
 }
 
 } // namespace GN::gpu2

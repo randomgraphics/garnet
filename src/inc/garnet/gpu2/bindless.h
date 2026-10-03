@@ -59,4 +59,55 @@ protected:
     using RCRT64::RCRT64;
 };
 
+/// High-performance bindless raster pass recorder.
+///
+/// Bypasses per-draw GpuResourceTable descriptor set compilation and per-draw table scanning.
+/// All draws execute against a unified, cached pipeline layout with the bindless descriptor set
+/// bound once at the start of the pass.
+///
+/// This class is not thread-safe. All calls on one instance must be single-threaded or externally
+/// serialized; use separate instances for parallel recording.
+class Raster : public RCRT64 {
+public:
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+
+    /// Plain POD configuration. The caller describes the intended pass layout;
+    /// gpu2 automatically manages, hashes, and caches the native pipeline layout.
+    struct CreateParameters {
+        AutoRef<GpuContext>     gpu;
+        const RasterTarget *    target = nullptr;       ///< Borrowed for creation only; Raster stores its own copy.
+        AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap.
+        uint32_t                heapSetIndex = 0;       ///< Descriptor set index for the bindless heap (default 0).
+        GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 0 Camera UBO).
+        uint32_t                pushConstantSize = 128; ///< Maximum push constant size in bytes (default 128).
+    };
+
+    /// Create a new bindless raster recorder. Performs a fast conflict check between
+    /// passResources and heapSetIndex, returning an empty ref if a collision is detected.
+    GN_API static AutoRef<Raster> create(const StrA & name, const CreateParameters & cp);
+
+    struct DrawParameters {
+        AutoRef<GpuShader>     vs = {}, ps = {};
+        RasterState            states = {};        ///< Transient state overrides for this draw.
+        const RasterGeometry & geometry;           ///< Vertex and index buffer bindings.
+        uint32_t               instanceCount = 1;  ///< Number of instances to draw (default 1).
+        AutoRef<const Blob>    immediates    = {}; ///< Push constants (transforms, material BDA, texture IDs).
+    };
+
+    /// Record a draw call. Thread-safe when called on thread-local recorder instances.
+    virtual void recordDraw(const DrawParameters & params) = 0;
+
+    /// Keep dynamic resources (e.g. parameter/material buffers) alive until GPU completes execution.
+    virtual void retainResource(AutoRef<RCRT64> resource) = 0;
+
+    /// Get the immutable render target retained by this recorder.
+    virtual const RasterTarget & target() const = 0;
+
+    /// Seal recorded work into an opaque, self-contained GpuPayload ready for GpuContext::submit().
+    virtual AutoRef<GpuPayload> seal() = 0;
+
+protected:
+    using RCRT64::RCRT64;
+};
+
 } // namespace GN::gpu2::bindless

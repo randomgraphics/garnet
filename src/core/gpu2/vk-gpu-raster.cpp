@@ -28,35 +28,6 @@ struct StoredDraw {
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
 
-static bool attachmentExtent(const GpuResourceView & view, vk::Extent2D & extent) {
-    auto texture = view.texture();
-    if (!texture) return false;
-    const auto & d     = texture->descriptor();
-    const auto & range = view.imageView.range;
-    if (range.i.mip >= d.levels || range.i.mip >= 32 || range.i.face >= d.faces || range.e.numMipLevels != 1 || range.e.numArrayLayers != 1) return false;
-    // Dynamic rendering area and default viewport must match the attached mip,
-    // not the base image, or downsampling can rasterize outside its destination.
-    extent = vk::Extent2D(std::max(1u, d.width >> range.i.mip), std::max(1u, d.height >> range.i.mip));
-    return d.width && d.height;
-}
-
-static inline bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
-                                          vk::Format * outVkFormat) {
-    if (v.empty() || !v.isTexture() || !attachmentExtent(v, *outExt)) return false;
-    auto * base = RuntimeType::cast<TextureVulkanBase>(v.texture().get());
-    if (!base || !base->nativeImage()) return false;
-    gfx::img::PixelFormat pf = v.imageView.format;
-    if (pf == gfx::img::PixelFormat::UNKNOWN()) pf = base->descriptor().format;
-    vk::Format fmt = pixelFormatToVkFormat(pf);
-    if (fmt == vk::Format::eUndefined) return false;
-    vk::ImageView view = base->nativeView(v.imageView);
-    if (!view) return false;
-    *outImage    = base->nativeImage();
-    *outView     = view;
-    *outVkFormat = fmt;
-    return true;
-}
-
 static rv::Sampler * ensureLinearSampler(const rv::Device * dev, rv::Ref<rv::Sampler> & slot) {
     if (slot.valid()) return slot.get();
     rv::Sampler::ConstructParameters scp;
@@ -68,31 +39,6 @@ static rv::Sampler * ensureLinearSampler(const rv::Device * dev, rv::Ref<rv::Sam
     slot            = rv::Ref<rv::Sampler>::make(scp);
     return slot.get();
 }
-
-// Merge non-empty fields from src into dst. Used once per draw at record time to fold draw-level
-// overrides into the target baseline, producing a fully self-contained per-draw state.
-static void mergeRenderState(RasterState & dst, const RasterState & src) {
-    if (src.fillMode) dst.fillMode = src.fillMode;
-    if (src.cullMode) dst.cullMode = src.cullMode;
-    if (src.frontFace) dst.frontFace = src.frontFace;
-    if (src.depthState) dst.depthState = src.depthState;
-    if (src.stencilState) dst.stencilState = src.stencilState;
-    if (src.viewport) dst.viewport = src.viewport;
-    if (src.scissorRect) dst.scissorRect = src.scissorRect;
-}
-
-// Convert RasterState viewport/scissor to Vulkan, using the render extent as the fallback for FLT_MAX/~0u.
-static vk::Viewport rsViewportToVk(const RasterState::Viewport & vp, vk::Extent2D ext) {
-    return vk::Viewport(vp.x, vp.y, (vp.width == FLT_MAX) ? (float) ext.width : vp.width, (vp.height == FLT_MAX) ? (float) ext.height : vp.height, vp.minDepth,
-                        vp.maxDepth);
-}
-
-static vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2D ext) {
-    return vk::Rect2D(vk::Offset2D(sr.x, sr.y),
-                      vk::Extent2D((sr.width == (~0u)) ? ext.width : (uint32_t) sr.width, (sr.height == (~0u)) ? ext.height : (uint32_t) sr.height));
-}
-
-// State → Vulkan conversion helpers are in vk-raster-pso-factory.cpp (single authoritative source).
 
 static AutoRef<GpuContextVulkan2> checkGpu(const AutoRef<GpuContext> & gpu) {
     AutoRef<GpuContextVulkan2> vkGpu = RuntimeType::cast<GpuContextVulkan2>(gpu);

@@ -13,7 +13,8 @@ target_sources(${GN_INTERNAL_TEST_TARGET} PRIVATE
     ${GN_INTERNAL_TEST_SOURCE_DIR}/swapchain-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/vk-format-utils-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/vk-gpu-payload-test.cpp
-    ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-heap-test.cpp)
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-heap-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-raster-test.cpp)
 
 if (VULKAN_FOUND)
     set(_shader_out_dir ${GN_INTERNAL_TEST_BINARY_DIR}/shaders)
@@ -23,6 +24,8 @@ if (VULKAN_FOUND)
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-fullscreen.frag
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-mrt.frag
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/mixed-cnc-raster.comp
+                ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-test.vert
+                ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-test.frag
         OUT_DIR ${_shader_out_dir}
         COMMENT "Compiling gpu2 internal-test GLSL shaders to SPIR-V headers"
     )
@@ -32,5 +35,6 @@ if (VULKAN_FOUND)
     set_source_files_properties(
         ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-raster-test.cpp
         ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-test.cpp
+        ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-raster-test.cpp
         PROPERTIES INCLUDE_DIRECTORIES ${_shader_out_dir})
 endif()

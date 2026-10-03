@@ -3,13 +3,24 @@
 
 namespace GN::gpu2 {
 
+struct PassFormats {
+    std::vector<vk::Format> colors;
+    vk::Format              depth = vk::Format::eUndefined;
+};
+
 vk::Format pixelFormatToVkFormat(gfx::img::PixelFormat pf);
 
 gfx::img::PixelFormat vkFormatToPixelFormat(vk::Format vkFmt);
 
 vk::Format vertexAttributeFormatToVk(RasterGeometry::AttributeFormat f);
 
-/// Derive Vulkan aspect flags from a requested view format relative to the texture's native format.
+vk::CompareOp           compareToVk(RasterState::Compare c);
+vk::StencilOp           stencilOpToVk(RasterState::StencilState::Op op);
+vk::BlendFactor         blendArgToVk(RasterTarget::BlendState::Arg a);
+vk::BlendOp             blendOpToVk(RasterTarget::BlendState::Op o);
+vk::ColorComponentFlags writeMaskToVk(uint8_t w);
+
+// Derive Vulkan aspect flags from a requested view format relative to the texture's native format.
 ///
 /// Depth-stencil textures carry no "aspect" concept in the gpu2 public API; the caller instead
 /// requests a view format that encodes which channel(s) to access:
@@ -22,5 +33,15 @@ vk::Format vertexAttributeFormatToVk(RasterGeometry::AttributeFormat f);
 ///
 /// Returns {} (no bits set) when \p viewFmt is incompatible with a depth-stencil \p textureFmt.
 vk::ImageAspectFlags aspectFromViewFormat(gfx::img::PixelFormat viewFmt, gfx::img::PixelFormat textureFmt);
+
+bool attachmentExtent(const GpuResourceView & view, vk::Extent2D & extent);
+
+bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt, vk::Format * outVkFormat);
+
+vk::Viewport rsViewportToVk(const RasterState::Viewport & vp, vk::Extent2D ext);
+
+vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2D ext);
+
+void mergeRenderState(RasterState & dst, const RasterState & src);
 
 } // namespace GN::gpu2

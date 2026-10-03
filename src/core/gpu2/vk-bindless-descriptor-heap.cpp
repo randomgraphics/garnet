@@ -29,8 +29,7 @@ VkBindlessDescriptorHeap::VkBindlessDescriptorHeap(const StrA & name, const Crea
     mDefaultSampler = rv::Ref<rv::Sampler>::make(scp);
 
     // 2. Descriptor set layout binding flags (Vulkan 1.2 core)
-    vk::DescriptorBindingFlags bindingFlags =
-        vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound;
+    vk::DescriptorBindingFlags bindingFlags = vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound;
 
     vk::DescriptorSetLayoutBindingFlagsCreateInfo flagsInfo;
     flagsInfo.setBindingFlags(bindingFlags);
@@ -43,9 +42,7 @@ VkBindlessDescriptorHeap::VkBindlessDescriptorHeap(const StrA & name, const Crea
         .setStageFlags(vk::ShaderStageFlagBits::eAll);
 
     vk::DescriptorSetLayoutCreateInfo layoutInfo;
-    layoutInfo.setFlags(vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool)
-        .setBindings(binding)
-        .setPNext(&flagsInfo);
+    layoutInfo.setFlags(vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool).setBindings(binding).setPNext(&flagsInfo);
 
     try {
         mDescriptorSetLayout = vkDev.createDescriptorSetLayout(layoutInfo);
@@ -186,8 +183,7 @@ uint32_t VkBindlessDescriptorHeap::size() const {
     return mActiveCount;
 }
 
-AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name,
-                                                                 const bindless::DescriptorHeap::CreateParameters & cp) {
+AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name, const bindless::DescriptorHeap::CreateParameters & cp) {
     auto heap = AutoRef<VkBindlessDescriptorHeap>(new VkBindlessDescriptorHeap(name, cp));
     if (!heap->nativeDescriptorSet()) return {};
     return heap;

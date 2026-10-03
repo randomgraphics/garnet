@@ -62,6 +62,10 @@ public:
     /// add*() calls will have a fresh start that represents the updated baseline.
     void emitPrePassBarriers(vk::CommandBuffer cb);
 
+    /// Advance a texture's tracked incoming state and emit a barrier restoring it to SHADER_READ_ONLY_OPTIMAL.
+    /// Used by bindless passes to satisfy the "writer restores to read-ready" invariant.
+    void restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb);
+
     /// Write the batch's final resource states to actual texture/buffer objects.
     /// Call once after vkQueueSubmit succeeds. For images: writes all planes of the updated
     /// incoming state. For buffers: writes the committed access/stage accumulated this batch.

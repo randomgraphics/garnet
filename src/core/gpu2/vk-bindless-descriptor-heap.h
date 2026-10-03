@@ -52,7 +52,6 @@ private:
     std::vector<bool>            mSlotAllocated;
 };
 
-AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name,
-                                                                 const bindless::DescriptorHeap::CreateParameters & cp);
+AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name, const bindless::DescriptorHeap::CreateParameters & cp);
 
 } // namespace GN::gpu2

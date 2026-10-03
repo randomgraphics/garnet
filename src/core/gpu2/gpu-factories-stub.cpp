@@ -6,6 +6,7 @@
 #include "vk-gpu-shader.h"
 #include "vk-texture.h"
 #include "vk-bindless-descriptor-heap.h"
+#include "vk-bindless-raster.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
 
@@ -185,6 +186,29 @@ AutoRef<DescriptorHeap> DescriptorHeap::create(const StrA & name, const CreatePa
         return {};
     default:
         GN_ERROR(sLogger, "DescriptorHeap::create: unknown GpuContext::Api");
+        return {};
+    }
+}
+
+AutoRef<Raster> Raster::create(const StrA & name, const CreateParameters & cp) {
+    if (!cp.gpu) {
+        GN_ERROR(sLogger, "Raster::create: GpuContext is null");
+        return {};
+    }
+    AutoRef<GpuContextCommon2> common = cp.gpu.staticCastTo<GpuContextCommon2>();
+    if (!common) {
+        GN_ERROR(sLogger, "Raster::create: GpuContext is not GpuContextCommon2");
+        return {};
+    }
+    switch (common->api()) {
+    case GpuContextCommon2::Api::VULKAN:
+        return createVkBindlessRaster(name, cp);
+    case GpuContextCommon2::Api::D3D12:
+    case GpuContextCommon2::Api::METAL:
+        GN_ERROR(sLogger, "Raster::create: backend not implemented");
+        return {};
+    default:
+        GN_ERROR(sLogger, "Raster::create: unknown GpuContext::Api");
         return {};
     }
 }

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "vk-gpu-resource-state-tracker.h"
 #include "vk-gpu-context.h"
+#include "vk-format-utils.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.tracker");
 
@@ -580,6 +581,68 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
     cb.pipelineBarrier(srcStages, dstStages, {}, nullptr,
                        vk::ArrayProxy<const vk::BufferMemoryBarrier>((uint32_t) bufferBarriers.size(), bufferBarriers.data()),
                        vk::ArrayProxy<const vk::ImageMemoryBarrier>((uint32_t) barriers.size(), barriers.data()));
+}
+
+void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb) {
+    if (!tex || !tex->nativeImage()) return;
+    auto                 vkImg  = tex->nativeImage();
+    const auto &         range  = view.imageView.range;
+    uint32_t             mip    = range.i.mip;
+    uint32_t             face   = range.i.face;
+    vk::ImageAspectFlags aspect = aspectFromViewFormat(view.imageView.format, tex->descriptor().format);
+    if (!aspect) aspect = vk::ImageAspectFlagBits::eColor;
+
+    auto                   it        = mTextures.find(tex->id);
+    vk::ImageLayout        oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    vk::AccessFlags        srcAccess = vk::AccessFlagBits::eColorAttachmentWrite;
+    vk::PipelineStageFlags srcStages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+    if (it != mTextures.end()) {
+        auto & tracked = it->second;
+        forEachAspectBit(aspect, [&](vk::ImageAspectFlagBits bit) {
+            const auto * prev = tracked.incoming.get(mip, face, bit);
+            if (prev) {
+                oldLayout = prev->layout;
+                srcAccess = prev->access;
+                srcStages = prev->stages;
+            }
+        });
+    }
+
+    if (aspect & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil)) {
+        if (srcAccess == vk::AccessFlagBits::eColorAttachmentWrite) {
+            srcAccess = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            srcStages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
+        }
+    }
+
+    vk::ImageMemoryBarrier b;
+    b.setOldLayout(oldLayout)
+        .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+        .setImage(vkImg)
+        .setSubresourceRange({aspect, mip, 1, face, 1})
+        .setSrcAccessMask(srcAccess)
+        .setDstAccessMask(vk::AccessFlagBits::eShaderRead)
+        .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+        .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+
+    cb.pipelineBarrier(srcStages, vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, {}, 0, nullptr, 0, nullptr, 1, &b);
+
+    rv::Image::State::PlaneState next;
+    next.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    next.access = vk::AccessFlagBits::eShaderRead;
+    next.stages = vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
+    next.usage  = "auto-restore shader read only";
+
+    if (it != mTextures.end()) {
+        auto & tracked = it->second;
+        if (mip < tracked.incoming.numMips && face < tracked.incoming.numLayers) {
+            auto & sr = tracked.incoming.subresources[tracked.incoming.subresourceIndex(mip, face)];
+            forEachAspectBit(aspect, [&](vk::ImageAspectFlagBits bit) { sr.planes[bit] = next; });
+        }
+    }
+
+    tex->setState(next, vk::ImageSubresourceRange(aspect, mip, 1, face, 1));
 }
 
 void GpuResourceStateTrackerVulkan::flushToResources() {
