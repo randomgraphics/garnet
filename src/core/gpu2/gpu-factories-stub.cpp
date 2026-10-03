@@ -5,7 +5,6 @@
 #include "vk-gpu-raster.h"
 #include "vk-gpu-shader.h"
 #include "vk-texture.h"
-#include "vk-transient-buffer.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
 

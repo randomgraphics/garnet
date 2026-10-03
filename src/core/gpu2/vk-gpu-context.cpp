@@ -4,7 +4,6 @@
 #include "vk-raster-pso-factory.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-payload.h"
-#include "vk-transient-buffer.h"
 
 #include <functional>
 #include <list>
@@ -92,9 +91,8 @@ struct GpuContextVulkan2::Impl {
         std::vector<AutoRef<GpuPayloadVulkan>> works;
         rv::CommandQueue::SubmissionID         submissionId; ///< ID returned by queue->submit(); used to flush rv::CommandQueue before fence is destroyed.
     };
-    std::mutex                    mPendingMutex;
-    std::list<PendingSubmission>  mPending;
-    AutoRef<TransientArenaVulkan> transientArena;
+    std::mutex                   mPendingMutex;
+    std::list<PendingSubmission> mPending;
 
     std::map<rv::CommandQueue *, GpuQueueTimeline> queueTimelines;
 
@@ -356,21 +354,10 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
     }
 
     finishedSubmissions.clear();
-    if (mImpl->transientArena) { mImpl->transientArena->reset(); }
 
     // Our pending list doesn't cover all in-flight work (e.g. bridge submits in the swapchain
     // that have no completion callback). A device-level idle wait covers those too.
     if (waitForIdle) device.waitIdle();
-}
-
-TransientArenaVulkan & GpuContextVulkan2::transientArena() const {
-    std::lock_guard<std::mutex> lock(mImpl->mPendingMutex);
-    if (!mImpl->transientArena) {
-        TransientArenaVulkan::CreateParameters p;
-        p.context             = AutoRef<GpuContextVulkan2>(const_cast<GpuContextVulkan2 *>(this));
-        mImpl->transientArena = AutoRef<TransientArenaVulkan>(new TransientArenaVulkan(name + "/transient-arena", p));
-    }
-    return *mImpl->transientArena;
 }
 
 // =============================================================================

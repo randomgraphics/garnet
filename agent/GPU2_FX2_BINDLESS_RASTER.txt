@@ -64,11 +64,10 @@ thrashing, per-draw heap allocations, and per-draw GPU buffer creations.
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.3 — integrated private TransientArena into GpuContext and GpuCnC staging; cleaned up RasterGeometry.
+Last completed: Reverted generic TransientArena/TransientBuffer in favor of clean, neutral gpu2 interface; preserved RasterGeometry/DrawParameters instancing cleanup and Buffer::gpuAddress().
   Phase 1.1: enabled Vulkan 1.2 bufferDeviceAddress and descriptor indexing (63 tests / 21194 assertions pass).
-  Phase 1.2: implemented private TransientArena and TransientBuffer in gpu2 with device address support; added Buffer::CreateParameters::transient (66 tests / 21220 assertions pass).
-  Phase 1.3: integrated transient arena into GpuContext and GpuCnC staging; moved instancing from RasterGeometry to DrawParameters (22 fx2 tests / 31782 assertions pass).
-In progress: Phase 2.1 — implement pass-wide texture descriptor indexing and layout in GpuRaster.
+  Phase 1.2 & 1.3: moved instancing to DrawParameters; confirmed gpu2 neutrality; 85 internal tests (52972 assertions) pass.
+In progress: Architectural alignment completed; preparing for global bindless descriptor heap and fast draw path.
 --- END PROGRESS ---
 
 --- REFERENCE ---

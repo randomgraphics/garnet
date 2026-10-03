@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "vk-buffer.h"
-#include "vk-transient-buffer.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
@@ -157,14 +156,6 @@ void BufferVulkan::reset() {
 // -----------------------------------------------------------------------------
 
 AutoRef<Buffer> createBufferVulkan2(const StrA & entityName, const Buffer::CreateParameters & params) {
-    if (params.transient) {
-        auto vkGpu = params.context.staticCastTo<GpuContextVulkan2>();
-        if (!vkGpu || !vkGpu->ready()) {
-            GN_ERROR(sLogger, "createBufferVulkan2: transient buffer requires valid Vulkan context");
-            return {};
-        }
-        return vkGpu->transientArena().allocate(params.size, 0, entityName.data());
-    }
     auto p = new BufferVulkan(entityName);
     if (!p->init(params)) {
         delete p;

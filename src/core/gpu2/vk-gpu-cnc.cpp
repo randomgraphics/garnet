@@ -282,7 +282,7 @@ static void emitBufferCopy(BufferVulkan * srcVk, BufferVulkan * dstVk, uint64_t 
     tracker.addTransferDstBuffer(dstVk);
     tracker.emitPrePassBarriers(cb);
 
-    cb.copyBuffer(srcBuf, dstBuf, vk::BufferCopy(srcOffset + srcVk->bufferOffset(), dstOffset + dstVk->bufferOffset(), size));
+    cb.copyBuffer(srcBuf, dstBuf, vk::BufferCopy(srcOffset, dstOffset, size));
 }
 
 void GpuCncPayloadVulkan::recordBufToBuf(const StoredBufferToBuffer & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
@@ -340,7 +340,7 @@ void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::Com
     copies.reserve(op.regions.size());
     for (const auto & r : op.regions) {
         vk::BufferImageCopy c;
-        c.setBufferOffset(r.bufferOffset + srcVk->bufferOffset())
+        c.setBufferOffset(r.bufferOffset)
             .setBufferRowLength(r.bufferRowLength)
             .setBufferImageHeight(r.bufferHeight)
             .setImageSubresource({aspects, r.mip, r.face, 1})
@@ -385,7 +385,7 @@ void GpuCncPayloadVulkan::recordDownloadImage(const StoredDownloadImage & op, vk
     copies.reserve(op.regions.size());
     for (const auto & r : op.regions) {
         vk::BufferImageCopy c;
-        c.setBufferOffset(r.bufferOffset + dstVk->bufferOffset())
+        c.setBufferOffset(r.bufferOffset)
             .setBufferRowLength(r.bufferRowLength) // 0 = tightly packed (rows == imageExtent.x)
             .setBufferImageHeight(r.bufferHeight)
             .setImageSubresource({aspects, r.mip, r.face, 1})
@@ -673,7 +673,7 @@ private:
 
     /// Allocate a host-visible staging buffer owned by the upcoming payload.
     AutoRef<Buffer> createStaging(const char * suffix, uint64_t size) {
-        return Buffer::create(name + "/" + suffix, {.context = mGpu, .size = size, .mappable = true, .transient = true});
+        return Buffer::create(name + "/" + suffix, {.context = mGpu, .size = size, .mappable = true});
     }
 };
 

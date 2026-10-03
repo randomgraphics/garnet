@@ -47,8 +47,7 @@
 
 namespace GN::gpu2 {
 
-class RasterPsoFactory;     // defined in vk-raster-pso-factory.h
-class TransientArenaVulkan; // defined in vk-transient-buffer.h
+class RasterPsoFactory; // defined in vk-raster-pso-factory.h
 
 typedef ResourcePoolVulkan<vk::Fence>   FencePoolVulkan;
 typedef AutoRef<FencePoolVulkan::Entry> PooledFenceVulkan;
@@ -80,8 +79,6 @@ public:
         GN_ASSERT(mFencePool.has_value());
         return mFencePool.value();
     }
-
-    TransientArenaVulkan & transientArena() const;
 
     GpuContext::Caps caps() const override { return mCaps; }
 
