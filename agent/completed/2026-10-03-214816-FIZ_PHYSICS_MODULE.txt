@@ -3,7 +3,7 @@
 ## Overview
 
 - Branch: `feature/phys/main`
-- Status: Phase 3 Completed (Awaiting user sign-off)
+- Status: Completed. Work signed off by user.
 - Completed work:
   - Phase 1 (Jolt Integration & Core Solid Dynamics).
   - Phase 3 (Gel Soft-Body Dynamics via XPBD & Bouncy Ball Simulation).
@@ -13,8 +13,7 @@
   - Fixed `GelMesh::createSphere` topology with distinct pole vertices, outward-facing surface faces, positive signed volume determinants, and lumped center vertex mass.
   - Decoupled `mVolumeConstraints` and pneumatic `mPressure` in `GelSolverImpl::createGel` to eliminate solver conflict.
   - Verified 100% pass on internal test suite (`cit.py -t`, 168 test cases, 6198 assertions), headless verification (`GNsample-fiz-gel t`, 180 frames, freefall/impact/rebound/volume stability: YES, avg physics 0.37 ms), and code style (`cit.py -l`).
-- Current step: Phase 3 complete — Awaiting user sign-off.
-- Remaining work: Phase 2 (E2 PhysicalDomain Integration), Phase 4 (Cloth & Hair), Phase 5 (Fluids & Ocean).
+- Current step: Complete. Work signed off by user.
 - Latest verification results: `python env/bin/cit.py -t` passed all 168 tests cleanly; `GNsample-fiz-gel.exe t` headless test passed cleanly; `python env/bin/cit.py -l` passed formatting check.
 - Known blockers: None.
 
@@ -83,8 +82,8 @@ to engine worlds or scene hierarchies:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 3.5 — Verify headless & interactive correctness, verify FPS performance, and optimize
-In progress: Awaiting user sign-off for Phase 3 (Gel Soft-Body Dynamics)
+Last completed: Phase 3.5 — Verify headless & interactive correctness, verify FPS performance, and optimize. Work signed off by user.
+In progress: Complete.
 --- END PROGRESS ---
 
 --- REFERENCE ---
