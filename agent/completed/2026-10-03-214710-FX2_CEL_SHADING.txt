@@ -54,8 +54,8 @@ Exposed in `src/inc/garnet/fx2/cel-shading.h` and included in monolithic `GNfx2.
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 4.1
-In progress: Awaiting user sign-off
+Last completed: Task 4.1 - Cel shading implementation, inverted-hull outline, sample, and tests verified. Work signed off by user.
+In progress: Complete.
 Phase 1: Shaders and UBO Layout
 Phase 2: FX2 C++ API and Implementation
 Phase 3: Sample & Tests
