@@ -50,8 +50,8 @@ descriptor set compilation, per-draw table scanning, and per-draw heap allocatio
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 4: Alternating dual-pipeline stress test (10k-100k draws switching between lit cube and holographic gem shaders) defeating instancing, live UPDATE_AFTER_BIND streaming, and frame-rate dependent animation.
-In progress: Awaiting manual user sign-off.
+Last completed: Phase 4: Alternating dual-pipeline stress test (10k-100k draws switching between lit cube and holographic gem shaders) defeating instancing, live UPDATE_AFTER_BIND streaming, and frame-rate dependent animation. Work signed off by user.
+In progress: Complete.
 --- END PROGRESS ---
 
 --- REFERENCE ---
