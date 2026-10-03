@@ -12,7 +12,8 @@ target_sources(${GN_INTERNAL_TEST_TARGET} PRIVATE
     ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/swapchain-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/vk-format-utils-test.cpp
-    ${GN_INTERNAL_TEST_SOURCE_DIR}/vk-gpu-payload-test.cpp)
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/vk-gpu-payload-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-heap-test.cpp)
 
 if (VULKAN_FOUND)
     set(_shader_out_dir ${GN_INTERNAL_TEST_BINARY_DIR}/shaders)
