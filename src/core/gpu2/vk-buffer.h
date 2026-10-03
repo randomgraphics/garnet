@@ -6,11 +6,12 @@
 
 namespace GN::gpu2 {
 
-class BufferVulkan final : public Buffer {
+class BufferVulkan : public Buffer {
 public:
     GN_REGISTER_RUNTIME_TYPE(Buffer);
 
     explicit BufferVulkan(const StrA & entityName): Buffer(TYPE_INFO(), entityName) {}
+    BufferVulkan(const RuntimeType::TypeInfo & ti, const StrA & entityName): Buffer(ti, entityName) {}
     ~BufferVulkan() override;
 
     bool init(const CreateParameters & params);
@@ -22,18 +23,19 @@ public:
     vk::Buffer          nativeBuffer() const { return mRvBuffer ? mRvBuffer->handle() : vk::Buffer {}; }
     rv::Ref<rv::Buffer> rvBuffer() const { return mRvBuffer; }
     uint64_t            bufferSize() const { return mSize; }
+    uint64_t            gpuAddress() const override { return mDeviceAddress; }
 
     mutable BufferStateVulkan gpuState {};
 
 protected:
     void unmap(const Mapped &) override;
 
-private:
     AutoRef<GpuContextVulkan2> mGpu;
     rv::Ref<rv::Buffer>        mRvBuffer {};
-    uint64_t                   mSize     = 0;
-    bool                       mMappable = false;
-    bool                       mIsMapped = false;
+    uint64_t                   mSize          = 0;
+    vk::DeviceAddress          mDeviceAddress = 0;
+    bool                       mMappable      = false;
+    bool                       mIsMapped      = false;
 
     void reset();
 };

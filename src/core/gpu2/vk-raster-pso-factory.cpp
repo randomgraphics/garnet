@@ -206,19 +206,6 @@ Gpu2RasterPsoKey Gpu2RasterPsoKey::make(const GpuShaderVulkan & vs, const GpuSha
                 k.stride2 = vb.stride & 0xFFF;
             ++bi;
         }
-        for (const auto & ib : geom.instances) {
-            if (bi == 0) {
-                k.stride0    = ib.stride & 0xFFF;
-                k.instanced0 = 1;
-            } else if (bi == 1) {
-                k.stride1    = ib.stride & 0xFFF;
-                k.instanced1 = 1;
-            } else if (bi == 2) {
-                k.stride2    = ib.stride & 0xFFF;
-                k.instanced2 = 1;
-            }
-            ++bi;
-        }
         k.numBindings = (uint64_t) std::min(bi, (size_t) 7);
 
         const auto & attrs = geom.format.attributes;
@@ -326,9 +313,8 @@ static rv::Ref<rv::GraphicsPipeline> buildPipeline(const Gpu2RasterPsoCreatePara
     // Viewport/scissor are always dynamic in this backend.
     gcp.dynamicViewport(1).dynamicScissor(1);
 
-    // Vertex input: vertex buffers first, then instance buffers (mirrors binding index assignment).
+    // Vertex input: vertex buffers (mirrors binding index assignment).
     for (const auto & vb : params.geometry.vertices) gcp.addVertexBuffer(vb.stride);
-    for (const auto & ib : params.geometry.instances) gcp.addInstanceBuffer(ib.stride);
     // Shader locations can be sparse (e.g. position at 0 and color at 4).
     // setVertexAttribute() expands by location and leaves invalid holes, whereas
     // Vulkan expects a compact array of descriptions with explicit locations.

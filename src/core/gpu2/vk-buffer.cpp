@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-buffer.h"
+#include "vk-transient-buffer.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
@@ -39,7 +40,8 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
     // Mappable buffers live in host-visible coherent memory; device-local buffers use staging for uploads.
     constexpr vk::BufferUsageFlags kAllUsages = vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst |
                                                 vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eStorageBuffer |
-                                                vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer;
+                                                vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer |
+                                                vk::BufferUsageFlagBits::eShaderDeviceAddress;
 
     rv::Buffer::ConstructParameters cp;
     cp.name  = name.c_str();
@@ -55,6 +57,10 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
         reset();
         return false;
     }
+
+    vk::BufferDeviceAddressInfo info {};
+    info.buffer    = mRvBuffer->handle();
+    mDeviceAddress = dev.handle().getBufferAddress(info);
 
     gpuState = BufferStateVulkan::UNDEFINED();
     return true;
@@ -151,6 +157,14 @@ void BufferVulkan::reset() {
 // -----------------------------------------------------------------------------
 
 AutoRef<Buffer> createBufferVulkan2(const StrA & entityName, const Buffer::CreateParameters & params) {
+    if (params.transient) {
+        auto vkGpu = params.context.staticCastTo<GpuContextVulkan2>();
+        if (!vkGpu || !vkGpu->ready()) {
+            GN_ERROR(sLogger, "createBufferVulkan2: transient buffer requires valid Vulkan context");
+            return {};
+        }
+        return vkGpu->transientArena().allocate(params.size, 0, entityName.data());
+    }
     auto p = new BufferVulkan(entityName);
     if (!p->init(params)) {
         delete p;

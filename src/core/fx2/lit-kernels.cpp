@@ -173,7 +173,7 @@ struct Implementation {
         }
         valid &= attribute(g, 0, 3) && attribute(g, 1, 3) && (!textured || attribute(g, 2, 2)) && (in.normalMap.empty() || attribute(g, 3, 4)) &&
                  (!in.useVertexColor || attribute(g, 4, 4));
-        valid &= g.instanceCount > 0 && (g.indexCount ? g.indices.buffer && (g.indices.stride == 2 || g.indices.stride == 4) : g.vertexCount > 0);
+        valid &= (g.indexCount ? g.indices.buffer && (g.indices.stride == 2 || g.indices.stride == 4) : g.vertexCount > 0);
         valid &= finite(in.color) && finite(in.emissive) && std::isfinite(in.alphaCutoff) && in.alphaCutoff >= 0 && in.alphaCutoff <= 1;
         auto validateMatrix = [&](const glm::mat4 & m) {
             for (int c = 0; c < 4; ++c)

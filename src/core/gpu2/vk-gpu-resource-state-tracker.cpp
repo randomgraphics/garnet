@@ -344,11 +344,6 @@ bool GpuResourceStateTrackerVulkan::addRasterGeometry(const RasterGeometry & geo
         if (auto * buf = RuntimeType::cast<BufferVulkan>(vb.buffer.get()))
             if (!addVertexBuffer(buf)) ok = false;
     }
-    for (const auto & ib : geom.instances) {
-        if (!ib.buffer) continue;
-        if (auto * buf = RuntimeType::cast<BufferVulkan>(ib.buffer.get()))
-            if (!addVertexBuffer(buf)) ok = false;
-    }
     if (geom.indices.buffer) {
         if (auto * buf = RuntimeType::cast<BufferVulkan>(geom.indices.buffer.get()))
             if (!addIndexBuffer(buf)) ok = false;

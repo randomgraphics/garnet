@@ -248,6 +248,10 @@ struct Buffer : public RCRT64 {
         /// Set to true, if you need an CPU mappable buffer.
         /// CPU mappable buffer is slower for GPU to access. It is mostly used to store short-lived data that is read or write only once by GPU.
         bool mappable = false;
+
+        /// Set to true if this buffer is short-lived/transient (e.g. per-frame uploads or parameters).
+        /// Transient buffers are host-mappable, device-addressable, and suballocated from recycled backing pools.
+        bool transient = false;
     };
 
     static GN_API AutoRef<Buffer> create(const StrA & name, const CreateParameters & params);
@@ -352,6 +356,12 @@ struct Buffer : public RCRT64 {
     /// for embedded model textures and follows the same ownership rules as the file overload.
     static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, ArrayView<const uint8_t> encoded,
                                                            const StrA & sourceName);
+
+    /// Return the 64-bit GPU virtual address (Vulkan buffer device address). Returns 0 if not enabled or supported.
+    virtual uint64_t gpuAddress() const { return 0; }
+
+    /// Return the byte offset within the backing storage (0 for standalone buffers).
+    virtual uint64_t bufferOffset() const { return 0; }
 
 protected:
     virtual void unmap(const Mapped &) = 0;

@@ -23,6 +23,7 @@ struct StoredDraw {
     uint32_t            geometryIndex      = 0;
     uint32_t            resourceTableIndex = ~0u;
     AutoRef<const Blob> immediates;
+    uint32_t            instanceCount = 1;
 };
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
@@ -165,17 +166,12 @@ private:
 };
 
 static inline bool sameGeometry(const RasterGeometry & a, const RasterGeometry & b) {
-    if (a.vertexCount != b.vertexCount || a.indexCount != b.indexCount || a.instanceCount != b.instanceCount) return false;
+    if (a.vertexCount != b.vertexCount || a.indexCount != b.indexCount) return false;
     if (a.indices.buffer.get() != b.indices.buffer.get() || a.indices.offset != b.indices.offset || a.indices.stride != b.indices.stride) return false;
-    if (a.vertices.size() != b.vertices.size() || a.instances.size() != b.instances.size()) return false;
+    if (a.vertices.size() != b.vertices.size()) return false;
     for (size_t i = 0; i < a.vertices.size(); ++i) {
         if (a.vertices[i].buffer.get() != b.vertices[i].buffer.get() || a.vertices[i].offset != b.vertices[i].offset ||
             a.vertices[i].stride != b.vertices[i].stride)
-            return false;
-    }
-    for (size_t i = 0; i < a.instances.size(); ++i) {
-        if (a.instances[i].buffer.get() != b.instances[i].buffer.get() || a.instances[i].offset != b.instances[i].offset ||
-            a.instances[i].stride != b.instances[i].stride)
             return false;
     }
     if (a.format != b.format) return false;
@@ -337,7 +333,7 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
     // Early exit: nothing to draw.
     const RasterGeometry & geom = mGeometries[d.geometryIndex];
     if (geom.vertexCount == 0 && geom.indexCount == 0) GN_UNLIKELY return {};
-    if (geom.instanceCount == 0 && !geom.instances.empty()) GN_UNLIKELY return {};
+    if (d.instanceCount == 0) GN_UNLIKELY return {};
 
     auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
     auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
@@ -481,12 +477,11 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
         }
     }
 
-    // --- Vertex and instance buffer binding ---
-    // Binding order mirrors gcp.addVertexBuffer / addInstanceBuffer above.
+    // --- Vertex buffer binding ---
     if (initializeGeometry) {
         {
             std::vector<rv::BufferView> vbViews;
-            vbViews.reserve(geom.vertices.size() + geom.instances.size());
+            vbViews.reserve(geom.vertices.size());
             auto pushGeomBuf = [&](const RasterGeometry::GeometryBuffer & gb) {
                 rv::BufferView bv;
                 if (gb.buffer) {
@@ -498,7 +493,6 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                 vbViews.push_back(bv);
             };
             for (const auto & vb : geom.vertices) pushGeomBuf(vb);
-            for (const auto & ib : geom.instances) pushGeomBuf(ib);
             if (!vbViews.empty()) drawable.v(vk::ArrayProxy<const rv::BufferView>((uint32_t) vbViews.size(), vbViews.data()));
         }
 
@@ -520,7 +514,7 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
         } else {
             drawParams.setNonIndexed(geom.vertexCount, 0);
         }
-        drawParams.setInstance(geom.instanceCount);
+        drawParams.setInstance(d.instanceCount);
 
         drawable.draw(drawParams);
     }
@@ -735,7 +729,7 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         newCfg.indexType     = pack->indexType;
         newCfg.indexCount    = geom.indexCount;
         newCfg.vertexCount   = geom.vertexCount;
-        newCfg.instanceCount = geom.instanceCount;
+        newCfg.instanceCount = d.instanceCount;
 
         // Update hardware tracking state
         boundPipeline      = newCfg.pipeline->handle();
@@ -864,6 +858,7 @@ public:
         s.geometryIndex      = geomIdx;
         s.resourceTableIndex = resIdx;
         s.immediates         = dp.immediates;
+        s.instanceCount      = dp.instanceCount;
     }
 
     AutoRef<GpuPayload> seal() override {

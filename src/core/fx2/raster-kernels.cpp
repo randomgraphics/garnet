@@ -76,7 +76,7 @@ public:
         const bool   textured = !input.colorMap.empty();
         const auto & g        = input.geometry;
         bool         valid    = uniform(shared, 1, sizeof(shader::CameraUBO)) && attribute(g, 0, 3) && (!input.useVertexColor || attribute(g, 4, 4)) &&
-                                (!textured || attribute(g, 2, 2)) && g.instanceCount > 0 &&
+                                (!textured || attribute(g, 2, 2)) &&
                                 (g.indexCount ? g.indices.buffer && (g.indices.stride == 2 || g.indices.stride == 4) : g.vertexCount > 0);
         for (int c = 0; c < 4; ++c) {
             valid &= std::isfinite(input.color[c]);

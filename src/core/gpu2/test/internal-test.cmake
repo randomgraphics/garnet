@@ -6,6 +6,7 @@ target_sources(${GN_INTERNAL_TEST_TARGET} PRIVATE
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-raster-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-texture-staging-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-texture-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-transient-buffer-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/raster-aspect-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/raster-cross-payload-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/raster-hazard-test.cpp

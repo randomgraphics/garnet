@@ -453,8 +453,6 @@ struct RasterGeometry {
     };
 
     VertexFormat              format;
-    DynaArray<GeometryBuffer> instances;
-    uint32_t                  instanceCount = 1;
     DynaArray<GeometryBuffer> vertices;
     uint32_t                  vertexCount = 0;
     GeometryBuffer            indices;
@@ -486,9 +484,10 @@ public:
         AutoRef<GpuShader> vs = {}, hs = {}, ds = {}, gs = {}, ps = {};
         RasterState states = {}; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
                                  ///< RasterTarget's baseline state.
-        const RasterGeometry &   geometry;        ///< Borrowed; must remain valid through each recordDraw() call.
-        const GpuResourceTable & resources;       ///< Borrowed; edits between calls affect only subsequent draws.
-        AutoRef<const Blob>      immediates = {}; ///< reference counted immediate constants.
+        const RasterGeometry &   geometry;          ///< Borrowed; must remain valid through each recordDraw() call.
+        uint32_t                 instanceCount = 1; ///< Number of instances to draw (default 1).
+        const GpuResourceTable & resources;         ///< Borrowed; edits between calls affect only subsequent draws.
+        AutoRef<const Blob>      immediates = {};   ///< reference counted immediate constants.
     };
     /// Record a draw without executing it; snapshot descriptions and retain GPU resources before returning.
     /// Later edits or destruction of inputs do not affect recorded draws or the sealed payload.
