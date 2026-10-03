@@ -85,10 +85,14 @@ Draws do not carry a `GpuResourceTable`. They specify only:
 #### Parameter Buffer Retention
 `bindless::Raster::retainResource(AutoRef<RCRT64> resource)` allows higher-level modules (`fx2`) to attach dynamic per-draw parameter buffers, material buffers, or textures to the recorder. The sealed `GpuPayload` holds these references until GPU execution completes.
 
-#### Direct Vulkan Recording
+#### Direct Vulkan Recording & Dynamic Rendering
 Bypasses `rv::Drawable` and descriptor pools entirely:
+- Emits native Vulkan 1.3 dynamic rendering (`vkCmdBeginRendering` / `vkCmdEndRendering`) without requiring `VkRenderPass` or `VkFramebuffer` handles.
+- **`VkBindlessPipelineLayoutCache`**: Thread-safe layout cache that hashes the POD configuration `(heapSetIndex, passResources layout, pushConstantSize)`. Generates dummy empty descriptor set layouts for any set indices between 0 and `heapSetIndex` that are not consumed by `passResources`, ensuring the unified layout is always valid.
+- **`VkBindlessPsoCache`**: Thread-safe PSO cache generating dynamic rendering graphics pipelines (`VkPipeline`) with deduplication across shaders, vertex layouts, raster state, and attachment formats.
 - At pass start: Binds pass resources and the bindless descriptor set.
 - Per draw: Emits direct `vkCmdPushConstants`, `vkCmdBindVertexBuffers`, `vkCmdBindIndexBuffer`, and `vkCmdDrawIndexed` with consecutive state deduplication.
+- At pass end: `ctx.batchTracker->restoreAttachmentToShaderReadOnly()` transitions attachments to `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` with write-to-read barrier execution and synchronization with CPU tracker state.
 
 ---
 
