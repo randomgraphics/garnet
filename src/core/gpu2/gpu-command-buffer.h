@@ -7,8 +7,8 @@ namespace GN::gpu2 {
 
 /// Internal command buffer abstraction. Not part of the public API.
 /// Public callers use GpuContext::submit() + GpuPayload instead.
-struct GpuCommandBuffer : public RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+struct GpuCommandBuffer : public Interface {
+    GN_API GN_REGISTER_RUNTIME_TYPE(Interface);
 
     struct Payload;
     struct Fence;
@@ -27,7 +27,7 @@ struct GpuCommandBuffer : public RCRT64 {
     virtual Fence * submit(const SubmitParameters &) = 0;
 
 protected:
-    using RCRT64::RCRT64;
+    using Interface::Interface;
 };
 
 /// Shared implementation for command buffers that record against one \c GpuContext.
@@ -38,8 +38,7 @@ public:
     AutoRef<GpuContext> gpuContext() const { return mGpu; }
 
 protected:
-    GpuCommandBufferCommon(const RuntimeType::TypeInfo & leafType, const StrA & entityName, AutoRef<GpuContext> gpu)
-        : GpuCommandBuffer(leafType, entityName), mGpu(std::move(gpu)) {}
+    GpuCommandBufferCommon(const RuntimeType::TypeInfo & leafType, AutoRef<GpuContext> gpu): GpuCommandBuffer(leafType), mGpu(std::move(gpu)) {}
 
     AutoRef<GpuContext> mGpu;
 };

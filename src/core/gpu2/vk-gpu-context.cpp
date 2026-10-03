@@ -113,7 +113,7 @@ struct GpuContextVulkan2::Impl {
 };
 
 GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters & params)
-    : GpuContextCommon2(TYPE_INFO(), name, GpuContextCommon2::Api::VULKAN), mImpl(std::make_unique<Impl>()) {
+    : GpuContextCommon2(TYPE_INFO(), GpuContextCommon2::Api::VULKAN), mImpl(std::make_unique<Impl>()) {
 
     // Create instance
     rv::Instance::ConstructParameters ip;
@@ -211,7 +211,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         if (!d) GN_UNLIKELY continue;
         auto w = RuntimeType::cast<GpuPayloadVulkan>(*d);
         if (!w) GN_UNLIKELY {
-                GN_ERROR(sLoggerVk, "Unrecognized payload type: {}({})", d->name, d->id);
+                GN_ERROR(sLoggerVk, "Unrecognized payload type: {}", d->typeInfo().name);
                 continue;
             }
         const auto & s = w->syncpoint();
@@ -220,7 +220,7 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         } else if (const auto * b = s.asBinarySemaphore()) {
             waitBinaries.push_back({*b, 0, vk::PipelineStageFlagBits::eAllCommands});
         } else {
-            GN_ERROR(sLoggerVk, "Can't depend on un-submitted payload: {}({})", d->name, d->id);
+            GN_ERROR(sLoggerVk, "Can't depend on un-submitted payload: {}", (const void *) d.get());
             continue;
         }
     }
@@ -256,12 +256,12 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
         if (!item) GN_UNLIKELY continue;
         auto w = RuntimeType::cast<GpuPayloadVulkan>(item);
         if (!w) GN_UNLIKELY {
-                GN_ERROR(sLoggerVk, "Unrecognized payload type: {}({})", item->name, item->id);
+                GN_ERROR(sLoggerVk, "Unrecognized payload type: {}", item->typeInfo().name);
                 continue;
             }
         if (w->syncpoint()) GN_UNLIKELY {
                 // This payload has a sync point already. it means it has been submit to GPU already. Reject it.
-                GN_ERROR(sLoggerVk, "Can't submit payload {}({}) multiple times to GPU.", w->name, w->id);
+                GN_ERROR(sLoggerVk, "Can't submit payload multiple times to GPU.");
                 continue;
             }
         w->recordForVulkanSubmit(recordCtx);
@@ -335,9 +335,9 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
             if (!w) continue;
             try {
                 w->onGpuComplete();
-            } catch (const std::exception & e) {
-                GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} payload onGpuComplete threw exception: {}", w->name, e.what());
-            } catch (...) { GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} payload onGpuComplete threw unknown exception", w->name); }
+            } catch (const std::exception & e) { GN_ERROR(sLoggerVk, "GpuContextVulkan2: payload onGpuComplete threw exception: {}", e.what()); } catch (...) {
+                GN_ERROR(sLoggerVk, "GpuContextVulkan2: payload onGpuComplete threw unknown exception");
+            }
         }
         try {
             if (s.onComplete) s.onComplete();

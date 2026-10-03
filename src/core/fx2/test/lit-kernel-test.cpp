@@ -20,7 +20,7 @@ struct LitRecordingRaster final : GpuRaster {
             : vs(p.vs), hs(p.hs), ds(p.ds), gs(p.gs), ps(p.ps), states(p.states), geometry(p.geometry), resources(p.resources), immediates(p.immediates) {}
     };
     DynaArray<RecordedDraw> draws;
-    LitRecordingRaster(): GpuRaster(TYPE_INFO(), "lit-recording") {}
+    LitRecordingRaster(): GpuRaster(TYPE_INFO()) {}
     void                 recordDraw(const DrawParameters & d) override { draws.append(d); }
     const RasterTarget & target() const override { return destination; }
     AutoRef<GpuPayload>  seal() override { return {}; }

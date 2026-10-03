@@ -10,10 +10,10 @@ class BufferVulkan final : public Buffer {
 public:
     GN_REGISTER_RUNTIME_TYPE(Buffer);
 
-    explicit BufferVulkan(const StrA & entityName): Buffer(TYPE_INFO(), entityName) {}
+    BufferVulkan(): Buffer(TYPE_INFO()) {}
     ~BufferVulkan() override;
 
-    bool init(const CreateParameters & params);
+    bool init(const StrA & name, const CreateParameters & params);
 
     Mapped               map() override;
     bool                 setContent(ArrayView<const uint8_t> data, size_t offset = 0) override;

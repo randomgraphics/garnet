@@ -19,7 +19,7 @@ public:
 private:
     friend AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & params);
 
-    GpuShaderVulkan(const StrA & entityName, std::unique_ptr<rv::Shader> sh);
+    explicit GpuShaderVulkan(std::unique_ptr<rv::Shader> sh);
     ~GpuShaderVulkan() override;
 
     std::unique_ptr<rv::Shader> mShader;

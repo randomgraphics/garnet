@@ -4,29 +4,40 @@
     #error "Do not include <garnet/gpu2/gpu2.h> directly. Include <garnet/GNgpu2.h> instead."
 #endif
 
+#define GN_GPU2_DEFINE_PUBLIC_INTERFACE(BaseType) \
+    GN_API GN_REGISTER_RUNTIME_TYPE(BaseType);    \
+                                                  \
+protected:                                        \
+    using BaseType::BaseType;                     \
+                                                  \
+public:
+
 namespace GN::gpu2 {
+
+// All GPU objects derive from this class for reference counting and runtime type info.
+struct Interface : public RefCounter, public RuntimeType {
+    GN_API GN_REGISTER_RUNTIME_TYPE();
+
+protected:
+    using RuntimeType::RuntimeType;
+};
 
 // -----------------------------
 // GpuPayload
 // -----------------------------
 //
-// All GPU objects derive from GN::RCRT64: reference counting, runtime type info, and a
-// process-unique id generated automatically by the RCRT64 (type, name) constructor.
 
 /// API-neutral base class for a GPU payload. Represents a self-contained unit of GPU work load that is ready to record and submit to the GPU.
-struct GpuPayload : public RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
-
-protected:
-    using RCRT64::RCRT64;
+struct GpuPayload : public Interface {
+    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
 };
 
 // -----------------------------
 // GPU context
 // -----------------------------
 
-struct GpuContext : public RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+struct GpuContext : public Interface {
+    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
 
     enum class DebugMode {
         DISABLED,
@@ -125,9 +136,6 @@ struct GpuContext : public RCRT64 {
 
     /// End the innermost graphics-queue debug region; no-op when debug labels are unavailable.
     virtual void endDebugLabel() = 0;
-
-protected:
-    using RCRT64::RCRT64;
 };
 
 /// Stack-scoped graphics-queue debug region. Retains the context until the region ends.
@@ -152,8 +160,8 @@ private:
 // Texture
 // -----------------------------
 
-struct Texture : RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+struct Texture : Interface {
+    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
 
     /// Descriptor used when creating or declaring the texture (format, dimensions).
     struct Descriptor {
@@ -222,24 +230,18 @@ struct Texture : RCRT64 {
     /// Convenience method to load texture from file. Returns a texture named after the file name.
     /// Slow. Do NOT use in production code.
     static GN_API AutoRef<Texture> load(const LoadParameters & params);
-
-protected:
-    using RCRT64::RCRT64;
 };
 
 // -----------------------------
 // Sampler, buffer
 // -----------------------------
 
-struct Sampler : public RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
-
-protected:
-    using RCRT64::RCRT64;
+struct Sampler : Interface {
+    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
 };
 
-struct Buffer : public RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+struct Buffer : Interface {
+    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
@@ -355,8 +357,6 @@ struct Buffer : public RCRT64 {
 
 protected:
     virtual void unmap(const Mapped &) = 0;
-
-    using RCRT64::RCRT64;
 };
 
 // -----------------------------
@@ -403,10 +403,10 @@ struct GpuResourceView {
         bool     operator!=(const BufferView & o) const { return !(*this == o); }
     };
 
-    AutoRef<RCRT64>  resource               = {};
-    AutoRef<Sampler> combinedTextureSampler = {};
-    ImageView        imageView              = {};
-    BufferView       bufferView             = {};
+    AutoRef<Interface> resource               = {};
+    AutoRef<Sampler>   combinedTextureSampler = {};
+    ImageView          imageView              = {};
+    BufferView         bufferView             = {};
 
     bool empty() const { return resource.empty(); }
     bool isTexture() const { return resource && resource->isKindOf<Texture>(); }
@@ -484,8 +484,8 @@ using GpuResourceTable = DynaArray<GpuResourceSet>;
 // GpuShader
 // -----------------------------
 
-struct GpuShader : public RCRT64 {
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+struct GpuShader : Interface {
+    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
 
     struct CreateParameters {
         AutoRef<GpuContext> context;
@@ -503,9 +503,6 @@ struct GpuShader : public RCRT64 {
     };
 
     static GN_API AutoRef<GpuShader> load(const LoadParameters &);
-
-protected:
-    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

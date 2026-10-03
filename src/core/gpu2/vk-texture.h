@@ -47,8 +47,7 @@ public:
     }
 
 protected:
-    /// \p leafType must be the concrete class \c TYPE_INFO() (so \c Entity stores the leaf type for \c RuntimeType::cast).
-    explicit TextureVulkanBase(const GN::RuntimeType::TypeInfo & leafType, const StrA & entityName);
+    explicit TextureVulkanBase(const GN::RuntimeType::TypeInfo & leafType);
     ~TextureVulkanBase() override;
 
     Texture::Descriptor        mDescriptor {};

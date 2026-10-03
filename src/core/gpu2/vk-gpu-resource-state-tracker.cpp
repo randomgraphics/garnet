@@ -44,14 +44,14 @@ inline GpuResourceView::SubresourceRange resolveRange(GpuResourceView::Subresour
 } // namespace
 
 bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state) {
-    auto & tracked = mTextures[tex->id];
+    auto & tracked = mTextures[tex];
     if (!tracked.tex) {
         // First registration of this texture in the batch. Initialize incoming from the actual
         // resource state; emit barrier method keeps it up-to-date after each payload so subsequent
         // payloads in the same command buffer see the correct "from" layout.
         tracked.tex      = tex;
         tracked.incoming = tex->getState();
-        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' incoming initialized ({} mips, {} faces)", tex->name, tracked.incoming.numMips,
+        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image {:p} incoming initialized ({} mips, {} faces)", (const void *) tex, tracked.incoming.numMips,
                    tracked.incoming.numLayers);
     }
 
@@ -63,7 +63,7 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
     // \c incoming, so subsequent \c incoming.get(...) calls always succeed.
     auto aspects = aspectFromView(view, desc) & tracked.incoming.validAspects;
     if (!aspects) GN_UNLIKELY {
-            GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: view of texture '{}' references no aspect plane the texture has", tex->name);
+            GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: view of texture {:p} references no aspect plane the texture has", (const void *) tex);
             return false;
         }
 
@@ -91,9 +91,9 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
 
                     const char * hazardKind = (existing.isWrite() && state.isWrite()) ? "write/write" : "read/write";
                     GN_ERROR(sLogger,
-                             "GpuResourceStateTrackerVulkan: {} hazard on texture '{}' aspect=0x{:x} — '{}' ({}) and '{}' ({}) "
+                             "GpuResourceStateTrackerVulkan: {} hazard on texture {:p} aspect=0x{:x} — '{}' ({}) and '{}' ({}) "
                              "both access subresource [mip={} face={}]",
-                             hazardKind, tracked.tex->name, static_cast<uint32_t>(bit), existing.usage ? existing.usage : "?",
+                             hazardKind, (const void *) tracked.tex, static_cast<uint32_t>(bit), existing.usage ? existing.usage : "?",
                              existing.isWrite() ? "write" : "read", state.usage ? state.usage : "?", state.isWrite() ? "write" : "read", mip, face);
                     hazardFound = true;
                 });
@@ -116,7 +116,7 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
         });
         return layout;
     };
-    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: register image '{}' [mip={}-{} face={}-{}] as '{}' (incoming: {})", tex->name, resolved.i.mip,
+    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: register image {:p} [mip={}-{} face={}-{}] as '{}' (incoming: {})", (const void *) tex, resolved.i.mip,
                mipEnd - 1, resolved.i.face, faceEnd - 1, state.usage ? state.usage : "?", vk::to_string(firstIncomingLayout()));
 
     // No hazard — record each (mip, face, plane) → intended state.
@@ -124,7 +124,7 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
         for (uint32_t face = resolved.i.face; face < faceEnd; ++face) {
             forEachAspectBit(aspects, [&](vk::ImageAspectFlagBits bit) {
                 tracked.registered[packPlaneKey(mip, face, bit)] = state;
-                GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' [mip={} face={} {}] registered layout={}", tex->name, mip, face,
+                GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image {:p} [mip={} face={} {}] registered layout={}", (const void *) tex, mip, face,
                            vk::to_string(bit), vk::to_string(state.layout));
             });
         }
@@ -175,27 +175,27 @@ bool GpuResourceStateTrackerVulkan::addStorageTexture(TextureVulkanBase * tex, c
 }
 
 bool GpuResourceStateTrackerVulkan::checkBufferHazard(const TrackedBuffer & incoming) const {
-    auto it = mBuffers.find(incoming.buf->id);
+    auto it = mBuffers.find(incoming.buf);
     if (it == mBuffers.end()) return true;
     const TrackedBuffer & existing = it->second;
     if (!existing.isWrite && !incoming.isWrite) return true; // read+read is always safe
     const char * hazardKind = (existing.isWrite && incoming.isWrite) ? "write/write" : "read/write";
-    GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: {} hazard on buffer '{}' — '{}' ({}) and '{}' ({})", hazardKind, incoming.buf->name, existing.usageName,
-             existing.isWrite ? "write" : "read", incoming.usageName, incoming.isWrite ? "write" : "read");
+    GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: {} hazard on buffer {:p} — '{}' ({}) and '{}' ({})", hazardKind, (const void *) incoming.buf,
+             existing.usageName, existing.isWrite ? "write" : "read", incoming.usageName, incoming.isWrite ? "write" : "read");
     return false;
 }
 
 bool GpuResourceStateTrackerVulkan::addBuffer(TrackedBuffer b) {
-    auto it = mBuffers.find(b.buf->id);
+    auto it = mBuffers.find(b.buf);
     if (it == mBuffers.end()) {
         // First registration in this batch: snapshot the actual resource state as the baseline
         // so emitPrePassBarriers() computes the correct "from" side of the first barrier.
         b.committedAccess = b.buf->gpuState.access;
         b.committedStages = b.buf->gpuState.stages;
         b.activeThisPass  = true;
-        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: register buffer '{}' as '{}' committed={} pass={}", b.buf->name, b.usageName,
+        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: register buffer {:p} as '{}' committed={} pass={}", (const void *) b.buf, b.usageName,
                    vk::to_string(b.committedAccess), vk::to_string(b.passAccess));
-        auto entry = mBuffers.emplace(b.buf->id, std::move(b)).first;
+        auto entry = mBuffers.emplace(b.buf, std::move(b)).first;
         mActiveBuffers.push_back(&entry->second);
         return true;
     }
@@ -213,14 +213,14 @@ bool GpuResourceStateTrackerVulkan::addBuffer(TrackedBuffer b) {
     if (!existing.activeThisPass) {
         mActiveBuffers.push_back(&existing);
         // Cross-payload re-registration: log the committed state this payload inherits.
-        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: re-register buffer '{}' as '{}' committed={} pass={}", b.buf->name, b.usageName,
+        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: re-register buffer {:p} as '{}' committed={} pass={}", (const void *) b.buf, b.usageName,
                    vk::to_string(existing.committedAccess), vk::to_string(b.passAccess));
     }
     existing.passAccess |= b.passAccess;
     existing.passStages |= b.passStages;
     existing.isWrite |= b.isWrite;
     existing.activeThisPass = true;
-    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer '{}' pass access merged to {}", existing.buf->name, vk::to_string(existing.passAccess));
+    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer {:p} pass access merged to {}", (const void *) existing.buf, vk::to_string(existing.passAccess));
     return true;
 }
 
@@ -310,8 +310,8 @@ bool GpuResourceStateTrackerVulkan::addTransferSrcImage(TextureVulkanBase * tex,
     return addTexture(tex, view, state);
 }
 
-std::vector<int64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
-    std::vector<int64_t> invalid;
+std::vector<const Interface *> GpuResourceStateTrackerVulkan::addGpuResourceTable(const GpuResourceTable & table) {
+    std::vector<const Interface *> invalid;
     for (size_t setIdx = 0; setIdx < table.size(); ++setIdx) {
         const auto & set = table[setIdx];
         for (size_t bindingIdx = 0; bindingIdx < set.size(); ++bindingIdx) {
@@ -323,12 +323,12 @@ std::vector<int64_t> GpuResourceStateTrackerVulkan::addGpuResourceTable(const Gp
                     auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
                     if (!tex) continue;
                     bool ok = (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? addStorageTexture(tex, view) : addSampledTexture(tex, view);
-                    if (!ok) invalid.push_back(tex->id);
+                    if (!ok) invalid.push_back(tex);
                 } else if (view.isBuffer()) {
                     auto * buf = RuntimeType::cast<BufferVulkan>(view.buffer().get());
                     if (!buf) continue;
                     bool ok = (view.bufferView.type == GpuResourceView::BufferView::STORAGE) ? addStorageBuffer(buf, false) : addUniformBuffer(buf);
-                    if (!ok) invalid.push_back(buf->id);
+                    if (!ok) invalid.push_back(buf);
                 }
                 // samplers carry no Vulkan resource state; skip
             }
@@ -404,9 +404,9 @@ void GpuResourceStateTrackerVulkan::upgradeForDrawRasterState(const RasterState 
             uint32_t mip  = uint32_t((key >> 48) & 0xffffu);
             uint32_t face = uint32_t((key >> 16) & 0xffffu);
             GN_VERBOSE(sLogger,
-                       "GpuResourceStateTrackerVulkan: promoting depth-stencil '{}' mip={} face={} from read-only to read-write "
+                       "GpuResourceStateTrackerVulkan: promoting depth-stencil {:p} mip={} face={} from read-only to read-write "
                        "(draw requires {})",
-                       tracked.tex->name, mip, face, needsDepthWrite ? "depth write" : "stencil write");
+                       (const void *) tracked.tex, mip, face, needsDepthWrite ? "depth write" : "stencil write");
             intended = promoted;
         }
     }
@@ -432,9 +432,9 @@ static vk::ImageLayout combineDepthStencilLayouts(vk::ImageLayout depth, vk::Ima
 } // namespace
 
 vk::ImageLayout GpuResourceStateTrackerVulkan::texturePassLayout(const TextureVulkanBase * tex, uint32_t mip, uint32_t face) const {
-    auto it = mTextures.find(tex->id);
+    auto it = mTextures.find(tex);
     if (it == mTextures.end()) {
-        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: texturePassLayout('{}' mip={} face={}) -> eUndefined (not tracked)", tex->name, mip, face);
+        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: texturePassLayout({:p} mip={} face={}) -> eUndefined (not tracked)", (const void *) tex, mip, face);
         return vk::ImageLayout::eUndefined;
     }
     const auto & tracked = it->second;
@@ -474,8 +474,8 @@ vk::ImageLayout GpuResourceStateTrackerVulkan::texturePassLayout(const TextureVu
         reason = "no plane at this subresource";
     }
 
-    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: texturePassLayout('{}' mip={} face={}) -> {} ({})", tex->name, mip, face, vk::to_string(result),
-               reason);
+    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: texturePassLayout({:p} mip={} face={}) -> {} ({})", (const void *) tex, mip, face,
+               vk::to_string(result), reason);
     return result;
 }
 
@@ -491,10 +491,10 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
         if (b.committedAccess != b.passAccess || b.committedStages != b.passStages) {
             vk::Buffer vkBuf = b.buf->nativeBuffer();
             if (!vkBuf) GN_UNLIKELY {
-                    GN_WARN(sLogger, "GpuResourceStateTrackerVulkan: buffer '{}' has no VkBuffer handle; skipping barrier", b.buf->name);
+                    GN_WARN(sLogger, "GpuResourceStateTrackerVulkan: buffer {:p} has no VkBuffer handle; skipping barrier", (const void *) b.buf);
                 }
             else {
-                GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer barrier '{}' [{}] : access {} -> {}", b.buf->name, b.usageName,
+                GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer barrier {:p} [{}] : access {} -> {}", (const void *) b.buf, b.usageName,
                            vk::to_string(b.committedAccess), vk::to_string(b.passAccess));
                 vk::BufferMemoryBarrier barrier;
                 barrier.setSrcAccessMask(b.committedAccess)
@@ -509,7 +509,8 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                 dstStages |= b.passStages;
                 b.committedAccess = b.passAccess;
                 b.committedStages = b.passStages;
-                GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer '{}' committed updated to {}", b.buf->name, vk::to_string(b.committedAccess));
+                GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer {:p} committed updated to {}", (const void *) b.buf,
+                           vk::to_string(b.committedAccess));
             }
         }
 
@@ -518,7 +519,7 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
         b.passStages     = vk::PipelineStageFlagBits::eBottomOfPipe;
         b.isWrite        = false;
         b.activeThisPass = false;
-        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer '{}' pass state reset", b.buf->name);
+        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: buffer {:p} pass state reset", (const void *) b.buf);
     }
 
     for (auto * active : mActiveTextures) {
@@ -526,7 +527,7 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
         tracked.activeThisPass = false;
         vk::Image vkImg        = tracked.tex->nativeImage();
         if (!vkImg) GN_UNLIKELY {
-                GN_WARN(sLogger, "GpuResourceStateTrackerVulkan: texture '{}' has no VkImage handle; skipping barrier", tracked.tex->name);
+                GN_WARN(sLogger, "GpuResourceStateTrackerVulkan: texture {:p} has no VkImage handle; skipping barrier", (const void *) tracked.tex);
                 continue;
             }
 
@@ -540,7 +541,7 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
             if (!prev) GN_UNLIKELY continue; // incoming should always have the plane (snapshot from gpuStates)
             if (*prev == next) continue;
 
-            GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image barrier '{}' [mip={} face={} {}] : {} -> {} ({})", tracked.tex->name, mip, face,
+            GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image barrier {:p} [mip={} face={} {}] : {} -> {} ({})", (const void *) tracked.tex, mip, face,
                        vk::to_string(aspect), vk::to_string(prev->layout), vk::to_string(next.layout), next.usage ? next.usage : "?");
             vk::ImageMemoryBarrier b;
             b.setOldLayout(prev->layout)
@@ -562,14 +563,14 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                 auto   it = sr.planes.find(aspect);
                 if (it != sr.planes.end()) {
                     it->second = next;
-                    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' [mip={} face={} {}] incoming updated to {}", tracked.tex->name, mip, face,
-                               vk::to_string(aspect), vk::to_string(next.layout));
+                    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image {:p} [mip={} face={} {}] incoming updated to {}", (const void *) tracked.tex, mip,
+                               face, vk::to_string(aspect), vk::to_string(next.layout));
                 }
             }
         }
 
         // Registered states are baked into barriers; clear so the next payload starts fresh.
-        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' registered cleared ({} planes)", tracked.tex->name, tracked.registered.size());
+        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image {:p} registered cleared ({} planes)", (const void *) tracked.tex, tracked.registered.size());
         tracked.registered.clear();
         tracked.hasWrite = false;
     }

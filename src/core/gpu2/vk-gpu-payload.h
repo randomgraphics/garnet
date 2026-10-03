@@ -26,7 +26,7 @@ struct GpuSyncPoint : rv::CommandQueue::SyncPoint {
 struct GpuPayloadVulkan : GpuPayload {
     GN_REGISTER_RUNTIME_TYPE(GpuPayload);
 
-    explicit GpuPayloadVulkan(const StrA & name): GpuPayload(TYPE_INFO(), name) {}
+    explicit GpuPayloadVulkan(const StrA & = ""): GpuPayload(TYPE_INFO()) {}
 
     const GpuSyncPoint & syncpoint() const { return mSyncPoint; }
     vk::Semaphore        semaphore() const { return mSyncPoint.semaphore; }

@@ -27,7 +27,7 @@ struct RecordingRaster final : GpuRaster {
             : vs(p.vs), hs(p.hs), ds(p.ds), gs(p.gs), ps(p.ps), states(p.states), geometry(p.geometry), resources(p.resources), immediates(p.immediates) {}
     };
     DynaArray<RecordedDraw> draws;
-    RecordingRaster(): GpuRaster(TYPE_INFO(), "recording-raster") {}
+    RecordingRaster(): GpuRaster(TYPE_INFO()) {}
     void                 recordDraw(const DrawParameters & draw) override { draws.append(draw); }
     const RasterTarget & target() const override { return destination; }
     AutoRef<GpuPayload>  seal() override { return {}; }
