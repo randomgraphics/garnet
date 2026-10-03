@@ -11,10 +11,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless.payload");
 namespace GN::gpu2 {
 
 VkBindlessPayload::VkBindlessPayload(const StrA & name, ConstructParameters params)
-    : GpuPayloadVulkan(name), mGpu(std::move(params.gpu)), mRenderTarget(std::move(params.target)),
-      mHeap(std::move(params.heap)), mHeapSetIndex(params.heapSetIndex), mPipelineLayout(params.pipelineLayout),
-      mDraws(std::move(params.draws)), mRetainedResources(std::move(params.retainedResources)),
-      mPassDescriptorPool(params.passDescriptorPool), mPassDescriptorSets(std::move(params.passDescriptorSets)) {}
+    : GpuPayloadVulkan(name), mGpu(std::move(params.gpu)), mRenderTarget(std::move(params.target)), mHeap(std::move(params.heap)),
+      mHeapSetIndex(params.heapSetIndex), mPipelineLayout(params.pipelineLayout), mDraws(std::move(params.draws)),
+      mRetainedResources(std::move(params.retainedResources)), mPassDescriptorPool(params.passDescriptorPool),
+      mPassDescriptorSets(std::move(params.passDescriptorSets)) {}
 
 VkBindlessPayload::~VkBindlessPayload() {
     mRetainedResources.clear();
@@ -24,15 +24,13 @@ VkBindlessPayload::~VkBindlessPayload() {
     }
 }
 
-void VkBindlessPayload::onGpuComplete() {
-    mRetainedResources.clear();
-}
+void VkBindlessPayload::onGpuComplete() { mRetainedResources.clear(); }
 
 void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     if (!ctx.dev || ctx.cmd.empty()) return;
 
-    vk::CommandBuffer vkcb = ctx.cmd.handle();
-    auto & psoCache = mGpu->bindlessPsoCache();
+    vk::CommandBuffer vkcb     = ctx.cmd.handle();
+    auto &            psoCache = mGpu->bindlessPsoCache();
 
     // 1. Pre-pass layout transitions for render targets
     if (ctx.batchTracker) {
@@ -65,8 +63,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 b.setOldLayout(vk::ImageLayout::eUndefined)
                     .setNewLayout(vk::ImageLayout::eDepthAttachmentOptimal)
                     .setImage(dTex->nativeImage())
-                    .setSubresourceRange({vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1,
-                                          mRenderTarget.depthStencilTarget.face, 1})
+                    .setSubresourceRange({vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1, mRenderTarget.depthStencilTarget.face, 1})
                     .setSrcAccessMask({})
                     .setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite)
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
@@ -76,10 +73,8 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         }
         if (!preBarriers.empty()) {
             vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
-                                 vk::PipelineStageFlagBits::eColorAttachmentOutput |
-                                     vk::PipelineStageFlagBits::eEarlyFragmentTests,
-                                 {}, 0, nullptr, 0, nullptr, static_cast<uint32_t>(preBarriers.size()),
-                                 preBarriers.data());
+                                 vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests, {}, 0, nullptr, 0, nullptr,
+                                 static_cast<uint32_t>(preBarriers.size()), preBarriers.data());
         }
     }
 
@@ -87,7 +82,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     vk::Extent2D ext(~0u, ~0u);
     PassFormats  formats;
 
-    const auto & cc = mRenderTarget.clearColor;
+    const auto &        cc = mRenderTarget.clearColor;
     vk::ClearColorValue clearCv(std::array<float, 4> {cc.f4[0], cc.f4[1], cc.f4[2], cc.f4[3]});
 
     std::vector<vk::RenderingAttachmentInfo> colorAtts;
@@ -98,11 +93,9 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         vk::Image             img {};
         vk::ImageView         view {};
         vk::Extent2D          attExt {};
-        vk::Format            fmt = vk::Format::eUndefined;
+        vk::Format            fmt    = vk::Format::eUndefined;
         const GpuResourceView ctView = mRenderTarget.colorTargets[i].view();
-        if (!resolveColorAttachment(ctView, &img, &view, &attExt, &fmt)) {
-            continue;
-        }
+        if (!resolveColorAttachment(ctView, &img, &view, &attExt, &fmt)) { continue; }
         ext.width  = std::min(ext.width, attExt.width);
         ext.height = std::min(ext.height, attExt.height);
         formats.colors.push_back(fmt);
@@ -119,14 +112,14 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     vk::RenderingAttachmentInfo depthAtt;
     bool                        hasDepth = false;
     vk::Image                   depthImg {};
-    const GpuResourceView       dst      = mRenderTarget.depthStencilTarget.view();
+    const GpuResourceView       dst = mRenderTarget.depthStencilTarget.view();
     if (dst.isTexture() && dst.texture()) {
         vk::Extent2D depthExtent;
         if (attachmentExtent(dst, depthExtent)) {
-            auto * depthTex = RuntimeType::cast<TextureVulkanBase>(dst.texture().get());
+            auto *        depthTex  = RuntimeType::cast<TextureVulkanBase>(dst.texture().get());
             vk::ImageView depthView = depthTex ? depthTex->nativeView(dst.imageView) : vk::ImageView {};
             if (depthTex && depthView) {
-                depthImg = depthTex->nativeImage();
+                depthImg                  = depthTex->nativeImage();
                 gfx::img::PixelFormat dpf = dst.imageView.format;
                 if (dpf == gfx::img::PixelFormat::UNKNOWN()) dpf = depthTex->descriptor().format;
                 formats.depth = pixelFormatToVkFormat(dpf);
@@ -135,8 +128,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                     .setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
                     .setLoadOp(vk::AttachmentLoadOp::eClear)
                     .setStoreOp(vk::AttachmentStoreOp::eStore)
-                    .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(mRenderTarget.clearDepth,
-                                                                             mRenderTarget.clearStencil)));
+                    .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(mRenderTarget.clearDepth, mRenderTarget.clearStencil)));
                 ext.width  = std::min(ext.width, depthExtent.width);
                 ext.height = std::min(ext.height, depthExtent.height);
                 hasDepth   = true;
@@ -157,16 +149,14 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         auto * vkHeap = RuntimeType::cast<VkBindlessDescriptorHeap>(mHeap.get());
         if (vkHeap && vkHeap->nativeDescriptorSet()) {
             auto heapSet = vkHeap->nativeDescriptorSet();
-            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mHeapSetIndex, 1, &heapSet, 0,
-                                    nullptr);
+            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mHeapSetIndex, 1, &heapSet, 0, nullptr);
         }
     }
 
     // Bind pass resources sets if present
     for (size_t s = 0; s < mPassDescriptorSets.size(); ++s) {
         if (s != mHeapSetIndex && mPassDescriptorSets[s]) {
-            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout, static_cast<uint32_t>(s), 1,
-                                    &mPassDescriptorSets[s], 0, nullptr);
+            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout, static_cast<uint32_t>(s), 1, &mPassDescriptorSets[s], 0, nullptr);
         }
     }
 
@@ -182,18 +172,15 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         if (!vsVk || !vsVk->rvShader()) continue;
 
         // Viewport and Scissor
-        vk::Viewport vp = d.mergedState.viewport ? rsViewportToVk(*d.mergedState.viewport, ext)
-                                                 : vk::Viewport(0.0f, 0.0f, (float) ext.width, (float) ext.height, 0.0f,
-                                                               1.0f);
+        vk::Viewport vp =
+            d.mergedState.viewport ? rsViewportToVk(*d.mergedState.viewport, ext) : vk::Viewport(0.0f, 0.0f, (float) ext.width, (float) ext.height, 0.0f, 1.0f);
         vkcb.setViewport(0, 1, &vp);
 
-        vk::Rect2D sc = d.mergedState.scissorRect ? rsScissorToVk(*d.mergedState.scissorRect, ext)
-                                                 : vk::Rect2D(vk::Offset2D(0, 0), ext);
+        vk::Rect2D sc = d.mergedState.scissorRect ? rsScissorToVk(*d.mergedState.scissorRect, ext) : vk::Rect2D(vk::Offset2D(0, 0), ext);
         vkcb.setScissor(0, 1, &sc);
 
         // Get-or-create graphics pipeline
-        vk::Pipeline pipe = psoCache.getOrCreate(mPipelineLayout, vsVk, psVk, d.mergedState, d.geometry, formats,
-                                                mRenderTarget.colorTargets);
+        vk::Pipeline pipe = psoCache.getOrCreate(mPipelineLayout, vsVk, psVk, d.mergedState, d.geometry, formats, mRenderTarget.colorTargets);
         if (!pipe) continue;
 
         if (pipe != activePipeline) {
@@ -203,8 +190,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
 
         // Push constants
         if (d.immediates && !d.immediates->empty() && mPipelineLayout) {
-            vkcb.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0,
-                               static_cast<uint32_t>(d.immediates->size()), d.immediates->data());
+            vkcb.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, static_cast<uint32_t>(d.immediates->size()), d.immediates->data());
         }
 
         // Vertex buffer bindings
@@ -255,8 +241,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
             vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput,
-                                 vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader,
-                                 {}, 0, nullptr, 0, nullptr, 1, &b);
+                                 vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, {}, 0, nullptr, 0, nullptr, 1, &b);
             rv::Image::State::PlaneState ps;
             ps.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
             ps.access = vk::AccessFlagBits::eShaderRead;
@@ -275,21 +260,18 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 b.setOldLayout(vk::ImageLayout::eDepthAttachmentOptimal)
                     .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
                     .setImage(depthImg)
-                    .setSubresourceRange({vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1,
-                                          mRenderTarget.depthStencilTarget.face, 1})
+                    .setSubresourceRange({vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1, mRenderTarget.depthStencilTarget.face, 1})
                     .setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite)
                     .setDstAccessMask(vk::AccessFlagBits::eShaderRead)
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
                 vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eLateFragmentTests,
-                                     vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader,
-                                     {}, 0, nullptr, 0, nullptr, 1, &b);
+                                     vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, {}, 0, nullptr, 0, nullptr, 1, &b);
                 rv::Image::State::PlaneState ps;
                 ps.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
                 ps.access = vk::AccessFlagBits::eShaderRead;
                 ps.stages = vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
-                dTex->setState(ps, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth,
-                                                             mRenderTarget.depthStencilTarget.mip, 1,
+                dTex->setState(ps, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1,
                                                              mRenderTarget.depthStencilTarget.face, 1));
             }
         }

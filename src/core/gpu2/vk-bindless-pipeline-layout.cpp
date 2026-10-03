@@ -41,8 +41,7 @@ VkBindlessPipelineLayoutCache::~VkBindlessPipelineLayoutCache() {
     }
 }
 
-vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Raster::CreateParameters & cp,
-                                                             VkBindlessDescriptorHeap *                 vkHeap) {
+vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Raster::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap) {
     std::lock_guard<std::mutex> lock(mMutex);
 
     LayoutKey key;
@@ -62,9 +61,7 @@ vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Ra
 
     // Determine the highest set index needed
     uint32_t maxSetIndex = cp.heapSetIndex;
-    if (!cp.passResources.empty()) {
-        maxSetIndex = std::max(maxSetIndex, static_cast<uint32_t>(cp.passResources.size() - 1));
-    }
+    if (!cp.passResources.empty()) { maxSetIndex = std::max(maxSetIndex, static_cast<uint32_t>(cp.passResources.size() - 1)); }
 
     std::vector<vk::DescriptorSetLayout> setLayouts(maxSetIndex + 1, mEmptyLayout);
 

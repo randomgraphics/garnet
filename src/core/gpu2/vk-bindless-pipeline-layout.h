@@ -13,13 +13,13 @@ class VkBindlessPipelineLayoutCache {
 public:
     struct LayoutKey {
         vk::DescriptorSetLayout heapLayout {};
-        uint32_t                heapSetIndex     = 0;
-        uint32_t                pushConstantSize = 128;
+        uint32_t                heapSetIndex      = 0;
+        uint32_t                pushConstantSize  = 128;
         size_t                  passResourcesHash = 0;
 
         bool operator==(const LayoutKey & o) const {
-            return heapLayout == o.heapLayout && heapSetIndex == o.heapSetIndex &&
-                   pushConstantSize == o.pushConstantSize && passResourcesHash == o.passResourcesHash;
+            return heapLayout == o.heapLayout && heapSetIndex == o.heapSetIndex && pushConstantSize == o.pushConstantSize &&
+                   passResourcesHash == o.passResourcesHash;
         }
     };
 
@@ -40,15 +40,14 @@ public:
     VkBindlessPipelineLayoutCache & operator=(const VkBindlessPipelineLayoutCache &) = delete;
 
     /// Get or create a VkPipelineLayout matching the given bindless configuration.
-    vk::PipelineLayout getOrCreate(const bindless::Raster::CreateParameters & cp,
-                                   VkBindlessDescriptorHeap *                 vkHeap);
+    vk::PipelineLayout getOrCreate(const bindless::Raster::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap);
 
 private:
-    GpuContextVulkan2 &                                                   mGpu;
-    std::mutex                                                            mMutex;
-    std::unordered_map<LayoutKey, vk::PipelineLayout, KeyHash>            mCache;
-    std::vector<vk::DescriptorSetLayout>                                  mPassLayoutsToDestroy;
-    vk::DescriptorSetLayout                                               mEmptyLayout {};
+    GpuContextVulkan2 &                                        mGpu;
+    std::mutex                                                 mMutex;
+    std::unordered_map<LayoutKey, vk::PipelineLayout, KeyHash> mCache;
+    std::vector<vk::DescriptorSetLayout>                       mPassLayoutsToDestroy;
+    vk::DescriptorSetLayout                                    mEmptyLayout {};
 };
 
 } // namespace GN::gpu2

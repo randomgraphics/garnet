@@ -16,4 +16,17 @@ if(VULKAN_FOUND)
     target_include_directories(GNsample-gpu2-simple-compute PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(GNsample-gpu2-simple-compute GNcore)
     add_dependencies(GNsample-gpu2-simple-compute GNsample-gpu2-shaders)
+
+    GN_compile_glsl_shaders(
+        bindless_spv_headers
+        SOURCES shaders/bindless-sample.vert
+                shaders/bindless-sample.frag
+        COMMENT "Compiling gpu2 bindless sample shaders"
+    )
+    add_custom_target(GNsample-gpu2-bindless-shaders DEPENDS "${bindless_spv_headers}")
+
+    add_executable(GNsample-gpu2-bindless bindless.cpp)
+    target_include_directories(GNsample-gpu2-bindless PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    target_link_libraries(GNsample-gpu2-bindless GNcore)
+    add_dependencies(GNsample-gpu2-bindless GNsample-gpu2-bindless-shaders)
 endif()

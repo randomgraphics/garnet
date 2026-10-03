@@ -51,7 +51,7 @@ TEST_CASE("bindless::Raster: creation validation and conflict checks", "[gpu2][b
     if (!gpu) SKIP("No GPU context available");
 
     constexpr uint32_t W = 16, H = 16;
-    auto targetTex = makeRgba8Tex(gpu, "rt", W, H);
+    auto               targetTex = makeRgba8Tex(gpu, "rt", W, H);
     REQUIRE(targetTex);
 
     RasterTarget rt;
@@ -72,7 +72,7 @@ TEST_CASE("bindless::Raster: creation validation and conflict checks", "[gpu2][b
         CHECK_FALSE(r);
 
         RasterTarget emptyRt;
-        auto r2 = bindless::Raster::create("empty-target", {.gpu = gpu, .target = &emptyRt, .heap = heap});
+        auto         r2 = bindless::Raster::create("empty-target", {.gpu = gpu, .target = &emptyRt, .heap = heap});
         CHECK_FALSE(r2);
     }
 
@@ -84,20 +84,17 @@ TEST_CASE("bindless::Raster: creation validation and conflict checks", "[gpu2][b
         conflictTable[0][0].append(GpuResourceView(targetTex));
 
         // heapSetIndex = 0 collides with conflictTable[0]
-        auto r = bindless::Raster::create("conflict", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0,
-                                                       .passResources = conflictTable});
+        auto r = bindless::Raster::create("conflict", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0, .passResources = conflictTable});
         CHECK_FALSE(r);
 
         // heapSetIndex = 1 does NOT collide with conflictTable[0]
-        auto rCompat = bindless::Raster::create("compat", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 1,
-                                                           .passResources = conflictTable});
+        auto rCompat = bindless::Raster::create("compat", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 1, .passResources = conflictTable});
         CHECK(rCompat);
     }
 
     // 4. Pure bindless configuration succeeds
     {
-        auto r = bindless::Raster::create("pure-bindless", {.gpu = gpu, .target = &rt, .heap = heap,
-                                                            .heapSetIndex = 0});
+        auto r = bindless::Raster::create("pure-bindless", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0});
         CHECK(r);
         CHECK(r->target().colorTargets.size() == 1);
     }
@@ -108,7 +105,7 @@ TEST_CASE("bindless::Raster: recordDraw, retainResource, and seal lifecycle", "[
     if (!gpu) SKIP("No GPU context available");
 
     constexpr uint32_t W = 16, H = 16;
-    auto targetTex = makeRgba8Tex(gpu, "rt", W, H);
+    auto               targetTex = makeRgba8Tex(gpu, "rt", W, H);
     REQUIRE(targetTex);
 
     RasterTarget rt;
@@ -131,7 +128,7 @@ TEST_CASE("bindless::Raster: recordDraw, retainResource, and seal lifecycle", "[
 
     // Record draw call
     RasterGeometry emptyGeom {};
-    emptyGeom.vertexCount = 3;
+    emptyGeom.vertexCount      = 3;
     uint32_t pushConstantIndex = 0;
 
     raster->recordDraw({.vs = vs, .ps = ps, .geometry = emptyGeom, .immediates = makePushConstants(pushConstantIndex)});
@@ -145,15 +142,14 @@ TEST_CASE("bindless::Raster: recordDraw, retainResource, and seal lifecycle", "[
     CHECK_FALSE(raster->seal());
 }
 
-TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-restore invariant",
-          "[gpu2][bindless][gpu]") {
+TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-restore invariant", "[gpu2][bindless][gpu]") {
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
     constexpr uint32_t W = 8, H = 8;
 
     // 1. Create two textures: red and green
-    auto texRed = makeRgba8Tex(gpu, "texRed", W, H);
+    auto texRed   = makeRgba8Tex(gpu, "texRed", W, H);
     auto texGreen = makeRgba8Tex(gpu, "texGreen", W, H);
     REQUIRE(texRed);
     REQUIRE(texGreen);
@@ -165,7 +161,7 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
     auto heap = bindless::DescriptorHeap::create("heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
 
-    uint32_t slotRed = heap->allocate(GpuResourceView(texRed));
+    uint32_t slotRed   = heap->allocate(GpuResourceView(texRed));
     uint32_t slotGreen = heap->allocate(GpuResourceView(texGreen));
     REQUIRE(slotRed != bindless::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(slotGreen != bindless::INVALID_DESCRIPTOR_INDEX);
@@ -186,8 +182,7 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
 
     // --- Pass A: Render using slotGreen (expecting solid green output) ---
     {
-        auto raster = bindless::Raster::create("draw-green", {.gpu = gpu, .target = &rt, .heap = heap,
-                                                              .heapSetIndex = 0, .pushConstantSize = 128});
+        auto raster = bindless::Raster::create("draw-green", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0, .pushConstantSize = 128});
         REQUIRE(raster);
 
         RasterGeometry geom {};
@@ -220,8 +215,7 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
 
     // --- Pass B: Render using slotRed (expecting solid red output) ---
     {
-        auto raster = bindless::Raster::create("draw-red", {.gpu = gpu, .target = &rt, .heap = heap,
-                                                            .heapSetIndex = 0, .pushConstantSize = 128});
+        auto raster = bindless::Raster::create("draw-red", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0, .pushConstantSize = 128});
         REQUIRE(raster);
 
         RasterGeometry geom {};
