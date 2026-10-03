@@ -59,7 +59,9 @@ struct GpuContext : public RCRT64 {
     static GN_API AutoRef<GpuContext> create(const StrA & name, const CreateParameters &);
 
     struct Caps {
-        gfx::img::PixelFormat defaultDepthFormat = gfx::img::PixelFormat::UNKNOWN();
+        gfx::img::PixelFormat defaultDepthFormat       = gfx::img::PixelFormat::UNKNOWN();
+        uint32_t              maxBindlessSampledImages = 0; ///< Maximum sampled images in a bindless descriptor set.
+        uint32_t              maxImmediateSize         = 0; ///< Maximum immediate data (push constants / root constants) in bytes.
     };
 
     virtual Caps caps() const = 0;

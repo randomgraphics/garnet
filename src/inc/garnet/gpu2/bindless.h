@@ -34,14 +34,33 @@ public:
     /// Thread-safe.
     virtual uint32_t allocate(const GpuResourceView & view) = 0;
 
+    /// Allocate a contiguous batch of descriptor indices for the given views.
+    /// All-or-nothing: if any view allocation fails or capacity is insufficient,
+    /// no slots are allocated, outIndices is unchanged, and false is returned.
+    /// Returns true on success, filling outIndices with the allocated indices.
+    /// Thread-safe.
+    virtual bool allocate(ArrayView<const GpuResourceView> views, ArrayView<uint32_t> outIndices) = 0;
+
     /// Update an existing descriptor slot in-place with a new resource view.
     /// Useful for background streaming (e.g. replacing a 1x1 fallback texture with a loaded 4K texture).
     /// Thread-safe and valid to invoke while GPU commands are in flight.
     virtual bool update(uint32_t slot, const GpuResourceView & view) = 0;
 
+    /// Update a batch of existing descriptor slots in-place with new resource views.
+    /// Permissive policy: each valid slot/view pair is updated in-place; invalid or inactive
+    /// slots are safely skipped without aborting other updates.
+    /// Returns the number of slots successfully updated.
+    /// Thread-safe and valid to invoke while GPU commands are in flight.
+    virtual uint32_t update(ArrayView<const uint32_t> slots, ArrayView<const GpuResourceView> views) = 0;
+
     /// Free a previously allocated descriptor slot for recycling.
     /// Thread-safe.
     virtual void free(uint32_t slot) = 0;
+
+    /// Free a batch of previously allocated descriptor slots for recycling.
+    /// Any invalid or unallocated slots in the array are safely ignored.
+    /// Thread-safe.
+    virtual void free(ArrayView<const uint32_t> slots) = 0;
 
     /// Maximum capacity of this descriptor heap.
     virtual uint32_t capacity() const = 0;
@@ -79,7 +98,7 @@ public:
         AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap.
         uint32_t                heapSetIndex = 0;       ///< Descriptor set index for the bindless heap (default 0).
         GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 0 Camera UBO).
-        uint32_t                pushConstantSize = 128; ///< Maximum push constant size in bytes (default 128).
+        uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
     };
 
     /// Create a new bindless raster recorder. Performs a fast conflict check between
@@ -87,21 +106,25 @@ public:
     GN_API static AutoRef<Raster> create(const StrA & name, const CreateParameters & cp);
 
     struct DrawParameters {
-        AutoRef<GpuShader>     vs = {}, ps = {};
-        RasterState            states = {};        ///< Transient state overrides for this draw.
-        const RasterGeometry & geometry;           ///< Vertex and index buffer bindings.
-        uint32_t               instanceCount = 1;  ///< Number of instances to draw (default 1).
-        AutoRef<const Blob>    immediates    = {}; ///< Push constants (transforms, material BDA, texture IDs).
+        AutoRef<GpuShader>       vs = {}, hs = {}, ds = {}, gs = {}, ps = {};
+        RasterState              states = {};        ///< Transient state overrides for this draw.
+        const RasterGeometry &   geometry;           ///< Vertex and index buffer bindings.
+        uint32_t                 instanceCount = 1;  ///< Number of instances to draw (default 1).
+        ArrayView<const uint8_t> immediates    = {}; ///< Inline uniform data (root constants / push constants).
     };
 
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;
 
-    /// Keep dynamic resources (e.g. parameter/material buffers) alive until GPU completes execution.
-    virtual void retainResource(AutoRef<RCRT64> resource) = 0;
+    /// Retain an arbitrary cleanup callable that will be invoked when the payload finishes execution.
+    virtual void retainCleanup(std::function<void()> cleanup) = 0;
 
-    /// Get the immutable render target retained by this recorder.
-    virtual const RasterTarget & target() const = 0;
+    /// Generic helper to retain any resource or object until GPU completes execution.
+    /// Accepts AutoRef<T>, std::shared_ptr<T>, or any move-constructible object.
+    template<typename T>
+    void retainResource(T && resource) {
+        retainCleanup([res = std::forward<T>(resource)]() mutable { (void) res; });
+    }
 
     /// Seal recorded work into an opaque, self-contained GpuPayload ready for GpuContext::submit().
     virtual AutoRef<GpuPayload> seal() = 0;

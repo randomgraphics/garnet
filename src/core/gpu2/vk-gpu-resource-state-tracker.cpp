@@ -584,7 +584,7 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
 }
 
 void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb) {
-    if (!tex || !tex->nativeImage()) return;
+    if (!tex || !tex->nativeImage() || tex->isBackbuffer()) return;
     auto                 vkImg  = tex->nativeImage();
     const auto &         range  = view.imageView.range;
     uint32_t             mip    = range.i.mip;

@@ -132,50 +132,179 @@ bool VkBindlessDescriptorHeap::writeDescriptor(uint32_t slot, const GpuResourceV
 }
 
 uint32_t VkBindlessDescriptorHeap::allocate(const GpuResourceView & view) {
-    std::lock_guard<std::mutex> lock(mMutex);
-    uint32_t                    slot = bindless::INVALID_DESCRIPTOR_INDEX;
-    if (!mFreeList.empty()) {
-        slot = mFreeList.back();
-        mFreeList.pop_back();
-    } else if (mNextIndex < mCapacity) {
-        slot = mNextIndex++;
-    } else {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: capacity {} reached", mCapacity);
-        return bindless::INVALID_DESCRIPTOR_INDEX;
-    }
-
-    if (!writeDescriptor(slot, view)) {
-        mFreeList.push_back(slot);
-        return bindless::INVALID_DESCRIPTOR_INDEX;
-    }
-
-    mResources[slot]     = view.resource;
-    mSlotAllocated[slot] = true;
-    mActiveCount++;
-    return slot;
+    uint32_t slot = bindless::INVALID_DESCRIPTOR_INDEX;
+    if (allocate(ArrayView<const GpuResourceView>(&view, 1), ArrayView<uint32_t>(&slot, 1))) { return slot; }
+    return bindless::INVALID_DESCRIPTOR_INDEX;
 }
 
-bool VkBindlessDescriptorHeap::update(uint32_t slot, const GpuResourceView & view) {
-    std::lock_guard<std::mutex> lock(mMutex);
-    if (slot >= mCapacity || !mSlotAllocated[slot]) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap::update: slot {} is not active", slot);
+bool VkBindlessDescriptorHeap::allocate(ArrayView<const GpuResourceView> views, ArrayView<uint32_t> outIndices) {
+    if (views.size() != outIndices.size()) {
+        GN_ERROR(sLogger, "VkBindlessDescriptorHeap::allocate batch: views size {} != outIndices size {}", views.size(), outIndices.size());
         return false;
     }
-    if (!writeDescriptor(slot, view)) { return false; }
-    mResources[slot] = view.resource;
+    if (views.empty()) return true;
+
+    std::lock_guard<std::mutex> lock(mMutex);
+    const size_t                count     = views.size();
+    const size_t                available = mFreeList.size() + (mCapacity - mNextIndex);
+    if (count > available) {
+        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: insufficient capacity for batch of {} descriptors (available: {})", count, available);
+        return false;
+    }
+
+    // Phase 1: validate all views upfront before modifying any allocator state
+    std::vector<vk::ImageView> imgViews;
+    imgViews.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+        auto * tex = RuntimeType::cast<TextureVulkanBase>(views[i].texture().get());
+        if (!tex) {
+            GN_ERROR(sLogger, "VkBindlessDescriptorHeap::allocate batch: view[{}] is not a valid TextureVulkanBase", i);
+            return false;
+        }
+        vk::ImageView iv = tex->nativeView(views[i].imageView);
+        if (!iv) {
+            GN_ERROR(sLogger, "VkBindlessDescriptorHeap::allocate batch: view[{}] failed to get nativeView", i);
+            return false;
+        }
+        imgViews.push_back(iv);
+    }
+
+    // Phase 2: reserve slots and prepare driver descriptor writes
+    vk::Sampler                          sampler = mDefaultSampler ? mDefaultSampler->handle() : vk::Sampler {};
+    std::vector<uint32_t>                slots;
+    std::vector<vk::DescriptorImageInfo> imageInfos;
+    std::vector<vk::WriteDescriptorSet>  writes;
+    slots.reserve(count);
+    imageInfos.reserve(count);
+    writes.reserve(count);
+
+    for (size_t i = 0; i < count; ++i) {
+        uint32_t slot = bindless::INVALID_DESCRIPTOR_INDEX;
+        if (!mFreeList.empty()) {
+            slot = mFreeList.back();
+            mFreeList.pop_back();
+        } else {
+            slot = mNextIndex++;
+        }
+        slots.push_back(slot);
+
+        vk::DescriptorImageInfo info;
+        info.setSampler(sampler).setImageView(imgViews[i]).setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+        imageInfos.push_back(info);
+    }
+
+    for (size_t i = 0; i < count; ++i) {
+        vk::WriteDescriptorSet write;
+        write.setDstSet(mDescriptorSet)
+            .setDstBinding(mBindingIndex)
+            .setDstArrayElement(slots[i])
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+            .setDescriptorCount(1)
+            .setImageInfo(imageInfos[i]);
+        writes.push_back(write);
+    }
+
+    // Phase 3: batched driver update
+    mGpu->vulkanDevice().handle().updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+
+    // Phase 4: commit allocations
+    for (size_t i = 0; i < count; ++i) {
+        uint32_t s        = slots[i];
+        mResources[s]     = views[i].resource;
+        mSlotAllocated[s] = true;
+        mActiveCount++;
+        outIndices[i] = s;
+    }
+
     return true;
 }
 
-void VkBindlessDescriptorHeap::free(uint32_t slot) {
-    std::lock_guard<std::mutex> lock(mMutex);
-    if (slot >= mCapacity || !mSlotAllocated[slot]) {
-        GN_WARN(sLogger, "VkBindlessDescriptorHeap::free: slot {} was not allocated or double-freed", slot);
-        return;
+bool VkBindlessDescriptorHeap::update(uint32_t slot, const GpuResourceView & view) {
+    return update(ArrayView<const uint32_t>(&slot, 1), ArrayView<const GpuResourceView>(&view, 1)) == 1;
+}
+
+uint32_t VkBindlessDescriptorHeap::update(ArrayView<const uint32_t> slots, ArrayView<const GpuResourceView> views) {
+    if (slots.size() != views.size()) {
+        GN_ERROR(sLogger, "VkBindlessDescriptorHeap::update batch: slots size {} != views size {}", slots.size(), views.size());
+        return 0;
     }
-    mResources[slot].clear();
-    mSlotAllocated[slot] = false;
-    mFreeList.push_back(slot);
-    if (mActiveCount > 0) mActiveCount--;
+    if (slots.empty()) return 0;
+
+    std::lock_guard<std::mutex> lock(mMutex);
+    const size_t                count = slots.size();
+
+    vk::Sampler                          sampler = mDefaultSampler ? mDefaultSampler->handle() : vk::Sampler {};
+    std::vector<vk::DescriptorImageInfo> imageInfos;
+    std::vector<vk::WriteDescriptorSet>  writes;
+    std::vector<size_t>                  validIndices;
+    imageInfos.reserve(count);
+    writes.reserve(count);
+    validIndices.reserve(count);
+
+    // Permissive policy: inspect each slot/view pair independently, skipping invalid ones
+    for (size_t i = 0; i < count; ++i) {
+        uint32_t s = slots[i];
+        if (s >= mCapacity || !mSlotAllocated[s]) {
+            GN_VERBOSE(sLogger, "VkBindlessDescriptorHeap::update batch: slot {} at index {} is not active; skipping", s, i);
+            continue;
+        }
+
+        auto * tex = RuntimeType::cast<TextureVulkanBase>(views[i].texture().get());
+        if (!tex) {
+            GN_VERBOSE(sLogger, "VkBindlessDescriptorHeap::update batch: view[{}] is not a valid TextureVulkanBase; skipping", i);
+            continue;
+        }
+        vk::ImageView iv = tex->nativeView(views[i].imageView);
+        if (!iv) {
+            GN_VERBOSE(sLogger, "VkBindlessDescriptorHeap::update batch: view[{}] failed to get nativeView; skipping", i);
+            continue;
+        }
+
+        vk::DescriptorImageInfo info;
+        info.setSampler(sampler).setImageView(iv).setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+        imageInfos.push_back(info);
+
+        vk::WriteDescriptorSet write;
+        write.setDstSet(mDescriptorSet)
+            .setDstBinding(mBindingIndex)
+            .setDstArrayElement(s)
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+            .setDescriptorCount(1)
+            .setImageInfo(imageInfos.back());
+        writes.push_back(write);
+        validIndices.push_back(i);
+    }
+
+    if (writes.empty()) return 0;
+
+    // Batched driver update for all valid slots
+    mGpu->vulkanDevice().handle().updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+
+    // Commit new resource references for updated slots
+    for (size_t vi = 0; vi < validIndices.size(); ++vi) {
+        size_t origIdx             = validIndices[vi];
+        mResources[slots[origIdx]] = views[origIdx].resource;
+    }
+
+    return static_cast<uint32_t>(writes.size());
+}
+
+void VkBindlessDescriptorHeap::free(uint32_t slot) { free(ArrayView<const uint32_t>(&slot, 1)); }
+
+void VkBindlessDescriptorHeap::free(ArrayView<const uint32_t> slots) {
+    if (slots.empty()) return;
+
+    std::lock_guard<std::mutex> lock(mMutex);
+    for (uint32_t s : slots) {
+        if (s >= mCapacity || !mSlotAllocated[s]) {
+            GN_WARN(sLogger, "VkBindlessDescriptorHeap::free: slot {} was not allocated or double-freed", s);
+            continue;
+        }
+        mResources[s].clear();
+        mSlotAllocated[s] = false;
+        mFreeList.push_back(s);
+        if (mActiveCount > 0) mActiveCount--;
+    }
 }
 
 uint32_t VkBindlessDescriptorHeap::size() const {

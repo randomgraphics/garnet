@@ -20,8 +20,11 @@ public:
     ~VkBindlessDescriptorHeap() override;
 
     uint32_t allocate(const GpuResourceView & view) override;
+    bool     allocate(ArrayView<const GpuResourceView> views, ArrayView<uint32_t> outIndices) override;
     bool     update(uint32_t slot, const GpuResourceView & view) override;
+    uint32_t update(ArrayView<const uint32_t> slots, ArrayView<const GpuResourceView> views) override;
     void     free(uint32_t slot) override;
+    void     free(ArrayView<const uint32_t> slots) override;
 
     uint32_t capacity() const override { return mCapacity; }
     uint32_t size() const override;

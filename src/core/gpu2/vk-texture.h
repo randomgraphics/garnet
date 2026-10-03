@@ -18,6 +18,9 @@ public:
 
     vk::Image nativeImage() const { return mImage; }
 
+    /// Returns true if this texture represents a swapchain-owned backbuffer.
+    virtual bool isBackbuffer() const { return false; }
+
     /// Returns a VkImageView matching the requested subresource range and format.
     /// If \p v.format is UNKNOWN the image's native format is used. Views are cached
     /// internally by rapid-vulkan so repeated calls with the same parameters are cheap.

@@ -14,11 +14,11 @@ public:
     struct LayoutKey {
         vk::DescriptorSetLayout heapLayout {};
         uint32_t                heapSetIndex      = 0;
-        uint32_t                pushConstantSize  = 128;
+        uint32_t                maxImmediateSize  = 128;
         size_t                  passResourcesHash = 0;
 
         bool operator==(const LayoutKey & o) const {
-            return heapLayout == o.heapLayout && heapSetIndex == o.heapSetIndex && pushConstantSize == o.pushConstantSize &&
+            return heapLayout == o.heapLayout && heapSetIndex == o.heapSetIndex && maxImmediateSize == o.maxImmediateSize &&
                    passResourcesHash == o.passResourcesHash;
         }
     };
@@ -27,7 +27,7 @@ public:
         size_t operator()(const LayoutKey & k) const {
             size_t h = std::hash<uint64_t>()((uint64_t) (VkDescriptorSetLayout) k.heapLayout);
             h ^= std::hash<uint32_t>()(k.heapSetIndex) + 0x9e3779b9 + (h << 6) + (h >> 2);
-            h ^= std::hash<uint32_t>()(k.pushConstantSize) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= std::hash<uint32_t>()(k.maxImmediateSize) + 0x9e3779b9 + (h << 6) + (h >> 2);
             h ^= k.passResourcesHash + 0x9e3779b9 + (h << 6) + (h >> 2);
             return h;
         }

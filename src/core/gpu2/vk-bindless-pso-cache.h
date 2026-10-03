@@ -58,8 +58,9 @@ struct BindlessPsoKey {
 
     bool operator==(const BindlessPsoKey & o) const noexcept;
 
-    static BindlessPsoKey make(vk::PipelineLayout layout, const GpuShaderVulkan & vs, const GpuShaderVulkan * ps, const RasterState & state,
-                               const RasterGeometry & geom, const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets);
+    static BindlessPsoKey make(vk::PipelineLayout layout, const GpuShaderVulkan & vs, const GpuShaderVulkan * hs, const GpuShaderVulkan * ds,
+                               const GpuShaderVulkan * gs, const GpuShaderVulkan * ps, const RasterState & state, const RasterGeometry & geom,
+                               const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets);
 };
 
 struct BindlessPsoKeyHash {
@@ -77,14 +78,16 @@ public:
     VkBindlessPsoCache & operator=(const VkBindlessPsoCache &) = delete;
 
     /// Returns a cached pipeline or creates a new one using Vulkan 1.3 dynamic rendering.
-    vk::Pipeline getOrCreate(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * ps, const RasterState & state,
-                             const RasterGeometry & geom, const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets);
+    vk::Pipeline getOrCreate(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * hs, const GpuShaderVulkan * ds,
+                             const GpuShaderVulkan * gs, const GpuShaderVulkan * ps, const RasterState & state, const RasterGeometry & geom,
+                             const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets);
 
     size_t cacheSize() const;
 
 private:
-    vk::Pipeline buildPipeline(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * ps, const RasterState & state,
-                               const RasterGeometry & geom, const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets);
+    vk::Pipeline buildPipeline(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * hs, const GpuShaderVulkan * ds,
+                               const GpuShaderVulkan * gs, const GpuShaderVulkan * ps, const RasterState & state, const RasterGeometry & geom,
+                               const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets);
 
     GpuContextVulkan2 &                                                  mGpu;
     std::mutex                                                           mMutex;

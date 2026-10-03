@@ -32,18 +32,26 @@ void VkBindlessRaster::recordDraw(const DrawParameters & params) {
 
     StoredBindlessDraw draw;
     draw.vs            = params.vs;
+    draw.hs            = params.hs;
+    draw.ds            = params.ds;
+    draw.gs            = params.gs;
     draw.ps            = params.ps;
     draw.instanceCount = params.instanceCount;
-    draw.immediates    = params.immediates;
     draw.geometry      = params.geometry;
     draw.mergedState   = mRenderTarget.states;
     mergeRenderState(draw.mergedState, params.states);
 
+    if (!params.immediates.empty()) {
+        draw.immediateOffset = static_cast<uint32_t>(mImmediateData.size());
+        draw.immediateSize   = static_cast<uint32_t>(params.immediates.size());
+        mImmediateData.insert(mImmediateData.end(), params.immediates.begin(), params.immediates.end());
+    }
+
     mDraws.push_back(std::move(draw));
 }
 
-void VkBindlessRaster::retainResource(AutoRef<RCRT64> resource) {
-    if (resource) { mRetainedResources.push_back(std::move(resource)); }
+void VkBindlessRaster::retainCleanup(std::function<void()> cleanup) {
+    if (cleanup) { mRetainedCleanups.push_back(std::move(cleanup)); }
 }
 
 AutoRef<GpuPayload> VkBindlessRaster::seal() {
@@ -60,7 +68,8 @@ AutoRef<GpuPayload> VkBindlessRaster::seal() {
     cp.heapSetIndex       = mHeapSetIndex;
     cp.pipelineLayout     = mPipelineLayout;
     cp.draws              = std::move(mDraws);
-    cp.retainedResources  = std::move(mRetainedResources);
+    cp.immediateData      = std::move(mImmediateData);
+    cp.retainedCleanups   = std::move(mRetainedCleanups);
     cp.passDescriptorPool = mPassDescriptorPool;
     cp.passDescriptorSets = std::move(mPassDescriptorSets);
     mPassDescriptorPool   = vk::DescriptorPool {};

@@ -47,7 +47,7 @@ vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Ra
     LayoutKey key;
     key.heapLayout        = vkHeap ? vkHeap->nativeDescriptorSetLayout() : vk::DescriptorSetLayout {};
     key.heapSetIndex      = cp.heapSetIndex;
-    key.pushConstantSize  = cp.pushConstantSize;
+    key.maxImmediateSize  = cp.maxImmediateSize;
     key.passResourcesHash = hashPassResources(cp.passResources);
 
     auto it = mCache.find(key);
@@ -103,9 +103,9 @@ vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Ra
 
     // Push constant range
     std::vector<vk::PushConstantRange> pushRanges;
-    if (cp.pushConstantSize > 0) {
+    if (cp.maxImmediateSize > 0) {
         vk::PushConstantRange pcr;
-        pcr.setStageFlags(vk::ShaderStageFlagBits::eAllGraphics).setOffset(0).setSize(cp.pushConstantSize);
+        pcr.setStageFlags(vk::ShaderStageFlagBits::eAllGraphics).setOffset(0).setSize(cp.maxImmediateSize);
         pushRanges.push_back(pcr);
     }
 

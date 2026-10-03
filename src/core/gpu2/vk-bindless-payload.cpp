@@ -13,18 +13,26 @@ namespace GN::gpu2 {
 VkBindlessPayload::VkBindlessPayload(const StrA & name, ConstructParameters params)
     : GpuPayloadVulkan(name), mGpu(std::move(params.gpu)), mRenderTarget(std::move(params.target)), mHeap(std::move(params.heap)),
       mHeapSetIndex(params.heapSetIndex), mPipelineLayout(params.pipelineLayout), mDraws(std::move(params.draws)),
-      mRetainedResources(std::move(params.retainedResources)), mPassDescriptorPool(params.passDescriptorPool),
+      mImmediateData(std::move(params.immediateData)), mRetainedCleanups(std::move(params.retainedCleanups)), mPassDescriptorPool(params.passDescriptorPool),
       mPassDescriptorSets(std::move(params.passDescriptorSets)) {}
 
 VkBindlessPayload::~VkBindlessPayload() {
-    mRetainedResources.clear();
+    for (auto & cleanup : mRetainedCleanups) {
+        if (cleanup) cleanup();
+    }
+    mRetainedCleanups.clear();
     if (mGpu && mGpu->ready() && mPassDescriptorPool) {
         mGpu->vulkanDevice().handle().destroyDescriptorPool(mPassDescriptorPool);
         mPassDescriptorPool = vk::DescriptorPool {};
     }
 }
 
-void VkBindlessPayload::onGpuComplete() { mRetainedResources.clear(); }
+void VkBindlessPayload::onGpuComplete() {
+    for (auto & cleanup : mRetainedCleanups) {
+        if (cleanup) cleanup();
+    }
+    mRetainedCleanups.clear();
+}
 
 void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     if (!ctx.dev || ctx.cmd.empty()) return;
@@ -168,6 +176,9 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         if (d.geometry.vertexCount == 0 && d.geometry.indexCount == 0) continue;
 
         auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
+        auto * hsVk = RuntimeType::cast<GpuShaderVulkan>(d.hs.get());
+        auto * dsVk = RuntimeType::cast<GpuShaderVulkan>(d.ds.get());
+        auto * gsVk = RuntimeType::cast<GpuShaderVulkan>(d.gs.get());
         auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
         if (!vsVk || !vsVk->rvShader()) continue;
 
@@ -180,7 +191,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         vkcb.setScissor(0, 1, &sc);
 
         // Get-or-create graphics pipeline
-        vk::Pipeline pipe = psoCache.getOrCreate(mPipelineLayout, vsVk, psVk, d.mergedState, d.geometry, formats, mRenderTarget.colorTargets);
+        vk::Pipeline pipe = psoCache.getOrCreate(mPipelineLayout, vsVk, hsVk, dsVk, gsVk, psVk, d.mergedState, d.geometry, formats, mRenderTarget.colorTargets);
         if (!pipe) continue;
 
         if (pipe != activePipeline) {
@@ -188,9 +199,9 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
             activePipeline = pipe;
         }
 
-        // Push constants
-        if (d.immediates && !d.immediates->empty() && mPipelineLayout) {
-            vkcb.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, static_cast<uint32_t>(d.immediates->size()), d.immediates->data());
+        // Push constants / immediates
+        if (d.immediateSize > 0 && mPipelineLayout && (d.immediateOffset + d.immediateSize <= mImmediateData.size())) {
+            vkcb.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, d.immediateSize, mImmediateData.data() + d.immediateOffset);
         }
 
         // Vertex buffer bindings
@@ -226,7 +237,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     for (const auto & ct : mRenderTarget.colorTargets) {
         if (!ct.target.texture) continue;
         auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture.get());
-        if (!tex || !tex->nativeImage()) continue;
+        if (!tex || !tex->nativeImage() || tex->isBackbuffer()) continue;
 
         if (ctx.batchTracker) {
             ctx.batchTracker->restoreAttachmentToShaderReadOnly(tex, ct.view(), vkcb);
@@ -252,7 +263,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
 
     if (hasDepth && depthImg) {
         auto * dTex = RuntimeType::cast<TextureVulkanBase>(mRenderTarget.depthStencilTarget.texture.get());
-        if (dTex) {
+        if (dTex && !dTex->isBackbuffer()) {
             if (ctx.batchTracker) {
                 ctx.batchTracker->restoreAttachmentToShaderReadOnly(dTex, mRenderTarget.depthStencilTarget.view(), vkcb);
             } else {

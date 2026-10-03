@@ -16,13 +16,19 @@ bool BindlessPsoKey::operator==(const BindlessPsoKey & o) const noexcept {
     return std::equal(colorFmts, colorFmts + colorCount, o.colorFmts);
 }
 
-BindlessPsoKey BindlessPsoKey::make(vk::PipelineLayout layout, const GpuShaderVulkan & vs, const GpuShaderVulkan * ps, const RasterState & rs,
-                                    const RasterGeometry & geom, const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets) {
+BindlessPsoKey BindlessPsoKey::make(vk::PipelineLayout layout, const GpuShaderVulkan & vs, const GpuShaderVulkan * hs, const GpuShaderVulkan * ds,
+                                    const GpuShaderVulkan * gs, const GpuShaderVulkan * ps, const RasterState & rs, const RasterGeometry & geom,
+                                    const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets) {
     BindlessPsoKey k {};
     k.pipelineLayout = layout;
 
     // Shader hash
-    k.shaderHash = uint64_t(vs.id) * 0x100000001b3ULL ^ uint64_t(ps ? ps->id : 0);
+    uint64_t sh = uint64_t(vs.id);
+    if (hs) sh = hashMix(sh, uint64_t(hs->id));
+    if (ds) sh = hashMix(sh, uint64_t(ds->id));
+    if (gs) sh = hashMix(sh, uint64_t(gs->id));
+    if (ps) sh = hashMix(sh, uint64_t(ps->id));
+    k.shaderHash = sh;
 
     // Vertex input
     const bool hasInput = !geom.format.attributes.empty() && !geom.vertices.empty();
@@ -112,33 +118,40 @@ VkBindlessPsoCache::~VkBindlessPsoCache() {
     mCache.clear();
 }
 
-vk::Pipeline VkBindlessPsoCache::getOrCreate(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * ps, const RasterState & state,
-                                             const RasterGeometry & geom, const PassFormats & formats,
-                                             const StackArray<RasterTarget::ColorTarget, 8> & colorTargets) {
+vk::Pipeline VkBindlessPsoCache::getOrCreate(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * hs, const GpuShaderVulkan * ds,
+                                             const GpuShaderVulkan * gs, const GpuShaderVulkan * ps, const RasterState & state, const RasterGeometry & geom,
+                                             const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets) {
     if (!vs || !vs->rvShader()) GN_UNLIKELY {
             GN_ERROR(sLogger, "VkBindlessPsoCache::getOrCreate: null vertex shader");
             return vk::Pipeline {};
         }
 
-    const BindlessPsoKey key = BindlessPsoKey::make(layout, *vs, ps, state, geom, formats, colorTargets);
+    const BindlessPsoKey key = BindlessPsoKey::make(layout, *vs, hs, ds, gs, ps, state, geom, formats, colorTargets);
 
     std::lock_guard<std::mutex> lock(mMutex);
     auto                        it = mCache.find(key);
     if (it != mCache.end()) return it->second;
 
-    vk::Pipeline pipe = buildPipeline(layout, vs, ps, state, geom, formats, colorTargets);
+    vk::Pipeline pipe = buildPipeline(layout, vs, hs, ds, gs, ps, state, geom, formats, colorTargets);
     if (pipe) { mCache.emplace(key, pipe); }
     return pipe;
 }
 
-vk::Pipeline VkBindlessPsoCache::buildPipeline(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * ps, const RasterState & state,
-                                               const RasterGeometry & geom, const PassFormats & formats,
-                                               const StackArray<RasterTarget::ColorTarget, 8> & colorTargets) {
+vk::Pipeline VkBindlessPsoCache::buildPipeline(vk::PipelineLayout layout, const GpuShaderVulkan * vs, const GpuShaderVulkan * hs, const GpuShaderVulkan * ds,
+                                               const GpuShaderVulkan * gs, const GpuShaderVulkan * ps, const RasterState & state, const RasterGeometry & geom,
+                                               const PassFormats & formats, const StackArray<RasterTarget::ColorTarget, 8> & colorTargets) {
     auto vkDev = mGpu.vulkanDevice().handle();
 
     // 1. Shaders
     std::vector<vk::PipelineShaderStageCreateInfo> stages;
     stages.push_back(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, vs->rvShader()->handle(), "main"));
+    if (hs && hs->rvShader()) {
+        stages.push_back(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eTessellationControl, hs->rvShader()->handle(), "main"));
+    }
+    if (ds && ds->rvShader()) {
+        stages.push_back(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eTessellationEvaluation, ds->rvShader()->handle(), "main"));
+    }
+    if (gs && gs->rvShader()) { stages.push_back(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eGeometry, gs->rvShader()->handle(), "main")); }
     if (ps && ps->rvShader()) { stages.push_back(vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, ps->rvShader()->handle(), "main")); }
 
     // 2. Vertex input
@@ -185,8 +198,8 @@ vk::Pipeline VkBindlessPsoCache::buildPipeline(vk::PipelineLayout layout, const 
     // 7. Depth Stencil
     vk::PipelineDepthStencilStateCreateInfo depthStencil;
     if (state.depthState) {
-        const auto & ds = *state.depthState;
-        depthStencil.setDepthTestEnable(ds.testEnabled()).setDepthWriteEnable(ds.writeEnabled()).setDepthCompareOp(compareToVk(ds.func));
+        const auto & depth = *state.depthState;
+        depthStencil.setDepthTestEnable(depth.testEnabled()).setDepthWriteEnable(depth.writeEnabled()).setDepthCompareOp(compareToVk(depth.func));
     }
     if (state.stencilState) {
         const auto &       ss   = *state.stencilState;

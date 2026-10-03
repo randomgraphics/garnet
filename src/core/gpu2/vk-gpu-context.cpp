@@ -153,6 +153,10 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     if (!mDevice->handle()) return;
 
     // Initialize caps
+    const auto & props             = mDevice->gi()->physical.getProperties();
+    mCaps.maxImmediateSize         = props.limits.maxPushConstantsSize;
+    mCaps.maxBindlessSampledImages = props.limits.maxDescriptorSetSampledImages;
+
     vk::Format depthVk = rv::queryDepthFormat(mDevice->gi()->physical, 1);
     if (depthVk != vk::Format::eUndefined) {
         mCaps.defaultDepthFormat = vkFormatToPixelFormat(depthVk);

@@ -27,10 +27,6 @@ struct PushConstants {
     uint32_t pad[3];
 };
 
-static AutoRef<const Blob> makePushConstants(const PushConstants & pc) {
-    return referenceTo(new SimpleBlob<uint8_t>(sizeof(pc), reinterpret_cast<const uint8_t *>(&pc)));
-}
-
 // Generate procedural patterns for visual verification
 static gfx::img::Image makePatternImage(uint32_t w, uint32_t h, int patternType) {
     gfx::img::Extent3D extent;
@@ -118,7 +114,8 @@ static bool verifyBackbuffer(const GpuResourceView & view, uint32_t width, uint3
 }
 
 int main(int argc, const char ** argv) {
-    bool testMode = argc > 1 && argv[1][0] == 't';
+    bool testMode     = argc > 1 && argv[1][0] == 't';
+    bool windowedTest = argc > 1 && argv[1][0] == 'w';
 
     auto gpu = GpuContext::create("gpu", GpuContext::CreateParameters {});
     if (!gpu) {
@@ -167,9 +164,10 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
-    // 3. Create 4 procedural textures and register them into the heap
+    // 3. Create 4 procedural textures and register them into the heap using atomic batch allocation
     constexpr uint32_t TEX_SIZE = 128;
     AutoRef<Texture>   textures[4];
+    GpuResourceView    textureViews[4];
     uint32_t           textureSlots[4];
 
     for (int i = 0; i < 4; ++i) {
@@ -180,11 +178,12 @@ int main(int argc, const char ** argv) {
             std::fprintf(stderr, "Failed to create and upload texture %d\n", i);
             return -1;
         }
-        textureSlots[i] = heap->allocate(GpuResourceView(textures[i]));
-        if (textureSlots[i] == bindless::INVALID_DESCRIPTOR_INDEX) {
-            std::fprintf(stderr, "Failed to allocate descriptor heap slot for texture %d\n", i);
-            return -1;
-        }
+        textureViews[i] = GpuResourceView(textures[i]);
+    }
+
+    if (!heap->allocate(ArrayView<const GpuResourceView>(textureViews, 4), ArrayView<uint32_t>(textureSlots, 4))) {
+        std::fprintf(stderr, "Failed to batch allocate descriptor heap slots for textures\n");
+        return -1;
     }
 
     // 4. Create vertex and index buffers for unit quad [-0.5, 0.5]
@@ -249,7 +248,7 @@ int main(int argc, const char ** argv) {
     rt.states.setCullMode(RasterState::CULL_NONE);
     rt.setClearColor(0.12f, 0.12f, 0.16f, 1.0f); // dark slate background
 
-    int totalFrames  = testMode ? 10 : 0;
+    int totalFrames  = (testMode || windowedTest) ? 10 : 0;
     int frameCounter = 0;
 
     while (totalFrames == 0 || frameCounter < totalFrames) {
@@ -269,7 +268,7 @@ int main(int argc, const char ** argv) {
         rcp.target           = &rt;
         rcp.heap             = heap;
         rcp.heapSetIndex     = 0;
-        rcp.pushConstantSize = sizeof(PushConstants);
+        rcp.maxImmediateSize = sizeof(PushConstants);
 
         auto raster = bindless::Raster::create("bindless-raster", rcp);
         if (!raster) {
@@ -301,7 +300,7 @@ int main(int argc, const char ** argv) {
                 .vs         = vs,
                 .ps         = ps,
                 .geometry   = geom,
-                .immediates = makePushConstants(pc),
+                .immediates = ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(&pc), sizeof(pc)),
             });
         }
 
@@ -318,7 +317,7 @@ int main(int argc, const char ** argv) {
             .vs         = vs,
             .ps         = ps,
             .geometry   = geom,
-            .immediates = makePushConstants(centerPc),
+            .immediates = ArrayView<const uint8_t>(reinterpret_cast<const uint8_t *>(&centerPc), sizeof(centerPc)),
         });
 
         // Seal recorded pass into self-contained GpuPayload

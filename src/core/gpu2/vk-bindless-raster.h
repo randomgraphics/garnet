@@ -18,10 +18,9 @@ public:
 
     ~VkBindlessRaster() override;
 
-    void                 recordDraw(const DrawParameters & params) override;
-    void                 retainResource(AutoRef<RCRT64> resource) override;
-    const RasterTarget & target() const override { return mRenderTarget; }
-    AutoRef<GpuPayload>  seal() override;
+    void                recordDraw(const DrawParameters & params) override;
+    void                retainCleanup(std::function<void()> cleanup) override;
+    AutoRef<GpuPayload> seal() override;
 
 private:
     AutoRef<GpuContextVulkan2>        mGpu;
@@ -32,9 +31,10 @@ private:
     vk::DescriptorPool                mPassDescriptorPool {};
     std::vector<vk::DescriptorSet>    mPassDescriptorSets;
 
-    std::vector<StoredBindlessDraw> mDraws;
-    std::vector<AutoRef<RCRT64>>    mRetainedResources;
-    bool                            mSealed = false;
+    std::vector<StoredBindlessDraw>    mDraws;
+    std::vector<uint8_t>               mImmediateData;
+    std::vector<std::function<void()>> mRetainedCleanups;
+    bool                               mSealed = false;
 };
 
 AutoRef<bindless::Raster> createVkBindlessRaster(const StrA & name, const bindless::Raster::CreateParameters & cp);
