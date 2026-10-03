@@ -22,9 +22,9 @@ void main() {
     vec3  texRgb = vec3(r, g, b);
 
     // Fresnel rim glow: glowing edges
-    vec3  N      = normalize(in_normal);
-    vec3  V      = vec3(0.0, 0.0, 1.0);
-    float NdotV  = abs(dot(N, V));
+    vec3  N       = normalize(in_normal);
+    vec3  V       = vec3(0.0, 0.0, 1.0);
+    float NdotV   = abs(dot(N, V));
     float fresnel = pow(1.0 - NdotV, 2.5);
 
     // Glowing energy core + scanline oscillation

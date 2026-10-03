@@ -707,8 +707,11 @@ int main(int argc, const char ** argv) {
         }
 
         if (!animPaused) {
-            simTime += frameDt;
-            if (autoCameraOrbit) { cameraAngle += frameDt * 0.22f; }
+            // Frame-rate dependent animation: advances by a constant increment per rendered frame
+            // rather than elapsed wall time, so higher FPS results directly in faster animation speed.
+            constexpr float kStepPerFrame = 0.0035f;
+            simTime += kStepPerFrame;
+            if (autoCameraOrbit) { cameraAngle += kStepPerFrame * 0.45f; }
         }
 
         // ─── Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action) ───

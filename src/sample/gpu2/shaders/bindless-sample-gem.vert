@@ -5,13 +5,13 @@ layout(location = 1) in vec3 in_normal;
 layout(location = 2) in vec2 in_uv;
 
 layout(push_constant) uniform PushConstants {
-    mat4  mvp;        // 64 bytes: Model-View-Projection matrix
-    vec4  rotation;   // 16 bytes: orientation quaternion (qx, qy, qz, qw)
-    vec4  colorTint;  // 16 bytes: RGBA color multiplier
-    uint  textureId;  // 4 bytes: bindless descriptor slot in Set 0
-    float shininess;  // 4 bytes: effect parameter / pulse frequency
-    vec2  uvScale;    // 8 bytes: UV coordinate scaling
-    vec4  lightDir;   // 16 bytes: normalized light dir (xyz) + time/phase (w)
+    mat4  mvp;       // 64 bytes: Model-View-Projection matrix
+    vec4  rotation;  // 16 bytes: orientation quaternion (qx, qy, qz, qw)
+    vec4  colorTint; // 16 bytes: RGBA color multiplier
+    uint  textureId; // 4 bytes: bindless descriptor slot in Set 0
+    float shininess; // 4 bytes: effect parameter / pulse frequency
+    vec2  uvScale;   // 8 bytes: UV coordinate scaling
+    vec4  lightDir;  // 16 bytes: normalized light dir (xyz) + time/phase (w)
 }
 pc;
 
@@ -22,9 +22,7 @@ layout(location = 3) flat out uint out_texId;
 layout(location = 4) out vec3 out_viewPos;
 layout(location = 5) out float out_pulse;
 
-vec3 rotateVector(vec4 q, vec3 v) {
-    return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
-}
+vec3 rotateVector(vec4 q, vec3 v) { return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v); }
 
 void main() {
     float time = pc.lightDir.w;
