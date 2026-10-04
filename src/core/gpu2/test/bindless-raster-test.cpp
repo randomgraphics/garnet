@@ -171,7 +171,7 @@ TEST_CASE("bindless::Raster: recordDraw, retainResource, and seal lifecycle", "[
     raster->retainResource(std::move(genericResource));
 
     bool cleanupCallbackFired = false;
-    raster->retainCleanup([&cleanupCallbackFired] { cleanupCallbackFired = true; });
+    raster->addCleanupCallback([&cleanupCallbackFired] { cleanupCallbackFired = true; });
 
     // Record draw call
     RasterGeometry emptyGeom {};

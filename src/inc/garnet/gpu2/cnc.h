@@ -44,7 +44,7 @@ public:
     };
 
     /// Record a buffer copy for execution when the sealed payload is submitted.
-    virtual void recordCopyBufferToBuffer(const BufferToBuffer &) = 0;
+    virtual void recordCopyBuffer(const BufferToBuffer &) = 0;
 
     /// Record a buffer upload. Content is copied into internal staging storage during recording;
     /// the GPU transfer executes after the sealed payload is submitted.

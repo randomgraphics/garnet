@@ -49,7 +49,7 @@ void VkBindlessRaster::recordDraw(const DrawParameters & params) {
     mStorage->draws.emplace_back(params, mergedState, &mStorage->pool, immOffset, immSize);
 }
 
-void VkBindlessRaster::retainCleanup(std::function<void()> cleanup) {
+void VkBindlessRaster::addCleanupCallback(std::function<void()> cleanup) {
     if (cleanup) { mRetainedCleanups.push_back(std::move(cleanup)); }
 }
 

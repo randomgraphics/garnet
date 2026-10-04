@@ -118,14 +118,14 @@ public:
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;
 
-    /// Retain an arbitrary cleanup callable that will be invoked when the payload finishes execution.
-    virtual void retainCleanup(std::function<void()> cleanup) = 0;
+    /// Register a cleanup callback invoked once when the payload completes or is destroyed without submission.
+    virtual void addCleanupCallback(std::function<void()> cleanup) = 0;
 
     /// Generic helper to retain any resource or object until GPU completes execution.
     /// Accepts AutoRef<T>, std::shared_ptr<T>, or any move-constructible object.
     template<typename T>
     void retainResource(T && resource) {
-        retainCleanup([res = std::forward<T>(resource)]() mutable { (void) res; });
+        addCleanupCallback([res = std::forward<T>(resource)]() mutable { (void) res; });
     }
 
     /// Seal recorded work into an opaque, self-contained GpuPayload ready for GpuContext::submit().
@@ -158,6 +158,7 @@ public:
         uint32_t                heapSetIndex = 0;       ///< Descriptor set index for the bindless heap (default 0).
         GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 1 storage buffers/UBOs).
         uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
+        size_t                  opCountHint      = 0;   ///< Expected operation count for preallocation; recording may exceed this hint.
     };
 
     /// Create a new bindless CnC recorder. Performs a fast conflict check between
@@ -172,19 +173,13 @@ public:
         ArrayView<const uint8_t> immediates = {}; ///< Inline uniform data (push constants).
     };
 
-    /// Optional hint to pre-allocate storage for expected operations and immediate data to eliminate vector reallocations.
-    virtual void reserve(size_t opCount, size_t immediateBytes = 0) {
-        (void) opCount;
-        (void) immediateBytes;
-    }
-
     /// Record a compute dispatch using the bindless descriptor set and pass resources.
     virtual void recordCompute(const ComputeParameters & params) = 0;
 
     using BufferToBuffer = GpuCnC::BufferToBuffer;
 
     /// Record a buffer copy for execution when the sealed payload is submitted.
-    virtual void recordCopyBufferToBuffer(const BufferToBuffer &) = 0;
+    virtual void recordCopyBuffer(const BufferToBuffer &) = 0;
 
     /// Record a buffer upload. Content is copied into internal staging storage during recording;
     /// the GPU transfer executes after the sealed payload is submitted.
@@ -212,14 +207,14 @@ public:
     /// then transferred into a TextureContent.
     virtual std::future<TextureContent> recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) = 0;
 
-    /// Retain an arbitrary cleanup callable that will be invoked when the payload finishes execution.
-    virtual void retainCleanup(std::function<void()> cleanup) = 0;
+    /// Register a cleanup callback invoked once when the payload completes or is destroyed without submission.
+    virtual void addCleanupCallback(std::function<void()> cleanup) = 0;
 
     /// Generic helper to retain any resource or object until GPU completes execution.
     /// Accepts AutoRef<T>, std::shared_ptr<T>, or any move-constructible object.
     template<typename T>
     void retainResource(T && resource) {
-        retainCleanup([res = std::forward<T>(resource)]() mutable { (void) res; });
+        addCleanupCallback([res = std::forward<T>(resource)]() mutable { (void) res; });
     }
 
     /// Seal recorded work into an opaque, self-contained GpuPayload ready for GpuContext::submit().

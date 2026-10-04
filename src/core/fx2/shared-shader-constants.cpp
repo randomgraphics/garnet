@@ -301,8 +301,8 @@ private:
 
         auto cnc = gpu2::GpuCnC::create({.gpu = mGpu});
         if (!cnc) GN_UNLIKELY return;
-        cnc->recordCopyBufferToBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
-        cnc->recordCopyBufferToBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
+        cnc->recordCopyBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
+        cnc->recordCopyBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
         snapshot.set0Payloads.append(cnc->seal());
     }
 };

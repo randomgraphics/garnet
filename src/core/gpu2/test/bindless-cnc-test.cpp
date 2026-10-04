@@ -86,7 +86,7 @@ TEST_CASE("bindless::CnC: creation validation and conflict checks", "[gpu2][bind
     }
 }
 
-TEST_CASE("bindless::CnC: retainResource, retainCleanup, and seal lifecycle", "[gpu2][bindless][cnc]") {
+TEST_CASE("bindless::CnC: retainResource, addCleanupCallback, and seal lifecycle", "[gpu2][bindless][cnc]") {
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
@@ -109,7 +109,7 @@ TEST_CASE("bindless::CnC: retainResource, retainCleanup, and seal lifecycle", "[
     cnc->retainResource(std::move(genericResource));
 
     bool cleanupCallbackFired = false;
-    cnc->retainCleanup([&cleanupCallbackFired] { cleanupCallbackFired = true; });
+    cnc->addCleanupCallback([&cleanupCallbackFired] { cleanupCallbackFired = true; });
 
     // Record a compute dispatch
     PushConstantData pc {0, 1.0f};
@@ -265,7 +265,7 @@ TEST_CASE("bindless::CnC: interleaved compute and buffer copy", "[gpu2][bindless
     cnc->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
 
     // Copy compute output to copyDstBuf within the same CnC pass
-    cnc->recordCopyBufferToBuffer({.src = computeBuf, .dst = copyDstBuf, .srcOffset = 0, .dstOffset = 0, .size = bufferSize});
+    cnc->recordCopyBuffer({.src = computeBuf, .dst = copyDstBuf, .srcOffset = 0, .dstOffset = 0, .size = bufferSize});
 
     // Download copyDstBuf
     auto downloadFuture = cnc->recordDownloadBuffer(copyDstBuf, 0, bufferSize);
@@ -329,7 +329,7 @@ TEST_CASE("bindless::CnC: automated invariant restores uploaded and copied buffe
     auto cnc = bindless::CnC::create("upload-copy-cnc", {.gpu = gpu, .heap = heap});
     REQUIRE(cnc);
     cnc->recordUploadBuffer(bufA, 0, data);
-    cnc->recordCopyBufferToBuffer({.src = bufA, .dst = bufB, .srcOffset = 0, .dstOffset = 0, .size = 256});
+    cnc->recordCopyBuffer({.src = bufA, .dst = bufB, .srcOffset = 0, .dstOffset = 0, .size = 256});
 
     auto payload = cnc->seal();
     REQUIRE(payload);

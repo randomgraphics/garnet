@@ -154,7 +154,7 @@ and `GpuCnC`:
      per-dispatch `GpuResourceTable` and `DrawPack` compilation.
 
 3. **Optimized Transfers in `GpuCnC`**:
-   - Copy and upload operations (`recordUploadBuffer`, `recordCopyBufferToBuffer`)
+   - Copy and upload operations (`recordUploadBuffer`, `recordCopyBuffer`)
      are fixed-function DMA operations that do not use descriptors.
    - Migrate upload staging from individual `Buffer` allocations to a persistent,
      mapped ring staging buffer.

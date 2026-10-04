@@ -20,7 +20,7 @@ public:
     ~VkBindlessRaster() override;
 
     void                recordDraw(const DrawParameters & params) override;
-    void                retainCleanup(std::function<void()> cleanup) override;
+    void                addCleanupCallback(std::function<void()> cleanup) override;
     AutoRef<GpuPayload> seal() override;
 
 private:

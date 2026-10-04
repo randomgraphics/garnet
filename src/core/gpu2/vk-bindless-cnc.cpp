@@ -167,20 +167,17 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
 
 VkBindlessCnC::VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
                              vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets,
-                             GpuResourceTable passResources)
+                             GpuResourceTable passResources, size_t opCountHint)
     : bindless::CnC(TYPE_INFO(), name), mGpu(std::move(gpu)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex), mPipelineLayout(pipelineLayout),
-      mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)), mPassResources(std::move(passResources)) {}
+      mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)), mPassResources(std::move(passResources)) {
+    mOps.reserve(opCountHint);
+}
 
 VkBindlessCnC::~VkBindlessCnC() {
     if (!mSealed && mPassDescriptorPool && mGpu && mGpu->ready()) {
         mGpu->vulkanDevice().handle().destroyDescriptorPool(mPassDescriptorPool);
         mPassDescriptorPool = vk::DescriptorPool {};
     }
-}
-
-void VkBindlessCnC::reserve(size_t opCount, size_t immediateBytes) {
-    mOps.reserve(opCount);
-    if (immediateBytes > 0) { mImmediateData.reserve(immediateBytes); }
 }
 
 void VkBindlessCnC::recordCompute(const ComputeParameters & params) {
@@ -208,9 +205,9 @@ void VkBindlessCnC::recordCompute(const ComputeParameters & params) {
     mOps.emplace_back(std::move(op));
 }
 
-void VkBindlessCnC::recordCopyBufferToBuffer(const BufferToBuffer & p) {
+void VkBindlessCnC::recordCopyBuffer(const BufferToBuffer & p) {
     if (mSealed) GN_UNLIKELY {
-            GN_ERROR(sLogger, "VkBindlessCnC::recordCopyBufferToBuffer: already sealed");
+            GN_ERROR(sLogger, "VkBindlessCnC::recordCopyBuffer: already sealed");
             return;
         }
     mOps.emplace_back(StoredBufferToBuffer {p.src, p.dst, p.srcOffset, p.dstOffset, p.size});
@@ -366,7 +363,7 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
     return future;
 }
 
-void VkBindlessCnC::retainCleanup(std::function<void()> cleanup) {
+void VkBindlessCnC::addCleanupCallback(std::function<void()> cleanup) {
     if (cleanup) { mRetainedCleanups.push_back(std::move(cleanup)); }
 }
 
@@ -426,7 +423,7 @@ AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::Cn
         return {};
     }
 
-    return AutoRef<bindless::CnC>(new VkBindlessCnC(name, vkGpu, cp.heap, cp.heapSetIndex, pl, passPool, passSets, cp.passResources));
+    return AutoRef<bindless::CnC>(new VkBindlessCnC(name, vkGpu, cp.heap, cp.heapSetIndex, pl, passPool, passSets, cp.passResources, cp.opCountHint));
 }
 
 } // namespace GN::gpu2

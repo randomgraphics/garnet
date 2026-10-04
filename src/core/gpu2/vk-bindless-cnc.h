@@ -26,21 +26,20 @@ public:
     GN_REGISTER_RUNTIME_TYPE(bindless::CnC);
 
     VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
-                  vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, GpuResourceTable passResources);
+                  vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, GpuResourceTable passResources,
+                  size_t opCountHint);
 
     ~VkBindlessCnC() override;
 
-    void reserve(size_t opCount, size_t immediateBytes = 0) override;
-
     void recordCompute(const ComputeParameters & params) override;
 
-    void                             recordCopyBufferToBuffer(const BufferToBuffer & p) override;
+    void                             recordCopyBuffer(const BufferToBuffer & p) override;
     void                             recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) override;
     std::future<AutoRef<const Blob>> recordDownloadBuffer(AutoRef<Buffer> src, uint64_t offset = 0, uint64_t size = uint64_t(~0)) override;
     void                             recordCopyBufferToImage(const BufferToImage & p) override;
     std::future<TextureContent>      recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) override;
 
-    void retainCleanup(std::function<void()> cleanup) override;
+    void addCleanupCallback(std::function<void()> cleanup) override;
 
     AutoRef<GpuPayload> seal() override;
 

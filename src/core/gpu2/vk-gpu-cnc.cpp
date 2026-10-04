@@ -340,9 +340,9 @@ public:
         mOps.emplace_back(std::move(op));
     }
 
-    void recordCopyBufferToBuffer(const BufferToBuffer & p) override {
+    void recordCopyBuffer(const BufferToBuffer & p) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::recordCopyBufferToBuffer: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordCopyBuffer: already sealed");
                 return;
             }
         mOps.emplace_back(StoredBufferToBuffer {p.src, p.dst, p.srcOffset, p.dstOffset, p.size});
