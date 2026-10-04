@@ -5,6 +5,7 @@
 #include "vk-gpu-raster.h"
 #include "vk-gpu-shader.h"
 #include "vk-texture.h"
+#include "vk-sampler.h"
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-bindless-raster.h"
 
@@ -44,6 +45,29 @@ AutoRef<GpuShader> GpuShader::create(const CreateParameters & params) {
 AutoRef<GpuShader> GpuShader::load(const LoadParameters & params) {
     if (!params.context) { GN_ERROR(sLogger, "GpuShader::load: GpuContext is null"); }
     return {};
+}
+
+AutoRef<Sampler> Sampler::create(const StrA & name, const CreateParameters & cp) {
+    if (!cp.context) {
+        GN_ERROR(sLogger, "Sampler::create: GpuContext is null");
+        return {};
+    }
+    AutoRef<GpuContextCommon2> common = cp.context.staticCastTo<GpuContextCommon2>();
+    if (!common) {
+        GN_ERROR(sLogger, "Sampler::create: GpuContext is not GpuContextCommon2");
+        return {};
+    }
+    switch (common->api()) {
+    case GpuContextCommon2::Api::VULKAN:
+        return createSamplerVulkan(name, cp);
+    case GpuContextCommon2::Api::D3D12:
+    case GpuContextCommon2::Api::METAL:
+        GN_ERROR(sLogger, "Sampler::create: backend not implemented");
+        return {};
+    default:
+        GN_ERROR(sLogger, "Sampler::create: unknown GpuContext::Api");
+        return {};
+    }
 }
 
 AutoRef<Buffer> Buffer::create(const StrA & name, const CreateParameters & params) {

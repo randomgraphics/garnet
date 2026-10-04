@@ -240,6 +240,21 @@ protected:
 struct Sampler : public RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
+    /// Filtering and addressing independent of texture views.
+    struct Descriptor {
+        enum class Filter { NEAREST, LINEAR };
+        enum class Address { REPEAT, MIRRORED_REPEAT, CLAMP_TO_EDGE };
+        Filter  minFilter = Filter::LINEAR, magFilter = Filter::LINEAR, mipFilter = Filter::LINEAR;
+        Address addressU = Address::REPEAT, addressV = Address::REPEAT, addressW = Address::REPEAT;
+        float   minLod = 0, maxLod = 1000;
+    };
+    struct CreateParameters {
+        AutoRef<GpuContext> context;
+        Descriptor          descriptor;
+    };
+    /// Create a device-owned sampler. Returns empty on invalid input or unsupported backends.
+    GN_API static AutoRef<Sampler> create(const StrA & name, const CreateParameters &);
+
 protected:
     using RCRT64::RCRT64;
 };
@@ -374,7 +389,7 @@ struct GpuResourceView {
     };
 
     AutoRef<RCRT64>  resource               = {};
-    AutoRef<Sampler> combinedTextureSampler = {};
+    AutoRef<Sampler> combinedTextureSampler = {}; // this is only used if resource is a texture
     ImageView        imageView              = {};
     BufferView       bufferView             = {};
 
