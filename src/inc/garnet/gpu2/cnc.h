@@ -25,12 +25,12 @@ public:
     GN_API static AutoRef<GpuCnC> create(const CreateParameters &);
 
     struct ComputeParameters {
-        AutoRef<GpuShader>  cs;
-        GpuResourceTable    resources;  ///< shader resources
-        AutoRef<const Blob> immediates; ///< reference counted immediate constants.
-        uint32_t            x = 1;
-        uint32_t            y = 1;
-        uint32_t            z = 1;
+        AutoRef<GpuShader>       cs;
+        GpuResourceTable         resources;  ///< shader resources
+        ArrayView<const uint8_t> immediates; ///< Inline uniform data (root constants / push constants).
+        uint32_t                 x = 1;
+        uint32_t                 y = 1;
+        uint32_t                 z = 1;
     };
     /// Record a compute dispatch in the pending payload without executing it.
     virtual void recordCompute(const ComputeParameters &) = 0;
@@ -48,11 +48,7 @@ public:
 
     /// Record a buffer upload. Content is copied into internal staging storage during recording;
     /// the GPU transfer executes after the sealed payload is submitted.
-    virtual void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, AutoRef<const Blob> content) = 0;
-
-    void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) {
-        recordUploadBuffer(std::move(dst), offset, referenceTo(new SimpleBlob<uint8_t>(content.size(), content.data())));
-    }
+    virtual void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) = 0;
 
     /// @brief Enqueue a buffer download operation. The buffer content is copied from the source buffer into an internal staging buffer, then
     /// a CPU-side copy is performed to transfer the data into a new Blob. The returned future is always signaled exactly once: with the

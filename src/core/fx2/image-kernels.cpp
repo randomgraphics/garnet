@@ -56,7 +56,7 @@ struct ImageImplementation {
             GpuCnC::ComputeParameters p;
             p.cs         = shader;
             p.resources  = resources;
-            p.immediates = immediate;
+            p.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
             p.x          = (values.dimensions[2] + 7) / 8;
             p.y          = (values.dimensions[3] + 7) / 8;
             cnc->recordCompute(p);

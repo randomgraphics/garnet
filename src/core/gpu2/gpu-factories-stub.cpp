@@ -8,6 +8,10 @@
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-bindless-raster.h"
 
+namespace GN::gpu2 {
+AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::CnC::CreateParameters & cp);
+}
+
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
 
 // -----------------------------------------------------------------------
@@ -209,6 +213,33 @@ AutoRef<Raster> Raster::create(const StrA & name, const CreateParameters & cp) {
         return {};
     default:
         GN_ERROR(sLogger, "Raster::create: unknown GpuContext::Api");
+        return {};
+    }
+}
+
+AutoRef<CnC> CnC::create(const StrA & name, const CreateParameters & cp) {
+    if (!cp.gpu) {
+        GN_ERROR(sLogger, "CnC::create: GpuContext is null");
+        return {};
+    }
+    if (!cp.heap) {
+        GN_ERROR(sLogger, "CnC::create: DescriptorHeap is null");
+        return {};
+    }
+    AutoRef<GpuContextCommon2> common = cp.gpu.staticCastTo<GpuContextCommon2>();
+    if (!common) {
+        GN_ERROR(sLogger, "CnC::create: GpuContext is not GpuContextCommon2");
+        return {};
+    }
+    switch (common->api()) {
+    case GpuContextCommon2::Api::VULKAN:
+        return createVkBindlessCnc(name, cp);
+    case GpuContextCommon2::Api::D3D12:
+    case GpuContextCommon2::Api::METAL:
+        GN_ERROR(sLogger, "CnC::create: backend not implemented");
+        return {};
+    default:
+        GN_ERROR(sLogger, "CnC::create: unknown GpuContext::Api");
         return {};
     }
 }

@@ -15,6 +15,11 @@ static size_t hashPassResources(const GpuResourceTable & table) {
             for (const auto & v : table[s][b]) {
                 h = h ^ (std::hash<uint8_t>()((uint8_t) v.isTexture()) + 0x9e3779b9 + (h << 6) + (h >> 2));
                 h = h ^ (std::hash<uint8_t>()((uint8_t) v.isBuffer()) + 0x9e3779b9 + (h << 6) + (h >> 2));
+                if (v.isTexture()) {
+                    h = h ^ (std::hash<uint8_t>()((uint8_t) v.imageView.type) + 0x9e3779b9 + (h << 6) + (h >> 2));
+                } else if (v.isBuffer()) {
+                    h = h ^ (std::hash<uint8_t>()((uint8_t) v.bufferView.type) + 0x9e3779b9 + (h << 6) + (h >> 2));
+                }
             }
         }
     }
@@ -42,13 +47,23 @@ VkBindlessPipelineLayoutCache::~VkBindlessPipelineLayoutCache() {
 }
 
 vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Raster::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap) {
+    return getOrCreateInternal(cp.heapSetIndex, cp.maxImmediateSize, cp.passResources, vkHeap, vk::ShaderStageFlagBits::eAllGraphics);
+}
+
+vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreateCompute(const bindless::CnC::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap) {
+    return getOrCreateInternal(cp.heapSetIndex, cp.maxImmediateSize, cp.passResources, vkHeap, vk::ShaderStageFlagBits::eCompute);
+}
+
+vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreateInternal(uint32_t heapSetIndex, uint32_t maxImmediateSize, const GpuResourceTable & passResources,
+                                                                      VkBindlessDescriptorHeap * vkHeap, vk::ShaderStageFlags stageFlags) {
     std::lock_guard<std::mutex> lock(mMutex);
 
     LayoutKey key;
     key.heapLayout        = vkHeap ? vkHeap->nativeDescriptorSetLayout() : vk::DescriptorSetLayout {};
-    key.heapSetIndex      = cp.heapSetIndex;
-    key.maxImmediateSize  = cp.maxImmediateSize;
-    key.passResourcesHash = hashPassResources(cp.passResources);
+    key.heapSetIndex      = heapSetIndex;
+    key.maxImmediateSize  = maxImmediateSize;
+    key.passResourcesHash = hashPassResources(passResources);
+    key.stageFlags        = stageFlags;
 
     auto it = mCache.find(key);
     if (it != mCache.end()) { return it->second; }
@@ -60,32 +75,38 @@ vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Ra
     }
 
     // Determine the highest set index needed
-    uint32_t maxSetIndex = cp.heapSetIndex;
-    if (!cp.passResources.empty()) { maxSetIndex = std::max(maxSetIndex, static_cast<uint32_t>(cp.passResources.size() - 1)); }
+    uint32_t maxSetIndex = heapSetIndex;
+    if (!passResources.empty()) { maxSetIndex = std::max(maxSetIndex, static_cast<uint32_t>(passResources.size() - 1)); }
 
     std::vector<vk::DescriptorSetLayout> setLayouts(maxSetIndex + 1, mEmptyLayout);
 
     // Place the heap layout at heapSetIndex
-    if (key.heapLayout) { setLayouts[cp.heapSetIndex] = key.heapLayout; }
+    if (key.heapLayout) { setLayouts[heapSetIndex] = key.heapLayout; }
 
     // Build layouts for passResources sets (excluding heapSetIndex)
-    for (size_t s = 0; s < cp.passResources.size(); ++s) {
-        if (s == cp.heapSetIndex || cp.passResources[s].empty()) continue;
+    for (size_t s = 0; s < passResources.size(); ++s) {
+        if (s == heapSetIndex || passResources[s].empty()) continue;
 
         std::vector<vk::DescriptorSetLayoutBinding> bindings;
-        for (size_t b = 0; b < cp.passResources[s].size(); ++b) {
-            const auto & slot = cp.passResources[s][b];
+        for (size_t b = 0; b < passResources[s].size(); ++b) {
+            const auto & slot = passResources[s][b];
             if (slot.empty()) continue;
 
             vk::DescriptorSetLayoutBinding bind;
-            bind.setBinding(static_cast<uint32_t>(b))
-                .setDescriptorCount(static_cast<uint32_t>(slot.size()))
-                .setStageFlags(vk::ShaderStageFlagBits::eAllGraphics);
+            bind.setBinding(static_cast<uint32_t>(b)).setDescriptorCount(static_cast<uint32_t>(slot.size())).setStageFlags(stageFlags);
 
             if (slot[0].isTexture()) {
-                bind.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+                if (slot[0].imageView.type == GpuResourceView::ImageView::STORAGE) {
+                    bind.setDescriptorType(vk::DescriptorType::eStorageImage);
+                } else {
+                    bind.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+                }
             } else if (slot[0].isBuffer()) {
-                bind.setDescriptorType(vk::DescriptorType::eUniformBuffer);
+                if (slot[0].bufferView.type == GpuResourceView::BufferView::STORAGE) {
+                    bind.setDescriptorType(vk::DescriptorType::eStorageBuffer);
+                } else {
+                    bind.setDescriptorType(vk::DescriptorType::eUniformBuffer);
+                }
             } else {
                 continue;
             }
@@ -103,9 +124,9 @@ vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Ra
 
     // Push constant range
     std::vector<vk::PushConstantRange> pushRanges;
-    if (cp.maxImmediateSize > 0) {
+    if (maxImmediateSize > 0) {
         vk::PushConstantRange pcr;
-        pcr.setStageFlags(vk::ShaderStageFlagBits::eAllGraphics).setOffset(0).setSize(cp.maxImmediateSize);
+        pcr.setStageFlags(stageFlags).setOffset(0).setSize(maxImmediateSize);
         pushRanges.push_back(pcr);
     }
 

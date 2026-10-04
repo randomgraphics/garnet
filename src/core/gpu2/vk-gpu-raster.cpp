@@ -23,7 +23,6 @@ struct StoredDraw {
     uint32_t            geometryIndex      = 0;
     uint32_t            resourceTableIndex = ~0u;
     AutoRef<const Blob> immediates;
-    uint32_t            instanceCount = 1;
 };
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
@@ -279,7 +278,6 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
     // Early exit: nothing to draw.
     const RasterGeometry & geom = mGeometries[d.geometryIndex];
     if (geom.vertexCount == 0 && geom.indexCount == 0) GN_UNLIKELY return {};
-    if (d.instanceCount == 0) GN_UNLIKELY return {};
 
     auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
     auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
@@ -460,7 +458,6 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
         } else {
             drawParams.setNonIndexed(geom.vertexCount, 0);
         }
-        drawParams.setInstance(d.instanceCount);
 
         drawable.draw(drawParams);
     }
@@ -481,11 +478,10 @@ struct CachedDrawConfig {
     std::vector<vk::Buffer>        vertexBuffers;
     std::vector<vk::DeviceSize>    vertexOffsets;
     vk::Buffer                     indexBuffer {};
-    vk::DeviceSize                 indexOffset   = 0;
-    vk::IndexType                  indexType     = vk::IndexType::eUint16;
-    uint32_t                       indexCount    = 0;
-    uint32_t                       vertexCount   = 0;
-    uint32_t                       instanceCount = 1;
+    vk::DeviceSize                 indexOffset = 0;
+    vk::IndexType                  indexType   = vk::IndexType::eUint16;
+    uint32_t                       indexCount  = 0;
+    uint32_t                       vertexCount = 0;
 };
 
 static void pushImmediates(vk::CommandBuffer command, const rv::Pipeline & pipeline, const Blob & data) {
@@ -564,9 +560,9 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
             const auto & cfg = configs[activeConfigIndex];
             if (d.immediates) pushImmediates(vkcb, *cfg.pipeline, *d.immediates);
             if (cfg.indexCount > 0) {
-                vkcb.drawIndexed(cfg.indexCount, cfg.instanceCount, 0, 0, 0);
+                vkcb.drawIndexed(cfg.indexCount, 1, 0, 0, 0);
             } else {
-                vkcb.draw(cfg.vertexCount, cfg.instanceCount, 0, 0);
+                vkcb.draw(cfg.vertexCount, 1, 0, 0);
             }
             continue;
         }
@@ -641,9 +637,9 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
 
             // Draw
             if (cfg.indexCount > 0) {
-                vkcb.drawIndexed(cfg.indexCount, cfg.instanceCount, 0, 0, 0);
+                vkcb.drawIndexed(cfg.indexCount, 1, 0, 0, 0);
             } else {
-                vkcb.draw(cfg.vertexCount, cfg.instanceCount, 0, 0);
+                vkcb.draw(cfg.vertexCount, 1, 0, 0);
             }
 
             activeConfigIndex = foundIndex;
@@ -675,7 +671,6 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         newCfg.indexType     = pack->indexType;
         newCfg.indexCount    = geom.indexCount;
         newCfg.vertexCount   = geom.vertexCount;
-        newCfg.instanceCount = d.instanceCount;
 
         // Update hardware tracking state
         boundPipeline      = newCfg.pipeline->handle();
@@ -804,7 +799,6 @@ public:
         s.geometryIndex      = geomIdx;
         s.resourceTableIndex = resIdx;
         s.immediates         = dp.immediates;
-        s.instanceCount      = dp.instanceCount;
     }
 
     AutoRef<GpuPayload> seal() override {

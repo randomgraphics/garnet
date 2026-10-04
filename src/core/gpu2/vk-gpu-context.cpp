@@ -4,6 +4,7 @@
 #include "vk-raster-pso-factory.h"
 #include "vk-bindless-pipeline-layout.h"
 #include "vk-bindless-pso-cache.h"
+#include "vk-bindless-compute-pso-cache.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-payload.h"
 
@@ -172,6 +173,7 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     mPsoFactory                  = std::make_unique<RasterPsoFactory>(*this);
     mBindlessPipelineLayoutCache = std::make_unique<VkBindlessPipelineLayoutCache>(*this);
     mBindlessPsoCache            = std::make_unique<VkBindlessPsoCache>(*this);
+    mBindlessComputePsoCache     = std::make_unique<VkBindlessComputePsoCache>(*this);
     mFencePool.emplace(std::make_unique<FenceTraits>(*mDevice->gi()));
 
     // All done
@@ -181,6 +183,7 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
 GpuContextVulkan2::~GpuContextVulkan2() {
     GN_INFO(sLoggerVk, "Wait for GPU idle ...");
     pumpInternal(true);
+    mBindlessComputePsoCache.reset();
     mBindlessPsoCache.reset();
     mBindlessPipelineLayoutCache.reset();
     mPsoFactory.reset();

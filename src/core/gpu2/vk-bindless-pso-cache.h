@@ -22,9 +22,6 @@ struct BindlessPsoKey {
             uint64_t stride0     : 12; ///< binding 0 stride in bytes (max 4095)
             uint64_t stride1     : 12;
             uint64_t stride2     : 12;
-            uint64_t instanced0  : 1;
-            uint64_t instanced1  : 1;
-            uint64_t instanced2  : 1;
             uint64_t numAttribs  : 5;
             uint64_t attrHash    : 16; ///< hash of vertex attributes
         };

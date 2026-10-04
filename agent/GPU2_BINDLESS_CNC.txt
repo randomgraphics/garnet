@@ -1,0 +1,193 @@
+# Assignment: GPU2 Bindless CnC (Copy & Compute) Subsystem
+
+---
+
+## Goals
+
+Extend the `GN::gpu2::bindless` subsystem to include high-throughput non-graphics operations
+(`bindless::CnC`), mirroring the performance and design advantages of `bindless::Raster`:
+eliminating per-dispatch descriptor set compilation, per-dispatch table scanning, and per-dispatch
+heap allocations.
+
+1. **Bindless CnC Recorder (`bindless::CnC`)**:
+   Implement direct Vulkan command recording with lean `ComputeParameters` (no `GpuResourceTable`),
+   plain POD `CreateParameters` with conflict validation against `heapSetIndex`, internal
+   compute `VkPipelineLayout` caching, and full support for asynchronous transfer and copy
+   operations (`recordCopyBufferToBuffer`, `recordUploadBuffer`, `recordDownloadBuffer`,
+   `recordCopyBufferToImage`, `recordDownloadImage`).
+2. **Native Compute PSO Caching (`VkBindlessComputePsoCache`)**:
+   Provide a lightweight, thread-safe compute pipeline cache keyed on `(VkPipelineLayout, shaderModule)`
+   in `gpu2`, directly calling `vkCreateComputePipelines` and bypassing `rv::Drawable` / `rv::ComputePipeline`.
+3. **Bindless CnC Payload & Automated Synchronization (`VkBindlessCncPayload`)**:
+   Bind the global descriptor heap once at pass start, push constants directly into `vkCmdPushConstants`,
+   dispatch directly via `vkCmdDispatch`, handle pipeline barriers for memory coherency between
+   dispatches and transfers, and fulfill download futures on completion.
+4. **Verification & Demonstration**:
+   Validate with comprehensive unit tests in `GNtest-internal`, including bindless texture/buffer
+   access, push constant dispatching, transfer operations, and a 10,000+ dispatch stress test.
+
+---
+
+## Design
+
+### 1. `bindless::CnC` Interface
+- Public interface declared in `<garnet/gpu2/bindless.h>` under `namespace GN::gpu2::bindless`.
+- Plain POD `CreateParameters`: `gpu`, `heap`, `heapSetIndex`, `passResources`, `maxImmediateSize`.
+- Lean `ComputeParameters`: `cs`, `x`, `y`, `z`, and `ArrayView<const uint8_t> immediates` (push constants).
+  Shaders access bindless resources through `DescriptorHeap` and pass-wide resources through `passResources`.
+- Unified copy/transfer operations matching `GpuCnC` contracts:
+  - `recordCopyBufferToBuffer`
+  - `recordUploadBuffer`
+  - `recordDownloadBuffer` (returns `std::future<AutoRef<const Blob>>`)
+  - `recordCopyBufferToImage`
+  - `recordDownloadImage` (returns `std::future<TextureContent>`)
+- `retainCleanup()` and `retainResource()` for parameter buffer and staging lifetime management.
+
+### 2. Pipeline Layout & Compute PSO Caching
+- Generalize `VkBindlessPipelineLayoutCache` to support compute stage flags (`vk::ShaderStageFlagBits::eCompute`).
+- Add `VkBindlessComputePsoCache` to `GpuContextVulkan2` for fast get-or-create of native `vk::Pipeline` compute handles.
+
+### 3. Direct Vulkan Recording & Synchronization
+- Commands are recorded into an ordered list of operations: compute dispatches and memory transfers.
+- Payload binds `mHeap` once at `heapSetIndex` for `vk::PipelineBindPoint::eCompute`.
+- Direct `vkCmdPushConstants` and `vkCmdDispatch`.
+- Execution and memory barriers between write/read hazards (e.g. compute writes visible to subsequent dispatches or transfers).
+- Futures for downloads resolved on `onGpuComplete()`.
+
+---
+
+Last completed: Phase 5 — Cleanup of Instanced Draw Scaffolding
+In progress: Awaiting user sign-off
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+src/inc/garnet/gpu2/bindless.h
+src/inc/garnet/gpu2/cnc.h
+src/core/gpu2/vk-gpu-cnc.h
+src/core/gpu2/vk-gpu-cnc.cpp
+src/core/gpu2/vk-bindless-pipeline-layout.h
+src/core/gpu2/vk-bindless-pipeline-layout.cpp
+src/core/gpu2/vk-bindless-raster.h
+src/core/gpu2/vk-bindless-raster.cpp
+src/core/gpu2/vk-bindless-payload.h
+src/core/gpu2/vk-bindless-payload.cpp
+
+--- BUILD / CI ---
+
+python.exe env/bin/build.py -C d
+build/windows.vc.d/bin/Debug/GNtest-internal.exe "[gpu2]"
+python.exe env/bin/format-all-sources.py -dqn
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep changes local, incremental, and verifiable.
+- All code in `namespace GN::gpu2::bindless`.
+- Warnings are errors. Maintain portability across MSVC, Clang, GCC.
+- Doxygen comments explaining why, ownership, and invariants on public APIs.
+- Use `AutoRef<T>` and `RuntimeType::cast<T>()`.
+- Keep line lengths clean.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: Public Interface & Pipeline Layout Support
+─────────────────────────────────────────────────────
+  Task 1.1: Declare bindless::CnC public interface in <garnet/gpu2/bindless.h>
+    - Plain POD CreateParameters (gpu, heap, heapSetIndex, passResources, maxImmediateSize)
+    - Lean ComputeParameters (cs, x, y, z, immediates)
+    - Transfer/copy methods (recordCopyBufferToBuffer, recordUploadBuffer, recordDownloadBuffer, recordCopyBufferToImage, recordDownloadImage)
+    - retainCleanup() and retainResource()
+    - seal() returning AutoRef<GpuPayload>
+    Verify: Header compiles cleanly in all consumers
+    Commit: "feat(gpu2): declare bindless::CnC public interface (Phase 1.1)"
+
+  Task 1.2: Extend VkBindlessPipelineLayoutCache for compute pipeline layouts
+    - Support vk::ShaderStageFlagBits::eCompute stage flags in layout key and creation
+    - Share cache on GpuContextVulkan2 across raster and compute
+    Verify: Cache compiles and serves both raster and compute layouts
+    Commit: "feat(gpu2): support compute pipeline layouts in VkBindlessPipelineLayoutCache (Phase 1.2)"
+
+Phase 2: Compute PSO Caching & Shared Transfer Infrastructure
+─────────────────────────────────────────────────────
+  Task 2.1: Extract shared Vulkan transfer helpers into vk-cnc-common.h
+    - Share StoredBufferToBuffer, StoredBufferToImage, StoredUploadBuffer, StoredDownloadBuffer, StoredDownloadImage, and DownloadResult
+    - Share emitBufferCopy, recordBufToImg, recordDownloadImage, resolveDownloadBuffer, resolveDownloadImage
+    Verify: Refactor compiles and all existing [gpu2][cnc] tests pass
+    Commit: "refactor(gpu2): extract shared Vulkan transfer helpers into vk-cnc-common.h (Phase 2.1)"
+
+  Task 2.2: Implement VkBindlessComputePsoCache for native compute pipelines
+    - Thread-safe key on (VkPipelineLayout, GpuShaderVulkan)
+    - Direct vkCreateComputePipelines caching
+    Verify: Cache compiles and integrates into GpuContextVulkan2
+    Commit: "feat(gpu2): implement VkBindlessComputePsoCache for native compute pipelines (Phase 2.2)"
+
+Phase 3: Bindless CnC Recorder & Payload Implementation
+─────────────────────────────────────────────────────
+  Task 3.1: Implement VkBindlessCnC pass recorder
+    - Fast conflict check between passResources and heapSetIndex
+    - Contiguous immediate data accumulation and op storage
+    - Factory function createVkBindlessCnc
+    Verify: VkBindlessCnC compiles and instantiates
+    Commit: "feat(gpu2): implement VkBindlessCnC pass recorder (Phase 3.1)"
+
+  Task 3.2: Implement VkBindlessCncPayload
+    - Binds descriptor heap and pass resources for compute
+    - Direct vkCmdBindPipeline, vkCmdPushConstants, and vkCmdDispatch
+    - Pipeline memory barriers between dispatches and transfers
+    - Transfer execution and download future resolution on completion
+    Verify: Work submits and completes through GpuContext::submit()
+    Commit: "feat(gpu2): implement VkBindlessCncPayload with direct Vulkan compute execution (Phase 3.2)"
+
+Phase 4: Unit Testing & Verification
+─────────────────────────────────────────────────────
+  Task 4.1: Comprehensive unit tests in bindless-cnc-test.cpp
+    - Basic compute dispatch with bindless heap access
+    - Push constants passing bindless descriptor index
+    - Interleaved compute and transfer operations (upload/download with future)
+    - Conflict check between passResources and heapSetIndex
+    Verify: GNtest-internal.exe "[gpu2][bindless][cnc]" passes
+    Commit: "test(gpu2): add unit tests for bindless::CnC (Phase 4.1)"
+
+  Task 4.2: High-throughput compute benchmark test
+    - Record 10,000+ dispatches with changing push constants
+    - Verify zero descriptor pool allocations during recording
+    Verify: GNtest-internal.exe "[gpu2][bindless][cnc][stress]" passes
+    Commit: "test(gpu2): add high-throughput stress test for bindless::CnC (Phase 4.2)"
+
+Phase 5: Cleanup of Instanced Draw Scaffolding
+  Task 5.1: Remove dead instanceCount and bitfields from raster and CnC pipelines
+    - Remove instanceCount from GpuRaster::DrawParameters and bindless::Raster::DrawParameters
+    - Remove instanced0/1/2 bitfields from Gpu2RasterPsoKey and BindlessPsoKey
+    - Remove instanceCount tracking from StoredDraw, StoredBindlessDraw, CachedDrawConfig
+    - Hardcode draw calls to 1 instance (vkcb.draw / vkcb.drawIndexed)
+    - Remove instanceCount from README.md
+    Verify: GNtest-internal.exe "[gpu2]" passes (76 tests, 22,038 assertions)
+    Commit: "refactor(gpu2): clean up instanced draw scaffolding from raster and bindless pipelines (Phase 5.1)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1:
+  src/inc/garnet/gpu2/bindless.h             — declare bindless::CnC
+  src/core/gpu2/vk-bindless-pipeline-layout.h — add compute stage flag support to layout key
+  src/core/gpu2/vk-bindless-pipeline-layout.cpp — support compute pipeline layout creation
+
+Phase 2:
+  src/core/gpu2/vk-cnc-common.h              — NEW: shared Vulkan transfer helpers
+  src/core/gpu2/vk-gpu-cnc.cpp               — consume vk-cnc-common.h
+  src/core/gpu2/vk-bindless-compute-pso-cache.h — NEW: compute PSO cache
+  src/core/gpu2/vk-bindless-compute-pso-cache.cpp — NEW: compute PSO cache implementation
+  src/core/gpu2/vk-gpu-context.h             — add compute PSO cache accessor
+  src/core/gpu2/vk-gpu-context.cpp           — instantiate compute PSO cache
+  src/core/gpu2/CMakeLists.txt               — register new source files
+
+Phase 3:
+  src/core/gpu2/vk-bindless-cnc.h            — NEW: VkBindlessCnC declaration
+  src/core/gpu2/vk-bindless-cnc.cpp          — NEW: VkBindlessCnC implementation
+  src/core/gpu2/vk-bindless-cnc-payload.h    — NEW: VkBindlessCncPayload declaration
+  src/core/gpu2/vk-bindless-cnc-payload.cpp  — NEW: VkBindlessCncPayload implementation
+  src/core/gpu2/CMakeLists.txt               — register new source files
+
+Phase 4:
+  src/core/gpu2/test/bindless-cnc-test.cpp   — NEW: bindless CnC unit & stress tests
+  src/core/gpu2/test/bindless-test.comp      — NEW: test compute shader with bindless sampling/storage
+  src/core/gpu2/test/internal-test.cmake     — register new test source and shader

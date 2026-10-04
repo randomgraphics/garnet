@@ -107,10 +107,9 @@ public:
 
     struct DrawParameters {
         AutoRef<GpuShader>       vs = {}, hs = {}, ds = {}, gs = {}, ps = {};
-        RasterState              states = {};        ///< Transient state overrides for this draw.
-        const RasterGeometry &   geometry;           ///< Vertex and index buffer bindings.
-        uint32_t                 instanceCount = 1;  ///< Number of instances to draw (default 1).
-        ArrayView<const uint8_t> immediates    = {}; ///< Inline uniform data (root constants / push constants).
+        RasterState              states = {};     ///< Transient state overrides for this draw.
+        const RasterGeometry &   geometry;        ///< Vertex and index buffer bindings.
+        ArrayView<const uint8_t> immediates = {}; ///< Inline uniform data (root constants / push constants).
     };
 
     /// Optional hint to pre-allocate storage for expected draws and immediate data to eliminate vector reallocations.
@@ -121,6 +120,100 @@ public:
 
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;
+
+    /// Retain an arbitrary cleanup callable that will be invoked when the payload finishes execution.
+    virtual void retainCleanup(std::function<void()> cleanup) = 0;
+
+    /// Generic helper to retain any resource or object until GPU completes execution.
+    /// Accepts AutoRef<T>, std::shared_ptr<T>, or any move-constructible object.
+    template<typename T>
+    void retainResource(T && resource) {
+        retainCleanup([res = std::forward<T>(resource)]() mutable { (void) res; });
+    }
+
+    /// Seal recorded work into an opaque, self-contained GpuPayload ready for GpuContext::submit().
+    virtual AutoRef<GpuPayload> seal() = 0;
+
+protected:
+    using RCRT64::RCRT64;
+};
+
+/// High-performance bindless copy and compute (CnC) recorder.
+///
+/// Bypasses per-dispatch GpuResourceTable descriptor set compilation and per-dispatch table scanning.
+/// All compute dispatches execute against a unified, cached pipeline layout with the bindless descriptor set
+/// bound once at the start of the pass.
+///
+/// Also provides asynchronous memory transfer and copy operations (buffer-to-buffer, buffer-to-image,
+/// staging uploads, and asynchronous downloads with std::future).
+///
+/// This class is not thread-safe. All calls on one instance must be single-threaded or externally
+/// serialized; use separate instances for parallel recording.
+class CnC : public RCRT64 {
+public:
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+
+    /// Plain POD configuration. The caller describes the intended pass layout;
+    /// gpu2 automatically manages, hashes, and caches the native pipeline layout.
+    struct CreateParameters {
+        AutoRef<GpuContext>     gpu;
+        AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap.
+        uint32_t                heapSetIndex = 0;       ///< Descriptor set index for the bindless heap (default 0).
+        GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 1 storage buffers/UBOs).
+        uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
+    };
+
+    /// Create a new bindless CnC recorder. Performs a fast conflict check between
+    /// passResources and heapSetIndex, returning an empty ref if a collision is detected.
+    GN_API static AutoRef<CnC> create(const StrA & name, const CreateParameters & cp);
+
+    struct ComputeParameters {
+        AutoRef<GpuShader>       cs;              ///< Compute shader module.
+        uint32_t                 x          = 1;  ///< Number of local workgroups to dispatch in X dimension.
+        uint32_t                 y          = 1;  ///< Number of local workgroups to dispatch in Y dimension.
+        uint32_t                 z          = 1;  ///< Number of local workgroups to dispatch in Z dimension.
+        ArrayView<const uint8_t> immediates = {}; ///< Inline uniform data (push constants).
+    };
+
+    /// Optional hint to pre-allocate storage for expected operations and immediate data to eliminate vector reallocations.
+    virtual void reserve(size_t opCount, size_t immediateBytes = 0) {
+        (void) opCount;
+        (void) immediateBytes;
+    }
+
+    /// Record a compute dispatch using the bindless descriptor set and pass resources.
+    virtual void recordCompute(const ComputeParameters & params) = 0;
+
+    using BufferToBuffer = GpuCnC::BufferToBuffer;
+
+    /// Record a buffer copy for execution when the sealed payload is submitted.
+    virtual void recordCopyBufferToBuffer(const BufferToBuffer &) = 0;
+
+    /// Record a buffer upload. Content is copied into internal staging storage during recording;
+    /// the GPU transfer executes after the sealed payload is submitted.
+    virtual void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) = 0;
+
+    /// Enqueue a buffer download operation. The buffer content is copied from the source buffer into an internal
+    /// staging buffer, then a CPU-side copy is performed to transfer the data into a new Blob. The returned future
+    /// is signaled with the downloaded Blob on success, or empty Blob if failed or canceled.
+    virtual std::future<AutoRef<const Blob>> recordDownloadBuffer(AutoRef<Buffer> src, uint64_t offset = 0, uint64_t size = uint64_t(~0)) = 0;
+
+    using Region        = GpuCnC::Region;
+    using BufferToImage = GpuCnC::BufferToImage;
+
+    /// Record a buffer-to-image copy, retaining resources and copying the region descriptions.
+    virtual void recordCopyBufferToImage(const BufferToImage &) = 0;
+
+    /// Convenience: upload all regions from a StagedTexture into dst without any conversion.
+    void recordCopyBufferToImage(const Buffer::StagedTexture & staged, AutoRef<Texture> dst) {
+        recordCopyBufferToImage({.src = staged.staging, .dst = std::move(dst), .regions = staged.regions});
+    }
+
+    using TextureContent = GpuCnC::TextureContent;
+
+    /// Enqueue a texture download operation. The data is copied from the source texture into an internal staging buffer,
+    /// then transferred into a TextureContent.
+    virtual std::future<TextureContent> recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) = 0;
 
     /// Retain an arbitrary cleanup callable that will be invoked when the payload finishes execution.
     virtual void retainCleanup(std::function<void()> cleanup) = 0;

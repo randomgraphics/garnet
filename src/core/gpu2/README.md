@@ -80,7 +80,6 @@ Draws do not carry a `GpuResourceTable`. They specify only:
 - Raster state overrides (`states`)
 - Geometry (`geometry`)
 - Push constants (`immediates`: transforms, material BDA addresses, bindless texture IDs)
-- Instance count (`instanceCount`)
 
 #### Parameter Buffer Retention
 `bindless::Raster::retainResource(AutoRef<RCRT64> resource)` allows higher-level modules (`fx2`) to attach dynamic per-draw parameter buffers, material buffers, or textures to the recorder. The sealed `GpuPayload` holds these references until GPU execution completes.

@@ -50,6 +50,7 @@ namespace GN::gpu2 {
 class RasterPsoFactory;              // defined in vk-raster-pso-factory.h
 class VkBindlessPipelineLayoutCache; // defined in vk-bindless-pipeline-layout.h
 class VkBindlessPsoCache;            // defined in vk-bindless-pso-cache.h
+class VkBindlessComputePsoCache;     // defined in vk-bindless-compute-pso-cache.h
 
 typedef ResourcePoolVulkan<vk::Fence>   FencePoolVulkan;
 typedef AutoRef<FencePoolVulkan::Entry> PooledFenceVulkan;
@@ -88,6 +89,12 @@ public:
         return *mBindlessPsoCache;
     }
 
+    /// PSO cache for bindless compute pipelines. Only valid when ready().
+    VkBindlessComputePsoCache & bindlessComputePsoCache() const {
+        GN_ASSERT(mBindlessComputePsoCache);
+        return *mBindlessComputePsoCache;
+    }
+
     // Fence pool
     ResourcePoolVulkan<vk::Fence> & fencePool() const {
         GN_ASSERT(mFencePool.has_value());
@@ -120,6 +127,7 @@ private:
     mutable std::unique_ptr<RasterPsoFactory>              mPsoFactory; // incomplete type; can't use std::optional
     mutable std::unique_ptr<VkBindlessPipelineLayoutCache> mBindlessPipelineLayoutCache;
     mutable std::unique_ptr<VkBindlessPsoCache>            mBindlessPsoCache;
+    mutable std::unique_ptr<VkBindlessComputePsoCache>     mBindlessComputePsoCache;
     mutable std::optional<FencePoolVulkan>                 mFencePool;
 
     // Other internal impl details that we'd like to hide from public context header.

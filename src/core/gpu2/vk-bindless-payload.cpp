@@ -172,7 +172,6 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     vk::Pipeline activePipeline {};
 
     for (const auto & d : mDraws) {
-        if (d.instanceCount == 0) continue;
         if (d.geometry.vertexCount == 0 && d.geometry.indexCount == 0) continue;
 
         auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
@@ -224,10 +223,10 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
             if (ibVk && ibVk->nativeBuffer()) {
                 vk::IndexType it = (d.geometry.indices.stride == 4) ? vk::IndexType::eUint32 : vk::IndexType::eUint16;
                 vkcb.bindIndexBuffer(ibVk->nativeBuffer(), d.geometry.indices.offset, it);
-                vkcb.drawIndexed(d.geometry.indexCount, d.instanceCount, 0, 0, 0);
+                vkcb.drawIndexed(d.geometry.indexCount, 1, 0, 0, 0);
             }
         } else if (d.geometry.vertexCount > 0) {
-            vkcb.draw(d.geometry.vertexCount, d.instanceCount, 0, 0);
+            vkcb.draw(d.geometry.vertexCount, 1, 0, 0);
         }
     }
 

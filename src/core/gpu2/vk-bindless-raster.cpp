@@ -36,14 +36,13 @@ void VkBindlessRaster::recordDraw(const DrawParameters & params) {
         }
 
     StoredBindlessDraw draw;
-    draw.vs            = params.vs;
-    draw.hs            = params.hs;
-    draw.ds            = params.ds;
-    draw.gs            = params.gs;
-    draw.ps            = params.ps;
-    draw.instanceCount = params.instanceCount;
-    draw.geometry      = params.geometry;
-    draw.mergedState   = mRenderTarget.states;
+    draw.vs          = params.vs;
+    draw.hs          = params.hs;
+    draw.ds          = params.ds;
+    draw.gs          = params.gs;
+    draw.ps          = params.ps;
+    draw.geometry    = params.geometry;
+    draw.mergedState = mRenderTarget.states;
     mergeRenderState(draw.mergedState, params.states);
 
     if (!params.immediates.empty()) {
