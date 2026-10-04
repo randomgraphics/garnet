@@ -66,6 +66,14 @@ public:
     /// Used by bindless passes to satisfy the "writer restores to read-ready" invariant.
     void restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb);
 
+    /// Advance a buffer's tracked state and emit a barrier restoring it to read-ready access
+    /// (shader read, uniform read, vertex/index attribute read, indirect read, transfer read).
+    /// Used by passes to satisfy the universal "writer restores to read-ready" invariant.
+    void restoreBufferToReadReady(BufferVulkan * buf, vk::CommandBuffer cb);
+
+    /// Batched variant: restores multiple buffers to read-ready state in a single pipeline barrier.
+    void restoreBuffersToReadReady(ArrayView<BufferVulkan * const> bufs, vk::CommandBuffer cb);
+
     /// Write the batch's final resource states to actual texture/buffer objects.
     /// Call once after vkQueueSubmit succeeds. For images: writes all planes of the updated
     /// incoming state. For buffers: writes the committed access/stage accumulated this batch.

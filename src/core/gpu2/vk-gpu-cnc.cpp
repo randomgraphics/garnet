@@ -252,25 +252,65 @@ void GpuCncPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     GpuResourceStateTrackerVulkan & tracker = *ctx.batchTracker;
     vk::CommandBuffer               vkcb    = ctx.cmd.handle();
 
+    std::vector<BufferVulkan *>                                  writtenBuffers;
+    std::vector<std::pair<TextureVulkanBase *, GpuResourceView>> writtenTextures;
+
+    auto addWrittenBuffer = [&](BufferVulkan * b) {
+        if (b && std::find(writtenBuffers.begin(), writtenBuffers.end(), b) == writtenBuffers.end()) { writtenBuffers.push_back(b); }
+    };
+    auto addWrittenTexture = [&](TextureVulkanBase * t, const GpuResourceView & v) {
+        if (!t) return;
+        for (const auto & [existingT, existingV] : writtenTextures) {
+            if (existingT == t) return;
+        }
+        writtenTextures.push_back({t, v});
+    };
+
     for (const auto & op : mOps) {
         std::visit(
             [&](const auto & o) {
                 using T = std::decay_t<decltype(o)>;
-                if constexpr (std::is_same_v<T, StoredCompute>)
+                if constexpr (std::is_same_v<T, StoredCompute>) {
                     recordCompute(o, ctx);
-                else if constexpr (std::is_same_v<T, StoredBufferToBuffer>)
+                    for (size_t setIdx = 0; setIdx < o.resources.size(); ++setIdx) {
+                        const auto & set = o.resources[setIdx];
+                        for (size_t bindIdx = 0; bindIdx < set.size(); ++bindIdx) {
+                            const auto & slot = set[bindIdx];
+                            for (const auto & view : slot) {
+                                if (view.empty()) continue;
+                                if (view.isBuffer() && view.bufferView.type == GpuResourceView::BufferView::STORAGE) {
+                                    auto * buf = RuntimeType::cast<BufferVulkan>(view.buffer().get());
+                                    addWrittenBuffer(buf);
+                                } else if (view.isTexture() && view.imageView.type == GpuResourceView::ImageView::STORAGE) {
+                                    auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
+                                    addWrittenTexture(tex, view);
+                                }
+                            }
+                        }
+                    }
+                } else if constexpr (std::is_same_v<T, StoredBufferToBuffer>) {
                     recordBufToBuf(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredBufferToImage>)
+                    auto * dstVk = RuntimeType::cast<BufferVulkan>(o.dst.get());
+                    addWrittenBuffer(dstVk);
+                } else if constexpr (std::is_same_v<T, StoredBufferToImage>) {
                     recordBufToImg(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredUploadBuffer>)
+                    auto * dstVk = RuntimeType::cast<TextureVulkanBase>(o.dst.get());
+                    addWrittenTexture(dstVk, GpuResourceView {});
+                } else if constexpr (std::is_same_v<T, StoredUploadBuffer>) {
                     recordUploadBuffer(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredDownloadBuffer>)
+                    auto * dstVk = RuntimeType::cast<BufferVulkan>(o.dst.get());
+                    addWrittenBuffer(dstVk);
+                } else if constexpr (std::is_same_v<T, StoredDownloadBuffer>) {
                     recordDownloadBuffer(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredDownloadImage>)
+                } else if constexpr (std::is_same_v<T, StoredDownloadImage>) {
                     recordDownloadImage(o, vkcb, tracker);
+                }
             },
             op);
     }
+
+    if (!writtenBuffers.empty()) { tracker.restoreBuffersToReadReady(writtenBuffers, vkcb); }
+    for (const auto & [tex, view] : writtenTextures) { tracker.restoreAttachmentToShaderReadOnly(tex, view, vkcb); }
 }
 
 // ── GpuCncVulkan2 ────────────────────────────────────────────────────────────────────

@@ -12,9 +12,7 @@ struct BindlessComputePsoKey {
     vk::PipelineLayout pipelineLayout {};
     uint64_t           shaderHash = 0;
 
-    bool operator==(const BindlessComputePsoKey & o) const noexcept {
-        return pipelineLayout == o.pipelineLayout && shaderHash == o.shaderHash;
-    }
+    bool operator==(const BindlessComputePsoKey & o) const noexcept { return pipelineLayout == o.pipelineLayout && shaderHash == o.shaderHash; }
 };
 
 struct BindlessComputePsoKeyHash {
@@ -43,8 +41,8 @@ public:
 private:
     vk::Pipeline buildPipeline(vk::PipelineLayout layout, const GpuShaderVulkan * cs);
 
-    GpuContextVulkan2 &                                                                 mGpu;
-    std::mutex                                                                          mMutex;
+    GpuContextVulkan2 &                                                                mGpu;
+    std::mutex                                                                         mMutex;
     std::unordered_map<BindlessComputePsoKey, vk::Pipeline, BindlessComputePsoKeyHash> mCache;
 };
 

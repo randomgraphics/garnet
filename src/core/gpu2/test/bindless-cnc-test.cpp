@@ -1,7 +1,12 @@
 #if GN_BUILD_HAS_VULKAN
 
     #include "../vk-gpu-context.h"
+    #include "../vk-buffer.h"
+    #include "../vk-texture.h"
+    #include "../vk-buffer-state.h"
     #include "bindless-cnc-test-comp.spv.h"
+    #include "bindless-test-vert.spv.h"
+    #include "bindless-test-frag.spv.h"
 
     #include <catch2/catch_test_macros.hpp>
     #include <garnet/GNgpu2.h>
@@ -305,6 +310,370 @@ TEST_CASE("bindless::CnC: high-throughput dispatch recording stress test", "[gpu
 
     auto payload = cnc->seal();
     REQUIRE(payload);
+}
+
+TEST_CASE("bindless::CnC: automated invariant restores uploaded and copied buffers to read-ready state", "[gpu2][bindless][cnc][invariant]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+
+    auto bufA = Buffer::create("bufA", Buffer::CreateParameters {.context = gpu, .size = 256});
+    auto bufB = Buffer::create("bufB", Buffer::CreateParameters {.context = gpu, .size = 256});
+    REQUIRE(bufA);
+    REQUIRE(bufB);
+
+    std::vector<uint8_t> data(256, 42);
+
+    auto cnc = bindless::CnC::create("upload-copy-cnc", {.gpu = gpu, .heap = heap});
+    REQUIRE(cnc);
+    cnc->recordUploadBuffer(bufA, 0, data);
+    cnc->recordCopyBufferToBuffer({.src = bufA, .dst = bufB, .srcOffset = 0, .dstOffset = 0, .size = 256});
+
+    auto payload = cnc->seal();
+    REQUIRE(payload);
+    submitAndWait(gpu, "restore-buffers", payload);
+
+    auto * vkBufA = RuntimeType::cast<BufferVulkan>(bufA.get());
+    auto * vkBufB = RuntimeType::cast<BufferVulkan>(bufB.get());
+    REQUIRE(vkBufA);
+    REQUIRE(vkBufB);
+
+    const auto expected = BufferStateVulkan::READ_READY();
+    CHECK(vkBufA->gpuState.access == expected.access);
+    CHECK(vkBufA->gpuState.stages == expected.stages);
+    CHECK(vkBufB->gpuState.access == expected.access);
+    CHECK(vkBufB->gpuState.stages == expected.stages);
+}
+
+TEST_CASE("bindless::CnC: automated invariant restores uploaded texture to SHADER_READ_ONLY_OPTIMAL", "[gpu2][bindless][cnc][invariant]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+
+    auto tex = makeRgba8Tex(gpu, "upload-tex", 16, 16);
+    REQUIRE(tex);
+
+    constexpr uint64_t stagingSize = 16 * 16 * 4;
+    auto               staging     = Buffer::create("staging", {.context = gpu, .size = stagingSize, .mappable = true});
+    REQUIRE(staging);
+    {
+        auto m = staging->map();
+        std::memset(m.data(), 128, stagingSize);
+    }
+    GpuCnC::Region region;
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {16, 16, 1};
+
+    auto cnc = bindless::CnC::create("upload-tex-cnc", {.gpu = gpu, .heap = heap});
+    REQUIRE(cnc);
+    cnc->recordCopyBufferToImage({.src = staging, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+
+    auto payload = cnc->seal();
+    REQUIRE(payload);
+    submitAndWait(gpu, "restore-texture", payload);
+
+    auto * vkTex = RuntimeType::cast<TextureVulkanBase>(tex.get());
+    REQUIRE(vkTex);
+
+    const auto * ps = vkTex->getState().get(0, 0, vk::ImageAspectFlagBits::eColor);
+    REQUIRE(ps);
+    CHECK(ps->layout == vk::ImageLayout::eShaderReadOnlyOptimal);
+    CHECK((ps->access & vk::AccessFlagBits::eShaderRead) == vk::AccessFlagBits::eShaderRead);
+}
+
+TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores to SRV for sampling", "[gpu2][bindless][cnc][invariant]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+
+    constexpr uint32_t W = 16, H = 16;
+    auto               tex = makeRgba8Tex(gpu, "srv-restore-tex", W, H);
+    REQUIRE(tex);
+
+    auto * vkTex = RuntimeType::cast<TextureVulkanBase>(tex.get());
+    REQUIRE(vkTex);
+
+    uint32_t slot = heap->allocate(GpuResourceView(tex));
+    REQUIRE(slot != bindless::INVALID_DESCRIPTOR_INDEX);
+
+    constexpr size_t bufferSize = 16 * sizeof(float) * 4;
+    auto             outBuf     = Buffer::create("outBuf", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
+    REQUIRE(outBuf);
+
+    GpuResourceTable passResources;
+    passResources.resize(2);
+    passResources[1].resize(1);
+    passResources[1][0].append(GpuResourceView(outBuf).setBufferViewType(GpuResourceView::BufferView::STORAGE));
+
+    auto cs = makeShader(gpu, "bindless-cnc-cs", kBindlessCncTestCompSpv, sizeof(kBindlessCncTestCompSpv));
+    REQUIRE(cs);
+
+    // --- Phase 1: Cross-pass copyBufferToImage -> restore to SRV -> sample in compute ---
+    {
+        // 1. Prepare blue pixels: (0, 0, 255, 255)
+        constexpr uint64_t stagingSize = W * H * 4;
+        auto               stagingBlue = Buffer::create("stagingBlue", {.context = gpu, .size = stagingSize, .mappable = true});
+        REQUIRE(stagingBlue);
+        {
+            auto * p = static_cast<uint8_t *>(stagingBlue->map().data());
+            for (uint32_t i = 0; i < W * H; ++i) {
+                p[i * 4 + 0] = 0;
+                p[i * 4 + 1] = 0;
+                p[i * 4 + 2] = 255;
+                p[i * 4 + 3] = 255;
+            }
+        }
+        GpuCnC::Region region;
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {W, H, 1};
+
+        auto cnc1 = bindless::CnC::create("cnc-copy", {.gpu = gpu, .heap = heap});
+        REQUIRE(cnc1);
+        cnc1->recordCopyBufferToImage({.src = stagingBlue, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+        auto payload1 = cnc1->seal();
+        REQUIRE(payload1);
+        submitAndWait(gpu, "pass1-copy-blue", payload1);
+
+        // Verify texture state is restored to SHADER_READ_ONLY_OPTIMAL
+        const auto * ps = vkTex->getState().get(0, 0, vk::ImageAspectFlagBits::eColor);
+        REQUIRE(ps);
+        CHECK(ps->layout == vk::ImageLayout::eShaderReadOnlyOptimal);
+        CHECK((ps->access & vk::AccessFlagBits::eShaderRead) == vk::AccessFlagBits::eShaderRead);
+
+        // 2. Sample in a subsequent compute pass
+        auto cnc2 =
+            bindless::CnC::create("cnc-sample-blue", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
+        REQUIRE(cnc2);
+        PushConstantData pc {slot, 1.0f};
+        cnc2->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
+        auto downloadFuture = cnc2->recordDownloadBuffer(outBuf, 0, bufferSize);
+        auto payload2       = cnc2->seal();
+        REQUIRE(payload2);
+        submitAndWait(gpu, "pass2-sample-blue", payload2);
+
+        REQUIRE(downloadFuture.valid());
+        auto blob = downloadFuture.get();
+        REQUIRE(blob);
+        const float * floats = reinterpret_cast<const float *>(blob->data());
+        for (int i = 0; i < 16; ++i) {
+            // Blue sampled: (0.0, 0.0, 1.0, 1.0)
+            CHECK(std::abs(floats[i * 4 + 0] - 0.0f) < 0.02f);
+            CHECK(std::abs(floats[i * 4 + 1] - 0.0f) < 0.02f);
+            CHECK(std::abs(floats[i * 4 + 2] - 1.0f) < 0.02f);
+            CHECK(std::abs(floats[i * 4 + 3] - 1.0f) < 0.02f);
+        }
+    }
+
+    // --- Phase 2: Same-pass interleave copyBufferToImage -> restore to SRV -> compute sample ---
+    {
+        // Prepare yellow pixels: (255, 255, 0, 255)
+        constexpr uint64_t stagingSize   = W * H * 4;
+        auto               stagingYellow = Buffer::create("stagingYellow", {.context = gpu, .size = stagingSize, .mappable = true});
+        REQUIRE(stagingYellow);
+        {
+            auto * p = static_cast<uint8_t *>(stagingYellow->map().data());
+            for (uint32_t i = 0; i < W * H; ++i) {
+                p[i * 4 + 0] = 255;
+                p[i * 4 + 1] = 255;
+                p[i * 4 + 2] = 0;
+                p[i * 4 + 3] = 255;
+            }
+        }
+        GpuCnC::Region region;
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {W, H, 1};
+
+        auto cnc3 =
+            bindless::CnC::create("cnc-interleaved", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
+        REQUIRE(cnc3);
+        // Interleave: copy buffer to image, then immediately sample in compute within the SAME pass
+        cnc3->recordCopyBufferToImage({.src = stagingYellow, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+        PushConstantData pc {slot, 2.0f};
+        cnc3->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
+        auto downloadFuture = cnc3->recordDownloadBuffer(outBuf, 0, bufferSize);
+        auto payload3       = cnc3->seal();
+        REQUIRE(payload3);
+        submitAndWait(gpu, "pass3-interleave-yellow", payload3);
+
+        REQUIRE(downloadFuture.valid());
+        auto blob = downloadFuture.get();
+        REQUIRE(blob);
+        const float * floats = reinterpret_cast<const float *>(blob->data());
+        for (int i = 0; i < 16; ++i) {
+            // Yellow sampled with multiplier 2.0f: (2.0, 2.0, 0.0, 2.0)
+            CHECK(std::abs(floats[i * 4 + 0] - 2.0f) < 0.02f);
+            CHECK(std::abs(floats[i * 4 + 1] - 2.0f) < 0.02f);
+            CHECK(std::abs(floats[i * 4 + 2] - 0.0f) < 0.02f);
+            CHECK(std::abs(floats[i * 4 + 3] - 2.0f) < 0.02f);
+        }
+
+        // Texture remains in SRV layout at end of pass
+        const auto * ps = vkTex->getState().get(0, 0, vk::ImageAspectFlagBits::eColor);
+        REQUIRE(ps);
+        CHECK(ps->layout == vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+}
+
+TEST_CASE("GpuCnC & GpuRaster: automated invariant restores buffer and render target states", "[gpu2][cnc][raster][invariant]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    // 1. Traditional GpuCnC upload restores destination buffer to read-ready
+    auto buf = Buffer::create("cnc-buf", Buffer::CreateParameters {.context = gpu, .size = 128});
+    REQUIRE(buf);
+
+    std::vector<uint8_t> data(128, 77);
+    auto                 cnc = GpuCnC::create({.gpu = gpu});
+    REQUIRE(cnc);
+    cnc->recordUploadBuffer(buf, 0, data);
+    submitAndWait(gpu, "cnc-upload", cnc->seal());
+
+    auto * vkBuf = RuntimeType::cast<BufferVulkan>(buf.get());
+    REQUIRE(vkBuf);
+    CHECK(vkBuf->gpuState.access == BufferStateVulkan::READ_READY().access);
+    CHECK(vkBuf->gpuState.stages == BufferStateVulkan::READ_READY().stages);
+
+    // 2. Traditional GpuRaster rendering restores color target to SHADER_READ_ONLY_OPTIMAL and depth target to DEPTH_STENCIL_READ_ONLY_OPTIMAL
+    auto colorTex = makeRgba8Tex(gpu, "raster-color", 16, 16);
+    auto depthTex = Texture::create(
+        "raster-depth",
+        {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::D_32_FLOAT()).setDimensions(16, 16).setLevels(1)});
+    REQUIRE(colorTex);
+    REQUIRE(depthTex);
+
+    RasterTarget rt;
+    rt.setColorTarget(0, GpuResourceView(colorTex));
+    rt.depthStencilTarget.setView(GpuResourceView(depthTex));
+
+    auto raster = GpuRaster::create("test-raster", {.gpu = gpu, .target = &rt});
+    REQUIRE(raster);
+    submitAndWait(gpu, "raster-clear", raster->seal());
+
+    auto * vkColor = RuntimeType::cast<TextureVulkanBase>(colorTex.get());
+    auto * vkDepth = RuntimeType::cast<TextureVulkanBase>(depthTex.get());
+    REQUIRE(vkColor);
+    REQUIRE(vkDepth);
+
+    const auto * colorPs = vkColor->getState().get(0, 0, vk::ImageAspectFlagBits::eColor);
+    REQUIRE(colorPs);
+    CHECK(colorPs->layout == vk::ImageLayout::eShaderReadOnlyOptimal);
+    CHECK((colorPs->access & vk::AccessFlagBits::eShaderRead) == vk::AccessFlagBits::eShaderRead);
+
+    const auto * depthPs = vkDepth->getState().get(0, 0, vk::ImageAspectFlagBits::eDepth);
+    REQUIRE(depthPs);
+    CHECK(depthPs->layout == vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+}
+
+TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly drawn without caller barriers", "[gpu2][bindless][cnc][raster][invariant]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+
+    constexpr uint32_t W = 16, H = 16;
+    auto               colorTex = makeRgba8Tex(gpu, "bindless-rt", W, H);
+    REQUIRE(colorTex);
+
+    auto sampleTex = makeRgba8Tex(gpu, "sample-src", W, H);
+    REQUIRE(sampleTex);
+
+    uint32_t slot = heap->allocate(GpuResourceView(sampleTex));
+    REQUIRE(slot != bindless::INVALID_DESCRIPTOR_INDEX);
+
+    constexpr uint64_t stagedSize = W * H * 4;
+    auto               stagedTex  = Buffer::create("staged-tex", {.context = gpu, .size = stagedSize, .mappable = true});
+    REQUIRE(stagedTex);
+    {
+        auto   m = stagedTex->map();
+        auto * p = static_cast<uint8_t *>(m.data());
+        for (uint32_t i = 0; i < W * H; ++i) {
+            p[i * 4 + 0] = 255;
+            p[i * 4 + 1] = 0;
+            p[i * 4 + 2] = 0;
+            p[i * 4 + 3] = 255;
+        }
+    }
+    GpuCnC::Region texRegion;
+    texRegion.imageOffset = {0, 0, 0};
+    texRegion.imageExtent = {W, H, 1};
+
+    // Fullscreen triangle dummy buffer
+    std::vector<uint8_t> dummyVbData(64, 0);
+    auto                 vb = Buffer::create("vb", Buffer::CreateParameters {.context = gpu, .size = dummyVbData.size()});
+    REQUIRE(vb);
+
+    // Pass 1: CnC uploads sample texture and vertex buffer
+    auto cnc = bindless::CnC::create("vb-upload", {.gpu = gpu, .heap = heap});
+    REQUIRE(cnc);
+    cnc->recordCopyBufferToImage({.src = stagedTex, .dst = sampleTex, .regions = ArrayView<const GpuCnC::Region>(&texRegion, 1)});
+    cnc->recordUploadBuffer(vb, 0, dummyVbData);
+    auto cncPayload = cnc->seal();
+    REQUIRE(cncPayload);
+
+    // Pass 2: bindless::Raster draws directly using vb and sampleTex without any caller-managed barriers
+    RasterTarget target;
+    target.setColorTarget(0, GpuResourceView(colorTex));
+    target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    auto vs = makeShader(gpu, "bindless-vs", kBindlessTestVertSpv, sizeof(kBindlessTestVertSpv));
+    auto ps = makeShader(gpu, "bindless-ps", kBindlessTestFragSpv, sizeof(kBindlessTestFragSpv));
+    REQUIRE(vs);
+    REQUIRE(ps);
+
+    auto raster = bindless::Raster::create("bindless-raster", {.gpu = gpu, .target = &target, .heap = heap, .heapSetIndex = 0});
+    REQUIRE(raster);
+
+    RasterGeometry geom;
+    geom.vertexCount = 3;
+    geom.vertices.append({.buffer = vb, .offset = 0, .stride = 16});
+
+    raster->recordDraw({
+        .vs         = vs,
+        .ps         = ps,
+        .geometry   = geom,
+        .immediates = makePushConstants(slot),
+    });
+    auto rasterPayload = raster->seal();
+    REQUIRE(rasterPayload);
+
+    // Submit both payloads in a single batch
+    submitAndWait(gpu, "cnc-then-bindless-raster", cncPayload, rasterPayload);
+
+    // Verify buffer, sampled texture, and render target are all in read-ready states
+    auto * vkBuf    = RuntimeType::cast<BufferVulkan>(vb.get());
+    auto * vkSample = RuntimeType::cast<TextureVulkanBase>(sampleTex.get());
+    auto * vkTarget = RuntimeType::cast<TextureVulkanBase>(colorTex.get());
+    REQUIRE(vkBuf);
+    REQUIRE(vkSample);
+    REQUIRE(vkTarget);
+
+    CHECK(vkBuf->gpuState.access == BufferStateVulkan::READ_READY().access);
+
+    const auto * samplePs = vkSample->getState().get(0, 0, vk::ImageAspectFlagBits::eColor);
+    REQUIRE(samplePs);
+    CHECK(samplePs->layout == vk::ImageLayout::eShaderReadOnlyOptimal);
+
+    const auto * targetPs = vkTarget->getState().get(0, 0, vk::ImageAspectFlagBits::eColor);
+    REQUIRE(targetPs);
+    CHECK(targetPs->layout == vk::ImageLayout::eShaderReadOnlyOptimal);
+
+    // Read back target pixels and verify rendered red output
+    auto result = colorTex->readback();
+    REQUIRE_FALSE(result.empty());
+    auto pixels = result.plane().toRGBA8(result.data());
+    REQUIRE_FALSE(pixels.empty());
+    auto * p = reinterpret_cast<const uint8_t *>(pixels.data());
+    CHECK(p[0] == 255);
+    CHECK(p[1] == 0);
+    CHECK(p[2] == 0);
+    CHECK(p[3] == 255);
 }
 
 #endif // GN_BUILD_HAS_VULKAN

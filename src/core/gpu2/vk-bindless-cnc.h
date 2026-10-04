@@ -17,14 +17,8 @@ struct StoredBindlessCompute {
     uint32_t           immediateSize   = 0;
 };
 
-using StoredBindlessCncOp = std::variant<
-    StoredBindlessCompute,
-    StoredBufferToBuffer,
-    StoredBufferToImage,
-    StoredUploadBuffer,
-    StoredDownloadBuffer,
-    StoredDownloadImage
->;
+using StoredBindlessCncOp =
+    std::variant<StoredBindlessCompute, StoredBufferToBuffer, StoredBufferToImage, StoredUploadBuffer, StoredDownloadBuffer, StoredDownloadImage>;
 
 /// Vulkan implementation of bindless::CnC recorder.
 class VkBindlessCnC final : public bindless::CnC {
@@ -32,8 +26,7 @@ public:
     GN_REGISTER_RUNTIME_TYPE(bindless::CnC);
 
     VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
-                  vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets,
-                  GpuResourceTable passResources);
+                  vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, GpuResourceTable passResources);
 
     ~VkBindlessCnC() override;
 
@@ -41,29 +34,29 @@ public:
 
     void recordCompute(const ComputeParameters & params) override;
 
-    void recordCopyBufferToBuffer(const BufferToBuffer & p) override;
-    void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) override;
+    void                             recordCopyBufferToBuffer(const BufferToBuffer & p) override;
+    void                             recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) override;
     std::future<AutoRef<const Blob>> recordDownloadBuffer(AutoRef<Buffer> src, uint64_t offset = 0, uint64_t size = uint64_t(~0)) override;
-    void recordCopyBufferToImage(const BufferToImage & p) override;
-    std::future<TextureContent> recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) override;
+    void                             recordCopyBufferToImage(const BufferToImage & p) override;
+    std::future<TextureContent>      recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) override;
 
     void retainCleanup(std::function<void()> cleanup) override;
 
     AutoRef<GpuPayload> seal() override;
 
 private:
-    AutoRef<GpuContextVulkan2>          mGpu;
-    AutoRef<bindless::DescriptorHeap>   mHeap;
-    uint32_t                            mHeapSetIndex = 0;
-    vk::PipelineLayout                  mPipelineLayout {};
-    vk::DescriptorPool                  mPassDescriptorPool {};
-    std::vector<vk::DescriptorSet>      mPassDescriptorSets;
-    GpuResourceTable                    mPassResources;
+    AutoRef<GpuContextVulkan2>        mGpu;
+    AutoRef<bindless::DescriptorHeap> mHeap;
+    uint32_t                          mHeapSetIndex = 0;
+    vk::PipelineLayout                mPipelineLayout {};
+    vk::DescriptorPool                mPassDescriptorPool {};
+    std::vector<vk::DescriptorSet>    mPassDescriptorSets;
+    GpuResourceTable                  mPassResources;
 
-    std::vector<StoredBindlessCncOp>    mOps;
-    std::vector<uint8_t>                mImmediateData;
-    std::vector<std::function<void()>>  mRetainedCleanups;
-    bool                                mSealed = false;
+    std::vector<StoredBindlessCncOp>   mOps;
+    std::vector<uint8_t>               mImmediateData;
+    std::vector<std::function<void()>> mRetainedCleanups;
+    bool                               mSealed = false;
 };
 
 AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::CnC::CreateParameters & cp);

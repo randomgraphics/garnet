@@ -10,8 +10,8 @@ namespace GN::gpu2 {
 
 namespace {
 
-static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTable & passResources, uint32_t heapSetIndex,
-                                    vk::DescriptorPool & outPool, std::vector<vk::DescriptorSet> & outSets) {
+static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTable & passResources, uint32_t heapSetIndex, vk::DescriptorPool & outPool,
+                                    std::vector<vk::DescriptorSet> & outSets) {
     if (passResources.empty()) return true;
 
     auto vkDev = gpu.vulkanDevice().handle();
@@ -44,9 +44,7 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
         }
     }
 
-    if (numCombinedSamplers == 0 && numStorageImages == 0 && numUniformBuffers == 0 && numStorageBuffers == 0) {
-        return true;
-    }
+    if (numCombinedSamplers == 0 && numStorageImages == 0 && numUniformBuffers == 0 && numStorageBuffers == 0) { return true; }
 
     std::vector<vk::DescriptorPoolSize> poolSizes;
     if (numCombinedSamplers > 0) poolSizes.push_back({vk::DescriptorType::eCombinedImageSampler, numCombinedSamplers});
@@ -67,7 +65,7 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
     outSets.resize(passResources.size());
 
     // Create a default linear sampler for combined image samplers
-    rv::Ref<rv::Sampler> defaultSampler;
+    rv::Ref<rv::Sampler>             defaultSampler;
     rv::Sampler::ConstructParameters scp;
     scp.gi = gpu.vulkanDevice().gi();
     scp.setLinear();
@@ -82,16 +80,14 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
             if (slot.empty()) continue;
 
             vk::DescriptorSetLayoutBinding bind;
-            bind.setBinding(static_cast<uint32_t>(b))
-                .setDescriptorCount(static_cast<uint32_t>(slot.size()))
-                .setStageFlags(vk::ShaderStageFlagBits::eCompute);
+            bind.setBinding(static_cast<uint32_t>(b)).setDescriptorCount(static_cast<uint32_t>(slot.size())).setStageFlags(vk::ShaderStageFlagBits::eCompute);
 
             if (slot[0].isTexture()) {
-                bind.setDescriptorType(slot[0].imageView.type == GpuResourceView::ImageView::STORAGE ?
-                                       vk::DescriptorType::eStorageImage : vk::DescriptorType::eCombinedImageSampler);
+                bind.setDescriptorType(slot[0].imageView.type == GpuResourceView::ImageView::STORAGE ? vk::DescriptorType::eStorageImage
+                                                                                                     : vk::DescriptorType::eCombinedImageSampler);
             } else if (slot[0].isBuffer()) {
-                bind.setDescriptorType(slot[0].bufferView.type == GpuResourceView::BufferView::STORAGE ?
-                                       vk::DescriptorType::eStorageBuffer : vk::DescriptorType::eUniformBuffer);
+                bind.setDescriptorType(slot[0].bufferView.type == GpuResourceView::BufferView::STORAGE ? vk::DescriptorType::eStorageBuffer
+                                                                                                       : vk::DescriptorType::eUniformBuffer);
             }
             bindings.push_back(bind);
         }
@@ -105,11 +101,11 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
         vk::DescriptorSetAllocateInfo allocInfo;
         allocInfo.setDescriptorPool(outPool).setSetLayouts(setlayout);
         vk::DescriptorSet descSet = vkDev.allocateDescriptorSets(allocInfo)[0];
-        outSets[s] = descSet;
+        outSets[s]                = descSet;
 
         // Populate writes
-        std::vector<vk::WriteDescriptorSet> writes;
-        std::vector<std::vector<vk::DescriptorImageInfo>> imageInfos;
+        std::vector<vk::WriteDescriptorSet>                writes;
+        std::vector<std::vector<vk::DescriptorImageInfo>>  imageInfos;
         std::vector<std::vector<vk::DescriptorBufferInfo>> bufferInfos;
 
         for (size_t b = 0; b < passResources[s].size(); ++b) {
@@ -127,16 +123,16 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
                         ii.imageLayout = vk::ImageLayout::eGeneral;
                     } else {
                         ii.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-                        ii.sampler = defaultSampler->handle();
+                        ii.sampler     = defaultSampler->handle();
                     }
                     curImageInfos.push_back(ii);
                 }
                 vk::WriteDescriptorSet w;
                 w.setDstSet(descSet)
-                 .setDstBinding(static_cast<uint32_t>(b))
-                 .setDescriptorType(slot[0].imageView.type == GpuResourceView::ImageView::STORAGE ?
-                                    vk::DescriptorType::eStorageImage : vk::DescriptorType::eCombinedImageSampler)
-                 .setImageInfo(curImageInfos);
+                    .setDstBinding(static_cast<uint32_t>(b))
+                    .setDescriptorType(slot[0].imageView.type == GpuResourceView::ImageView::STORAGE ? vk::DescriptorType::eStorageImage
+                                                                                                     : vk::DescriptorType::eCombinedImageSampler)
+                    .setImageInfo(curImageInfos);
                 writes.push_back(w);
             } else if (slot[0].isBuffer()) {
                 auto & curBufferInfos = bufferInfos.emplace_back();
@@ -151,17 +147,15 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
                 }
                 vk::WriteDescriptorSet w;
                 w.setDstSet(descSet)
-                 .setDstBinding(static_cast<uint32_t>(b))
-                 .setDescriptorType(slot[0].bufferView.type == GpuResourceView::BufferView::STORAGE ?
-                                    vk::DescriptorType::eStorageBuffer : vk::DescriptorType::eUniformBuffer)
-                 .setBufferInfo(curBufferInfos);
+                    .setDstBinding(static_cast<uint32_t>(b))
+                    .setDescriptorType(slot[0].bufferView.type == GpuResourceView::BufferView::STORAGE ? vk::DescriptorType::eStorageBuffer
+                                                                                                       : vk::DescriptorType::eUniformBuffer)
+                    .setBufferInfo(curBufferInfos);
                 writes.push_back(w);
             }
         }
 
-        if (!writes.empty()) {
-            vkDev.updateDescriptorSets(writes, {});
-        }
+        if (!writes.empty()) { vkDev.updateDescriptorSets(writes, {}); }
 
         vkDev.destroyDescriptorSetLayout(setlayout);
     }
@@ -174,9 +168,8 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
 VkBindlessCnC::VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
                              vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets,
                              GpuResourceTable passResources)
-    : bindless::CnC(TYPE_INFO(), name), mGpu(std::move(gpu)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex),
-      mPipelineLayout(pipelineLayout), mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)),
-      mPassResources(std::move(passResources)) {}
+    : bindless::CnC(TYPE_INFO(), name), mGpu(std::move(gpu)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex), mPipelineLayout(pipelineLayout),
+      mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)), mPassResources(std::move(passResources)) {}
 
 VkBindlessCnC::~VkBindlessCnC() {
     if (!mSealed && mPassDescriptorPool && mGpu && mGpu->ready()) {
@@ -187,20 +180,18 @@ VkBindlessCnC::~VkBindlessCnC() {
 
 void VkBindlessCnC::reserve(size_t opCount, size_t immediateBytes) {
     mOps.reserve(opCount);
-    if (immediateBytes > 0) {
-        mImmediateData.reserve(immediateBytes);
-    }
+    if (immediateBytes > 0) { mImmediateData.reserve(immediateBytes); }
 }
 
 void VkBindlessCnC::recordCompute(const ComputeParameters & params) {
     if (mSealed) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordCompute: cannot record compute into a sealed CnC recorder");
-        return;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordCompute: cannot record compute into a sealed CnC recorder");
+            return;
+        }
     if (!params.cs) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordCompute: compute shader is required");
-        return;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordCompute: compute shader is required");
+            return;
+        }
 
     StoredBindlessCompute op;
     op.cs = params.cs;
@@ -219,33 +210,33 @@ void VkBindlessCnC::recordCompute(const ComputeParameters & params) {
 
 void VkBindlessCnC::recordCopyBufferToBuffer(const BufferToBuffer & p) {
     if (mSealed) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordCopyBufferToBuffer: already sealed");
-        return;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordCopyBufferToBuffer: already sealed");
+            return;
+        }
     mOps.emplace_back(StoredBufferToBuffer {p.src, p.dst, p.srcOffset, p.dstOffset, p.size});
 }
 
 void VkBindlessCnC::recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) {
     if (mSealed) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: already sealed");
-        return;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: already sealed");
+            return;
+        }
     if (!dst || content.empty()) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: null destination or empty content");
-        return;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: null destination or empty content");
+            return;
+        }
     const uint64_t size    = content.size();
     auto           staging = Buffer::create(name + "/upload_stg", {.context = mGpu, .size = size, .mappable = true});
     if (!staging) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: staging buffer allocation failed");
-        return;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: staging buffer allocation failed");
+            return;
+        }
     {
         auto m = staging->map();
         if (!m.data()) GN_UNLIKELY {
-            GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: failed to map staging buffer");
-            return;
-        }
+                GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: failed to map staging buffer");
+                return;
+            }
         memcpy(m.data(), content.data(), static_cast<size_t>(size));
     }
     StoredUploadBuffer op;
@@ -262,27 +253,27 @@ std::future<AutoRef<const Blob>> VkBindlessCnC::recordDownloadBuffer(AutoRef<Buf
 
     auto * srcVk = RuntimeType::cast<BufferVulkan>(src.get());
     if (mSealed || !srcVk) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: {}", mSealed ? "already sealed" : "null/invalid source buffer");
-        return future;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: {}", mSealed ? "already sealed" : "null/invalid source buffer");
+            return future;
+        }
 
     const uint64_t bufSize = srcVk->bufferSize();
     if (offset > bufSize) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: offset {} exceeds buffer size {}", offset, bufSize);
-        return future;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: offset {} exceeds buffer size {}", offset, bufSize);
+            return future;
+        }
     if (size == uint64_t(~0)) size = bufSize - offset;
     if (offset + size > bufSize) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: range [{}, {}) exceeds buffer size {}", offset, offset + size, bufSize);
-        return future;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: range [{}, {}) exceeds buffer size {}", offset, offset + size, bufSize);
+            return future;
+        }
     if (size == 0) return future;
 
     auto staging = Buffer::create(name + "/download_stg", {.context = mGpu, .size = size, .mappable = true});
     if (!staging) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: staging buffer allocation failed");
-        return future;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadBuffer: staging buffer allocation failed");
+            return future;
+        }
 
     StoredDownloadBuffer op;
     op.src       = std::move(src);
@@ -296,9 +287,9 @@ std::future<AutoRef<const Blob>> VkBindlessCnC::recordDownloadBuffer(AutoRef<Buf
 
 void VkBindlessCnC::recordCopyBufferToImage(const BufferToImage & p) {
     if (mSealed) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordCopyBufferToImage: already sealed");
-        return;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordCopyBufferToImage: already sealed");
+            return;
+        }
     StoredBufferToImage op;
     op.src = p.src;
     op.dst = p.dst;
@@ -312,10 +303,10 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
 
     auto * srcVk = RuntimeType::cast<TextureVulkanBase>(src.get());
     if (mSealed || !srcVk || regions.empty()) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadImage: {}",
-                 mSealed ? "already sealed" : (!srcVk ? "null/invalid source texture" : "no regions specified"));
-        return future;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadImage: {}",
+                     mSealed ? "already sealed" : (!srcVk ? "null/invalid source texture" : "no regions specified"));
+            return future;
+        }
 
     const auto     fmt = srcVk->descriptor().format;
     const auto &   ld  = fmt.layoutDesc();
@@ -356,15 +347,15 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
     }
 
     if (cursor == 0) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadImage: regions describe zero bytes");
-        return future;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadImage: regions describe zero bytes");
+            return future;
+        }
 
     auto staging = Buffer::create(name + "/download_img_stg", {.context = mGpu, .size = cursor, .mappable = true});
     if (!staging) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadImage: staging buffer allocation failed");
-        return future;
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::recordDownloadImage: staging buffer allocation failed");
+            return future;
+        }
 
     StoredDownloadImage op;
     op.src     = std::move(src);
@@ -376,16 +367,14 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
 }
 
 void VkBindlessCnC::retainCleanup(std::function<void()> cleanup) {
-    if (cleanup) {
-        mRetainedCleanups.push_back(std::move(cleanup));
-    }
+    if (cleanup) { mRetainedCleanups.push_back(std::move(cleanup)); }
 }
 
 AutoRef<GpuPayload> VkBindlessCnC::seal() {
     if (mSealed) GN_UNLIKELY {
-        GN_ERROR(sLogger, "VkBindlessCnC::seal: recorder is already sealed");
-        return {};
-    }
+            GN_ERROR(sLogger, "VkBindlessCnC::seal: recorder is already sealed");
+            return {};
+        }
     mSealed = true;
 
     VkBindlessCncPayload::ConstructParameters cp;
@@ -407,27 +396,27 @@ AutoRef<GpuPayload> VkBindlessCnC::seal() {
 AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::CnC::CreateParameters & cp) {
     AutoRef<GpuContextVulkan2> vkGpu(RuntimeType::cast<GpuContextVulkan2>(cp.gpu.get()));
     if (!vkGpu || !vkGpu->ready()) GN_UNLIKELY {
-        GN_ERROR(sLogger, "createVkBindlessCnc: null or unready GpuContextVulkan2");
-        return {};
-    }
+            GN_ERROR(sLogger, "createVkBindlessCnc: null or unready GpuContextVulkan2");
+            return {};
+        }
 
     if (!cp.heap) GN_UNLIKELY {
-        GN_ERROR(sLogger, "createVkBindlessCnc: null DescriptorHeap");
-        return {};
-    }
+            GN_ERROR(sLogger, "createVkBindlessCnc: null DescriptorHeap");
+            return {};
+        }
 
     // Fast conflict check: passResources must not collide with heapSetIndex
     if (cp.heapSetIndex < cp.passResources.size() && !cp.passResources[cp.heapSetIndex].empty()) GN_UNLIKELY {
-        GN_ERROR(sLogger, "createVkBindlessCnc: passResources conflicts with heapSetIndex {}", cp.heapSetIndex);
-        return {};
-    }
+            GN_ERROR(sLogger, "createVkBindlessCnc: passResources conflicts with heapSetIndex {}", cp.heapSetIndex);
+            return {};
+        }
 
     auto *             vkHeap = RuntimeType::cast<VkBindlessDescriptorHeap>(cp.heap.get());
     vk::PipelineLayout pl     = vkGpu->bindlessPipelineLayoutCache().getOrCreateCompute(cp, vkHeap);
     if (!pl) GN_UNLIKELY {
-        GN_ERROR(sLogger, "createVkBindlessCnc: failed to obtain VkPipelineLayout for compute");
-        return {};
-    }
+            GN_ERROR(sLogger, "createVkBindlessCnc: failed to obtain VkPipelineLayout for compute");
+            return {};
+        }
 
     vk::DescriptorPool             passPool {};
     std::vector<vk::DescriptorSet> passSets;

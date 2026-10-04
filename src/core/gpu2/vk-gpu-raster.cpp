@@ -690,6 +690,23 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     }
 
     vkcb.endRendering();
+
+    // Automated invariant: restore attachments to SHADER_READ_ONLY_OPTIMAL with pipeline barrier
+    if (ctx.batchTracker) {
+        auto & tracker = *ctx.batchTracker;
+        for (const auto & ct : mRenderTarget.colorTargets) {
+            if (!ct.target.texture) continue;
+            auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture.get());
+            if (!tex || !tex->nativeImage() || tex->isBackbuffer()) continue;
+            tracker.restoreAttachmentToShaderReadOnly(tex, ct.view(), vkcb);
+        }
+        if (mRenderTarget.depthStencilTarget.texture) {
+            auto * dTex = RuntimeType::cast<TextureVulkanBase>(mRenderTarget.depthStencilTarget.texture.get());
+            if (dTex && dTex->nativeImage() && !dTex->isBackbuffer()) {
+                tracker.restoreAttachmentToShaderReadOnly(dTex, mRenderTarget.depthStencilTarget.view(), vkcb);
+            }
+        }
+    }
 }
 
 static inline bool isRasterStateEmpty(const RasterState & s) {

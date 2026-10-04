@@ -2,6 +2,7 @@
 #include "vk-gpu-resource-state-tracker.h"
 #include "vk-gpu-context.h"
 #include "vk-format-utils.h"
+#include <unordered_set>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.tracker");
 
@@ -484,7 +485,11 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
     for (auto * active : mActiveBuffers) {
         auto & b = *active;
 
-        if (b.committedAccess != b.passAccess || b.committedStages != b.passStages) {
+        bool prevHadWrite = bool(b.committedAccess & (vk::AccessFlagBits::eTransferWrite | vk::AccessFlagBits::eShaderWrite));
+        bool needsBarrier =
+            prevHadWrite || b.isWrite || ((b.committedAccess & b.passAccess) != b.passAccess) || ((b.committedStages & b.passStages) != b.passStages);
+
+        if (needsBarrier) {
             vk::Buffer vkBuf = b.buf->nativeBuffer();
             if (!vkBuf) GN_UNLIKELY {
                     GN_WARN(sLogger, "GpuResourceStateTrackerVulkan: buffer '{}' has no VkBuffer handle; skipping barrier", b.buf->name);
@@ -585,17 +590,23 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
 
 void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb) {
     if (!tex || !tex->nativeImage() || tex->isBackbuffer()) return;
-    auto                 vkImg  = tex->nativeImage();
-    const auto &         range  = view.imageView.range;
-    uint32_t             mip    = range.i.mip;
-    uint32_t             face   = range.i.face;
-    vk::ImageAspectFlags aspect = aspectFromViewFormat(view.imageView.format, tex->descriptor().format);
+    auto                 vkImg    = tex->nativeImage();
+    const auto &         desc     = tex->descriptor();
+    const auto           resolved = resolveRange(view.imageView.range, desc);
+    uint32_t             mip      = resolved.i.mip;
+    uint32_t             face     = resolved.i.face;
+    uint32_t             numMips  = resolved.e.numMipLevels;
+    uint32_t             numFaces = resolved.e.numArrayLayers;
+    vk::ImageAspectFlags aspect   = aspectFromView(view.imageView, desc);
     if (!aspect) aspect = vk::ImageAspectFlagBits::eColor;
+    bool            isDepthStencil = bool(aspect & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil));
+    vk::ImageLayout targetLayout   = isDepthStencil ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eShaderReadOnlyOptimal;
 
     auto                   it        = mTextures.find(tex->id);
-    vk::ImageLayout        oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
-    vk::AccessFlags        srcAccess = vk::AccessFlagBits::eColorAttachmentWrite;
-    vk::PipelineStageFlags srcStages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    vk::ImageLayout        oldLayout = isDepthStencil ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
+    vk::AccessFlags        srcAccess = isDepthStencil ? vk::AccessFlagBits::eDepthStencilAttachmentWrite : vk::AccessFlagBits::eColorAttachmentWrite;
+    vk::PipelineStageFlags srcStages = isDepthStencil ? (vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests)
+                                                      : vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
     if (it != mTextures.end()) {
         auto & tracked = it->second;
@@ -607,42 +618,130 @@ void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVul
                 srcStages = prev->stages;
             }
         });
+    } else {
+        forEachAspectBit(aspect, [&](vk::ImageAspectFlagBits bit) {
+            const auto * prev = tex->getState().get(mip, face, bit);
+            if (prev) {
+                oldLayout = prev->layout;
+                srcAccess = prev->access;
+                srcStages = prev->stages;
+            }
+        });
     }
 
-    if (aspect & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil)) {
-        if (srcAccess == vk::AccessFlagBits::eColorAttachmentWrite) {
-            srcAccess = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-            srcStages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
-        }
+    if (isDepthStencil && srcAccess == vk::AccessFlagBits::eColorAttachmentWrite) {
+        srcAccess = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+        srcStages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
     }
+
+    bool hasWrite = bool(srcAccess & (vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite |
+                                      vk::AccessFlagBits::eTransferWrite | vk::AccessFlagBits::eShaderWrite));
+    if (oldLayout == targetLayout && !hasWrite) {
+        return; // Already in target read-only layout without pending write flushes
+    }
+
+    vk::AccessFlags dstAccess =
+        isDepthStencil ? (vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eDepthStencilAttachmentRead) : vk::AccessFlagBits::eShaderRead;
+    vk::PipelineStageFlags dstStages =
+        isDepthStencil
+            ? (vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eEarlyFragmentTests)
+            : (vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader);
 
     vk::ImageMemoryBarrier b;
     b.setOldLayout(oldLayout)
-        .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+        .setNewLayout(targetLayout)
         .setImage(vkImg)
-        .setSubresourceRange({aspect, mip, 1, face, 1})
+        .setSubresourceRange({aspect, mip, numMips, face, numFaces})
         .setSrcAccessMask(srcAccess)
-        .setDstAccessMask(vk::AccessFlagBits::eShaderRead)
+        .setDstAccessMask(dstAccess)
         .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
         .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 
-    cb.pipelineBarrier(srcStages, vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, {}, 0, nullptr, 0, nullptr, 1, &b);
+    cb.pipelineBarrier(srcStages, dstStages, {}, 0, nullptr, 0, nullptr, 1, &b);
 
     rv::Image::State::PlaneState next;
-    next.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    next.access = vk::AccessFlagBits::eShaderRead;
-    next.stages = vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
-    next.usage  = "auto-restore shader read only";
+    next.layout = targetLayout;
+    next.access = dstAccess;
+    next.stages = dstStages;
+    next.usage  = isDepthStencil ? "auto-restore depth-stencil read only" : "auto-restore shader read only";
 
     if (it != mTextures.end()) {
         auto & tracked = it->second;
-        if (mip < tracked.incoming.numMips && face < tracked.incoming.numLayers) {
-            auto & sr = tracked.incoming.subresources[tracked.incoming.subresourceIndex(mip, face)];
-            forEachAspectBit(aspect, [&](vk::ImageAspectFlagBits bit) { sr.planes[bit] = next; });
+        for (uint32_t m = mip; m < mip + numMips && m < tracked.incoming.numMips; ++m) {
+            for (uint32_t f = face; f < face + numFaces && f < tracked.incoming.numLayers; ++f) {
+                auto & sr = tracked.incoming.subresources[tracked.incoming.subresourceIndex(m, f)];
+                forEachAspectBit(aspect, [&](vk::ImageAspectFlagBits bit) { sr.planes[bit] = next; });
+            }
         }
     }
 
-    tex->setState(next, vk::ImageSubresourceRange(aspect, mip, 1, face, 1));
+    tex->setState(next, vk::ImageSubresourceRange(aspect, mip, numMips, face, numFaces));
+}
+
+void GpuResourceStateTrackerVulkan::restoreBuffersToReadReady(ArrayView<BufferVulkan * const> bufs, vk::CommandBuffer cb) {
+    if (bufs.empty()) return;
+
+    const auto readReady = BufferStateVulkan::READ_READY();
+
+    DynaArray<vk::BufferMemoryBarrier> barriers;
+    vk::PipelineStageFlags             srcStages = {};
+
+    std::unordered_set<int64_t> seen;
+
+    for (auto * buf : bufs) {
+        if (!buf || !buf->nativeBuffer()) continue;
+        if (!seen.insert(buf->id).second) continue;
+
+        auto                   it        = mBuffers.find(buf->id);
+        vk::AccessFlags        srcAccess = buf->gpuState.access;
+        vk::PipelineStageFlags bufStages = buf->gpuState.stages;
+
+        if (it != mBuffers.end()) {
+            auto & tracked = it->second;
+            if (tracked.committedAccess) {
+                srcAccess = tracked.committedAccess;
+                bufStages = tracked.committedStages;
+            }
+        }
+
+        bool hasWrite = bool(srcAccess & (vk::AccessFlagBits::eTransferWrite | vk::AccessFlagBits::eShaderWrite));
+        if (!hasWrite && (srcAccess & readReady.access) == readReady.access && (bufStages & readReady.stages) == readReady.stages) { continue; }
+
+        if (!bufStages) bufStages = vk::PipelineStageFlagBits::eTopOfPipe;
+
+        vk::BufferMemoryBarrier b;
+        b.setSrcAccessMask(srcAccess)
+            .setDstAccessMask(readReady.access)
+            .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            .setBuffer(buf->nativeBuffer())
+            .setOffset(0)
+            .setSize(VK_WHOLE_SIZE);
+
+        barriers.append(b);
+        srcStages |= bufStages;
+
+        if (it != mBuffers.end()) {
+            auto & tracked          = it->second;
+            tracked.committedAccess = readReady.access;
+            tracked.committedStages = readReady.stages;
+            tracked.passAccess      = {};
+            tracked.passStages      = vk::PipelineStageFlagBits::eBottomOfPipe;
+            tracked.isWrite         = false;
+        }
+        buf->gpuState.access = readReady.access;
+        buf->gpuState.stages = readReady.stages;
+    }
+
+    if (barriers.empty()) return;
+    if (!srcStages) srcStages = vk::PipelineStageFlagBits::eTopOfPipe;
+
+    cb.pipelineBarrier(srcStages, readReady.stages, {}, 0, nullptr, static_cast<uint32_t>(barriers.size()), barriers.data(), 0, nullptr);
+}
+
+void GpuResourceStateTrackerVulkan::restoreBufferToReadReady(BufferVulkan * buf, vk::CommandBuffer cb) {
+    if (!buf) return;
+    restoreBuffersToReadReady(ArrayView<BufferVulkan * const>(&buf, 1), cb);
 }
 
 void GpuResourceStateTrackerVulkan::flushToResources() {

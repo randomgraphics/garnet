@@ -15,29 +15,21 @@ VkBindlessComputePsoCache::~VkBindlessComputePsoCache() {
     mCache.clear();
 }
 
-size_t VkBindlessComputePsoCache::cacheSize() const {
-    return mCache.size();
-}
+size_t VkBindlessComputePsoCache::cacheSize() const { return mCache.size(); }
 
 vk::Pipeline VkBindlessComputePsoCache::getOrCreate(vk::PipelineLayout layout, const GpuShaderVulkan * cs) {
-    if (!layout || !cs || !cs->rvShader() || !cs->rvShader()->handle()) {
-        return vk::Pipeline {};
-    }
+    if (!layout || !cs || !cs->rvShader() || !cs->rvShader()->handle()) { return vk::Pipeline {}; }
 
     BindlessComputePsoKey key;
     key.pipelineLayout = layout;
     key.shaderHash     = static_cast<uint64_t>(cs->id);
 
     std::lock_guard<std::mutex> lock(mMutex);
-    auto it = mCache.find(key);
-    if (it != mCache.end()) {
-        return it->second;
-    }
+    auto                        it = mCache.find(key);
+    if (it != mCache.end()) { return it->second; }
 
     vk::Pipeline p = buildPipeline(layout, cs);
-    if (p) {
-        mCache.emplace(key, p);
-    }
+    if (p) { mCache.emplace(key, p); }
     return p;
 }
 
@@ -46,12 +38,7 @@ vk::Pipeline VkBindlessComputePsoCache::buildPipeline(vk::PipelineLayout layout,
 
     vk::ComputePipelineCreateInfo info;
     info.setLayout(layout);
-    info.setStage(vk::PipelineShaderStageCreateInfo {
-        {},
-        vk::ShaderStageFlagBits::eCompute,
-        cs->rvShader()->handle(),
-        "main"
-    });
+    info.setStage(vk::PipelineShaderStageCreateInfo {{}, vk::ShaderStageFlagBits::eCompute, cs->rvShader()->handle(), "main"});
 
     try {
         auto res = vkDev.createComputePipeline(vk::PipelineCache {}, info);

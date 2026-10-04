@@ -77,13 +77,13 @@ inline void emitBufferCopy(BufferVulkan * srcVk, BufferVulkan * dstVk, uint64_t 
                            GpuResourceStateTrackerVulkan & tracker) {
     if (size == 0) return;
     if (!srcVk || !dstVk) GN_UNLIKELY {
-        return;
-    }
+            return;
+        }
     vk::Buffer srcBuf = srcVk->nativeBuffer();
     vk::Buffer dstBuf = dstVk->nativeBuffer();
     if (!srcBuf || !dstBuf) GN_UNLIKELY {
-        return;
-    }
+            return;
+        }
 
     tracker.addTransferSrcBuffer(srcVk);
     tracker.addTransferDstBuffer(dstVk);
@@ -98,14 +98,14 @@ inline void recordBufToImg(const StoredBufferToImage & op, vk::CommandBuffer cb,
     auto * srcVk = RuntimeType::cast<BufferVulkan>(op.src.get());
     auto * dstVk = RuntimeType::cast<TextureVulkanBase>(op.dst.get());
     if (!srcVk || !dstVk) GN_UNLIKELY {
-        return;
-    }
+            return;
+        }
 
     vk::Buffer srcBuf = srcVk->nativeBuffer();
     vk::Image  dstImg = dstVk->nativeImage();
     if (!srcBuf || !dstImg) GN_UNLIKELY {
-        return;
-    }
+            return;
+        }
 
     tracker.addTransferSrcBuffer(srcVk);
     GpuResourceView::ImageView fullRange;
@@ -138,14 +138,14 @@ inline void recordDownloadImage(const StoredDownloadImage & op, vk::CommandBuffe
     auto * srcVk = RuntimeType::cast<TextureVulkanBase>(op.src.get());
     auto * dstVk = RuntimeType::cast<BufferVulkan>(op.staging.get());
     if (!srcVk || !dstVk) GN_UNLIKELY {
-        return;
-    }
+            return;
+        }
 
     vk::Image  srcImg = srcVk->nativeImage();
     vk::Buffer dstBuf = dstVk->nativeBuffer();
     if (!srcImg || !dstBuf) GN_UNLIKELY {
-        return;
-    }
+            return;
+        }
 
     tracker.addTransferDstBuffer(dstVk);
     GpuResourceView::ImageView fullRange;
@@ -176,9 +176,7 @@ inline void resolveDownloadBuffer(StoredDownloadBuffer & op) {
     AutoRef<const Blob> blob;
     if (op.staging && op.size > 0) {
         auto m = op.staging->map();
-        if (m.data()) {
-            blob = AutoRef<const Blob>(new SimpleBlob<uint8_t>((size_t) op.size, (const uint8_t *) m.data()));
-        }
+        if (m.data()) { blob = AutoRef<const Blob>(new SimpleBlob<uint8_t>((size_t) op.size, (const uint8_t *) m.data())); }
     }
     op.staging.clear();
     op.result.resolve(std::move(blob));
