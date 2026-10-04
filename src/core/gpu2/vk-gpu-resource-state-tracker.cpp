@@ -490,10 +490,12 @@ vk::ImageLayout GpuResourceStateTrackerVulkan::texturePassLayout(const TextureVu
 }
 
 void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
-    DynaArray<vk::BufferMemoryBarrier> bufferBarriers;
-    DynaArray<vk::ImageMemoryBarrier>  barriers;
-    vk::PipelineStageFlags             srcStages = {};
-    vk::PipelineStageFlags             dstStages = {};
+    auto & bufferBarriers = mBufferBarriers;
+    auto & barriers       = mImageBarriers;
+    bufferBarriers.clear();
+    barriers.clear();
+    vk::PipelineStageFlags srcStages = {};
+    vk::PipelineStageFlags dstStages = {};
 
     for (auto * active : mActiveBuffers) {
         auto & b = *active;
@@ -518,7 +520,7 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                     .setBuffer(vkBuf)
                     .setOffset(0)
                     .setSize(VK_WHOLE_SIZE);
-                bufferBarriers.append(barrier);
+                bufferBarriers.push_back(barrier);
                 srcStages |= b.committedStages;
                 dstStages |= b.passStages;
                 b.committedAccess = b.passAccess;
@@ -565,7 +567,7 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                 .setDstAccessMask(next.access)
                 .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-            barriers.append(b);
+            barriers.push_back(b);
             srcStages |= prev->stages;
             dstStages |= next.stages;
 

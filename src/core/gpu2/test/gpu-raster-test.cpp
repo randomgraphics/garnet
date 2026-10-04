@@ -8,8 +8,8 @@ using namespace GN::gpu2;
 
 TEST_CASE("GPU2: geometry and resource tables transfer storage on move", "[gpu2][raster]") {
     RasterGeometry geometry;
-    geometry.format.attributes.append(RasterGeometry::VertexAttribute {.location = 3});
-    geometry.vertices.append(RasterGeometry::GeometryBuffer {.offset = 16, .stride = 24});
+    geometry.format.attributes.push_back(RasterGeometry::VertexAttribute {.location = 3});
+    geometry.vertices.push_back(RasterGeometry::GeometryBuffer {.offset = 16, .stride = 24});
     geometry.indices.offset   = 64;
     geometry.vertexCount      = 7;
     geometry.indexCount       = 9;
@@ -20,7 +20,7 @@ TEST_CASE("GPU2: geometry and resource tables transfer storage on move", "[gpu2]
     CHECK(moved.vertices.data() == vertices);
     CHECK(geometry.format.attributes.empty());
     CHECK(geometry.vertices.empty());
-    geometry.vertices.append(RasterGeometry::GeometryBuffer {});
+    geometry.vertices.push_back(RasterGeometry::GeometryBuffer {});
     geometry = std::move(moved);
     CHECK(geometry.format.attributes.data() == attributes);
     CHECK(geometry.vertices.data() == vertices);

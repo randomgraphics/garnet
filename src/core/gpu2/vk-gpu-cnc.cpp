@@ -134,7 +134,9 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
         else { drawable.c(0, op.immediates.size(), op.immediates.data(), vk::ShaderStageFlagBits::eCompute); }
     }
 
-    rv::Ref<rv::Sampler> defaultSampler;
+    rv::Ref<rv::Sampler>          defaultSampler;
+    std::vector<rv::ImageSampler> imgs;
+    std::vector<rv::BufferView>   bufs;
     for (size_t setIdx = 0; setIdx < op.resources.size(); ++setIdx) {
         const auto & set = op.resources[setIdx];
         for (size_t bindIdx = 0; bindIdx < set.size(); ++bindIdx) {
@@ -142,7 +144,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
             if (slot.empty()) continue;
             rv::DescriptorIdentifier descId((uint32_t) setIdx, (uint32_t) bindIdx);
             if (slot[0].isTexture()) {
-                std::vector<rv::ImageSampler> imgs;
+                imgs.clear();
                 imgs.reserve(slot.size());
                 for (const auto & view : slot) {
                     if (view.empty() || !view.isTexture()) continue;
@@ -162,7 +164,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
                 }
                 if (!imgs.empty()) drawable.t(descId, vk::ArrayProxy<const rv::ImageSampler>((uint32_t) imgs.size(), imgs.data()));
             } else if (slot[0].isBuffer()) {
-                std::vector<rv::BufferView> bufs;
+                bufs.clear();
                 bufs.reserve(slot.size());
                 for (const auto & view : slot) {
                     if (view.empty() || !view.isBuffer()) continue;

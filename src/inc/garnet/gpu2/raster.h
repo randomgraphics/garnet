@@ -3,7 +3,9 @@
     #error "Do not include <garnet/gpu2/raster.h> directly. Include <garnet/GNgpu2.h> instead."
 #endif
 
+#include <memory_resource>
 #include <optional>
+#include <vector>
 
 namespace GN::gpu2 {
 
@@ -374,6 +376,10 @@ struct RasterTarget {
 // -----------------------------
 
 /// GPU renderable geometry (mirrors v1 \c GpuDraw::GpuGeometry in \c actions.h).
+///
+/// Arrays are std::pmr::vector so recorders can snapshot geometry into a per-pass arena via the
+/// allocator-extended copy constructor instead of hitting the global heap once per draw.
+/// Plain copies use the default memory resource, so caller-owned geometry behaves like std::vector.
 struct RasterGeometry {
     /// API-agnostic vertex attribute format; backend maps to native (e.g. VkFormat).
     enum class AttributeFormat : uint8_t {
@@ -439,7 +445,12 @@ struct RasterGeometry {
     };
 
     struct VertexFormat {
-        DynaArray<VertexAttribute> attributes;
+        std::pmr::vector<VertexAttribute> attributes;
+
+        VertexFormat() = default;
+        explicit VertexFormat(std::pmr::memory_resource * r): attributes(r) {}
+        /// Allocator-extended copy: duplicates \p other into storage owned by \p r.
+        VertexFormat(const VertexFormat & other, std::pmr::memory_resource * r): attributes(other.attributes, r) {}
 
         bool empty() const { return attributes.empty(); }
         bool operator==(const VertexFormat & other) const { return attributes == other.attributes; }
@@ -452,11 +463,17 @@ struct RasterGeometry {
         uint32_t        stride = 0;
     };
 
-    VertexFormat              format;
-    DynaArray<GeometryBuffer> vertices;
-    uint32_t                  vertexCount = 0;
-    GeometryBuffer            indices;
-    uint32_t                  indexCount = 0;
+    VertexFormat                     format;
+    std::pmr::vector<GeometryBuffer> vertices;
+    uint32_t                         vertexCount = 0;
+    GeometryBuffer                   indices;
+    uint32_t                         indexCount = 0;
+
+    RasterGeometry() = default;
+    explicit RasterGeometry(std::pmr::memory_resource * r): format(r), vertices(r) {}
+    /// Allocator-extended copy: duplicates \p other into storage owned by \p r.
+    RasterGeometry(const RasterGeometry & other, std::pmr::memory_resource * r)
+        : format(other.format, r), vertices(other.vertices, r), vertexCount(other.vertexCount), indices(other.indices), indexCount(other.indexCount) {}
 };
 
 // -----------------------------
@@ -476,7 +493,7 @@ public:
         const RasterTarget * target = nullptr; ///< borrowed for creation only; GpuRaster stores its own copy
 
         //< optional hint for expected number of draw calls, used to minimize internal allocations. The number of draws can exceed this hint.
-        size_t numberOfDrawsHint = 1000;
+        size_t numberOfDrawsHint = 100;
     };
     GN_API static AutoRef<GpuRaster> create(const StrA & name, const CreateParameters &);
 

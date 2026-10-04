@@ -99,6 +99,9 @@ public:
         uint32_t                heapSetIndex = 0;       ///< Descriptor set index for the bindless heap (default 0).
         GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 0 Camera UBO).
         uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
+        /// Preallocates draw storage, geometry backing for eight buffers with eight attributes each per draw,
+        /// and numberOfDrawsHint * maxImmediateSize immediate bytes. Recording may exceed this hint.
+        size_t numberOfDrawsHint = 100;
     };
 
     /// Create a new bindless raster recorder. Performs a fast conflict check between
@@ -111,12 +114,6 @@ public:
         const RasterGeometry &   geometry;        ///< Vertex and index buffer bindings.
         ArrayView<const uint8_t> immediates = {}; ///< Inline uniform data (root constants / push constants).
     };
-
-    /// Optional hint to pre-allocate storage for expected draws and immediate data to eliminate vector reallocations.
-    virtual void reserve(size_t drawCount, size_t immediateBytes = 0) {
-        (void) drawCount;
-        (void) immediateBytes;
-    }
 
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;

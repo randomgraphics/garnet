@@ -311,19 +311,19 @@ static void createCubeGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & outVb,
     }
 
     outGeom.format.attributes.clear();
-    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+    outGeom.format.attributes.push_back(RasterGeometry::VertexAttribute {
         .location = 0,
         .binding  = 0,
         .offset   = 0,
         .format   = RasterGeometry::AttributeFormat::F32_3,
     });
-    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+    outGeom.format.attributes.push_back(RasterGeometry::VertexAttribute {
         .location = 1,
         .binding  = 0,
         .offset   = sizeof(float) * 3,
         .format   = RasterGeometry::AttributeFormat::F32_3,
     });
-    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+    outGeom.format.attributes.push_back(RasterGeometry::VertexAttribute {
         .location = 2,
         .binding  = 0,
         .offset   = sizeof(float) * 6,
@@ -335,7 +335,7 @@ static void createCubeGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & outVb,
     geomVb.buffer = outVb;
     geomVb.offset = 0;
     geomVb.stride = sizeof(Vertex);
-    outGeom.vertices.append(geomVb);
+    outGeom.vertices.push_back(geomVb);
     outGeom.vertexCount = 24;
 
     outGeom.indices.buffer = outIb;
@@ -395,19 +395,19 @@ static void createOctahedronGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & 
     }
 
     outGeom.format.attributes.clear();
-    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+    outGeom.format.attributes.push_back(RasterGeometry::VertexAttribute {
         .location = 0,
         .binding  = 0,
         .offset   = 0,
         .format   = RasterGeometry::AttributeFormat::F32_3,
     });
-    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+    outGeom.format.attributes.push_back(RasterGeometry::VertexAttribute {
         .location = 1,
         .binding  = 0,
         .offset   = sizeof(float) * 3,
         .format   = RasterGeometry::AttributeFormat::F32_3,
     });
-    outGeom.format.attributes.append(RasterGeometry::VertexAttribute {
+    outGeom.format.attributes.push_back(RasterGeometry::VertexAttribute {
         .location = 2,
         .binding  = 0,
         .offset   = sizeof(float) * 6,
@@ -419,7 +419,7 @@ static void createOctahedronGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & 
     geomVb.buffer = outVb;
     geomVb.offset = 0;
     geomVb.stride = sizeof(Vertex);
-    outGeom.vertices.append(geomVb);
+    outGeom.vertices.push_back(geomVb);
     outGeom.vertexCount = 24;
 
     outGeom.indices.buffer = outIb;
@@ -783,20 +783,18 @@ int main(int argc, const char ** argv) {
 
         // ─── Bindless Raster Recorder Creation ───────────────────────────────
         bindless::Raster::CreateParameters rcp;
-        rcp.gpu              = gpu;
-        rcp.target           = &rt;
-        rcp.heap             = heap;
-        rcp.heapSetIndex     = 0;
-        rcp.maxImmediateSize = sizeof(PushConstants);
+        rcp.gpu               = gpu;
+        rcp.target            = &rt;
+        rcp.heap              = heap;
+        rcp.heapSetIndex      = 0;
+        rcp.maxImmediateSize  = sizeof(PushConstants);
+        rcp.numberOfDrawsHint = activeDrawCount;
 
         auto raster = bindless::Raster::create("bindless-raster", rcp);
         if (!raster) {
             std::fprintf(stderr, "Failed to create bindless raster recorder\n");
             return -1;
         }
-
-        // Pre-allocate storage for high draw counts (up to 100k) to eliminate vector reallocations
-        raster->reserve(activeDrawCount, activeDrawCount * sizeof(PushConstants));
 
         // ─── Alternating Pipeline Draw Call Recording Benchmark ─────────────
         // Every single draw alternates between:

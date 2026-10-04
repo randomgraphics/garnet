@@ -43,10 +43,10 @@ TEST_CASE("fx2 typed lit kernels preserve state and isolate invocation uniforms"
     auto vertices = Buffer::create("lit.vertices", {.context = gpu, .size = 72});
     REQUIRE(vertices);
     PbrKernel::Inputs input;
-    input.geometry.vertices.append({.buffer = vertices, .offset = 0, .stride = 24});
+    input.geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 24});
     input.geometry.vertexCount = 3;
-    input.geometry.format.attributes.append({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-    input.geometry.format.attributes.append({.location = 1, .binding = 0, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
+    input.geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    input.geometry.format.attributes.push_back({.location = 1, .binding = 0, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
     input.states.cullMode = RasterState::CULL_NONE;
     auto uploads          = GpuCnC::create({.gpu = gpu});
     REQUIRE(uploads);
@@ -127,10 +127,10 @@ TEST_CASE("fx2 lit kernels render position-normal buffers with independent priva
         auto shared = ssc->takeSnapshot();
         for (int side = 0; side < 2; ++side) {
             LitKernelInputs common;
-            common.geometry.vertices.append({.buffer = vertices, .offset = 0, .stride = 24});
+            common.geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 24});
             common.geometry.vertexCount = 3;
-            common.geometry.format.attributes.append({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-            common.geometry.format.attributes.append({.location = 1, .binding = 0, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
+            common.geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+            common.geometry.format.attributes.push_back({.location = 1, .binding = 0, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
             common.color                 = {0, 0, 0, 1};
             common.emissive              = side ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
             common.worldFromObject[3][0] = float(side);
@@ -229,10 +229,10 @@ TEST_CASE("fx2 renders 1024 independent materials in one raster", "[fx2][lit][ke
     }
     const auto        shared = ssc->takeSnapshot();
     PbrKernel::Inputs input;
-    input.geometry.vertices.append({.buffer = buffer, .offset = 0, .stride = 24});
+    input.geometry.vertices.push_back({.buffer = buffer, .offset = 0, .stride = 24});
     input.geometry.vertexCount = 3;
-    input.geometry.format.attributes.append({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-    input.geometry.format.attributes.append({.location = 1, .binding = 0, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
+    input.geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    input.geometry.format.attributes.push_back({.location = 1, .binding = 0, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_3});
     input.color = {0, 0, 0, 1};
     // Each worker owns its recorder; the kernel and immutable GPU inputs are shared.
     // Catch assertions stay on the joining thread because worker assertions are unsupported.

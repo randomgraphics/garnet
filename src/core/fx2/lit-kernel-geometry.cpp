@@ -32,7 +32,7 @@ RasterGeometry buildGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, const Dy
     for (uint32_t location = 0; location < 5; ++location) {
         if (!enabled[location]) continue;
         auto format = static_cast<AF>(static_cast<uint32_t>(opts.half ? AF::F16_1 : AF::F32_1) + components[location] - 1);
-        geometry.format.attributes.append({.location = location, .binding = 0, .offset = stride, .format = format});
+        geometry.format.attributes.push_back({.location = location, .binding = 0, .offset = stride, .format = format});
         stride += components[location] * scalarSize;
     }
     DynaArray<uint8_t> packed;
@@ -67,7 +67,7 @@ RasterGeometry buildGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, const Dy
     uploads.recordUploadBuffer(vb, 0, {packed.data(), packed.size()});
     const auto * indexData = use16 ? reinterpret_cast<const uint8_t *>(indices16.data()) : reinterpret_cast<const uint8_t *>(cpuIndices.data());
     uploads.recordUploadBuffer(ib, 0, {indexData, cpuIndices.size() * indexStride});
-    geometry.vertices.append({.buffer = vb, .offset = 0, .stride = stride});
+    geometry.vertices.push_back({.buffer = vb, .offset = 0, .stride = stride});
     geometry.indices     = {.buffer = ib, .offset = 0, .stride = indexStride};
     geometry.vertexCount = static_cast<uint32_t>(cpuVerts.size());
     geometry.indexCount  = static_cast<uint32_t>(cpuIndices.size());

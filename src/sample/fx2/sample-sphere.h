@@ -33,11 +33,11 @@ inline GN::gpu2::RasterGeometry createSampleSphere(GN::AutoRef<GN::gpu2::GpuCont
     uploads.recordUploadBuffer(vb, 0, {reinterpret_cast<const uint8_t *>(vertices.data()), vertices.size() * sizeof(Vertex)});
     uploads.recordUploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(indices.data()), indices.size() * sizeof(uint32_t)});
     RasterGeometry geometry;
-    geometry.vertices.append({.buffer = vb, .offset = 0, .stride = sizeof(Vertex)});
+    geometry.vertices.push_back({.buffer = vb, .offset = 0, .stride = sizeof(Vertex)});
     geometry.indices     = {.buffer = ib, .offset = 0, .stride = sizeof(uint32_t)};
     geometry.vertexCount = static_cast<uint32_t>(vertices.size());
     geometry.indexCount  = static_cast<uint32_t>(indices.size());
-    geometry.format.attributes.append({.location = 0, .binding = 0, .offset = offsetof(Vertex, position), .format = RasterGeometry::AttributeFormat::F32_3});
-    geometry.format.attributes.append({.location = 1, .binding = 0, .offset = offsetof(Vertex, normal), .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = offsetof(Vertex, position), .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back({.location = 1, .binding = 0, .offset = offsetof(Vertex, normal), .format = RasterGeometry::AttributeFormat::F32_3});
     return geometry;
 }

@@ -54,8 +54,8 @@ int main(int argc, const char * argv[]) {
     auto initialization = upload->seal();
     if (!initialization) return 1;
     fx2::UnlitKernel::Inputs input;
-    input.geometry.vertices.append({.buffer = vertices, .offset = 0, .stride = 3 * sizeof(float)});
-    input.geometry.format.attributes.append({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    input.geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 3 * sizeof(float)});
+    input.geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
     input.geometry.vertexCount = 3;
 
     for (int frame = 0; !headless || frame < 3; ++frame) {

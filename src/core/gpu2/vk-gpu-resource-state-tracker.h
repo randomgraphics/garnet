@@ -156,6 +156,10 @@ private:
     std::vector<TrackedBuffer *>  mActiveBuffers;
     std::vector<TrackedTexture *> mActiveTextures;
     bool                          mHasReadOnlyDepthStencil = false;
+
+    // Barrier emissions within a submit are sequential; retain scratch capacity between passes.
+    std::vector<vk::BufferMemoryBarrier> mBufferBarriers;
+    std::vector<vk::ImageMemoryBarrier>  mImageBarriers;
 };
 
 } // namespace GN::gpu2

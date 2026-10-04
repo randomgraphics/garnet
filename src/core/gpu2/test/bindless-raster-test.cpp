@@ -1,6 +1,7 @@
 #if GN_BUILD_HAS_VULKAN
 
     #include "../vk-gpu-context.h"
+    #include "../vk-bindless-payload.h"
     #include "../vk-texture.h"
 
     #include "bindless-test-vert.spv.h"
@@ -12,6 +13,45 @@
 
 using namespace GN;
 using namespace GN::gpu2;
+
+namespace {
+class CountingDrawResource final : public std::pmr::memory_resource {
+public:
+    size_t allocations = 0;
+
+private:
+    void * do_allocate(size_t bytes, size_t alignment) override {
+        ++allocations;
+        return std::pmr::new_delete_resource()->allocate(bytes, alignment);
+    }
+    void do_deallocate(void * p, size_t bytes, size_t alignment) override { std::pmr::new_delete_resource()->deallocate(p, bytes, alignment); }
+    bool do_is_equal(const std::pmr::memory_resource & other) const noexcept override { return this == &other; }
+};
+} // namespace
+
+TEST_CASE("bindless::Raster: preallocated geometry backing and fallback", "[gpu2][bindless][allocation]") {
+    CountingDrawResource upstream;
+    auto                 storage = std::make_unique<BindlessDrawStorage>(100, &upstream);
+    RasterGeometry       source;
+    source.format.attributes.resize(64);
+    source.vertices.resize(8);
+    source.vertices[0].offset = 123;
+    bindless::Raster::DrawParameters params {.geometry = source};
+    for (size_t i = 0; i < 100; ++i) storage->draws.emplace_back(params, RasterState {}, &storage->pool, 0, 0);
+    CHECK(upstream.allocations == 0);
+
+    const auto * vertices       = storage->draws.front().geometry.vertices.data();
+    auto         payloadStorage = std::move(storage);
+    CHECK(payloadStorage->draws.front().geometry.vertices.data() == vertices);
+    // Growing after recording must preserve the original backing and allow upstream fallback.
+    payloadStorage->draws.reserve(1000);
+    for (size_t i = 100; i < 1000; ++i) payloadStorage->draws.emplace_back(params, RasterState {}, &payloadStorage->pool, 0, 0);
+    CHECK(upstream.allocations > 0);
+    CHECK(payloadStorage->draws.front().geometry.vertices.data() == vertices);
+    CHECK(payloadStorage->draws.front().geometry.vertices[0].offset == 123);
+    CHECK(payloadStorage->draws.back().geometry.format.attributes.size() == 64);
+    CHECK(payloadStorage->draws.back().geometry.vertices.size() == 8);
+}
 
 static gfx::img::Image makeSolidImage(uint32_t w, uint32_t h, uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) {
     gfx::img::Extent3D extent;

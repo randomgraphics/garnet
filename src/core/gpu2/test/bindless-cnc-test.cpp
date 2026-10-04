@@ -603,7 +603,7 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
 
     RasterGeometry geom;
     geom.vertexCount = 3;
-    geom.vertices.append({.buffer = vb, .offset = 0, .stride = 16});
+    geom.vertices.push_back({.buffer = vb, .offset = 0, .stride = 16});
 
     raster->recordDraw({
         .vs         = vs,

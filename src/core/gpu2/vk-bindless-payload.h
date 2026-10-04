@@ -5,6 +5,8 @@
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-bindless-pso-cache.h"
 #include <garnet/GNgpu2.h>
+#include <memory>
+#include <memory_resource>
 #include <vector>
 
 namespace GN::gpu2 {
@@ -15,6 +17,32 @@ struct StoredBindlessDraw {
     RasterGeometry     geometry;
     uint32_t           immediateOffset = 0;
     uint32_t           immediateSize   = 0;
+
+    StoredBindlessDraw(const bindless::Raster::DrawParameters & params, const RasterState & state, std::pmr::memory_resource * memRes, uint32_t immOffset,
+                       uint32_t immSize)
+        : vs(params.vs), hs(params.hs), ds(params.ds), gs(params.gs), ps(params.ps), mergedState(state), geometry(params.geometry, memRes),
+          immediateOffset(immOffset), immediateSize(immSize) {}
+};
+
+/// All per-pass draw memory: the draw array and every geometry array snapshotted into it.
+///
+/// Heap-allocated once per pass and handed from recorder to payload by pointer. Moving the
+/// pmr::vector itself into another container would not work: pmr allocators do not propagate on
+/// move-assignment, so the target would reallocate from its own resource and copy every draw.
+/// Holding everything in one object also pins destruction order (draws -> pool -> arena -> backing buffer).
+struct BindlessDrawStorage {
+    const size_t                           backingSize;
+    std::unique_ptr<uint8_t[]>             backing;
+    std::pmr::monotonic_buffer_resource    arena;
+    std::pmr::unsynchronized_pool_resource pool;
+    std::pmr::vector<StoredBindlessDraw>   draws;
+
+    /// Preallocates for eight buffers with eight attributes each per draw, plus pool overhead.
+    /// The upstream resource handles larger layouts or underestimated draw counts.
+    explicit BindlessDrawStorage(size_t drawCountHint, std::pmr::memory_resource * upstream = std::pmr::get_default_resource());
+
+    BindlessDrawStorage(const BindlessDrawStorage &)             = delete;
+    BindlessDrawStorage & operator=(const BindlessDrawStorage &) = delete;
 };
 
 /// Vulkan GPU payload for recorded bindless raster passes.
@@ -25,16 +53,16 @@ public:
     GN_REGISTER_RUNTIME_TYPE(GpuPayloadVulkan);
 
     struct ConstructParameters {
-        AutoRef<GpuContextVulkan2>         gpu;
-        RasterTarget                       target;
-        AutoRef<bindless::DescriptorHeap>  heap;
-        uint32_t                           heapSetIndex = 0;
-        vk::PipelineLayout                 pipelineLayout {};
-        std::vector<StoredBindlessDraw>    draws;
-        std::vector<uint8_t>               immediateData;
-        std::vector<std::function<void()>> retainedCleanups;
-        vk::DescriptorPool                 passDescriptorPool {};
-        std::vector<vk::DescriptorSet>     passDescriptorSets;
+        AutoRef<GpuContextVulkan2>           gpu;
+        RasterTarget                         target;
+        AutoRef<bindless::DescriptorHeap>    heap;
+        uint32_t                             heapSetIndex = 0;
+        vk::PipelineLayout                   pipelineLayout {};
+        std::unique_ptr<BindlessDrawStorage> storage;
+        std::vector<uint8_t>                 immediateData;
+        std::vector<std::function<void()>>   retainedCleanups;
+        vk::DescriptorPool                   passDescriptorPool {};
+        std::vector<vk::DescriptorSet>       passDescriptorSets;
     };
 
     explicit VkBindlessPayload(const StrA & name, ConstructParameters params);
@@ -44,16 +72,16 @@ public:
     void onGpuComplete() override;
 
 private:
-    AutoRef<GpuContextVulkan2>         mGpu;
-    RasterTarget                       mRenderTarget;
-    AutoRef<bindless::DescriptorHeap>  mHeap;
-    uint32_t                           mHeapSetIndex = 0;
-    vk::PipelineLayout                 mPipelineLayout {};
-    std::vector<StoredBindlessDraw>    mDraws;
-    std::vector<uint8_t>               mImmediateData;
-    std::vector<std::function<void()>> mRetainedCleanups;
-    vk::DescriptorPool                 mPassDescriptorPool {};
-    std::vector<vk::DescriptorSet>     mPassDescriptorSets;
+    AutoRef<GpuContextVulkan2>           mGpu;
+    RasterTarget                         mRenderTarget;
+    AutoRef<bindless::DescriptorHeap>    mHeap;
+    uint32_t                             mHeapSetIndex = 0;
+    vk::PipelineLayout                   mPipelineLayout {};
+    std::unique_ptr<BindlessDrawStorage> mStorage;
+    std::vector<uint8_t>                 mImmediateData;
+    std::vector<std::function<void()>>   mRetainedCleanups;
+    vk::DescriptorPool                   mPassDescriptorPool {};
+    std::vector<vk::DescriptorSet>       mPassDescriptorSets;
 };
 
 } // namespace GN::gpu2

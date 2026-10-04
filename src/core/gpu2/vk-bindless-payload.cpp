@@ -10,9 +10,37 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless.payload");
 
 namespace GN::gpu2 {
 
+namespace {
+constexpr size_t kGeometryBytesPerDraw = 8 * 8 * sizeof(RasterGeometry::VertexAttribute) + 8 * sizeof(RasterGeometry::GeometryBuffer);
+
+size_t drawBackingSize(size_t drawCountHint) {
+    // Pool chunks grow geometrically and include bookkeeping/alignment slack. This is a
+    // capacity estimate, not a limit: the arena can fall back to its upstream resource.
+    constexpr size_t bytesPerDraw = 2 * (sizeof(StoredBindlessDraw) + kGeometryBytesPerDraw);
+    constexpr size_t overhead     = 4096;
+    const size_t     count        = std::max<size_t>(drawCountHint, 16);
+    if (count > (std::numeric_limits<size_t>::max() - overhead) / bytesPerDraw) throw std::length_error("Bindless draw storage size overflow");
+    return count * bytesPerDraw + overhead;
+}
+
+std::pmr::pool_options drawPoolOptions(size_t drawCountHint) {
+    std::pmr::pool_options options {};
+    options.max_blocks_per_chunk = std::max<size_t>(drawCountHint, 16);
+    // Keep large arrays on the arena directly instead of paying pool chunk slack for them.
+    options.largest_required_pool_block = 512;
+    return options;
+}
+} // namespace
+
+BindlessDrawStorage::BindlessDrawStorage(size_t drawCountHint, std::pmr::memory_resource * upstream)
+    : backingSize(drawBackingSize(drawCountHint)), backing(new uint8_t[backingSize]), arena(backing.get(), backingSize, upstream),
+      pool(drawPoolOptions(drawCountHint), &arena), draws(&pool) {
+    draws.reserve(drawCountHint);
+}
+
 VkBindlessPayload::VkBindlessPayload(const StrA & name, ConstructParameters params)
     : GpuPayloadVulkan(name), mGpu(std::move(params.gpu)), mRenderTarget(std::move(params.target)), mHeap(std::move(params.heap)),
-      mHeapSetIndex(params.heapSetIndex), mPipelineLayout(params.pipelineLayout), mDraws(std::move(params.draws)),
+      mHeapSetIndex(params.heapSetIndex), mPipelineLayout(params.pipelineLayout), mStorage(std::move(params.storage)),
       mImmediateData(std::move(params.immediateData)), mRetainedCleanups(std::move(params.retainedCleanups)), mPassDescriptorPool(params.passDescriptorPool),
       mPassDescriptorSets(std::move(params.passDescriptorSets)) {}
 
@@ -170,8 +198,17 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
 
     // 4. Record draws directly to Vulkan command buffer
     vk::Pipeline activePipeline {};
+    vk::Viewport activeViewport {};
+    vk::Rect2D   activeScissor {};
+    bool         hasActiveViewport = false;
+    bool         hasActiveScissor  = false;
 
-    for (const auto & d : mDraws) {
+    std::vector<vk::Buffer>     vkBuffers;
+    std::vector<vk::DeviceSize> vkOffsets;
+    vkBuffers.reserve(8);
+    vkOffsets.reserve(8);
+
+    for (const auto & d : mStorage->draws) {
         if (d.geometry.vertexCount == 0 && d.geometry.indexCount == 0) continue;
 
         auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
@@ -181,13 +218,21 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
         if (!vsVk || !vsVk->rvShader()) continue;
 
-        // Viewport and Scissor
+        // Viewport and Scissor: only update when changed
         vk::Viewport vp =
             d.mergedState.viewport ? rsViewportToVk(*d.mergedState.viewport, ext) : vk::Viewport(0.0f, 0.0f, (float) ext.width, (float) ext.height, 0.0f, 1.0f);
-        vkcb.setViewport(0, 1, &vp);
+        if (!hasActiveViewport || vp != activeViewport) {
+            vkcb.setViewport(0, 1, &vp);
+            activeViewport    = vp;
+            hasActiveViewport = true;
+        }
 
         vk::Rect2D sc = d.mergedState.scissorRect ? rsScissorToVk(*d.mergedState.scissorRect, ext) : vk::Rect2D(vk::Offset2D(0, 0), ext);
-        vkcb.setScissor(0, 1, &sc);
+        if (!hasActiveScissor || sc != activeScissor) {
+            vkcb.setScissor(0, 1, &sc);
+            activeScissor    = sc;
+            hasActiveScissor = true;
+        }
 
         // Get-or-create graphics pipeline
         vk::Pipeline pipe = psoCache.getOrCreate(mPipelineLayout, vsVk, hsVk, dsVk, gsVk, psVk, d.mergedState, d.geometry, formats, mRenderTarget.colorTargets);
@@ -205,8 +250,8 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
 
         // Vertex buffer bindings
         if (!d.geometry.vertices.empty()) {
-            std::vector<vk::Buffer>     vkBuffers;
-            std::vector<vk::DeviceSize> vkOffsets;
+            vkBuffers.clear();
+            vkOffsets.clear();
             vkBuffers.reserve(d.geometry.vertices.size());
             vkOffsets.reserve(d.geometry.vertices.size());
             for (const auto & vb : d.geometry.vertices) {

@@ -64,17 +64,17 @@ bool RenderModel::prepare(AutoRef<GpuContext> gpu, GpuCnC & cnc, const ModelScen
         cnc.recordUploadBuffer(vb, 0, {reinterpret_cast<const uint8_t *>(primitive.vertices.data()), primitive.vertices.size() * sizeof(ModelScene::Vertex)});
         cnc.recordUploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(primitive.indices.data()), primitive.indices.size() * sizeof(uint32_t)});
         RasterGeometry mesh;
-        mesh.vertices.append({.buffer = vb, .offset = 0, .stride = sizeof(ModelScene::Vertex)});
+        mesh.vertices.push_back({.buffer = vb, .offset = 0, .stride = sizeof(ModelScene::Vertex)});
         mesh.indices     = {.buffer = ib, .offset = 0, .stride = sizeof(uint32_t)};
         mesh.vertexCount = static_cast<uint32_t>(primitive.vertices.size());
         mesh.indexCount  = static_cast<uint32_t>(primitive.indices.size());
         using V          = ModelScene::Vertex;
         using AF         = RasterGeometry::AttributeFormat;
-        mesh.format.attributes.append({.location = 0, .binding = 0, .offset = offsetof(V, position), .format = AF::F32_3});
-        mesh.format.attributes.append({.location = 1, .binding = 0, .offset = offsetof(V, normal), .format = AF::F32_3});
-        mesh.format.attributes.append({.location = 2, .binding = 0, .offset = offsetof(V, texcoord), .format = AF::F32_2});
-        mesh.format.attributes.append({.location = 3, .binding = 0, .offset = offsetof(V, tangent), .format = AF::F32_4});
-        mesh.format.attributes.append({.location = 4, .binding = 0, .offset = offsetof(V, color), .format = AF::F32_4});
+        mesh.format.attributes.push_back({.location = 0, .binding = 0, .offset = offsetof(V, position), .format = AF::F32_3});
+        mesh.format.attributes.push_back({.location = 1, .binding = 0, .offset = offsetof(V, normal), .format = AF::F32_3});
+        mesh.format.attributes.push_back({.location = 2, .binding = 0, .offset = offsetof(V, texcoord), .format = AF::F32_2});
+        mesh.format.attributes.push_back({.location = 3, .binding = 0, .offset = offsetof(V, tangent), .format = AF::F32_4});
+        mesh.format.attributes.push_back({.location = 4, .binding = 0, .offset = offsetof(V, color), .format = AF::F32_4});
         meshes.append(std::move(mesh));
     }
 

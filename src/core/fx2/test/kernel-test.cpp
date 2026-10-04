@@ -50,9 +50,9 @@ struct Fixture {
         const float positions[]                                                = {-1, -1, 0, 0, -1, 0, -0.5f, 1, 0};
         vertices = Buffer::create("kernel.positions", {.context = gpu, .size = sizeof(positions)});
         if (!vertices || !vertices->setContent({reinterpret_cast<const uint8_t *>(positions), sizeof(positions)})) return false;
-        inputs.geometry.vertices.append({.buffer = vertices, .offset = 0, .stride = 12});
+        inputs.geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 12});
         inputs.geometry.vertexCount = 3;
-        inputs.geometry.format.attributes.append({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+        inputs.geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
         return true;
     }
     ~Fixture() {
@@ -200,10 +200,10 @@ TEST_CASE("fx2 unlit handles optional texture and vertex color without dummy att
             f.inputs.geometry.vertices[0] = {.buffer = vertices, .offset = 0, .stride = sizeof(Vertex)};
             f.inputs.geometry.format.attributes.resize(1);
             if (textured)
-                f.inputs.geometry.format.attributes.append(
+                f.inputs.geometry.format.attributes.push_back(
                     {.location = 2, .binding = 0, .offset = offsetof(Vertex, uv), .format = RasterGeometry::AttributeFormat::F32_2});
             if (colored)
-                f.inputs.geometry.format.attributes.append(
+                f.inputs.geometry.format.attributes.push_back(
                     {.location = 4, .binding = 0, .offset = offsetof(Vertex, color), .format = RasterGeometry::AttributeFormat::F32_4});
             f.inputs.colorMap.resource = textured ? tex : AutoRef<Texture> {};
             f.inputs.useVertexColor    = colored;

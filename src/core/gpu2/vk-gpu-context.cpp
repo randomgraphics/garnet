@@ -228,6 +228,8 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     // collect semaphores to wait from dependencies
     std::vector<rv::CommandQueue::SyncPoint> waitPoints;   // timeline dependencies
     std::vector<rv::CommandQueue::SyncPoint> waitBinaries; // binary dependencies
+    waitPoints.reserve(sp.dependencies.size());
+    waitBinaries.reserve(sp.dependencies.size());
     for (size_t i = 0; i < sp.dependencies.size(); ++i) {
         auto d = sp.dependencies[i];
         if (!d) GN_UNLIKELY continue;

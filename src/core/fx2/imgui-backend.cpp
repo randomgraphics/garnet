@@ -304,15 +304,15 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 gpu2::GpuRaster::DrawParameters draw {.geometry = drawGeometry, .resources = drawResources};
                 draw.vs = mVs;
                 draw.ps = mPs;
-                drawGeometry.format.attributes.append(
+                drawGeometry.format.attributes.push_back(
                     {.location = 0, .binding = 0, .offset = offsetof(UiVertex, position), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
-                drawGeometry.format.attributes.append(
+                drawGeometry.format.attributes.push_back(
                     {.location = 1, .binding = 0, .offset = offsetof(UiVertex, texcoord), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
-                drawGeometry.format.attributes.append(
+                drawGeometry.format.attributes.push_back(
                     {.location = 2, .binding = 0, .offset = offsetof(UiVertex, color), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
-                drawGeometry.vertices.append({.buffer = vertexBuffer,
-                                              .offset = globalVertexOffset + static_cast<uint64_t>(command.VtxOffset) * sizeof(UiVertex),
-                                              .stride = sizeof(UiVertex)});
+                drawGeometry.vertices.push_back({.buffer = vertexBuffer,
+                                                 .offset = globalVertexOffset + static_cast<uint64_t>(command.VtxOffset) * sizeof(UiVertex),
+                                                 .stride = sizeof(UiVertex)});
                 drawGeometry.indices    = {.buffer = indexBuffer,
                                            .offset = globalIndexOffset + static_cast<uint64_t>(command.IdxOffset) * sizeof(ImDrawIdx),
                                            .stride = sizeof(ImDrawIdx)};

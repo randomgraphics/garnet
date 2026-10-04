@@ -60,11 +60,11 @@ static PbrKernel::Inputs gelInputs(AutoRef<GpuContext> gpu, GpuCnC & uploads, co
     result.geometry.indexCount  = static_cast<uint32_t>(indices.size());
     result.geometry.vertexCount = static_cast<uint32_t>(mesh->faceVertices().size());
     // Each instance supplies its own deformed buffer before recording a draw.
-    result.geometry.vertices.append({.buffer = nullptr, .offset = 0, .stride = sizeof(GelVertex)});
+    result.geometry.vertices.push_back({.buffer = nullptr, .offset = 0, .stride = sizeof(GelVertex)});
     using F = RasterGeometry::AttributeFormat;
-    result.geometry.format.attributes.append({.location = 0, .offset = offsetof(GelVertex, position), .format = F::F32_3});
-    result.geometry.format.attributes.append({.location = 1, .offset = offsetof(GelVertex, normal), .format = F::F32_3});
-    result.geometry.format.attributes.append({.location = 4, .offset = offsetof(GelVertex, color), .format = F::F32_4});
+    result.geometry.format.attributes.push_back({.location = 0, .offset = offsetof(GelVertex, position), .format = F::F32_3});
+    result.geometry.format.attributes.push_back({.location = 1, .offset = offsetof(GelVertex, normal), .format = F::F32_3});
+    result.geometry.format.attributes.push_back({.location = 4, .offset = offsetof(GelVertex, color), .format = F::F32_4});
     result.color          = color;
     result.useVertexColor = true;
     result.metallic       = metallic;

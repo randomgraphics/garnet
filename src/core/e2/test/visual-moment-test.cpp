@@ -153,8 +153,8 @@ TEST_CASE("e2 custom moments invoke typed kernels without scene assets", "[e2][v
     REQUIRE(vertices);
     REQUIRE(vertices->setContent({reinterpret_cast<const uint8_t *>(positions), sizeof(positions)}));
     fx2::UnlitKernel::Inputs inputs;
-    inputs.geometry.vertices.append({.buffer = vertices, .offset = 0, .stride = 3 * sizeof(float)});
-    inputs.geometry.format.attributes.append({.location = 0, .binding = 0, .offset = 0, .format = gpu2::RasterGeometry::AttributeFormat::F32_3});
+    inputs.geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 3 * sizeof(float)});
+    inputs.geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = gpu2::RasterGeometry::AttributeFormat::F32_3});
     inputs.geometry.vertexCount = 6;
     inputs.color                = {1, 0, 0, 1};
     auto tableau                = VisualTableau::create(universe);
