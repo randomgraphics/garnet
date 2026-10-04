@@ -23,8 +23,7 @@ struct EnvTextureSet {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/// Create a 1×1 solid-color texture and record the staging→device copy into cnc.
-/// The staging buffer is captured by the CnC and kept alive inside the sealed payload.
+/// Create a solid-color texture and snapshot its CPU pixels into the upload recording.
 static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & cnc, const StrA & name, uint8_t r, uint8_t g, uint8_t b, uint8_t a,
                                              uint32_t faces) {
     gpu2::Texture::Descriptor desc;
@@ -32,34 +31,26 @@ static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2
     auto tex = gpu2::Texture::create(name, {.context = gpu, .descriptor = desc});
     if (!tex) GN_UNLIKELY return {};
 
-    const uint64_t stagingSize = 4ULL * faces;
-    auto           staging     = gpu2::Buffer::create(name + "_stg", {.context = gpu, .size = stagingSize, .mappable = true});
-    if (!staging) GN_UNLIKELY return {};
-
-    {
-        auto m = staging->map();
-        if (!m.data()) GN_UNLIKELY return {};
-        auto * p = static_cast<uint8_t *>(m.data());
-        for (uint32_t f = 0; f < faces; ++f) {
-            p[f * 4 + 0] = r;
-            p[f * 4 + 1] = g;
-            p[f * 4 + 2] = b;
-            p[f * 4 + 3] = a;
-        }
+    std::vector<uint8_t> pixels(4 * faces);
+    for (uint32_t f = 0; f < faces; ++f) {
+        pixels[f * 4 + 0] = r;
+        pixels[f * 4 + 1] = g;
+        pixels[f * 4 + 2] = b;
+        pixels[f * 4 + 3] = a;
     }
 
     DynaArray<gpu2::GpuCnC::Region> regions;
     for (uint32_t f = 0; f < faces; ++f) {
         gpu2::GpuCnC::Region reg;
-        reg.mip          = 0;
-        reg.face         = f;
-        reg.imageOffset  = {0, 0, 0};
-        reg.imageExtent  = {1, 1, 1};
-        reg.bufferOffset = f * 4ULL;
+        reg.mip         = 0;
+        reg.face        = f;
+        reg.imageOffset = {0, 0, 0};
+        reg.imageExtent = {1, 1, 1};
+        reg.dataOffset  = f * 4ULL;
         regions.append(reg);
     }
-    cnc.recordCopyBufferToImage({.src = staging, .dst = tex, .regions = regions});
-    return tex; // staging reference held by cnc until seal()
+    cnc.recordUploadImage(tex, pixels, regions);
+    return tex;
 }
 
 // ─── SharedShaderConstants2Impl ──────────────────────────────────────────────
@@ -186,11 +177,18 @@ private:
 
         auto tryLoad = [&](const StrA & path, const StrA & texName, AutoRef<gpu2::Texture> & outTex) {
             if (path.empty()) return;
-            auto stg = gpu2::Buffer::loadTextureToStagingBuffer(texName, mGpu, path);
-            if (stg.empty()) return;
-            auto tex = gpu2::Texture::create(texName, {.context = mGpu, .descriptor = stg.descriptor});
+            auto file = fs::openFile(path, std::ios::in | std::ios::binary);
+            if (!file) return;
+            auto image = gfx::img::Image::load(file->input(), path.c_str());
+            if (image.empty()) return;
+            gpu2::Texture::Descriptor descriptor;
+            descriptor.setFormat(image.format())
+                .setDimensions(image.width(), image.height(), image.depth())
+                .setFaces((uint32_t) image.desc().faces)
+                .setLevels((uint32_t) image.desc().levels);
+            auto tex = gpu2::Texture::create(texName, {.context = mGpu, .descriptor = descriptor});
             if (!tex) return;
-            cnc->recordCopyBufferToImage(stg, tex);
+            cnc->recordUploadImage(tex, image);
             outTex              = tex;
             loadedAnyEnvTexture = true;
         };
@@ -284,25 +282,10 @@ private:
             cam.exposure         = snap.camera.exposure;
         }
 
-        auto stagingScene = gpu2::Buffer::create("ssc2.staging_scene", {.context = mGpu, .size = sizeof(shader::SceneUBO), .mappable = true});
-        auto stagingCam   = gpu2::Buffer::create("ssc2.staging_cam", {.context = mGpu, .size = sizeof(shader::CameraUBO), .mappable = true});
-        if (!stagingScene || !stagingCam) GN_UNLIKELY return;
-
-        {
-            auto m = stagingScene->map();
-            if (!m.data()) GN_UNLIKELY return;
-            memcpy(m.data(), &scene, sizeof(scene));
-        }
-        {
-            auto m = stagingCam->map();
-            if (!m.data()) GN_UNLIKELY return;
-            memcpy(m.data(), &cam, sizeof(cam));
-        }
-
         auto cnc = gpu2::GpuCnC::create({.gpu = mGpu});
         if (!cnc) GN_UNLIKELY return;
-        cnc->recordCopyBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
-        cnc->recordCopyBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
+        cnc->recordUploadBuffer(mSceneBuffer, 0, {(const uint8_t *) &scene, sizeof(scene)});
+        cnc->recordUploadBuffer(mCameraBuffer, 0, {(const uint8_t *) &cam, sizeof(cam)});
         snapshot.set0Payloads.append(cnc->seal());
     }
 };

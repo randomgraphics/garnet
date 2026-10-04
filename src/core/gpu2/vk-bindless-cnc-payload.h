@@ -17,6 +17,7 @@ public:
     GN_REGISTER_RUNTIME_TYPE(GpuPayloadVulkan);
 
     struct ConstructParameters {
+        std::unique_ptr<CncUploadStorage>  uploadStorage;
         AutoRef<GpuContextVulkan2>         gpu;
         AutoRef<bindless::DescriptorHeap>  heap;
         uint32_t                           heapSetIndex = 0;
@@ -36,6 +37,7 @@ public:
     void onGpuComplete() override;
 
 private:
+    std::unique_ptr<CncUploadStorage>  mUploadStorage;
     AutoRef<GpuContextVulkan2>         mGpu;
     AutoRef<bindless::DescriptorHeap>  mHeap;
     uint32_t                           mHeapSetIndex = 0;

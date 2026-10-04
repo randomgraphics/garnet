@@ -553,7 +553,6 @@ int main(int argc, const char ** argv) {
 
     // 5. Dynamic Streaming Textures: dedicated textures updated live in-place (demonstrating UPDATE_AFTER_BIND)
     constexpr uint32_t            NUM_STREAMING_SLOTS = 16;
-    constexpr uint32_t            TEX_BYTES           = TEX_SIZE * TEX_SIZE * 4;
     std::vector<AutoRef<Texture>> streamingTextures(NUM_STREAMING_SLOTS);
     for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
         streamingTextures[s] = Texture::create(
@@ -561,10 +560,7 @@ int main(int argc, const char ** argv) {
             {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(TEX_SIZE, TEX_SIZE).setLevels(1)});
         GN_ASSERT(streamingTextures[s]);
     }
-    auto               streamingBuffer = Buffer::create("streaming-upload-buf", {
-                                                                                    .context = gpu,
-                                                                                    .size    = (uint64_t) NUM_STREAMING_SLOTS * TEX_BYTES,
-                                                                                });
+
     gfx::img::Extent3D streamExtent;
     streamExtent.set(TEX_SIZE, TEX_SIZE, 1);
     gfx::img::PlaneDesc streamPlaneDesc = gfx::img::PlaneDesc::make(gfx::img::PixelFormat::RGBA8(), streamExtent);
@@ -731,24 +727,10 @@ int main(int argc, const char ** argv) {
         AutoRef<GpuPayload> uploadPayload;
         if (streamingEnabled && !testMode) {
             auto cnc = GpuCnC::create({.gpu = gpu});
-            if (cnc && streamingBuffer) {
+            if (cnc) {
                 for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
                     updateDynamicTextureImage(dynImg, TEX_SIZE, TEX_SIZE, s, simTime);
-                    uint64_t offset = (uint64_t) s * TEX_BYTES;
-                    cnc->recordUploadBuffer(streamingBuffer, offset, ArrayView<const uint8_t>((const uint8_t *) dynImg.data(), TEX_BYTES));
-
-                    GpuCnC::Region region {};
-                    region.bufferOffset    = offset;
-                    region.bufferRowLength = TEX_SIZE;
-                    region.bufferHeight    = TEX_SIZE;
-                    region.mip             = 0;
-                    region.face            = 0;
-                    region.imageExtent     = {TEX_SIZE, TEX_SIZE, 1};
-                    cnc->recordCopyBufferToImage({
-                        .src     = streamingBuffer,
-                        .dst     = streamingTextures[s],
-                        .regions = ArrayView<const GpuCnC::Region>(&region, 1),
-                    });
+                    cnc->recordUploadImage(streamingTextures[s], dynImg);
 
                     heap->update(textureSlots[s], GpuResourceView(streamingTextures[s]));
                 }

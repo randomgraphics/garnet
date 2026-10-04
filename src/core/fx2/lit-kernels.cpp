@@ -135,17 +135,12 @@ struct Implementation {
             Texture::Descriptor d;
             d.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(1, 1).setFaces(1).setLevels(1);
             auto t = Texture::create("lit-kernel.fallback", {.context = gpu, .descriptor = d});
-            auto b = Buffer::create("lit-kernel.fallback-upload", {.context = gpu, .size = 4, .mappable = true});
-            if (!t || !b) return false;
-            {
-                auto m = b->map();
-                if (!m.data()) return false;
-                const uint8_t whiteBytes[] = {255, 255, 255, 255}, normalBytes[] = {128, 128, 255, 255};
-                memcpy(m.data(), i ? normalBytes : whiteBytes, 4);
-            }
+            if (!t) return false;
+            const uint8_t whiteBytes[] = {255, 255, 255, 255}, normalBytes[] = {128, 128, 255, 255};
+
             GpuCnC::Region r;
             r.imageExtent = {1, 1, 1};
-            initialization.recordCopyBufferToImage({.src = b, .dst = t, .regions = {&r, 1}});
+            initialization.recordUploadImage(t, {i ? normalBytes : whiteBytes, 4}, {&r, 1});
             (i ? normal : white) = t;
         }
         return true;

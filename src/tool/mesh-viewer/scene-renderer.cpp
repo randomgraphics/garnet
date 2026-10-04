@@ -1,21 +1,34 @@
 #include "scene-renderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
+#include <sstream>
 
 namespace GN::viewer {
 using namespace gpu2;
 namespace {
 AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, GpuCnC & cnc, const ModelScene::Texture & source) {
-    auto staging = !source.path.empty()
-                       ? Buffer::loadTextureToStagingBuffer("viewer.texture", gpu, source.path)
-                       : Buffer::loadTextureToStagingBuffer("viewer.texture", gpu, {source.embeddedData.data(), source.embeddedData.size()}, source.mimeType);
-    if (staging.empty()) return {};
+    gfx::img::Image image;
+    if (!source.path.empty()) {
+        auto file = fs::openFile(source.path, std::ios::in | std::ios::binary);
+        if (!file) return {};
+        image = gfx::img::Image::load(file->input(), source.path.c_str());
+    } else {
+        std::string        bytes((const char *) source.embeddedData.data(), source.embeddedData.size());
+        std::istringstream stream(bytes);
+        image = gfx::img::Image::load(stream, source.mimeType.c_str());
+    }
+    if (image.empty()) return {};
+    Texture::Descriptor descriptor;
+    descriptor.setFormat(image.format())
+        .setDimensions(image.width(), image.height(), image.depth())
+        .setFaces((uint32_t) image.desc().faces)
+        .setLevels((uint32_t) image.desc().levels);
     using PF  = gfx::img::PixelFormat;
     auto sign = source.srgb ? PF::SIGN_GNORM : PF::SIGN_UNORM;
-    if (staging.descriptor.format.sign0 == PF::SIGN_UNORM || staging.descriptor.format.sign0 == PF::SIGN_GNORM) staging.descriptor.format.sign0 = sign;
-    if (staging.descriptor.format.sign12 == PF::SIGN_UNORM || staging.descriptor.format.sign12 == PF::SIGN_GNORM) staging.descriptor.format.sign12 = sign;
-    auto texture = Texture::create("viewer.texture", {.context = gpu, .descriptor = staging.descriptor});
-    if (texture) cnc.recordCopyBufferToImage(staging, texture);
+    if (descriptor.format.sign0 == PF::SIGN_UNORM || descriptor.format.sign0 == PF::SIGN_GNORM) descriptor.format.sign0 = sign;
+    if (descriptor.format.sign12 == PF::SIGN_UNORM || descriptor.format.sign12 == PF::SIGN_GNORM) descriptor.format.sign12 = sign;
+    auto texture = Texture::create("viewer.texture", {.context = gpu, .descriptor = descriptor});
+    if (texture) cnc.recordUploadImage(texture, image);
     return texture;
 }
 } // namespace

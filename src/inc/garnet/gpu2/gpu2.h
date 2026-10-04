@@ -214,11 +214,15 @@ struct Texture : RCRT64 {
 
     /// Convenience method to read the texture content into an image. Stalls CPU and GPU.
     /// Slow. Do NOT use in performance-sensitive code or render loop.
+    /// Leaves all downloaded image subresources shader-readable.
+    /// Prefer CNC's recordDownloadImage() for nonblocking CPU/GPU image transfers in production code.
     virtual gfx::img::Image readback() const = 0;
 
     /// Convenience method to set content of the whole texture from an image. Stalls CPU and GPU. Slow. Do NOT use in performance-sensitive code or render loop.
     /// The method assumes the input image has the same format and dimensions as the texture. It'll simply reject the image and fail,
     /// if the input image does not completely match the texture's format and dimensions.
+    /// Leaves all uploaded image subresources shader-readable.
+    /// Prefer CNC's recordUploadImage() for nonblocking CPU/GPU image transfers in production code.
     virtual bool setContent(const gfx::img::Image & image) = 0;
 
     /// Convenience method to load texture from file. Returns a texture named after the file name.
@@ -304,56 +308,17 @@ struct Buffer : public RCRT64 {
     /// Trying to map a un-mappable, or already mapped, buffer returns an empty Mapped object.
     virtual Mapped map() = 0;
 
-    /// Upload \p size bytes from \p data into the buffer using an internal staging buffer.
-    /// The caller does not need to create the buffer as mappable. Internally this allocates
-    /// a short-lived CPU-visible staging buffer, copies the data, then issues a GPU copy
-    /// command to transfer it into the device-local buffer. The upload is submitted
-    /// immediately and the method blocks until the GPU copy completes.
-    /// \return true on success, false if the upload failed (e.g. out-of-memory).
-    /// \note Set buffer content in this way is, although convenient, very inefficient, especially when uploading data
-    /// to many buffers, since it completely stalls the CPU and GPU until the upload completes. For better performance,
-    /// consider uploading data into mappable staging buffers, then issue GPU copy commands to transfer data from the
-    /// staging buffers into the target buffers. This way multiple uploads can be batched together and submitted at
-    /// once, significantly reducing CPU-GPU synchronization overhead.
+    /// Upload CPU bytes into this buffer at the requested byte offset. Blocks until the GPU transfer completes.
+    /// Leaves the buffer read-ready. Returns false if validation or upload fails.
+    /// Prefer CNC's recordUploadBuffer() for nonblocking CPU/GPU buffer transfers in production code.
     virtual bool setContent(ArrayView<const uint8_t> data, size_t offset = 0) = 0;
 
     /// Read \p size bytes starting at \p offset from the buffer into a CPU-side vector.
     /// Uses an internal staging buffer if the buffer is not CPU-mappable. Stalls CPU and GPU.
     /// Slow; do NOT use in performance-sensitive code or render loop.
     /// \return The bytes read, or an empty vector on failure.
+    /// Prefer CNC's recordDownloadBuffer() for nonblocking CPU/GPU buffer transfers in production code.
     virtual std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const = 0;
-
-    /// Result of loading a texture image file into a CPU-visible staging buffer.
-    /// Pass to GpuCnC::recordCopyBufferToImage() and Texture::create(); keep staging alive
-    /// until the GPU copy payload completes.
-    struct StagedTexture {
-        // Vector3's default constructor leaves components unset, so region vectors
-        // need explicit components for whole-subresource copies to start at zero.
-        struct Region {
-            uint32_t          mip             = 0;
-            uint32_t          face            = 0;
-            Vector3<uint32_t> imageOffset     = {0, 0, 0};
-            Vector3<uint32_t> imageExtent     = {0, 0, 0};
-            uint64_t          bufferOffset    = 0;
-            uint32_t          bufferRowLength = 0; ///< 0 = tight (same as imageExtent.x)
-            uint32_t          bufferHeight    = 0; ///< 0 = tight (same as imageExtent.y)
-        };
-        AutoRef<Buffer>     staging;    ///< host-visible; keep alive until GPU copy completes
-        Texture::Descriptor descriptor; ///< use with Texture::create() for the GPU-side texture
-        DynaArray<Region>   regions;    ///< one entry per face×mip
-        bool                empty() const { return !staging; }
-    };
-
-    /// Load a texture image file into a CPU-visible staging buffer. No GPU operations.
-    /// Thread-safe; call from any worker thread without affecting the render loop.
-    /// Uses rapid-image to decode; supports DDS, KTX, and common formats.
-    /// @return StagedTexture with empty()==true on failure.
-    static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, const StrA & path);
-
-    /// Decode an encoded in-memory image into a CPU-visible staging buffer. This is intended
-    /// for embedded model textures and follows the same ownership rules as the file overload.
-    static GN_API StagedTexture loadTextureToStagingBuffer(const StrA & name, AutoRef<GpuContext> context, ArrayView<const uint8_t> encoded,
-                                                           const StrA & sourceName);
 
     /// Return the 64-bit GPU virtual address (Vulkan buffer device address). Returns 0 if not enabled or supported.
     virtual uint64_t gpuAddress() const { return 0; }

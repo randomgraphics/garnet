@@ -391,8 +391,8 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                         auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
                         if (!tex) continue;
                         if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), tex->id) != invalidResourceIds.end()) continue;
-                        vk::ImageLayout layout =
-                            (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral : vk::ImageLayout::eShaderReadOnlyOptimal;
+                        vk::ImageLayout  layout = (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral
+                                                                                                               : shaderReadOnlyLayout(tex->descriptor().format);
                         rv::ImageSampler is;
                         is.view    = tex->nativeView(view.imageView);
                         is.layout  = layout;

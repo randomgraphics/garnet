@@ -145,6 +145,8 @@ TEST_CASE("bindless::CnC: sample bindless texture in compute and download result
 
     REQUIRE(texRed->setContent(makeSolidImage(W, H, 255, 0, 0, 255)));
     REQUIRE(texBlue->setContent(makeSolidImage(W, H, 0, 0, 255, 255)));
+    // Synchronous readback must leave the sampled texture shader-readable for the next compute pass.
+    REQUIRE_FALSE(texRed->readback().empty());
 
     // 2. Create descriptor heap and allocate both textures
     auto heap = bindless::DescriptorHeap::create("heap", {.gpu = gpu, .capacity = 16});
@@ -366,7 +368,10 @@ TEST_CASE("bindless::CnC: automated invariant restores uploaded texture to SHADE
 
     auto cnc = bindless::CnC::create("upload-tex-cnc", {.gpu = gpu, .heap = heap});
     REQUIRE(cnc);
-    cnc->recordCopyBufferToImage({.src = staging, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+    {
+        auto mapped = staging->map();
+        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+    }
 
     auto payload = cnc->seal();
     REQUIRE(payload);
@@ -429,7 +434,10 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
 
         auto cnc1 = bindless::CnC::create("cnc-copy", {.gpu = gpu, .heap = heap});
         REQUIRE(cnc1);
-        cnc1->recordCopyBufferToImage({.src = stagingBlue, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+        {
+            auto mapped = stagingBlue->map();
+            cnc1->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+        }
         auto payload1 = cnc1->seal();
         REQUIRE(payload1);
         submitAndWait(gpu, "pass1-copy-blue", payload1);
@@ -481,7 +489,10 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
             bindless::CnC::create("cnc-interleaved", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
         REQUIRE(cnc3);
         // Interleave: copy buffer to image, then immediately sample in compute within the SAME pass
-        cnc3->recordCopyBufferToImage({.src = stagingYellow, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+        {
+            auto mapped = stagingYellow->map();
+            cnc3->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+        }
         PushConstantData pc {slot, 2.0f};
         cnc3->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
         auto downloadFuture = cnc3->recordDownloadBuffer(outBuf, 0, bufferSize);
@@ -583,7 +594,10 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
     // Pass 1: CnC uploads sample texture and vertex buffer
     auto cnc = bindless::CnC::create("vb-upload", {.gpu = gpu, .heap = heap});
     REQUIRE(cnc);
-    cnc->recordCopyBufferToImage({.src = stagedTex, .dst = sampleTex, .regions = ArrayView<const GpuCnC::Region>(&texRegion, 1)});
+    {
+        auto mapped = stagedTex->map();
+        cnc->recordUploadImage(sampleTex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&texRegion, 1));
+    }
     cnc->recordUploadBuffer(vb, 0, dummyVbData);
     auto cncPayload = cnc->seal();
     REQUIRE(cncPayload);

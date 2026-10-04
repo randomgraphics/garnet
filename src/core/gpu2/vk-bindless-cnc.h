@@ -17,8 +17,8 @@ struct StoredBindlessCompute {
     uint32_t           immediateSize   = 0;
 };
 
-using StoredBindlessCncOp =
-    std::variant<StoredBindlessCompute, StoredBufferToBuffer, StoredBufferToImage, StoredUploadBuffer, StoredDownloadBuffer, StoredDownloadImage>;
+using StoredBindlessCncOp = std::variant<StoredBindlessCompute, StoredBufferToBuffer, StoredBufferToImage, StoredImageToImage, StoredUploadBuffer,
+                                         StoredDownloadBuffer, StoredDownloadImage>;
 
 /// Vulkan implementation of bindless::CnC recorder.
 class VkBindlessCnC final : public bindless::CnC {
@@ -36,7 +36,8 @@ public:
     void                             recordCopyBuffer(const BufferToBuffer & p) override;
     void                             recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) override;
     std::future<AutoRef<const Blob>> recordDownloadBuffer(AutoRef<Buffer> src, uint64_t offset = 0, uint64_t size = uint64_t(~0)) override;
-    void                             recordCopyBufferToImage(const BufferToImage & p) override;
+    void                             recordUploadImage(AutoRef<Texture> dst, ArrayView<const uint8_t> content, ArrayView<const Region> regions) override;
+    void                             recordCopyImage(const ImageToImage & p) override;
     std::future<TextureContent>      recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) override;
 
     void addCleanupCallback(std::function<void()> cleanup) override;
@@ -55,7 +56,8 @@ private:
     std::vector<StoredBindlessCncOp>   mOps;
     std::vector<uint8_t>               mImmediateData;
     std::vector<std::function<void()>> mRetainedCleanups;
-    bool                               mSealed = false;
+    std::unique_ptr<CncUploadStorage>  mUploadStorage = std::make_unique<CncUploadStorage>();
+    bool                               mSealed        = false;
 };
 
 AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::CnC::CreateParameters & cp);

@@ -181,7 +181,7 @@ public:
     /// Record a buffer copy for execution when the sealed payload is submitted.
     virtual void recordCopyBuffer(const BufferToBuffer &) = 0;
 
-    /// Record a buffer upload. Content is copied into internal staging storage during recording;
+    /// Record a buffer upload. Content is copied during recording;
     /// the GPU transfer executes after the sealed payload is submitted.
     virtual void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) = 0;
 
@@ -190,21 +190,25 @@ public:
     /// is signaled with the downloaded Blob on success, or empty Blob if failed or canceled.
     virtual std::future<AutoRef<const Blob>> recordDownloadBuffer(AutoRef<Buffer> src, uint64_t offset = 0, uint64_t size = uint64_t(~0)) = 0;
 
-    using Region        = GpuCnC::Region;
-    using BufferToImage = GpuCnC::BufferToImage;
+    using Region          = GpuCnC::Region;
+    using ImageCopyRegion = GpuCnC::ImageCopyRegion;
+    using ImageToImage    = GpuCnC::ImageToImage;
 
-    /// Record a buffer-to-image copy, retaining resources and copying the region descriptions.
-    virtual void recordCopyBufferToImage(const BufferToImage &) = 0;
+    /// Snapshot CPU pixel content immediately; image transfer executes after submission.
+    /// Region data offsets are relative to content. The caller may release or modify content on return.
+    virtual void recordUploadImage(AutoRef<Texture> dst, ArrayView<const uint8_t> content, ArrayView<const Region> regions) = 0;
 
-    /// Convenience: upload all regions from a StagedTexture into dst without any conversion.
-    void recordCopyBufferToImage(const Buffer::StagedTexture & staged, AutoRef<Texture> dst) {
-        recordCopyBufferToImage({.src = staged.staging, .dst = std::move(dst), .regions = staged.regions});
-    }
+    /// Upload all faces, mip levels, and depth slices from a CPU image. Content is copied before returning.
+    GN_API void recordUploadImage(AutoRef<Texture> dst, const gfx::img::Image & content);
+
+    /// Record copies between distinct textures with matching formats and sample counts; snapshots the regions.
+    virtual void recordCopyImage(const ImageToImage &) = 0;
 
     using TextureContent = GpuCnC::TextureContent;
 
     /// Enqueue a texture download operation. The data is copied from the source texture into an internal staging buffer,
     /// then transferred into a TextureContent.
+    /// Returned regions describe tightly packed block rows in the CPU blob. Input CPU offsets/pitches are ignored.
     virtual std::future<TextureContent> recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) = 0;
 
     /// Register a cleanup callback invoked once when the payload completes or is destroyed without submission.

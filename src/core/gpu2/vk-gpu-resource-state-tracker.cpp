@@ -80,7 +80,9 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
                     if (tex->isBackbuffer() || state.isWrite()) {
                         tracked.setIncoming(mip, face, bit, TexturePlaneStateVulkan::UNDEFINED());
                     } else {
-                        tracked.setIncoming(mip, face, bit, TexturePlaneStateVulkan::SHADER_READ_ONLY());
+                        auto ready   = TexturePlaneStateVulkan::SHADER_READ_ONLY();
+                        ready.layout = shaderReadOnlyLayout(desc.format);
+                        tracked.setIncoming(mip, face, bit, ready);
                     }
                 }
             });
@@ -173,7 +175,7 @@ bool GpuResourceStateTrackerVulkan::addDepthStencilTarget(TextureVulkanBase * te
 bool GpuResourceStateTrackerVulkan::addSampledTexture(TextureVulkanBase * tex, const GpuResourceView & view, vk::PipelineStageFlags stages) {
     if (!tex) GN_UNLIKELY return true;
     TexturePlaneStateVulkan state;
-    state.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    state.layout = shaderReadOnlyLayout(tex->descriptor().format);
     state.access = vk::AccessFlagBits::eShaderRead;
     state.stages = stages;
     state.usage  = "sampled texture";
@@ -609,7 +611,7 @@ void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVul
     vk::ImageAspectFlags aspect   = aspectFromView(view.imageView, desc);
     if (!aspect) aspect = vk::ImageAspectFlagBits::eColor;
     bool            isDepthStencil = bool(aspect & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil));
-    vk::ImageLayout targetLayout   = isDepthStencil ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eShaderReadOnlyOptimal;
+    vk::ImageLayout targetLayout   = shaderReadOnlyLayout(desc.format);
 
     auto                   it        = mTextures.find(tex->id);
     vk::ImageLayout        oldLayout = isDepthStencil ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;

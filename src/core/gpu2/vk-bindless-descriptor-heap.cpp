@@ -117,7 +117,7 @@ bool VkBindlessDescriptorHeap::writeDescriptor(uint32_t slot, const GpuResourceV
     vk::Sampler sampler = mDefaultSampler ? mDefaultSampler->handle() : vk::Sampler {};
 
     vk::DescriptorImageInfo imageInfo;
-    imageInfo.setSampler(sampler).setImageView(imgView).setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    imageInfo.setSampler(sampler).setImageView(imgView).setImageLayout(shaderReadOnlyLayout(tex->descriptor().format));
 
     vk::WriteDescriptorSet write;
     write.setDstSet(mDescriptorSet)
@@ -153,7 +153,9 @@ bool VkBindlessDescriptorHeap::allocate(ArrayView<const GpuResourceView> views, 
     }
 
     // Phase 1: validate all views upfront before modifying any allocator state
-    std::vector<vk::ImageView> imgViews;
+    std::vector<vk::ImageView>   imgViews;
+    std::vector<vk::ImageLayout> layouts;
+    layouts.reserve(count);
     imgViews.reserve(count);
     for (size_t i = 0; i < count; ++i) {
         auto * tex = RuntimeType::cast<TextureVulkanBase>(views[i].texture().get());
@@ -167,6 +169,7 @@ bool VkBindlessDescriptorHeap::allocate(ArrayView<const GpuResourceView> views, 
             return false;
         }
         imgViews.push_back(iv);
+        layouts.push_back(shaderReadOnlyLayout(tex->descriptor().format));
     }
 
     // Phase 2: reserve slots and prepare driver descriptor writes
@@ -189,7 +192,7 @@ bool VkBindlessDescriptorHeap::allocate(ArrayView<const GpuResourceView> views, 
         slots.push_back(slot);
 
         vk::DescriptorImageInfo info;
-        info.setSampler(sampler).setImageView(imgViews[i]).setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+        info.setSampler(sampler).setImageView(imgViews[i]).setImageLayout(layouts[i]);
         imageInfos.push_back(info);
     }
 
@@ -261,7 +264,7 @@ uint32_t VkBindlessDescriptorHeap::update(ArrayView<const uint32_t> slots, Array
         }
 
         vk::DescriptorImageInfo info;
-        info.setSampler(sampler).setImageView(iv).setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+        info.setSampler(sampler).setImageView(iv).setImageLayout(shaderReadOnlyLayout(tex->descriptor().format));
         imageInfos.push_back(info);
 
         vk::WriteDescriptorSet write;

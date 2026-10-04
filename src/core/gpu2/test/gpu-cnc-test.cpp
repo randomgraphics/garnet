@@ -166,7 +166,10 @@ TEST_CASE("GPU2/CnC: copyBufferToImage uploads pixel data", "[gpu2][cnc][gpu]") 
 
     auto cnc = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc);
-    cnc->recordCopyBufferToImage({.src = staging, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+    {
+        auto mapped = staging->map();
+        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+    }
     submitAndWait(gpu.get(), cnc->seal());
 
     // Transition the texture to shader-read so readback can sample it.

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-buffer.h"
+#include "vk-gpu-cnc.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
@@ -94,22 +95,13 @@ void BufferVulkan::unmap(const Mapped &) {
 }
 
 bool BufferVulkan::setContent(ArrayView<const uint8_t> data, size_t offset) {
-    if (!mRvBuffer) {
-        GN_ERROR(sLogger, "BufferVulkan::setContent: buffer not initialized, name='{}'", name);
-        return false;
-    }
+    if (!mRvBuffer || !mGpu || !mGpu->ready() || offset > mSize || data.size() > mSize - offset) return false;
     if (data.empty()) return true;
-    if (!mGpu || !mGpu->ready()) return false;
-    const rv::Device & dev = mGpu->vulkanDevice();
-    rv::CommandQueue * gq  = dev.graphics();
-    if (!gq) {
-        GN_ERROR(sLogger, "BufferVulkan::setContent: no graphics queue, name='{}'", name);
-        return false;
-    }
+    auto payload = createCncBufferUploadPayload(mGpu, AutoRef<Buffer>(this), data, offset);
+    if (!payload) return false;
+    // Shared CNC barriers restore READ_READY rather than leaving this buffer in transfer-write state.
+    mGpu->submit(GpuContext::SubmitParameters(name + "/set-content").appendWork(payload));
     mGpu->waitForIdle();
-    rv::Buffer::SetContentParameters sc;
-    sc.setQueue(*gq).setData(data.data(), data.size()).setOffset((vk::DeviceSize) offset);
-    mRvBuffer->setContent(sc);
     return true;
 }
 

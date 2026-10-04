@@ -24,25 +24,20 @@ int main(int argc, const char * argv[]) {
     auto               rasterMips    = RasterMipmapKernel::create(gpu);
     auto               computeMips   = ComputeMipmapKernel::create(gpu);
     if (!source || !rasterOutput || !computeOutput || !rasterBlur || !computeBlur || !rasterMips || !computeMips) return 1;
-    auto staging = Buffer::create("checker.upload", {.context = gpu, .size = width * height * 4, .mappable = true});
-    auto upload  = GpuCnC::create({.gpu = gpu});
-    if (!staging || !upload) return 1;
-    {
-        auto mapped = staging->map();
-        if (!mapped.data()) return 1;
-        auto pixels = static_cast<uint8_t *>(mapped.data());
-        for (uint32_t y = 0; y < height; ++y)
-            for (uint32_t x = 0; x < width; ++x) {
-                auto p = pixels + (y * width + x) * 4;
-                p[0]   = ((x / 8 + y / 8) & 1) ? 255 : 0;
-                p[1]   = static_cast<uint8_t>(x * 255 / (width - 1));
-                p[2]   = static_cast<uint8_t>(y * 255 / (height - 1));
-                p[3]   = 255;
-            }
-    }
+    std::vector<uint8_t> pixels(width * height * 4);
+    auto                 upload = GpuCnC::create({.gpu = gpu});
+    if (!upload) return 1;
+    for (uint32_t y = 0; y < height; ++y)
+        for (uint32_t x = 0; x < width; ++x) {
+            auto p = pixels.data() + (y * width + x) * 4;
+            p[0]   = ((x / 8 + y / 8) & 1) ? 255 : 0;
+            p[1]   = static_cast<uint8_t>(x * 255 / (width - 1));
+            p[2]   = static_cast<uint8_t>(y * 255 / (height - 1));
+            p[3]   = 255;
+        }
     GpuCnC::Region region;
     region.imageExtent = {width, height, 1};
-    upload->recordCopyBufferToImage({.src = staging, .dst = source, .regions = {&region, 1}});
+    upload->recordUploadImage(source, pixels, {&region, 1});
     DynaArray<AutoRef<GpuPayload>> work;
     auto                           initialization = upload->seal();
     if (!initialization) return 1;

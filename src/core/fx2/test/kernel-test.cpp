@@ -180,7 +180,10 @@ TEST_CASE("fx2 unlit handles optional texture and vertex color without dummy att
     REQUIRE(cnc);
     GpuCnC::Region region;
     region.imageExtent = {1, 1, 1};
-    cnc->recordCopyBufferToImage({.src = staging, .dst = tex, .regions = {&region, 1}});
+    {
+        auto mapped = staging->map();
+        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, {&region, 1});
+    }
     f.gpu->submit(GpuContext::SubmitParameters("kernel.texture-upload").appendWork(cnc->seal()));
     for (bool textured : {false, true})
         for (bool colored : {false, true}) {

@@ -34,6 +34,13 @@ vk::ColorComponentFlags writeMaskToVk(uint8_t w);
 /// Returns {} (no bits set) when \p viewFmt is incompatible with a depth-stencil \p textureFmt.
 vk::ImageAspectFlags aspectFromViewFormat(gfx::img::PixelFormat viewFmt, gfx::img::PixelFormat textureFmt);
 
+inline vk::ImageLayout shaderReadOnlyLayout(gfx::img::PixelFormat format) {
+    // Descriptors and the ready-state tracker must agree, especially after depth readback or attachment use.
+    const auto aspects = aspectFromViewFormat(format, format);
+    return (aspects & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil)) ? vk::ImageLayout::eDepthStencilReadOnlyOptimal
+                                                                                             : vk::ImageLayout::eShaderReadOnlyOptimal;
+}
+
 bool attachmentExtent(const GpuResourceView & view, vk::Extent2D & extent);
 
 bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt, vk::Format * outVkFormat);

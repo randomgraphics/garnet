@@ -122,7 +122,7 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
                     if (v.imageView.type == GpuResourceView::ImageView::STORAGE) {
                         ii.imageLayout = vk::ImageLayout::eGeneral;
                     } else {
-                        ii.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+                        ii.imageLayout = shaderReadOnlyLayout(tex->descriptor().format);
                         ii.sampler     = defaultSampler->handle();
                     }
                     curImageInfos.push_back(ii);
@@ -222,25 +222,18 @@ void VkBindlessCnC::recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, Arr
             GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: null destination or empty content");
             return;
         }
-    const uint64_t size    = content.size();
-    auto           staging = Buffer::create(name + "/upload_stg", {.context = mGpu, .size = size, .mappable = true});
-    if (!staging) GN_UNLIKELY {
-            GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: staging buffer allocation failed");
+    const uint64_t size  = content.size();
+    auto           slice = mUploadStorage->copy(mGpu, name, content);
+    if (!slice.buffer) GN_UNLIKELY {
+            GN_ERROR(sLogger, "CNC::recordUploadBuffer: staging allocation failed");
             return;
         }
-    {
-        auto m = staging->map();
-        if (!m.data()) GN_UNLIKELY {
-                GN_ERROR(sLogger, "VkBindlessCnC::recordUploadBuffer: failed to map staging buffer");
-                return;
-            }
-        memcpy(m.data(), content.data(), static_cast<size_t>(size));
-    }
     StoredUploadBuffer op;
-    op.staging   = std::move(staging);
+    op.staging   = std::move(slice.buffer);
     op.dst       = std::move(dst);
     op.dstOffset = offset;
     op.size      = size;
+    op.srcOffset = slice.offset;
     mOps.emplace_back(std::move(op));
 }
 
@@ -282,12 +275,39 @@ std::future<AutoRef<const Blob>> VkBindlessCnC::recordDownloadBuffer(AutoRef<Buf
     return future;
 }
 
-void VkBindlessCnC::recordCopyBufferToImage(const BufferToImage & p) {
-    if (mSealed) GN_UNLIKELY {
-            GN_ERROR(sLogger, "VkBindlessCnC::recordCopyBufferToImage: already sealed");
+void VkBindlessCnC::recordUploadImage(AutoRef<Texture> dst, ArrayView<const uint8_t> content, ArrayView<const Region> regions) {
+    if (mSealed || !validImageUpload(dst.get(), content, regions)) GN_UNLIKELY {
+            GN_ERROR(sLogger, "CNC::recordUploadImage: sealed recorder or empty upload");
             return;
         }
     StoredBufferToImage op;
+    op.dst = dst;
+    for (auto region : regions) {
+        auto slice = mUploadStorage->copyImage(mGpu, name, content, dst->descriptor(), region);
+        if (!slice.buffer) GN_UNLIKELY {
+                GN_ERROR(sLogger, "CNC::recordUploadImage: staging allocation failed");
+                return;
+            }
+        if (op.src && op.src.get() != slice.buffer.get()) {
+            mOps.emplace_back(std::move(op));
+            op     = StoredBufferToImage {};
+            op.dst = dst;
+        }
+        op.src                 = std::move(slice.buffer);
+        region.dataOffset      = slice.offset;
+        region.rowPitchBytes   = 0;
+        region.slicePitchBytes = 0;
+        op.regions.append(region);
+    }
+    mOps.emplace_back(std::move(op));
+}
+
+void VkBindlessCnC::recordCopyImage(const ImageToImage & p) {
+    if (mSealed || !validImageCopy(p)) GN_UNLIKELY {
+            GN_ERROR(sLogger, "CNC::recordCopyImage: sealed recorder or invalid copy resources");
+            return;
+        }
+    StoredImageToImage op;
     op.src = p.src;
     op.dst = p.dst;
     for (const auto & r : p.regions) op.regions.append(r);
@@ -304,6 +324,17 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
                      mSealed ? "already sealed" : (!srcVk ? "null/invalid source texture" : "no regions specified"));
             return future;
         }
+
+    if (srcVk->descriptor().samples != 1 || !singleCopyAspect(srcVk->descriptor())) GN_UNLIKELY {
+            GN_ERROR(sLogger, "CNC::recordDownloadImage: image downloads require a single-sample, single-aspect format");
+            return future;
+        }
+    for (const auto & region : regions) {
+        if (!validImageRegion(srcVk->descriptor(), region.mip, region.face, region.imageOffset, region.imageExtent)) GN_UNLIKELY {
+                GN_ERROR(sLogger, "CNC::recordDownloadImage: invalid image region");
+                return future;
+            }
+    }
 
     const auto     fmt = srcVk->descriptor().format;
     const auto &   ld  = fmt.layoutDesc();
@@ -322,8 +353,8 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
     };
     const uint64_t align = lcm4(bb);
 
-    DynaArray<Buffer::StagedTexture::Region> packed;
-    uint64_t                                 cursor = 0;
+    DynaArray<GpuCnC::Region> packed;
+    uint64_t                  cursor = 0;
     for (const auto & r : regions) {
         const uint32_t w        = r.imageExtent.x ? r.imageExtent.x : 1;
         const uint32_t h        = r.imageExtent.y ? r.imageExtent.y : 1;
@@ -334,10 +365,10 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
 
         cursor = ((cursor + align - 1) / align) * align;
 
-        Buffer::StagedTexture::Region pr = r;
-        pr.bufferOffset                  = cursor;
-        pr.bufferRowLength               = 0;
-        pr.bufferHeight                  = 0;
+        GpuCnC::Region pr  = r;
+        pr.dataOffset      = cursor;
+        pr.rowPitchBytes   = blocksX * bb;
+        pr.slicePitchBytes = blocksX * blocksY * bb;
         packed.append(pr);
 
         cursor += regBytes;
@@ -379,6 +410,7 @@ AutoRef<GpuPayload> VkBindlessCnC::seal() {
     cp.heap               = std::move(mHeap);
     cp.heapSetIndex       = mHeapSetIndex;
     cp.pipelineLayout     = mPipelineLayout;
+    cp.uploadStorage      = std::move(mUploadStorage);
     cp.ops                = std::move(mOps);
     cp.immediateData      = std::move(mImmediateData);
     cp.retainedCleanups   = std::move(mRetainedCleanups);

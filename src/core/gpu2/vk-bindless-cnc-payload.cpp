@@ -10,8 +10,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless.cnc.payload");
 namespace GN::gpu2 {
 
 VkBindlessCncPayload::VkBindlessCncPayload(const StrA & name, ConstructParameters params)
-    : GpuPayloadVulkan(name), mGpu(std::move(params.gpu)), mHeap(std::move(params.heap)), mHeapSetIndex(params.heapSetIndex),
-      mPipelineLayout(params.pipelineLayout), mOps(std::move(params.ops)), mImmediateData(std::move(params.immediateData)),
+    : GpuPayloadVulkan(name), mUploadStorage(std::move(params.uploadStorage)), mGpu(std::move(params.gpu)), mHeap(std::move(params.heap)),
+      mHeapSetIndex(params.heapSetIndex), mPipelineLayout(params.pipelineLayout), mOps(std::move(params.ops)), mImmediateData(std::move(params.immediateData)),
       mRetainedCleanups(std::move(params.retainedCleanups)), mPassDescriptorPool(params.passDescriptorPool),
       mPassDescriptorSets(std::move(params.passDescriptorSets)), mPassResources(std::move(params.passResources)) {}
 
@@ -34,6 +34,8 @@ void VkBindlessCncPayload::onGpuComplete() {
                 using T = std::decay_t<decltype(o)>;
                 if constexpr (std::is_same_v<T, StoredUploadBuffer>) {
                     o.staging.clear();
+                } else if constexpr (std::is_same_v<T, StoredBufferToImage>) {
+                    o.src.clear();
                 } else if constexpr (std::is_same_v<T, StoredDownloadBuffer>) {
                     resolveDownloadBuffer(o);
                 } else if constexpr (std::is_same_v<T, StoredDownloadImage>) {
@@ -50,6 +52,7 @@ void VkBindlessCncPayload::onGpuComplete() {
 }
 
 void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
+    mUploadStorage->unmapForSubmit();
     if (!ctx.dev || ctx.cmd.empty()) return;
 
     vk::CommandBuffer vkcb = ctx.cmd.handle();
@@ -176,20 +179,27 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                             }
                         emitBufferCopy(srcVk, dstVk, o.srcOffset, o.dstOffset, o.size, vkcb, tracker);
                         addWrittenBuffer(dstVk);
+                        addWrittenBuffer(srcVk);
                         hasTransferWrite = true;
                     } else if constexpr (std::is_same_v<T, StoredBufferToImage>) {
                         recordBufToImg(o, vkcb, tracker);
                         auto * dstVk = RuntimeType::cast<TextureVulkanBase>(o.dst.get());
                         addWrittenTexture(dstVk, GpuResourceView {});
                         hasTransferWrite = true;
+                    } else if constexpr (std::is_same_v<T, StoredImageToImage>) {
+                        recordImageCopy(o, vkcb, tracker);
+                        addWrittenTexture(RuntimeType::cast<TextureVulkanBase>(o.src.get()), GpuResourceView {});
+                        addWrittenTexture(RuntimeType::cast<TextureVulkanBase>(o.dst.get()), GpuResourceView {});
+                        hasTransferWrite = true;
                     } else if constexpr (std::is_same_v<T, StoredUploadBuffer>) {
                         auto * dstVk = RuntimeType::cast<BufferVulkan>(o.dst.get());
-                        emitBufferCopy(RuntimeType::cast<BufferVulkan>(o.staging.get()), dstVk, 0, o.dstOffset, o.size, vkcb, tracker);
+                        emitBufferCopy(RuntimeType::cast<BufferVulkan>(o.staging.get()), dstVk, o.srcOffset, o.dstOffset, o.size, vkcb, tracker);
                         addWrittenBuffer(dstVk);
                         hasTransferWrite = true;
                     } else if constexpr (std::is_same_v<T, StoredDownloadBuffer>) {
                         emitBufferCopy(RuntimeType::cast<BufferVulkan>(o.src.get()), RuntimeType::cast<BufferVulkan>(o.staging.get()), o.srcOffset, 0, o.size,
                                        vkcb, tracker);
+                        addWrittenBuffer(RuntimeType::cast<BufferVulkan>(o.src.get()));
                     } else if constexpr (std::is_same_v<T, StoredDownloadImage>) {
                         recordDownloadImage(o, vkcb, tracker);
                         auto * srcVk = RuntimeType::cast<TextureVulkanBase>(o.src.get());
