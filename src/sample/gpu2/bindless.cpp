@@ -225,13 +225,8 @@ static gfx::img::Image makeProceduralTextureImage(uint32_t w, uint32_t h, uint32
     return img;
 }
 
-static gfx::img::Image makeDynamicTextureImage(uint32_t w, uint32_t h, uint32_t slot, float animTime) {
-    gfx::img::Extent3D extent;
-    extent.set(w, h, 1);
-    gfx::img::PlaneDesc planeDesc = gfx::img::PlaneDesc::make(gfx::img::PixelFormat::RGBA8(), extent);
-    gfx::img::ImageDesc imageDesc = gfx::img::ImageDesc::make(planeDesc, 1, 1, 1);
-    gfx::img::Image     img(imageDesc);
-    uint8_t *           p = reinterpret_cast<uint8_t *>(img.data());
+static void updateDynamicTextureImage(gfx::img::Image & img, uint32_t w, uint32_t h, uint32_t slot, float animTime) {
+    uint8_t * p = reinterpret_cast<uint8_t *>(img.data());
 
     float t       = animTime * 2.5f + slot * 0.392f;
     float baseHue = std::fmod(t * 0.15f + slot * 0.0625f, 1.0f);
@@ -257,7 +252,6 @@ static gfx::img::Image makeDynamicTextureImage(uint32_t w, uint32_t h, uint32_t 
             px[3] = 255;
         }
     }
-    return img;
 }
 
 // ─── 3D Geometry: Solid Cube & Holographic Octahedron Crystal ────────────────
@@ -559,6 +553,7 @@ int main(int argc, const char ** argv) {
 
     // 5. Dynamic Streaming Textures: dedicated textures updated live in-place (demonstrating UPDATE_AFTER_BIND)
     constexpr uint32_t            NUM_STREAMING_SLOTS = 16;
+    constexpr uint32_t            TEX_BYTES           = TEX_SIZE * TEX_SIZE * 4;
     std::vector<AutoRef<Texture>> streamingTextures(NUM_STREAMING_SLOTS);
     for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
         streamingTextures[s] = Texture::create(
@@ -566,6 +561,15 @@ int main(int argc, const char ** argv) {
             {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(TEX_SIZE, TEX_SIZE).setLevels(1)});
         GN_ASSERT(streamingTextures[s]);
     }
+    auto               streamingBuffer = Buffer::create("streaming-upload-buf", {
+                                                                                    .context = gpu,
+                                                                                    .size    = (uint64_t) NUM_STREAMING_SLOTS * TEX_BYTES,
+                                                                                });
+    gfx::img::Extent3D streamExtent;
+    streamExtent.set(TEX_SIZE, TEX_SIZE, 1);
+    gfx::img::PlaneDesc streamPlaneDesc = gfx::img::PlaneDesc::make(gfx::img::PixelFormat::RGBA8(), streamExtent);
+    gfx::img::ImageDesc streamImageDesc = gfx::img::ImageDesc::make(streamPlaneDesc, 1, 1, 1);
+    gfx::img::Image     dynImg(streamImageDesc);
 
     // 6. Geometry buffers for two distinct meshes: Cube and Crystal Octahedron
     AutoRef<Buffer> cubeVb, cubeIb, gemVb, gemIb;
@@ -723,12 +727,32 @@ int main(int argc, const char ** argv) {
             if (autoCameraOrbit) { cameraAngle += kStepPerFrame * 0.45f; }
         }
 
-        // ─── Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action) ───
+        // ─── Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action via CnC) ───
+        AutoRef<GpuPayload> uploadPayload;
         if (streamingEnabled && !testMode) {
-            for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
-                auto dynImg = makeDynamicTextureImage(TEX_SIZE, TEX_SIZE, s, simTime);
-                streamingTextures[s]->setContent(dynImg);
-                heap->update(textureSlots[s], GpuResourceView(streamingTextures[s]));
+            auto cnc = GpuCnC::create({.gpu = gpu});
+            if (cnc && streamingBuffer) {
+                for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
+                    updateDynamicTextureImage(dynImg, TEX_SIZE, TEX_SIZE, s, simTime);
+                    uint64_t offset = (uint64_t) s * TEX_BYTES;
+                    cnc->recordUploadBuffer(streamingBuffer, offset, ArrayView<const uint8_t>((const uint8_t *) dynImg.data(), TEX_BYTES));
+
+                    GpuCnC::Region region {};
+                    region.bufferOffset    = offset;
+                    region.bufferRowLength = TEX_SIZE;
+                    region.bufferHeight    = TEX_SIZE;
+                    region.mip             = 0;
+                    region.face            = 0;
+                    region.imageExtent     = {TEX_SIZE, TEX_SIZE, 1};
+                    cnc->recordCopyBufferToImage({
+                        .src     = streamingBuffer,
+                        .dst     = streamingTextures[s],
+                        .regions = ArrayView<const GpuCnC::Region>(&region, 1),
+                    });
+
+                    heap->update(textureSlots[s], GpuResourceView(streamingTextures[s]));
+                }
+                uploadPayload = cnc->seal();
             }
         }
 
@@ -858,7 +882,10 @@ int main(int argc, const char ** argv) {
             return -1;
         }
 
-        gpu->submit(GpuContext::SubmitParameters("bindless-frame").appendWork(payload).waitFor(frame.ready));
+        GpuContext::SubmitParameters sp("bindless-frame");
+        if (uploadPayload) sp.appendWork(uploadPayload);
+        sp.appendWork(payload).waitFor(frame.ready);
+        gpu->submit(sp);
 
         // ─── Test Mode Verification ──────────────────────────────────────────
         if (testMode && frameCounter == totalFrames - 1) {
