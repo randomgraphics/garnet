@@ -2,7 +2,6 @@
 
 #include <garnet/GNgpu2.h>
 #include "vk-gpu-context.h"
-#include "vk-buffer-state.h"
 
 namespace GN::gpu2 {
 
@@ -23,8 +22,6 @@ public:
     rv::Ref<rv::Buffer> rvBuffer() const { return mRvBuffer; }
     uint64_t            bufferSize() const { return mSize; }
     uint64_t            gpuAddress() const override { return mDeviceAddress; }
-
-    mutable BufferStateVulkan gpuState {};
 
 protected:
     void unmap(const Mapped &) override;

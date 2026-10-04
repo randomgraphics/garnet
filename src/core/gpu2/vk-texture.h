@@ -37,18 +37,6 @@ public:
         return mRvImage->getView(vp);
     }
 
-    /// Returns a snapshot-by-reference of the image's current per-subresource GPU state.
-    /// Valid only when nativeImage() is non-null; returns an empty default state otherwise.
-    const rv::Image::State & getState() const {
-        if (mRvImage) return mRvImage->getState();
-        static const rv::Image::State sEmpty {};
-        return sEmpty;
-    }
-
-    void setState(const rv::Image::State::PlaneState & newState, const vk::ImageSubresourceRange & range = {}) {
-        if (mRvImage) mRvImage->setState(newState, range);
-    }
-
 protected:
     /// \p leafType must be the concrete class \c TYPE_INFO() (so \c Entity stores the leaf type for \c RuntimeType::cast).
     explicit TextureVulkanBase(const GN::RuntimeType::TypeInfo & leafType, const StrA & entityName);

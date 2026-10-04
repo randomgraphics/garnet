@@ -61,7 +61,6 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
     info.buffer    = mRvBuffer->handle();
     mDeviceAddress = dev.handle().getBufferAddress(info);
 
-    gpuState = BufferStateVulkan::UNDEFINED();
     return true;
 }
 
@@ -90,9 +89,7 @@ Buffer::Mapped BufferVulkan::map() {
 void BufferVulkan::unmap(const Mapped &) {
     if (mRvBuffer && mIsMapped) {
         mRvBuffer->unmap();
-        mIsMapped       = false;
-        gpuState.access = vk::AccessFlagBits::eHostWrite;
-        gpuState.stages = vk::PipelineStageFlagBits::eHost;
+        mIsMapped = false;
     }
 }
 
@@ -113,8 +110,6 @@ bool BufferVulkan::setContent(ArrayView<const uint8_t> data, size_t offset) {
     rv::Buffer::SetContentParameters sc;
     sc.setQueue(*gq).setData(data.data(), data.size()).setOffset((vk::DeviceSize) offset);
     mRvBuffer->setContent(sc);
-    gpuState.access = vk::AccessFlagBits::eTransferWrite;
-    gpuState.stages = vk::PipelineStageFlagBits::eTransfer;
     return true;
 }
 
@@ -133,9 +128,7 @@ std::vector<uint8_t> BufferVulkan::readContent(size_t offset, size_t size) const
     mGpu->waitForIdle();
     rv::Buffer::ReadParameters rp;
     rp.setQueue(*gq).setRange((vk::DeviceSize) offset, size == (size_t) -1 ? vk::DeviceSize(-1) : (vk::DeviceSize) size);
-    auto result     = mRvBuffer->readContent(rp);
-    gpuState.access = vk::AccessFlagBits::eTransferRead;
-    gpuState.stages = vk::PipelineStageFlagBits::eTransfer;
+    auto result = mRvBuffer->readContent(rp);
     return result;
 }
 
@@ -148,7 +141,6 @@ void BufferVulkan::reset() {
     mSize     = 0;
     mMappable = false;
     mGpu.clear();
-    gpuState = BufferStateVulkan::UNDEFINED();
 }
 
 // -----------------------------------------------------------------------------

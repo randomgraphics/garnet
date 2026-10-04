@@ -697,14 +697,12 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         for (const auto & ct : mRenderTarget.colorTargets) {
             if (!ct.target.texture) continue;
             auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture.get());
-            if (!tex || !tex->nativeImage() || tex->isBackbuffer()) continue;
+            if (!tex || !tex->nativeImage()) continue;
             tracker.restoreAttachmentToShaderReadOnly(tex, ct.view(), vkcb);
         }
         if (mRenderTarget.depthStencilTarget.texture) {
             auto * dTex = RuntimeType::cast<TextureVulkanBase>(mRenderTarget.depthStencilTarget.texture.get());
-            if (dTex && dTex->nativeImage() && !dTex->isBackbuffer()) {
-                tracker.restoreAttachmentToShaderReadOnly(dTex, mRenderTarget.depthStencilTarget.view(), vkcb);
-            }
+            if (dTex && dTex->nativeImage()) { tracker.restoreAttachmentToShaderReadOnly(dTex, mRenderTarget.depthStencilTarget.view(), vkcb); }
         }
     }
 }

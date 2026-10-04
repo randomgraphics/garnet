@@ -56,7 +56,8 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
 
     // Offscreen RGBA8 texture used as the render target.
     auto texture = Texture::create(
-        "rt", Texture::CreateParameters {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H)});
+        "rt", Texture::CreateParameters {.context    = gpu,
+                                         .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H).setLevels(1)});
     if (!texture) SKIP("RGBA8 color-attachment texture unavailable");
 
     // Clear-only raster pass: no draw calls, pure blue clear color.
@@ -96,7 +97,7 @@ TEST_CASE("GPU2: raster validates attachment subresources and clips to depth mip
     auto gpu = GpuContext::create("mip-target-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!gpu) SKIP("No GPU context available");
     auto color = Texture::create(
-        "mip-color", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(8, 8).setLevels(4)});
+        "mip-color", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(8, 8).setLevels(1)});
     REQUIRE(color);
     GpuResourceView colorView;
     colorView.resource = color;

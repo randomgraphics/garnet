@@ -651,6 +651,15 @@ int main(int argc, const char ** argv) {
     int totalFrames  = (testMode || windowedTest) ? 10 : 0;
     int frameCounter = 0;
 
+    for (int i = 1; i < argc; ++i) {
+        if ((std::strcmp(argv[i], "--draws") == 0 || std::strcmp(argv[i], "-d") == 0 || std::strcmp(argv[i], "--count") == 0) && i + 1 < argc) {
+            activeDrawCount = static_cast<uint32_t>(std::strtoul(argv[++i], nullptr, 10));
+            activeDrawCount = std::min(activeDrawCount, MAX_OBJECTS);
+        } else if ((std::strcmp(argv[i], "--frames") == 0 || std::strcmp(argv[i], "-f") == 0) && i + 1 < argc) {
+            totalFrames = std::atoi(argv[++i]);
+        }
+    }
+
     bool prevKeyStates[static_cast<size_t>(KeyCode::NUM_KEYS)] = {};
     auto isKeyJustPressed                                      = [&](KeyCode code) -> bool {
         if (!window) return false;

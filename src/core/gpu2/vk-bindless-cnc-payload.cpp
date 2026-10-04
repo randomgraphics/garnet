@@ -192,6 +192,9 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                                        vkcb, tracker);
                     } else if constexpr (std::is_same_v<T, StoredDownloadImage>) {
                         recordDownloadImage(o, vkcb, tracker);
+                        auto * srcVk = RuntimeType::cast<TextureVulkanBase>(o.src.get());
+                        addWrittenTexture(srcVk, GpuResourceView {});
+                        hasTransferWrite = true;
                     }
                 }
             },

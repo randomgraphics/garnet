@@ -50,7 +50,8 @@ TEST_CASE("GPU2: render target hazard — same texture on two color slots aborts
     if (!gpu) SKIP("No GPU context available");
 
     constexpr uint32_t W = 8, H = 8;
-    auto tex = Texture::create("rt", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H)});
+    auto               tex = Texture::create(
+        "rt", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H).setLevels(1)});
     if (!tex) SKIP("RGBA8 texture unavailable");
 
     // Establish a known color: pure red.
@@ -92,10 +93,11 @@ TEST_CASE("GPU2: render target no hazard — distinct cubemap faces on separate 
 
     constexpr uint32_t W = 8, H = 8;
     // Square 6-face cubemap; each face is a distinct array layer.
-    auto cubemap = Texture::create("cube", {
-                                               .context    = gpu,
-                                               .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H).setFaces(6),
-                                           });
+    auto cubemap =
+        Texture::create("cube", {
+                                    .context    = gpu,
+                                    .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H).setFaces(6).setLevels(1),
+                                });
     if (!cubemap) SKIP("Cubemap RGBA8 texture unavailable");
 
     // Build a view for a single face (one mip, one layer) at the given face index.
@@ -135,12 +137,13 @@ TEST_CASE("GPU2: render target hazard — same texture as both color and depth-s
 
     constexpr uint32_t W = 8, H = 8;
     // A color target for the actual render (so the pass has something to draw to).
-    auto colorTex =
-        Texture::create("color", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H)});
+    auto colorTex = Texture::create(
+        "color", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H).setLevels(1)});
     if (!colorTex) SKIP("RGBA8 texture unavailable");
 
     // A depth texture whose format is used as BOTH color and depth target — clear abuse.
-    auto depthTex = Texture::create("depth", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(caps.defaultDepthFormat).setDimensions(W, H)});
+    auto depthTex =
+        Texture::create("depth", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(caps.defaultDepthFormat).setDimensions(W, H).setLevels(1)});
     if (!depthTex) SKIP("Depth texture unavailable");
 
     REQUIRE(clearToColor(gpu, colorTex, 1.0f, 0.0f, 0.0f)); // prime color to red

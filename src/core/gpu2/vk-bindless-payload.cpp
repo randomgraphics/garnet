@@ -236,7 +236,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     for (const auto & ct : mRenderTarget.colorTargets) {
         if (!ct.target.texture) continue;
         auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture.get());
-        if (!tex || !tex->nativeImage() || tex->isBackbuffer()) continue;
+        if (!tex || !tex->nativeImage()) continue;
 
         if (ctx.batchTracker) {
             ctx.batchTracker->restoreAttachmentToShaderReadOnly(tex, ct.view(), vkcb);
@@ -252,17 +252,12 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
             vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput,
                                  vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, {}, 0, nullptr, 0, nullptr, 1, &b);
-            rv::Image::State::PlaneState ps;
-            ps.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            ps.access = vk::AccessFlagBits::eShaderRead;
-            ps.stages = vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
-            tex->setState(ps, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, ct.target.mip, 1, ct.target.face, 1));
         }
     }
 
     if (hasDepth && depthImg) {
         auto * dTex = RuntimeType::cast<TextureVulkanBase>(mRenderTarget.depthStencilTarget.texture.get());
-        if (dTex && !dTex->isBackbuffer()) {
+        if (dTex) {
             if (ctx.batchTracker) {
                 ctx.batchTracker->restoreAttachmentToShaderReadOnly(dTex, mRenderTarget.depthStencilTarget.view(), vkcb);
             } else {
@@ -277,12 +272,6 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
                 vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eLateFragmentTests,
                                      vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, {}, 0, nullptr, 0, nullptr, 1, &b);
-                rv::Image::State::PlaneState ps;
-                ps.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
-                ps.access = vk::AccessFlagBits::eShaderRead;
-                ps.stages = vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
-                dTex->setState(ps, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1,
-                                                             mRenderTarget.depthStencilTarget.face, 1));
             }
         }
     }

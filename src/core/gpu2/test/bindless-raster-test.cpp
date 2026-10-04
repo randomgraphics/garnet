@@ -210,17 +210,6 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
         submitAndWait(gpu, "submit-green", payload);
     }
 
-    // Invariant check: after bindless pass ends, the render target must be automatically restored
-    // to SHADER_READ_ONLY_OPTIMAL layout on GPU.
-    {
-        auto * vkTex = RuntimeType::cast<TextureVulkanBase>(targetTex.get());
-        REQUIRE(vkTex);
-        const auto & state = vkTex->getState();
-        const auto * plane = state.get(0, 0, vk::ImageAspectFlagBits::eColor);
-        REQUIRE(plane);
-        CHECK(plane->layout == vk::ImageLayout::eShaderReadOnlyOptimal);
-    }
-
     // Verify rendered pixels: green = (0, 255, 0, 255)
     {
         gfx::img::Image result = targetTex->readback();

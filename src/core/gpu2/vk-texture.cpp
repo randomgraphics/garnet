@@ -143,16 +143,14 @@ bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
             const uint32_t w     = (uint32_t) plane.extent.w;
             const uint32_t h     = (uint32_t) plane.extent.h;
             if (w == 0 || h == 0) continue;
+            const size_t                    planeSize = (size_t) plane.slice * (plane.extent.d ? (size_t) plane.extent.d : 1u);
             rv::Image::SetContentParameters sc;
             sc.setQueue(*gq);
             sc.mipLevel   = l;
             sc.arrayLayer = f;
-            sc.area.w     = w;
-            sc.area.h     = h;
-            sc.area.d     = 1;
             sc.pitch      = (size_t) plane.pitch;
-            sc.pixels     = image.at(pc);
-            mRvImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
+            sc.setPixels(planeSize, image.at(pc));
+            mRvImage->setContent(sc);
         }
     }
     return true;
@@ -239,15 +237,14 @@ public:
                 const uint32_t w     = (uint32_t) plane.extent.w;
                 const uint32_t h     = (uint32_t) plane.extent.h;
                 if (w == 0 || h == 0) continue;
+                const size_t                    planeSize = (size_t) plane.slice * (plane.extent.d ? (size_t) plane.extent.d : 1u);
                 rv::Image::SetContentParameters sc;
-                sc.setQueue(*gq).mipLevel = l;
-                sc.arrayLayer             = f;
-                sc.area.w                 = w;
-                sc.area.h                 = h;
-                sc.area.d                 = 1;
-                sc.pitch                  = (size_t) plane.pitch;
-                sc.pixels                 = image.at(pc);
-                mOwnedImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
+                sc.setQueue(*gq);
+                sc.mipLevel   = l;
+                sc.arrayLayer = f;
+                sc.pitch      = (size_t) plane.pitch;
+                sc.setPixels(planeSize, image.at(pc));
+                mOwnedImage->setContent(sc);
             }
 
         GN_INFO(sLogger, "Loaded texture '{}'", path);

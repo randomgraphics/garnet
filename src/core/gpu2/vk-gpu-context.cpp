@@ -300,10 +300,6 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     auto submissionId  = queue->submit2(qsp);
     if (!submissionId) return; // submission failed somehow. bail out.
 
-    // The GPU has accepted the commands. Update CPU-side resource state now so subsequent
-    // submissions compute correct "from" layouts for their barriers.
-    batchTracker.flushToResources();
-
     // Mark all workload as "submitted"
     for (auto & w : works) {
         w->setTimelinePoint(mainPoint);
