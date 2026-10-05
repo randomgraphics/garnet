@@ -144,10 +144,11 @@ jobs:
           command: env/bin/cit.py -l
 
   build-linux-gcc:
-    # Linux runs coverage in place of debug. The coverage variant is the same Debug/-O0
-    # configuration plus --coverage in its own build folder, so it exercises what the debug
-    # job did while also producing a report. Windows and Android keep the debug variant.
-    parameters: &linux-build-parameters
+    # Only the gcc Linux job runs coverage, in place of debug. The coverage variant is the
+    # same Debug/-O0 configuration plus --coverage in its own build folder, so it exercises
+    # what the debug job did while also producing a report. clang, Windows and Android keep
+    # debug: clang coverage data can only be decoded by llvm-cov, not GNU gcov.
+    parameters:
       variant:
         type: enum
         enum: [coverage, profile, release]
@@ -184,7 +185,7 @@ jobs:
           destination: coverage
 
   build-linux-clang:
-    parameters: *linux-build-parameters
+    parameters: *build-parameters
     docker:
       - image: *docker-image
     steps:
@@ -224,14 +225,14 @@ workflows:
             - lint
       - build-linux-gcc:
           name: build-linux-gcc-<< matrix.variant >>
-          matrix: &linux-build-matrix
+          matrix:
             parameters:
               variant: [coverage, profile, release]
           requires:
             - lint
       - build-linux-clang:
           name: build-linux-clang-<< matrix.variant >>
-          matrix: *linux-build-matrix
+          matrix: *build-matrix
           requires:
             - lint
       - build-android:

@@ -95,12 +95,17 @@ grep -c -- '--coverage' build/linux.gcc.c/build.ninja
 
 ## CI
 
-CircleCI runs `coverage`, `profile`, `release` for `build-linux-gcc` and
-`build-linux-clang`, and keeps `debug`, `profile`, `release` for Windows and Android. The
-coverage variant replaces the Linux debug job rather than adding to it — same `-O0` Debug
-configuration, plus instrumentation and a report.
+Only `build-linux-gcc` runs `coverage`, `profile`, `release`. `build-linux-clang`, Windows
+and Android all keep `debug`, `profile`, `release`. The coverage variant replaces the gcc
+debug job rather than adding to it — same `-O0` Debug configuration, plus instrumentation and
+a report.
+
+clang is excluded because its coverage data can only be decoded by `llvm-cov`, which the CI
+image does not provide, and because `build-linux-clang` has no test step anyway, so running
+the variant there would only prove that it compiles.
 
 `build-linux-gcc` branches its test step: the coverage variant runs
-`env/bin/code-coverage.py --no-build`, everything else runs `env/bin/cit.py -t`.
-`build-linux-clang` has no test step, so it only proves the variant compiles and never needs
-`llvm-cov`.
+`env/bin/code-coverage.py --no-build`, everything else runs `env/bin/cit.py -t`. A step
+before `store_artifacts` creates the report directory, because that step is unconditional and
+only the coverage variant produces a report; the other variants upload an empty folder rather
+than failing.

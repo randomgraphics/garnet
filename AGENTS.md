@@ -110,9 +110,10 @@ Reports land in `build/linux.gcc.c/coverage/`, which the `/build*/` gitignore ru
 called per project directory scope instead of at the repository root precisely so that
 vendored code stays out of the build and out of the report.
 
-Coverage is Linux only; `build.py c` fails with an explicit message elsewhere. CircleCI
-runs `coverage`, `profile` and `release` for the Linux gcc and clang jobs, and keeps
-`debug`, `profile`, `release` for Windows and Android.
+Coverage is Linux only; `build.py c` fails with an explicit message elsewhere. In CircleCI
+only `build-linux-gcc` runs `coverage`, `profile`, `release`; `build-linux-clang`, Windows
+and Android all keep `debug`, `profile`, `release`. clang is left out because its coverage
+data can only be decoded by `llvm-cov`, not GNU `gcov`.
 
 ## Coding Rules
 
