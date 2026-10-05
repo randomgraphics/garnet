@@ -24,6 +24,12 @@ if(VULKAN_FOUND)
 
     GN_compile_glsl_shaders(_fx2_shader_hdrs
         SOURCES ${_fx2_lit_shaders}
+                ${_fx2_shader_dir}/bindless-unlit.vert
+                ${_fx2_shader_dir}/bindless-unlit-texture.vert
+                ${_fx2_shader_dir}/bindless-unlit.frag
+                ${_fx2_shader_dir}/bindless-lambertian.vert
+                ${_fx2_shader_dir}/bindless-lambertian-texture.vert
+                ${_fx2_shader_dir}/bindless-lambertian.frag
                 ${_fx2_shader_dir}/image-kernel.vert
                 ${_fx2_shader_dir}/blur-kernel.frag ${_fx2_shader_dir}/blur-kernel.comp
                 ${_fx2_shader_dir}/mipmap-kernel.frag ${_fx2_shader_dir}/mipmap-kernel.comp

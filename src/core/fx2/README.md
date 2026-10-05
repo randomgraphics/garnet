@@ -153,12 +153,10 @@ differently.
 | 1 | 1 | Shared-shader-constant (SSC) uniform buffer | Captured shared-state version |
 | 2+ | As needed | Optional additional pass resources | Explicit extension point |
 
-Set 0's binding count, ordering, descriptor indexing, and material chunk contract
-belong to gpu2 and are documented in the [gpu2 design](../gpu2/README.md); FX2
-neither defines nor restates them. SSC retains and shares one heap as an opaque
-object. Texture views register separately from samplers, so thousands of textures
-may share a few samplers; shader sampling uses both indices and texel fetch needs
-only a texture index.
+Set 0's descriptor and material contracts belong to gpu2, as documented in
+[gpu2 design](../gpu2/README.md). Callers share the heap directly with
+Raster/CnC; SSC neither owns nor requires it. Texture and sampler descriptors
+remain separate so many textures can share a few samplers.
 
 Set 1 belongs entirely to SSC and is not part of the heap. It is supplied through
 `Raster`/`CnC` `CreateParameters::passResources`, indexed by absolute set number as
@@ -176,33 +174,36 @@ and the SSC uniform records only which chunk is selected.
 
 ### SSC-owned storage
 
-A long-lived `fx2::bindless::SharedShaderConstants` (SSC) owns the GPU data shared
-by the new kernels. There is no separate `fx2::bindless::Device` class. SSC
-implements exactly two stores and shares one heap:
+A long-lived `fx2::bindless::SharedShaderConstants` (SSC) owns the uniform and
+streaming stores shared by new kernels. There is no separate
+`fx2::bindless::Device` class. SSC is created with a GPU context and has no
+descriptor-heap dependency.
 
 | Store | Set / binding | Entry lifetime | Transfer mechanism |
 | --- | --- | --- | --- |
 | Streaming pool | 1 / 0 | One-time use, until the consuming payload releases it | None: CPU writes a mapped range |
 | Versioned shared-state uniforms | 1 / 1 | One recorded version, until its last lease releases | Caller-supplied CnC |
-| gpu2 descriptor heap, materials included | 0 | gpu2-defined | gpu2-defined |
 
-Long-lived, read-only, non-uniform records — materials included — are **not** an
-SSC store. The gpu2 descriptor heap owns that material buffer, as described in the
-[gpu2 design](../gpu2/README.md#b1-built-in-material-buffer), and FX2 implements no
-second material allocator. The heap performs descriptor allocation and registration;
-SSC retains and shares it rather than introducing a second descriptor manager, and
-also owns shared fallback resources. Across its two stores SSC is responsible for
-GPU backing buffers, allocation, upload batching, versioning, resource retention,
-and safe recycling.
+Long-lived, read-only, non-uniform records, including materials, are not an
+SSC store. The gpu2 descriptor heap owns the material buffer, as described in
+[gpu2 design](../gpu2/README.md#b1-built-in-material-buffer). Callers manage
+that heap separately and provide it directly to Raster/CnC. SSC exposes no
+heap accessor or material allocator. Across its two stores SSC is responsible
+for GPU backing buffers, allocation, upload batching, versioning, resource
+retention, and safe recycling.
 
 #### Versioned uniform store
 
-SSC's uniform management is generic: it allocates, versions, uploads, and recycles
-byte ranges, and knows only each record's total size. The concrete combined-uniform
-layout — frame, direct lighting, camera/view, and active-sky selection — is defined
-outside SSC as an independent structure that callers pack into bytes before
-recording an update. The same management therefore serves any uniform format, not
-only the FX2 scene layout. There is no separate camera binding.
+SSC's uniform management is generic: it allocates, versions, uploads, and
+recycles opaque byte ranges. The standard `SharedUniforms` schema is defined in
+the public bindless SSC header, without making the storage implementation
+interpret it. One 1,024-byte std140 UBO contains frame counter/duration, a fixed
+array of 16 legacy-compatible direct-light records with an active count, all
+camera/view fields, and an active sky-material index. There is no separate
+camera or light buffer. Environment texture bindings and calibration fields
+are absent; those belong to sky materials. `NO_SKY_MATERIAL` is UINT32_MAX;
+index zero remains valid. Callers fill the struct and upload all its bytes with
+`recordUniformUpdate()`.
 
 Each update captures its own bytes in a newly allocated, independently aligned
 range, so two updates are distinct GPU bytes rather than two writes into one
@@ -284,10 +285,11 @@ multiple passes. Dropped initialization must be retryable or cause explicit
 uninitialized-use rejection. Recorders copy immediate CPU input and retain GPU
 resources through completion or cancellation.
 
-Bindless indices do not describe resource hazards. Track sampled/storage views,
-geometry, attachments, transfers, and compute writes explicitly. Reject unsupported
-attachment feedback before appending work. Preserve blur intermediates, in-place
-semantics, odd edges, per-mip dependencies, and raster/compute visibility.
+Follow gpu2's read-ready invariant: raster readers perform no per-draw table
+scanning, resource tracking, or barriers. Writers declare destinations at
+operation/pass scope and restore read-ready state after completion. Schedule
+writers before readers. Do not sample an active render attachment or mutate
+heap descriptors still used by recorded/in-flight consumers.
 
 ### Delivery and verification
 
@@ -301,3 +303,38 @@ existing APIs. Verify each step before starting the next. Final checks cover GPU
 readback, descriptor/allocation lifetime, cancellation, validation-clean samples,
 and a reproducible 10,000-draw recording-cost comparison. Previous stash test
 results are historical evidence, not verification of the second attempt.
+
+### Simple bindless kernels
+
+`fx2::bindless::UnlitKernel` and `LambertianKernel` use only SSC's public
+`UniformState` contract and the standard `SharedUniforms` schema in the SSC
+header. Upload the bytes with `recordUniformUpdate()`, then use
+`sharedUniformResources(state)` as the caller-owned Raster's pass resources.
+Recording a draw retains the state lease until payload completion/discard.
+The producer is submitted once before all consumers; kernels never submit it.
+
+Textures and samplers are registered directly in the caller's gpu2 heap.
+Inputs contain tagged descriptor handles; shaders use the slots. The heap is
+bound at set 0 with its default bindingIndex 0. Optional color maps modulate
+the input color. Lambertian also accepts a tangent-space normal map, deriving
+its tangent frame from world-position/UV derivatives. UV location 2 is needed
+only when a map is enabled; normal location 1 is needed for Lambertian.
+Unlit bypasses lighting/exposure. Lambertian handles up to 16 direct lights, inverse-transpose normals, back faces, and exposure/Reinhard.
+Both support emissive and alpha cutoff, inherit raster policy, and use 128
+vertex-stage push bytes. These draws need no streaming allocation.
+
+Readers follow gpu2's read-ready invariant and add no per-draw resource
+tracking. Callers schedule writers first, keep descriptor slots allocated and
+unchanged through final consumption, and avoid attachment feedback. SSC has no
+heap dependency. Its current implementation is still a dummy, so this exercise
+has compile/link verification only; runtime rendering has not been tested.
+
+The standard direct-light ABI matches legacy FX2's three vec4 light records.
+Lambertian handles directional and point attenuation/range; SPOT currently
+uses point attenuation, matching the legacy Lambertian shader. There is no
+ambient or environment texture contribution until sky-material sampling is
+implemented. Camera exposure remains in the shared UBO.
+
+SharedUniforms physical order is frame/sky header, camera fields, then direct
+lighting. numLights is at byte 244 and lights[16] starts at byte 256. The
+combined UBO remains 1024 bytes, with a fixed maximum of 16 direct lights.
