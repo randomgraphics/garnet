@@ -1,3 +1,5 @@
+GN_enable_code_coverage()
+
 add_subdirectory(bezier)
 add_subdirectory(cuda)
 add_subdirectory(dolphin)

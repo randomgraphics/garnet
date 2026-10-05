@@ -24,6 +24,10 @@ endfunction()
 
 add_subdirectory(3rdparty)
 
+# Deliberately after the Catch2 subdirectory: vendored test framework code must not be
+# instrumented, or its lines would dominate the report.
+GN_enable_code_coverage()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include)
 
 # this is needed for fmt to build correctly with unicode support on Windows platform.
