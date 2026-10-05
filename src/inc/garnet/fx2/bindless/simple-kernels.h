@@ -12,9 +12,19 @@ namespace GN::fx2::bindless {
 GN_API gpu2::GpuResourceTable sharedUniformResources(const AutoRef<SharedShaderConstants::UniformState> & state);
 
 struct CommonDrawParameter {
+    /// Fixed shader input locations used by the simple bindless kernels.
+    /// Attribute locations are the `location` values in RasterGeometry::format.attributes.
+    static constexpr uint32_t POSITION_LOCATION  = 0;
+    static constexpr uint32_t NORMAL_LOCATION    = 1;
+    static constexpr uint32_t TEXCOORD_LOCATION  = 2;
+
     gpu2::bindless::Raster & raster;
     AutoRef<SharedShaderConstants::UniformState> ssc;
-    gpu2::RasterGeometry geometry; ///< Position at location 0; UV at location 2 when a custom map is used.
+    /// Vertex attributes must use the locations above and map each attribute's binding, offset,
+    /// and format to the supplied vertex buffers. Position is F16_3 or F32_3. Lambertian also
+    /// requires normal as F16_3 or F32_3. A material with a custom color or normal map requires
+    /// UV as F16_2 or F32_2. Unlit does not consume normals. UV is unused when no map is set.
+    gpu2::RasterGeometry geometry;
     gpu2::RasterState    states;
 };
 

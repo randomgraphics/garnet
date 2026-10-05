@@ -99,8 +99,12 @@ int main(int argc, const char * argv[]) {
 
     RasterGeometry geometry;
     geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 5 * sizeof(float)});
-    geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-    geometry.format.attributes.push_back({.location = 2, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
+    geometry.format.attributes.push_back(
+        {.location = fxBindless::CommonDrawParameter::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back({.location = fxBindless::CommonDrawParameter::TEXCOORD_LOCATION,
+                                          .binding = 0,
+                                          .offset = 3 * sizeof(float),
+                                          .format = RasterGeometry::AttributeFormat::F32_2});
     geometry.vertexCount = 3;
 
     for (int frame = 0; !headless || frame < 3; ++frame) {
