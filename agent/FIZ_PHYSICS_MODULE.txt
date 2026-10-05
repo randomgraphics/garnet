@@ -1,0 +1,240 @@
+# Assignment: Physics Module (fiz) & E2 Physical Domain
+
+## Overview
+
+- Branch: `feature/phys/main`
+- Status: Phase 3 Completed (Awaiting user sign-off)
+- Completed work:
+  - Phase 1 (Jolt Integration & Core Solid Dynamics).
+  - Phase 3 (Gel Soft-Body Dynamics via XPBD & Bouncy Ball Simulation).
+  - `GelMesh` and `Gel` interfaces refactored to return slice-safe `ArrayView<const T>` (`GelMesh::vertices()`, `faces()`, `tetrahedra()`, `edges()`, and `Gel::surfaceIndices()`).
+  - Demo updated to a single big bouncy ball ($R = 2.0\text{m}$, dropped from $Y = 10.0\text{m}$) falling to the ground, squashing, and bouncing up and down.
+  - Dynamic strain color mapping (ruby jelly to bright shockwave gold) and window title telemetry (Height, Squash %, Volume Error %, Physics ms, FPS).
+  - Fixed `GelMesh::createSphere` topology with distinct pole vertices, outward-facing surface faces, positive signed volume determinants, and lumped center vertex mass.
+  - Decoupled `mVolumeConstraints` and pneumatic `mPressure` in `GelSolverImpl::createGel` to eliminate solver conflict.
+  - Verified 100% pass on internal test suite (`cit.py -t`, 168 test cases, 6198 assertions), headless verification (`GNsample-fiz-gel t`, 180 frames, freefall/impact/rebound/volume stability: YES, avg physics 0.37 ms), and code style (`cit.py -l`).
+- Current step: Phase 3 complete — Awaiting user sign-off.
+- Remaining work: Phase 2 (E2 integration superseded by agent/E2_WORLD_RUNTIME.txt), Phase 4 (Cloth & Hair), Phase 5 (Fluids & Ocean).
+- Latest verification results: `python env/bin/cit.py -t` passed all 168 tests cleanly; `GNsample-fiz-gel.exe t` headless test passed cleanly; `python env/bin/cit.py -l` passed formatting check.
+- Known blockers: None.
+
+---
+
+## Goals
+
+This assignment establishes Garnet's physics and continuous media simulation
+architecture. The work introduces two complementary layers:
+
+1. `GNfiz` (`GN::fiz`): a standalone, low-level physics module under `src/core/fiz/`
+   and `src/inc/garnet/GNfiz.h` occupying the same architectural tier as `gpu2`
+   and `fx2`. It delivers atomic, reusable, world-agnostic simulation routines:
+   - Rigid-body mechanics (`Solid`, `Hull`, `Temper`) backed by Jolt Physics.
+   - Soft and bouncy volumetric bodies (`Gel`) via GPU XPBD tetrahedral volume constraints.
+   - Flexible 2D/1D bodies (`Weft` cloth and `Strand` hair) via GPU XPBD compute pipelines.
+   - Gaseous media (`Plume` smoke and `Blaze` fire) via 3D Eulerian Navier-Stokes grids.
+   - Liquids (`Current` SPH/FLIP particles and `Tide` FFT ocean wave spectra).
+2. E2 integration now follows the approved Law/Prime/Slate World Runtime in
+   `src/core/e2/README.md`, tracked by `agent/E2_WORLD_RUNTIME.txt`. The earlier
+   independently ticking PhysicalDomain/PhysicalSnapshot writeback proposal is
+   superseded. This assignment retains its completed GNfiz work and awaits user
+   sign-off; no archival is implied by supersession.
+
+---
+
+## Design
+
+### Low-Level Architecture: `GNfiz`
+
+The `fiz` module provides pure data-driven physics primitives without any coupling
+to engine worlds or scene hierarchies:
+- Defines the canonical `UnitOfTime = std::chrono::nanoseconds;` for all physics/simulation.
+- 100% strict forward determinism: bit-identical reproducible results from identical initial states and integer timestamps.
+- $T$-symmetry where physically permissible: solvers support negative integer durations ($-\Delta t$) for conservative laws via symplectic integrators.
+- Operates in unit-agnostic 32-bit floating-point precision (`Scalar`), independent of E2's 128-bit coordinate space (user defines whether 1.0 is meters, AU, or micrometers).
+- Exposes pure virtual interfaces in `src/inc/garnet/fiz/*.h` guarded by `__GN_INSIDE_FIZ_H__`.
+- Encapsulates Jolt Physics C++ bindings, avoiding leaking external headers into client code.
+- GPU simulations emit `gpu2` compute resources that convert directly into `rdg2` artifacts
+  for rendering with zero CPU readback.
+- Shared GPU Geometry & Procedural Streaming: GPU simulations (`Gel`, `Weft`, `Strand`, `Tide`)
+  share vertex buffers directly with rendering (zero CPU readback, zero GPU duplication);
+  procedural generators stream out once to shared GPU buffers to guarantee bit-identical
+  physical-visual alignment and 50% compute savings.
+
+### High-Level E2 Integration — superseded
+
+Use `agent/E2_WORLD_RUNTIME.txt` and `src/core/e2/README.md` for active work.
+DynamicsLaw reads immutable Prime, performs coordinated local solving and writes
+final state into write-only Slate. World publishes the complete tick. The MVP
+halts on failure and does not promise solver rollback, reliable Intents, reverse
+World time or replay. Keep GNfiz independent of E2 and preserve exact integer
+coordinate rebasing at the adapter boundary.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 3.5 — Verify headless & interactive correctness, verify FPS performance, and optimize
+In progress: Awaiting user sign-off for Phase 3 (Gel Soft-Body Dynamics)
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Key design and specification documents:
+- `src/core/fiz/README.md`: canonical design and API guide for GNfiz.
+- `src/core/e2/README.md`: canonical approved data-driven World Runtime design.
+- `src/inc/garnet/e2/visual.h`: reference pattern for domain, tableau, and moment.
+- `src/inc/garnet/e2/world.h`: reference pattern for Form, Facet, and World evolution.
+- `src/inc/garnet/GNengine2.h`: monolithic header entry for engine2.
+
+--- BUILD / CI ---
+
+```bash
+python env/bin/build.py d              # Debug build
+python env/bin/build.py p              # Profile / RelWithDebInfo build
+python env/bin/cit.py -l               # Formatting / lint check
+python env/bin/cit.py -t               # Test suite execution
+python env/bin/format-all-sources.py -d # Format touched files
+```
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep changes small, modular, and verifiable at every step.
+- All code must build cleanly with zero warnings (`/WX` on MSVC, `-Werror` on GCC/Clang).
+- Monolithic header convention: public access strictly via `GNfiz.h` and `GNengine2.h`.
+- Subheaders reject direct inclusion with guard macros (`__GN_INSIDE_FIZ_H__`).
+- Pure virtual public interfaces; private concrete implementations live in `src/core/fiz/`
+  and `src/core/e2/`.
+- Use `AutoRef<T>` / `Ref<T>` for ownership; use `RCRT64` and `RuntimeType` for RTTI.
+- Sample assets must be 100% CC0 (Public Domain), directly checked in with provenance/credits.
+- Run `format-all-sources.py -d` before each commit.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: Jolt Integration & Core Solid Dynamics (GNfiz)
+─────────────────────────────────────────────────────
+  Task 1.1: Add Jolt Physics to 3rdparty and configure CMake
+    - Integrate shallow Jolt submodule or package in `src/3rdparty/`.
+    - Configure CMake compile options and ensure clean multi-platform compilation.
+    Verify: `python env/bin/build.py -C d` builds 3rdparty Jolt successfully.
+    Commit: "3rdparty: integrate Jolt Physics build (Phase 1.1)"
+
+  Task 1.2: Establish GNfiz module structure and public headers
+    - Create `src/inc/garnet/GNfiz.h` and `src/inc/garnet/fiz/common.h`.
+    - Create `temper.h`, `hull.h`, and `solid.h` interfaces.
+    - Wire `src/core/fiz/CMakeLists.txt` into `GNcore-objects`.
+    Verify: `python env/bin/build.py d` builds with new empty fiz module headers.
+    Commit: "fiz: scaffold GNfiz module and solid public interfaces (Phase 1.2)"
+
+  Task 1.3: Implement SolidEngine and Jolt backend wrapper
+    - Implement `BoxHull`, `SphereHull`, `CapsuleHull`, and `ConvexHull`.
+    - Implement Jolt body management and step simulation in `src/core/fiz/`.
+    - Add unit tests in `src/core/fiz/test/solid-test.cpp`.
+    Verify: `python env/bin/cit.py -t` passes all solid unit tests.
+    Commit: "fiz: implement solid rigid body mechanics via Jolt (Phase 1.3)"
+
+  Task 1.4: Implement standalone rigid body sample (GNsample-fiz-solids)
+    - Standalone sample app under `src/sample/fiz/solids.cpp`, entirely uncoupled from E2.
+    - Demonstrates thousands of colliding/stacking boxes, spheres, capsules, and hulls.
+    Verify: `GNsample-fiz-solids` runs and renders dynamic rigid bodies with physics.
+    Commit: "sample: add standalone fiz solids sample app (Phase 1.4)"
+
+  Task 1.5: Implement core deterministic and symmetry unit test suite (GNtest-internal)
+    - `deterministic-forward-test.cpp`: 10 repeated runs bit-identical, thread-count invariance (1, 2, 4, 8 threads).
+    - `t-reversal-symmetry-test.cpp`: conservative motion reversal, planetary orbits, energy conservation.
+    - `integer-time-test.cpp`: zero-drift integer nanosecond accumulation and exact cancellation.
+    - `scale-and-coordinate-test.cpp`: numerical stability across AU, meter, and nanometer scales.
+    - `solid-collision-test.cpp`: stacking stability, friction angles, restitution, CCD anti-tunneling.
+    Verify: `python env/bin/cit.py -t` passes all deterministic tests with bit-identical assertions.
+    Commit: "fiz: implement deterministic and T-symmetry unit tests (Phase 1.5)"
+
+Phase 2: E2 integration — SUPERSEDED
+─────────────────────────────────────────────────────
+  Active tasks are tracked in agent/E2_WORLD_RUNTIME.txt. Do not implement the
+  former PhysicalDomain/PhysicalSnapshot writeback plan from this assignment.
+
+Phase 3: Gel Soft-Body Dynamics (GNfiz)
+─────────────────────────────────────────────────────
+  Task 3.1: Define Gel, GelMesh, and GelSolver public interfaces
+    - Create `src/inc/garnet/fiz/gel.h` and include in `GNfiz.h`.
+    - Declare `GelMesh::Vertex`, `Face`, `Tetrahedron`, `Edge`, `GelMesh`, `GelDesc`, `Gel`, `GelSolverDesc`, `GelSolver`.
+    Verify: `python env/bin/build.py d` builds with new gel public headers.
+    Commit: "fiz: declare Gel, GelMesh, and GelSolver public interfaces (Phase 3.1)"
+
+  Task 3.2: Implement Gel soft-body dynamics and Jolt backend solver
+    - Implement `GelMeshImpl`, `GelImpl`, and `GelSolverImpl` in `src/core/fiz/gel.cpp`.
+    - Support XPBD volume constraints (incompressibility), edge springs, pneumatic pressure, deformation extraction, and mutual collision with rigid bodies.
+    Verify: `python env/bin/build.py d` compiles Gel implementation cleanly.
+    Commit: "fiz: implement Gel soft-body dynamics and solver (Phase 3.2)"
+
+  Task 3.3: Implement Gel soft-body incompressibility and recovery unit test suite
+    - Create `src/core/fiz/test/gel-softbody-test.cpp` and wire into `internal-test.cmake`.
+    - Verify hydrostatic volume preservation under impact (±0.5%), elastic shape recovery, bounciness, and forward determinism.
+    Verify: `python env/bin/cit.py -t` passes all Gel soft-body tests.
+    Commit: "fiz: implement Gel soft-body incompressibility and recovery unit tests (Phase 3.3)"
+
+  Task 3.4: Implement standalone visual gel sample application (GNsample-fiz-gel)
+    - Create `src/sample/fiz/gel.cpp` and wire into `src/sample/fiz/CMakeLists.txt`.
+    - Render deformed gel meshes with dynamically updated vertices and normals.
+    - Support interactive mode (camera orbit/zoom, projectile launching, resetting) and headless test mode (`t`).
+    Verify: `GNsample-fiz-gel t` runs headless test and passes with zero error.
+    Commit: "sample: add standalone fiz gel soft-body visual sample app (Phase 3.4)"
+
+  Task 3.5: Verify headless & interactive correctness, verify FPS performance, and optimize
+    - Validate headless and interactive execution.
+    - Measure physics ms, draw ms, and FPS telemetry.
+    - Optimize dynamic vertex buffer uploads and solver stepping.
+    Verify: High framerate (60+ FPS) achieved and verified; clean exit.
+    Commit: "fiz, sample: verify correctness, optimize gel rendering, and verify FPS (Phase 3.5)"
+
+Phase 4: Deformable Cloth & Hair (GNfiz) — FUTURE
+─────────────────────────────────────────────────────
+  Task 4.1: GPU XPBD Weft (cloth) simulation compute pipeline
+  Task 4.2: GPU Strand (hair/fur) guide-chain dynamics and interpolation
+  Task 4.3: Standalone cloth sample in `src/sample/fiz/cloth.cpp` (GNsample-fiz-cloth)
+  Task 4.4: Standalone hair sample in `src/sample/fiz/hair.cpp` (GNsample-fiz-hair)
+
+Phase 5: Liquids & Gaseous Media — Fluid Simulation (GNfiz) — FUTURE
+─────────────────────────────────────────────────────
+  Task 4.1: GPU 2D IFFT Tide (ocean) wave spectrum and displacement maps
+  Task 4.2: GPU 3D Eulerian Plume & Blaze (smoke/fire) grid solver
+  Task 4.3: GPU Current (SPH/FLIP) particle liquid simulation
+  Task 4.4: RDG2 zero-readback volumetric & ocean surface integration
+  Task 4.5: Standalone ocean sample in `src/sample/fiz/ocean.cpp` (GNsample-fiz-ocean)
+  Task 4.6: Standalone smoke/fire sample in `src/sample/fiz/smoke-fire.cpp` (GNsample-fiz-smoke-fire)
+  Task 4.7: Standalone fluid particles sample in `src/sample/fiz/fluid-particles.cpp` (GNsample-fiz-fluid-particles)
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (Jolt Integration & Core Solid Dynamics):
+  src/3rdparty/CMakeLists.txt            — add Jolt build target
+  src/core/CMakeLists.txt                — include fiz/CMakeLists.txt
+  src/core/fiz/CMakeLists.txt            — NEW: fiz library build script
+  src/core/fiz/pch.h                     — NEW: precompiled header
+  src/core/fiz/pch.cpp                   — NEW: precompiled header source
+  src/core/fiz/solid-engine-jolt.h       — NEW: Jolt wrapper internal header
+  src/core/fiz/solid-engine-jolt.cpp     — NEW: Jolt wrapper implementation
+  src/core/fiz/hull.cpp                  — NEW: collision hull implementations
+  src/core/fiz/test/solid-test.cpp       — NEW: solid dynamics unit test
+  src/inc/garnet/GNfiz.h                 — NEW: monolithic fiz header
+  src/inc/garnet/fiz/common.h            — NEW: common types and macros
+  src/inc/garnet/fiz/temper.h            — NEW: material temper interface
+  src/inc/garnet/fiz/hull.h              — NEW: collision hulls interface
+  src/inc/garnet/fiz/solid.h             — NEW: solid body interface
+  src/inc/garnet/fiz/gel.h               — NEW: gel/soft body interface
+  src/inc/garnet/fiz/domain.h            — NEW: standalone physical domain
+  src/sample/CMakeLists.txt              — add_subdirectory(fiz)
+  src/sample/fiz/CMakeLists.txt          — NEW: standalone fiz samples build script
+  src/sample/fiz/solids.cpp              — NEW: standalone rigid body physics sample
+
+Phase 2 (E2 integration):
+  See agent/E2_WORLD_RUNTIME.txt for the current file plan; old physical.h and
+  independent snapshot-ingress work is superseded.
+
+Phase 3 (Deformable & Flexible Bodies & Samples):
+  src/sample/fiz/gel.cpp                 — NEW: standalone gel/soft-body sample
+  src/sample/fiz/cloth.cpp               — NEW: standalone cloth sample
+  src/sample/fiz/hair.cpp                — NEW: standalone hair sample
+
+Phase 4 (Fluids, Ocean & Samples):
+  src/sample/fiz/ocean.cpp               — NEW: standalone ocean sample
+  src/sample/fiz/smoke-fire.cpp          — NEW: standalone smoke & fire sample
+  src/sample/fiz/fluid-particles.cpp     — NEW: standalone fluid particles sample

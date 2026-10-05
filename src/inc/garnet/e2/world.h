@@ -1,223 +1,281 @@
 #if !defined(__GN_INSIDE_ENGINE2_H__)
-    #error "Do not include <garnet/e2/world.h> directly. Include <garnet/GNengine2.h> instead."
+    #error "Include <garnet/GNengine2.h> instead."
 #endif
-
 #include <functional>
-
-namespace GN::fx2 {
-struct ModelScene;
-}
 
 namespace GN::e2 {
 
-// /// An audio snapshot of something, consumed by audio domain to play sound & music.
-// struct AudioMoment : Being {
-//     GN_E2_DEFINE_A_BEING(Being);
-// };
+/// Universe-scoped identity; zero is invalid. Do not transfer raw IDs between Universes.
+using FormId = int64_t;
+struct PrimeView;
 
-struct World;
-struct Form;
+/// Polymorphic versioned data. Every concrete subclass must clone its complete dynamic type.
+/// Copies must own mutable payloads; immutable resources may be shared between versions.
+/// Derive a Facet's nested Value or a world-state type, then submit copies through Slate.
+struct FacetValue : RefCounter, RuntimeType {
 
-/// A unit of state and behavior attached to a form. A form composes its capabilities from a
-/// flat list of facets (visual, audio, physics, gameplay, ...). Facets are the extension
-/// point of the simulation: aspects that a form has are expressed by attaching facets, not
-/// by subclassing Form. A facet never forms a hierarchy of its own — tree structure belongs
-/// to forms.
-struct Facet : Being {
-    GN_E2_DEFINE_A_BEING(Being);
+    // These mixins provide ownership and RTTI without an instance identity.
+    GN_API GN_REGISTER_RUNTIME_TYPE();
 
-    /// The form this facet is attached to, or null when detached. A facet belongs to at most
-    /// one form at a time; the back-pointer is maintained by Form::addFacet() and cleared by
-    /// the owning form's destructor.
-    Form * form() const { return mForm; }
+    /// Make an independent copy of the complete dynamic value, including all derived fields.
+    virtual Ref<FacetValue> clone() const = 0;
 
-    /// Live one simulation moment: advance this facet's internal state by one step.
-    /// Called by the owning form's live(), on the world's simulation cadence.
-    virtual void live() {}
-
-    /// Called when this facet starts living in a world: either the owning form enters the
-    /// world, or the facet is added to a form that already lives in one. Invoked by the
-    /// owning form; not meant to be called directly. form()->world() is already set when
-    /// the call arrives.
-    virtual void enterWorld(World &) {}
-
-    /// Called when this facet stops living in a world: the owning form leaves the world or
-    /// is destroyed while in one. Invoked by the owning form; not meant to be called
-    /// directly. form() and its world are still valid during the call.
-    virtual void leaveWorld(World &) {}
-
-private:
-    friend struct Form; // the owning form maintains the back-pointer
-    Form * mForm = nullptr;
+protected:
+    explicit FacetValue(const RuntimeType::TypeInfo & type): RuntimeType(type) {}
+    FacetValue(const FacetValue & other): RuntimeType(other.typeInfo()) {}
 };
 
-/// A facet with visible state that can contribute to a self-contained visual snapshot.
-struct VisualFacet : Facet {
-    GN_E2_DEFINE_A_BEING(Facet);
+/// First-class capability identified by its owning Form and concrete type, with no instance ID/name.
+/// Its immutable configuration and behavior are separate from tick values.
+/// A subclass declares nested Value, overrides valueType(), and clones its complete dynamic type.
+/// Register a prototype with World and attach instances/initial values through a Mold or Slate.
+struct Facet : RefCounter, RuntimeType {
+    GN_API GN_REGISTER_RUNTIME_TYPE();
 
-    /// Generate a self-contained visual moment capturing this facet's current visible state.
-    /// Future changes to the facet or its owning form must not affect the returned moment.
-    /// Shared resources must remain immutable for the lifetime of the moment.
-    virtual Ref<VisualMoment> snapshot(const VisualTableau::SnapshotParameters &) = 0;
+    /// Accepted Value base type; concrete values may derive from it.
+    virtual const RuntimeType::TypeInfo & valueType() const = 0;
+
+    /// Required capabilities, checked against final composition with RuntimeType inheritance.
+    virtual DynaArray<const RuntimeType::TypeInfo *> requirements() const { return {}; }
+
+    /// Domain invariants over the complete candidate. No mutation or external side effects.
+    virtual bool       validate(const PrimeView &, FormId, const FacetValue &) const { return true; }
+    virtual Ref<Facet> clone() const = 0;
+
+protected:
+    explicit Facet(const RuntimeType::TypeInfo & type): RuntimeType(type) {}
+    Facet(const Facet & other): RuntimeType(other.typeInfo()) {}
 };
 
-/// Visual capability for a form backed by an immutable, format-neutral FX2 model scene.
-/// The facet captures only instance state; GPU residency and RDG2 scheduling remain owned
-/// by the visual domain.
-struct ModelVisualFacet : VisualFacet {
-    GN_E2_DEFINE_A_BEING(VisualFacet);
-
-    struct CreateParameters {
-        Universe &                     universe;
-        AutoRef<const fx2::ModelScene> model;
-    };
-
-    /// Create a detached model facet. Attach it through Form::addFacet().
-    GN_API static Ref<ModelVisualFacet> create(const CreateParameters &);
-
-    /// Immutable source scene represented by this facet.
-    virtual AutoRef<const fx2::ModelScene> model() const = 0;
-
-    /// Enable or suppress this model's contribution to captured visual moments.
-    virtual void setVisible(bool visible) = 0;
-    virtual bool visible() const          = 0;
-};
-
-/// Create a normal structural form with one ModelVisualFacet attached.
-GN_API Ref<Form> createModelForm(Universe & universe, const StrA & name, AutoRef<const fx2::ModelScene> model);
-
-/// The main class that represents a presence in the world. A form owns the structural side
-/// of the simulation: the parent/child hierarchy, the spatial transform, and a flat list of
-/// facets that supply its state and behavior. A form may be atomic or composed from child
-/// forms; the world owns only root forms and propagates world membership through the form
-/// tree. The interface is sealed: forms are created with create() (or cast from molds) and
-/// gain capabilities by attaching facets; the concrete implementation lives in the engine.
+/// Extensible individual identity. Composition is resolved in an explicit Prime version.
+/// Obtain committed Forms from PrimeView; use a Mold factory when custom Form methods are needed.
 struct Form : Being {
     GN_E2_DEFINE_A_BEING(Being);
-
-    /// Create a new empty form: no parent, no children, no facets, identity transform.
-    /// Capabilities are added by attaching facets.
-    GN_API static Ref<Form> create(Universe & universe, const StrA & name);
-
-    /// The world this form currently belongs to, or null when not attached to any world. A form can be
-    /// attached to at most one world at a time; attachment is managed by the world's populate().
-    virtual World * world() const = 0;
-
-    /// The parent form this form is currently attached to, or null when this is a root form.
-    virtual Form * parent() const = 0;
-
-    /// Child forms directly attached to this form.
-    virtual ArrayView<Ref<Form>> children() = 0;
-
-    /// Child forms directly attached to this form.
-    virtual ArrayView<const Ref<Form>> children() const = 0;
-
-    /// Attach a child form. Fails if the child is null, not created by this engine, already parented,
-    /// belongs to a different world, or would create a cycle. When this form is already in a world,
-    /// the child joins the same world.
-    virtual bool attach(Ref<Form> child) = 0;
-
-    /// Position relative to the parent form (world-relative for root forms), in world units.
-    ///@{
-    virtual const WorldVector3 & position() const                  = 0;
-    virtual void                 setPosition(const WorldVector3 &) = 0;
-    ///@}
-
-    /// Orientation relative to the parent form (world-relative for root forms).
-    ///@{
-    virtual const Rotation & rotation() const              = 0;
-    virtual void             setRotation(const Rotation &) = 0;
-    ///@}
-
-    /// This form's transform composed with all ancestors, i.e. in world space. Defined once for
-    /// all implementations in terms of parent() and the local transform.
-    ///@{
-    GN_API WorldVector3 worldPosition() const;
-    GN_API Rotation     worldRotation() const;
-    ///@}
-
-    /// Facets attached to this form, in attach order.
-    virtual ArrayView<Ref<Facet>> facets() = 0;
-
-    /// Facets attached to this form, in attach order.
-    virtual ArrayView<const Ref<Facet>> facets() const = 0;
-
-    /// Attach a facet. Fails if the facet is null or already attached to a form. When this
-    /// form already lives in a world, the facet is told it enters that world.
-    virtual bool addFacet(Ref<Facet> facet) = 0;
-
-    /// Enter a world as a root form. Fails if this form already belongs to a world or is attached
-    /// below another form. World implementations call this before storing a populated root form.
-    virtual bool enterWorld(World & world) = 0;
-
-    /// Leave a world entered by this root form. Clears world membership for the whole form tree.
-    virtual void leaveWorld(World & world) = 0;
-
-    /// Live one simulation moment: lets each facet live, in attach order. Called by the
-    /// world, usually with a fixed interval; the world's tree traversal covers child
-    /// forms, not this method.
-    virtual void live() = 0;
-
-protected:
-    /// Facet befriends only this base class and friendship does not inherit, so the engine's
-    /// concrete implementation maintains a facet's owner back-pointer through this helper.
-    static void setFacetOwner(Facet & facet, Form * owner) { facet.mForm = owner; }
+    GN_API static Ref<Form> create(FormId, const StrA & name = "form");
+    virtual FormId          formId() const = 0;
+    template<typename F>
+    Ref<const F> getFacet(const PrimeView &) const;
 };
 
-/// A reusable recipe that casts a fresh form tree from a root-form factory and child molds.
+/// Immutable published object world; retaining a view retains its Form, Facet and value references.
+/// Storage uses only the Facet/FacetValue base contracts; typed accessors serve external callers.
+/// Acquire through World::primeSnapshot() and retain the view while using borrowed values.
+struct PrimeView : Being {
+    GN_E2_DEFINE_A_BEING(Being);
+    virtual uint64_t              tick() const                                       = 0;
+    virtual Ref<const Form>       form(FormId) const                                 = 0;
+    virtual Ref<const Facet>      facet(FormId, const RuntimeType::TypeInfo &) const = 0;
+    virtual Ref<const FacetValue> value(FormId, const RuntimeType::TypeInfo &) const = 0;
+    virtual Ref<const FacetValue> state(const RuntimeType::TypeInfo &) const         = 0;
+
+    /// Match exact concrete capability types; an empty list returns every committed Form.
+    virtual DynaArray<FormId> query(const DynaArray<const RuntimeType::TypeInfo *> &) const = 0;
+    template<typename F>
+    Ref<const F> getFacet(FormId id) const {
+        return RuntimeType::cast<const F>(facet(id, F::TYPE_INFO()));
+    }
+
+    /// Borrow a value for this view's lifetime. Exact type wins; ambiguous derived matches return null.
+    template<typename F>
+    const typename F::Value * get(FormId id) const {
+        return RuntimeType::cast<const typename F::Value>(value(id, F::TYPE_INFO()).get());
+    }
+    template<typename T>
+    const T * state() const {
+        return RuntimeType::cast<const T>(state(T::TYPE_INFO()).get());
+    }
+    template<typename... F>
+    DynaArray<FormId> query() const {
+        return query({&F::TYPE_INFO()...});
+    }
+};
+
+template<typename F>
+Ref<const F> Form::getFacet(const PrimeView & view) const {
+    return view.template getFacet<F>(formId());
+}
+
+using Prime = PrimeView;
+
+/// Pairs a capability with compatible initial data for a Mold.
+/// Construct from owning references; Mold/Slate snapshot both objects on ingress.
+struct FacetBinding {
+
+    /// Capability prototype. Mold and World clone it so builder aliases cannot mutate attached capabilities.
+    Ref<const Facet> facet;
+
+    /// Initial value compatible with facet->valueType(); cloned independently for each created Form.
+    Ref<const FacetValue> value;
+};
+
+/// Reusable Form creation recipe, supplied to World::createForm() or Slate::create().
+/// Build with initial FacetBindings; an optional factory creates custom Form identities using the reserved ID.
 struct Mold : Being {
     GN_E2_DEFINE_A_BEING(Being);
-
-    struct CreateParameters {
-        Universe & universe;
-        StrA       name;
-    };
-
-    using Factory = std::function<Ref<Form>(const CreateParameters &)>;
-
-    GN_API static Ref<Mold> create(Universe & universe, const StrA & name, Factory factory);
-
-    /// Add a child mold to this recipe. Fails if the child is null or would create a recipe cycle.
-    virtual bool add(Ref<Mold> child, const StrA & childName) = 0;
-
-    /// Cast a new form tree. Returns null if the root factory or any child factory fails.
-    virtual Ref<Form> cast(Universe & universe, const StrA & formName) const = 0;
+    using FormFactory = std::function<Ref<Form>(FormId)>;
+    GN_API static Ref<Mold>                 create(Universe &, const StrA &, DynaArray<FacetBinding>, FormFactory = {});
+    virtual const DynaArray<FacetBinding> & facets() const           = 0;
+    virtual Ref<Form>                       createForm(FormId) const = 0;
 };
 
-/// This represents a continuously evolving game world with different forms living in it.
-struct World : Being {
+/// Mutation workspace borrowed from LawContext during a tick.
+/// Use it to propose owned value/structural changes; they become visible only on successful publication.
+/// It is never a second state read source. All operations validate caller ownership.
+struct Slate {
+    virtual ~Slate()                    = default;
+    virtual FormId create(const Mold &) = 0;
+
+    /// Deletes only the explicit Form; deletion dominates its value writes.
+    virtual void destroy(FormId)                                                = 0;
+    virtual void set(FormId, const RuntimeType::TypeInfo &, const FacetValue &) = 0;
+    virtual void add(FormId, const Facet &, const FacetValue &)                 = 0;
+    virtual void remove(FormId, const RuntimeType::TypeInfo &)                  = 0;
+    virtual void setState(const FacetValue &)                                   = 0;
+    template<typename F>
+    void set(FormId id, const typename F::Value & value) {
+        set(id, F::TYPE_INFO(), value);
+    }
+    template<typename F>
+    void remove(FormId id) {
+        remove(id, F::TYPE_INFO());
+    }
+};
+
+/// Receiver-defined directed request. Concrete subclasses clone their complete dynamic type.
+/// Declare its type in the receiving Law contract; submit through World or send from LawContext.
+struct Intent : Being {
     GN_E2_DEFINE_A_BEING(Being);
-
-    struct CreateParameters {
-        Universe &    universe;
-        PhysicalScale scale = PhysicalScale::NANOMETER(); ///< physical size of one world unit.
-    };
-
-    /// The universe this world belongs to.
-    Universe & universe;
-
-    /// Physical size of one world unit in this world; all physical-unit conversion goes through
-    /// it. Constant for the world's lifetime.
-    const PhysicalScale scale;
-
-    /// The main entry point (game-loop) of this world. Blocks the calling thread until stop()
-    /// is called. The world imposes no threading policy of its own; callers that want the
-    /// simulation to evolve concurrently should invoke run() on a thread they own.
-    virtual void run() = 0;
-
-    /// Signal the game loop to exit. Can be called from any thread; run() returns shortly after.
-    virtual void stop() = 0;
-
-    /// Add new actors to the world. Can be called from any thread.
-    virtual void populate(ArrayView<Ref<Form>>) = 0;
-
-    /// Capture an opaque visual tableau at a consistent point in world evolution.
-    /// Can be called from any thread; the snapshot does not refer back to mutable forms.
-    virtual Ref<VisualTableau> snapshot(const VisualTableau::SnapshotParameters &) = 0;
+    virtual Ref<Intent> clone() const = 0;
 
 protected:
-    World(const RuntimeType::TypeInfo & type, int64_t id, const StrA & name, const CreateParameters & cp)
-        : Being(type, id, name), universe(cp.universe), scale(cp.scale) {}
+    explicit Intent(const RuntimeType::TypeInfo & type, const StrA & name = "intent"): Being(type, 0, name) {}
+    Intent(const Intent & other): Being(other.typeInfo(), 0, "intent") {}
+};
+
+/// Producer-defined observational output; it has no simulation mutation authority.
+/// Declare its type in the producing Law contract and emit through LawContext; presentation consumes World::events().
+struct Event : Being {
+    GN_E2_DEFINE_A_BEING(Being);
+    virtual Ref<Event> clone() const = 0;
+
+protected:
+    explicit Event(const RuntimeType::TypeInfo & type, const StrA & name = "event"): Being(type, 0, name) {}
+    Event(const Event & other): Being(other.typeInfo(), 0, "event") {}
+};
+
+/// Published notification with cursor metadata. Read through World::events() and cast its payload to the declared Event type.
+struct PublishedEvent {
+
+    /// Committed simulation tick that produced this notification.
+    uint64_t tick = 0;
+
+    /// World-wide publication sequence used by events() cursors; independent of rendering frequency.
+    uint64_t sequence = 0;
+
+    /// Immutable cloned notification; retaining the reference survives event-buffer eviction.
+    Ref<const Event> payload;
+};
+
+/// Registration contract returned by Law::contract(); lists its write authority and message types.
+/// Registration order is execution order; all laws read the same tick-start Prime.
+/// Writes and simulation queries match exact concrete types. A subclass supplies its own Law.
+struct LawContract {
+
+    /// Diagnostic label for this registered domain.
+    StrA name;
+
+    /// Exact Facet or world-state types this Law may mutate; each type has one writer.
+    DynaArray<const RuntimeType::TypeInfo *> writes;
+
+    /// Exact Intent types routed exclusively to this Law. TypeInfo pointers must remain valid for World's lifetime.
+    DynaArray<const RuntimeType::TypeInfo *> intents;
+
+    /// Grants structural operations; existing Facet additions/removals still require writes ownership.
+    bool structural = false;
+
+    /// Exact Event types this Law may emit; delivery follows successful publication, with no simulation causality.
+    DynaArray<const RuntimeType::TypeInfo *> events = {};
+};
+
+/// Per-invocation inputs and output channels passed to Law::tick().
+/// Read prime, stage changes through slate, and send/emit messages; do not retain borrowed members after tick returns.
+struct LawContext {
+
+    /// Borrowed immutable tick-start state shared by every Law in this tick.
+    const PrimeView & prime;
+
+    /// Borrowed write-only workspace; valid only during this Law invocation.
+    Slate & slate;
+
+    /// Positive simulated duration in shared fiz nanosecond units, independent of presentation frame time.
+    UnitOfTime dt;
+
+    /// Borrowed requests routed to this invocation, in delivery order; self/backward sends arrive next tick.
+    const DynaArray<Ref<const Intent>> & intents;
+    LawContext(const PrimeView & p, Slate & s, UnitOfTime d, const DynaArray<Ref<const Intent>> & i): prime(p), slate(s), dt(d), intents(i) {}
+    virtual ~LawContext()             = default;
+    virtual void send(const Intent &) = 0;
+    virtual void emit(const Event &)  = 0;
+};
+
+/// Extensible coarse simulation domain. Causal mutable state belongs in Prime.
+/// Override contract() and tick(), then register with World::addLaw(). Runtime registration remains open.
+/// Each tick reads one shared Prime version and proposes changes through LawContext.
+struct Law : Being {
+    GN_E2_DEFINE_A_BEING(Being);
+    virtual LawContract contract() const   = 0;
+    virtual void        tick(LawContext &) = 0;
+
+protected:
+    explicit Law(const RuntimeType::TypeInfo & type, const StrA & name = "law"): Being(type, 0, name) {}
+};
+
+/// Pure candidate cleanup for the registered capability after structural deletion.
+using DeletionCleanup = std::function<Ref<FacetValue>(FormId, const FacetValue &, const DynaArray<FormId> &)>;
+
+/// Runtime owning publication, ordered Laws and message routing.
+/// Registration remains open; each tick captures a stable registry and input batch.
+/// Readers independently retain primeSnapshot() views; producers submit declared Intents.
+struct World : Being {
+    GN_E2_DEFINE_A_BEING(Being);
+    GN_API static Ref<World> create(Universe &, const StrA & name = "world", size_t eventCapacity = 4096);
+
+    /// Register a concrete capability at any time; optional cleanup repairs references after deletion.
+    virtual bool registerFacet(const Facet &, DeletionCleanup = {}) = 0;
+
+    /// Register a concrete world-level FacetValue type at any time.
+    virtual bool registerState(const RuntimeType::TypeInfo &) = 0;
+    template<typename T>
+    bool registerState() {
+        return registerState(T::TYPE_INFO());
+    }
+
+    /// Append an owner/receiver in execution order; duplicate concrete ownership is rejected.
+    /// Late Laws activate after the publication that installs their captured initial data.
+    /// Their queued Intents wait until activation. Registered writes and unique receivers are checked immediately.
+    virtual bool addLaw(Ref<Law>) = 0;
+
+    /// Reserve a Form identity and clone the recipe. Before the first tick, publishes into Prime 0.
+    /// Later calls queue creation for the next uncaptured tick; failure returns zero.
+    virtual FormId createForm(const Mold &) = 0;
+
+    /// Attach a new capability, never overwrite one. Bootstrap publishes immediately; later calls queue it.
+    /// Value/type/composition validity is checked before publication; queued acceptance is not completion.
+    virtual bool addFacet(FormId, const Facet &, const FacetValue &) = 0;
+
+    /// Initialize a missing registered world-state value. Never overwrites existing/pending state.
+    /// Bootstrap publishes immediately; later calls queue initialization at a tick boundary.
+    virtual bool initializeState(const FacetValue &) = 0;
+
+    /// Advance one positive nanosecond duration. Failed ticks keep Prime unchanged and permanently halt.
+    virtual bool           tick(UnitOfTime dt)    = 0;
+    virtual bool           halted() const         = 0;
+    virtual StrA           error() const          = 0;
+    virtual Ref<PrimeView> primeSnapshot() const  = 0;
+    virtual bool           submit(const Intent &) = 0;
+
+    /// Bounded presentation stream. Cursor advances past returned events; old events may be dropped.
+    virtual DynaArray<PublishedEvent> events(uint64_t & cursor) const = 0;
 };
 
 } // namespace GN::e2

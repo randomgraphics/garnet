@@ -201,14 +201,14 @@ public:
                     resources[0][0].resize(1);
                     resources[0][0][0] = faceView;
 
-                    GpuRaster::DrawParameters dp;
-                    dp.vs                   = vsContent->shader;
-                    dp.ps                   = psContent->shader;
-                    dp.geometry.vertexCount = 3; // fullscreen triangle, no VBO
-                    dp.resources            = resources;
+                    RasterGeometry            dpGeometry;
+                    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = resources};
+                    dp.vs                  = vsContent->shader;
+                    dp.ps                  = psContent->shader;
+                    dpGeometry.vertexCount = 3; // fullscreen triangle, no VBO
 
                     auto rast = GpuRaster::create("cubemap-face", rcp);
-                    rast->draw(dp);
+                    rast->recordDraw(dp);
                     outPayloads.push_back(rast->seal());
                 }
                 mCtx.graph->publishArtifact(mCubemapReady, AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
@@ -244,14 +244,14 @@ public:
                     resources[0][f][0] = v;
                 }
 
-                GpuRaster::DrawParameters dp;
-                dp.vs                   = vsContent->shader;
-                dp.ps                   = psContent->shader;
-                dp.geometry.vertexCount = 3;
-                dp.resources            = resources;
+                RasterGeometry            dpGeometry;
+                GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = resources};
+                dp.vs                  = vsContent->shader;
+                dp.ps                  = psContent->shader;
+                dpGeometry.vertexCount = 3;
 
                 auto rast = GpuRaster::create("cubemap-all-faces", rcp);
-                rast->draw(dp);
+                rast->recordDraw(dp);
                 outPayloads.push_back(rast->seal());
                 mCtx.graph->publishArtifact(mCubemapReady, AutoRef<TextureArtifactContent>(new TextureArtifactContent(mCubemap)));
             });
@@ -381,16 +381,15 @@ public:
                          resources.append(sscSnapshot.set0Resources); // set 0
                          resources.append(cubeSet);                   // set 1
 
-                         GpuRaster::DrawParameters dp;
-                         dp.vs        = vsContent->shader;
-                         dp.ps        = psContent->shader;
-                         dp.geometry  = geom;
-                         dp.resources = resources;
+                         GpuRaster::DrawParameters dp {.geometry = geom, .resources = resources};
+                         dp.vs = vsContent->shader;
+                         dp.ps = psContent->shader;
+
                          // Push constant: model matrix only (view+proj come from camera UBO)
                          dp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(model), reinterpret_cast<const uint8_t *>(&model)));
 
                          auto rast = GpuRaster::create("cube-display", rcp);
-                         rast->draw(dp);
+                         rast->recordDraw(dp);
                          outPayload = rast->seal();
                      })
                 .dependsOn(cubemapToken)

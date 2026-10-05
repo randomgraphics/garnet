@@ -120,6 +120,7 @@ bool SwapchainVulkan2::init(const Swapchain::CreateDesc & desc) {
     scp.setSurface(vk::SurfaceKHR((VkSurfaceKHR) (void *) desc.surface));
     scp.depthStencilFormat.mode = rv::Swapchain::DepthStencilFormat::DISABLED;
     scp.backbufferFormat        = pixelFormatToVkFormat(desc.format);
+    scp.vsync                   = desc.vsync;
 
     try {
         mRvSwapchain = rv::Ref<rv::Swapchain>::make(scp);

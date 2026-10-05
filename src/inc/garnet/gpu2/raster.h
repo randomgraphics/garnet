@@ -447,7 +447,7 @@ struct RasterGeometry {
     };
 
     struct GeometryBuffer {
-        AutoRef<Buffer> buffer;
+        AutoRef<Buffer> buffer = {};
         uint64_t        offset = 0;
         uint32_t        stride = 0;
     };
@@ -465,7 +465,10 @@ struct RasterGeometry {
 // Raster
 // -----------------------------
 
-/// Represent a graphical raster pass
+/// One-shot recorder for a graphical raster pass. seal() finalizes its GPU payload;
+/// no further recording or sealing is allowed afterward.
+/// This class is not thread-safe. All calls on one instance must be single-threaded
+/// or externally serialized; use separate instances for parallel recording.
 class GpuRaster : public RCRT64 {
 public:
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
@@ -480,17 +483,19 @@ public:
     GN_API static AutoRef<GpuRaster> create(const StrA & name, const CreateParameters &);
 
     struct DrawParameters {
-        AutoRef<GpuShader> vs, hs, ds, gs, ps;
-        RasterState states; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
-                            ///< RasterTarget's baseline state.
-        RasterGeometry      geometry;
-        GpuResourceTable    resources;
-        AutoRef<const Blob> immediates; ///< reference counted immediate constants.
+        AutoRef<GpuShader> vs = {}, hs = {}, ds = {}, gs = {}, ps = {};
+        RasterState states = {}; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
+                                 ///< RasterTarget's baseline state.
+        const RasterGeometry &   geometry;        ///< Borrowed; must remain valid through each recordDraw() call.
+        const GpuResourceTable & resources;       ///< Borrowed; edits between calls affect only subsequent draws.
+        AutoRef<const Blob>      immediates = {}; ///< reference counted immediate constants.
     };
-    virtual void draw(const DrawParameters &) = 0;
+    /// Record a draw without executing it; snapshot descriptions and retain GPU resources before returning.
+    /// Later edits or destruction of inputs do not affect recorded draws or the sealed payload.
+    /// GPU contents are not copied. Concurrent recording requires separate recorders and immutable shared inputs.
+    virtual void recordDraw(const DrawParameters &) = 0;
 
-    /// @brief Get the render target associated with this raster. The target is immutable and fully defined at creation time. It can be used to inspect the
-    /// target attachments and their properties, but not to modify them.
+    /// Get the immutable render target retained by this recorder.
     virtual const RasterTarget & target() const = 0;
 
     /// Finalize the render pass. Returns a payload to pass to GpuContext::submit().

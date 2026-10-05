@@ -10,6 +10,7 @@ Here is the full list of 3rd party libraries refrenced by the Garnet 3D.
 | [Freetype](http://www.freetype.org) | 2.14.1 | [FreeType License](https://gitlab.freedesktop.org/freetype/freetype/-/blob/master/docs/FTL.TXT) (GPL2 part disabled) |
 | [glad](https://github.com/Dav1dde/glad) | 0.1.34 | [MIT](https://github.com/Dav1dde/glad/blob/glad2/LICENSE) |
 | [glew](http://glew.sourceforge.net) | 2.1.0 | [Modified BSD and MIT](https://github.com/nigels-com/glew#copyright-and-licensing) |
+| [Jolt Physics](https://github.com/jrouwe/JoltPhysics) | 5.6.0 | [MIT](https://github.com/jrouwe/JoltPhysics/blob/master/LICENSE) |
 | [jpeg](http://www.ijg.org) | jpeg-6b | Public Domain |
 | [lua](http://www.lua.org) | 5.1 | [MIT](https://www.lua.org/license.html) |
 | [libpng](http://www.libpng.org/pub/png/libpng.html) | 1.2.8 | [libpng License](http://www.libpng.org/pub/png/src/libpng-LICENSE.txt) |

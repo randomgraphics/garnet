@@ -1,0 +1,43 @@
+# Assignment: Lit geometry helpers and fiz sample migration
+---
+## Goals
+Implement the drafted FX2 box/sphere GPU geometry helpers and migrate fiz samples to public typed FX2 kernels.
+---
+## Design
+Keep geometry generation in FX2, with deferred uploads and optional packed attributes. Samples own their geometry and PBR inputs. Mesh viewer model/scene classes remain private and are not used.
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Tasks 1.1 and 1.3 verified; Task 1.2 implemented and both samples built.
+In progress: Fiz fixes approved for commit by the user. Awaiting explicit assignment sign-off; keep this document active.
+Phase 1.1: Complete. Lit tests pass: 10456 assertions across 4 cases, including full/half generated geometry rendered through all three lit kernels.
+Phase 1.2: Pending manual verification. Gel headless test passed 180 steps. Solids headless test stalled after physics initialization and was stopped; no physics behavior changed.
+Phase 1.3: Complete. Viewer tests pass inside GNtest-internal: 2869 assertions across 15 cases.
+Phase 1.4: Fixed inherited disabled depth writes in both fiz samples; cached Vulkan draws now use reflected push-constant stage ranges; Cel light and rim are calibrated for camera exposure.
+Validation: Debug builds pass for GNtest-internal, both fiz samples, and FX2 unlit/Cel samples. All 28 FX2/raster cases pass (13441 assertions), including skybox occlusion, Cel band pixels, and both push-constant cache paths. Unlit/Cel headless samples and the 180-step gel check pass. Solids runtime still awaits manual verification after its earlier physics stall.
+--- END PROGRESS ---
+--- REFERENCE ---
+src/inc/garnet/fx2/lit-kernels.h
+src/core/fx2/lit-kernel-geometry.cpp
+src/sample/fiz/solids.cpp
+src/sample/fiz/gel.cpp
+--- BUILD / CI ---
+Initialize env/garnet.ps1; use env/bin/build.py and env/bin/cit.py.
+--- WORKFLOW / CONVENTIONS ---
+Preserve user changes and rapid-vulkan submodule edits. Commit FX2 and viewer changes together as requested. Commit fiz sample changes separately as subsequently requested by the user.
+Keep this assignment active pending user sign-off.
+--- TASK BREAKDOWN ---
+Phase 1: Geometry and sample migration
+  Task 1.1: Implement and verify lit geometry helpers.
+    Verify: Geometry tests and GNtest-internal build.
+    Commit: "feat(fx2): add lit geometry helpers and consolidate viewer tests"
+  Task 1.2: Migrate fiz rendering and benchmark paths to typed kernels.
+    Verify: Build both fiz samples and run offscreen smoke checks.
+    Commit: "fix(fiz): migrate samples to typed FX2 kernels and restore depth writes"
+  Task 1.3: Run viewer-private model tests in GNtest-internal through a wrapper and tool-local CMake fragment.
+    Verify: Build GNtest-internal and run [viewer].
+    Commit: Together with Task 1.1 as requested.
+  Task 1.4: Fix sample depth policy, cached raster push-constant stage masks, and Cel lighting; verify rendered pixels.
+    Verify: FX2/gpu2 tests, sample builds and offscreen rendering checks.
+    Commit: "fix(fx2): correct cached push constants and cel sample lighting"; fiz sample changes are committed separately under Task 1.2.
+--- SUMMARY OF FILES TO TOUCH ---
+FX2 geometry header, implementation, tests; fiz sample rendering code.

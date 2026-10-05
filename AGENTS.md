@@ -42,12 +42,16 @@ development.
 build.py d          # debug
 build.py p          # profile / RelWithDebInfo
 build.py r          # release
-build.py c          # clean build directories
+build.py c          # code coverage (Linux only)
+build.py x          # clean build directories
 build.py -c d       # configure only
 build.py -C d       # build only
 build.py --clang d  # Linux clang
 build.py -a d       # Android
 ```
+
+Note the positional `c` selects the coverage variant while the `-c` flag means
+configure-only, so `build.py -c c` configures a coverage build without compiling it.
 
 On Windows, run Python scripts through `python.exe`:
 
@@ -63,6 +67,7 @@ Run CIT through the project script:
 env/bin/cit.py      # lint + tests
 env/bin/cit.py -l   # lint / formatting check only
 env/bin/cit.py -t   # tests only
+env/bin/cit.py -c   # tests against the coverage build, then a function-level report
 ```
 
 Formatting uses the bundled clang-format and repo wrapper:
@@ -73,7 +78,54 @@ env/bin/format-all-sources.py -d    # format changed files
 env/bin/format-all-sources.py       # format all tracked sources
 ```
 
+## Code Coverage
+
+`build.py c` builds a dedicated coverage variant into `build/linux.gcc.c`. It configures
+`CMAKE_BUILD_TYPE=Debug` and adds `--coverage`, so it is the debug configuration plus gcov
+instrumentation, isolated in its own folder. The daily `d` build never carries coverage
+flags, and `GN_BUILD_CODE_COVERAGE` defaults OFF.
+
+The variant must stay at `-O0`. gcov drops the function record of anything the compiler
+inlines, and this codebase marks many header-defined helpers `inline`, so any optimizing
+level would silently remove them from the function report while the totals still looked
+plausible. Measured with GCC 15.2 on a four-function translation unit: `-O0` reported all
+four functions, `-Og` reported three, `-O2` reported three and marked an executed function
+as 0%.
+
+```bash
+build.py c                            # configure + build the coverage variant
+env/bin/code-coverage.py              # build, run tests, generate the report
+env/bin/code-coverage.py --no-build   # report on an existing coverage build
+env/bin/cit.py -c                     # the same flow through CIT
+```
+
+Reports land in `build/linux.gcc.c/coverage/`, which the `/build*/` gitignore rule covers:
+
+- `index.html` — per-file line coverage, browsable.
+- `functions.md` — function coverage by module plus every never-executed function.
+- `coverage.json` — raw gcovr data with per-function execution counts.
+
+`src/core`, `src/inc`, `src/sample`, `src/test` and `src/tool` are instrumented.
+`src/3rdparty` and `src/test/3rdparty` (Catch2) are not: `GN_enable_code_coverage()` is
+called per project directory scope instead of at the repository root precisely so that
+vendored code stays out of the build and out of the report.
+
+Coverage is Linux only; `build.py c` fails with an explicit message elsewhere. In CircleCI
+only `build-linux-gcc` runs `coverage`, `profile`, `release`; `build-linux-clang`, Windows
+and Android all keep `debug`, `profile`, `release`. clang is left out because its coverage
+data can only be decoded by `llvm-cov`, not GNU `gcov`.
+
 ## Coding Rules
+
+- Leave at least one blank line between class/struct definitions.
+- Leave at least one blank line before a standalone comment block documenting a
+  member function or field. Uncommented members and members with trailing same-line
+  comments may remain adjacent without blank lines.
+- Document non-obvious public classes with Doxygen describing their role and normal
+  construction, extension or consumption workflow.
+- Prefer `DynaArray` over `std::vector` for growable contiguous containers.
+- Document non-obvious public data fields with Doxygen: meaning, units/reference frame,
+  valid values and caller usage as applicable. Avoid restating self-explanatory names.
 
 - Keep changes small and local. If a task wants large diffs across many files,
   split it into verifiable steps and track it in `agent/`.
@@ -162,12 +214,79 @@ RDG2 is a playground for graph designs with two generations:
 Known open-graph gaps include multi-worker execution, descriptor/resource
 binding paths, indexed draw coverage, and file-path shader loading.
 
+## E2 World Runtime
+
+The canonical approved design is `src/core/e2/README.md`; implementation progress
+is tracked in `agent/E2_WORLD_RUNTIME.txt`. SimpleWorld and mesh-viewer are out of
+scope and must not constrain this refactor.
+
+- Form, Law, Intent and Event are extensible Being-derived objects. Facet and
+  FacetValue use RuntimeType + RefCounter without per-instance IDs or names. Reuse existing RuntimeType exclusively; no SchemaId/hash/void-payload
+  type system. Applications can subclass objects and expose typed methods.
+- `Platform` is the host window/input/event interface, independent of World simulation.
+- Forms compose actual Facet objects. Immutable Facet configuration is
+  separate from versioned FacetValue state (nested Value classes are supported).
+  Do not hide mutable causal state in Facet or Law objects. FormIds are scoped to
+  their owning Universe; never transfer raw IDs across Universes.
+- Prime/storage use only common Facet/FacetValue virtual contracts and RuntimeType
+  metadata; no concrete Facet checks or domain-field knowledge.
+  Typed accessors serve clients; concrete-type behavior belongs in Laws/apps.
+- Form has no parent/child hierarchy. TransformFacet Value owns a parent ID and
+  local pose (root ID zero means world pose); children derive from queries.
+  Generic Facet candidate validation enforces valid parents/cycles without core
+  Transform knowledge. Deletion never cascades: surviving children need explicit
+  same-tick detach/reparent or candidate validation fails. Changing parent preserves
+  stored local pose; preserving world pose is an explicit Law calculation.
+- Facets declare required Facet types through RuntimeType (Motion requires
+  Transform). Validate final composition at initialization/checkin, permitting
+  paired batch additions/removals; never auto-construct missing requirements.
+- Laws drive evolution; `Form::live()` / `Facet::live()` are not tick entry points.
+  Public headers expose app extension contracts, never private storage machinery.
+- Prime is immutable committed state; PrimeView pins one complete version. Slate
+  is the write-only tick workspace. Every Law reads the same starting Prime.
+- World has no seal/freeze phase. Registration and new Forms/Facets/Laws remain
+  open. Bootstrap builds Prime[0]; after ticking starts, external creation,
+  attachment and missing-state initialization stage for the next successful tick.
+  Active registry/Law lists are stable within a tick. Laws read old Prime, so new
+  published data first participates in simulation on the following tick.
+- E2 aliases `fiz::UnitOfTime` (integer nanoseconds) for tick/step durations;
+  numerical Laws convert to floating-point seconds only inside their calculations.
+- Post-start Laws activate after the tick capturing their registration/additions
+  publishes, never against pre-initialization Prime. Intents remain pending until
+  activation; bootstrap Laws run on the first tick.
+- Ownership and Law queries use exact concrete Facet types. A Facet subclass needs
+  an explicitly compatible Law; no automatic inherited writer or simulation
+  semantics. Base/derived capabilities may have different owner Laws. Polymorphic
+  explicit lookup and derived requirement satisfaction do not grant write access.
+  Creation initialization and structural-reference cleanup are restricted exceptions.
+- Laws run in explicit order, at most once per tick. Receiver-defined Intents have
+  one receiver; later receivers may consume this tick, earlier receivers next tick.
+- Intents are transient; MVP failure may lose them. Discard candidate state/events,
+  keep the previous Prime, report failure and halt without automatic retry.
+- Events are post-publication observations for Presentation, never simulation input.
+- MVP uses DynamicsLaw then LifetimeLaw, persistent contacts, at most 100 generated
+  bodies/second and 1000 alive, and small random horizontal initial velocities.
+- World core does not encode physics, rendering or gameplay resolution policies.
+
 ## FX2 Module
 
-FX2 (`GN::fx2`) owns graph-agnostic rendering effects such as shared shader
-constants, skybox drawing, and PBR assets. Public include `GNfx2.h`,
-implementation `src/core/fx2/`, public headers `src/inc/garnet/fx2/`. FX2
-depends on gpu2 only and must not include or reference RDG2.
+FX2 (`GN::fx2`) owns graph-agnostic typed rendering kernels, shared shader
+constants, and the ImGui backend. Public include `GNfx2.h`, implementation
+`src/core/fx2/`, public headers `src/inc/garnet/fx2/`. FX2 depends on gpu2 only
+and must not include or reference RDG2 or E2.
+
+- Kernels consume GPU buffers/textures and typed immediate values. FX2 has no
+  Geometry, Surface, or asset ownership layer; callers prepare resources.
+- Raster and compute implementations are distinct kernel types, selected by callers.
+- Mesh raster effects append draws to a caller-owned raster; image kernels produce
+  ordered payloads. FX2 does not submit or present GPU work.
+- Raster state inherits caller policy except documented algorithm-required overrides.
+- SSC retains one GPU scene/camera buffer pair per instance. Order uploads and
+  consumers as upload A -> all consumers A -> upload B -> all consumers B.
+  Retaining snapshots does not preserve independent GPU values. Preserve one-time
+  initialization payloads if a recording is abandoned.
+- Use typed public kernel APIs in tools/samples, never private shader ABI headers.
+
 
 ## gpu2 Module
 

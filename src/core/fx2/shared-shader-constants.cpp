@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "vk-shaders/scene-ubo.h"
 #include "vk-shaders/camera-ubo.h"
-#include "skybox-vert.spv.h"
-#include "skybox-frag.spv.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -60,7 +58,7 @@ static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2
         reg.bufferOffset = f * 4ULL;
         regions.append(reg);
     }
-    cnc.copyBufferToImage({.src = staging, .dst = tex, .regions = regions});
+    cnc.recordCopyBufferToImage({.src = staging, .dst = tex, .regions = regions});
     return tex; // staging reference held by cnc until seal()
 }
 
@@ -68,11 +66,10 @@ static AutoRef<gpu2::Texture> make1x1Texture(AutoRef<gpu2::GpuContext> gpu, gpu2
 
 class SharedShaderConstants2Impl : public SharedShaderConstants {
     AutoRef<gpu2::GpuContext> mGpu;
-    AutoRef<gpu2::Buffer>     mSceneBuffer;
-    AutoRef<gpu2::Buffer>     mCameraBuffer;
-
-    // Skybox shaders compiled once at init; referenced by every getSkyboxDrawParams() call.
-    AutoRef<gpu2::GpuShader> mSkyboxVS, mSkyboxPS;
+    // One GPU version per SSC instance: snapshot uploads overwrite these buffers, so consumers
+    // must execute between their snapshot's upload and the next upload (see Snapshot's contract).
+    AutoRef<gpu2::Buffer> mSceneBuffer;
+    AutoRef<gpu2::Buffer> mCameraBuffer;
 
     // Fallback textures used in buildSet0Resources() when env slots are null.
     AutoRef<gpu2::Texture> mFallbackCubemap;
@@ -102,13 +99,6 @@ public:
         mCameraBuffer = gpu2::Buffer::create("ssc2.camera_ubo", {.context = mGpu, .size = sizeof(shader::CameraUBO)});
         if (!mSceneBuffer || !mCameraBuffer) GN_UNLIKELY {
                 GN_ERROR(sLogger, "SharedShaderConstants2: failed to create UBO buffers");
-                return false;
-            }
-
-        mSkyboxVS = gpu2::GpuShader::create({.context = mGpu, .name = "skybox.vert", .binary = kSkyboxVertSpv, .size = sizeof(kSkyboxVertSpv)});
-        mSkyboxPS = gpu2::GpuShader::create({.context = mGpu, .name = "skybox.frag", .binary = kSkyboxFragSpv, .size = sizeof(kSkyboxFragSpv)});
-        if (!mSkyboxVS || !mSkyboxPS) GN_UNLIKELY {
-                GN_ERROR(sLogger, "SharedShaderConstants2: failed to compile skybox shaders");
                 return false;
             }
 
@@ -162,6 +152,8 @@ public:
             }
 
             if (mPendingEnvUploadPayload) {
+                // Transfer initialization work, not proof of submission. Callers must preserve
+                // these payloads even if they discard this snapshot's draws.
                 snapshot.set0Payloads.append(mPendingEnvUploadPayload);
                 mPendingEnvUploadPayload = {};
             }
@@ -177,18 +169,6 @@ public:
 
         uploadSnapshot(parameters, snapshot);
         return snapshot;
-    }
-
-    gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet & set0Resources) const override {
-        gpu2::GpuRaster::DrawParameters dp;
-        dp.vs                   = mSkyboxVS;
-        dp.ps                   = mSkyboxPS;
-        dp.states.depthState    = gpu2::RasterState::DepthState {gpu2::RasterState::Compare::LESS_EQUAL, false};
-        dp.states.cullMode      = gpu2::RasterState::CULL_NONE;
-        dp.geometry.vertexCount = 3; // fullscreen triangle, no VBO
-        dp.resources.resize(1);
-        dp.resources[0] = set0Resources;
-        return dp;
     }
 
 private:
@@ -210,7 +190,7 @@ private:
             if (stg.empty()) return;
             auto tex = gpu2::Texture::create(texName, {.context = mGpu, .descriptor = stg.descriptor});
             if (!tex) return;
-            cnc->copyBufferToImage(stg, tex);
+            cnc->recordCopyBufferToImage(stg, tex);
             outTex              = tex;
             loadedAnyEnvTexture = true;
         };
@@ -321,8 +301,8 @@ private:
 
         auto cnc = gpu2::GpuCnC::create({.gpu = mGpu});
         if (!cnc) GN_UNLIKELY return;
-        cnc->copyBufferToBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
-        cnc->copyBufferToBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
+        cnc->recordCopyBufferToBuffer({.src = stagingScene, .dst = mSceneBuffer, .size = sizeof(shader::SceneUBO)});
+        cnc->recordCopyBufferToBuffer({.src = stagingCam, .dst = mCameraBuffer, .size = sizeof(shader::CameraUBO)});
         snapshot.set0Payloads.append(cnc->seal());
     }
 };

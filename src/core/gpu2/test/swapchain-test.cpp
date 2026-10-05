@@ -74,3 +74,10 @@ TEST_CASE("GPU2: headless swapchain prepare and present", "[gpu2][swapchain][gpu
         swapchain->present(*frame.ready);
     }
 }
+
+TEST_CASE("GPU2: swapchain create desc vsync defaults and builder", "[gpu2][swapchain]") {
+    Swapchain::CreateDesc desc;
+    REQUIRE(desc.vsync == true);
+    desc.setVsync(false);
+    REQUIRE(desc.vsync == false);
+}

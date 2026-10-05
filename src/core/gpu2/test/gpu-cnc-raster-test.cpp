@@ -58,7 +58,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
 
     auto cnc1 = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc1);
-    cnc1->copyBufferToImage({.src = staging, .dst = sourceTex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+    cnc1->recordCopyBufferToImage({.src = staging, .dst = sourceTex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
     AutoRef<GpuPayload> p1 = cnc1->seal();
 
     // ── Payload 2: Raster — sample sourceTex → renderTarget ──────────────
@@ -87,12 +87,13 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     rasterResources[0][0].resize(1);
     rasterResources[0][0][0] = sourceView;
 
-    GpuRaster::DrawParameters dp;
-    dp.vs                   = vs;
-    dp.ps                   = ps;
-    dp.geometry.vertexCount = 3;
-    dp.resources            = rasterResources;
-    raster->draw(dp);
+    RasterGeometry            dpGeometry;
+    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = rasterResources};
+    dp.vs                  = vs;
+    dp.ps                  = ps;
+    dpGeometry.vertexCount = 3;
+
+    raster->recordDraw(dp);
     AutoRef<GpuPayload> p2 = raster->seal();
 
     // ── Payload 3: CnC compute — copy renderTarget → outputTex ───────────
@@ -119,7 +120,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
 
     auto cnc2 = GpuCnC::create({.gpu = gpu});
     REQUIRE(cnc2);
-    cnc2->compute({
+    cnc2->recordCompute({
         .cs         = cs,
         .resources  = computeResources,
         .immediates = {},

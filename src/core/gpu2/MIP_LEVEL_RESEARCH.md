@@ -469,7 +469,7 @@ rt.setColorTarget(0, gpuView.setSubresourceIndex({.mip = 3, .face = 0})
 ```
 
 ### Step 2: Register with State Tracker
-When `GpuRaster::draw()` is called, the payload's `collectPassResources()` registers the render target:
+When `GpuRaster::recordDraw()` is called, the payload's `collectPassResources()` registers the render target:
 ```cpp
 bool GpuRasterPayloadVulkan::collectPassResources(GpuResourceStateTrackerVulkan & tracker) {
     if (!tracker.addRasterTarget(mRenderTarget)) return false;

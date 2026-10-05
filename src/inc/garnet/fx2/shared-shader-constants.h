@@ -99,19 +99,28 @@ struct SharedShaderConstants : public RCRT64 {
         EnvLightingParameters  envLighting;
     };
 
+    /// Captured resources and upload work, not an immutable version of GPU constants.
+    /// Snapshots from one SharedShaderConstants instance share its scene/camera UBOs.
+    /// Order GPU work as upload A -> all draws using A -> upload B -> all draws using B,
+    /// with the required GPU dependencies. Uploading A and B before drawing A makes A
+    /// observe B's constants. Keeping a Snapshot alive does not preserve its UBO contents.
+    /// CPU recording may run ahead; it is GPU execution order that must obey this rule.
+    /// Use separate SharedShaderConstants instances when independent UBO contents are needed.
     struct Snapshot {
         GN::gpu2::GpuResourceSet set0Resources;
-        /// All GPU work for this snapshot: any one-time inits (first frame only) followed by
-        /// the per-frame UBO upload. Submit all entries every frame.
+        /// Submit all entries in order before this snapshot's draws: pending resource
+        /// initialization followed by this snapshot's UBO upload. Initialization is handed
+        /// out once (including after environment changes), not repeated in later snapshots.
+        /// If discarding a snapshot, preserve/submit its initialization work before later
+        /// users of those resources; discarding its payloads can leave them uninitialized.
         DynaArray<AutoRef<GN::gpu2::GpuPayload>> set0Payloads;
     };
 
     Set0Parameters set0;
 
+    /// Captures CPU parameters and records uploads without submitting them. Does not allocate
+    /// an independent scene/camera UBO version; callers must follow Snapshot's ordering contract.
     virtual Snapshot takeSnapshot() const = 0;
-
-    /// Build DrawParameters for a fullscreen skybox pass using the snapshot's set0 resources.
-    virtual GN::gpu2::GpuRaster::DrawParameters getSkyboxDrawParams(const GN::gpu2::GpuResourceSet &) const = 0;
 
     struct CreateParameters {
         AutoRef<GN::gpu2::GpuContext> gpu;

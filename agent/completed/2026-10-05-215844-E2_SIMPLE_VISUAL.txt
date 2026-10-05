@@ -1,0 +1,45 @@
+# Assignment: Minimal E2 white-model presentation
+---
+## Goals
+Render pure-data tableaux with basic white-model lighting. Keep Assets minimal.
+---
+## Design
+Use FX2 LambertianKernel and direct gpu2 submission, with serial frames and no RDG.
+Keep camera-relative conversion to metres, simple asset lookup and a normal-bearing box.
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 2.1 — active sample verified on the new basis architecture
+  Phase 1.1: Debug build, E2 25 passed / 1 display-dependent skipped, 600 assertions; white-model PNG checked; sample 600 ticks; format and diff checks passed.
+  Phase 2.1: Debug sample build; headless 600 ticks / 303 frames / 74133 white-model pixels; Xvfb windowed 600 ticks / 354 frames; E2 26 tests / 601 assertions passed; screenshot inspected; formatting passed.
+In progress: none — implementation verified; commit and push requested; keep assignment active pending explicit archival approval.
+--- END PROGRESS ---
+--- REFERENCE ---
+src/core/e2/visual.cpp, asset.cpp; src/inc/garnet/e2/basis/
+--- BUILD / CI ---
+source env/garnet.rc
+build.py d
+env/bin/cit.py -i '[e2]'
+--- WORKFLOW / CONVENTIONS ---
+Preserve existing pending work. User requested commit and push to the current branch, without merging into another branch. Keep assignment active.
+--- TASK BREAKDOWN ---
+Phase 1: Minimal presentation
+─────────────────────────────────────────────────────
+  Task 1.1: Replace graph execution with a direct white-model pass and verify output
+    Verify: Debug build, E2 tests and headless white-model readback.
+    Commit: "refactor(e2): simplify visual presentation (Phase 1.1)" (only when requested)
+Phase 2: Sample integration
+─────────────────────────────────────────────────────
+  Task 2.1: Exercise basis Assets and data Tableau with headless image and windowed smoke verification
+    Verify: Build sample; 600-tick headless run with white-model screenshot; finite windowed run and teardown test under Xvfb.
+    Commit: "refactor(e2): run sample through basis services (Phase 2.1)" (only when requested)
+--- SUMMARY OF FILES TO TOUCH ---
+Phase 1 (presentation):
+  src/core/e2/visual.cpp, asset.cpp, dynamics.cpp — rendering, geometry and scale
+  src/core/e2/test/ — replace frame-graph checks with image regression
+  src/inc/garnet/e2/basis/visual.h — pure-data scale and rendering contract
+  src/sample/e2/world-runtime.cpp — camera clip units and exposure
+  src/core/e2/README.md — current presentation design
+
+Phase 2 (sample):
+  src/sample/e2/world-runtime.cpp — explicit built-in asset, image verification and finite windowed run
+  src/sample/e2/README.md — current architecture and run commands
