@@ -1,7 +1,7 @@
 # Engine2 (`GN::e2`): World Runtime
 
 This is the canonical approved design for the data-driven World Runtime. The
-implementation assignment and current verification status live in
+implementation assignment and historical verification records live in
 [`agent/E2_WORLD_RUNTIME.txt`](../../../agent/E2_WORLD_RUNTIME.txt). The object-oriented runtime described below is implemented. The earlier
 plain-value/schema-ID prototype has been replaced and the replacement has been
 built and checked; see the validation section and active assignment for results.
@@ -456,23 +456,75 @@ where applicable. Public interfaces expose contracts, not concrete world storage
 
 ## Validation and implementation status
 
-The always-open lifecycle and shared FIZ time type pass the full Linux GCC debug
-build on parent revision `51bdab91c`. E2/spatial/FX2 checks passed 64 cases and
-32,546 assertions, with one display-only case skipped. These include live additions,
-registration during a running Law, deferred Law activation and pending Intent
-retention. The headless World sample completed 600 ticks and 928 observed events
-on Vulkan llvmpipe with no validation errors. Formatting checks passed.
-Interactive display, Windows and Android remain unverified.
+### Current refactor status (2026-10-05)
 
-The intended first solver remains a local axis-aligned box demo, not a general
-GNfiz adapter. Rotation/spin response, arbitrary collision shapes and backend
-recovery are not supplied by that MVP. E2 aliases `GN::fiz::UnitOfTime`
-(`std::chrono::nanoseconds`) rather than defining a separate temporal type.
-`World::tick()` and `LawContext::dt` use positive integer nanosecond durations.
-Numerical Laws convert that duration to floating-point seconds locally for
-integration; public tick boundaries do not use floating-point seconds.
-Acceleration fields remain deferred. Explicit deferral to an arbitrary future tick is outside the MVP;
-a request sent to the currently executing Law is eligible next tick.
+The ECS-style World runtime is a working MVP. It preserves extensible objects:
+Form is the entity, Facet supplies immutable component configuration and typed
+methods, FacetValue supplies versioned state, and Law performs system updates.
+The former plain-value/schema-ID prototype has been replaced with the existing
+RuntimeType protocol.
+
+| Area | Implemented behavior |
+| --- | --- |
+| Composition and ownership | Stable Forms, typed Facets/Values, required-Facet validation and exact-concrete-type writer ownership. |
+| Tick publication | All Laws read the same Prime; Slate is write-only; candidate validation precedes whole-tick publication; retained views preserve older versions. |
+| Requests and observations | Receiver-defined Intents support same-tick or next-tick routing; Events become observable only after publication. |
+| Live additions | Forms, Facets and Laws may be added while running; late Laws activate after their initialization publishes. |
+| Spatial state | Transform Values own parent references and local poses; candidate validation rejects cycles and missing parents; Form has no hierarchy. |
+| Simulation and presentation | DynamicsLaw runs before LifetimeLaw; an independent presentation thread renders committed snapshots through Platform, Assets and Visual. |
+
+The implementation is not yet a packed ECS storage engine. Private storage uses
+maps grouped by concrete type and polymorphic values; a tick copies candidate
+container structure while sharing unchanged immutable payloads. Packed SoA or
+archetype storage and parallel Law scheduling are not implemented. Laws currently
+execute serially in explicit order.
+
+### Physics readiness and GNfiz integration
+
+The active World sample already runs gravity, multiple-box collision response,
+persistent symmetric contacts, contact-begin statistics/events, bounded spawning
+and out-of-bounds deletion. Its DynamicsLaw uses E2's local axis-aligned-box
+solver; it does not invoke a GNfiz solver backend. Integrating GNfiz rigid-body or
+soft-body solving requires a Law adapter with explicit ownership of backend
+continuation state and a failure protocol consistent with Prime/Slate publication.
+The earlier independent PhysicalSnapshot/Form::live integration is superseded.
+
+E2 already shares `GN::fiz::UnitOfTime` (`std::chrono::nanoseconds`).
+`World::tick()` and `LawContext::dt` use positive integer nanosecond durations;
+numerical Laws convert to floating-point seconds locally for integration.
+Sharing this type does not constitute solver integration.
+
+The demo solver uses substeps and iterative overlap resolution. It has no
+continuous collision detection (CCD): it does not test the swept motion between
+sampled positions, so sufficiently fast bodies can tunnel through thin obstacles.
+Rotation/spin response, arbitrary collision shapes and general compound/kinematic
+support are also outside this MVP. Acceleration fields remain deferred.
+
+Failed ticks preserve the previous Prime, discard unpublished state/events and
+halt advancement. Reliable Intent delivery, automatic retry, backend checkpoint
+recovery, deterministic replay and reverse-time World execution are not supplied.
+Explicit deferral to an arbitrary future tick is also outside the MVP; requests
+sent to the currently executing Law become eligible next tick.
+
+### Latest verification
+
+Rechecked on 2026-10-05 at `dc4445506` on `wip/e2/world-runtime`:
+
+- Linux GCC debug builds of `GNtest-internal` and
+  `GNsample-e2-world-runtime` passed through `build.py`.
+- `DISPLAY= env/bin/cit.py -i '[e2],E2 spatial*'`: 37 cases passed,
+  one display-dependent case skipped, and 701 assertions passed.
+- `DISPLAY= build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless`:
+  exit 0, 600 ticks, 211 rendered frames, 928 observed events and 74,133
+  white-model pixels. Presentation frame counts vary with scheduling.
+- This check did not rerun the full build, FX2/fiz suites, formatting checks or
+  interactive display. Earlier verification in `agent/E2_SIMPLE_VISUAL.txt`
+  includes a finite Xvfb windowed run. Windows and Android remain unverified.
+
+SimpleWorld and its dependent samples/tests remain suspended; migration of all
+legacy consumers is not complete. The runtime assignment remains active awaiting
+user review/sign-off. Historical results in the assignment describe earlier
+checkpoints and should not be read as the current test count.
 
 Required validation includes:
 
