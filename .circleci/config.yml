@@ -144,7 +144,13 @@ jobs:
           command: env/bin/cit.py -l
 
   build-linux-gcc:
-    parameters: *build-parameters
+    # Linux runs coverage in place of debug. The coverage variant is the same Debug/-O0
+    # configuration plus --coverage in its own build folder, so it exercises what the debug
+    # job did while also producing a report. Windows and Android keep the debug variant.
+    parameters: &linux-build-parameters
+      variant:
+        type: enum
+        enum: [coverage, profile, release]
     docker:
       - image: *docker-image
     steps:
@@ -158,10 +164,27 @@ jobs:
             build.py << parameters.variant >>
       - run:
           name: Test << parameters.variant >>
-          command: .pyvenv/bin/python env/bin/cit.py -t
+          command: |
+            # The coverage variant needs its own runner: it has to clear stale .gcda
+            # counters and pin the binary search to build/linux.gcc.c before generating a
+            # report, and cit.py -t does neither.
+            if [ "<< parameters.variant >>" = "coverage" ]; then
+              .pyvenv/bin/python env/bin/code-coverage.py --no-build
+            else
+              .pyvenv/bin/python env/bin/cit.py -t
+            fi
+      - run:
+          name: Ensure coverage artifact path
+          # store_artifacts is unconditional but only the coverage variant produces a
+          # report, so the directory has to exist for the other variants too. They upload
+          # an empty folder rather than failing the step.
+          command: mkdir -p build/linux.gcc.c/coverage
+      - store_artifacts:
+          path: build/linux.gcc.c/coverage
+          destination: coverage
 
   build-linux-clang:
-    parameters: *build-parameters
+    parameters: *linux-build-parameters
     docker:
       - image: *docker-image
     steps:
@@ -201,12 +224,14 @@ workflows:
             - lint
       - build-linux-gcc:
           name: build-linux-gcc-<< matrix.variant >>
-          matrix: *build-matrix
+          matrix: &linux-build-matrix
+            parameters:
+              variant: [coverage, profile, release]
           requires:
             - lint
       - build-linux-clang:
           name: build-linux-clang-<< matrix.variant >>
-          matrix: *build-matrix
+          matrix: *linux-build-matrix
           requires:
             - lint
       - build-android:
