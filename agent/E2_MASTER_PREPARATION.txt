@@ -1,0 +1,61 @@
+# Assignment: E2 staging integration and master preparation
+
+---
+## Goals
+Merge the current E2 World runtime into feature/phys/main, then clean and verify
+the resulting change for a future merge into master. Do not merge master yet.
+
+---
+## Design
+Squash the verified runtime and current README status into the physics staging
+branch. Keep cleanup local to active E2 code, documentation and regression checks.
+Preserve suspended SimpleWorld/mesh-viewer and all unrelated work. Keep active
+assignments until explicit archival approval.
+
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 0 — inspected clean source checkpoint and fetched origin
+In progress: Phase 1.1 — record README update and squash into feature/phys/main
+--- END PROGRESS ---
+
+--- REFERENCE ---
+src/core/e2/README.md
+agent/E2_WORLD_RUNTIME.txt
+agent/E2_SIMPLE_VISUAL.txt
+
+--- BUILD / CI ---
+source env/garnet.rc
+build.py d
+env/bin/cit.py -i '[e2],E2 spatial*,[fx2],[fiz]'
+env/bin/cit.py -l
+build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless
+
+--- WORKFLOW / CONVENTIONS ---
+- User authorized merging into physics staging, followed by cleanup for master.
+- Repo workflow requires squash integration and pushing the staging branch.
+- Do not merge master or archive assignments without further authorization.
+
+--- TASK BREAKDOWN ---
+Phase 1: Staging integration
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Commit current status and squash current E2 work into physics staging
+    Verify: fetched target ancestry, clean squash, identical integrated source tree
+    Commit: "feat(e2): integrate versioned World runtime into physics staging (Phase 1.1)"
+
+Phase 2: Cleanup and validation
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Review staging diff and clean active E2 implementation and documentation
+    Verify: review public contracts, unused code/includes, stale guidance and formatting
+    Commit: "refactor(e2): clean runtime integration for master (Phase 2.1)"
+  Task 2.2: Verify build, regressions and samples; record master readiness
+    Verify: full debug build, relevant CIT checks, headless samples, final diff review
+    Commit: "docs(e2): record verified master preparation (Phase 2.2)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+Phase 1 (integration):
+  src/core/e2/README.md — current verified implementation status
+  agent/E2_MASTER_PREPARATION.txt — integration and cleanup progress
+Phase 2 (cleanup and verification):
+  src/core/e2/, src/inc/garnet/e2/ — focused cleanup as review warrants
+  src/sample/e2/ — sample documentation and checks as needed
+  agent/E2_MASTER_PREPARATION.txt — findings and final verification results

@@ -14,7 +14,7 @@
   - Decoupled `mVolumeConstraints` and pneumatic `mPressure` in `GelSolverImpl::createGel` to eliminate solver conflict.
   - Verified 100% pass on internal test suite (`cit.py -t`, 168 test cases, 6198 assertions), headless verification (`GNsample-fiz-gel t`, 180 frames, freefall/impact/rebound/volume stability: YES, avg physics 0.37 ms), and code style (`cit.py -l`).
 - Current step: Phase 3 complete — Awaiting user sign-off.
-- Remaining work: Phase 2 (E2 PhysicalDomain Integration), Phase 4 (Cloth & Hair), Phase 5 (Fluids & Ocean).
+- Remaining work: Phase 2 (E2 integration superseded by agent/E2_WORLD_RUNTIME.txt), Phase 4 (Cloth & Hair), Phase 5 (Fluids & Ocean).
 - Latest verification results: `python env/bin/cit.py -t` passed all 168 tests cleanly; `GNsample-fiz-gel.exe t` headless test passed cleanly; `python env/bin/cit.py -l` passed formatting check.
 - Known blockers: None.
 
@@ -33,16 +33,11 @@ architecture. The work introduces two complementary layers:
    - Flexible 2D/1D bodies (`Weft` cloth and `Strand` hair) via GPU XPBD compute pipelines.
    - Gaseous media (`Plume` smoke and `Blaze` fire) via 3D Eulerian Navier-Stokes grids.
    - Liquids (`Current` SPH/FLIP particles and `Tide` FFT ocean wave spectra).
-2. `PhysicalDomain`, `PhysicalTableau` & `PhysicalFacet`: high-level simulation integration in
-   `engine2` (`GN::e2`) under `src/inc/garnet/e2/physical.h`.
-   - Independent simulation timeline, decoupled from main game loop and rendering.
-   - Canonical `UnitOfTime` (integer nanoseconds) with true mathematical $T$-symmetry
-     (negative integer stepping $-\Delta t$ with bit-identical determinism and zero history cache).
-   - Support for time scaling (`timeScale`), slow motion, pausing, and single-stepping.
-   - Alpha-state interpolation for jitter-free rendering at high display refresh rates.
-   - Rich query and prediction interfaces: raycasting, shape sweeps, volume overlaps,
-     water/wind field sampling, ballistic trajectory lookahead, and speculative
-     ghost sandboxes.
+2. E2 integration now follows the approved Law/Prime/Slate World Runtime in
+   `src/core/e2/README.md`, tracked by `agent/E2_WORLD_RUNTIME.txt`. The earlier
+   independently ticking PhysicalDomain/PhysicalSnapshot writeback proposal is
+   superseded. This assignment retains its completed GNfiz work and awaits user
+   sign-off; no archival is implied by supersession.
 
 ---
 
@@ -65,20 +60,14 @@ to engine worlds or scene hierarchies:
   procedural generators stream out once to shared GPU buffers to guarantee bit-identical
   physical-visual alignment and 50% compute savings.
 
-### High-Level Architecture: `e2::PhysicalDomain`, `PhysicalTableau` & `PhysicalFacet`
+### High-Level E2 Integration — superseded
 
-- **Singleton Operating Engine**: `PhysicalDomain` is a singleton service owned by `Universe`,
-  holding zero simulation data (no bodies, colliders, or islands).
-- **Data Ownership**: `World` owns the connected simulation graph (`PhysicalTableau`), while
-  `Form` and `PhysicalFacet` own local physical attributes.
-- **Dual-Snapshot Symmetry & World Serialization**:
-  - Ingress Physical Write: World requests `PhysicalSnapshot` at its logic cadence (30/60 Hz)
-  - Egress Visual Read: World captures `VisualTableau` for `VisualDomain` (READ).
-  - Ingress writes and egress reads are serialized within each world step, preventing torn states.
-- **128-bit Coordinate Rebasing**: Anchors simulation zones to 128-bit $O_{sim}$ and scales into
-  32-bit float meters for `fiz`, eliminating floating-point jitter across planetary-scale worlds.
-- **Query & Prediction**: Thread-safe spatial queries (raycast, sweep, overlap), environmental
-  field sampling, and speculative ghost sandboxes.
+Use `agent/E2_WORLD_RUNTIME.txt` and `src/core/e2/README.md` for active work.
+DynamicsLaw reads immutable Prime, performs coordinated local solving and writes
+final state into write-only Slate. World publishes the complete tick. The MVP
+halts on failure and does not promise solver rollback, reliable Intents, reverse
+World time or replay. Keep GNfiz independent of E2 and preserve exact integer
+coordinate rebasing at the adapter boundary.
 
 ---
 
@@ -91,7 +80,7 @@ In progress: Awaiting user sign-off for Phase 3 (Gel Soft-Body Dynamics)
 
 Key design and specification documents:
 - `src/core/fiz/README.md`: canonical design and API guide for GNfiz.
-- `src/core/e2/README.md`: canonical design for Engine2, including PhysicalDomain.
+- `src/core/e2/README.md`: canonical approved data-driven World Runtime design.
 - `src/inc/garnet/e2/visual.h`: reference pattern for domain, tableau, and moment.
 - `src/inc/garnet/e2/world.h`: reference pattern for Form, Facet, and World evolution.
 - `src/inc/garnet/GNengine2.h`: monolithic header entry for engine2.
@@ -157,11 +146,10 @@ Phase 1: Jolt Integration & Core Solid Dynamics (GNfiz)
     Verify: `python env/bin/cit.py -t` passes all deterministic tests with bit-identical assertions.
     Commit: "fiz: implement deterministic and T-symmetry unit tests (Phase 1.5)"
 
-Phase 2: E2 PhysicalDomain, PhysicalTableau & PhysicalFacet Integration — FUTURE
+Phase 2: E2 integration — SUPERSEDED
 ─────────────────────────────────────────────────────
-  Task 2.1: Define E2 PhysicalDomain, PhysicalTableau, and generic PhysicalFacet API
-  Task 2.2: Implement 128-bit coordinate translation and serialized PhysicalSnapshot write
-  Task 2.3: Implement decoupled integer clock, T-symmetric stepping, and prediction queries
+  Active tasks are tracked in agent/E2_WORLD_RUNTIME.txt. Do not implement the
+  former PhysicalDomain/PhysicalSnapshot writeback plan from this assignment.
 
 Phase 3: Gel Soft-Body Dynamics (GNfiz)
 ─────────────────────────────────────────────────────
@@ -237,12 +225,9 @@ Phase 1 (Jolt Integration & Core Solid Dynamics):
   src/sample/fiz/CMakeLists.txt          — NEW: standalone fiz samples build script
   src/sample/fiz/solids.cpp              — NEW: standalone rigid body physics sample
 
-Phase 2 (E2 PhysicalDomain, PhysicalTableau & PhysicalFacet Integration):
-  src/inc/garnet/GNengine2.h             — include e2/physical.h
-  src/inc/garnet/e2/physical.h           — NEW: PhysicalDomain, PhysicalTableau, PhysicalSnapshot, and PhysicalFacet headers
-  src/core/e2/CMakeLists.txt             — add physical.cpp to source list
-  src/core/e2/physical.cpp               — NEW: PhysicalDomain and PhysicalFacet implementation
-  src/core/e2/test/physical-domain-test.cpp — NEW: E2 physical domain tests
+Phase 2 (E2 integration):
+  See agent/E2_WORLD_RUNTIME.txt for the current file plan; old physical.h and
+  independent snapshot-ingress work is superseded.
 
 Phase 3 (Deformable & Flexible Bodies & Samples):
   src/sample/fiz/gel.cpp                 — NEW: standalone gel/soft-body sample
