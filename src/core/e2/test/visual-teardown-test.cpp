@@ -31,10 +31,10 @@ struct ErrorCounter : Logger::Receiver {
 TEST_CASE("E2 visual: destroying the visual domain before the Platform leaves no live Vulkan objects", "[e2][gpu]") {
     Universe u;
 
-    auto os = Platform::create({.universe = u, .caption = "GNtest-e2-teardown", .width = 320, .height = 240});
+    auto os = basis::Platform::create({.universe = u, .caption = "GNtest-e2-teardown", .width = 320, .height = 240});
     if (!os) SKIP("Window creation failed (no display?)");
 
-    auto visual = VisualDomain::create({.universe = u, .os = os});
+    auto visual = basis::Visual::create({.universe = u, .platform = os});
     if (!visual) SKIP("No Vulkan-capable GPU context");
 
     ErrorCounter counter;

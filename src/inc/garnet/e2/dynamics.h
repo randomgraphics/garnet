@@ -165,8 +165,9 @@ struct VisualFacet : Facet {
             if (typeInfo().id != TYPE_INFO().id) return {};
             return Ref<FacetValue>(new Value(*this));
         }
-        glm::vec3 halfExtent {0.25f};          ///< Visual box half-size in metres, independent of the collision box.
-        glm::vec4 color {0.6f, 0.7f, 0.9f, 1}; ///< RGBA tint passed to the sample renderer.
+        basis::Assets::MeshId meshId {nullptr};
+        glm::vec3             halfExtent {0.25f};          ///< Visual box half-size in metres, independent of the collision box.
+        glm::vec4             color {0.6f, 0.7f, 0.9f, 1}; ///< RGBA tint passed to the sample renderer.
     };
 
     explicit VisualFacet(const RuntimeType::TypeInfo & type = TYPE_INFO()): Facet(type) {}
@@ -315,5 +316,8 @@ GN_API WorldVector3 positionFromMeters(const glm::dvec3 &, PhysicalScale,
 /// Rebase first, then convert to metres. Intended for the demo's bounded simulation region.
 GN_API glm::dvec3 positionToMeters(const WorldVector3 &, PhysicalScale,
                                    const WorldVector3 & origin = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()});
+
+/// Extract a Visual::Tableau snapshot from a PrimeView by querying TransformFacet and VisualFacet.
+GN_API basis::Visual::Tableau extractTableau(const PrimeView & prime, const basis::Visual::Camera & camera, PhysicalScale = PhysicalScale::NANOMETER());
 
 } // namespace GN::e2

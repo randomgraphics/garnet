@@ -9,6 +9,7 @@
 
 using namespace GN;
 using namespace GN::e2;
+using namespace GN::e2::basis;
 
 namespace {
 
@@ -53,7 +54,7 @@ private:
 
 } // namespace
 
-namespace GN::e2 {
+namespace GN::e2::basis {
 
 Ref<Platform> Platform::create(const CreateParameters & cp) {
     auto d = referenceTo(new PlatformImpl(cp.universe));
@@ -61,4 +62,4 @@ Ref<Platform> Platform::create(const CreateParameters & cp) {
     return d;
 }
 
-} // namespace GN::e2
+} // namespace GN::e2::basis

@@ -431,29 +431,23 @@ World MVP.
 
 ## Existing visual architecture to preserve
 
-Use the monolithic `garnet/GNengine2.h`. The existing VisualDomain/VisualTableau/
-VisualMoment path remains useful as a Presentation adapter, with capture sourced
-from one PrimeView rather than live mutable Form traversal.
+Use the monolithic `garnet/GNengine2.h`. Presentation uses the basis services:
 
-- VisualTableau is an opaque collection; private ordering is not public graph API.
-- VisualMoment records its captured work through borrowed RenderContext. Moments
-  retain self-contained data and must not follow references into mutable state.
-- Regular moments precede environments and overlays; overlays use descending
-  logical Z. Equal-Z and multiple-environment selection need no new guarantee.
-- VisualDomain owns render targets, resource preparation and frame submission.
-  It supports windowed rendering and headless readback; per-frame clear values
-  do not inherit from the previous frame.
-- FX2 exposes typed graph-agnostic raster/compute kernels and shared constants.
-  Callers prepare GPU resources. FX2 owns no E2 assets or World semantics and does
-  not submit/present GPU work.
-- RDG2 owns ordering/submission through the existing closed-plan frame skeleton:
-  acquire, prepare constants, render, present. It has no Form/Facet semantics.
-- Resource uploads precede every consumer; abandoned one-time uploads must survive
-  recording failure. FX2 SSC reuses a GPU buffer pair: retaining CPU snapshots
-  does not preserve multiple independent GPU values. Order upload A, consumers A,
-  upload B, consumers B, or use separate allocations when overlap is required.
-- Tableaux/moments and referenced resources remain stable for their render lifetime.
-  Environment, overlay and ImGui adapters stay Presentation-only.
+- `basis::Platform` provides the host window and OS events.
+- `basis::Assets` retains registered GPU meshes/textures in simple lookup tables,
+  with a built-in box containing positions and normals. No loading or material system is required.
+- `basis::Visual::Tableau` is plain data: camera, world-unit scale, object mesh IDs
+  and transforms, clear values, and reserved environment data. It owns no GPU work.
+- `extractTableau()` adapts committed Prime data into this presentation snapshot.
+- `basis::Visual` draws opaque white models with fixed directional and ambient
+  diffuse lighting using FX2 LambertianKernel. Texture/environment inputs are not
+  consumed by this initial implementation.
+- Visual directly acquires, uploads, draws, submits and presents through gpu2;
+  there is no RDG dependency or frame graph. Frames complete serially for simplicity.
+- Positions are rebased against the camera and converted to metres before FX2.
+  Object scale is a mesh multiplier; the built-in box spans [-1, 1].
+- One-time uploads survive abandoned recording. GPU resources, submission and
+  readback stay inside Visual, independent of the simulation tick cadence.
 
 Platform provides the host window and event adapter independently of World
 simulation; presentation retains it while using the window or graphics surface.

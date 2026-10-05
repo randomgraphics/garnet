@@ -359,4 +359,23 @@ Ref<Mold> createBoxMold(Universe & universe, const TransformFacet::Value & trans
                         {binding<TransformFacet>(transform), binding<MotionFacet>(motion), binding<BodyFacet>(body), binding<ContactFacet>(),
                          binding<CollisionStatsFacet>(), binding<VisualFacet>(visual), binding<LifetimeFacet>()});
 }
+
+basis::Visual::Tableau extractTableau(const PrimeView & prime, const basis::Visual::Camera & camera, PhysicalScale scale) {
+    basis::Visual::Tableau tableau;
+    tableau.camera = camera;
+    tableau.scale  = scale;
+    for (auto id : prime.query<TransformFacet, VisualFacet>()) {
+        WorldTransform transform;
+        if (!resolveWorldTransform(prime, id, transform)) continue;
+        const auto &          visual = *prime.get<VisualFacet>(id);
+        basis::Visual::Object obj;
+        obj.meshId                = visual.meshId;
+        obj.transform.position    = transform.position;
+        obj.transform.orientation = transform.orientation;
+        obj.transform.scale       = visual.halfExtent;
+        tableau.objects.append(obj);
+    }
+    return tableau;
+}
+
 } // namespace GN::e2
