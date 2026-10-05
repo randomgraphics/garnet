@@ -6,6 +6,15 @@ description: Garnet C++ coding style and local conventions. Use when editing C/C
 # Garnet C++ Style
 
 - Keep edits small, buildable, and aligned with nearby code.
+- Leave at least one blank line between class/struct definitions.
+- Leave at least one blank line before a standalone comment block documenting a
+  member function or field. Uncommented members and members with trailing same-line
+  comments may remain adjacent without blank lines.
+- Document non-obvious public classes with Doxygen describing their role and normal
+  construction, extension or consumption workflow.
+- Prefer `DynaArray` over `std::vector` for growable contiguous containers.
+- Document non-obvious public data fields with Doxygen: meaning, units/reference frame,
+  valid values and caller usage as applicable. Avoid restating self-explanatory names.
 - Public API declarations need Doxygen comments.
 - Comments explain why, invariants, ownership, API quirks, or tradeoffs. When
   code or build scripts use an unusual structure, workaround, ordering
