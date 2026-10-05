@@ -104,8 +104,17 @@ class BuildSystem:
     def build_dir(self):
         return f"{self.name}.{self.compiler}"
 
-def search_for_the_latest_binary_ex(path_template):
-    variants = [".d", ".p", ".r"]
+# Variants searched when looking for the most recently built binary; newest mtime wins.
+# ".c" is included so cit.py keeps working on a checkout that only built the coverage
+# variant. Note the consequence: a freshly built coverage binary outranks an older debug
+# one and runs noticeably slower, being gcov-instrumented. Coverage reporting pins
+# COVERAGE_BUILD_VARIANTS instead, so a report can never be taken from a binary that was
+# not instrumented.
+DEFAULT_BUILD_VARIANTS = [".c", ".d", ".p", ".r"]
+COVERAGE_BUILD_VARIANTS = [".c"]
+
+def search_for_the_latest_binary_ex(path_template, variants = None):
+    if variants is None: variants = DEFAULT_BUILD_VARIANTS
     p = [BuildSystem(), BuildSystem(())]
     compilers = [".vc", ".clang", ".gcc", ".xcode"]
     # Loop through all candidates
@@ -120,7 +129,8 @@ def search_for_the_latest_binary_ex(path_template):
             p = pathlib.Path(c)
             if not p.is_absolute(): p = sdk_root_dir / p
             if "windows" == pla:
-                v = "Debug" if ".d" == var else "Release" if ".r" == var else "RelWithDebInfo"
+                # The coverage variant configures as Debug, so it shares that output layout.
+                v = "Debug" if var in (".d", ".c") else "Release" if ".r" == var else "RelWithDebInfo"
                 p = pathlib.Path(c).with_suffix(".exe")
                 p = p.parent / v / p.name
             searched.append(p)
@@ -128,16 +138,16 @@ def search_for_the_latest_binary_ex(path_template):
             latest, chosen = compare_file_timestamp(p.with_suffix(".exe"), latest, chosen)
     return chosen, searched
 
-def search_for_the_latest_binary(path_template):
-    chosen, searched = search_for_the_latest_binary_ex(path_template)
+def search_for_the_latest_binary(path_template, variants = None):
+    chosen, searched = search_for_the_latest_binary_ex(path_template, variants)
     if chosen is None:
         pp = pprint.PrettyPrinter(indent=4)
         print(f"[ERROR] binary _NOT_ found: {path_template}. The following locations are searched:\n{pp.pformat(searched)}")
     return chosen
 
-def run_the_latest_binary(path_template, argv, check = True, **subprocess_kwargs):
+def run_the_latest_binary(path_template, argv, check = True, variants = None, **subprocess_kwargs):
     # search for the latest binary
-    chosen, searched = search_for_the_latest_binary_ex(path_template)
+    chosen, searched = search_for_the_latest_binary_ex(path_template, variants)
     if chosen is None:
         pp = pprint.PrettyPrinter(indent=4)
         print(f"[ERROR] binary _NOT_ found: {path_template}. The following locations are searched:\n{pp.pformat(searched)}")
