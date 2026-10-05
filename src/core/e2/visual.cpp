@@ -3,8 +3,6 @@
 
 #include <garnet/GNengine2.h>
 
-#include <garnet/GNwin.h>
-
 using namespace GN;
 using namespace GN::e2;
 using namespace GN::e2::basis;

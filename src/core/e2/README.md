@@ -88,7 +88,7 @@ and write final results. Later Laws cannot read earlier Laws' Slate outputs.
 Same-tick requests and necessary computed parameters travel through Intents;
 closely coupled calculations belong in one Law.
 
-Slate expresses value updates, CreateForm, DestroyForm, AddFacet and RemoveFacet.
+Slate exposes `set`, `setState`, `create`, `destroy`, `add` and `remove` operations.
 It has no spatial reparent operation; changing a Transform parent is a typed Value
 update by the appropriate Law.
 A new FormId may be reserved and initialized inside Slate, but the Form is pending
@@ -104,8 +104,10 @@ the appropriate owner's Intents. Registration rejects duplicate ownership of the
 same concrete type. Creation-time initialization and registered structural cleanup are
 explicit, restricted exceptions: they cannot become arbitrary cross-Law writes.
 Deleting a Form discards its pending value updates and removes it from the next
-Prime. Conflicting unsupported structural operations are rejected rather than
-silently resolved by write order.
+Prime. Structural operations validate against the candidate in recording order:
+duplicate additions fail, removal of an absent registered Facet is a no-op, and
+repeated owned value writes replace the earlier candidate value. Final composition
+and domain invariants are checked before publication.
 
 ## Transform relationships and Facet requirements
 
@@ -148,8 +150,9 @@ is available only to this validation phase, not as a second read source during L
 execution. Validation is pure: reject invalid state, do not mutate or run another
 simulation stage.
 
-TransformFacet uses the hook to require a valid parent Transform, reject stale or
-foreign references, and detect self-parenting/cycles in the final candidate chain.
+TransformFacet uses the hook to require a parent Transform in the candidate World
+and detect self-parenting/cycles in the final chain. Raw IDs carry no Universe tag;
+callers must not transfer IDs between Universes, even when numerical values match.
 Several coordinated Transform edits can therefore pass through intermediate
 relationships that are incomplete, provided the final committed chain is valid.
 
@@ -292,7 +295,7 @@ Intent delivery:
 - A Law sends to an active receiver that has not run: eligible in this tick.
 - Requests for registered but inactive receivers remain pending until activation.
 - A Law sends to an already executed receiver, or to itself: next tick.
-- Deferred requests have an explicit future eligibility tick.
+- There is no API for selecting an arbitrary future eligibility tick.
 
 Pending Intents are transient runtime data, not Prime state. The MVP promises no
 reliable delivery, replay or recovery. If a Law or candidate preparation fails,
@@ -317,10 +320,10 @@ structural changes, routing and independent presentation.
 | --- | --- |
 | TransformFacet | Parent FormId and actual local position/orientation; roots store world pose. |
 | MotionFacet | Actual linear and angular velocity. |
-| BodyFacet | Collision shape, mass, friction and restitution. |
+| BodyFacet | Axis-aligned box half-extents in metres, mass, friction and restitution. |
 | ContactFacet | Set of Forms touching at the end of the tick. |
 | CollisionStatsFacet | Cumulative number of contact beginnings. |
-| VisualFacet | Presentation resource descriptions or handles. |
+| VisualFacet | Mesh handle, box half-extents and color metadata; the current white-model renderer ignores color. |
 
 Ground: Transform + Body + Contact + Visual.
 Dynamic box: Transform + Motion + Body + Contact + CollisionStats + Visual.
@@ -379,7 +382,8 @@ same-tick deletion requests, then applies generation rules:
 - Capacity includes accepted deletions and already staged creations.
 - Do not accumulate spawn credit while at capacity.
 - Spawn above the finite ground, with vertical initial velocity zero.
-- Horizontal speed is uniform in [0, 0.5] m/s; direction uniform in [0, 2*pi).
+- Default horizontal speed is uniform in [0, 0.5] m/s; direction uniform in [0, 2*pi).
+  `LifetimeOptions::maximumHorizontalSpeed` can change the speed limit.
 
 Choose birth region, ground extent and friction so some bodies can reach an edge
 with these small velocities. Not every body must leave the ground. Mold creation
@@ -506,25 +510,46 @@ recovery, deterministic replay and reverse-time World execution are not supplied
 Explicit deferral to an arbitrary future tick is also outside the MVP; requests
 sent to the currently executing Law become eligible next tick.
 
+### Build and run
+
+```bash
+source env/garnet.rc
+build.py d --target GNtest-internal GNsample-e2-world-runtime
+env/bin/cit.py -i '[e2],E2 spatial*'
+DISPLAY= build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless
+build/linux.gcc.d/bin/GNsample-e2-world-runtime --window-test
+```
+
+The headless sample still uses a GPU renderer. `--window-test` requires a display
+and exits after 600 ticks; no arguments selects an interactive run. See the
+[sample README](../../sample/e2/README.md) for snapshot output.
+
 ### Latest verification
 
-Rechecked on 2026-10-05 at `dc4445506` on `wip/e2/world-runtime`:
+Validated on 2026-10-05 on `feature/phys/main`, after integrating the runtime
+as `43a5ac98f` and applying the master-preparation cleanup:
 
-- Linux GCC debug builds of `GNtest-internal` and
-  `GNsample-e2-world-runtime` passed through `build.py`.
-- `DISPLAY= env/bin/cit.py -i '[e2],E2 spatial*'`: 37 cases passed,
-  one display-dependent case skipped, and 701 assertions passed.
-- `DISPLAY= build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless`:
-  exit 0, 600 ticks, 211 rendered frames, 928 observed events and 74,133
-  white-model pixels. Presentation frame counts vary with scheduling.
-- This check did not rerun the full build, FX2/fiz suites, formatting checks or
-  interactive display. Earlier verification in `agent/E2_SIMPLE_VISUAL.txt`
-  includes a finite Xvfb windowed run. Windows and Android remain unverified.
+- Full Linux GCC debug build passed through `build.py d --parallel 2`.
+- `xvfb-run -a env/bin/cit.py` passed formatting, 211 unit tests and all 185
+  internal cases (58,778 assertions), plus the RDG2 triangle and gpu2 copy/compute
+  smoke samples. This includes E2, spatial, FX2 and fiz tests; the E2 windowed
+  teardown case ran under Xvfb rather than being skipped.
+- Headless World sample: exit 0, 600 ticks, 343 frames, 928 observed events and
+  74,133 white-model pixels. Xvfb `--window-test`: exit 0, 600 ticks, 370 frames
+  and 928 observed events. Presentation frame counts vary with scheduling.
+- Standalone fiz samples passed: solids completed 60 steps; gel completed 180
+  steps with freefall, impact, rebound and volume-stability checks.
+- The public C++ examples in this README and the fiz README passed a compiler
+  syntax check using the debug test target's compiler options. Local Markdown
+  links and `git diff --check` passed.
 
-SimpleWorld and its dependent samples/tests remain suspended; migration of all
-legacy consumers is not complete. The runtime assignment remains active awaiting
-user review/sign-off. Historical results in the assignment describe earlier
-checkpoints and should not be read as the current test count.
+Xvfb verifies a virtual-display path; physical-window interaction, Windows and
+Android were not checked in this run. SimpleWorld and its dependent samples/tests
+remain suspended; migration of all legacy consumers is not complete. Master has
+not been merged. See
+[`agent/E2_MASTER_PREPARATION.txt`](../../../agent/E2_MASTER_PREPARATION.txt)
+for the integration/verification record. Earlier assignment counts describe their
+original checkpoints; assignments remain active pending user sign-off.
 
 Required validation includes:
 

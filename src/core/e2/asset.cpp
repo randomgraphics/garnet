@@ -2,7 +2,6 @@
 // Manages in-game visual assets such as meshes and textures on the GPU.
 
 #include <garnet/GNengine2.h>
-#include <garnet/GNgpu2.h>
 
 using namespace GN;
 using namespace GN::e2;
@@ -37,14 +36,13 @@ struct TextureImpl : Assets::Texture {
 struct AssetsImpl : Assets {
     GN_REGISTER_RUNTIME_TYPE(Assets);
 
-    Universe &                          mUniverse;
     AutoRef<GpuContext>                 mGpu;
     Dictionary<MeshId, Ref<Mesh>>       mMeshes;
     Dictionary<TextureId, Ref<Texture>> mTextures;
     uint64_t                            mNextMeshId    = 100;
     uint64_t                            mNextTextureId = 100;
 
-    AssetsImpl(Universe & u, AutoRef<GpuContext> gpu): Assets(TYPE_INFO(), u.generateUniqueIdentifier(), "assets"), mUniverse(u), mGpu(std::move(gpu)) {}
+    AssetsImpl(Universe & u, AutoRef<GpuContext> gpu): Assets(TYPE_INFO(), u.generateUniqueIdentifier(), "assets"), mGpu(std::move(gpu)) {}
 
     bool init() {
         if (!mGpu) return true; // Headless / GPU-less support

@@ -4,7 +4,8 @@
 
 namespace GN::e2::basis {
 
-/// Functional rendering service providing scene presentation and headless readback.
+/// Renders caller-provided Tableaux with fixed white-model lighting.
+/// Create with a Platform for presentation, or without one for headless readback.
 struct Visual : Being {
     GN_E2_DEFINE_A_BEING(Being);
 
@@ -37,18 +38,18 @@ struct Visual : Being {
         glm::vec3    scale       = {1.f, 1.f, 1.f};
     };
 
-    /// Visual object description containing mesh, effect, transform info, and tint.
+    /// Mesh instance rendered with fixed white-model lighting.
     struct Object {
         Assets::MeshId meshId = 0;
         Transform      transform;
     };
 
-    /// Environment map and lighting description for scene rendering.
+    /// Reserved environment inputs; the current white-model renderer ignores these.
     struct Environment {
-        TextureId skyCubeMap;
-        TextureId irradiancePath;
-        TextureId prefilteredPath;
-        TextureId brdfLutPath;
+        TextureId skyCubeMap                = nullptr;
+        TextureId irradiancePath            = nullptr;
+        TextureId prefilteredPath           = nullptr;
+        TextureId brdfLutPath               = nullptr;
         float     environmentLuminanceScale = 1.0f;
         bool      visible                   = true;
     };
@@ -71,12 +72,14 @@ struct Visual : Being {
     /// Parameters for creating a Visual service.
     struct CreateParameters {
         Universe &    universe;
-        Ref<Platform> platform;
+        Ref<Platform> platform;    ///< Null selects headless rendering.
         Ref<Assets>   assets = {}; ///< Optional; an internal Assets service is created if null.
     };
 
     /// The universe this visual service belongs to.
     virtual Universe & universe() const = 0;
+
+    /// Borrow the host Platform. Requires creation with a non-null platform.
     virtual Platform & platform() const = 0;
     virtual Assets &   assets() const   = 0;
 

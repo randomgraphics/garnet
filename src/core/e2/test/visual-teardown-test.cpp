@@ -1,6 +1,6 @@
-// Regression test for engine2 quit-order safety: the VisualDomain (which owns the Vulkan
+// Regression test for engine2 quit-order safety: Visual (which owns the Vulkan
 // instance) is commonly destroyed while the Platform (whose window provided the
-// render surface) is still alive — exactly what the simple-world sample does. The render
+// render surface) is still alive — as in the world-runtime sample. The render
 // surface must not outlive the instance, or the validation layer reports leaked objects
 // at vkDestroyInstance time.
 
@@ -28,7 +28,7 @@ struct ErrorCounter : Logger::Receiver {
 
 } // namespace
 
-TEST_CASE("E2 visual: destroying the visual domain before the Platform leaves no live Vulkan objects", "[e2][gpu]") {
+TEST_CASE("E2 visual: destroying Visual before Platform leaves no live Vulkan objects", "[e2][gpu]") {
     Universe u;
 
     auto os = basis::Platform::create({.universe = u, .caption = "GNtest-e2-teardown", .width = 320, .height = 240});
@@ -41,7 +41,7 @@ TEST_CASE("E2 visual: destroying the visual domain before the Platform leaves no
     auto *       vkLogger = getLogger("GN.gpu2.vk");
     vkLogger->addReceiver(&counter);
 
-    // Mirror the sample's quit order: the visual domain goes away first, while the OS domain
+    // Mirror the sample's quit order: Visual goes away first, while Platform
     // still holds the window. Any Vulkan object left alive at instance destruction (or any
     // other teardown error) surfaces as an ERROR log from the validation layer.
     visual.clear();

@@ -38,7 +38,9 @@ See [the canonical design](../../core/e2/README.md) and
 [the active assignment](../../../agent/E2_WORLD_RUNTIME.txt) for runtime contracts,
 implementation status and verification limitations.
 
-The capabilities are extensible `Being` subclasses with nested `Value` types.
+Capabilities derive from `Facet` with nested `FacetValue` subclasses. Both use
+`RuntimeType` and `RefCounter` without per-instance IDs or names; Forms and Laws
+remain extensible `Being` subclasses.
 `MotionFacet` requires `TransformFacet`; the runtime checks that requirement
 before publishing a composition. TransformFacet parent links and local poses are versioned in Prime. Rendering
 resolves world poses through the spatial ancestor chain; Form has no hierarchy.
