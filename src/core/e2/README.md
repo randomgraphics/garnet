@@ -498,7 +498,8 @@ E2 already shares `GN::fiz::UnitOfTime` (`std::chrono::nanoseconds`).
 numerical Laws convert to floating-point seconds locally for integration.
 Sharing this type does not constitute solver integration.
 
-The demo solver uses substeps and iterative overlap resolution. It has no
+The demo DynamicsLaw accepts positive steps up to one second and subdivides
+them to at most 1/240 s, with eight contact iterations per substep. It has no
 continuous collision detection (CCD): it does not test the swept motion between
 sampled positions, so sufficiently fast bodies can tunnel through thin obstacles.
 Rotation/spin response, arbitrary collision shapes and general compound/kinematic

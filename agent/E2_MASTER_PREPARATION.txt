@@ -14,10 +14,11 @@ assignments until explicit archival approval.
 
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 2.1 — reconciled E2/fiz documentation and removed active E2 remnants
+Last completed: Phase 2.2 — verification and final master-diff review complete
   Phase 1.1: staging tree matched the source branch exactly before committing; push succeeded
   Phase 2.1: API/source/test audit, full debug build, CIT and standalone samples passed
-In progress: Phase 2.2 — record final verification and review the master diff
+  Phase 2.2: full validation passed; master is an ancestor and GPU2/FX2/submodule changes are absent
+In progress: none — ready for master review; awaiting user sign-off, keep assignment active
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -43,6 +44,9 @@ Verification on 2026-10-05 after staging integration and cleanup:
 - Local links in both module READMEs and sample README resolve; diff checks pass.
 - Logs: /tmp/e2-prep-{build,cit,headless,window,solids,gel,lint}.log.
 - Not checked: physical-window interaction, Windows, Android. No master merge.
+- Final review: origin/master is an ancestor; no GPU2/FX2 implementation or
+  submodule-pointer differences from master; no unrelated worktree changes.
+- Cleanup commit: 25ad47e52; final documentation/verification record follows it.
 
 Documentation audit findings:
 - Replaced fiz's nonexistent Domain and future cloth/fluid API/sample claims
