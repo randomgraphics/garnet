@@ -11,14 +11,15 @@ layout(location = 5) in float in_pulse;
 layout(location = 0) out vec4 out_color;
 
 // Global bindless descriptor heap at Set 0, Binding 0
-layout(set = 0, binding = 0) uniform sampler2D u_textures[];
+layout(set = 0, binding = 0) uniform texture2D u_textures[];
+layout(set = 0, binding = 4) uniform sampler u_samplers[];
 
 void main() {
     // Holographic chromatic dispersion: sample bindless texture with R/G/B phase shift
     vec2  disp   = vec2(0.015, -0.010) * (1.0 + in_pulse * 2.0);
-    float r      = texture(u_textures[nonuniformEXT(in_texId)], in_uv + disp).r;
-    float g      = texture(u_textures[nonuniformEXT(in_texId)], in_uv).g;
-    float b      = texture(u_textures[nonuniformEXT(in_texId)], in_uv - disp).b;
+    float r      = texture(sampler2D(u_textures[nonuniformEXT(in_texId)], u_samplers[0]), in_uv + disp).r;
+    float g      = texture(sampler2D(u_textures[nonuniformEXT(in_texId)], u_samplers[0]), in_uv).g;
+    float b      = texture(sampler2D(u_textures[nonuniformEXT(in_texId)], u_samplers[0]), in_uv - disp).b;
     vec3  texRgb = vec3(r, g, b);
 
     // Fresnel rim glow: glowing edges

@@ -5,9 +5,6 @@
 
 namespace GN::gpu2::bindless {
 
-/// Sentinel value returned when descriptor allocation fails.
-static constexpr uint32_t INVALID_DESCRIPTOR_INDEX = ~0u;
-
 /// Persistent global descriptor heap managing unbounded resource arrays for bindless shaders.
 ///
 /// Under the hood, this allocates a long-lived descriptor set with VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
@@ -22,45 +19,73 @@ public:
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
-        uint32_t            capacity     = 65536; ///< Maximum number of descriptors in the heap (default 65,536).
-        uint32_t            bindingIndex = 0;     ///< Target binding slot within the descriptor set (default 0).
+
+        /// Maximum total active descriptors across all types (default 65,536).
+        /// Each typed binding has this array length; allocation shares one slot pool.
+        uint32_t capacity = 65536;
+
+        /// The first target binding slot within the descriptor set (default 0).
+        /// Note that each descriptor heap takes up to 5 slots, one for each resource descriptor type:
+        ///  - sampled texture
+        ///  - storage texture
+        ///  - uniform buffer
+        ///  - storage buffer
+        ///  - sampler
+        uint32_t bindingIndex = 0;
     };
+
+    /// Descriptor kind and binding offset within the heap's reserved set.
+    enum DescriptorType {
+        SAMPLED_TEXTURE, // bindingIndex
+        STORAGE_TEXTURE, // bindingIndex + 1
+        UNIFORM_BUFFER,  // bindingIndex + 2
+        STORAGE_BUFFER,  // bindingIndex + 3
+        SAMPLER,         // bindingIndex + 4
+    };
+
+    /// Packed CPU handle. Shaders use slot to index the array at bindingIndex + type.
+    union DescriptorIndex {
+        uint32_t u32;
+        bool     operator==(DescriptorIndex other) const { return u32 == other.u32; }
+        bool     operator!=(DescriptorIndex other) const { return u32 != other.u32; }
+        struct {
+            uint32_t slot : 28; ///< index into the descriptor array.
+            uint32_t type : 4;  ///< Resource type; shader binding is bindingIndex + type.
+        };
+    };
+
+    /// Sentinel value returned when descriptor allocation fails.
+    static constexpr DescriptorIndex INVALID_DESCRIPTOR_INDEX = {{~0u}};
 
     /// Create a persistent descriptor heap on the supplied GPU context. Returns an empty ref on failure.
     GN_API static AutoRef<DescriptorHeap> create(const StrA & name, const CreateParameters & cp);
 
     /// Allocate a persistent descriptor index for the given resource view (texture, storage image, or buffer).
     /// Performs driver descriptor write once internally. Returns INVALID_DESCRIPTOR_INDEX on failure.
+    /// Rejects resource-kind/view-type mismatches and combined texture/sampler views.
     /// Thread-safe.
-    virtual uint32_t allocate(const GpuResourceView & view) = 0;
-
-    /// Allocate a contiguous batch of descriptor indices for the given views.
-    /// All-or-nothing: if any view allocation fails or capacity is insufficient,
-    /// no slots are allocated, outIndices is unchanged, and false is returned.
-    /// Returns true on success, filling outIndices with the allocated indices.
-    /// Thread-safe.
-    virtual bool allocate(ArrayView<const GpuResourceView> views, ArrayView<uint32_t> outIndices) = 0;
+    virtual DescriptorIndex allocate(DescriptorType type, const GpuResourceView & view) = 0;
 
     /// Update an existing descriptor slot in-place with a new resource view.
     /// Useful for background streaming (e.g. replacing a 1x1 fallback texture with a loaded 4K texture).
-    /// Thread-safe and valid to invoke while GPU commands are in flight.
-    virtual bool update(uint32_t slot, const GpuResourceView & view) = 0;
+    /// CPU-thread-safe; do not update slots referenced by recorded/in-flight work.
+    virtual bool update(DescriptorIndex index, const GpuResourceView & view) = 0;
 
     /// Update a batch of existing descriptor slots in-place with new resource views.
     /// Permissive policy: each valid slot/view pair is updated in-place; invalid or inactive
     /// slots are safely skipped without aborting other updates.
     /// Returns the number of slots successfully updated.
-    /// Thread-safe and valid to invoke while GPU commands are in flight.
-    virtual uint32_t update(ArrayView<const uint32_t> slots, ArrayView<const GpuResourceView> views) = 0;
+    /// CPU-thread-safe; do not update slots referenced by recorded/in-flight work.
+    virtual size_t update(ArrayView<const DescriptorIndex> indices, ArrayView<const GpuResourceView> views) = 0;
 
     /// Free a previously allocated descriptor slot for recycling.
-    /// Thread-safe.
-    virtual void free(uint32_t slot) = 0;
+    /// CPU-thread-safe; free only after recorded/in-flight consumers stop using the slot.
+    virtual void free(DescriptorIndex index) = 0;
 
     /// Free a batch of previously allocated descriptor slots for recycling.
     /// Any invalid or unallocated slots in the array are safely ignored.
-    /// Thread-safe.
-    virtual void free(ArrayView<const uint32_t> slots) = 0;
+    /// CPU-thread-safe; free only after recorded/in-flight consumers stop using the slot.
+    virtual void free(ArrayView<const DescriptorIndex> indices) = 0;
 
     /// Maximum capacity of this descriptor heap.
     virtual uint32_t capacity() const = 0;
@@ -68,7 +93,7 @@ public:
     /// Number of currently active allocated descriptor slots.
     virtual uint32_t size() const = 0;
 
-    /// Target binding slot within the descriptor set.
+    /// The first binding index within the descriptor set.
     virtual uint32_t bindingIndex() const = 0;
 
     /// Owning GPU context.

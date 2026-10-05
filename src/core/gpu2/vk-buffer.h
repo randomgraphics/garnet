@@ -18,6 +18,7 @@ public:
     bool                 setContent(ArrayView<const uint8_t> data, size_t offset = 0) override;
     std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const override;
 
+    GpuContextVulkan2 * context() const { return mGpu.get(); }
     vk::Buffer          nativeBuffer() const { return mRvBuffer ? mRvBuffer->handle() : vk::Buffer {}; }
     rv::Ref<rv::Buffer> rvBuffer() const { return mRvBuffer; }
     uint64_t            bufferSize() const { return mSize; }

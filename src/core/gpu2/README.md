@@ -40,13 +40,34 @@ Layout and barrier management is completely automated and invisible to the user.
 ---
 
 ### B. Persistent Global Descriptor Heap (`bindless::DescriptorHeap`)
-Traditional descriptor set management allocates and updates `VkDescriptorSet`s frequently. `DescriptorHeap` replaces this with a persistent, long-lived descriptor array:
-- Created once and persists across passes and frames.
-- Built on Vulkan 1.2 `VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT` and `VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT`.
-- Unbounded descriptor arrays (e.g., `sampler2D u_textures[]`, storage images, buffers) managed via a thread-safe slot allocator (bump counter + free list).
-- Provides stable `uint32_t` indices for shaders to consume.
-- Supports in-place `update(slot, view)`: allows background streaming threads to swap a fallback 1x1 placeholder texture for a loaded 4K texture without changing material constants or rebinding shaders.
-- Bound **once** at the start of the pass. Per-frame descriptor writes drop to zero for static/reused resources.
+
+The heap owns one persistent descriptor set, reserved entirely for its typed arrays.
+For a configured base `bindingIndex`, Vulkan uses:
+
+| Binding offset | Descriptor type |
+|---|---|
+| 0 | Sampled texture, without a sampler |
+| 1 | Storage texture |
+| 2 | Uniform buffer |
+| 3 | Storage buffer |
+| 4 | Sampler |
+
+Combined texture/sampler descriptors are not supported by this heap. A shader can
+sample a texture with any registered sampler, or load texels without a sampler.
+All arrays have `capacity` entries and share one thread-safe slot allocator; the
+capacity limits total active descriptors across the five types.
+
+`allocate(type, view)` returns a packed `DescriptorIndex`. Its `type` identifies
+the binding offset, and its `slot` is the shader array index. Allocation rejects
+views that disagree with the requested descriptor kind, including sampled versus
+storage image views and uniform versus storage buffer views. Updates preserve
+the allocated type. Batch update/free remain available; batch allocation is deferred.
+The heap retains each complete view until it is replaced or freed.
+
+The set uses Vulkan update-after-bind and partially-bound arrays, and is bound
+once per pass. CPU operations are thread-safe, but callers must not replace or
+free slots referenced by recorded or in-flight GPU work. Writable resource hazards
+must still be declared through the recorder's existing pass resources.
 
 ---
 

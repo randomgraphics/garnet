@@ -16,7 +16,8 @@ public:
     gfx::img::Image readback() const override;
     bool            setContent(const gfx::img::Image & image) override;
 
-    vk::Image nativeImage() const { return mImage; }
+    GpuContextVulkan2 * context() const { return mGpu.get(); }
+    vk::Image           nativeImage() const { return mImage; }
 
     /// Returns true if this texture represents a swapchain-owned backbuffer.
     virtual bool isBackbuffer() const { return false; }

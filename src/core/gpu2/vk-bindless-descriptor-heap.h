@@ -7,54 +7,46 @@
 
 namespace GN::gpu2 {
 
-/// Vulkan implementation of bindless::DescriptorHeap.
-///
-/// Allocates a long-lived descriptor set with VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-/// and VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT. Maintains a thread-safe slot allocator
-/// with free-list recycling for concurrent resource streaming.
-class VkBindlessDescriptorHeap : public bindless::DescriptorHeap {
+class VkBindlessDescriptorHeap final : public bindless::DescriptorHeap {
 public:
     GN_REGISTER_RUNTIME_TYPE(bindless::DescriptorHeap);
-
-    VkBindlessDescriptorHeap(const StrA & name, const CreateParameters & cp);
+    VkBindlessDescriptorHeap(const StrA &, const CreateParameters &);
     ~VkBindlessDescriptorHeap() override;
-
-    uint32_t allocate(const GpuResourceView & view) override;
-    bool     allocate(ArrayView<const GpuResourceView> views, ArrayView<uint32_t> outIndices) override;
-    bool     update(uint32_t slot, const GpuResourceView & view) override;
-    uint32_t update(ArrayView<const uint32_t> slots, ArrayView<const GpuResourceView> views) override;
-    void     free(uint32_t slot) override;
-    void     free(ArrayView<const uint32_t> slots) override;
-
-    uint32_t capacity() const override { return mCapacity; }
-    uint32_t size() const override;
-    uint32_t bindingIndex() const override { return mBindingIndex; }
-
-    AutoRef<GpuContext> gpu() const override { return mGpu; }
-
+    DescriptorIndex         allocate(DescriptorType, const GpuResourceView &) override;
+    bool                    update(DescriptorIndex, const GpuResourceView &) override;
+    size_t                  update(ArrayView<const DescriptorIndex>, ArrayView<const GpuResourceView>) override;
+    void                    free(DescriptorIndex) override;
+    void                    free(ArrayView<const DescriptorIndex>) override;
+    uint32_t                capacity() const override { return mCapacity; }
+    uint32_t                size() const override;
+    uint32_t                bindingIndex() const override { return mBindingIndex; }
+    AutoRef<GpuContext>     gpu() const override { return mGpu; }
     vk::DescriptorSet       nativeDescriptorSet() const { return mDescriptorSet; }
     vk::DescriptorSetLayout nativeDescriptorSetLayout() const { return mDescriptorSetLayout; }
 
 private:
-    bool writeDescriptor(uint32_t slot, const GpuResourceView & view);
-
+    struct Slot {
+        GpuResourceView view;
+        DescriptorType  type = SAMPLED_TEXTURE;
+    };
+    struct Write {
+        vk::DescriptorImageInfo  image;
+        vk::DescriptorBufferInfo buffer;
+        vk::WriteDescriptorSet   descriptor;
+    };
+    bool                       prepareWrite(DescriptorIndex, const GpuResourceView &, Write &) const;
+    bool                       allocated(DescriptorIndex) const;
     AutoRef<GpuContextVulkan2> mGpu;
-    uint32_t                   mCapacity     = 0;
-    uint32_t                   mBindingIndex = 0;
-
-    vk::DescriptorSetLayout mDescriptorSetLayout {};
-    vk::DescriptorPool      mDescriptorPool {};
-    vk::DescriptorSet       mDescriptorSet {};
-    rv::Ref<rv::Sampler>    mDefaultSampler;
-
-    mutable std::mutex           mMutex;
-    uint32_t                     mNextIndex   = 0;
-    uint32_t                     mActiveCount = 0;
-    std::vector<uint32_t>        mFreeList;
-    std::vector<AutoRef<RCRT64>> mResources;
-    std::vector<bool>            mSlotAllocated;
+    uint32_t                   mCapacity = 0, mBindingIndex = 0;
+    vk::DescriptorSetLayout    mDescriptorSetLayout {};
+    vk::DescriptorPool         mDescriptorPool {};
+    vk::DescriptorSet          mDescriptorSet {};
+    mutable std::mutex         mMutex;
+    uint32_t                   mNextIndex = 0, mActiveCount = 0;
+    std::vector<uint32_t>      mFreeList;
+    std::vector<Slot>          mSlots;
 };
 
-AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name, const bindless::DescriptorHeap::CreateParameters & cp);
+AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA &, const bindless::DescriptorHeap::CreateParameters &);
 
 } // namespace GN::gpu2

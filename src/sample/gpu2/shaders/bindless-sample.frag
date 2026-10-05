@@ -12,10 +12,11 @@ layout(location = 6) in float in_shininess;
 layout(location = 0) out vec4 out_color;
 
 // Global bindless descriptor heap at Set 0, Binding 0
-layout(set = 0, binding = 0) uniform sampler2D u_textures[];
+layout(set = 0, binding = 0) uniform texture2D u_textures[];
+layout(set = 0, binding = 4) uniform sampler u_samplers[];
 
 void main() {
-    vec4 texColor = texture(u_textures[nonuniformEXT(in_texId)], in_uv);
+    vec4 texColor = texture(sampler2D(u_textures[nonuniformEXT(in_texId)], u_samplers[0]), in_uv);
 
     // Directional diffuse + Blinn-Phong specular highlight
     vec3  N    = normalize(in_normal);

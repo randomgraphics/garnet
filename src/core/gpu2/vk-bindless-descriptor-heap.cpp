@@ -1,324 +1,162 @@
 #include "pch.h"
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-texture.h"
-
-static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless");
+#include "vk-buffer.h"
+#include "vk-sampler.h"
+#include <array>
+#include <algorithm>
 
 namespace GN::gpu2 {
+namespace {
+constexpr std::array<vk::DescriptorType, 5> TYPES = {vk::DescriptorType::eSampledImage, vk::DescriptorType::eStorageImage, vk::DescriptorType::eUniformBuffer,
+                                                     vk::DescriptorType::eStorageBuffer, vk::DescriptorType::eSampler};
+}
 
 VkBindlessDescriptorHeap::VkBindlessDescriptorHeap(const StrA & name, const CreateParameters & cp)
     : bindless::DescriptorHeap(TYPE_INFO(), name), mCapacity(cp.capacity), mBindingIndex(cp.bindingIndex) {
-    if (!cp.gpu) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: null GpuContext");
-        return;
-    }
     mGpu = RuntimeType::cast<GpuContextVulkan2>(cp.gpu.get());
-    if (!mGpu || !mGpu->ready()) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: GpuContext is not a ready GpuContextVulkan2");
+    if (!mGpu || !mGpu->ready() || !mCapacity || mCapacity > (1u << 28) || mBindingIndex > UINT32_MAX - 4) return;
+    auto &         device     = mGpu->vulkanDevice();
+    const auto     properties = device.gi()->physical.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDescriptorIndexingProperties>();
+    const auto &   limits     = properties.get<vk::PhysicalDeviceDescriptorIndexingProperties>();
+    const uint32_t limit      = std::min({limits.maxDescriptorSetUpdateAfterBindSampledImages, limits.maxPerStageDescriptorUpdateAfterBindSampledImages,
+                                          limits.maxDescriptorSetUpdateAfterBindStorageImages, limits.maxPerStageDescriptorUpdateAfterBindStorageImages,
+                                          limits.maxDescriptorSetUpdateAfterBindUniformBuffers, limits.maxPerStageDescriptorUpdateAfterBindUniformBuffers,
+                                          limits.maxDescriptorSetUpdateAfterBindStorageBuffers, limits.maxPerStageDescriptorUpdateAfterBindStorageBuffers,
+                                          limits.maxDescriptorSetUpdateAfterBindSamplers, limits.maxPerStageDescriptorUpdateAfterBindSamplers});
+    if (mCapacity > limit || uint64_t(mCapacity) * TYPES.size() > limits.maxPerStageUpdateAfterBindResources ||
+        uint64_t(mCapacity) * TYPES.size() > limits.maxUpdateAfterBindDescriptorsInAllPools)
         return;
+    std::array<vk::DescriptorSetLayoutBinding, TYPES.size()> bindings;
+    std::array<vk::DescriptorBindingFlags, TYPES.size()>     flags;
+    std::array<vk::DescriptorPoolSize, TYPES.size()>         sizes;
+    for (uint32_t i = 0; i < TYPES.size(); ++i) {
+        bindings[i] = vk::DescriptorSetLayoutBinding(mBindingIndex + i, TYPES[i], mCapacity, vk::ShaderStageFlagBits::eAll);
+        flags[i]    = vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound;
+        sizes[i]    = vk::DescriptorPoolSize(TYPES[i], mCapacity);
     }
-
-    const auto & dev   = mGpu->vulkanDevice();
-    auto         vkDev = dev.handle();
-
-    // 1. Create default linear sampler for textures
-    rv::Sampler::ConstructParameters scp;
-    scp.gi = dev.gi();
-    scp.setLinear();
-    scp.info.maxLod = VK_LOD_CLAMP_NONE;
-    mDefaultSampler = rv::Ref<rv::Sampler>::make(scp);
-
-    // 2. Descriptor set layout binding flags (Vulkan 1.2 core)
-    vk::DescriptorBindingFlags bindingFlags = vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound;
-
-    vk::DescriptorSetLayoutBindingFlagsCreateInfo flagsInfo;
-    flagsInfo.setBindingFlags(bindingFlags);
-
-    // 3. Descriptor set layout binding
-    vk::DescriptorSetLayoutBinding binding;
-    binding.setBinding(mBindingIndex)
-        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-        .setDescriptorCount(mCapacity)
-        .setStageFlags(vk::ShaderStageFlagBits::eAll);
-
-    vk::DescriptorSetLayoutCreateInfo layoutInfo;
-    layoutInfo.setFlags(vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool).setBindings(binding).setPNext(&flagsInfo);
-
     try {
-        mDescriptorSetLayout = vkDev.createDescriptorSetLayout(layoutInfo);
+        vk::DescriptorSetLayoutBindingFlagsCreateInfo flagInfo;
+        flagInfo.setBindingFlags(flags);
+        vk::DescriptorSetLayoutCreateInfo layout;
+        layout.setFlags(vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool).setBindings(bindings).setPNext(&flagInfo);
+        mDescriptorSetLayout = device.handle().createDescriptorSetLayout(layout);
+        vk::DescriptorPoolCreateInfo pool;
+        pool.setFlags(vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind).setMaxSets(1).setPoolSizes(sizes);
+        mDescriptorPool = device.handle().createDescriptorPool(pool);
+        vk::DescriptorSetAllocateInfo allocation;
+        allocation.setDescriptorPool(mDescriptorPool).setSetLayouts(mDescriptorSetLayout);
+        mDescriptorSet = device.handle().allocateDescriptorSets(allocation).front();
+        mSlots.resize(mCapacity);
+        mFreeList.reserve(mCapacity);
     } catch (const std::exception & e) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: createDescriptorSetLayout failed: {}", e.what());
-        return;
+        GN_ERROR(getLogger("GN.gpu2.vk.bindless"), "Descriptor heap creation failed: {}", e.what());
+        mDescriptorSet = vk::DescriptorSet {};
     }
-
-    // 4. Descriptor pool with update-after-bind flag
-    vk::DescriptorPoolSize poolSize;
-    poolSize.setType(vk::DescriptorType::eCombinedImageSampler).setDescriptorCount(mCapacity);
-
-    vk::DescriptorPoolCreateInfo poolInfo;
-    poolInfo.setFlags(vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind).setMaxSets(1).setPoolSizes(poolSize);
-
-    try {
-        mDescriptorPool = vkDev.createDescriptorPool(poolInfo);
-    } catch (const std::exception & e) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: createDescriptorPool failed: {}", e.what());
-        vkDev.destroyDescriptorSetLayout(mDescriptorSetLayout);
-        mDescriptorSetLayout = vk::DescriptorSetLayout {};
-        return;
-    }
-
-    // 5. Allocate descriptor set
-    vk::DescriptorSetAllocateInfo allocInfo;
-    allocInfo.setDescriptorPool(mDescriptorPool).setSetLayouts(mDescriptorSetLayout);
-
-    try {
-        auto sets = vkDev.allocateDescriptorSets(allocInfo);
-        if (!sets.empty()) { mDescriptorSet = sets[0]; }
-    } catch (const std::exception & e) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: allocateDescriptorSets failed: {}", e.what());
-        vkDev.destroyDescriptorPool(mDescriptorPool);
-        vkDev.destroyDescriptorSetLayout(mDescriptorSetLayout);
-        mDescriptorPool      = vk::DescriptorPool {};
-        mDescriptorSetLayout = vk::DescriptorSetLayout {};
-        return;
-    }
-
-    mResources.resize(mCapacity);
-    mSlotAllocated.resize(mCapacity, false);
 }
 
 VkBindlessDescriptorHeap::~VkBindlessDescriptorHeap() {
-    if (mGpu && mGpu->ready()) {
-        auto vkDev = mGpu->vulkanDevice().handle();
-        if (mDescriptorPool) {
-            vkDev.destroyDescriptorPool(mDescriptorPool);
-            mDescriptorPool = vk::DescriptorPool {};
-        }
-        if (mDescriptorSetLayout) {
-            vkDev.destroyDescriptorSetLayout(mDescriptorSetLayout);
-            mDescriptorSetLayout = vk::DescriptorSetLayout {};
-        }
-    }
+    if (!mGpu || !mGpu->ready()) return;
+    if (mDescriptorPool) mGpu->vulkanDevice().handle().destroyDescriptorPool(mDescriptorPool);
+    if (mDescriptorSetLayout) mGpu->vulkanDevice().handle().destroyDescriptorSetLayout(mDescriptorSetLayout);
 }
 
-bool VkBindlessDescriptorHeap::writeDescriptor(uint32_t slot, const GpuResourceView & view) {
-    if (!mGpu || !mDescriptorSet) return false;
-    auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
-    if (!tex) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap::writeDescriptor: resource is not a valid TextureVulkanBase");
-        return false;
+bool VkBindlessDescriptorHeap::prepareWrite(DescriptorIndex index, const GpuResourceView & view, Write & write) const {
+    if (index.type >= TYPES.size() || view.empty() || view.combinedTextureSampler) return false;
+    auto & descriptor = write.descriptor;
+    descriptor.setDstSet(mDescriptorSet)
+        .setDstBinding(mBindingIndex + index.type)
+        .setDstArrayElement(index.slot)
+        .setDescriptorType(TYPES[index.type])
+        .setDescriptorCount(1);
+    if (index.type == SAMPLED_TEXTURE || index.type == STORAGE_TEXTURE) {
+        auto *     texture  = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
+        const auto expected = index.type == SAMPLED_TEXTURE ? GpuResourceView::ImageView::SAMPLED : GpuResourceView::ImageView::STORAGE;
+        if (!texture || texture->context() != mGpu.get() || view.imageView.type != expected) return false;
+        auto image = texture->nativeView(view.imageView);
+        if (!image) return false;
+        write.image.setImageView(image).setImageLayout(index.type == SAMPLED_TEXTURE ? shaderReadOnlyLayout(texture->descriptor().format)
+                                                                                     : vk::ImageLayout::eGeneral);
+        descriptor.setImageInfo(write.image);
+    } else if (index.type == UNIFORM_BUFFER || index.type == STORAGE_BUFFER) {
+        auto *     buffer   = RuntimeType::cast<BufferVulkan>(view.buffer().get());
+        const auto expected = index.type == UNIFORM_BUFFER ? GpuResourceView::BufferView::UNIFORM : GpuResourceView::BufferView::STORAGE;
+        if (!buffer || buffer->context() != mGpu.get() || view.bufferView.type != expected || view.bufferView.offset >= buffer->bufferSize()) return false;
+        const auto &   limits    = mGpu->vulkanDevice().gi()->physical.getProperties().limits;
+        const uint64_t size      = view.bufferView.size ? view.bufferView.size : buffer->bufferSize() - view.bufferView.offset;
+        const uint64_t alignment = index.type == UNIFORM_BUFFER ? limits.minUniformBufferOffsetAlignment : limits.minStorageBufferOffsetAlignment;
+        const uint64_t maxSize   = index.type == UNIFORM_BUFFER ? limits.maxUniformBufferRange : limits.maxStorageBufferRange;
+        if (size > buffer->bufferSize() - view.bufferView.offset || size > maxSize || view.bufferView.offset % alignment) return false;
+        write.buffer.setBuffer(buffer->nativeBuffer()).setOffset(view.bufferView.offset).setRange(size);
+        descriptor.setBufferInfo(write.buffer);
+    } else {
+        auto * sampler = RuntimeType::cast<SamplerVulkan>(view.sampler().get());
+        if (!sampler || sampler->context() != mGpu.get()) return false;
+        write.image.setSampler(sampler->nativeSampler());
+        descriptor.setImageInfo(write.image);
     }
-    vk::ImageView imgView = tex->nativeView(view.imageView);
-    if (!imgView) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap::writeDescriptor: failed to get nativeView for slot {}", slot);
-        return false;
-    }
-
-    vk::Sampler sampler = mDefaultSampler ? mDefaultSampler->handle() : vk::Sampler {};
-
-    vk::DescriptorImageInfo imageInfo;
-    imageInfo.setSampler(sampler).setImageView(imgView).setImageLayout(shaderReadOnlyLayout(tex->descriptor().format));
-
-    vk::WriteDescriptorSet write;
-    write.setDstSet(mDescriptorSet)
-        .setDstBinding(mBindingIndex)
-        .setDstArrayElement(slot)
-        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-        .setDescriptorCount(1)
-        .setImageInfo(imageInfo);
-
-    mGpu->vulkanDevice().handle().updateDescriptorSets(1, &write, 0, nullptr);
     return true;
 }
 
-uint32_t VkBindlessDescriptorHeap::allocate(const GpuResourceView & view) {
-    uint32_t slot = bindless::INVALID_DESCRIPTOR_INDEX;
-    if (allocate(ArrayView<const GpuResourceView>(&view, 1), ArrayView<uint32_t>(&slot, 1))) { return slot; }
-    return bindless::INVALID_DESCRIPTOR_INDEX;
+bool VkBindlessDescriptorHeap::allocated(DescriptorIndex index) const {
+    return index.type < TYPES.size() && index.slot < mSlots.size() && !mSlots[index.slot].view.empty() && uint32_t(mSlots[index.slot].type) == index.type;
 }
 
-bool VkBindlessDescriptorHeap::allocate(ArrayView<const GpuResourceView> views, ArrayView<uint32_t> outIndices) {
-    if (views.size() != outIndices.size()) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap::allocate batch: views size {} != outIndices size {}", views.size(), outIndices.size());
-        return false;
-    }
-    if (views.empty()) return true;
-
+VkBindlessDescriptorHeap::DescriptorIndex VkBindlessDescriptorHeap::allocate(DescriptorType type, const GpuResourceView & view) {
     std::lock_guard<std::mutex> lock(mMutex);
-    const size_t                count     = views.size();
-    const size_t                available = mFreeList.size() + (mCapacity - mNextIndex);
-    if (count > available) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap: insufficient capacity for batch of {} descriptors (available: {})", count, available);
-        return false;
-    }
-
-    // Phase 1: validate all views upfront before modifying any allocator state
-    std::vector<vk::ImageView>   imgViews;
-    std::vector<vk::ImageLayout> layouts;
-    layouts.reserve(count);
-    imgViews.reserve(count);
-    for (size_t i = 0; i < count; ++i) {
-        auto * tex = RuntimeType::cast<TextureVulkanBase>(views[i].texture().get());
-        if (!tex) {
-            GN_ERROR(sLogger, "VkBindlessDescriptorHeap::allocate batch: view[{}] is not a valid TextureVulkanBase", i);
-            return false;
-        }
-        vk::ImageView iv = tex->nativeView(views[i].imageView);
-        if (!iv) {
-            GN_ERROR(sLogger, "VkBindlessDescriptorHeap::allocate batch: view[{}] failed to get nativeView", i);
-            return false;
-        }
-        imgViews.push_back(iv);
-        layouts.push_back(shaderReadOnlyLayout(tex->descriptor().format));
-    }
-
-    // Phase 2: reserve slots and prepare driver descriptor writes
-    vk::Sampler                          sampler = mDefaultSampler ? mDefaultSampler->handle() : vk::Sampler {};
-    std::vector<uint32_t>                slots;
-    std::vector<vk::DescriptorImageInfo> imageInfos;
-    std::vector<vk::WriteDescriptorSet>  writes;
-    slots.reserve(count);
-    imageInfos.reserve(count);
-    writes.reserve(count);
-
-    for (size_t i = 0; i < count; ++i) {
-        uint32_t slot = bindless::INVALID_DESCRIPTOR_INDEX;
-        if (!mFreeList.empty()) {
-            slot = mFreeList.back();
-            mFreeList.pop_back();
-        } else {
-            slot = mNextIndex++;
-        }
-        slots.push_back(slot);
-
-        vk::DescriptorImageInfo info;
-        info.setSampler(sampler).setImageView(imgViews[i]).setImageLayout(layouts[i]);
-        imageInfos.push_back(info);
-    }
-
-    for (size_t i = 0; i < count; ++i) {
-        vk::WriteDescriptorSet write;
-        write.setDstSet(mDescriptorSet)
-            .setDstBinding(mBindingIndex)
-            .setDstArrayElement(slots[i])
-            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-            .setDescriptorCount(1)
-            .setImageInfo(imageInfos[i]);
-        writes.push_back(write);
-    }
-
-    // Phase 3: batched driver update
-    mGpu->vulkanDevice().handle().updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
-
-    // Phase 4: commit allocations
-    for (size_t i = 0; i < count; ++i) {
-        uint32_t s        = slots[i];
-        mResources[s]     = views[i].resource;
-        mSlotAllocated[s] = true;
-        mActiveCount++;
-        outIndices[i] = s;
-    }
-
-    return true;
+    if (!mDescriptorSet || (mFreeList.empty() && mNextIndex == mCapacity)) return INVALID_DESCRIPTOR_INDEX;
+    const uint32_t  slot = mFreeList.empty() ? mNextIndex : mFreeList.back();
+    DescriptorIndex index {(uint32_t(type) << 28) | slot};
+    Write           write;
+    if (uint32_t(type) >= TYPES.size() || !prepareWrite(index, view, write)) return INVALID_DESCRIPTOR_INDEX;
+    mGpu->vulkanDevice().handle().updateDescriptorSets(1, &write.descriptor, 0, nullptr);
+    if (mFreeList.empty())
+        ++mNextIndex;
+    else
+        mFreeList.pop_back();
+    mSlots[slot] = {view, type};
+    ++mActiveCount;
+    return index;
 }
 
-bool VkBindlessDescriptorHeap::update(uint32_t slot, const GpuResourceView & view) {
-    return update(ArrayView<const uint32_t>(&slot, 1), ArrayView<const GpuResourceView>(&view, 1)) == 1;
-}
-
-uint32_t VkBindlessDescriptorHeap::update(ArrayView<const uint32_t> slots, ArrayView<const GpuResourceView> views) {
-    if (slots.size() != views.size()) {
-        GN_ERROR(sLogger, "VkBindlessDescriptorHeap::update batch: slots size {} != views size {}", slots.size(), views.size());
-        return 0;
+bool   VkBindlessDescriptorHeap::update(DescriptorIndex index, const GpuResourceView & view) { return update({&index, 1}, {&view, 1}) == 1; }
+size_t VkBindlessDescriptorHeap::update(ArrayView<const DescriptorIndex> indices, ArrayView<const GpuResourceView> views) {
+    if (indices.size() != views.size()) return 0;
+    std::lock_guard<std::mutex>         lock(mMutex);
+    std::vector<Write>                  storage(indices.size());
+    std::vector<vk::WriteDescriptorSet> writes;
+    std::vector<size_t>                 valid;
+    writes.reserve(indices.size());
+    valid.reserve(indices.size());
+    for (size_t i = 0; i < indices.size(); ++i) {
+        if (!allocated(indices[i]) || !prepareWrite(indices[i], views[i], storage[i])) continue;
+        writes.push_back(storage[i].descriptor);
+        valid.push_back(i);
     }
-    if (slots.empty()) return 0;
-
-    std::lock_guard<std::mutex> lock(mMutex);
-    const size_t                count = slots.size();
-
-    vk::Sampler                          sampler = mDefaultSampler ? mDefaultSampler->handle() : vk::Sampler {};
-    std::vector<vk::DescriptorImageInfo> imageInfos;
-    std::vector<vk::WriteDescriptorSet>  writes;
-    std::vector<size_t>                  validIndices;
-    imageInfos.reserve(count);
-    writes.reserve(count);
-    validIndices.reserve(count);
-
-    // Permissive policy: inspect each slot/view pair independently, skipping invalid ones
-    for (size_t i = 0; i < count; ++i) {
-        uint32_t s = slots[i];
-        if (s >= mCapacity || !mSlotAllocated[s]) {
-            GN_VERBOSE(sLogger, "VkBindlessDescriptorHeap::update batch: slot {} at index {} is not active; skipping", s, i);
-            continue;
-        }
-
-        auto * tex = RuntimeType::cast<TextureVulkanBase>(views[i].texture().get());
-        if (!tex) {
-            GN_VERBOSE(sLogger, "VkBindlessDescriptorHeap::update batch: view[{}] is not a valid TextureVulkanBase; skipping", i);
-            continue;
-        }
-        vk::ImageView iv = tex->nativeView(views[i].imageView);
-        if (!iv) {
-            GN_VERBOSE(sLogger, "VkBindlessDescriptorHeap::update batch: view[{}] failed to get nativeView; skipping", i);
-            continue;
-        }
-
-        vk::DescriptorImageInfo info;
-        info.setSampler(sampler).setImageView(iv).setImageLayout(shaderReadOnlyLayout(tex->descriptor().format));
-        imageInfos.push_back(info);
-
-        vk::WriteDescriptorSet write;
-        write.setDstSet(mDescriptorSet)
-            .setDstBinding(mBindingIndex)
-            .setDstArrayElement(s)
-            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-            .setDescriptorCount(1)
-            .setImageInfo(imageInfos.back());
-        writes.push_back(write);
-        validIndices.push_back(i);
-    }
-
     if (writes.empty()) return 0;
-
-    // Batched driver update for all valid slots
-    mGpu->vulkanDevice().handle().updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
-
-    // Commit new resource references for updated slots
-    for (size_t vi = 0; vi < validIndices.size(); ++vi) {
-        size_t origIdx             = validIndices[vi];
-        mResources[slots[origIdx]] = views[origIdx].resource;
-    }
-
-    return static_cast<uint32_t>(writes.size());
+    mGpu->vulkanDevice().handle().updateDescriptorSets(writes, {});
+    for (auto i : valid) mSlots[indices[i].slot].view = views[i];
+    return writes.size();
 }
 
-void VkBindlessDescriptorHeap::free(uint32_t slot) { free(ArrayView<const uint32_t>(&slot, 1)); }
-
-void VkBindlessDescriptorHeap::free(ArrayView<const uint32_t> slots) {
-    if (slots.empty()) return;
-
+void VkBindlessDescriptorHeap::free(DescriptorIndex index) { free({&index, 1}); }
+void VkBindlessDescriptorHeap::free(ArrayView<const DescriptorIndex> indices) {
     std::lock_guard<std::mutex> lock(mMutex);
-    for (uint32_t s : slots) {
-        if (s >= mCapacity || !mSlotAllocated[s]) {
-            GN_WARN(sLogger, "VkBindlessDescriptorHeap::free: slot {} was not allocated or double-freed", s);
-            continue;
-        }
-        mResources[s].clear();
-        mSlotAllocated[s] = false;
-        mFreeList.push_back(s);
-        if (mActiveCount > 0) mActiveCount--;
+    for (auto index : indices) {
+        if (!allocated(index)) continue;
+        mSlots[index.slot].view = {};
+        mFreeList.push_back(index.slot);
+        --mActiveCount;
     }
 }
-
 uint32_t VkBindlessDescriptorHeap::size() const {
     std::lock_guard<std::mutex> lock(mMutex);
     return mActiveCount;
 }
 
 AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name, const bindless::DescriptorHeap::CreateParameters & cp) {
-    auto heap = AutoRef<VkBindlessDescriptorHeap>(new VkBindlessDescriptorHeap(name, cp));
-    if (!heap->nativeDescriptorSet()) return {};
-    return heap;
+    auto heap = referenceTo(new VkBindlessDescriptorHeap(name, cp));
+    return heap->nativeDescriptorSet() ? AutoRef<bindless::DescriptorHeap>(heap) : AutoRef<bindless::DescriptorHeap>();
 }
 
 } // namespace GN::gpu2

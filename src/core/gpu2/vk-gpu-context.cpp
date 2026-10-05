@@ -146,6 +146,12 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
                       .setDescriptorIndexing(true)
                       .setRuntimeDescriptorArray(true)
                       .setShaderSampledImageArrayNonUniformIndexing(true)
+                      .setShaderStorageImageArrayNonUniformIndexing(true)
+                      .setShaderUniformBufferArrayNonUniformIndexing(true)
+                      .setShaderStorageBufferArrayNonUniformIndexing(true)
+                      .setDescriptorBindingStorageImageUpdateAfterBind(true)
+                      .setDescriptorBindingUniformBufferUpdateAfterBind(true)
+                      .setDescriptorBindingStorageBufferUpdateAfterBind(true)
                       .setDescriptorBindingPartiallyBound(true)
                       .setDescriptorBindingVariableDescriptorCount(true)
                       .setDescriptorBindingSampledImageUpdateAfterBind(true));

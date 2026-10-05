@@ -214,11 +214,14 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
     // 2. Create descriptor heap and allocate both textures
     auto heap = bindless::DescriptorHeap::create("heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
+    auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
+    REQUIRE(sharedSampler);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
 
-    uint32_t slotRed   = heap->allocate(GpuResourceView(texRed));
-    uint32_t slotGreen = heap->allocate(GpuResourceView(texGreen));
-    REQUIRE(slotRed != bindless::INVALID_DESCRIPTOR_INDEX);
-    REQUIRE(slotGreen != bindless::INVALID_DESCRIPTOR_INDEX);
+    auto slotRed   = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texRed));
+    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texGreen));
+    REQUIRE(slotRed != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+    REQUIRE(slotGreen != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(slotRed != slotGreen);
 
     // 3. Create render target
@@ -242,7 +245,7 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
         RasterGeometry geom {};
         geom.vertexCount = 3; // fullscreen triangle
 
-        raster->recordDraw({.vs = vs, .ps = ps, .geometry = geom, .immediates = makePushConstants(slotGreen)});
+        raster->recordDraw({.vs = vs, .ps = ps, .geometry = geom, .immediates = makePushConstants(slotGreen.slot)});
 
         auto payload = raster->seal();
         REQUIRE(payload);
@@ -264,7 +267,7 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
         RasterGeometry geom {};
         geom.vertexCount = 3;
 
-        raster->recordDraw({.vs = vs, .ps = ps, .geometry = geom, .immediates = makePushConstants(slotRed)});
+        raster->recordDraw({.vs = vs, .ps = ps, .geometry = geom, .immediates = makePushConstants(slotRed.slot)});
 
         auto payload = raster->seal();
         REQUIRE(payload);
@@ -277,64 +280,6 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
         gfx::img::Image result = targetTex->readback();
         checkPixels(result, 255, 0, 0, 255);
     }
-}
-
-TEST_CASE("bindless::DescriptorHeap: batch allocation with all-or-nothing atomicity", "[gpu2][bindless]") {
-    auto gpu = makeGpu();
-    if (!gpu) SKIP("No GPU context available");
-
-    // Heap capacity of 3 slots
-    auto heap = bindless::DescriptorHeap::create("batch-heap", {.gpu = gpu, .capacity = 3});
-    REQUIRE(heap);
-    CHECK(heap->capacity() == 3);
-    CHECK(heap->size() == 0);
-
-    auto t0 = makeRgba8Tex(gpu, "t0", 8, 8);
-    auto t1 = makeRgba8Tex(gpu, "t1", 8, 8);
-    auto t2 = makeRgba8Tex(gpu, "t2", 8, 8);
-    auto t3 = makeRgba8Tex(gpu, "t3", 8, 8);
-    REQUIRE((t0 && t1 && t2 && t3));
-
-    GpuResourceView views[4] = {GpuResourceView(t0), GpuResourceView(t1), GpuResourceView(t2), GpuResourceView(t3)};
-    uint32_t        slots[4] = {~0u, ~0u, ~0u, ~0u};
-
-    // 1. Batch allocate 2 items: succeeds
-    CHECK(heap->allocate(ArrayView<const GpuResourceView>(views, 2), ArrayView<uint32_t>(slots, 2)));
-    CHECK(heap->size() == 2);
-    CHECK(slots[0] != bindless::INVALID_DESCRIPTOR_INDEX);
-    CHECK(slots[1] != bindless::INVALID_DESCRIPTOR_INDEX);
-    CHECK(slots[0] != slots[1]);
-
-    // 2. Batch allocate 2 more items: only 1 slot left -> must fail all-or-nothing without altering heap or slots
-    uint32_t failSlots[2] = {12345, 67890};
-    CHECK_FALSE(heap->allocate(ArrayView<const GpuResourceView>(views + 2, 2), ArrayView<uint32_t>(failSlots, 2)));
-    CHECK(heap->size() == 2); // heap count untouched
-    CHECK(failSlots[0] == 12345);
-    CHECK(failSlots[1] == 67890);
-
-    // 3. Batch allocate 1 item: fills remaining slot
-    uint32_t singleSlot = ~0u;
-    CHECK(heap->allocate(ArrayView<const GpuResourceView>(views + 2, 1), ArrayView<uint32_t>(&singleSlot, 1)));
-    CHECK(heap->size() == 3);
-    CHECK(singleSlot != bindless::INVALID_DESCRIPTOR_INDEX);
-
-    // 4. Permissive batch update: update slots[0] and slots[1] with new views
-    GpuResourceView updateViews[2] = {GpuResourceView(t2), GpuResourceView(t3)};
-    CHECK(heap->update(ArrayView<const uint32_t>(slots, 2), ArrayView<const GpuResourceView>(updateViews, 2)) == 2);
-
-    // Permissive batch update with a mixed valid and invalid slot: updates valid, skips invalid
-    uint32_t mixedSlots[2] = {slots[0], 9999};
-    CHECK(heap->update(ArrayView<const uint32_t>(mixedSlots, 2), ArrayView<const GpuResourceView>(updateViews, 2)) == 1);
-
-    // 5. Permissive batch free: free slots[0], singleSlot, plus an invalid slot (9999 is ignored)
-    uint32_t toFree[3] = {slots[0], singleSlot, 9999};
-    heap->free(ArrayView<const uint32_t>(toFree, 3));
-    CHECK(heap->size() == 1); // 3 - 2 = 1 slot active (slots[1])
-
-    // Re-allocating now reuses freed slots
-    uint32_t reallocatedSlots[2] = {~0u, ~0u};
-    CHECK(heap->allocate(ArrayView<const GpuResourceView>(views, 2), ArrayView<uint32_t>(reallocatedSlots, 2)));
-    CHECK(heap->size() == 3);
 }
 
 TEST_CASE("GpuContext::caps: maxImmediateSize and maxBindlessSampledImages", "[gpu2]") {

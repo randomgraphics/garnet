@@ -151,11 +151,14 @@ TEST_CASE("bindless::CnC: sample bindless texture in compute and download result
     // 2. Create descriptor heap and allocate both textures
     auto heap = bindless::DescriptorHeap::create("heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
+    auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
+    REQUIRE(sharedSampler);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
 
-    uint32_t slotRed  = heap->allocate(GpuResourceView(texRed));
-    uint32_t slotBlue = heap->allocate(GpuResourceView(texBlue));
-    REQUIRE(slotRed != bindless::INVALID_DESCRIPTOR_INDEX);
-    REQUIRE(slotBlue != bindless::INVALID_DESCRIPTOR_INDEX);
+    auto slotRed  = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texRed));
+    auto slotBlue = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texBlue));
+    REQUIRE(slotRed != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+    REQUIRE(slotBlue != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(slotRed != slotBlue);
 
     // 3. Create storage output buffer for 16 float4 elements
@@ -176,7 +179,7 @@ TEST_CASE("bindless::CnC: sample bindless texture in compute and download result
         auto cnc = bindless::CnC::create("cnc-red", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
         REQUIRE(cnc);
 
-        PushConstantData pc {slotRed, 2.0f};
+        PushConstantData pc {slotRed.slot, 2.0f};
         cnc->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
 
         auto downloadFuture = cnc->recordDownloadBuffer(outBuf, 0, bufferSize);
@@ -206,7 +209,7 @@ TEST_CASE("bindless::CnC: sample bindless texture in compute and download result
         auto cnc = bindless::CnC::create("cnc-blue", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
         REQUIRE(cnc);
 
-        PushConstantData pc {slotBlue, 0.5f};
+        PushConstantData pc {slotBlue.slot, 0.5f};
         cnc->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
 
         auto downloadFuture = cnc->recordDownloadBuffer(outBuf, 0, bufferSize);
@@ -243,8 +246,11 @@ TEST_CASE("bindless::CnC: interleaved compute and buffer copy", "[gpu2][bindless
 
     auto heap = bindless::DescriptorHeap::create("heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
-    uint32_t slotGreen = heap->allocate(GpuResourceView(texGreen));
-    REQUIRE(slotGreen != bindless::INVALID_DESCRIPTOR_INDEX);
+    auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
+    REQUIRE(sharedSampler);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
+    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texGreen));
+    REQUIRE(slotGreen != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     constexpr size_t bufferSize = 16 * sizeof(float) * 4;
     auto             computeBuf = Buffer::create("computeBuf", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
@@ -263,7 +269,7 @@ TEST_CASE("bindless::CnC: interleaved compute and buffer copy", "[gpu2][bindless
     auto cnc = bindless::CnC::create("interleaved", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
     REQUIRE(cnc);
 
-    PushConstantData pc {slotGreen, 1.0f};
+    PushConstantData pc {slotGreen.slot, 1.0f};
     cnc->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
 
     // Copy compute output to copyDstBuf within the same CnC pass
@@ -390,6 +396,9 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
 
     auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
+    auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
+    REQUIRE(sharedSampler);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
 
     constexpr uint32_t W = 16, H = 16;
     auto               tex = makeRgba8Tex(gpu, "srv-restore-tex", W, H);
@@ -398,8 +407,8 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
     auto * vkTex = RuntimeType::cast<TextureVulkanBase>(tex.get());
     REQUIRE(vkTex);
 
-    uint32_t slot = heap->allocate(GpuResourceView(tex));
-    REQUIRE(slot != bindless::INVALID_DESCRIPTOR_INDEX);
+    auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(tex));
+    REQUIRE(slot != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     constexpr size_t bufferSize = 16 * sizeof(float) * 4;
     auto             outBuf     = Buffer::create("outBuf", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
@@ -446,7 +455,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
         auto cnc2 =
             bindless::CnC::create("cnc-sample-blue", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
         REQUIRE(cnc2);
-        PushConstantData pc {slot, 1.0f};
+        PushConstantData pc {slot.slot, 1.0f};
         cnc2->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
         auto downloadFuture = cnc2->recordDownloadBuffer(outBuf, 0, bufferSize);
         auto payload2       = cnc2->seal();
@@ -493,7 +502,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
             auto mapped = stagingYellow->map();
             cnc3->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
         }
-        PushConstantData pc {slot, 2.0f};
+        PushConstantData pc {slot.slot, 2.0f};
         cnc3->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
         auto downloadFuture = cnc3->recordDownloadBuffer(outBuf, 0, bufferSize);
         auto payload3       = cnc3->seal();
@@ -558,6 +567,9 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
 
     auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
+    auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
+    REQUIRE(sharedSampler);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
 
     constexpr uint32_t W = 16, H = 16;
     auto               colorTex = makeRgba8Tex(gpu, "bindless-rt", W, H);
@@ -566,8 +578,8 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
     auto sampleTex = makeRgba8Tex(gpu, "sample-src", W, H);
     REQUIRE(sampleTex);
 
-    uint32_t slot = heap->allocate(GpuResourceView(sampleTex));
-    REQUIRE(slot != bindless::INVALID_DESCRIPTOR_INDEX);
+    auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(sampleTex));
+    REQUIRE(slot != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     constexpr uint64_t stagedSize = W * H * 4;
     auto               stagedTex  = Buffer::create("staged-tex", {.context = gpu, .size = stagedSize, .mappable = true});
@@ -623,7 +635,7 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
         .vs         = vs,
         .ps         = ps,
         .geometry   = geom,
-        .immediates = makePushConstants(slot),
+        .immediates = makePushConstants(slot.slot),
     });
     auto rasterPayload = raster->seal();
     REQUIRE(rasterPayload);

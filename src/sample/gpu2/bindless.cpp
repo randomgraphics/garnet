@@ -60,7 +60,8 @@ struct SwarmObject {
     float     shininess;
 };
 
-// ─── Procedural Texture Generation ──────────────────────────────────────────
+// â”€â”€â”€ Procedural Texture Generation
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static void hsvToRgb(float h, float s, float v, uint8_t & r, uint8_t & g, uint8_t & b) {
     float c       = v * s;
@@ -254,7 +255,7 @@ static void updateDynamicTextureImage(gfx::img::Image & img, uint32_t w, uint32_
     }
 }
 
-// ─── 3D Geometry: Solid Cube & Holographic Octahedron Crystal ────────────────
+// â”€â”€â”€ 3D Geometry: Solid Cube & Holographic Octahedron Crystal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static void createCubeGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & outVb, AutoRef<Buffer> & outIb, RasterGeometry & outGeom) {
     const Vertex vertices[24] = {
@@ -428,7 +429,7 @@ static void createOctahedronGeometry(AutoRef<GpuContext> gpu, AutoRef<Buffer> & 
     outGeom.indexCount     = 24;
 }
 
-// ─── Backbuffer Verification for Test Mode ───────────────────────────────────
+// â”€â”€â”€ Backbuffer Verification for Test Mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static bool verifyBackbuffer(const GpuResourceView & view, uint32_t /*width*/, uint32_t /*height*/, uint32_t drawCount) {
     auto tex = view.texture();
@@ -461,7 +462,8 @@ static bool verifyBackbuffer(const GpuResourceView & view, uint32_t /*width*/, u
     return true;
 }
 
-// ─── Main Application ────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Application
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 int main(int argc, const char ** argv) {
     bool testMode     = argc > 1 && argv[1][0] == 't';
@@ -529,11 +531,11 @@ int main(int argc, const char ** argv) {
     }
 
     // 4. Create 256 distinct procedural textures and batch allocate into heap
-    constexpr uint32_t            NUM_TEXTURES = 256;
-    constexpr uint32_t            TEX_SIZE     = 128;
-    std::vector<AutoRef<Texture>> textures(NUM_TEXTURES);
-    std::vector<GpuResourceView>  textureViews(NUM_TEXTURES);
-    std::vector<uint32_t>         textureSlots(NUM_TEXTURES);
+    constexpr uint32_t                                     NUM_TEXTURES = 256;
+    constexpr uint32_t                                     TEX_SIZE     = 128;
+    std::vector<AutoRef<Texture>>                          textures(NUM_TEXTURES);
+    std::vector<GpuResourceView>                           textureViews(NUM_TEXTURES);
+    std::vector<bindless::DescriptorHeap::DescriptorIndex> textureSlots(NUM_TEXTURES);
 
     for (uint32_t i = 0; i < NUM_TEXTURES; ++i) {
         textures[i] = Texture::create(
@@ -546,9 +548,11 @@ int main(int argc, const char ** argv) {
         textureViews[i] = GpuResourceView(textures[i]);
     }
 
-    if (!heap->allocate(ArrayView<const GpuResourceView>(textureViews.data(), NUM_TEXTURES), ArrayView<uint32_t>(textureSlots.data(), NUM_TEXTURES))) {
-        std::fprintf(stderr, "Failed to batch allocate descriptor heap slots for %u textures\n", NUM_TEXTURES);
-        return -1;
+    auto sampler = Sampler::create("bindless-shared-sampler", {.context = gpu});
+    if (!sampler || heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sampler)).slot != 0) return -1;
+    for (uint32_t i = 0; i < NUM_TEXTURES; ++i) {
+        textureSlots[i] = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, textureViews[i]);
+        if (textureSlots[i] == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return -1;
     }
 
     // 5. Dynamic Streaming Textures: dedicated textures updated live in-place (demonstrating UPDATE_AFTER_BIND)
@@ -625,7 +629,7 @@ int main(int argc, const char ** argv) {
         obj.spinAxis    = glm::normalize(axis);
         obj.spinSpeed   = distSpinSpeed(rng);
         obj.scale       = distScale(rng);
-        obj.textureSlot = textureSlots[i % NUM_TEXTURES];
+        obj.textureSlot = textureSlots[i % NUM_TEXTURES].slot;
         obj.shininess   = distShininess(rng);
         obj.colorTint   = glm::vec4(distTint(rng), distTint(rng), distTint(rng), 1.0f);
     }
@@ -679,7 +683,8 @@ int main(int argc, const char ** argv) {
         avgFps           = (avgFps == 0.0f) ? instantFps : (avgFps * 0.95f + instantFps * 0.05f);
         avgFrameMs       = (avgFrameMs == 0.0f) ? (frameDt * 1000.0f) : (avgFrameMs * 0.95f + (frameDt * 1000.0f) * 0.05f);
 
-        // ─── Input Handling ──────────────────────────────────────────────────
+        // â”€â”€â”€ Input Handling
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (window) {
             if (window->getKeyStatus(KeyCode::ESCAPE).down) break;
 
@@ -690,7 +695,7 @@ int main(int argc, const char ** argv) {
             if (isKeyJustPressed(KeyCode::_4)) activeDrawCount = 75000;
             if (isKeyJustPressed(KeyCode::_5)) activeDrawCount = 100000;
 
-            // Fine adjustments with UP / DOWN arrows (±5000 draws)
+            // Fine adjustments with UP / DOWN arrows (Â±5000 draws)
             if (isKeyJustPressed(KeyCode::UP) && activeDrawCount + 5000 <= MAX_OBJECTS) { activeDrawCount += 5000; }
             if (isKeyJustPressed(KeyCode::DOWN) && activeDrawCount >= 5000) { activeDrawCount -= 5000; }
 
@@ -723,7 +728,7 @@ int main(int argc, const char ** argv) {
             if (autoCameraOrbit) { cameraAngle += kStepPerFrame * 0.45f; }
         }
 
-        // ─── Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action via CnC) ───
+        // â”€â”€â”€ Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action via CnC) â”€â”€â”€
         AutoRef<GpuPayload> uploadPayload;
         if (streamingEnabled && !testMode) {
             auto cnc = GpuCnC::create({.gpu = gpu});
@@ -746,7 +751,8 @@ int main(int argc, const char ** argv) {
 
         rt.setColorTarget(0, frame.view);
 
-        // ─── Camera & Projection Setup ───────────────────────────────────────
+        // â”€â”€â”€ Camera & Projection Setup
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         float     camX = cameraDistance * std::cos(cameraElevation) * std::sin(cameraAngle);
         float     camY = cameraDistance * std::sin(cameraElevation);
         float     camZ = cameraDistance * std::cos(cameraElevation) * std::cos(cameraAngle);
@@ -763,7 +769,7 @@ int main(int argc, const char ** argv) {
         const glm::vec3 lightDir = glm::normalize(glm::vec3(0.577f, 0.707f, 0.408f));
         constexpr float ambient  = 0.22f;
 
-        // ─── Bindless Raster Recorder Creation ───────────────────────────────
+        // â”€â”€â”€ Bindless Raster Recorder Creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         bindless::Raster::CreateParameters rcp;
         rcp.gpu               = gpu;
         rcp.target            = &rt;
@@ -778,7 +784,7 @@ int main(int argc, const char ** argv) {
             return -1;
         }
 
-        // ─── Alternating Pipeline Draw Call Recording Benchmark ─────────────
+        // â”€â”€â”€ Alternating Pipeline Draw Call Recording Benchmark â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Every single draw alternates between:
         //   - Even draw: Pipeline 1 (Solid Lit Cube) + Cube Geometry
         //   - Odd draw:  Pipeline 2 (Holographic Crystal Gem) + Gem Geometry
@@ -867,7 +873,8 @@ int main(int argc, const char ** argv) {
         sp.appendWork(payload).waitFor(frame.ready);
         gpu->submit(sp);
 
-        // ─── Test Mode Verification ──────────────────────────────────────────
+        // â”€â”€â”€ Test Mode Verification
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (testMode && frameCounter == totalFrames - 1) {
             gpu->waitForIdle();
             if (!verifyBackbuffer(frame.view, W, H, activeDrawCount)) {
@@ -878,7 +885,8 @@ int main(int argc, const char ** argv) {
 
         swapchain->present(*payload);
 
-        // ─── Real-Time Telemetry HUD ─────────────────────────────────────────
+        // â”€â”€â”€ Real-Time Telemetry HUD
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (window && frameCounter % 10 == 0) {
             std::string title =
                 StrA::format("Garnet Bindless | Draws: {} (Alternating Pipelines) | Textures: {} | CPU Record: {:.2f} ms | Frame: {:.2f} ms ({:.0f} FPS) "
