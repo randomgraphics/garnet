@@ -42,12 +42,16 @@ development.
 build.py d          # debug
 build.py p          # profile / RelWithDebInfo
 build.py r          # release
-build.py c          # clean build directories
+build.py c          # code coverage (Linux only)
+build.py x          # clean build directories
 build.py -c d       # configure only
 build.py -C d       # build only
 build.py --clang d  # Linux clang
 build.py -a d       # Android
 ```
+
+Note the positional `c` selects the coverage variant while the `-c` flag means
+configure-only, so `build.py -c c` configures a coverage build without compiling it.
 
 On Windows, run Python scripts through `python.exe`:
 
@@ -63,6 +67,7 @@ Run CIT through the project script:
 env/bin/cit.py      # lint + tests
 env/bin/cit.py -l   # lint / formatting check only
 env/bin/cit.py -t   # tests only
+env/bin/cit.py -c   # tests against the coverage build, then a function-level report
 ```
 
 Formatting uses the bundled clang-format and repo wrapper:
@@ -72,6 +77,42 @@ env/bin/format-all-sources.py -dqn  # check changed files
 env/bin/format-all-sources.py -d    # format changed files
 env/bin/format-all-sources.py       # format all tracked sources
 ```
+
+## Code Coverage
+
+`build.py c` builds a dedicated coverage variant into `build/linux.gcc.c`. It configures
+`CMAKE_BUILD_TYPE=Debug` and adds `--coverage`, so it is the debug configuration plus gcov
+instrumentation, isolated in its own folder. The daily `d` build never carries coverage
+flags, and `GN_BUILD_CODE_COVERAGE` defaults OFF.
+
+The variant must stay at `-O0`. gcov drops the function record of anything the compiler
+inlines, and this codebase marks many header-defined helpers `inline`, so any optimizing
+level would silently remove them from the function report while the totals still looked
+plausible. Measured with GCC 15.2 on a four-function translation unit: `-O0` reported all
+four functions, `-Og` reported three, `-O2` reported three and marked an executed function
+as 0%.
+
+```bash
+build.py c                            # configure + build the coverage variant
+env/bin/code-coverage.py              # build, run tests, generate the report
+env/bin/code-coverage.py --no-build   # report on an existing coverage build
+env/bin/cit.py -c                     # the same flow through CIT
+```
+
+Reports land in `build/linux.gcc.c/coverage/`, which the `/build*/` gitignore rule covers:
+
+- `index.html` — per-file line coverage, browsable.
+- `functions.md` — function coverage by module plus every never-executed function.
+- `coverage.json` — raw gcovr data with per-function execution counts.
+
+`src/core`, `src/inc`, `src/sample`, `src/test` and `src/tool` are instrumented.
+`src/3rdparty` and `src/test/3rdparty` (Catch2) are not: `GN_enable_code_coverage()` is
+called per project directory scope instead of at the repository root precisely so that
+vendored code stays out of the build and out of the report.
+
+Coverage is Linux only; `build.py c` fails with an explicit message elsewhere. CircleCI
+runs `coverage`, `profile` and `release` for the Linux gcc and clang jobs, and keeps
+`debug`, `profile`, `release` for Windows and Android.
 
 ## Coding Rules
 
