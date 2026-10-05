@@ -102,15 +102,18 @@ would silently inflate every subsequent measurement.
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 6 — end-to-end coverage build, test run and report verified
+Last completed: Phase 7 — payload free-list ABA defect fixed and the full flow re-verified
   Phase 0: measured -O0/-Og/-O2 gcov function attribution, confirmed CMake Debug defaults, created wip/code-coverage worktree at /home/chenli/code/garnet-code-coverage
   Phase 1: build.py c=coverage (Linux only) and x=clean; garnet-utils variants parameter with .c added to the default binary search
   Phase 2: GN_BUILD_CODE_COVERAGE option plus GN_enable_code_coverage in core/sample/tool/test; configure verified 216 project outputs instrumented, 546 third-party outputs clean
   Phase 3: gcovr added to requirements.txt; env/bin/code-coverage.py emits HTML, JSON and functions.md
   Phase 4: cit.py -c plus importable main(); CircleCI linux gcc/clang switched to coverage/profile/release
   Phase 5: AGENTS.md, garnet-build-test skill, new garnet-code-coverage skill and skills index; QWEN.md/CLAUDE.md/README.md need no change on this branch
-  Phase 6: coverage build 1m54s no warnings; cit.py -c exit 0; 132 internal cases (130 passed, 2 skipped) 5322 assertions, mesh-viewer 2863 assertions; 310 files reported with 0 third-party leakage; lines 45.50%, functions 52.80%, branches 21.20%; cit.py -l passes; build/linux.gcc.d has 0 --coverage flags
-In progress: none — awaiting user sign-off, nothing committed yet
+  Phase 6: measured on the pre-rebase base (master cc41fbd93); superseded by Phase 7.2 numbers
+  Phase 6.5: rebased onto origin/master a8a62a8b5 (#51), resolving the cit.py conflict by taking upstream's removal of GNtest-mesh-viewer; jolt stays uninstrumented (140 outputs) and the new fiz module is instrumented (4 core + 2 sample outputs) with no change to the coverage code
+  Phase 7.1: PayLoadFreeList lock-free Treiber stack replaced with a mutex; instrumented GNtest-unit-tests 30/30 pass (was 5/10 failing), non-instrumented debug build 10/10 pass
+  Phase 7.2: full coverage flow exit 0, all five CIT binaries green, 173 internal cases (171 passed, 2 skipped) 58267 assertions; lines 48.50%, functions 55.51% (5515/9936), branches 22.80%
+In progress: none — branch pushed to origin, PR not yet opened
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -241,6 +244,28 @@ Phase 6: End-to-end verification
             function totals; `cit.py -l` still passes.
     Commit: "test(coverage): verify end-to-end coverage build and report (Phase 6.1)"
 
+Phase 7: Defect exposed by instrumentation
+─────────────────────────────────────────────────────
+  Task 7.1: Fix the ABA defect in the AutoPtr payload free list
+    - The coverage build failed AutoPtrTest::testThreadSafety on 5 of 10 runs while the
+      non-instrumented debug build passed 10 of 10, on identical sources. Instrumentation
+      widens the preemption window inside PayLoadFreeList::allocate() between reading
+      current->next and the CAS on mHead, which is what makes the latent ABA reachable.
+    - recycle() pushing a node back can restore mHead to the value a pending CAS expects,
+      so the stale CAS installs an in-use payload as the free-list head and two AutoObjPtrs
+      end up sharing one counter, leaking the managed object.
+    - recycle() also wrote p->next non-atomically against a non-atomic read in allocate().
+    - Replace the lock-free stack with a mutex. No CAS remains to suffer ABA, and every
+      access to next is under the lock or on an exclusively owned node.
+    Verify: 30 consecutive runs of the instrumented GNtest-unit-tests pass; the debug build
+            still passes; the full coverage flow exits 0.
+    Commit: "fix(base): replace the ABA-prone payload free list with a mutex (Phase 7.1)"
+
+  Task 7.2: Re-run the full coverage flow on the fixed tree
+    Verify: `code-coverage.py --no-build` exits 0 with all CIT binaries passing and a
+            function-level report regenerated at the pre-defect coverage level.
+    Commit: "test(coverage): re-verify the report after the payload free list fix (Phase 7.2)"
+
 --- SUMMARY OF FILES TO TOUCH ---
 
 Phase 1 (variant plumbing):
@@ -267,6 +292,9 @@ Phase 5 (docs):
   agent/skills/garnet-build-test/SKILL.md — variant list, CIT -c, pointer to the coverage skill
   agent/skills/garnet-code-coverage/SKILL.md — NEW: coverage skill note
   agent/skills/README.md            — index the new skill
+
+Phase 7 (defect exposed by instrumentation):
+  src/core/base/autoptr.cpp         — PayLoadFreeList lock-free stack replaced by a mutex; add <mutex>
 
 Not touched, deliberately:
   QWEN.md                           — does not exist on master; it is added on the e2 branch
