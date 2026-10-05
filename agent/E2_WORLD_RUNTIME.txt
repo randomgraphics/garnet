@@ -1,0 +1,292 @@
+# Assignment: E2 data-driven World runtime and falling-body validation
+
+---
+## Goals
+Implement the approved Prime/Slate/Law runtime while preserving Form and Facet as
+first-class application concepts. Demonstrate multiple falling bodies, persistent
+contacts, lifetime-driven creation/deletion, and independent presentation.
+
+Overview: the replacement object-oriented MVP is implemented and verified on
+wip/e2/world-runtime, based on 51bdab91c. Form, Law, Intent and Event use Being; Facet and FacetValue use
+RuntimeType + RefCounter without instance IDs or names; concrete Facets expose nested Values. Prime stores
+immutable polymorphic versions and communicates only through base contracts.
+Hierarchy and required-Facet validation are included. The work remains active
+awaiting user review/sign-off. The user authorized committing and pushing this checkpoint.
+
+---
+## Design
+The canonical design is src/core/e2/README.md. Every Law reads the same immutable
+Prime; Slate is write-only. Each facet type has one writer Law. Initialization and
+registered structural cleanup are restricted exceptions. Ordered Laws execute once
+per tick; internally they may use substeps or parallel work. Pending intents are
+transient and may be lost on failure. Failure discards candidate state/events and
+halts advancement without automatic retry. Events become visible after publication.
+
+DynamicsLaw precedes LifetimeLaw. It solves multiple bodies in a local workspace,
+publishes symmetric final contact sets, and counts contact beginnings. LifetimeLaw
+receives same-tick deletion intents for bodies below a configured Y threshold and
+spawns at most 100 bodies/second, with at most 1000 generated bodies. No spawn credit
+accumulates at capacity. Spawn clock/RNG are Prime state. Initial horizontal speed
+is uniformly 0..0.5 m/s with uniform heading; initial vertical speed is zero.
+Deleting a form discards its value writes and cleans contact references during
+candidate preparation. New forms begin dynamics on the following tick.
+
+Transform/Motion/Body remain separate MVP facets; acceleration fields are deferred.
+Motion presence selects integration only for this demo, not as a universal physics
+classification. The simple solver is not a general-purpose physics replacement.
+Presentation reads retained snapshots on its own thread and uses public FX2 kernels.
+
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 4.9 — OperatingDomain renamed to Platform
+  Phase 0.1: approved design recorded; branch wip/e2/world-runtime created
+  Phase 1.1: canonical docs, active guidance, public extension contracts updated
+  Phase 1.2: immutable publication, writer ownership, routing and structure tests passed
+  Phase 2.1: multiple-body contacts, stable resting counts and deletion cleanup passed
+  Phase 2.2: bounded generator, RNG state, small initial velocity and same-tick deletion passed
+  Phase 3.1: headless presentation completed 600 ticks / 569 frames / 928 observed events
+  Phase 3.2: E2 36 passed / 1 display skip / 632 assertions; FX2 18 passed / 1107 assertions; lint passed
+  Phase 3.3: synchronized eecf430bb; full build passes; 57 regression cases pass / 1 display skip / 12169 assertions; World and fiz samples pass
+Phase 4.1: Being-derived contracts and base-only Prime protocol implemented
+Phase 4.2: nested Values, exact concrete Law contracts, hierarchy/dependencies migrated
+Phase 4.3: full debug build; 37 E2/spatial cases passed / 1 display skip / 695 assertions;
+  World sample 600 ticks / 558 frames / 928 events; lint passed
+Phase 4.4: Facet/FacetValue use RuntimeType + RefCounter; targets build, 13 cases /
+  505 assertions and lint pass. Facet::clone design question recorded below.
+Phase 4.5: Form hierarchy removed; Transform parent/local poses, world resolution,
+  candidate validation and physics conversion implemented. Final verification recorded below.
+Phase 4.6: affected debug targets build; 40 E2/spatial cases / 752 assertions pass,
+  one display-only skip; lint and diff checks pass.
+Phase 4.7: seal removed; live registrations and queued Form/Facet/state initialization
+  preserve tick snapshots; newly added Laws activate after initialization publishes.
+Phase 4.8: synced latest parent 51bdab91c; shared fiz::UnitOfTime; full debug build,
+  64 regression cases / 32,546 assertions and World demo pass; one display skip.
+Phase 4.9: Platform API/implementation/active consumers renamed; debug targets
+  build, 42 E2/spatial cases / 764 assertions pass, one display skip; lint clean.
+In progress: awaiting user review/sign-off; assignment remains active
+--- END PROGRESS ---
+
+--- REFERENCE ---
+src/core/e2/README.md — canonical design and implementation status
+src/inc/garnet/e2/ — public spatial/runtime contracts
+src/core/e2/ — runtime implementation
+src/sample/fx2/simple-unlit.cpp — typed rendering and GPU lifetime pattern
+agent/FIZ_PHYSICS_MODULE.txt — standalone physics work and superseded E2 integration
+
+--- BUILD / CI ---
+source env/garnet.rc
+build.py d --target GNtest-internal GNsample-e2-world-runtime
+env/bin/cit.py -i '[e2]'
+env/bin/cit.py -l
+build/linux.gcc.d/bin/GNsample-e2-world-runtime t
+
+Latest verification on eecf430bb (Linux GCC debug, Vulkan llvmpipe with validation):
+- Full build.py -C d --parallel 1 passed. Earlier -j8 attempts encountered GCC 15
+  internal compiler errors in unrelated GNtest-engine and GNtest-unit-tests;
+  recompiling the remaining targets serially passed without source changes there.
+- Targeted GNtest-internal, GNsample-e2-world-runtime, GNsample-fiz-solids and
+  GNsample-fiz-gel build passed after minimal GCC warnings-as-errors fixes in the
+  migrated fiz samples (braces around conditional logging; explicit empty buffer).
+- DISPLAY= env/bin/cit.py -i '[e2],E2 spatial*,[fx2]': 57 passed, 1 display-only
+  skip, 12169 assertions passed.
+- DISPLAY= GNsample-e2-world-runtime t: exit 0, 600 ticks, 576 presented frames,
+  928 observed events. Independent presentation frame counts may vary.
+- DISPLAY= GNsample-fiz-solids t: exit 0, 60 simulated steps.
+- DISPLAY= GNsample-fiz-gel t: exit 0, 180 steps; freefall, impact, rebound and
+  volume-stability checks all passed. No Vulkan validation errors in the samples.
+- env/bin/cit.py -l and git diff --check passed.
+- Historical result at stale 24771498c: fiz samples referenced removed FX2 APIs.
+  Upstream ffc3f22e4 migrated them; synchronized eecf430bb includes that fix.
+  The old blocker is resolved, not a limitation of the current checkout.
+- Local gpu2/vk-gpu-raster.cpp now matches upstream; no duplicate backend patch.
+- Not verified: interactive display, Windows, Android. MVP limitations: sparse
+  type-grouped payloads rather than packed SoA, AABB-only/no spin/no CCD,
+  double-second dt, no reliable intents/recovery/replay or arbitrary-tick defer.
+
+--- WORKFLOW / CONVENTIONS ---
+- Parent owns this assignment, sample, build integration and final verification.
+- docs agent owns active documentation/guidance synchronization.
+- runtime agent owns public core contract, storage/scheduling and core tests.
+- dynamics agent owns physical/lifetime extension and extension tests.
+- No edits to archived documents, SimpleWorld, or mesh-viewer implementation.
+- Commit lines describe intended boundaries only; do not commit or push implicitly.
+- Keep this assignment active until explicit user sign-off; do not archive on completion.
+
+--- TASK BREAKDOWN ---
+Phase 0: Establish scope
+─────────────────────────────────────────────────────────────────────
+  Task 0.1: Inspect repository and create isolated work branch
+    Verify: clean starting status and branch wip/e2/world-runtime
+    Commit: "chore(e2): establish runtime assignment (Phase 0.1)"
+
+Phase 1: Canonical design and core runtime
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Synchronize active docs and implement versioned core contracts
+    Verify: active docs agree; public header has no gameplay-specific knowledge
+    Commit: "feat(e2): define data-driven world contracts (Phase 1.1)"
+  Task 1.2: Implement publication, ownership, intent routing and structure handling
+    Verify: focused runtime tests cover old-view retention, same-prime reads, writes, routing and failure
+    Commit: "feat(e2): execute ordered laws over immutable prime (Phase 1.2)"
+
+Phase 2: Dynamics and lifetime extension
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Implement batch dynamics, contacts and structural cleanup
+    Verify: multiple dynamic contacts symmetric, begin counting stable, deleted IDs cleaned
+    Commit: "feat(e2): add batch dynamics and persistent contacts (Phase 2.1)"
+  Task 2.2: Implement timed spawning and same-tick lifetime intent handling
+    Verify: spawn rate/cap, no banked credits, random bounds, deletion and next-tick activation
+    Commit: "feat(e2): add lifetime law and bounded spawning (Phase 2.2)"
+
+Phase 3: Presentation demo and final audit
+─────────────────────────────────────────────────────────────────────
+  Task 3.1: Render independent snapshots of falling bodies using FX2 typed kernels
+    Verify: finite headless demo and documented interactive mode; event cursor consumption
+    Commit: "feat(e2): demonstrate independent world presentation (Phase 3.1)"
+  Task 3.2: Build, run focused regression checks and reconcile final documentation
+    Verify: build, E2 tests, demo, lint; record exact limitations and remaining work
+    Commit: "test(e2): verify world runtime integration (Phase 3.2)"
+
+  Task 3.3: Synchronize latest physics staging and revalidate without duplicate GPU fixes
+    Verify: full build, E2/FX2 checks, world and fiz headless samples, lint
+    Commit: "chore(e2): validate runtime on latest physics staging (Phase 3.3)"
+
+Phase 4: Correct public object model per user review
+Current hierarchy requirement (supersedes earlier Phase 4.2): TransformFacet values
+store parent links and local poses in Prime; Form has no hierarchy or subtree deletion.
+World poses are derived by composing the spatial ancestor chain. Facets declare required Facets using existing
+RuntimeType: Motion requires Transform. Validate final composition at checkin and
+initialization; no implicit construction. Adding/removing both together is valid.
+Law ownership and queries use explicit concrete Facet types. Subclass authors
+provide compatible Laws; existing Laws need not understand or automatically
+claim derived Facets. Polymorphic storage alone does not imply solver support.
+Prime communicates exclusively through base Facet/FacetValue virtual contracts
+and inherited Being RTTI. Subclass overrides customize those contracts; Prime
+never branches on a concrete domain type or reads domain-specific fields.
+─────────────────────────────────────────────────────────────────────
+  Task 4.1: Replace invented schema IDs and erased payloads with Being-derived contracts
+    Verify: no SchemaId/hash/void payload API; public subclasses preserve methods and RuntimeType inheritance
+    Commit: "refactor(e2): use Being object model for world capabilities (Phase 4.1)"
+  Task 4.2: Migrate Laws, Facet values, nested intents, docs and consumers
+    Verify: Dynamics/Lifetime and app-defined Form/Facet/Value/Intent/Event operate through public API
+    Commit: "refactor(e2): migrate world extensions to polymorphic values (Phase 4.2)"
+  Task 4.3: Verify snapshot isolation, subtype preservation, routing and complete demo
+    Verify: full build, public-only extensibility tests, E2/FX2 regression and World demo; lint
+    Commit: "test(e2): verify object-oriented world runtime (Phase 4.3)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+Phase 1 (core and docs):
+  src/inc/garnet/e2/world.h — replace mutable object evolution contract
+  src/core/e2/world-runtime.cpp — NEW: runtime implementation
+  src/core/e2/form.cpp, mold.cpp — adapt to versioned identities/templates
+  src/core/e2/test/ — core behavior checks
+  src/core/e2/README.md, AGENTS.md, CLAUDE.md — current design guidance
+  src/core/fiz/README.md, agent/FIZ_PHYSICS_MODULE.txt — integration scope references
+Phase 2 (extension):
+  src/inc/garnet/e2/dynamics.h — NEW: extension contract
+  src/core/e2/dynamics.cpp — NEW: dynamics/lifetime implementation
+  src/core/e2/test/world-dynamics-test.cpp — NEW: extension validation
+Phase 3 (sample and integration):
+  src/inc/garnet/GNengine2.h — monolithic extension inclusion
+  src/sample/e2/world-runtime.cpp — NEW: independent presentation demo
+  src/sample/e2/CMakeLists.txt — active sample target
+  src/sample/e2/README.md — NEW: public sample usage and limits
+  src/core/gpu2/vk-gpu-raster.cpp — upstream fix retained unchanged after synchronization
+  src/sample/fiz/solids.cpp, gel.cpp — minimal GCC warning fixes in migrated samples
+
+Task 4.4: Remove unnecessary instance ID/name from Facet and FacetValue
+  Use existing RuntimeType + RefCounter directly; widen e2::Ref to those contracts.
+  Keep identified objects on Being. Update active API/design documentation.
+  Verify: debug build, focused World runtime/dynamics tests, formatting and diff checks
+  Commit: "refactor(e2): remove artificial facet instance identity (Phase 4.4)"
+
+Phase 4.4 verification: GNtest-internal and GNsample-e2-world-runtime debug targets
+build; '[world-runtime],[world-dynamics]' passes 13 cases / 505 assertions; lint and
+diff checks pass. No commits made. Logs /tmp/garnet-facet-identity-*.log.
+Design review: Facet::clone currently defensively copies capabilities into Molds
+and attached bindings. It is unnecessary if immutable capability references are
+shared by contract; recommend removing it separately. FacetValue copying remains
+necessary for the current versioned value implementation. No clone API change yet.
+
+Task 4.5: Move hierarchy from Form to persistent TransformFacet values
+  Remove Form/Prime/Slate parent-child structure and subtree deletion semantics.
+  TransformFacet::Value records parent and parent-local pose (world pose at root).
+  Resolve world poses for rendering/physics. Validate spatial links via common
+  Facet validation contract at publication; reject dangling links/cycles. Parent
+  deletion requires explicit reparent/detach/deletion of surviving children.
+  Verify: hierarchy composition/rotation, retained views, invalid links, deletion
+  policy, physics integration, full debug build and headless sample
+  Commit: "refactor(e2): store spatial hierarchy in transform values (Phase 4.5)"
+
+Latest Phase 4.5 verification (current TransformFacet hierarchy):
+- Full Linux GCC debug build passes: build.py -C d --parallel 1.
+- DISPLAY= cit.py -i '[e2],E2 spatial*': 40 cases passed, one display-only
+  case skipped, 752 assertions passed. Includes far-origin rotated hierarchy,
+  old snapshots, invalid parents/cycles, joint detach/delete and dynamic children.
+- Headless World sample passes: 600 ticks / 558 frames / 928 observed events;
+  no Vulkan validation errors.
+- cit.py -l and git diff --check pass. Logs: /tmp/garnet-transform-hierarchy-*.log.
+- AABB/no-spin remains; static colliders below moving parents require compound
+  or kinematic support outside this demo. Visual children and dynamic children work.
+- No commits made. Assignment remains active awaiting explicit user sign-off.
+
+Task 4.6: Apply requested class spacing and DynaArray conventions
+  Update World APIs, implementation, extensions and callers together; retain other
+  container types where their semantics differ. Document non-obvious public classes
+  and fields with roles, units, ownership and usage. Record all preferences in guidance.
+  Verify: affected debug targets, existing runtime/dynamics checks, formatting
+  Commit: "style(e2): use DynaArray and separate class definitions (Phase 4.6)"
+
+Phase 4.6 verification: debug GNtest-internal/GNsample-e2-world-runtime build passes;
+E2/spatial tests 40 passed, one display-only skip, 752 assertions; lint/diff clean.
+DynaArray replaces vector across World APIs/implementation, dynamics and relevant
+callers. Active guidance records class spacing and class/field Doxygen conventions.
+Logs: /tmp/garnet-world-style-{build,tests,lint}.log. No commits made.
+
+Phase 4.6 style clarification: separate standalone member documentation blocks with
+a preceding blank line. Keep uncommented and trailing-comment members packed when
+useful. Applied to World/dynamics public headers and recorded in repo/style guidance.
+
+Task 4.7: Remove World sealing; allow live Form/Facet/Law additions
+  No seal or permanent registry freeze. Keep current tick configuration stable;
+  registrations and proposed structural initialization can arrive while running.
+  Replace initialize(Form) with createForm; expose adding a Facet without replacing
+  existing state. Retain immutable published versions and explicit Law ownership.
+  Verify: live additions, retained snapshots, additions during Law execution,
+  existing E2/dynamics checks, debug build and headless sample
+  Commit: "feat(e2): keep World open for live additions (Phase 4.7)"
+
+Current integration steering:
+- Fast-forwarded wip/e2/world-runtime to latest parent origin/feature/phys/main,
+  51bdab91c. Kept upstream fiz sample batching and GCC fixes when restoring local
+  work; rapid-vulkan now at recorded b0761844. Backup retained in named stash
+  e2-world-runtime-before-parent-sync-2026-10-02 until verification completes.
+- E2 aliases fiz::UnitOfTime (integer nanoseconds), including World::tick and
+  LawContext::dt. Numerical domains convert the duration to seconds locally.
+- Late Laws activate only after their initialization batch publishes; held
+  requests remain pending until that Law first executes.
+
+Task 4.8: Synchronize latest parent and share FIZ time units
+  Fast-forwarded to origin/feature/phys/main 51bdab91c; upstream rapid-vulkan
+  b0761844 and GPU recording API names preserved. E2 aliases fiz::UnitOfTime.
+  Verify: full debug build; E2/spatial/FX2 64 passed / one display skip / 32,546
+  assertions; World demo 600 ticks / 737 frames / 928 observed events; lint/diff clean
+  Commit: "refactor(e2): share physics time units on latest parent (Phase 4.8)"
+
+Latest verification logs: /tmp/garnet-open-world-{build,full-build,tests,demo,lint}.log.
+No implementation commits or pushes. Pre-sync backup stash retained.
+
+Task 4.9: Rename OperatingDomain to Platform
+  Rename the public class/factory, implementation, active consumers and docs.
+  Keep suspended SimpleWorld work outside the active refactor.
+  Verify: E2 debug targets build, existing E2 regression checks, lint/diff checks
+  Commit: "refactor(e2): rename OperatingDomain to Platform (Phase 4.9)"
+
+Phase 4.9 verification: GNtest-internal and GNsample-e2-world-runtime debug targets
+built; '[e2],E2 spatial*' passed 42 cases / 764 assertions, one display-only skip.
+Formatting and diff checks pass. Logs /tmp/garnet-platform-{build,tests,lint}.log.
+Suspended SimpleWorld sample retains its old API spelling as explicitly out of
+scope; all active OperatingDomain references have been renamed. No commits made.
+
+Checkpoint publication: user explicitly requested committing and pushing the current
+work on wip/e2/world-runtime. This does not archive the assignment or imply final
+design sign-off. Earlier no-commit notes record the state before this request.

@@ -1,23 +1,23 @@
-// os.cpp — the official OperatingDomain implementation. Wraps the GN::win window/event
+// os.cpp — the official Platform implementation. Wraps the GN::win window/event
 // system to provide engine2 with a render surface and an event pump.
 
 #include <garnet/GNengine2.h>
 #include <garnet/GNwin.h>
 
 #include <memory>
-#include <string>
 
 using namespace GN;
 using namespace GN::e2;
+using namespace GN::e2::basis;
 
 namespace {
 
 GN::Logger * sLogger = GN::getLogger("GN.e2.os");
 
-struct OperatingDomainImpl : OperatingDomain {
-    GN_REGISTER_RUNTIME_TYPE(OperatingDomain);
+struct PlatformImpl : Platform {
+    GN_REGISTER_RUNTIME_TYPE(Platform);
 
-    explicit OperatingDomainImpl(Universe & u): OperatingDomain(TYPE_INFO(), u.generateUniqueIdentifier(), "os-domain") {}
+    explicit PlatformImpl(Universe & u): Platform(TYPE_INFO(), u.generateUniqueIdentifier(), "platform") {}
 
     bool init(const CreateParameters & cp) {
         win::WindowCreateParameters wcp;
@@ -53,12 +53,12 @@ private:
 
 } // namespace
 
-namespace GN::e2 {
+namespace GN::e2::basis {
 
-Ref<OperatingDomain> OperatingDomain::create(const CreateParameters & cp) {
-    auto d = referenceTo(new OperatingDomainImpl(cp.universe));
+Ref<Platform> Platform::create(const CreateParameters & cp) {
+    auto d = referenceTo(new PlatformImpl(cp.universe));
     if (!d->init(cp)) return {};
     return d;
 }
 
-} // namespace GN::e2
+} // namespace GN::e2::basis
