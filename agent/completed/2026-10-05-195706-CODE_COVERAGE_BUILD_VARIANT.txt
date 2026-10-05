@@ -113,8 +113,29 @@ Last completed: Phase 7 — payload free-list ABA defect fixed and the full flow
   Phase 6.5: rebased onto origin/master a8a62a8b5 (#51), resolving the cit.py conflict by taking upstream's removal of GNtest-mesh-viewer; jolt stays uninstrumented (140 outputs) and the new fiz module is instrumented (4 core + 2 sample outputs) with no change to the coverage code
   Phase 7.1: PayLoadFreeList lock-free Treiber stack replaced with a mutex; instrumented GNtest-unit-tests 30/30 pass (was 5/10 failing), non-instrumented debug build 10/10 pass
   Phase 7.2: full coverage flow exit 0, all five CIT binaries green, 173 internal cases (171 passed, 2 skipped) 58267 assertions; lines 48.50%, functions 55.51% (5515/9936), branches 22.80%
-In progress: none — branch pushed to origin, PR not yet opened
+In progress: none — archived 2026-10-05 at the user's explicit request; pushed to origin/wip/code-coverage at 7905347ba with no PR opened, so CircleCI has never run this branch and build-linux-clang-coverage is unverified
 --- END PROGRESS ---
+
+--- OUTSTANDING AT ARCHIVAL ---
+
+Recorded so the gaps are not lost when this doc is read as history.
+
+- CircleCI has never executed this branch. The config was validated by parsing the resolved
+  YAML only. Opening the PR is the first real run of build-linux-gcc-coverage and
+  build-linux-clang-coverage.
+- The clang coverage build was never compiled locally. clang 21.1.8 is available but
+  llvm-cov is not, so `code-coverage.py --clang` would fail its own early check. The clang CI
+  job is build-only and needs no llvm-cov, but nothing has proven clang accepts these flags
+  on this tree.
+- No PR, therefore no squash merge. The repository only allows squash merges, so the 14
+  commits here become one on master whenever that happens.
+- The mutex in PayLoadFreeList is a correctness-first fix. Its cost on contended
+  AutoRef/AutoObjPtr paths in RDG and gpu2 was never benchmarked; a tagged-pointer CAS or
+  thread-local free lists remain open follow-ups.
+- `format-all-sources.py` formats `*.py` with black, but black is absent from
+  env/requirements.txt and futures are collected with concurrent.futures.wait(), which does
+  not re-raise. Python formatting is therefore silently unchecked in CI and locally. Left
+  alone here because fixing it would reformat existing env/bin/*.py.
 
 --- REFERENCE ---
 
