@@ -1,9 +1,6 @@
-// Vertex-only push range: gpu2 emits stage-specific push updates.
+// Vertex-only push range; backend mapping is private to these kernels.
 layout(push_constant, std430) uniform SimpleDraw {
     mat4  worldFromObject;
-    vec4  color;
-    vec4  emissiveAndCutoff;
-    vec4  diffuseAndOpaque;
-    uvec4 textureIndices;
+    uvec4 materialIndex;
 }
 draw;

@@ -195,13 +195,13 @@ reject unsupported attachment feedback before recording.
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: standard combined SharedUniforms in SSC header, fixed 16 lights in one UBO, kernel/shader migration compile/link verified
+Last completed: compile-only simple-unlit sample uses bindless SSC/kernel flow plus heap checker texture and nearest sampler; target compile/link passed
   Phase 0.1: FX2/gpu2 design split; material storage assigned to the gpu2 heap, not to FX2.
   Phase 0.2: Full Debug build and cit.py -l passed; existing gpu2/FX2 regression passed with Vulkan validation.
   Phase 0.3: Opaque aligned chunks, immediate free/coalescing, stale/foreign rejection, caller uploads and GPU SSBO readback verified; 31,930 bindless assertions/20 cases, 86,775 regression assertions/108 cases, sample pixel check passed.
   Phase 0.4: Default-capacity boundary test, 100,000 persistent material chunks with one initial upload; targeted Debug build, lint, 31,933 assertions/20 cases, 1,000/100,000-draw headless pixel checks passed under validation.
   Phase 0.5: gpu2 descriptor handles made invalid-by-default and tagged; targeted Debug build/lint, 31,955 assertions/20 bindless cases and sample headless pixels passed under Vulkan validation.
-In progress: simple-unlit sample conversion blocked by dummy recordUniformUpdate returning empty state; stopped per user instruction, uniform store must be implemented first
+In progress: expose separate unlit/Lambertian kernel and immutable material interfaces. Kernels own the heap reference and shared shader/fallback state, and return default parameter values. Materials accept resource views/samplers and reclaim heap allocations after producer/draw references release. Descriptor deduplication is deferred. Debug sample and internal test targets compile/link; no tests executed.
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -537,7 +537,7 @@ C++/GLSL layouts and static offset assertions match. The restored kernel/shader
 exercise is included with the public SSC interface, dummy, and design docs.
 User requested commit and push; runtime tests are not an acceptance gate.
 
-Sample conversion dependency (blocked, stopped)
+Sample conversion dependency (historical; resolved for compile-only acceptance)
  Task E4: Switch src/sample/fx2/simple-unlit.cpp to bindless kernels
    Blocking condition: SharedShaderConstantsDummy::recordUniformUpdate returns
    an empty UniformState. The new kernel rejects empty states, so switching
@@ -550,3 +550,27 @@ Sample conversion dependency (blocked, stopped)
    sample conversion remains unfinished, not archived.
 Delivery validation: python.exe env/bin/build.py -C d --target GNtest-internal
 passed compilation/link with the light-array tail layout. No runtime tests run.
+
+Sample exercise resumed: user clarified that successful compilation is the
+acceptance criterion, not correct runtime output. E4's dummy-state runtime
+blocker is therefore not a compile-flow blocker. The sample now uses the
+public bindless heap, SharedUniforms, recordUniformUpdate, uniform pass binding,
+bindless Raster, two typed unlit draws, sealed producer/consumer submission,
+and present. An empty dummy state still causes an explicit early failure.
+
+Sample bindless API exercise (compile-only complete)
+ Task E4 refinement: Wire the sample through public bindless APIs and heap textures
+   User clarified that compilation, not correct runtime output, validates the
+   API flow. Sample now creates heap/SSC/kernel, fills SharedUniforms, records
+   uniform upload in caller CnC, derives pass resources, creates bindless Raster,
+   records two draws, seals producer/consumer work, submits in order, presents.
+   Add a 4x4 opaque RGBA8 black/white checker. Initialization CnC uploads vertex
+   position/UV and texture bytes. Create the UnlitKernel from the heap, copy its
+   default parameters, then pass the checker GpuResourceView and nearest sampler
+   directly to both material instances. Materials allocate their descriptors
+   from the kernel's heap. Sampler uses nearest min/mag/mip, one mip, clamp-to-edge.
+   Verify: python.exe env/bin/build.py -C d --target GNsample-fx2-unlit passed
+   Debug compile/link; scoped clang-format and git diff --check passed.
+   Evidence: build/fx2-bindless/simple-unlit-bindless-build.log. No runtime tests
+   required or run; dummy recordUniformUpdate still returns an empty state.
+   Commit: not requested for this sample follow-up; leave uncommitted for review.

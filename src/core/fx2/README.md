@@ -313,19 +313,23 @@ header. Upload the bytes with `recordUniformUpdate()`, then use
 Recording a draw retains the state lease until payload completion/discard.
 The producer is submitted once before all consumers; kernels never submit it.
 
-Textures and samplers are registered directly in the caller's gpu2 heap.
-Inputs contain tagged descriptor handles; shaders use the slots. The heap is
-bound at set 0 with its default bindingIndex 0. Optional color maps modulate
-the input color. Lambertian also accepts a tangent-space normal map, deriving
-its tangent frame from world-position/UV derivatives. UV location 2 is needed
-only when a map is enabled; normal location 1 is needed for Lambertian.
+Create a kernel with a gpu2 heap, then create immutable materials from that
+kernel. Material parameters use `GpuResourceView` and `Sampler` directly; FX2
+allocates the required heap descriptors and releases them with material
+lifetime. Each material retains its kernel, so the heap and built-in fallback
+resources remain valid. The kernel exposes default material parameters, which
+callers can copy and customize. The heap is bound at set 0 with bindingIndex 0.
+Optional color maps modulate the input color. Lambertian also accepts a
+tangent-space normal map, deriving its tangent frame from world-position/UV
+derivatives. UV location 2 is needed only when a map is enabled; normal
+location 1 is needed for Lambertian.
 Unlit bypasses lighting/exposure. Lambertian handles up to 16 direct lights, inverse-transpose normals, back faces, and exposure/Reinhard.
 Both support emissive and alpha cutoff, inherit raster policy, and use 128
 vertex-stage push bytes. These draws need no streaming allocation.
 
 Readers follow gpu2's read-ready invariant and add no per-draw resource
-tracking. Callers schedule writers first, keep descriptor slots allocated and
-unchanged through final consumption, and avoid attachment feedback. SSC has no
+tracking. Callers schedule writers first and avoid attachment feedback. FX2
+retains material descriptor slots through recorded/in-flight draws. SSC has no
 heap dependency. Its current implementation is still a dummy, so this exercise
 has compile/link verification only; runtime rendering has not been tested.
 
@@ -338,3 +342,13 @@ implemented. Camera exposure remains in the shared UBO.
 SharedUniforms physical order is frame/sky header, camera fields, then direct
 lighting. numLights is at byte 244 and lights[16] starts at byte 256. The
 combined UBO remains 1024 bytes, with a fixed maximum of 16 direct lights.
+
+The simple-unlit sample now exercises the public bindless API flow at compile
+level: heap/SSC/kernel creation, shared uniform upload, pass resource bindings,
+two draws, producer/consumer sealing, submission, and presentation. Its 4x4
+RGBA8 black/white checker is uploaded once and supplied as a resource view to
+the unlit material; its nearest sampler is supplied directly as well.
+Position/UV vertices feed the textured unlit variant.
+No private SSC or shader ABI headers are included by the sample. This is a
+compile-only exercise: dummy SSC still returns an empty uniform state, so no
+runtime image or descriptor-heap behavior has been verified yet.
