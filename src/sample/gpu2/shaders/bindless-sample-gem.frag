@@ -10,9 +10,9 @@ layout(location = 5) in float in_pulse;
 
 layout(location = 0) out vec4 out_color;
 
-// Global bindless descriptor heap at Set 0, Binding 0
-layout(set = 0, binding = 0) uniform texture2D u_textures[];
-layout(set = 0, binding = 4) uniform sampler u_samplers[];
+// Typed arrays share set 0 with the material SSBO at binding 0
+layout(set = 0, binding = 1) uniform texture2D u_textures[];
+layout(set = 0, binding = 5) uniform sampler u_samplers[];
 
 void main() {
     // Holographic chromatic dispersion: sample bindless texture with R/G/B phase shift

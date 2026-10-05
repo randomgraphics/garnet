@@ -12,6 +12,8 @@ using Heap = bindless::DescriptorHeap;
 TEST_CASE("bindless heap enforces descriptor type and view agreement", "[gpu2][bindless][typed]") {
     auto gpu = makeGpu();
     REQUIRE(gpu);
+    CHECK(Heap::DescriptorIndex {}.u32 == 0);
+    CHECK(Heap::INVALID_DESCRIPTOR_INDEX.u32 == 0);
     auto heap = Heap::create("typed-validation", {.gpu = gpu, .capacity = 5});
     REQUIRE(heap);
     auto texture = makeRgba8Tex(gpu, "texture", 2, 1);
@@ -33,6 +35,13 @@ TEST_CASE("bindless heap enforces descriptor type and view agreement", "[gpu2][b
         REQUIRE(index != Heap::INVALID_DESCRIPTOR_INDEX);
         CHECK(index.type == type);
         CHECK(index.slot == type);
+        CHECK(index.tag == 1);
+        CHECK(index.u32 == (0x80000000u | (type << 28) | type));
+        auto untagged = index;
+        untagged.tag  = 0;
+        CHECK_FALSE(heap->update(untagged, views[type]));
+        heap->free(untagged);
+        CHECK(heap->size() == type + 1);
         for (uint32_t other = 0; other < views.size(); ++other) CHECK(heap->update(index, views[other]) == (type == other));
         auto wrongType = index;
         wrongType.type = (type + 1) % 5;
@@ -42,7 +51,7 @@ TEST_CASE("bindless heap enforces descriptor type and view agreement", "[gpu2][b
     }
     CHECK(heap->allocate(Heap::SAMPLER, views[4]) == Heap::INVALID_DESCRIPTOR_INDEX);
     std::array<Heap::DescriptorIndex, 5> indices;
-    for (uint32_t type = 0; type < indices.size(); ++type) indices[type] = Heap::DescriptorIndex {(type << 28) | type};
+    for (uint32_t type = 0; type < indices.size(); ++type) indices[type] = Heap::DescriptorIndex {0x80000000u | (type << 28) | type};
     CHECK(heap->update({indices.data(), indices.size()}, {views.data(), views.size()}) == 5);
     auto mixed = views;
     mixed[4]   = views[0];

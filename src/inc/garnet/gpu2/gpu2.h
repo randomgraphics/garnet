@@ -234,7 +234,7 @@ protected:
 };
 
 // -----------------------------
-// Sampler, buffer
+// Sampler
 // -----------------------------
 
 struct Sampler : public RCRT64 {
@@ -259,6 +259,10 @@ protected:
     using RCRT64::RCRT64;
 };
 
+// -----------------------------
+// Buffer
+// -----------------------------
+
 struct Buffer : public RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
@@ -267,7 +271,8 @@ struct Buffer : public RCRT64 {
         uint64_t            size = 0; ///< Size in bytes. Must be greater than 0.
 
         /// Set to true, if you need an CPU mappable buffer.
-        /// CPU mappable buffer is slower for GPU to access. It is mostly used to store short-lived data that is read or write only once by GPU.
+        /// CPU mappable buffer is faster for CPU to acess, but slower for GPU to access.
+        /// It should be used to store short-lived data that is read or write only once by GPU.
         bool mappable = false;
     };
 

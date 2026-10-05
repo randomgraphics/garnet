@@ -4,8 +4,8 @@
 layout(location = 0) in vec2 inUV;
 
 // Bindless descriptor heap: array of textures at set 0, binding 0
-layout(set = 0, binding = 0) uniform texture2D u_textures[];
-layout(set = 0, binding = 4) uniform sampler u_samplers[];
+layout(set = 0, binding = 1) uniform texture2D u_textures[];
+layout(set = 0, binding = 5) uniform sampler u_samplers[];
 
 layout(push_constant) uniform PushConstants { uint textureIndex; }
 pc;

@@ -41,16 +41,23 @@ Layout and barrier management is completely automated and invisible to the user.
 
 ### B. Persistent Global Descriptor Heap (`bindless::DescriptorHeap`)
 
-The heap owns one persistent descriptor set, reserved entirely for its typed arrays.
+The heap owns one persistent descriptor set containing a material SSBO followed
+by five typed resource arrays.
 For a configured base `bindingIndex`, Vulkan uses:
 
 | Binding offset | Descriptor type |
 |---|---|
-| 0 | Sampled texture, without a sampler |
-| 1 | Storage texture |
-| 2 | Uniform buffer |
-| 3 | Storage buffer |
-| 4 | Sampler |
+| 0 | Material storage buffer (one descriptor) |
+| 1 | Sampled texture, without sampler |
+| 2 | Storage texture |
+| 3 | Uniform buffer |
+| 4 | Storage buffer |
+| 5 | Sampler |
+
+`DescriptorIndex` packs a 28-bit slot, a 3-bit type, and a high validity bit.
+Allocated handles have bit 31 set; zero/default-initialized handles are invalid.
+Update/free reject untagged handles even if their type/slot names an active entry.
+Shaders still receive only the slot, so this CPU encoding does not change bindings.
 
 Combined texture/sampler descriptors are not supported by this heap. A shader can
 sample a texture with any registered sampler, or load texels without a sampler.
@@ -68,6 +75,82 @@ The set uses Vulkan update-after-bind and partially-bound arrays, and is bound
 once per pass. CPU operations are thread-safe, but callers must not replace or
 free slots referenced by recorded or in-flight GPU work. Writable resource hazards
 must still be declared through the recorder's existing pass resources.
+
+---
+
+### B.1. Built-in Material Buffer
+
+The first implementation of this extension is a fixed-capacity mini heap inside
+`bindless::DescriptorHeap`. The growth design below is a subsequent step. The heap will own both its existing descriptor arrays and a material buffer.
+The buffer is a generic store for relatively long-lived, read-only, non-uniform
+GPU records. "Material" names its common use; gpu2 does not know the contents of
+any record, shader schema, FX2 kernel type, or descriptor indices packed inside.
+Kernels and other callers define and interpret those bytes.
+
+#### Opaque variable-sized chunks
+
+The heap allocates relatively long-lived, read-only, non-uniform GPU records.
+`allocateMaterial(size, alignment)` returns an opaque `MaterialToken`; alignment
+must be a nonzero power of two. `materialView(token)` returns the buffer range
+with its offset/size, allowing a caller-owned CnC to upload bytes. Allocation
+itself creates no upload work. `freeMaterial(token)` immediately returns the
+range to the allocator; the caller must delay freeing until all consumers finish.
+Stale/foreign tokens have no effect. Material chunks do not consume typed-array
+slots, and gpu2 never interprets their contents.
+
+`CreateParameters::materialCapacity` is the current fixed byte budget (default
+4 MiB). Invalid size/alignment or exhaustion returns `INVALID_MATERIAL_TOKEN`.
+The current implementation fails explicitly instead of growing or relocating
+storage. Recorded work can retain the heap or captured buffer views; retaining a
+view does not prevent an explicit free from reusing its bytes.
+
+#### Future TODO: growth
+
+Add doubling growth with caller-recorded GPU buffer copies, preserving every
+live token's offset/size and versioning the heap descriptor set with its backing
+buffer. No blocking readback or persistent CPU copy of material contents is
+needed. Maximum capacity/failure policy remains explicit. This growth step is
+not implemented by the initial fixed-capacity allocator.
+
+#### Allocation implementation
+
+One long-lived storage buffer plus a free-list allocator over aligned,
+variable-sized ranges, with adjacent free ranges coalesced. Tokens are dense
+identifiers; the token-to-offset mapping is private. Growth preserves byte offsets
+by design, so tokens survive it. Uploads and the growth copy are recorded on the
+caller's CnC. The arena keeps no CPU shadow of its contents.
+
+#### Descriptor and pipeline integration
+
+The material SSBO is part of the heap's own descriptor set, alongside its five
+typed descriptor arrays. It uses `bindingIndex + 0`; with the FX2 heap at set 0
+and base binding zero, this is set 0, binding 0. The five arrays move to offsets
+1-5 while DescriptorType values remain 0-4. Binding 0 is one storage-buffer
+descriptor, not another indexed resource array. The heap provides one
+descriptor set and its set layout, covering all six bindings; Raster/CnC combine
+this set layout with other sets and push constants into the pipeline layout.
+The implemented heap layout contains these six bindings.
+
+When growth is implemented, subsequent recordings capture the new material buffer together
+with its heap descriptor-set version. Already recorded/in-flight work must retain
+the old buffer and matching descriptor-set version. Do not rewrite a material
+binding still used by earlier work; retaining just the old buffer is insufficient
+if its descriptor now points elsewhere. The caller executes uploads/growth copies
+before consumers. `free(token)` immediately reclaims the chunk and does not
+schedule deferred reclamation; delaying that call until consumers finish is the
+caller's responsibility.
+
+This buffer is distinct from a mapped CPU-to-GPU streaming pool for per-draw
+arguments and from versioned shared-uniform storage. FX2 SSC shares the heap;
+it does not implement a second material allocator.
+
+#### Required verification
+
+Verify byte-exact GPU readback, mixed sizes/alignment, free-list reuse/coalescing,
+capacity failure, immediate free, captured-buffer lifetime, and caller uploads with
+no CPU shadow, readback, implicit submission, or blocking transfer. Run relevant
+heap and pass-resource tests under Vulkan validation. FX2 integration tests
+verify consumption of heap-owned records, not another allocation implementation.
 
 ---
 
@@ -135,3 +218,41 @@ The bindless model extends naturally to compute and memory operations:
 - `DescriptorHeap` allocates storage image (UAV) and storage buffer indices via `GpuResourceView`.
 - Compute dispatches take push constants (BDA addresses, storage indices) without a `GpuResourceTable`.
 - Operations automatically flush memory/caches before sealing, preserving the universal read-ready invariant.
+
+## Material mini-heap verification checkpoint
+
+The fixed-capacity implementation and six-binding layout are verified on Windows
+Debug/Vulkan. `python.exe env/bin/build.py -C d` passed. With
+`VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation`,
+`python.exe env/bin/cit.py -i "[bindless]"` passed 31,930 assertions in 20 cases,
+and `-i "[gpu2],[fx2]"` passed 86,775 assertions in 108 cases. The bindless sample
+`t --frames 3 --draws 1000` passed its pixel check. No Vulkan validation diagnostics
+were found. `python.exe env/bin/cit.py -l` and `git diff --check` passed.
+Doubling growth and descriptor-set version retention are not implemented yet.
+Evidence logs: `build/fx2-bindless/mini-heap-*.log` (local build artifacts).
+
+### Bindless sample material usage
+
+`GNsample-gpu2-bindless` prepares 100,000 reusable 32-byte material chunks
+(3,200,000 bytes, fitting the default 4 MiB). Cube and gem pipelines share the
+sample-private std430 schema: color tint, texture slot, shininess, and UV scale.
+The fresh heap packs these chunks contiguously; the sample records one batched
+initialization upload and submits it before the first raster consumer.
+
+Every draw passes the material index alongside its transform and frame light/time
+values. Both vertex shaders read the material SSBO at set 0/binding 0. Push
+constants shrink from 128 to 100 bytes; no material allocation or material upload
+occurs in the frame loop. The CPU initialization array is released after upload
+recording. The heap retains the records for the sample lifetime. Buffer growth
+remains a future TODO and is not a prerequisite for the fixed-capacity sample.
+
+Sample material checkpoint: the targeted Debug build and lint pass. With Vulkan
+validation enabled, 20 bindless cases pass 31,933 assertions (including the default
+4 MiB boundary). Three-frame headless sample runs at 1,000 and 100,000 draws pass
+pixel checks (66,576 and 664,438 non-background pixels) with no Vulkan diagnostics.
+Logs: `build/fx2-bindless/material-sample-{build,tests,1000,100000,lint}.log`.
+
+Descriptor-index checkpoint: bit 31 is the validity tag, type occupies bits 28-30,
+and the slot occupies bits 0-27. Zero/default handles are invalid. Targeted Debug
+build, lint, 31,955 assertions/20 bindless cases and the three-frame 1,000-draw
+sample pass with Vulkan validation enabled and no diagnostics.

@@ -3,38 +3,52 @@
 #include "vk-texture.h"
 #include "vk-buffer.h"
 #include "vk-sampler.h"
+
+#include <atomic>
 #include <array>
 #include <algorithm>
 
 namespace GN::gpu2 {
 namespace {
+// Tokens are process-wide so a stale or foreign token cannot name a new allocation.
+std::atomic<uint64_t>                       NEXT_MATERIAL_TOKEN {1};
 constexpr std::array<vk::DescriptorType, 5> TYPES = {vk::DescriptorType::eSampledImage, vk::DescriptorType::eStorageImage, vk::DescriptorType::eUniformBuffer,
                                                      vk::DescriptorType::eStorageBuffer, vk::DescriptorType::eSampler};
-}
+} // namespace
 
 VkBindlessDescriptorHeap::VkBindlessDescriptorHeap(const StrA & name, const CreateParameters & cp)
     : bindless::DescriptorHeap(TYPE_INFO(), name), mCapacity(cp.capacity), mBindingIndex(cp.bindingIndex) {
     mGpu = RuntimeType::cast<GpuContextVulkan2>(cp.gpu.get());
-    if (!mGpu || !mGpu->ready() || !mCapacity || mCapacity > (1u << 28) || mBindingIndex > UINT32_MAX - 4) return;
-    auto &         device     = mGpu->vulkanDevice();
-    const auto     properties = device.gi()->physical.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDescriptorIndexingProperties>();
-    const auto &   limits     = properties.get<vk::PhysicalDeviceDescriptorIndexingProperties>();
-    const uint32_t limit      = std::min({limits.maxDescriptorSetUpdateAfterBindSampledImages, limits.maxPerStageDescriptorUpdateAfterBindSampledImages,
-                                          limits.maxDescriptorSetUpdateAfterBindStorageImages, limits.maxPerStageDescriptorUpdateAfterBindStorageImages,
-                                          limits.maxDescriptorSetUpdateAfterBindUniformBuffers, limits.maxPerStageDescriptorUpdateAfterBindUniformBuffers,
-                                          limits.maxDescriptorSetUpdateAfterBindStorageBuffers, limits.maxPerStageDescriptorUpdateAfterBindStorageBuffers,
-                                          limits.maxDescriptorSetUpdateAfterBindSamplers, limits.maxPerStageDescriptorUpdateAfterBindSamplers});
-    if (mCapacity > limit || uint64_t(mCapacity) * TYPES.size() > limits.maxPerStageUpdateAfterBindResources ||
-        uint64_t(mCapacity) * TYPES.size() > limits.maxUpdateAfterBindDescriptorsInAllPools)
+    if (!mGpu || !mGpu->ready() || !mCapacity || mCapacity > (1u << 28) || mBindingIndex > UINT32_MAX - 5) return;
+    auto &         device       = mGpu->vulkanDevice();
+    const auto     properties   = device.gi()->physical.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDescriptorIndexingProperties>();
+    const auto &   limits       = properties.get<vk::PhysicalDeviceDescriptorIndexingProperties>();
+    const uint32_t limit        = std::min({limits.maxDescriptorSetUpdateAfterBindSampledImages, limits.maxPerStageDescriptorUpdateAfterBindSampledImages,
+                                            limits.maxDescriptorSetUpdateAfterBindStorageImages, limits.maxPerStageDescriptorUpdateAfterBindStorageImages,
+                                            limits.maxDescriptorSetUpdateAfterBindUniformBuffers, limits.maxPerStageDescriptorUpdateAfterBindUniformBuffers,
+                                            limits.maxDescriptorSetUpdateAfterBindStorageBuffers, limits.maxPerStageDescriptorUpdateAfterBindStorageBuffers,
+                                            limits.maxDescriptorSetUpdateAfterBindSamplers, limits.maxPerStageDescriptorUpdateAfterBindSamplers});
+    const auto     bufferLimits = device.gi()->physical.getProperties().limits;
+    if (!cp.materialCapacity || cp.materialCapacity > bufferLimits.maxStorageBufferRange ||
+        uint64_t(mCapacity) + 1 > limits.maxDescriptorSetUpdateAfterBindStorageBuffers ||
+        uint64_t(mCapacity) + 1 > limits.maxPerStageDescriptorUpdateAfterBindStorageBuffers)
         return;
-    std::array<vk::DescriptorSetLayoutBinding, TYPES.size()> bindings;
-    std::array<vk::DescriptorBindingFlags, TYPES.size()>     flags;
-    std::array<vk::DescriptorPoolSize, TYPES.size()>         sizes;
+    if (mCapacity > limit || (uint64_t(mCapacity) * TYPES.size() + 1) > limits.maxPerStageUpdateAfterBindResources ||
+        (uint64_t(mCapacity) * TYPES.size() + 1) > limits.maxUpdateAfterBindDescriptorsInAllPools)
+        return;
+    std::array<vk::DescriptorSetLayoutBinding, TYPES.size() + 1> bindings;
+    std::array<vk::DescriptorBindingFlags, TYPES.size() + 1>     flags {};
+    std::array<vk::DescriptorPoolSize, TYPES.size()>             sizes;
+    bindings[0] = vk::DescriptorSetLayoutBinding(mBindingIndex, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eAll);
     for (uint32_t i = 0; i < TYPES.size(); ++i) {
-        bindings[i] = vk::DescriptorSetLayoutBinding(mBindingIndex + i, TYPES[i], mCapacity, vk::ShaderStageFlagBits::eAll);
-        flags[i]    = vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound;
-        sizes[i]    = vk::DescriptorPoolSize(TYPES[i], mCapacity);
+        bindings[i + 1] = vk::DescriptorSetLayoutBinding(mBindingIndex + 1 + i, TYPES[i], mCapacity, vk::ShaderStageFlagBits::eAll);
+        flags[i + 1]    = vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound;
+        sizes[i]        = vk::DescriptorPoolSize(TYPES[i], mCapacity);
     }
+    ++sizes[3].descriptorCount; // The material SSBO shares the storage-buffer pool budget.
+    mMaterialBuffer = Buffer::create(name + "/materials", {.context = mGpu, .size = cp.materialCapacity});
+    if (!mMaterialBuffer) return;
+
     try {
         vk::DescriptorSetLayoutBindingFlagsCreateInfo flagInfo;
         flagInfo.setBindingFlags(flags);
@@ -46,7 +60,12 @@ VkBindlessDescriptorHeap::VkBindlessDescriptorHeap(const StrA & name, const Crea
         mDescriptorPool = device.handle().createDescriptorPool(pool);
         vk::DescriptorSetAllocateInfo allocation;
         allocation.setDescriptorPool(mDescriptorPool).setSetLayouts(mDescriptorSetLayout);
-        mDescriptorSet = device.handle().allocateDescriptorSets(allocation).front();
+        mDescriptorSet                  = device.handle().allocateDescriptorSets(allocation).front();
+        const auto *             buffer = RuntimeType::cast<BufferVulkan>(mMaterialBuffer.get());
+        vk::DescriptorBufferInfo info(buffer->nativeBuffer(), 0, cp.materialCapacity);
+        vk::WriteDescriptorSet   materialWrite(mDescriptorSet, mBindingIndex, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &info);
+        device.handle().updateDescriptorSets(1, &materialWrite, 0, nullptr);
+        mMaterialFreeRanges.emplace(0, cp.materialCapacity);
         mSlots.resize(mCapacity);
         mFreeList.reserve(mCapacity);
     } catch (const std::exception & e) {
@@ -62,10 +81,10 @@ VkBindlessDescriptorHeap::~VkBindlessDescriptorHeap() {
 }
 
 bool VkBindlessDescriptorHeap::prepareWrite(DescriptorIndex index, const GpuResourceView & view, Write & write) const {
-    if (index.type >= TYPES.size() || view.empty() || view.combinedTextureSampler) return false;
+    if (!index.tag || index.type >= TYPES.size() || view.empty() || view.combinedTextureSampler) return false;
     auto & descriptor = write.descriptor;
     descriptor.setDstSet(mDescriptorSet)
-        .setDstBinding(mBindingIndex + index.type)
+        .setDstBinding(mBindingIndex + 1 + index.type)
         .setDstArrayElement(index.slot)
         .setDescriptorType(TYPES[index.type])
         .setDescriptorCount(1);
@@ -99,14 +118,15 @@ bool VkBindlessDescriptorHeap::prepareWrite(DescriptorIndex index, const GpuReso
 }
 
 bool VkBindlessDescriptorHeap::allocated(DescriptorIndex index) const {
-    return index.type < TYPES.size() && index.slot < mSlots.size() && !mSlots[index.slot].view.empty() && uint32_t(mSlots[index.slot].type) == index.type;
+    return index.tag && index.type < TYPES.size() && index.slot < mSlots.size() && !mSlots[index.slot].view.empty() &&
+           uint32_t(mSlots[index.slot].type) == index.type;
 }
 
 VkBindlessDescriptorHeap::DescriptorIndex VkBindlessDescriptorHeap::allocate(DescriptorType type, const GpuResourceView & view) {
     std::lock_guard<std::mutex> lock(mMutex);
     if (!mDescriptorSet || (mFreeList.empty() && mNextIndex == mCapacity)) return INVALID_DESCRIPTOR_INDEX;
     const uint32_t  slot = mFreeList.empty() ? mNextIndex : mFreeList.back();
-    DescriptorIndex index {(uint32_t(type) << 28) | slot};
+    DescriptorIndex index {0x80000000u | (uint32_t(type) << 28) | slot};
     Write           write;
     if (uint32_t(type) >= TYPES.size() || !prepareWrite(index, view, write)) return INVALID_DESCRIPTOR_INDEX;
     mGpu->vulkanDevice().handle().updateDescriptorSets(1, &write.descriptor, 0, nullptr);
@@ -152,6 +172,57 @@ void VkBindlessDescriptorHeap::free(ArrayView<const DescriptorIndex> indices) {
 uint32_t VkBindlessDescriptorHeap::size() const {
     std::lock_guard<std::mutex> lock(mMutex);
     return mActiveCount;
+}
+
+VkBindlessDescriptorHeap::MaterialToken VkBindlessDescriptorHeap::allocateMaterial(uint64_t size, uint64_t alignment) {
+    std::lock_guard<std::mutex> lock(mMutex);
+    if (!mDescriptorSet || !size || !alignment || (alignment & (alignment - 1))) GN_UNLIKELY return INVALID_MATERIAL_TOKEN;
+    for (auto it = mMaterialFreeRanges.begin(); it != mMaterialFreeRanges.end(); ++it) {
+        const uint64_t start = it->first, available = it->second;
+        const uint64_t padding = (alignment - (start & (alignment - 1))) & (alignment - 1);
+        if (padding > available || size > available - padding) continue;
+        const uint64_t offset = start + padding;
+        const auto     token  = NEXT_MATERIAL_TOKEN.fetch_add(1, std::memory_order_relaxed);
+        if (!token) GN_UNLIKELY return INVALID_MATERIAL_TOKEN;
+        mMaterials.emplace(token, MaterialRange {offset, size});
+        mMaterialFreeRanges.erase(it);
+        if (padding) mMaterialFreeRanges.emplace(start, padding);
+        if (available > padding + size) mMaterialFreeRanges.emplace(offset + size, available - padding - size);
+        return token;
+    }
+    return INVALID_MATERIAL_TOKEN;
+}
+
+GpuResourceView VkBindlessDescriptorHeap::materialView(MaterialToken token) const {
+    std::lock_guard<std::mutex> lock(mMutex);
+    const auto                  it = mMaterials.find(token);
+    if (it == mMaterials.end()) GN_UNLIKELY return {};
+    return GpuResourceView(mMaterialBuffer)
+        .setBufferViewType(GpuResourceView::BufferView::STORAGE)
+        .setBufferViewOffset(it->second.offset)
+        .setBufferViewSize(it->second.size);
+}
+
+void VkBindlessDescriptorHeap::freeMaterial(MaterialToken token) {
+    std::lock_guard<std::mutex> lock(mMutex);
+    const auto                  allocation = mMaterials.find(token);
+    if (allocation == mMaterials.end()) GN_UNLIKELY return;
+    auto range = allocation->second;
+    mMaterials.erase(allocation);
+    auto next = mMaterialFreeRanges.lower_bound(range.offset);
+    if (next != mMaterialFreeRanges.begin()) {
+        auto previous = std::prev(next);
+        if (previous->first + previous->second == range.offset) {
+            range.offset = previous->first;
+            range.size += previous->second;
+            mMaterialFreeRanges.erase(previous);
+        }
+    }
+    if (next != mMaterialFreeRanges.end() && range.offset + range.size == next->first) {
+        range.size += next->second;
+        mMaterialFreeRanges.erase(next);
+    }
+    mMaterialFreeRanges.emplace(range.offset, range.size);
 }
 
 AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name, const bindless::DescriptorHeap::CreateParameters & cp) {

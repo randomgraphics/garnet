@@ -34,16 +34,23 @@ struct Vertex {
     float uv[2];
 };
 
-struct PushConstants {
-    float    mvp[16];      // 64 bytes: Model-View-Projection matrix
-    float    rotation[4];  // 16 bytes: orientation quaternion (qx, qy, qz, qw)
-    float    colorTint[4]; // 16 bytes: RGBA color multiplier
-    uint32_t textureId;    // 4 bytes:  bindless descriptor slot in Set 0
-    float    shininess;    // 4 bytes:  specular exponent / effect param
-    float    uvScale[2];   // 8 bytes:  UV coordinate scaling
-    float    lightDir[4];  // 16 bytes: normalized light dir (xyz) + time/ambient (w)
+// Both pipelines share this std430 schema; gpu2 treats its chunks as opaque bytes.
+struct MaterialData {
+    float    colorTint[4];
+    uint32_t textureId;
+    float    shininess;
+    float    uvScale[2];
 };
-static_assert(sizeof(PushConstants) == 128, "PushConstants size must be exactly 128 bytes");
+static_assert(sizeof(MaterialData) == 32);
+static_assert(offsetof(MaterialData, textureId) == 16 && offsetof(MaterialData, uvScale) == 24);
+
+struct PushConstants {
+    float    mvp[16];
+    float    rotation[4];
+    float    lightDir[4]; // Frame light direction plus ambient (cube) or animation time (gem).
+    uint32_t materialIndex;
+};
+static_assert(sizeof(PushConstants) == 100);
 
 struct SwarmObject {
     float     orbitRadius;
@@ -55,9 +62,7 @@ struct SwarmObject {
     glm::vec3 spinAxis;
     float     spinSpeed;
     float     scale;
-    uint32_t  textureSlot;
-    glm::vec4 colorTint;
-    float     shininess;
+    uint32_t  materialIndex;
 };
 
 // â”€â”€â”€ Procedural Texture Generation
@@ -549,7 +554,9 @@ int main(int argc, const char ** argv) {
     }
 
     auto sampler = Sampler::create("bindless-shared-sampler", {.context = gpu});
-    if (!sampler || heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sampler)).slot != 0) return -1;
+    if (!sampler) return -1;
+    const auto samplerIndex = heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sampler));
+    if (samplerIndex == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX || samplerIndex.slot != 0) return -1;
     for (uint32_t i = 0; i < NUM_TEXTURES; ++i) {
         textureSlots[i] = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, textureViews[i]);
         if (textureSlots[i] == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return -1;
@@ -600,8 +607,10 @@ int main(int argc, const char ** argv) {
     rt.states.setFrontFace(RasterState::FRONT_CCW);
 
     // 9. Pre-generate up to 100,000 Swarm Objects alternating between Cubes and Crystals
-    constexpr uint32_t       MAX_OBJECTS = 100000;
-    std::vector<SwarmObject> swarm(MAX_OBJECTS);
+    constexpr uint32_t        MAX_OBJECTS = 100000;
+    std::vector<SwarmObject>  swarm(MAX_OBJECTS);
+    std::vector<MaterialData> materials(MAX_OBJECTS);
+    AutoRef<Buffer>           materialBuffer;
 
     std::mt19937                   rng(1337);
     std::uniform_real_distribution distRadius(3.5f, 54.0f);
@@ -626,13 +635,36 @@ int main(int argc, const char ** argv) {
 
         glm::vec3 axis(distAxis(rng), distAxis(rng), distAxis(rng));
         if (glm::length(axis) < 0.01f) axis = glm::vec3(0.0f, 1.0f, 0.0f);
-        obj.spinAxis    = glm::normalize(axis);
-        obj.spinSpeed   = distSpinSpeed(rng);
-        obj.scale       = distScale(rng);
-        obj.textureSlot = textureSlots[i % NUM_TEXTURES].slot;
-        obj.shininess   = distShininess(rng);
-        obj.colorTint   = glm::vec4(distTint(rng), distTint(rng), distTint(rng), 1.0f);
+        obj.spinAxis            = glm::normalize(axis);
+        obj.spinSpeed           = distSpinSpeed(rng);
+        obj.scale               = distScale(rng);
+        MaterialData & material = materials[i];
+        material.textureId      = textureSlots[i % NUM_TEXTURES].slot;
+        material.shininess      = distShininess(rng);
+        const glm::vec4 tint(distTint(rng), distTint(rng), distTint(rng), 1.0f);
+        std::memcpy(material.colorTint, glm::value_ptr(tint), sizeof(material.colorTint));
+        material.uvScale[0] = material.uvScale[1] = 1.0f;
+        const auto token                          = heap->allocateMaterial(sizeof(MaterialData), 16);
+        const auto view                           = heap->materialView(token);
+        // This fresh heap packs equal-sized records contiguously, allowing one upload.
+        if (!token || view.empty() || view.bufferView.offset != uint64_t(i) * sizeof(MaterialData)) {
+            std::fprintf(stderr, "Failed to allocate bindless material %u\n", i);
+            return -1;
+        }
+        materialBuffer    = view.buffer();
+        obj.materialIndex = static_cast<uint32_t>(view.bufferView.offset / sizeof(MaterialData));
     }
+
+    auto materialUploads = GpuCnC::create({.gpu = gpu});
+    if (!materialUploads) return -1;
+    materialUploads->recordUploadBuffer(materialBuffer, 0, {reinterpret_cast<const uint8_t *>(materials.data()), materials.size() * sizeof(MaterialData)});
+    auto materialInitialization = materialUploads->seal();
+    if (!materialInitialization) return -1;
+    // Upload recording copies the input; CPU material bytes need not live through rendering.
+    materials.clear();
+    materials.shrink_to_fit();
+    GN_INFO(sLogger, "Prepared {} materials in {} bytes; {} push-constant bytes per draw", MAX_OBJECTS, uint64_t(MAX_OBJECTS) * sizeof(MaterialData),
+            sizeof(PushConstants));
 
     // Application state
     // Default: 20,000 draws (10,000 Cubes + 10,000 Crystals alternating every draw call!)
@@ -831,22 +863,15 @@ int main(int argc, const char ** argv) {
 
             PushConstants pc {};
             std::memcpy(pc.mvp, glm::value_ptr(mvp), sizeof(pc.mvp));
-            pc.rotation[0]  = q.x;
-            pc.rotation[1]  = q.y;
-            pc.rotation[2]  = q.z;
-            pc.rotation[3]  = q.w;
-            pc.colorTint[0] = obj.colorTint.r;
-            pc.colorTint[1] = obj.colorTint.g;
-            pc.colorTint[2] = obj.colorTint.b;
-            pc.colorTint[3] = obj.colorTint.a;
-            pc.textureId    = obj.textureSlot;
-            pc.shininess    = obj.shininess;
-            pc.uvScale[0]   = 1.0f;
-            pc.uvScale[1]   = 1.0f;
-            pc.lightDir[0]  = lightDir.x;
-            pc.lightDir[1]  = lightDir.y;
-            pc.lightDir[2]  = lightDir.z;
-            pc.lightDir[3]  = isGem ? simTime : ambient; // Gem shader uses lightDir.w as time
+            pc.rotation[0]   = q.x;
+            pc.rotation[1]   = q.y;
+            pc.rotation[2]   = q.z;
+            pc.rotation[3]   = q.w;
+            pc.materialIndex = obj.materialIndex;
+            pc.lightDir[0]   = lightDir.x;
+            pc.lightDir[1]   = lightDir.y;
+            pc.lightDir[2]   = lightDir.z;
+            pc.lightDir[3]   = isGem ? simTime : ambient; // Gem shader uses lightDir.w as time
 
             // Alternating draw call: switches vertex shader, fragment shader, and geometry buffer!
             raster->recordDraw({
@@ -869,6 +894,10 @@ int main(int argc, const char ** argv) {
         }
 
         GpuContext::SubmitParameters sp("bindless-frame");
+        if (materialInitialization) {
+            sp.appendWork(materialInitialization);
+            materialInitialization.clear();
+        }
         if (uploadPayload) sp.appendWork(uploadPayload);
         sp.appendWork(payload).waitFor(frame.ready);
         gpu->submit(sp);

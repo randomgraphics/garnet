@@ -1,0 +1,507 @@
+# Assignment: FX2 Bindless SSC — Uniform, Material, and Streaming Storage
+
+## Overview
+
+Workspace: D:\dev\garnet\1, branch wip/fx2-bindless.
+Scope: fx2::bindless::SharedShaderConstants (SSC), its two stores and gpu2 heap
+integration, plus the requested gpu2 material mini heap/sample prerequisites.
+Downstream FX2 kernels, sky schemas, image effects, ImGui, FX2 samples and
+performance acceptance remain appendix references, not active work.
+Status: second attempt; gpu2 fixed-capacity material mini heap verified; FX2 SSC implementation not started. The gpu2 foundation is committed; the first-attempt FX2
+implementation is stashed and is reference only.
+Approach: build the SSC skeleton first as an empty shell, then implement the two
+FX2 stores and integrate the heap as independent units against fixed private interfaces.
+Completed foundation: standalone gpu2 samplers and typed bindless descriptor heap.
+Latest verification: targeted wrapper Debug build (GNtest-internal and
+GNsample-gpu2-bindless), cit.py -l, 31,955 assertions/20 bindless cases and
+sample t --frames 3 --draws 1000 passed with Vulkan validation. No diagnostics.
+Previous material sample checkpoint also covered 100,000 draws. FX2 SSC remains
+unimplemented; descriptor-index encoding is now tagged with zero invalid.
+
+Known blockers: none for the verified gpu2 checkpoint. The previous committed
+bindless-types.comp formatting blocker was cleared during shader migration.
+
+Filename note: "Device" in the filename is historical; there is no Device class.
+The name is retained so existing links keep working.
+
+---
+
+## Goals
+
+Implement fx2::bindless::SharedShaderConstants as the single long-lived owner of
+the GPU data shared by the new bindless kernels. Additive only: existing GN::fx2
+classes, shader contracts, and callers stay intact and keep working. Keep
+gpu2::GpuContext named as-is. New public APIs are opaque contracts reached through
+the monolithic GNfx2.h include; binding numbers, packing, allocators, and backend
+details stay private.
+
+SSC owns uniform and streaming stores and shares the gpu2 descriptor heap.
+Material chunk management is a built-in gpu2 heap extension, designed in
+src/core/gpu2/README.md; it is not an FX2 storage subsystem.
+
+R1 — Generic versioned uniform store (set 1, binding 2). Manages uniform records
+by total byte size only; it does not know and must not interpret their internal
+layout. Each update allocates a new, independently aligned range in long-lived
+backing storage, so two updates are distinct GPU bytes rather than two writes into
+one buffer. Update order is therefore independent of draw order, and this must
+hold with distinct readback values:
+
+    upload A -> upload B -> consumers B -> consumers A
+
+The concrete combined-uniform structure (frame, direct lighting, camera/view,
+active-sky selection) is defined OUTSIDE SSC as an independent type that callers
+pack into bytes before recording an update. The same store must therefore serve
+any uniform format, not only the FX2 scene layout. Offsets and sizes obey GPU
+uniform buffer alignment and range limits. There is no separate camera binding.
+Multiple passes share one state without duplicate producer execution. The existing
+fx2::SharedShaderConstants and its snapshot API are not changed.
+
+R2 — Heap-owned material-buffer integration (set 0, binding 0). The material
+buffer belongs to gpu2::bindless::DescriptorHeap. Its opaque chunk allocation,
+free, upload, and growth contracts are defined in src/core/gpu2/README.md,
+"Built-in Material Buffer". SSC shares the heap whose captured descriptor set includes its
+material buffer; it implements no material allocator.
+FX2 kernels define byte schemas and retain referenced resources. Callers delay
+freeing chunks until consumers finish; the gpu2 allocator's free is immediate.
+Implementation of the gpu2 extension is a prerequisite outside this FX2 task.
+
+R3 — Streaming pool (set 1, binding 1). Holds one-time-use per-draw data that a
+kernel wants the GPU to read but that is too large for push constants. Backed by
+one or a few long-lived mappable buffers reused across draws and frames: no buffer
+is created or destroyed per draw, and no CnC transfer is involved. allocate(size)
+takes only a size and returns a CPU-writable block — an identifier plus an
+ArrayView over the mapped range — and the caller fills the bytes. The consuming
+raster or CnC payload owns the release, calling it when it completes or is
+discarded so the range recycles within the pool. Shaders read the pool as an SSBO
+through a per-draw offset encoded in the kernel's push constants. Keep pool
+buffers persistently mapped for their lifetime when the backend and memory
+allocation support it; otherwise map as needed. Map/unmap is not the mechanism for
+synchronizing reuse with GPU consumers. Recorded or in-flight ranges must not be
+overwritten. Flush non-coherent mapped ranges and establish host-write visibility
+before shader consumption. The caller may release its source CPU input once it has
+been copied into the mapped range.
+
+R4 — Shared heap and fallbacks. SSC retains and shares one
+gpu2::bindless::DescriptorHeap occupying set 0, bindings 0-4, rather than
+introducing a second descriptor manager. SSC also owns shared fallback resources.
+Scale verification of the heap (1,024 textures, four samplers) is deferred to the
+appendix; only ownership and sharing are in scope here.
+
+R5 — Leases. A shared state, its upload work, unsealed recordings, and every
+consuming payload retain a lease on the ranges they reference. Recycle storage
+only after the final lease releases; upload completion alone is insufficient,
+because a consumer may still be recorded or in flight. Never overwrite or free a
+descriptor slot still referenced by recorded or in-flight work. Test GPU
+completion, retained states and payloads, dropped work, safe recycling, capacity
+failure, and any growth policy.
+
+R6 — Explicit scheduling. FX2 records work and never implicitly submits, presents,
+or waits. Applications submit SSC-prepared producers before their consumers. A
+pass returns only its own work and does not duplicate shared producers. Dropped
+initialization must support retry or explicitly reject uninitialized consumption.
+Immediate CPU values are copied and GPU resources retained. Blocking transfers
+(Buffer::setContent, Buffer::readContent, Texture::readback) are for tests,
+debugging, and one-shot initialization only.
+
+R7 — Verification. Wrapper Debug build, formatting/lint/CIT, and focused SSC tests
+pass under Vulkan validation with no unexpected errors, warnings, performance
+warnings, or lifetime leaks. Scope expected negative-test diagnostics explicitly.
+Record exact commands and results, plus untested platform/backend gaps.
+
+---
+
+## Design
+
+### Namespace and incremental scope
+
+All new code lives in GN::fx2::bindless, in new files. Existing classes and shaders
+are not refactored into this namespace. Shared build and include wiring gains
+additive entries only. Implement one unit at a time and verify it before advancing;
+do not batch the two stores and heap integration into one broad change. The stash is reference only —
+reuse small reviewed pieces solely when they satisfy this contract.
+
+### Private Vulkan GPU layout
+
+The layout is private to the bindless implementation. Other backends may lower
+these contracts differently. With heap base binding zero:
+
+  Set 0, binding 0: material storage buffer, one SSBO descriptor
+  Set 0, binding 1: sampled-image descriptor array
+  Set 0, binding 2: storage-image descriptor array
+  Set 0, binding 3: uniform-buffer descriptor array
+  Set 0, binding 4: storage-buffer descriptor array
+  Set 0, binding 5: sampler descriptor array
+  Set 1, binding 0: unused
+  Set 1, binding 1: CPU-to-GPU streaming SSBO
+  Set 1, binding 2: generic versioned SSC uniform buffer
+  Set 2+: optional explicit pass resources
+
+The heap reserves six bindings: its material SSBO followed by five typed arrays.
+DescriptorType remains 0-4; its array binding is bindingIndex + 1 + type. Typed
+arrays share a descriptor slot allocator; material chunks do not use those slots.
+Sampled views and samplers register independently. Material allocation/growth
+belongs to gpu2; see its README for the opaque chunk contract.
+
+Set 1 is provided through Raster/CnC CreateParameters::passResources, indexed by
+absolute set/binding/array indices. passResources[heapSetIndex] must be empty.
+SSC supplies streaming at binding 1 (BufferView::STORAGE) and uniforms at binding
+2 (BufferView::UNIFORM), leaving binding 0 empty. Material data is already bound
+in the heap set. The initial gpu2 extension is fixed-capacity; doubling growth
+and matching buffer/descriptor-set versions remain a subsequent gpu2 step.
+
+Environment resources have no dedicated bindings. Later FX2 sky schemas store
+texture/sampler indices in opaque heap-owned chunks; combined scene uniform
+schemas reference the selected chunk. SSC does not interpret either schema.
+
+### Decomposition
+
+The SSC facade is thin. It owns two independent storage subsystems and shares the gpu2 heap, each with its own
+private header and implementation file, so the two can be implemented independently
+against fixed interfaces without touching the same file:
+
+    bindless-ssc-uniform-store.h/.cpp    R1  versioned uniform ranges
+
+    bindless-ssc-stream-pool.h/.cpp      R3  mapped one-time-use ranges
+    bindless-shared-shader-constants.cpp facade: composes the two stores, shares the heap
+
+The private subsystem headers are the contract between the facade and each unit. An
+implementer fills in the .cpp against the header it is given, and reports any
+interface that is genuinely wrong rather than changing it unilaterally.
+
+Kernels later define their typed inputs and private shader schemas, provide values
+to SSC, and record consumers of SSC-managed data. They do not own separate arenas
+or independently manage uploads of shared records. Each kernel controls its
+complete push-constant layout: ordinary transforms, flags, and optional material
+references use push constants, with no universal packet or mandatory
+material-address field. Vertex and index buffers remain ordinary geometry bindings.
+
+### Uniform store internals
+
+One long-lived pool buffer carved into aligned ranges. An update call takes opaque
+bytes plus a size, allocates a fresh range, records the upload on the caller-supplied
+CnC, and returns a retained state exposing that range as a GpuResourceView for set 1,
+binding 2. Range offsets must satisfy minUniformBufferOffsetAlignment and each range
+size must stay within maxUniformBufferRange. Ranges are recycled by lease, not by
+upload completion. The growth policy must be explicit and tested: either enlarge the
+pool preserving outstanding ranges, or fail at a documented capacity.
+
+### Streaming pool internals
+
+One or a few long-lived mappable buffers, kept mapped for their lifetime. gpu2
+mappable buffers are HOST_VISIBLE|HOST_COHERENT (vk-buffer.cpp:52) and rapid-vulkan
+marks every host-visible allocation VMA_ALLOCATION_CREATE_MAPPED_BIT
+(rapid-vulkan.cpp:261), so no cache flush is required and repeated map/unmap is
+avoided. Note that gpu2 Buffer::map() is exclusive: mapping an already-mapped buffer
+is an error (vk-buffer.cpp:77), so the pool must map each backing buffer once and
+hold the mapping, following the CncUploadStorage pattern at vk-cnc-common.h:129.
+Allocation is a bump or free-list advance over the mapped range; release recycles
+the range. Release is driven by the consuming payload, never by mapping state.
+
+### Uploads, cancellation, and hazards
+
+Applications schedule producers once before their consumers. No implicit submit or
+wait. Bindless indices do not describe resource hazards: track actual sampled,
+storage, attachment, geometry, transfer, and compute-write uses explicitly, and
+reject unsupported attachment feedback before recording.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 0.5 — descriptor high validity bit and zero invalid sentinel verified
+  Phase 0.1: FX2/gpu2 design split; material SSBO is heap binding +0, arrays +1 through +5.
+  Phase 0.2: Full Debug build and cit.py -l passed; existing gpu2/FX2 regression passed with Vulkan validation.
+  Phase 0.3: Opaque aligned chunks, immediate free/coalescing, stale/foreign rejection, caller uploads and GPU SSBO readback verified; 31,930 bindless assertions/20 cases, 86,775 regression assertions/108 cases, sample pixel check passed.
+  Phase 0.4: Default 4 MiB boundary test, 100,000 32-byte materials/one initial upload, 100-byte draw constants; targeted Debug build, lint, 31,933 assertions/20 cases, 1,000/100,000-draw headless pixel checks passed under validation.
+  Phase 0.5: Bit 31 tags allocations, zero/default handles invalid, untagged update/free rejected; targeted Debug build/lint, 31,955 assertions/20 bindless cases and sample headless pixels passed under Vulkan validation.
+In progress: none — next is Phase 1.1 FX2 SSC skeleton; material growth remains future TODO
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Design: src/core/fx2/README.md — "Bindless design" and "SSC-owned storage"
+  src/core/gpu2/README.md — "Built-in Material Buffer" (allocation contract)
+Plan filename retained for existing links; Device in the filename is historical.
+Public include: src/inc/garnet/GNfx2.h and GNgpu2.h
+Existing legacy SSC (unchanged): src/inc/garnet/fx2/shared-shader-constants.h and
+  src/core/fx2/shared-shader-constants.cpp
+Legacy shader ABI reference: src/core/fx2/vk-shaders/scene-ubo.h, camera-ubo.h
+gpu2 heap and recorders: src/inc/garnet/gpu2/bindless.h
+gpu2 buffer and resource views: src/inc/garnet/gpu2/gpu2.h
+Foundation: src/core/gpu2/vk-bindless-*
+Set 1 assembly example: src/core/gpu2/test/bindless-cnc-test.cpp:169
+Pass-resource plumbing: src/core/gpu2/vk-bindless-raster.cpp:87,
+  vk-bindless-cnc.cpp:80, vk-bindless-pipeline-layout.cpp:92
+Mapped-arena precedent: src/core/gpu2/vk-cnc-common.h:129 (CncUploadStorage)
+Mapping and coherence: src/core/gpu2/vk-buffer.cpp:52,77;
+  src/3rdparty/rapid-vulkan/inc/rapid-vulkan/rapid-vulkan.cpp:261,426
+Tests: src/core/fx2/test/; registration in src/core/fx2/test/internal-test.cmake
+Existing behavior: src/core/fx2/; src/sample/fx2/
+Guidance: AGENTS.md; agent/README.md; agent/skills/README.md
+
+--- BUILD / CI ---
+
+Initialize: . env\garnet.ps1
+Build: python.exe env\bin\build.py d
+Configure only: python.exe env\bin\build.py -c d
+Focused CIT: python.exe env\bin\cit.py -i "[fx2],[bindless]"
+Formatting check: python.exe env\bin\format-all-sources.py -dqn
+Formatting apply: python.exe env\bin\format-all-sources.py -d
+Lint: python.exe env\bin\cit.py -l
+Full CIT: python.exe env\bin\cit.py
+Set VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation for GPU checks.
+New .cpp files directly in src/core/fx2/ are picked up by file(GLOB) in
+src/core/fx2/CMakeLists.txt, so a re-configure is enough. New test files must be
+added to src/core/fx2/test/internal-test.cmake explicitly.
+Use focused test tags for each new step and record exact commands/results.
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Work on existing wip/fx2-bindless; preserve the stash and unrelated user changes.
+- New solution namespace is GN::fx2::bindless; do not modify existing classes.
+- One coherent unit and its verification at a time; update PROGRESS before work.
+- No commits/pushes without user instruction; Commit lines are intended boundaries.
+- Follow opaque public contracts, AutoRef, RuntimeType::cast, monolithic includes,
+  lowercase hyphenated filenames, Doxygen, GN_UNLIKELY on rare branches, and CRLF.
+- No gpu2::GpuContext rename or unrelated backend allocation/staging rewrites.
+- Keep this plan active until explicit user sign-off/archive instruction.
+
+--- TASK BREAKDOWN ---
+
+Phase 0: Foundation audit
+───────────────────────────────────────────────────────────────────────────────
+  Task 0.1: Document the SSC two-store/heap-integration contract and generic uniform management
+    Verify: Plan/README agreement, task format, CRLF, git diff --check.
+    Commit: "docs(fx2): revise bindless plan for SSC two-store/heap-integration contract (Phase 0.1)"
+  Task 0.2: Clear the committed lint blocker and capture the current baseline
+    Verify: cit.py -l exits clean after formatting bindless-types.comp; build.py d
+      succeeds; existing fx2/gpu2 bindless tests pass under validation; prerequisite
+      gaps listed.
+    Commit: "style(gpu2): format bindless typed-resource test shader (Phase 0.2)"
+
+  Task 0.3: Implement fixed-capacity gpu2 material mini heap and shift typed-array bindings
+    Verify: Full wrapper Debug build, cit.py -l, bindless material/readback fixtures, gpu2/FX2 regressions and headless bindless sample under Vulkan validation; fixed-capacity exhaustion explicit.
+    Commit: "feat(gpu2): add fixed-capacity material mini heap (Phase 0.3)"
+  Task 0.4: Set default material capacity to 4 MiB and use it in the bindless sample
+    Verify: Default-capacity boundary test, sample 100,000 packed records/one initial upload, cube/gem SSBO consumers, headless pixel checks at 1,000 and 100,000 draws under validation; build/lint.
+    Commit: "sample(gpu2): store reusable materials in the descriptor heap (Phase 0.4)"
+
+  Task 0.5: Encode descriptor validity in bit 31 and use zero as invalid
+    Verify: Default/zero handles invalid, all descriptor types carry tag, untagged update/free cannot affect active slots, bindless regressions and sample validation pass.
+    Commit: "fix(gpu2): tag valid descriptor indices (Phase 0.5)"
+
+Future TODO: material-buffer expansion (outside current acceptance)
+  Preserve tokens/offsets during growth and retain matching old buffer/set versions.
+  Verify doubling copies, recorded-consumer lifetime and capacity/cancellation policy
+  when this future work is requested. Fixed-capacity exhaustion remains explicit.
+
+Phase 1: SSC framework skeleton
+───────────────────────────────────────────────────────────────────────────────
+  Task 1.1: Add the opaque public SSC contract and an empty-shell implementation
+    Verify: Debug build compiles and links; GNfx2.h exposes the contract with no
+      internals leaking; create() succeeds with the two stores stubbed and heap material view integration explicit; existing
+      fx2 tests unaffected; no Device class and no existing-class changes.
+    Commit: "feat(fx2): add bindless SSC framework skeleton (Phase 1.1)"
+
+Phase 2: The two stores and heap integration
+───────────────────────────────────────────────────────────────────────────────
+  Task 2.1: Implement the generic versioned uniform store
+    Verify: bindless-ssc-uniform-test.cpp covers upload A -> upload B -> read B ->
+      read A with distinct GPU bytes, minUniformBufferOffsetAlignment and
+      maxUniformBufferRange respected, lease retention, recycle-after-last-release,
+      dropped work, and growth or documented capacity failure; validation clean.
+    Commit: "feat(fx2): add bindless versioned uniform store (Phase 2.1)"
+  Task 2.2: Integrate the gpu2 heap with its built-in material binding
+    Verify: Requires gpu2 material-buffer extension; SSBO is set 0/binding 0, set 1/binding 0 unused; fixed-capacity backing lifetime retained; growth deferred; no FX2 material allocator; validation clean.
+    Commit: "feat(fx2): integrate heap-owned material binding (Phase 2.2)"
+  Task 2.3: Implement the streaming pool
+    Verify: bindless-ssc-stream-test.cpp covers caller-filled mapped bytes reaching
+      the GPU with no CnC transfer, per-draw offset usable from push constants,
+      release recycling driven by payload completion or discard, in-flight ranges
+      never overwritten, backing buffers persistently mapped across frames, and no
+      per-draw buffer creation; validation clean.
+    Commit: "feat(fx2): add bindless streaming pool (Phase 2.3)"
+
+Phase 3: Combined uniform and integration
+───────────────────────────────────────────────────────────────────────────────
+  Task 3.1: Define the combined scene uniform outside SSC and add typed packing
+    Verify: the struct is independent of SSC internals and usable by any uniform
+      consumer; packed size is accepted by the generic store; GPU readback matches
+      the packed CPU bytes; sky selection is an heap material-chunk reference; no separate camera
+      binding exists.
+    Commit: "feat(fx2): define bindless combined scene uniform (Phase 3.1)"
+  Task 3.2: Integrate the two stores and heap integration and complete verification
+    Verify: full Debug build; cit.py -l green; focused SSC tests pass under
+      validation; set 1 assembles with absolute indices and an empty set 0; R1-R7
+      evidence and exact commands/results recorded in this file; platform gaps noted.
+    Commit: "test(fx2): verify bindless SSC integration (Phase 3.2)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 0 (foundation):
+  agent/FX2_BINDLESS_DEVICE.txt           — this plan; lint blocker and baseline results
+  src/core/fx2/README.md                  — additive bindless design and SSC-owned storage
+  src/core/gpu2/test/bindless-types.comp  — clang-format fix only, no semantic change
+
+Phase 1 (skeleton):
+  src/inc/garnet/fx2/bindless-shared-shader-constants.h — NEW: opaque public SSC contract
+  src/inc/garnet/GNfx2.h                                — additive include of the new header
+  src/core/fx2/bindless-shared-shader-constants.cpp     — NEW: facade composing the two stores and heap integration
+  src/core/fx2/bindless-ssc-uniform-store.h             — NEW: private uniform-store contract
+  src/core/fx2/bindless-ssc-stream-pool.h               — NEW: private streaming-pool contract
+  src/core/fx2/bindless-ssc-uniform-store.cpp           — NEW: stub, filled by Phase 2.1
+  src/core/fx2/bindless-ssc-stream-pool.cpp             — NEW: stub, filled by Phase 2.3
+
+Phase 2 (stores):
+  src/core/fx2/bindless-ssc-uniform-store.cpp           — implementation
+  src/core/fx2/bindless-ssc-stream-pool.cpp             — implementation
+  src/core/fx2/test/bindless-ssc-uniform-test.cpp       — NEW: uniform-store fixtures
+  src/core/fx2/test/bindless-ssc-heap-test.cpp — NEW: heap material-view integration fixtures
+  src/core/fx2/test/bindless-ssc-stream-test.cpp        — NEW: streaming-pool fixtures
+  src/core/fx2/test/internal-test.cmake                 — register the new test files
+
+Phase 3 (integration):
+  src/core/fx2/vk-shaders/bindless-scene-ubo.h          — NEW: combined uniform ABI, outside SSC
+  src/inc/garnet/fx2/bindless-scene-parameters.h        — NEW: caller-facing typed parameters
+  src/core/fx2/bindless-shared-shader-constants.cpp     — typed packing entry point
+  agent/FX2_BINDLESS_DEVICE.txt                         — measured results and status
+
+--- APPENDIX: DEFERRED SCOPE (REFERENCE ONLY) ---
+
+Nothing below is active work. It is retained so the SSC contracts stay compatible
+with what follows and so the original goal numbering remains traceable. Do not
+start any of it without explicit instruction.
+
+Traceability: the SSC work above covers former G1 (independent API, in part),
+G2 (heap ownership only), G3 (material arena), G6 (combined versioned SSC),
+G7 (lifetime and bounded allocation), G10 (explicit scheduling), and G11
+(verification, SSC scope only). Former G4 is split: its streaming-storage half
+became R3 above and its kernel-fixture half is deferred below. Former G5, G8, G9,
+and G12 are deferred in full.
+
+Deferred: heap scale verification (former G2, test half)
+  At least 1,024 texture registrations and at most four sampler registrations, all
+  samplers used, with GPU sampling/readback covering filtering/addressing and
+  sampler-free texel fetch. Check capacity, batching, cross-device rejection, slot
+  reuse, and retained lifetime. Existing gpu2 heap callers continue to work.
+
+Deferred: kernel-defined draw data (former G4, kernel half)
+  Ordinary per-draw values use privately defined push constants, with no universal
+  packet or reserved material field. Validate transforms, normal matrices, and GPU
+  push-constant limits. A focused custom-kernel fixture exercises the streaming pool
+  with an app-defined typed kernel extension path that needs no public ABI assembly;
+  no production skinning.
+
+Deferred: typed material schemas (former G3, schema half)
+  Typed prepared Unlit, PBR, Lambertian, Cel, and Sky records as the first arena
+  schemas. Verify packing, copied input lifetime, stable shared references,
+  mixed-kernel rendering, and reuse across geometries. Parameterless kernels require
+  no material.
+
+Deferred: shared sky selection (former G5)
+  At least two reusable sky materials coexist as arena records. Skybox and
+  environment-lit surfaces use the same sky selected by each shared state. Preserve
+  background/diffuse/specular/BRDF, exposure, luminance, ambient floor, and
+  documented no-sky behavior, including environment-file preparation.
+
+Deferred: passes and new kernels (former G8)
+  Private pass bindings plus separate bindless unlit, skybox, PBR, Lambertian,
+  Cel/outline, raster/compute blur, and mipmap kernels preserving rendering and state
+  policy. No per-draw/per-dispatch resource tables; kernel and material switches do
+  not change material-buffer bindings. Verify upload visibility, in-place blur, odd
+  edges, per-mip subresources and dependencies, format limits, and compute/raster
+  transitions. Reject unsupported feedback and attachment loops before recording,
+  without partial work or validation errors.
+
+Deferred: independent UI and opt-in integration (former G9)
+  A new bindless ImGui backend uses the SSC-owned gpu2 descriptor heap, explicit font
+  uploads, and safe unregister-after-recording, without altering the existing
+  backend. Add an opt-in sample exercising the new APIs. Existing samples, tools,
+  mesh viewer, and E2/RDG2 integrations remain on their current path; migration is
+  future work.
+
+Deferred: performance and full audit (former G12, and G11 beyond SSC scope)
+  Capture a reproducible >=10,000-draw existing-path baseline and new-path
+  comparison, separately timing CPU preparation and recording/uploads with warm-up.
+  Record allocation/upload/descriptor counters, hardware, configuration, and
+  validation state. Ordinary draws allocate no GPU buffers or resource tables. No
+  absolute FPS claim. Audit all goals and docs, and record platform/backend gaps.
+
+Deferred file targets
+  src/inc/garnet/fx2/bindless*.h      — kernel, sky, and UI contracts
+  src/core/fx2/bindless*.cpp          — kernels, passes, ImGui backend
+  src/core/fx2/vk-shaders/bindless-*  — private new-path shader ABI
+  src/core/fx2/test/bindless-*        — incremental GPU/lifetime fixtures
+  src/sample/fx2/                     — separate opt-in bindless sample
+
+First-attempt reference (not second-attempt acceptance)
+  Stash message: FX2 bindless refactor paused; agent plan kept active.
+  Implemented Device/material/draw arenas, pooled separate scene/camera SSC,
+  RasterPass, five raster kernels, and unlit integration across >100 files.
+  Recorded Debug wrapper build and combined 78,790 assertions/64 cases; focused
+  raster/oversized checks and unlit headless sample passed. Work was unfinished,
+  covers neither the bindless namespace nor the combined SSC contract, and its
+  Device class contradicts the current design.
+  Historical baseline: RTX 4090, SDK 1.4.357, Debug with validation, 100 warm-up
+  draws and 10,000 timed draws. Existing PBR preparation 8.2864/6.8131 ms and
+  recording/material uploads 239.817/238.964 ms for uniform/diverse materials.
+  Local evidence: build/fx2-bindless/. Re-establish comparable results for attempt
+  two.
+
+--- SECOND-ATTEMPT GPU2 PREREQUISITE CHECKPOINT ---
+Implemented: material SSBO at bindingIndex +0, typed arrays at +1 through +5.
+allocateMaterial(size, alignment) returns an opaque token. materialView(token)
+returns the upload/read range; caller CnC uploads the bytes. freeMaterial(token)
+immediately coalesces/recycles ranges; caller waits for consumers before freeing.
+materialCapacity defaults to 4 MiB; exhaustion explicitly fails, no growth yet.
+No material interpretation, CPU shadow, implicit upload/submit/wait, or descriptor
+array slot consumption. User gpu2.h edits and the first-attempt stash are preserved.
+
+Verification (Windows Debug, Vulkan validation enabled for GPU runs):
+  python.exe env/bin/build.py -C d: full build passed.
+  python.exe env/bin/cit.py -i "[bindless]": 31,930 assertions / 20 cases passed.
+  python.exe env/bin/cit.py -i "[gpu2],[fx2]": 86,775 assertions / 108 cases passed.
+  GNsample-gpu2-bindless.exe t --frames 3 --draws 1000: pixel verification passed
+  (66,576 non-background pixels). No Vulkan VUID/error/warning diagnostics found.
+  python.exe env/bin/cit.py -l: passed; git diff --check: passed.
+  New/scoped source files formatted with bundled clang-format; CRLF verified.
+  Interactive sample and non-Vulkan platforms were not verified at this checkpoint.
+Evidence: build/fx2-bindless/mini-heap-{build,full-build,tests,regression,sample,lint}.log.
+Growth/versioning is a future TODO, not a prerequisite. FX2 SSC remains unimplemented.
+
+--- SAMPLE MATERIAL CHECKPOINT ---
+Current change: default material buffer 4 MiB; sample material schemas are 32 bytes,
+100,000 persistent chunks occupy 3,200,000 bytes, one explicit initial upload,
+and both cube/gem vertex shaders read heap set 0/binding 0 by material index.
+Frame push constants contain transform, light/time, and material index (100 bytes).
+No frame-loop material upload/allocation. Verified:
+  python.exe env/bin/build.py -C d --target GNtest-internal GNsample-gpu2-bindless: passed.
+  python.exe env/bin/cit.py -i "[bindless]": 31,933 assertions/20 cases passed.
+  GNsample-gpu2-bindless.exe t --frames 3 --draws 1000: 66,576 non-background pixels.
+  GNsample-gpu2-bindless.exe t --frames 3 --draws 100000: 664,438 non-background pixels.
+  Both sample runs explicitly enabled VK_LAYER_KHRONOS_validation; zero Vulkan
+  VUID/error/warning diagnostics. Windowed mode not verified in this step.
+  python.exe env/bin/cit.py -l and git diff --check passed.
+Logs: build/fx2-bindless/material-sample-{build,tests,1000,100000,lint}.log.
+Expansion remains future TODO; fixed-capacity exhaustion is explicit.
+
+--- DESCRIPTOR INDEX CHECKPOINT ---
+CPU index encoding: slot bits 0-27, type bits 28-30, validity tag bit 31.
+allocate() sets 0x80000000; INVALID_DESCRIPTOR_INDEX and default construction
+are zero. prepareWrite/allocated require the tag, protecting active slot zero
+against invalid or untagged update/free. Shader slot indices are unchanged.
+Sample sampler registration now checks the invalid handle before using slot 0.
+Verification: build.py -C d --target GNtest-internal GNsample-gpu2-bindless;
+cit.py -l; Vulkan-enabled cit.py -i "[bindless]" (31,955 assertions/20 cases);
+three-frame 1,000-draw sample pixel check. All passed, no Vulkan diagnostics.
+Logs: build/fx2-bindless/descriptor-tag-{build,lint,tests,sample}.log.
+
+--- DELIVERY CHECKPOINT ---
+User requested commit and push of all current staged/unstaged/untracked task
+changes on wip/fx2-bindless. The verified checkpoint includes heap material
+storage, six-binding shader migration, default 4 MiB, sample material records,
+tagged descriptor handles, tests, revised design/task documentation, and the
+user's staged gpu2.h comment changes. Intended commit:
+"feat(gpu2): add heap-backed materials and tagged descriptor handles".
+Validation is recorded above; no code changed after the last verification.
+Next work remains Phase 1.1 FX2 SSC skeleton. Material expansion is future TODO.
+The first-attempt implementation stash is retained; this plan remains active.

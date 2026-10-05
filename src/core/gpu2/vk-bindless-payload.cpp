@@ -70,6 +70,10 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
 
     // 1. Pre-pass layout transitions for render targets
     if (ctx.batchTracker) {
+        // The heap's material SSBO is an explicit pass-wide read, unlike indexed arrays.
+        if (auto * heap = RuntimeType::cast<VkBindlessDescriptorHeap>(mHeap.get())) {
+            ctx.batchTracker->addStorageBuffer(RuntimeType::cast<BufferVulkan>(heap->materialBuffer().get()), false, vk::PipelineStageFlagBits::eAllGraphics);
+        }
         ctx.batchTracker->addRasterTarget(mRenderTarget);
         ctx.batchTracker->emitPrePassBarriers(vkcb);
     } else {

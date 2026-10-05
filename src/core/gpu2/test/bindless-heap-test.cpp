@@ -28,6 +28,11 @@ TEST_CASE("bindless::DescriptorHeap: creation and capacity", "[gpu2][bindless]")
         CHECK(heap->bindingIndex() == 1);
         CHECK(heap->size() == 0);
         CHECK(heap->gpu().get() == gpu.get());
+        const auto material = heap->allocateMaterial(4 * 1024 * 1024);
+        REQUIRE(material != bindless::DescriptorHeap::INVALID_MATERIAL_TOKEN);
+        CHECK(heap->materialView(material).bufferView.size == 4 * 1024 * 1024);
+        CHECK_FALSE(heap->allocateMaterial(1));
+        heap->freeMaterial(material);
     }
 }
 

@@ -25,37 +25,43 @@ public:
         uint32_t capacity = 65536;
 
         /// The first target binding slot within the descriptor set (default 0).
-        /// Note that each descriptor heap takes up to 5 slots, one for each resource descriptor type:
+        /// Note that each descriptor heap takes up to 6 slots, one material buffer and 5 descriptor buffers (one for each type):
+        ///  - material buffer
         ///  - sampled texture
         ///  - storage texture
         ///  - uniform buffer
         ///  - storage buffer
         ///  - sampler
         uint32_t bindingIndex = 0;
+
+        /// Fixed material-buffer capacity in bytes (default 4 MiB). Exhaustion returns INVALID_MATERIAL_TOKEN.
+        /// This first implementation never relocates recorded material data.
+        uint64_t materialCapacity = 4 * 1024 * 1024;
     };
 
-    /// Descriptor kind and binding offset within the heap's reserved set.
+    /// Descriptor kind. Its array binding is bindingIndex + 1 + type.
     enum DescriptorType {
-        SAMPLED_TEXTURE, // bindingIndex
-        STORAGE_TEXTURE, // bindingIndex + 1
-        UNIFORM_BUFFER,  // bindingIndex + 2
-        STORAGE_BUFFER,  // bindingIndex + 3
-        SAMPLER,         // bindingIndex + 4
+        SAMPLED_TEXTURE, // bindingIndex + 1
+        STORAGE_TEXTURE, // bindingIndex + 2
+        UNIFORM_BUFFER,  // bindingIndex + 3
+        STORAGE_BUFFER,  // bindingIndex + 4
+        SAMPLER,         // bindingIndex + 5
     };
 
-    /// Packed CPU handle. Shaders use slot to index the array at bindingIndex + type.
+    /// Packed CPU handle. Shaders use slot to index the array at bindingIndex + 1 + type.
     union DescriptorIndex {
-        uint32_t u32;
+        uint32_t u32 = 0;
         bool     operator==(DescriptorIndex other) const { return u32 == other.u32; }
         bool     operator!=(DescriptorIndex other) const { return u32 != other.u32; }
         struct {
             uint32_t slot : 28; ///< index into the descriptor array.
-            uint32_t type : 4;  ///< Resource type; shader binding is bindingIndex + type.
+            uint32_t type : 3;  ///< Resource type; shader binding is bindingIndex + 1 + type.
+            uint32_t tag  : 1;  ///< must be 1 to be considered as a valid index.
         };
     };
 
     /// Sentinel value returned when descriptor allocation fails.
-    static constexpr DescriptorIndex INVALID_DESCRIPTOR_INDEX = {{~0u}};
+    static constexpr DescriptorIndex INVALID_DESCRIPTOR_INDEX = {0};
 
     /// Create a persistent descriptor heap on the supplied GPU context. Returns an empty ref on failure.
     GN_API static AutoRef<DescriptorHeap> create(const StrA & name, const CreateParameters & cp);
@@ -86,6 +92,23 @@ public:
     /// Any invalid or unallocated slots in the array are safely ignored.
     /// CPU-thread-safe; free only after recorded/in-flight consumers stop using the slot.
     virtual void free(ArrayView<const DescriptorIndex> indices) = 0;
+
+    /// Opaque material allocation identifier; zero is invalid.
+    using MaterialToken                                   = uint64_t;
+    static constexpr MaterialToken INVALID_MATERIAL_TOKEN = 0;
+
+    /// Allocate an opaque, variable-sized chunk; alignment must be a nonzero power of two.
+    /// No upload is recorded. Fill materialView(token) through a caller-owned CnC before use.
+    /// The fixed-capacity allocator returns INVALID_MATERIAL_TOKEN on invalid input or exhaustion.
+    virtual MaterialToken allocateMaterial(uint64_t size, uint64_t alignment = 4) = 0;
+
+    /// Return the allocated buffer range, or an empty view for a stale/foreign token.
+    /// Captured views retain the buffer but do not prevent freeMaterial() from reusing its bytes.
+    virtual GpuResourceView materialView(MaterialToken token) const = 0;
+
+    /// Immediately recycle a chunk. Invalid/stale tokens are ignored.
+    /// Call only after all recorded/in-flight consumers stop using the range.
+    virtual void freeMaterial(MaterialToken token) = 0;
 
     /// Maximum capacity of this descriptor heap.
     virtual uint32_t capacity() const = 0;

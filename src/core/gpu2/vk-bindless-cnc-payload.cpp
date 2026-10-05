@@ -60,6 +60,10 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     // 1. Register pass resources with state tracker if present
     if (ctx.batchTracker) {
         auto & tracker = *ctx.batchTracker;
+        // Uploads to the built-in material SSBO must be visible before compute reads.
+        if (auto * heap = RuntimeType::cast<VkBindlessDescriptorHeap>(mHeap.get())) {
+            tracker.addStorageBuffer(RuntimeType::cast<BufferVulkan>(heap->materialBuffer().get()), false, vk::PipelineStageFlagBits::eComputeShader);
+        }
         for (size_t setIdx = 0; setIdx < mPassResources.size(); ++setIdx) {
             const auto & set = mPassResources[setIdx];
             for (size_t bindIdx = 0; bindIdx < set.size(); ++bindIdx) {

@@ -3,21 +3,22 @@
 #extension GL_EXT_samplerless_texture_functions : require
 layout(local_size_x = 64) in;
 // A nonzero base binding verifies that type offsets are relative to the heap.
-layout(set = 0, binding = 3) uniform texture2D textures[];
-layout(rgba8, set = 0, binding = 4) uniform writeonly image2D images[];
-layout(set = 0, binding = 5) uniform Constants { vec4 value; } constants[];
-layout(std430, set = 0, binding = 6) buffer Data { vec4 values[]; } buffers[];
-layout(set = 0, binding = 7) uniform sampler samplers[];
-layout(push_constant) uniform Parameters {
-    uint firstTexture, count, uniformIndex, inputIndex, outputIndex, imageIndex;
-} p;
+layout(set = 0, binding = 4) uniform texture2D textures[];
+layout(rgba8, set = 0, binding = 5) uniform writeonly image2D images[];
+layout(set = 0, binding = 6) uniform Constants { vec4 value; }
+constants[];
+layout(std430, set = 0, binding = 7) buffer Data { vec4 values[]; }
+buffers[];
+layout(set = 0, binding = 8) uniform sampler samplers[];
+layout(push_constant) uniform Parameters { uint firstTexture, count, uniformIndex, inputIndex, outputIndex, imageIndex; }
+p;
 void main() {
     uint i = gl_GlobalInvocationID.x;
     if (i >= p.count) return;
-    uint t = nonuniformEXT(p.firstTexture + i);
-    uint o = nonuniformEXT(p.outputIndex);
-    vec4 pixel = texelFetch(textures[t], ivec2(0), 0);
-    buffers[o].values[i * 6] = pixel;
+    uint t                       = nonuniformEXT(p.firstTexture + i);
+    uint o                       = nonuniformEXT(p.outputIndex);
+    vec4 pixel                   = texelFetch(textures[t], ivec2(0), 0);
+    buffers[o].values[i * 6]     = pixel;
     buffers[o].values[i * 6 + 1] = texture(sampler2D(textures[t], samplers[0]), vec2(1.25, 0.5));
     buffers[o].values[i * 6 + 2] = texture(sampler2D(textures[t], samplers[1]), vec2(1.25, 0.5));
     buffers[o].values[i * 6 + 3] = texture(sampler2D(textures[t], samplers[2]), vec2(0.5));
