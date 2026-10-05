@@ -645,13 +645,13 @@ struct ChargeLaw : Law {
                 {&ChargeFacet::Add::TYPE_INFO()}, false, {}};
     }
     void tick(LawContext & c) override {
-        for (auto id : c.prime.query<ChargeFacet>()) {
-            ChargeFacet::Value next(*c.prime.get<ChargeFacet>(id));
+        for (auto formId : c.prime.query<ChargeFacet>()) {
+            ChargeFacet::Value next(*c.prime.get<ChargeFacet>(formId));
             for (const auto & intent : c.intents) {
                 const auto * add = RuntimeType::cast<const ChargeFacet::Add>(intent.get());
-                if (add && add->target == id) next.charge += add->amount;
+                if (add && add->target == formId) next.charge += add->amount;
             }
-            c.slate.set<ChargeFacet>(id, next);
+            c.slate.set<ChargeFacet>(formId, next);
         }
     }
 };

@@ -18,7 +18,7 @@ Last completed: Phase 2.2 — verification and final master-diff review complete
   Phase 1.1: staging tree matched the source branch exactly before committing; push succeeded
   Phase 2.1: API/source/test audit, full debug build, CIT and standalone samples passed
   Phase 2.2: full validation passed; master is an ancestor and GPU2/FX2/submodule changes are absent
-In progress: none — ready for master review; awaiting user sign-off, keep assignment active
+In progress: Phase 3.1 — PR #52 authorized for master merge; rechecking CI after MSVC shadowing fix
 --- END PROGRESS ---
 
 --- REFERENCE ---
@@ -78,6 +78,19 @@ Phase 2: Cleanup and validation
   Task 2.2: Verify build, regressions and samples; record master readiness
     Verify: full debug build, relevant CIT checks, headless samples, final diff review
     Commit: "docs(e2): record verified master preparation (Phase 2.2)"
+
+Phase 3: Authorized master integration
+─────────────────────────────────────────────────────────────────────
+  Task 3.1: Fix MSVC member-shadowing warnings and merge PR #52 after required CI
+    Verify: E2 targets build; Xvfb E2 tests 38 passed / 702 assertions; required cross-platform build-and-test succeeds before merge
+    Commit: "fix(e2): avoid inherited identity member shadowing on MSVC (Phase 3.1)"
+
+PR #52 initially passed Android and Linux Clang configurations but Windows
+reported C4458 warnings-as-errors where local id/name hid Being fields. Renamed
+only parameters and local variables in active E2 implementations/tests and the
+README extension example; behavior and API signatures are unchanged. Local
+GCC debug targets and all 38 E2/spatial cases pass. Required remote CI is pending.
+The separate autoptr race audit/proposed patch is not applied or included here.
 
 --- SUMMARY OF FILES TO TOUCH ---
 Phase 1 (integration):

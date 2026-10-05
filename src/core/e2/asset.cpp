@@ -64,27 +64,27 @@ struct AssetsImpl : Assets {
         return true;
     }
 
-    Ref<Mesh> registerMesh(const StrA & name, const gpu2::RasterGeometry & geom) override {
-        MeshId id   = reinterpret_cast<MeshId>((uintptr_t) mNextMeshId++);
-        auto   mesh = referenceTo(new MeshImpl(id, name, geom));
-        mMeshes[id] = mesh;
+    Ref<Mesh> registerMesh(const StrA & assetName, const gpu2::RasterGeometry & geom) override {
+        MeshId assetId   = reinterpret_cast<MeshId>((uintptr_t) mNextMeshId++);
+        auto   mesh      = referenceTo(new MeshImpl(assetId, assetName, geom));
+        mMeshes[assetId] = mesh;
         return mesh;
     }
 
-    Ref<Mesh> findMesh(MeshId id) const override {
-        auto * ptr = mMeshes.find(id);
+    Ref<Mesh> findMesh(MeshId assetId) const override {
+        auto * ptr = mMeshes.find(assetId);
         return ptr ? *ptr : Ref<Mesh> {};
     }
 
-    Ref<Texture> registerTexture(const StrA & name, AutoRef<gpu2::Texture> tex) override {
-        TextureId id      = reinterpret_cast<TextureId>((uintptr_t) mNextTextureId++);
-        auto      texture = referenceTo(new TextureImpl(id, name, std::move(tex)));
-        mTextures[id]     = texture;
+    Ref<Texture> registerTexture(const StrA & assetName, AutoRef<gpu2::Texture> tex) override {
+        TextureId assetId  = reinterpret_cast<TextureId>((uintptr_t) mNextTextureId++);
+        auto      texture  = referenceTo(new TextureImpl(assetId, assetName, std::move(tex)));
+        mTextures[assetId] = texture;
         return texture;
     }
 
-    Ref<Texture> findTexture(TextureId id) const override {
-        auto * ptr = mTextures.find(id);
+    Ref<Texture> findTexture(TextureId assetId) const override {
+        auto * ptr = mTextures.find(assetId);
         return ptr ? *ptr : Ref<Texture> {};
     }
 };

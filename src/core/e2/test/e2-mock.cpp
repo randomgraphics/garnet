@@ -339,11 +339,11 @@ struct LateDomain : Law {
         auto state = RuntimeType::cast<RoutingState>(value.get());
         for (const auto & request : context.intents) state->total += RuntimeType::cast<const Add>(request)->amount;
         context.slate.setState(*state);
-        for (auto id : context.prime.query<Counter>()) {
-            auto copy    = context.prime.get<Counter>(id)->clone();
+        for (auto formId : context.prime.query<Counter>()) {
+            auto copy    = context.prime.get<Counter>(formId)->clone();
             auto counter = RuntimeType::cast<Counter::Value>(copy.get());
             ++counter->count;
-            context.slate.set<Counter>(id, *counter);
+            context.slate.set<Counter>(formId, *counter);
         }
     }
 };

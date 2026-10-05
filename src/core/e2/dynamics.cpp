@@ -131,16 +131,16 @@ public:
     void tick(LawContext & c) override {
         const double           dt = std::chrono::duration<double>(c.dt).count();
         DynaArray<Participant> bodies;
-        for (auto id : c.prime.query<TransformFacet, BodyFacet>()) {
-            auto transform = cloneValue(*c.prime.get<TransformFacet>(id));
-            auto body      = c.prime.get<BodyFacet>(id);
-            auto motion    = c.prime.get<MotionFacet>(id);
-            if (!c.prime.get<ContactFacet>(id)) throw std::runtime_error("Every demo body requires ContactFacet");
+        for (auto formId : c.prime.query<TransformFacet, BodyFacet>()) {
+            auto transform = cloneValue(*c.prime.get<TransformFacet>(formId));
+            auto body      = c.prime.get<BodyFacet>(formId);
+            auto motion    = c.prime.get<MotionFacet>(formId);
+            if (!c.prime.get<ContactFacet>(formId)) throw std::runtime_error("Every demo body requires ContactFacet");
             if (!finite(body->halfExtent) || glm::any(glm::lessThanEqual(body->halfExtent, glm::dvec3(0))) || !std::isfinite(body->mass) || body->mass <= 0 ||
                 !std::isfinite(body->friction) || body->friction < 0 || !std::isfinite(body->restitution) || body->restitution < 0 || body->restitution > 1)
                 throw std::runtime_error("Invalid box body");
             WorldTransform worldTransform;
-            if (!resolveWorldTransform(c.prime, id, worldTransform)) throw std::runtime_error("Invalid spatial hierarchy");
+            if (!resolveWorldTransform(c.prime, formId, worldTransform)) throw std::runtime_error("Invalid spatial hierarchy");
             // Attached static colliders require compound/kinematic integration, outside this demo solver.
             if (!motion)
                 for (auto parent = transform->parent; parent != 0;) {
@@ -150,9 +150,9 @@ public:
             if (glm::length(glm::vec3(worldTransform.orientation.x, worldTransform.orientation.y, worldTransform.orientation.z)) > 0.00001f ||
                 (motion && (!finite(motion->linearVelocity) || motion->angularVelocity != glm::dvec3(0))))
                 throw std::runtime_error("MVP solver supports axis-aligned boxes with zero spin only");
-            bodies.append({id, transform, motion ? cloneValue(*motion) : Ref<MotionFacet::Value>(new MotionFacet::Value), body,
+            bodies.append({formId, transform, motion ? cloneValue(*motion) : Ref<MotionFacet::Value>(new MotionFacet::Value), body,
                            positionToMeters(worldTransform.position, options.scale, options.origin), motion ? 1 / body->mass : 0,
-                           cloneValue(*c.prime.get<ContactFacet>(id))});
+                           cloneValue(*c.prime.get<ContactFacet>(formId))});
             if (!bodies.back().contact->touching.empty()) bodies.back().contact->touching.clear();
         }
         // Small bounded steps reduce tunnelling in the slow falling-box demo; this is not CCD.
