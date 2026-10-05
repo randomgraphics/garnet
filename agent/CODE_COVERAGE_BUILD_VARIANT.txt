@@ -1,0 +1,274 @@
+# Assignment: Code Coverage Build Variant and Function-Level CIT Report
+
+---
+
+## Goals
+
+Add a dedicated code coverage build variant so that coverage instrumentation never
+touches the `d`/`p`/`r` builds that developers use daily, and so that CIT can produce a
+detailed function-level test coverage report on demand.
+
+The existing debug build must not carry `--coverage`. Coverage instrumentation is heavy
+enough that adding it to `d` degrades or breaks the build every developer depends on; the
+overhead belongs in its own isolated build directory that is only configured when someone
+explicitly asks for coverage.
+
+The report must be trustworthy at function granularity. That drives the optimization level
+choice: gcov function records disappear when the compiler inlines a function, so the
+variant compiles at `-O0`. Measured on this toolchain (GCC 15.2, gcov 15.2):
+
+| flags | functions reported for a 4-function TU | notes |
+| --- | --- | --- |
+| `-O0 -g` | 4 | `static inline helper` keeps its own record |
+| `-Og -g` | 3 | `helper` inlined into `main`, record gone |
+| `-O2 -g` | 3 | additionally reports an executed function as 0% |
+
+`-Og` enables 28 optimizers that `-O0` does not, including `-finline`, `-ftree-dce`,
+`-ftree-ccp`, `-freorder-blocks` and `-ftoplevel-reorder`. Because this codebase marks many
+header-defined helpers `inline` by convention, `-Og` would silently drop a large share of
+`src/inc/garnet/**` from the function report while the report still looked plausible.
+
+---
+
+## Design
+
+### Build variant
+
+`c` becomes the coverage variant and `clean` moves to `x`. `c` previously meant clean;
+`AGENTS.md`, `QWEN.md` and `agent/skills/garnet-build-test/SKILL.md` all document the old
+meaning and must be updated together with the code.
+
+Coverage is Linux-only for now. On any other platform `build.py c` fails with an explicit
+message rather than silently producing an uninstrumented build.
+
+The variant reuses `CMAKE_BUILD_TYPE=Debug` and only adds `--coverage`, writing to its own
+directory `build/linux.gcc.c`:
+
+- CMake's `CMAKE_CXX_FLAGS_DEBUG` default is exactly `-g` with no `-O` flag, so GCC already
+  lands on `-O0` implicitly. The chosen "-O0 -g, isolated directory" configuration therefore
+  needs no extra optimization flag.
+- `GN_BUILD_DEBUG_ENABLED` is derived from `CMAKE_BUILD_TYPE STREQUAL "Debug"` in the root
+  `CMakeLists.txt`, so debug features and assertions stay ON, matching the `d` variant.
+
+### Instrumentation scope
+
+Everything except vendored third-party code. `GN_enable_code_coverage()` is a directory-scope
+helper called from `src/core`, `src/sample`, `src/tool` and `src/test` rather than from the
+repository root, so `add_compile_options` never reaches `src/3rdparty`. `src/test` calls it
+*after* its own `add_subdirectory(3rdparty)`, which keeps Catch2 uninstrumented.
+
+### Binary discovery
+
+`garnet-utils.search_for_the_latest_binary_ex()` picks the newest binary by mtime. Its
+variant list becomes a parameter defaulting to `[".c", ".d", ".p", ".r"]`, so a checkout
+that only built the coverage variant still resolves binaries for a plain `cit.py -t`. The
+accepted tradeoff is that a freshly built instrumented binary outranks an older debug one
+and therefore runs slower. Coverage reporting pins `COVERAGE_BUILD_VARIANTS = [".c"]`, so a
+report can never be taken from a binary that was not instrumented.
+
+On Windows the per-config output folder for `.c` maps to `Debug`, matching the
+`CMAKE_BUILD_TYPE` the variant configures with.
+
+### CI pipeline
+
+`.circleci/config.yml` ran `[debug, profile, release]` for all four job types through one
+shared `&build-parameters` / `&build-matrix` anchor pair. Linux now runs
+`[coverage, profile, release]` through a second anchor pair, leaving Windows and Android on
+debug. Coverage replaces the Linux debug job rather than adding to it: same `-O0`
+`CMAKE_BUILD_TYPE=Debug` configuration, plus instrumentation and a report.
+
+`build-linux-gcc`'s test step branches on the variant. For coverage it runs
+`env/bin/code-coverage.py --no-build`, which clears stale `.gcda`, runs the same test set
+`cit.py -t` would, and generates the report. `build-linux-clang` has no test step, so it
+only proves the coverage variant compiles under clang; it never needs the `llvm-cov` that
+report generation would require.
+
+### Report
+
+gcovr 8.6, added to `env/requirements.txt`. Three outputs under
+`build/linux.gcc.c/coverage/`, which is already covered by the `/build*/` gitignore rule:
+
+- `index.html` via `--html-details` — browsable per-file line coverage.
+- `coverage.json` via `--json` — per-function records carrying `demangled_name`, `lineno`,
+  `execution_count` and `blocks_percent`.
+- `functions.md` — generated from `coverage.json`: per-directory function rollup plus the
+  list of never-executed functions. This is the "detailed function-level" deliverable.
+
+Console output ends with `--print-summary` totals for lines, functions and branches.
+
+Stale `.gcda` files are deleted before each run; gcov accumulates counters, so skipping this
+would silently inflate every subsequent measurement.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 6 — end-to-end coverage build, test run and report verified
+  Phase 0: measured -O0/-Og/-O2 gcov function attribution, confirmed CMake Debug defaults, created wip/code-coverage worktree at /home/chenli/code/garnet-code-coverage
+  Phase 1: build.py c=coverage (Linux only) and x=clean; garnet-utils variants parameter with .c added to the default binary search
+  Phase 2: GN_BUILD_CODE_COVERAGE option plus GN_enable_code_coverage in core/sample/tool/test; configure verified 216 project outputs instrumented, 546 third-party outputs clean
+  Phase 3: gcovr added to requirements.txt; env/bin/code-coverage.py emits HTML, JSON and functions.md
+  Phase 4: cit.py -c plus importable main(); CircleCI linux gcc/clang switched to coverage/profile/release
+  Phase 5: AGENTS.md, garnet-build-test skill, new garnet-code-coverage skill and skills index; QWEN.md/CLAUDE.md/README.md need no change on this branch
+  Phase 6: coverage build 1m54s no warnings; cit.py -c exit 0; 132 internal cases (130 passed, 2 skipped) 5322 assertions, mesh-viewer 2863 assertions; 310 files reported with 0 third-party leakage; lines 45.50%, functions 52.80%, branches 21.20%; cit.py -l passes; build/linux.gcc.d has 0 --coverage flags
+In progress: none — awaiting user sign-off, nothing committed yet
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Build and test entry points:
+  env/bin/build.py                  — variant parsing, cmake configure/build invocation
+  env/bin/garnet-utils.py           — BuildSystem, search_for_the_latest_binary_ex, run_the_latest_binary
+  env/bin/cit.py                    — lint + test runner, -c delegates to code-coverage.py
+  env/bin/code-coverage.py          — coverage build, test run and report generation
+  env/requirements.txt              — python deps installed by env/garnet.rc and env/garnet.ps1
+  .circleci/config.yml              — build matrix per platform, linux gcc/clang vs windows/android
+
+CMake:
+  CMakeLists.txt                    — GN_BUILD_* options, compiler detection, global warning flags
+  src/CMakeLists.txt                — subdirectory ordering (3rdparty, core, sample, tool, test)
+  src/core/CMakeLists.txt           — GNcore-objects OBJECT lib, GNcore wrapper lib
+  src/sample/CMakeLists.txt         — add_subdirectory list only
+  src/tool/CMakeLists.txt           — add_subdirectory list only
+  src/test/CMakeLists.txt           — add_simple_test(), catch2 via add_subdirectory(3rdparty)
+  src/test/internal/CMakeLists.txt  — GNtest-internal, links GNcore-objects
+  src/test/ut/CMakeLists.txt        — GNtest-unit-tests, generated ut.cpp
+
+Docs to keep in sync:
+  AGENTS.md, QWEN.md, README.md, agent/skills/garnet-build-test/SKILL.md, agent/skills/README.md
+
+--- BUILD / CI ---
+
+source env/garnet.rc
+build.py x                        # clean all build directories
+build.py c                        # configure + build the coverage variant (Linux only)
+env/bin/code-coverage.py          # build if needed, run tests, generate report
+env/bin/code-coverage.py --no-build
+env/bin/cit.py -c                 # coverage report through CIT
+env/bin/cit.py -l                 # style check must still pass
+
+--- WORKFLOW / CONVENTIONS ---
+
+- The `d`, `p` and `r` variants must produce byte-identical cmake command lines to before
+  this change. Verify by comparing configure output.
+- `GN_BUILD_CODE_COVERAGE` defaults OFF; when OFF no coverage flag may reach any target.
+- Never instrument `src/3rdparty` or `src/test/3rdparty`.
+- Coverage reports land under the build directory so `/build*/` keeps them out of git.
+- New python scripts follow the existing `env/bin` style: argparse, `garnet-utils` helpers,
+  `utils.rip()` for fatal errors.
+- Commit style `"<scope>(<area>): <description> (Phase N.M)"`.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: Build variant plumbing
+─────────────────────────────────────────────────────
+  Task 1.1: Rename the clean variant from c to x in build.py
+    - Keep the long form `clean` working.
+    - Update the `variant` positional help text.
+    Verify: `build.py x` still removes build directories; `build.py c` no longer does.
+    Commit: "refactor(build): move clean variant from c to x (Phase 1.1)"
+
+  Task 1.2: Add the coverage variant c to build.py
+    - Map `c`/`coverage` to suffix `.c` and `CMAKE_BUILD_TYPE=Debug`.
+    - Reject the variant on non-Linux platforms with an explicit message.
+    - Pass `-DGN_BUILD_CODE_COVERAGE=ON` at configure time.
+    Verify: `build.py -c c` configures build/linux.gcc.c with the coverage option ON.
+    Commit: "feat(build): add Linux-only code coverage build variant c (Phase 1.2)"
+
+  Task 1.3: Make the binary variant list a parameter in garnet-utils.py
+    - Default stays `[".d", ".p", ".r"]` so existing callers are unaffected.
+    - Thread the parameter through search_for_the_latest_binary and run_the_latest_binary.
+    Verify: existing CIT invocation paths unchanged; coverage flow can pin `.c`.
+    Commit: "refactor(build): parameterize binary variant search in garnet-utils (Phase 1.3)"
+
+Phase 2: CMake instrumentation
+─────────────────────────────────────────────────────
+  Task 2.1: Add GN_BUILD_CODE_COVERAGE option and GN_enable_code_coverage helper
+    - Default OFF; warn and disable when not a GCC/Clang desktop build.
+    Verify: configure of d/p/r emits no coverage flags.
+    Commit: "feat(cmake): add GN_BUILD_CODE_COVERAGE option and helper (Phase 2.1)"
+
+  Task 2.2: Call the helper from core, sample, tool and test scopes
+    - src/test calls it after add_subdirectory(3rdparty) to keep Catch2 clean.
+    Verify: grep of the coverage build's compile_commands.json shows --coverage on project
+            sources and none under src/3rdparty or src/test/3rdparty.
+    Commit: "feat(cmake): instrument project scopes, exclude third-party (Phase 2.2)"
+
+Phase 3: Coverage report tool
+─────────────────────────────────────────────────────
+  Task 3.1: Add gcovr to env/requirements.txt
+    Verify: fresh venv install resolves gcovr.
+    Commit: "build(env): require gcovr for coverage reports (Phase 3.1)"
+
+  Task 3.2: Add env/bin/code-coverage.py
+    - Build unless --no-build, delete stale .gcda, run the CIT test set pinned to `.c`.
+    - Emit HTML details, full JSON and a generated function-level markdown report.
+    Verify: report contains per-function records for src/core sources.
+    Commit: "feat(coverage): add code-coverage.py report generator (Phase 3.2)"
+
+Phase 4: CIT and CI integration
+─────────────────────────────────────────────────────
+  Task 4.1: Add cit.py -c / --coverage and make the module importable
+    - Move argparse and dispatch into main() so code-coverage.py can import and reuse
+      run_all_tests instead of duplicating a test list that differs per branch.
+    - Thread a variants parameter through run_all_tests.
+    Verify: `env/bin/cit.py -t` behaves as before; `env/bin/cit.py -c` produces the report.
+    Commit: "feat(cit): add coverage mode (Phase 4.1)"
+
+  Task 4.2: Run coverage, profile and release on Linux CI, dropping debug there
+    - Give build-linux-gcc and build-linux-clang their own [coverage, profile, release]
+      parameter enum and workflow matrix via a second anchor pair; Windows and Android keep
+      [debug, profile, release].
+    - Branch the gcc test step so the coverage variant runs code-coverage.py --no-build.
+    Verify: resolved YAML shows linux enums = coverage/profile/release and
+            windows/android enums = debug/profile/release.
+    Commit: "ci(linux): replace the debug job with the coverage variant (Phase 4.2)"
+
+Phase 5: Documentation
+─────────────────────────────────────────────────────
+  Task 5.1: Update AGENTS.md, QWEN.md, README.md and the build-test skill
+    - Document c = coverage (Linux only), x = clean, and the coverage workflow.
+    Verify: no remaining doc text describing `build.py c` as clean.
+    Commit: "docs(build): document coverage variant and clean rename (Phase 5.1)"
+
+  Task 5.2: Add the garnet-code-coverage skill note and index it
+    Verify: agent/skills/README.md lists the new skill.
+    Commit: "docs(agent): add garnet-code-coverage skill (Phase 5.2)"
+
+Phase 6: End-to-end verification
+─────────────────────────────────────────────────────
+  Task 6.1: Full coverage build plus report run
+    Verify: `build.py c` succeeds, all five CIT binaries run, report generated with non-zero
+            function totals; `cit.py -l` still passes.
+    Commit: "test(coverage): verify end-to-end coverage build and report (Phase 6.1)"
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (variant plumbing):
+  env/bin/build.py                  — c becomes coverage, x becomes clean, pass coverage option
+  env/bin/garnet-utils.py           — variants parameter on binary search helpers
+
+Phase 2 (cmake):
+  CMakeLists.txt                    — NEW option + GN_enable_code_coverage helper
+  src/core/CMakeLists.txt           — call helper
+  src/sample/CMakeLists.txt         — call helper
+  src/tool/CMakeLists.txt           — call helper
+  src/test/CMakeLists.txt           — call helper after add_subdirectory(3rdparty)
+
+Phase 3 (report tool):
+  env/requirements.txt              — add gcovr
+  env/bin/code-coverage.py          — NEW: build, run tests, generate reports
+
+Phase 4 (CIT and CI):
+  env/bin/cit.py                    — add -c/--coverage, wrap dispatch in main() so it is importable
+  .circleci/config.yml              — linux gcc/clang enums to coverage/profile/release, gcc test step branch
+
+Phase 5 (docs):
+  AGENTS.md                         — variant list (c=coverage, x=clean), CIT -c, new Code Coverage section
+  agent/skills/garnet-build-test/SKILL.md — variant list, CIT -c, pointer to the coverage skill
+  agent/skills/garnet-code-coverage/SKILL.md — NEW: coverage skill note
+  agent/skills/README.md            — index the new skill
+
+Not touched, deliberately:
+  QWEN.md                           — does not exist on master; it is added on the e2 branch
+  CLAUDE.md                         — 13 lines, only points at AGENTS.md, no variant list
+  README.md                         — mentions `b d` only, carries no variant table
