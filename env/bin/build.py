@@ -16,7 +16,7 @@ def get_cmake_build_info(args):
     elif "r" == build_type or "release" == build_type:
         suffix = ".r"
         build_type = "Release"
-    elif "c" == build_type or "clean" == build_type:
+    elif "x" == build_type or "clean" == build_type:
         # return [None, None, None] indicating a clear action.
         return [None, None, None]
     else:
@@ -169,7 +169,7 @@ ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake c
 ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
 ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")
 ap.add_argument("--clang", dest="use_clang", action="store_true", help="Use CLANG instead of GCC as the compiler. This option is only valid on Linux.")
-ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(lean). "
+ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/x (clean). "
                                          "Note that all parameters alert this one will be considered \"extra\" and passed to CMake directly.")
 ap.add_argument("extra", nargs=argparse.REMAINDER, help="Extra arguments passing to cmake.")
 args = ap.parse_args()
