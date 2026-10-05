@@ -11,6 +11,7 @@ option(GN_BUILD_SAMPLES "Set to ON to build samples. Default is ON." ON)
 option(GN_BUILD_TOOLS "Set to ON to build tools. Default is ON." ON)
 option(GN_BUILD_TESTS "Set to ON to build tests. Default is ON." ON)
 option(GN_BUILD_DISABLE_ALL_WARINGS "Set to ON mute all compiler warnings. Default is OFF." OFF)
+option(GN_BUILD_CODE_COVERAGE "Set to ON to instrument project code with gcov coverage. Linux GCC/Clang only. Default is OFF." OFF)
 
 # =================
 # utility functions
@@ -23,6 +24,22 @@ endmacro()
 macro(GN_warning)
     message(WARNING "========================\n\n[GARNET] ${ARGN}\n\n========================")
 endmacro()
+
+# Instrument the calling directory scope and everything below it with gcov coverage.
+#
+# This is called per-directory from src/core, src/sample, src/tool and src/test instead of
+# once at the repository root, because add_compile_options() propagates downward and the
+# root scope also owns src/3rdparty. Instrumenting vendored code would multiply build time
+# and bury the project's own numbers under third-party noise. src/test calls this after its
+# own add_subdirectory(3rdparty) so Catch2 stays uninstrumented as well.
+# ------------------------------------------------------------------------------
+function(GN_enable_code_coverage)
+    if (NOT GN_BUILD_CODE_COVERAGE)
+        return()
+    endif()
+    add_compile_options(--coverage)
+    add_link_options(--coverage)
+endfunction()
 
 # Setup PCH for source files
 #
@@ -194,6 +211,17 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang")
 endif()
 if(IS_GCC OR IS_CLANG)
     set(IS_GNUC TRUE)
+endif()
+
+# Coverage depends on gcov-compatible instrumentation, which only the GNU/Clang desktop
+# toolchains provide here. Warn and disable rather than fail: GN_BUILD_CODE_COVERAGE is a
+# cache entry, so one left behind by a Linux configure must not break another platform.
+if (GN_BUILD_CODE_COVERAGE AND (NOT IS_GNUC OR ANDROID OR MSVC))
+    GN_warning("GN_BUILD_CODE_COVERAGE is only supported on Linux GCC/Clang desktop builds. Coverage instrumentation has been disabled.")
+    set(GN_BUILD_CODE_COVERAGE OFF)
+endif()
+if (GN_BUILD_CODE_COVERAGE)
+    GN_print_status("GN_BUILD_CODE_COVERAGE     = ON (gcov instrumentation)")
 endif()
 
 # =================================
