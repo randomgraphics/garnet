@@ -20,7 +20,7 @@ public:
 
 protected:
     Api mApi;
-    GpuContextCommon2(const RuntimeType::TypeInfo & typeInfo, Api api): GpuContext(typeInfo), mApi(api) {}
+    GpuContextCommon2(const RuntimeType::TypeInfo & typeInfo, const StrA & name, Api api): GpuContext(typeInfo, name), mApi(api) {}
 };
 
 } // namespace GN::gpu2

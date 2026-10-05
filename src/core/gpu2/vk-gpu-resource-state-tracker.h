@@ -42,9 +42,9 @@ public:
     bool addTransferDstImage(TextureVulkanBase * tex, const GpuResourceView::ImageView & view);
     bool addTransferSrcImage(TextureVulkanBase * tex, const GpuResourceView::ImageView & view);
 
-    std::vector<const Interface *> addGpuResourceTable(const GpuResourceTable & table);
-    bool                           addRasterGeometry(const RasterGeometry & geom);
-    bool                           addRasterTarget(const RasterTarget & rt);
+    std::vector<int64_t> addGpuResourceTable(const GpuResourceTable & table);
+    bool                 addRasterGeometry(const RasterGeometry & geom);
+    bool                 addRasterTarget(const RasterTarget & rt);
 
     void upgradeForDrawRasterState(const RasterState & drawState);
 
@@ -81,7 +81,7 @@ private:
         std::unordered_map<uint64_t, rv::Image::State::PlaneState> registered;
         bool                                                       hasWrite = false;
     };
-    std::unordered_map<const TextureVulkanBase *, TrackedTexture> mTextures;
+    std::unordered_map<int64_t, TrackedTexture> mTextures;
 
     struct TrackedBuffer {
         BufferVulkan * buf = nullptr;
@@ -99,7 +99,7 @@ private:
     bool checkBufferHazard(const TrackedBuffer & incoming) const;
     bool addBuffer(TrackedBuffer b);
 
-    std::unordered_map<const BufferVulkan *, TrackedBuffer> mBuffers;
+    std::unordered_map<int64_t, TrackedBuffer> mBuffers;
     // unordered_map rehashing preserves element addresses; these lists only visit registrations for the current pass.
     std::vector<TrackedBuffer *>  mActiveBuffers;
     std::vector<TrackedTexture *> mActiveTextures;

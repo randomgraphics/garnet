@@ -14,8 +14,9 @@ namespace GN::gpu2 {
 /// One-shot recorder: seal() finalizes the payload; no further recording or sealing
 /// is allowed afterward. This class is not thread-safe. All calls on one instance
 /// must be single-threaded or externally serialized; use separate instances for parallel recording.
-struct GpuCnC : public Interface {
-    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
+struct GpuCnC : public RCRT64 {
+public:
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateParameters {
         AutoRef<GpuContext> gpu;
@@ -92,6 +93,9 @@ struct GpuCnC : public Interface {
 
     /// Seal the object. Generate payload for all enqueued operations.
     virtual AutoRef<GpuPayload> seal() = 0;
+
+protected:
+    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

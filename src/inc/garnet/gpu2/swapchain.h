@@ -6,8 +6,8 @@
 
 namespace GN::gpu2 {
 
-struct Swapchain : Interface {
-    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
+struct Swapchain : RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateDesc {
         AutoRef<GpuContext> gpu;
@@ -59,6 +59,9 @@ struct Swapchain : Interface {
 
     /// Schedule present to execute on GPU after \p waitFor completes.
     virtual void present(GpuPayload & waitFor) = 0;
+
+protected:
+    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

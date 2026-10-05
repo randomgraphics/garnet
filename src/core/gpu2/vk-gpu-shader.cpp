@@ -14,7 +14,7 @@ static const char * shaderEntryCStr(const GpuShader::CreateParameters & p) {
     return "main";
 }
 
-GpuShaderVulkan::GpuShaderVulkan(std::unique_ptr<rv::Shader> sh): GpuShader(TYPE_INFO()), mShader(std::move(sh)) {}
+GpuShaderVulkan::GpuShaderVulkan(const StrA & entityName, std::unique_ptr<rv::Shader> sh): GpuShader(TYPE_INFO(), entityName), mShader(std::move(sh)) {}
 
 GpuShaderVulkan::~GpuShaderVulkan() = default;
 
@@ -59,7 +59,7 @@ AutoRef<GpuShader> createGpuShaderVulkan2(const GpuShader::CreateParameters & p)
         return {};
     }
 
-    return AutoRef<GpuShader>(new GpuShaderVulkan(std::move(sh)));
+    return AutoRef<GpuShader>(new GpuShaderVulkan(shaderEntityName(p), std::move(sh)));
 }
 
 } // namespace GN::gpu2

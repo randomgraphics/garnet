@@ -186,7 +186,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
     // Build compute pipeline. No PSO cache yet; create fresh per-dispatch.
     // TODO: add a compute PSO factory (keyed on shader ID) if per-frame dispatch overhead shows up in profiles.
     rv::ComputePipeline::ConstructParameters ccp;
-    ccp.name = "compute_pso";
+    ccp.name = std::string(name.c_str()) + "/compute_pso";
     ccp.cs   = csVk->rvShader();
     rv::Ref<rv::ComputePipeline> pipeline(new rv::ComputePipeline(ccp));
     if (!pipeline->handle()) GN_UNLIKELY {
@@ -477,7 +477,7 @@ class GpuCncVulkan2 final : public GpuCnC {
 public:
     GN_REGISTER_RUNTIME_TYPE(GpuCnC);
 
-    explicit GpuCncVulkan2(const CreateParameters & cp): GpuCnC(TYPE_INFO()), mGpu(cp.gpu) {}
+    GpuCncVulkan2(const StrA & entityName, const CreateParameters & cp): GpuCnC(TYPE_INFO(), entityName), mGpu(cp.gpu) {}
 
     void recordCompute(const ComputeParameters & cp) override {
         if (mSealed) GN_UNLIKELY {
@@ -663,7 +663,7 @@ public:
                 return {};
             }
         mSealed = true;
-        return AutoRef<GpuPayload>(new GpuCncPayloadVulkan("cnc_payload", std::move(mOps)));
+        return AutoRef<GpuPayload>(new GpuCncPayloadVulkan(name + "/payload", std::move(mOps)));
     }
 
 private:
@@ -673,7 +673,7 @@ private:
 
     /// Allocate a host-visible staging buffer owned by the upcoming payload.
     AutoRef<Buffer> createStaging(const char * suffix, uint64_t size) {
-        return Buffer::create(StrA("cnc_staging_") + suffix, {.context = mGpu, .size = size, .mappable = true});
+        return Buffer::create(name + "/" + suffix, {.context = mGpu, .size = size, .mappable = true});
     }
 };
 
@@ -685,7 +685,8 @@ AutoRef<GpuCnC> createGpuCncVulkan2(const GpuCnC::CreateParameters & params) {
     if (!params.gpu) return {};
     auto vkGpu = params.gpu.staticCastTo<GpuContextVulkan2>();
     if (!vkGpu || !vkGpu->ready()) return {};
-    return AutoRef<GpuCnC>(new GpuCncVulkan2(params));
+    StrA n = params.gpu->name.empty() ? StrA("cnc") : params.gpu->name + "/cnc";
+    return AutoRef<GpuCnC>(new GpuCncVulkan2(n, params));
 }
 
 } // namespace GN::gpu2

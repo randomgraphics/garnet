@@ -469,9 +469,9 @@ struct RasterGeometry {
 /// no further recording or sealing is allowed afterward.
 /// This class is not thread-safe. All calls on one instance must be single-threaded
 /// or externally serialized; use separate instances for parallel recording.
-class GpuRaster : public Interface {
+class GpuRaster : public RCRT64 {
 public:
-    GN_GPU2_DEFINE_PUBLIC_INTERFACE(Interface);
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateParameters {
         AutoRef<GpuContext>  gpu;
@@ -501,6 +501,9 @@ public:
     /// Finalize the render pass. Returns a payload to pass to GpuContext::submit().
     /// After this call the GpuRaster is unusable and safe to release.
     virtual AutoRef<GpuPayload> seal() = 0;
+
+protected:
+    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

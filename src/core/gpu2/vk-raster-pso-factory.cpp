@@ -126,7 +126,7 @@ static vk::ColorComponentFlags writeMaskToVk(uint8_t w) {
 // Viewport and scissor are always dynamic state and are NOT keyed.
 
 struct Gpu2RasterPsoKey {
-    uint64_t shaderHash = 0; ///< FNV-multiply of vs and ps pointer addresses
+    uint64_t shaderHash = 0; ///< FNV-multiply of vs->id and ps->id
 
     union {
         uint64_t geomWord = 0;
@@ -188,8 +188,8 @@ Gpu2RasterPsoKey Gpu2RasterPsoKey::make(const GpuShaderVulkan & vs, const GpuSha
     Gpu2RasterPsoKey k {};
 
     // ── 1. Shader identity ────────────────────────────────────────────────────
-    // Combine VS and PS pointer addresses using FNV multiply to avoid trivial cancellations.
-    k.shaderHash = uint64_t(uintptr_t(&vs)) * 0x100000001b3ULL ^ uint64_t(uintptr_t(ps));
+    // Combine VS and PS ids using FNV multiply to avoid trivial cancellations.
+    k.shaderHash = uint64_t(vs.id) * 0x100000001b3ULL ^ uint64_t(ps ? ps->id : 0);
 
     // ── 2. Vertex input ───────────────────────────────────────────────────────
     const bool hasInput = !geom.format.attributes.empty() && !geom.vertices.empty();

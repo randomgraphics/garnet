@@ -30,7 +30,8 @@ class SwapchainBackbufferTextureVulkan final : public TextureVulkanBase {
 public:
     GN_REGISTER_RUNTIME_TYPE(TextureVulkanBase);
 
-    SwapchainBackbufferTextureVulkan(AutoRef<GpuContextVulkan2> gpu): TextureVulkanBase(SwapchainBackbufferTextureVulkan::TYPE_INFO()) {
+    SwapchainBackbufferTextureVulkan(const StrA & entityName, AutoRef<GpuContextVulkan2> gpu)
+        : TextureVulkanBase(SwapchainBackbufferTextureVulkan::TYPE_INFO(), entityName) {
         mGpu = std::move(gpu);
     }
 
@@ -46,7 +47,7 @@ public:
     }
 
     /// stable per-backbuffer payload; returned as frame.ready from prepare()
-    AutoRef<SwapchainReadyPayloadVulkan> readyPayload = AutoRef<SwapchainReadyPayloadVulkan>::make("swapchain/ready");
+    AutoRef<SwapchainReadyPayloadVulkan> readyPayload = AutoRef<SwapchainReadyPayloadVulkan>::make(name + "/ready");
 
     /// Binary semaphore used to bridge a timeline render-done point into a form vkQueuePresentKHR can wait on.
     /// One per backbuffer: the swapchain won't recycle the same image until present consumed the previous signal.
@@ -59,7 +60,7 @@ class SwapchainVulkan2 final : public Swapchain {
 public:
     GN_REGISTER_RUNTIME_TYPE(Swapchain);
 
-    explicit SwapchainVulkan2(const StrA & entityName): Swapchain(TYPE_INFO()), name(entityName) {}
+    explicit SwapchainVulkan2(const StrA & entityName): Swapchain(TYPE_INFO(), entityName) {}
 
     bool init(const Swapchain::CreateDesc & desc);
 
@@ -67,7 +68,6 @@ public:
     void             present(GpuPayload & waitFor) override;
 
 private:
-    StrA                       name;
     AutoRef<GpuContextVulkan2> mGpu;
     gfx::img::PixelFormat      mSurfaceFormat = gfx::img::PixelFormat::UNKNOWN();
 
@@ -168,7 +168,8 @@ Swapchain::Frame SwapchainVulkan2::prepare() {
 
     auto it = mBackbufferTextures.find(bb.image);
     if (it == mBackbufferTextures.end()) {
-        AutoRef<SwapchainBackbufferTextureVulkan> tex(new SwapchainBackbufferTextureVulkan(mGpu));
+        StrA                                      texName = StrA::format("{}_bb_{}", name, (uint64_t) (uintptr_t) bb.image);
+        AutoRef<SwapchainBackbufferTextureVulkan> tex(new SwapchainBackbufferTextureVulkan(texName, mGpu));
         it = mBackbufferTextures.emplace(bb.image, tex).first;
     }
     it->second->bindToSwapchainBackbuffer(bb.image, w, h, mSurfaceFormat); // this will reset the texture's GPU state to UNDEFINED,
@@ -211,10 +212,10 @@ void SwapchainVulkan2::present(GpuPayload & waitFor) {
                 // that waits on the timeline and signals a per-backbuffer binary semaphore.
                 renderFinished = bridgeTimelineToBinary(*t);
             } else {
-                GN_ERROR(sLogger, "present() must wait on an already-submitted payload: {:p}", (const void *) &waitFor);
+                GN_ERROR(sLogger, "present() must wait on an already-submitted payload: {}({})", waitFor.name, waitFor.id);
             }
         }
-    else { GN_ERROR(sLogger, "waitFor is not a GpuPayloadVulkan: {:p}", (const void *) &waitFor); }
+    else { GN_ERROR(sLogger, "waitFor is not a GpuPayloadVulkan: {}({})", waitFor.name, waitFor.id); }
 
     rv::Swapchain::PresentResult result;
     try {

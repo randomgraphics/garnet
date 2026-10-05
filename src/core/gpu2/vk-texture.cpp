@@ -92,23 +92,23 @@ gfx::img::Image contentToImage(const rv::Image::Content & content, size_t subres
 // TextureVulkanBase
 // -----------------------------------------------------------------------------
 
-TextureVulkanBase::TextureVulkanBase(const GN::RuntimeType::TypeInfo & leafType): Texture(leafType) {}
+TextureVulkanBase::TextureVulkanBase(const GN::RuntimeType::TypeInfo & leafType, const StrA & entityName): Texture(leafType, entityName) {}
 
 TextureVulkanBase::~TextureVulkanBase() = default;
 
 gfx::img::Image TextureVulkanBase::readback() const {
     if (!mRvImage || !mImage) {
-        GN_ERROR(sLogger, "TextureVulkanBase::readback: no image");
+        GN_ERROR(sLogger, "TextureVulkanBase::readback: no image, name='{}'", name);
         return gfx::img::Image();
     }
     if (!mGpu || !mGpu->ready()) {
-        GN_ERROR(sLogger, "TextureVulkanBase::readback: no GpuContext");
+        GN_ERROR(sLogger, "TextureVulkanBase::readback: no GpuContext, name='{}'", name);
         return gfx::img::Image();
     }
     const rv::Device & dev = mGpu->vulkanDevice();
     rv::CommandQueue * gq  = dev.graphics();
     if (!gq) {
-        GN_ERROR(sLogger, "TextureVulkanBase::readback: no graphics queue");
+        GN_ERROR(sLogger, "TextureVulkanBase::readback: no graphics queue, name='{}'", name);
         return gfx::img::Image();
     }
     mGpu->waitForIdle(); // Ensure all submitted GPU operations are complete before readback.
@@ -121,11 +121,11 @@ gfx::img::Image TextureVulkanBase::readback() const {
 
 bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
     if (!mRvImage || !mImage) {
-        GN_ERROR(sLogger, "TextureVulkanBase::setContent: texture not writable or not initialized");
+        GN_ERROR(sLogger, "TextureVulkanBase::setContent: texture not writable or not initialized, name='{}'", name);
         return false;
     }
     if (image.empty()) {
-        GN_ERROR(sLogger, "TextureVulkanBase::setContent: input image is empty");
+        GN_ERROR(sLogger, "TextureVulkanBase::setContent: input image is empty, name='{}'", name);
         return false;
     }
     if (!mGpu || !mGpu->ready()) return false;
@@ -166,9 +166,9 @@ class OwnedTextureVulkan final : public TextureVulkanBase {
 public:
     GN_REGISTER_RUNTIME_TYPE(TextureVulkanBase);
 
-    OwnedTextureVulkan(): TextureVulkanBase(OwnedTextureVulkan::TYPE_INFO()) {}
+    explicit OwnedTextureVulkan(const StrA & entityName): TextureVulkanBase(OwnedTextureVulkan::TYPE_INFO(), entityName) {}
 
-    bool initOwned(const StrA & name, const CreateParameters & params) {
+    bool initOwned(const CreateParameters & params) {
         reset();
         if (!params.context) {
             GN_ERROR(sLogger, "OwnedTextureVulkan::initOwned: context is null, name='{}'", name);
@@ -266,8 +266,8 @@ private:
 };
 
 AutoRef<Texture> createTextureVulkan2(const StrA & entityName, const Texture::CreateParameters & params) {
-    auto p = new OwnedTextureVulkan();
-    if (!p->initOwned(entityName, params)) {
+    auto p = new OwnedTextureVulkan(entityName);
+    if (!p->initOwned(params)) {
         delete p;
         return {};
     }
@@ -275,7 +275,8 @@ AutoRef<Texture> createTextureVulkan2(const StrA & entityName, const Texture::Cr
 }
 
 AutoRef<Texture> loadTextureVulkan2(const Texture::LoadParameters & params) {
-    auto p = new OwnedTextureVulkan();
+    StrA entityName = params.filename.empty() ? StrA("texture") : params.filename;
+    auto p          = new OwnedTextureVulkan(entityName);
     if (!p->initFromLoad(params)) {
         delete p;
         return {};

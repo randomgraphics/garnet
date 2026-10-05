@@ -52,9 +52,7 @@ struct MockRenderTarget final : public Entity {
 struct MockGpuPayload final : public gpu2::GpuPayload {
     GN_REGISTER_RUNTIME_TYPE(gpu2::GpuPayload);
 
-    StrA name;
-
-    explicit MockGpuPayload(const StrA & name_): gpu2::GpuPayload(TYPE_INFO()), name(name_) {}
+    explicit MockGpuPayload(const StrA & name_): gpu2::GpuPayload(TYPE_INFO(), name_) {}
 };
 
 // ============================================================================
@@ -381,12 +379,8 @@ TEST_CASE("rdg2::ClosedGraph: pbr frame through quest/plan/execution", "[rdg2][c
 
     // Payload gather order is deterministic: scc upload before pbr raster.
     REQUIRE(execution->context.payloads.size() == 2);
-    auto p0 = RuntimeType::cast<MockGpuPayload>(execution->context.payloads[0].get());
-    auto p1 = RuntimeType::cast<MockGpuPayload>(execution->context.payloads[1].get());
-    REQUIRE(p0);
-    REQUIRE(p1);
-    CHECK(p0->name == "scc-upload");
-    CHECK(p1->name == "pbr-raster");
+    CHECK(execution->context.payloads[0]->name == "scc-upload");
+    CHECK(execution->context.payloads[1]->name == "pbr-raster");
 
     // Published relics: pbr consumed the in-plan scc relic and the imported mesh.
     auto constantsRelic = sceneConstants->content<MockSceneConstants>();
@@ -507,15 +501,11 @@ TEST_CASE("rdg2::ClosedGraph: multi-pass frame: shadow, hdr scene, post, super-r
 
     // Deterministic gather order across all five passes.
     REQUIRE(execution->context.payloads.size() == 5);
-    auto payloadName = [&](size_t i) -> StrA {
-        auto p = RuntimeType::cast<MockGpuPayload>(execution->context.payloads[i].get());
-        return p ? p->name : StrA {};
-    };
-    CHECK(payloadName(0) == "shadow-map");
-    CHECK(payloadName(1) == "main-scene");
-    CHECK(payloadName(2) == "post-process");
-    CHECK(payloadName(3) == "super-res");
-    CHECK(payloadName(4) == "ui");
+    CHECK(execution->context.payloads[0]->name == "shadow-map");
+    CHECK(execution->context.payloads[1]->name == "main-scene");
+    CHECK(execution->context.payloads[2]->name == "post-process");
+    CHECK(execution->context.payloads[3]->name == "super-res");
+    CHECK(execution->context.payloads[4]->name == "ui");
 
     // Final backbuffer: acquire (v1) -> super-res discard (v2) -> ui composite (v3).
     auto expectedVersion = Artifact::Version::ONE();

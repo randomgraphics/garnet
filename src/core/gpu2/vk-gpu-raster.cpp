@@ -132,14 +132,14 @@ public:
     void recordForVulkanSubmit(const RecordContext & ctx) override;
 
 private:
-    RasterPsoFactory *                          mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
-    RasterTarget                                mRenderTarget;
-    DynaArray<StoredDraw>                       mDraws;
-    DynaArray<RasterGeometry>                   mGeometries;
-    DynaArray<GpuResourceTable>                 mResourceTables;
-    DynaArray<RasterState>                      mStates;
-    std::vector<bool>                           mGeomHazards;
-    std::vector<std::vector<const Interface *>> mTableInvalidIds;
+    RasterPsoFactory *                mPsoFactory = nullptr; // owned by GpuContextVulkan2; lifetime > this payload
+    RasterTarget                      mRenderTarget;
+    DynaArray<StoredDraw>             mDraws;
+    DynaArray<RasterGeometry>         mGeometries;
+    DynaArray<GpuResourceTable>       mResourceTables;
+    DynaArray<RasterState>            mStates;
+    std::vector<bool>                 mGeomHazards;
+    std::vector<std::vector<int64_t>> mTableInvalidIds;
     struct DrawableTemplate {
         const rv::GraphicsPipeline * pipeline;
         uint32_t                     geometryIndex;
@@ -372,7 +372,7 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
     rv::Ref<const rv::GraphicsPipeline> pipeline = mPsoFactory->getOrCreate(psoParams);
     if (!pipeline || !pipeline->handle()) GN_UNLIKELY return {};
 
-    static const std::vector<const Interface *> emptyInvalidIds;
+    static const std::vector<int64_t> emptyInvalidIds;
     const auto & invalidResourceIds = d.resourceTableIndex < mTableInvalidIds.size() ? mTableInvalidIds[d.resourceTableIndex] : emptyInvalidIds;
     bool         complete           = invalidResourceIds.empty();
     const auto & reflection         = pipeline->reflection();
@@ -450,8 +450,7 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                         if (view.empty() || !view.isTexture()) continue;
                         auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
                         if (!tex) continue;
-                        if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), static_cast<const Interface *>(tex)) != invalidResourceIds.end())
-                            continue;
+                        if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), tex->id) != invalidResourceIds.end()) continue;
                         vk::ImageLayout layout =
                             (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral : vk::ImageLayout::eShaderReadOnlyOptimal;
                         rv::ImageSampler is;
@@ -469,8 +468,7 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                         if (view.empty() || !view.isBuffer()) continue;
                         auto * buf = RuntimeType::cast<BufferVulkan>(view.buffer().get());
                         if (!buf) continue;
-                        if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), static_cast<const Interface *>(buf)) != invalidResourceIds.end())
-                            continue;
+                        if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), buf->id) != invalidResourceIds.end()) continue;
                         rv::BufferView bv;
                         bv.buffer = buf->rvBuffer();
                         bv.offset = (vk::DeviceSize) view.bufferView.offset;
@@ -768,7 +766,7 @@ public:
     GN_REGISTER_RUNTIME_TYPE(GpuRaster);
 
     GpuRasterVulkan2(const StrA & entityName, const CreateParameters & cp)
-        : GpuRaster(TYPE_INFO()), mName(entityName), mGpu(checkGpu(cp.gpu)), mRenderTarget(checkRasterTarget(cp.target)) {
+        : GpuRaster(TYPE_INFO(), entityName), mGpu(checkGpu(cp.gpu)), mRenderTarget(checkRasterTarget(cp.target)) {
         if (!mGpu) return;
         if (mRenderTarget.empty()) return;
         mDraws.reserve(cp.numberOfDrawsHint);
@@ -876,12 +874,11 @@ public:
         mSealed        = true;
         auto   vkGpu   = mGpu.staticCastTo<GpuContextVulkan2>();
         auto * factory = (vkGpu && vkGpu->ready()) ? &vkGpu->psoFactory() : nullptr;
-        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(mName + "/payload", factory, std::move(mRenderTarget), std::move(mDraws), std::move(mGeometries),
+        return AutoRef<GpuPayload>(new GpuRasterPayloadVulkan(name + "/payload", factory, std::move(mRenderTarget), std::move(mDraws), std::move(mGeometries),
                                                               std::move(mResourceTables), std::move(mStates)));
     }
 
 private:
-    StrA                                      mName;
     AutoRef<GpuContextVulkan2>                mGpu;
     RasterTarget                              mRenderTarget;
     bool                                      mValid  = false;
