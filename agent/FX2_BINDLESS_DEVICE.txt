@@ -65,7 +65,7 @@ FX2 kernels define byte schemas and retain referenced resources. Callers delay
 freeing chunks until consumers finish; the gpu2 allocator's free is immediate.
 Implementation of the gpu2 extension is a prerequisite outside this FX2 task.
 
-R3 — Streaming pool (set 1, binding 1). Holds one-time-use per-draw data that a
+R3 — Streaming pool (set 1, binding 0). Holds one-time-use per-draw data that a
 kernel wants the GPU to read but that is too large for push constants. Backed by
 one or a few long-lived mappable buffers reused across draws and frames: no buffer
 is created or destroyed per draw, and no CnC transfer is involved. allocate(size)
@@ -131,8 +131,7 @@ these contracts differently. With heap base binding zero:
   Set 0, binding 3: uniform-buffer descriptor array
   Set 0, binding 4: storage-buffer descriptor array
   Set 0, binding 5: sampler descriptor array
-  Set 1, binding 0: unused
-  Set 1, binding 1: CPU-to-GPU streaming SSBO
+  Set 1, binding 0: CPU-to-GPU streaming SSBO
   Set 1, binding 2: generic versioned SSC uniform buffer
   Set 2+: optional explicit pass resources
 
@@ -144,8 +143,8 @@ belongs to gpu2; see its README for the opaque chunk contract.
 
 Set 1 is provided through Raster/CnC CreateParameters::passResources, indexed by
 absolute set/binding/array indices. passResources[heapSetIndex] must be empty.
-SSC supplies streaming at binding 1 (BufferView::STORAGE) and uniforms at binding
-2 (BufferView::UNIFORM), leaving binding 0 empty. Material data is already bound
+SSC supplies streaming at binding 0 (BufferView::STORAGE) and uniforms at binding
+2 (BufferView::UNIFORM), leaving binding 1 empty. Material data is already bound
 in the heap set. The initial gpu2 extension is fixed-capacity; doubling growth
 and matching buffer/descriptor-set versions remain a subsequent gpu2 step.
 
@@ -311,7 +310,7 @@ Phase 2: The two stores and heap integration
       dropped work, and growth or documented capacity failure; validation clean.
     Commit: "feat(fx2): add bindless versioned uniform store (Phase 2.1)"
   Task 2.2: Integrate the gpu2 heap with its built-in material binding
-    Verify: Requires gpu2 material-buffer extension; SSBO is set 0/binding 0, set 1/binding 0 unused; fixed-capacity backing lifetime retained; growth deferred; no FX2 material allocator; validation clean.
+    Verify: Requires gpu2 material-buffer extension; SSBO is set 0/binding 0, set 1/binding 0 reserved for streaming; fixed-capacity backing lifetime retained; growth deferred; no FX2 material allocator; validation clean.
     Commit: "feat(fx2): integrate heap-owned material binding (Phase 2.2)"
   Task 2.3: Implement the streaming pool
     Verify: bindless-ssc-stream-test.cpp covers caller-filled mapped bytes reaching
@@ -505,3 +504,11 @@ user's staged gpu2.h comment changes. Intended commit:
 Validation is recorded above; no code changed after the last verification.
 Next work remains Phase 1.1 FX2 SSC skeleton. Material expansion is future TODO.
 The first-attempt implementation stash is retained; this plan remains active.
+
+--- DELIVERY FOLLOW-UP ---
+Main checkpoint committed and pushed as 264fa0d2b. User README edit arriving
+after that commit selects set 1/binding 0 for the future streaming SSBO. Layout
+table and task contract synchronized in this documentation-only follow-up;
+SSC uniforms stay at binding 2. No implemented gpu2 heap/sample bindings change.
+Verify: README/task agreement and git diff --check. FX2 SSC implementation remains
+unstarted (next Phase 1.1); material growth remains future TODO; stash retained.

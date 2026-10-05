@@ -219,7 +219,7 @@ backend and memory allocation support it, keep pool buffers persistently mapped
 for their lifetime to avoid repeated map/unmap calls. Otherwise map as needed;
 map/unmap is not the mechanism for synchronizing reuse with GPU consumers. CPU
 recording writes an aligned range directly,
-and the shader reads it as an SSBO at set 1, binding 1 using a per-draw offset
+and the shader reads it as an SSBO at set 1, binding 0 using a per-draw offset
 encoded in the kernel's push constants. No CnC upload or CnC ownership is needed.
 The buffer pool persists across draws and frames. Individual data ranges are
 retained by consuming raster/compute work until GPU completion or discard, then
@@ -253,10 +253,13 @@ fail explicitly at a documented capacity, without invalidating recorded work.
 Never overwrite/free a descriptor slot still referenced by recorded or in-flight
 work.
 
-Sky materials contain background, diffuse, specular, and BRDF lookup resources
-plus sampler references and lighting parameters. The SSC selects one sky material;
-skybox and lit kernels read the same selection. Preserve existing exposure,
-luminance, ambient-floor, and no-sky behavior.
+Sky materials are ordinary gpu2 heap material chunks containing background,
+diffuse, specular, and BRDF lookup resources plus sampler references and lighting
+parameters; their textures register in the shared heap like any other sampled
+texture. The SSC uniform records only which sky material is selected, as a heap
+material token, so choosing a different sky changes state rather than rebinding
+textures. Skybox and lit kernels read that same selection. Preserve existing
+exposure, luminance, ambient-floor, and no-sky behavior.
 
 ### Uploads and hazards
 
@@ -274,9 +277,11 @@ semantics, odd edges, per-mip dependencies, and raster/compute visibility.
 
 ### Delivery and verification
 
-Build the new SSC shared-resource owner and heap integration first, then heap-owned material-buffer integration, combined
-SSC versions, a minimal pass/unlit path, sky/lit kernels, the mapped CPU-to-GPU streaming pool,
-image kernels, and an independent ImGui backend. Add an opt-in bindless sample;
+Build the new SSC shared-resource owner and heap integration first, then the
+versioned uniform store and the mapped CPU-to-GPU streaming pool, combined SSC
+versions, a minimal pass/unlit path, sky/lit kernels, image kernels, and an
+independent ImGui backend. Material storage comes from the gpu2 heap and needs no
+FX2 implementation step. Add an opt-in bindless sample;
 existing samples, tools, and E2/RDG2 paths continue to use their existing APIs.
 Verify each step before starting the next. Final checks cover GPU readback,
 descriptor/allocation lifetime, cancellation, validation-clean samples, and a
