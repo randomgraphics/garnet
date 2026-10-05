@@ -148,110 +148,124 @@ differently.
 
 | Set | Binding | Resource | Scope |
 | --- | --- | --- | --- |
-| 0 | 0 | Material SSBO built into the gpu2 descriptor heap | Captured heap/buffer |
-| 0 | 1 | Sampled-image descriptor array | SSC-owned shared heap |
-| 0 | 2 | Storage-image descriptor array | SSC-owned shared heap |
-| 0 | 3 | Uniform-buffer descriptor array | SSC-owned shared heap |
-| 0 | 4 | Storage-buffer descriptor array | SSC-owned shared heap |
-| 0 | 5 | Sampler descriptor array | SSC-owned shared heap |
-| 1 | 0 | CPU-to-GPU streaming SSBO | Long-lived mapped buffer pool; ranges recycled after consumption |
+| 0 | gpu2-defined | gpu2 bindless descriptor heap, material buffer included | Shared; gpu2-owned |
+| 1 | 0 | CPU-to-GPU streaming SSBO | SSC streaming pool; ranges recycled after consumption |
 | 1 | 1 | Shared-shader-constant (SSC) uniform buffer | Captured shared-state version |
 | 2+ | As needed | Optional additional pass resources | Explicit extension point |
 
-Set 0 uses the gpu2 heap with base binding zero: binding 0 is its material SSBO,
-and bindings 1-5 are its typed arrays. Set 1 belongs entirely to SSC and holds
-exactly its two stores: the streaming pool at binding 0 and the versioned uniform
-at binding 1. Texture views register separately from samplers; thousands of
-textures may share a few samplers. Shader sampling uses both indices; texel fetch
-needs only a texture index.
+Set 0's binding count, ordering, descriptor indexing, and material chunk contract
+belong to gpu2 and are documented in the [gpu2 design](../gpu2/README.md); FX2
+neither defines nor restates them. SSC retains and shares one heap as an opaque
+object. Texture views register separately from samplers, so thousands of textures
+may share a few samplers; shader sampling uses both indices and texel fetch needs
+only a texture index.
 
-The SSC buffer combines scene, frame, lighting, camera, and active-sky selection
-in one private ABI at set 1, binding 1. There is no separate camera binding.
-Each shared state retains an independently aligned allocation and captures its
-buffer range for consuming passes. Pool offsets and sizes must obey GPU uniform
-buffer alignment and range limits.
+Set 1 belongs entirely to SSC and is not part of the heap. It is supplied through
+`Raster`/`CnC` `CreateParameters::passResources`, indexed by absolute set number as
+`passResources[set][binding][arrayIndex]`. `passResources[heapSetIndex]` must be
+empty or recorder creation is rejected. Binding number equals the slot array index,
+and empty slots are skipped by both the pipeline-layout builder and the descriptor
+writer, so the two stores can be delivered independently. Descriptor type derives
+from `slot[0].bufferView.type`: `STORAGE` becomes a storage buffer, anything else a
+uniform buffer. Binding 0 must therefore be `BufferView::STORAGE` and binding 1
+`BufferView::UNIFORM`.
 
-SSC's uniform management is generic: it allocates, versions, uploads, and recycles
-byte ranges, and knows only each record's total size. The concrete combined-uniform
-layout is defined outside SSC as an independent structure that callers pack into
-bytes before recording an update. The same management therefore serves any uniform
-format, not only the FX2 scene layout.
+Environment resources have no dedicated bindings. A sky is an ordinary gpu2 heap
+material chunk; its textures register in the heap like any other sampled texture,
+and the SSC uniform records only which chunk is selected.
 
 ### SSC-owned storage
 
-A long-lived `fx2::bindless::SharedShaderConstants` (SSC) is the owner of the GPU
-data shared by the new kernels. There is no separate `fx2::bindless::Device` class.
-SSC implements exactly two stores and shares one heap:
+A long-lived `fx2::bindless::SharedShaderConstants` (SSC) owns the GPU data shared
+by the new kernels. There is no separate `fx2::bindless::Device` class. SSC
+implements exactly two stores and shares one heap:
 
 | Store | Set / binding | Entry lifetime | Transfer mechanism |
 | --- | --- | --- | --- |
 | Streaming pool | 1 / 0 | One-time use, until the consuming payload releases it | None: CPU writes a mapped range |
-| Versioned shared-state uniforms | 1 / 1 | One `recordUpdate` version, until its last lease releases | Caller-supplied CnC |
-| Shared descriptor heap, material SSBO included | 0 / 0–5 | gpu2-defined | gpu2-defined |
+| Versioned shared-state uniforms | 1 / 1 | One recorded version, until its last lease releases | Caller-supplied CnC |
+| gpu2 descriptor heap, materials included | 0 | gpu2-defined | gpu2-defined |
 
 Long-lived, read-only, non-uniform records — materials included — are **not** an
 SSC store. The gpu2 descriptor heap owns that material buffer, as described in the
-[gpu2 design](../gpu2/README.md#b1-built-in-material-buffer), and FX2 does not
-implement a second material allocator. The heap performs descriptor allocation and
-registration; SSC retains and shares it rather than introducing a second descriptor
-manager, and also owns shared fallback resources.
+[gpu2 design](../gpu2/README.md#b1-built-in-material-buffer), and FX2 implements no
+second material allocator. The heap performs descriptor allocation and registration;
+SSC retains and shares it rather than introducing a second descriptor manager, and
+also owns shared fallback resources. Across its two stores SSC is responsible for
+GPU backing buffers, allocation, upload batching, versioning, resource retention,
+and safe recycling.
 
-Across its two stores SSC is responsible for GPU backing buffers, allocation,
-upload batching, versioning, resource retention, and safe recycling.
+#### Versioned uniform store
 
-Kernels define typed material inputs and private shader schemas, retain their
-texture/sampler dependencies, and consume opaque chunks from the gpu2 heap-owned
-material buffer. SSC shares the heap; its captured descriptor set includes the material buffer. Material
-allocation, free, upload, and growth contracts are defined in the gpu2 README.
-Ordinary per-draw values can still be encoded as kernel-defined push constants;
-buffer-backed draw parameters use a long-lived CPU-mapped streaming buffer pool. Applications
-explicitly submit the
-SSC-prepared producer work before its consumers. Unlit, PBR, Lambertian, Cel, and Sky schemas are FX2-specific interpretations of
-opaque heap-managed chunks. They share one material-buffer binding and can reuse
-a prepared record across draws without per-draw material uploads. FX2 retains
-referenced registrations and delays freeing chunks until consumers finish.
+SSC's uniform management is generic: it allocates, versions, uploads, and recycles
+byte ranges, and knows only each record's total size. The concrete combined-uniform
+layout — frame, direct lighting, camera/view, and active-sky selection — is defined
+outside SSC as an independent structure that callers pack into bytes before
+recording an update. The same management therefore serves any uniform format, not
+only the FX2 scene layout. There is no separate camera binding.
 
-Each kernel controls its complete push-constant layout. Ordinary transforms,
-flags, and optional material references use push constants; there is no universal
-packet or mandatory material-address field. Buffer-backed draw parameters use
-a long-lived mappable buffer pool for streaming CPU data to the GPU. When the
-backend and memory allocation support it, keep pool buffers persistently mapped
-for their lifetime to avoid repeated map/unmap calls. Otherwise map as needed;
-map/unmap is not the mechanism for synchronizing reuse with GPU consumers. CPU
-recording writes an aligned range directly,
-and the shader reads it as an SSBO at set 1, binding 0 using a per-draw offset
-encoded in the kernel's push constants. No CnC upload or CnC ownership is needed.
-The buffer pool persists across draws and frames. Individual data ranges are
-retained by consuming raster/compute work until GPU completion or discard, then
-recycled within the pool. Do not create or destroy a GPU buffer per draw. Recorded or in-flight ranges must not be
-overwritten. Flush non-coherent mapped ranges and establish host-write visibility
-before shader consumption. The caller may release source CPU input after it is
-copied into the mapped pool. The pool is shared by kernels and holds streamed
-data such as per-draw arguments; its lifetime is independent of any one record
-or CnC upload. Material/uniform storage has its own reuse policy. Geometry uses ordinary vertex/index bindings.
-
-New raster/compute recorders capture the heap and common buffers at pass scope.
-Kernel and material switches do not construct per-draw/per-dispatch resource
-tables or switch material-buffer bindings. App-defined kernels must have a typed
-extension path without exposing private descriptor assembly.
-
-### Shared states, sky selection, and lifetime
-
-New `fx2::bindless::SharedShaderConstants::recordUpdate(typedParameters)` returns
-an opaque retained shared state and access to its update payload. It does not
-change the existing FX2 SSC API. Each update captures its own combined SSC bytes.
-Two updates from one SSC must support this ordering with distinct results:
+Each update captures its own bytes in a newly allocated, independently aligned
+range, so two updates are distinct GPU bytes rather than two writes into one
+buffer. That is what makes update order independent of draw order:
 
 ```text
 upload A -> upload B -> consumers B -> consumers A
 ```
 
-The state, upload work, unsealed recordings, and all consuming payloads retain
-allocation leases. Recycle storage only after the final lease releases; upload
-completion alone is insufficient. Capture backing storage through growth, or
-fail explicitly at a documented capacity, without invalidating recorded work.
-Never overwrite/free a descriptor slot still referenced by recorded or in-flight
-work.
+Range offsets and sizes must obey GPU uniform buffer alignment and range limits.
+Multiple passes share one state without duplicating producer work. The existing
+`fx2::SharedShaderConstants` and its snapshot API are unchanged.
+
+#### Streaming pool
+
+The pool holds one-time-use per-draw data that a kernel wants the GPU to read but
+that is too large for push constants. It is backed by one or a few long-lived
+mappable buffers reused across draws and frames; no buffer is created or destroyed
+per draw, and no CnC transfer is involved. Allocation takes only a size and returns
+a CPU-writable block — an identifier plus a view over the mapped range — which the
+caller fills. The consuming raster or CnC payload owns the release and calls it on
+completion or discard, recycling the range within the pool. Shaders read the pool
+as an SSBO at set 1, binding 0 through a per-draw offset encoded in the kernel's
+push constants.
+
+When the backend and memory allocation support it, keep pool buffers persistently
+mapped for their lifetime to avoid repeated map/unmap calls; otherwise map as
+needed. Map/unmap is not the mechanism for synchronizing reuse with GPU consumers:
+recorded or in-flight ranges must not be overwritten, and that is enforced by
+deferring release to payload completion rather than by mapping state. Flush
+non-coherent mapped ranges and establish host-write visibility before shader
+consumption. The caller may release its source CPU input once it has been copied
+into the mapped range.
+
+#### Kernels and push constants
+
+Kernels define their typed inputs and private shader schemas, retain their
+texture/sampler dependencies, and consume opaque chunks from the gpu2 heap-owned
+material buffer. They do not own separate arenas or independently manage uploads of
+shared records. Unlit, PBR, Lambertian, Cel, and Sky schemas are FX2-specific
+interpretations of those opaque chunks; they share one material binding and reuse a
+prepared record across draws without per-draw material uploads. FX2 retains
+referenced registrations and delays freeing chunks until consumers finish.
+
+Each kernel controls its complete push-constant layout: ordinary transforms, flags,
+and optional material references use push constants, with no universal packet or
+mandatory material-address field. Vertex and index buffers remain ordinary geometry
+bindings. New raster/compute recorders capture the heap and common buffers at pass
+scope; kernel and material switches do not construct per-draw/per-dispatch resource
+tables or switch material-buffer bindings. App-defined kernels must have a typed
+extension path without exposing private descriptor assembly. Applications explicitly
+submit SSC-prepared producer work before its consumers.
+
+### Lifetime and leases
+
+Recording an update returns an opaque retained shared state plus access to its
+update payload; it does not change the existing FX2 SSC API. The state, its upload
+work, unsealed recordings, and all consuming payloads retain a lease on the ranges
+they reference. Recycle storage only after the final lease releases; upload
+completion alone is insufficient, because a consumer may still be recorded or in
+flight. Capture backing storage through growth, or fail explicitly at a documented
+capacity, without invalidating recorded work. Never overwrite or free a descriptor
+slot still referenced by recorded or in-flight work.
 
 Sky materials are ordinary gpu2 heap material chunks containing background,
 diffuse, specular, and BRDF lookup resources plus sampler references and lighting
@@ -277,13 +291,13 @@ semantics, odd edges, per-mip dependencies, and raster/compute visibility.
 
 ### Delivery and verification
 
-Build the new SSC shared-resource owner and heap integration first, then the
-versioned uniform store and the mapped CPU-to-GPU streaming pool, combined SSC
-versions, a minimal pass/unlit path, sky/lit kernels, image kernels, and an
-independent ImGui backend. Material storage comes from the gpu2 heap and needs no
-FX2 implementation step. Add an opt-in bindless sample;
-existing samples, tools, and E2/RDG2 paths continue to use their existing APIs.
-Verify each step before starting the next. Final checks cover GPU readback,
-descriptor/allocation lifetime, cancellation, validation-clean samples, and a
-reproducible 10,000-draw recording-cost comparison. Previous stash test results
-are historical evidence, not verification of the second attempt.
+Build the SSC framework skeleton first, then its versioned uniform store and its
+mapped CPU-to-GPU streaming pool, then the combined scene uniform and its typed
+packing. Material storage comes from the gpu2 heap and needs no FX2 implementation
+step. Later work — a minimal pass/unlit path, sky and lit kernels, image kernels,
+an independent ImGui backend, and an opt-in bindless sample — is tracked in the
+assignment plan. Existing samples, tools, and E2/RDG2 paths continue to use their
+existing APIs. Verify each step before starting the next. Final checks cover GPU
+readback, descriptor/allocation lifetime, cancellation, validation-clean samples,
+and a reproducible 10,000-draw recording-cost comparison. Previous stash test
+results are historical evidence, not verification of the second attempt.
