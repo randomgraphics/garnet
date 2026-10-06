@@ -6,6 +6,7 @@
 
 ## 1. Core Architectural Concepts
 
+
 ### The Single Currency: `GpuPayload`
 To the caller, all unsubmitted GPU work—regardless of whether it represents rasterization, compute, memory copy, bound rendering, or bindless rendering—is represented by an opaque `AutoRef<GpuPayload>`.
 - The caller records work into a recorder object and calls `seal()`.
