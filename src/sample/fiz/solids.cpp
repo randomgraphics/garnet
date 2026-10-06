@@ -9,7 +9,6 @@
 #include <garnet/GNfiz.h>
 #include "render-helpers.h"
 #include <garnet/GNwin.h>
-#include <garnet/GNutil.h>
 
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>

@@ -1,14 +1,12 @@
 #include "sample-sphere.h"
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
-#include <garnet/GNutil.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <cmath>
 
 using namespace GN;
 using namespace GN::fx2;
 using namespace GN::gpu2;
-using namespace GN::util;
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.fx2.cel");
 

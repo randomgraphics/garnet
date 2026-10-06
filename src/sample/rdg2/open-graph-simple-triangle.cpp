@@ -1,6 +1,5 @@
 #include <garnet/GNrdg2.h>
 #include <garnet/GNwin.h>
-#include <garnet/GNutil.h>
 
 #include "solid-triangle-vert.spv.h"
 #include "solid-triangle-frag.spv.h"
