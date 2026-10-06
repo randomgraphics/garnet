@@ -104,7 +104,7 @@ class WorldScene {
 public:
     e2::Universe                   universe;
     AutoRef<e2::World>             world;
-    e2::PhysicalScale              scale = e2::PhysicalScale::MILLIMETER();
+    e2::PhysicalScale              scale = e2::PhysicalScale::MICROMETER();
     AutoRef<UnlitKernel>           kernel;
     AutoRef<SharedShaderConstants> constants;
     RasterGeometry                 box;

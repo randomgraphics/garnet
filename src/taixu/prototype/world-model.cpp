@@ -15,17 +15,13 @@ struct BoxDefinition {
     float        rotationZ = 0;
 };
 
-e2::FacetBinding makeBinding(const e2::TransformFacet::Value & value) {
-    return {e2::Ref<const e2::Facet>(new e2::TransformFacet), value.clone()};
-}
+e2::FacetBinding makeBinding(const e2::TransformFacet::Value & value) { return {e2::Ref<const e2::Facet>(new e2::TransformFacet), value.clone()}; }
 
-e2::FacetBinding makeBinding(const e2::VisualFacet::Value & value) {
-    return {e2::Ref<const e2::Facet>(new e2::VisualFacet), value.clone()};
-}
+e2::FacetBinding makeBinding(const e2::VisualFacet::Value & value) { return {e2::Ref<const e2::Facet>(new e2::VisualFacet), value.clone()}; }
 
 bool valid(const BoxDefinition & box) {
-    return std::isfinite(box.position.x) && std::isfinite(box.position.y) && std::isfinite(box.position.z) && glm::all(glm::greaterThan(box.size, glm::vec3(0))) &&
-           std::isfinite(box.rotationZ);
+    return std::isfinite(box.position.x) && std::isfinite(box.position.y) && std::isfinite(box.position.z) &&
+           glm::all(glm::greaterThan(box.size, glm::vec3(0))) && std::isfinite(box.rotationZ);
 }
 
 e2::Ref<e2::Mold> makeBoxMold(e2::Universe & universe, e2::PhysicalScale scale, const BoxDefinition & box) {
@@ -41,7 +37,8 @@ e2::Ref<e2::Mold> makeBoxMold(e2::Universe & universe, e2::PhysicalScale scale, 
                             [name = StrA(box.name)](e2::FormId id) { return e2::Form::create(id, name); });
 }
 
-bool addBoxes(e2::Universe & universe, e2::World & world, e2::PhysicalScale scale, const BoxDefinition * boxes, size_t count, DynaArray<e2::FormId> * createdIds = nullptr) {
+bool addBoxes(e2::Universe & universe, e2::World & world, e2::PhysicalScale scale, const BoxDefinition * boxes, size_t count,
+              DynaArray<e2::FormId> * createdIds = nullptr) {
     DynaArray<e2::Ref<e2::Mold>> molds;
     for (size_t i = 0; i < count; ++i) {
         auto mold = makeBoxMold(universe, scale, boxes[i]);
@@ -60,18 +57,18 @@ bool addBoxes(e2::Universe & universe, e2::World & world, e2::PhysicalScale scal
 bool verifyBoxes(const e2::PrimeView & prime, e2::PhysicalScale scale, const BoxDefinition * boxes, size_t count, const DynaArray<e2::FormId> & ids) {
     if (ids.size() != count) return false;
     for (size_t i = 0; i < ids.size(); ++i) {
-        const auto form = prime.form(ids[i]);
+        const auto   form      = prime.form(ids[i]);
         const auto * transform = prime.get<e2::TransformFacet>(ids[i]);
-        const auto * visual = prime.get<e2::VisualFacet>(ids[i]);
+        const auto * visual    = prime.get<e2::VisualFacet>(ids[i]);
         if (!form || form->name != StrA(boxes[i].name) || !transform || !visual) {
             std::fprintf(stderr, "House Form check failed for expected=%s actual=%s found=%d transform=%d visual=%d\n", boxes[i].name,
                          form ? form->name.c_str() : "<missing>", !!form, !!transform, !!visual);
             return false;
         }
-        if (glm::length(e2::positionToMeters(transform->position, scale) - boxes[i].position) > 1e-3) {
+        if (glm::length(e2::positionToMeters(transform->position, scale) - boxes[i].position) > 2e-6) {
             const auto position = e2::positionToMeters(transform->position, scale);
-            std::fprintf(stderr, "House Transform check failed for %s: got=(%.8f,%.8f,%.8f) expected=(%.8f,%.8f,%.8f)\n", boxes[i].name, position.x,
-                         position.y, position.z, boxes[i].position.x, boxes[i].position.y, boxes[i].position.z);
+            std::fprintf(stderr, "House Transform check failed for %s: got=(%.8f,%.8f,%.8f) expected=(%.8f,%.8f,%.8f)\n", boxes[i].name, position.x, position.y,
+                         position.z, boxes[i].position.x, boxes[i].position.y, boxes[i].position.z);
             return false;
         }
         if (glm::length(visual->halfExtent - boxes[i].size * 0.5f) > 1e-5f || glm::length(visual->color - boxes[i].color) > 1e-5f) {

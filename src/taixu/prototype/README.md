@@ -8,7 +8,7 @@ standalone prototype host for the first Taixu milestone.
 Every visible scene object is an `e2::Form`. The scene creates one Form per named
 object and attaches E2's `TransformFacet` and `VisualFacet`; the committed `PrimeView`
 is the source of transforms, extents, and colors each frame. FX2 only turns that
-snapshot into GPU draws. Taixu stores positions at millimeter world scale to preserve
+snapshot into GPU draws. Taixu stores positions at micrometer world scale to preserve
 sub-meter geometry. The crosshair ground target remains a transient presentation
 marker rather than a world entity.
 
