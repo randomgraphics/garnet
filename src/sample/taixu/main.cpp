@@ -3,21 +3,28 @@
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
 #include <string>
 
 using namespace GN;
+using namespace GN::fx2;
 using namespace GN::gpu2;
 
 namespace {
 
+constexpr uint32_t kWidth  = 1280;
+constexpr uint32_t kHeight = 720;
+
 struct Host {
-    AutoRef<GpuContext> gpu;
+    AutoRef<GpuContext>          gpu;
     std::unique_ptr<win::Window> window;
-    intptr_t surface = 0;
-    AutoRef<Swapchain> swapchain;
+    intptr_t                     surface = 0;
+    AutoRef<Swapchain>           swapchain;
 
     ~Host() {
         if (gpu) gpu->waitForIdle();
@@ -26,26 +33,116 @@ struct Host {
     }
 };
 
-bool renderHeadless(const AutoRef<GpuContext> & gpu, const char * outputPath, uint32_t width, uint32_t height) {
-    auto color = Texture::create("taixu.headless-color",
-                                 {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8())
-                                                                       .setDimensions(width, height)
-                                                                       .setLevels(1)});
-    if (!color) return false;
+struct Landmark {
+    glm::vec3 position;
+    glm::vec3 scale;
+    glm::vec4 color;
+};
 
+class WorldScene {
+public:
+    AutoRef<UnlitKernel>           kernel;
+    AutoRef<SharedShaderConstants> constants;
+    RasterGeometry                 box;
+    AutoRef<GpuPayload>            initialUpload;
+
+    bool initialize(const AutoRef<GpuContext> & gpu) {
+        kernel       = UnlitKernel::create(gpu);
+        constants    = SharedShaderConstants::create({.gpu = gpu});
+        auto uploads = GpuCnC::create({.gpu = gpu});
+        if (!kernel || !constants || !uploads) return false;
+
+        LitKernelInputs::CubeCreateOptions boxOptions;
+        boxOptions.width  = 1.0f;
+        boxOptions.height = 1.0f;
+        boxOptions.depth  = 1.0f;
+        box               = LitKernelInputs::createBox(gpu, *uploads, boxOptions);
+        if (!box.indexCount) return false;
+
+        initialUpload = uploads->seal();
+        return !!initialUpload;
+    }
+
+    bool record(GpuRaster & raster, const RasterTarget & target) {
+        constexpr glm::vec3 eye(0.0f, 4.0f, 12.0f);
+        constexpr glm::vec3 focus(0.0f, 0.8f, 0.0f);
+        const auto          rasterSize           = target.calcRasterSizeInPixel();
+        constants->set0.camera.cameraPosition    = eye;
+        constants->set0.camera.cameraOrientation = glm::quat_cast(glm::mat3(glm::inverse(glm::lookAtRH(eye, focus, glm::vec3(0, 1, 0)))));
+        constants->set0.camera.aspectRatio       = static_cast<float>(rasterSize.x) / static_cast<float>(rasterSize.y);
+        constants->set0.camera.viewWidthInPixel  = rasterSize.x;
+        constants->set0.camera.viewHeightInPixel = rasterSize.y;
+        constants->set0.camera.nearPlane         = 0.1f;
+        constants->set0.camera.farPlane          = 100.0f;
+        constants->set0.camera.exposure          = 1.0f;
+
+        const auto snapshot = constants->takeSnapshot();
+        for (const auto & landmark : landmarks()) {
+            UnlitKernel::Inputs input;
+            input.geometry        = box;
+            input.color           = landmark.color;
+            input.worldFromObject = glm::translate(glm::mat4(1.0f), landmark.position) * glm::scale(glm::mat4(1.0f), landmark.scale);
+            if (!kernel->record(raster, snapshot.set0Resources, input)) return false;
+        }
+
+        mLatestSnapshot = snapshot;
+        return true;
+    }
+
+    const SharedShaderConstants::Snapshot & latestSnapshot() const { return mLatestSnapshot; }
+
+private:
+    static ArrayView<const Landmark> landmarks() {
+        static constexpr Landmark scene[] = {
+            {{0.0f, -0.15f, 0.0f}, {24.0f, 0.3f, 24.0f}, {0.25f, 0.42f, 0.28f, 1.0f}}, {{-3.5f, 0.8f, 0.0f}, {2.2f, 1.6f, 2.0f}, {0.72f, 0.34f, 0.18f, 1.0f}},
+            {{-3.5f, 1.9f, 0.0f}, {2.5f, 0.35f, 2.3f}, {0.86f, 0.63f, 0.28f, 1.0f}},   {{3.5f, 1.1f, -1.0f}, {1.2f, 2.2f, 1.2f}, {0.30f, 0.54f, 0.78f, 1.0f}},
+            {{6.0f, 0.6f, -4.0f}, {1.0f, 1.2f, 1.0f}, {0.78f, 0.32f, 0.25f, 1.0f}},    {{6.0f, 1.6f, -4.0f}, {1.8f, 0.35f, 1.8f}, {0.92f, 0.72f, 0.35f, 1.0f}},
+            {{-7.0f, 0.7f, -5.0f}, {0.55f, 1.4f, 0.55f}, {0.38f, 0.28f, 0.18f, 1.0f}}, {{-7.0f, 1.8f, -5.0f}, {2.2f, 1.2f, 2.2f}, {0.20f, 0.52f, 0.30f, 1.0f}},
+        };
+        return {scene, 8};
+    }
+
+    SharedShaderConstants::Snapshot mLatestSnapshot;
+};
+
+bool renderFrame(const AutoRef<GpuContext> & gpu, WorldScene & scene, const AutoRef<Texture> & color, const AutoRef<Texture> & depth,
+                 const GpuResourceView * swapchainView = nullptr, const AutoRef<GpuPayload> * ready = nullptr, AutoRef<GpuPayload> * renderedOut = nullptr) {
+    RasterTarget    target;
     GpuResourceView colorView;
-    colorView.resource = color;
-    RasterTarget target;
-    target.setColorTarget(0, colorView).setClearColor(0.35f, 0.58f, 0.78f, 1.0f);
+    if (swapchainView) {
+        colorView = *swapchainView;
+    } else {
+        colorView.resource = color;
+    }
+    GpuResourceView depthView;
+    depthView.resource = depth;
+    target.setColorTarget(0, colorView).setDepthStencilTarget(depthView).setClearColor(0.36f, 0.61f, 0.82f, 1.0f).setClearDepth(1.0f);
+    target.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
 
-    auto raster = GpuRaster::create("taixu.headless-frame", {.gpu = gpu, .target = &target});
-    if (!raster) return false;
+    auto raster = GpuRaster::create("taixu.world-frame", {.gpu = gpu, .target = &target});
+    if (!raster || !scene.record(*raster, target)) return false;
     auto frame = raster->seal();
     if (!frame) return false;
 
-    GpuContext::SubmitParameters submission("taixu.headless");
+    GpuContext::SubmitParameters submission("taixu.world-frame");
+    if (scene.initialUpload) submission.appendWork(scene.initialUpload);
+    for (const auto & payload : scene.latestSnapshot().set0Payloads) submission.appendWork(payload);
     submission.appendWork(frame);
+    if (ready) submission.waitFor(*ready);
     gpu->submit(submission);
+    scene.initialUpload.clear();
+    if (renderedOut) *renderedOut = frame;
+    return true;
+}
+
+AutoRef<Texture> createTexture(const AutoRef<GpuContext> & gpu, const char * name, gfx::img::PixelFormat format) {
+    return Texture::create(name, {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(format).setDimensions(kWidth, kHeight).setLevels(1)});
+}
+
+bool renderHeadless(const AutoRef<GpuContext> & gpu, WorldScene & scene, const char * outputPath) {
+    auto color = createTexture(gpu, "taixu.headless-color", gfx::img::PixelFormat::RGBA8());
+    auto depth = createTexture(gpu, "taixu.headless-depth", gfx::img::PixelFormat::D_32_FLOAT());
+    if (!color || !depth || !renderFrame(gpu, scene, color, depth)) return false;
 
     // Texture readback waits for GPU completion; this path is intentionally for verification.
     const auto image = color->readback();
@@ -58,10 +155,7 @@ bool renderHeadless(const AutoRef<GpuContext> & gpu, const char * outputPath, ui
 } // namespace
 
 int main(int argc, const char ** argv) {
-    constexpr uint32_t width = 1280;
-    constexpr uint32_t height = 720;
-
-    bool headless = false;
+    bool         headless   = false;
     const char * outputPath = "taixu-headless.png";
     if (argc > 1 && std::string(argv[1]) == "--headless") {
         headless = true;
@@ -84,35 +178,31 @@ int main(int argc, const char ** argv) {
     host.gpu = GpuContext::create("taixu-prototype", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!host.gpu) return 1;
 
-    if (headless) return renderHeadless(host.gpu, outputPath, width, height) ? 0 : 1;
+    WorldScene scene;
+    if (!scene.initialize(host.gpu)) return 1;
 
-    host.window.reset(win::createWindow({.caption = "Taixu", .clientWidth = width, .clientHeight = height}));
+    if (headless) return renderHeadless(host.gpu, scene, outputPath) ? 0 : 1;
+
+    host.window.reset(win::createWindow({.caption = "Taixu", .clientWidth = kWidth, .clientHeight = kHeight}));
     if (!host.window) return 1;
     host.window->show();
 
     host.surface = host.window->createVulkanSurfaceHandle(host.gpu->getVulkanInstanceHandle());
     if (!host.surface) return 1;
 
-    Swapchain::CreateDesc swapchainDesc {.gpu = host.gpu, .width = width, .height = height};
+    Swapchain::CreateDesc swapchainDesc {.gpu = host.gpu, .width = kWidth, .height = kHeight};
     swapchainDesc.setSurface(host.surface);
     host.swapchain = Swapchain::create(swapchainDesc);
     if (!host.swapchain) return 1;
 
+    auto depth = createTexture(host.gpu, "taixu.window-depth", gfx::img::PixelFormat::D_32_FLOAT());
+    if (!depth) return 1;
     while (host.window->runUntilNoNewEvents()) {
         auto acquired = host.swapchain->prepare();
         if (acquired.view.empty()) return 1;
-
-        RasterTarget target;
-        target.setColorTarget(0, acquired.view).setClearColor(0.35f, 0.58f, 0.78f, 1.0f);
-        auto raster = GpuRaster::create("taixu.clear-frame", {.gpu = host.gpu, .target = &target});
-        if (!raster) return 1;
-        auto frame = raster->seal();
-        if (!frame) return 1;
-
-        GpuContext::SubmitParameters submission("taixu.frame");
-        submission.appendWork(frame).waitFor(acquired.ready);
-        host.gpu->submit(submission);
-        host.swapchain->present(*frame);
+        AutoRef<GpuPayload> rendered;
+        if (!renderFrame(host.gpu, scene, {}, depth, &acquired.view, &acquired.ready, &rendered)) return 1;
+        host.swapchain->present(*rendered);
     }
 
     return 0;
