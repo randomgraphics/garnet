@@ -51,8 +51,9 @@ struct AssetsImpl : Assets {
         if (!uploads) return false;
         fx2::LitKernelInputs::CubeCreateOptions options;
         options.width = options.height = options.depth = 2.f;
-        options.uv = options.tangent = false;
-        auto geometry                = fx2::LitKernelInputs::createBox(mGpu, *uploads, options);
+        options.uv                                     = true;
+        options.tangent                                = false;
+        auto geometry                                  = fx2::LitKernelInputs::createBox(mGpu, *uploads, options);
         if (geometry.vertices.empty()) return false;
         auto payload = uploads->seal();
         if (!payload) return false;
