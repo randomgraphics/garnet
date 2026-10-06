@@ -40,8 +40,8 @@ Archived code moves into `src/retired/gfx1/`:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1 — Retire Gen1 Engine, Application, and Camera Utilities
-In progress: Phase 2 — Retire Old GFX and GPU Modules & Headers
+Last completed: Phase 2 — Retire Old GFX and GPU Modules & Headers
+In progress: Phase 3 — Retire Gen1 Samples and Tests
 --- END PROGRESS ---
 
 ---
