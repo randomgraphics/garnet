@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "garnet/gfx/image.h"
 
 #ifdef _MSC_VER
     #define __STDC_LIB_EXT1__ // this is to tell stb image header to use secure version of the C library.

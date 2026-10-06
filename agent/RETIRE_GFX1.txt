@@ -1,0 +1,78 @@
+# Assignment: Retire GFX1 Generation Classes and Modules
+
+---
+
+## Goals
+
+Retire obsolete Gen1 graphics and engine modules from active compilation and archive
+them under `src/retired/gfx1/` for reference:
+- Old GPU module (`src/core/gpu/`) and old GFX module (`src/core/gfx/`).
+- Old monolithic headers (`GNgfx.h`, `GNogl.h`, `GNd3d.h`, `GNengine.h`) and sub-headers
+  under `src/inc/garnet/gfx/` (preserving `gfx/image.h` for Gen2), `d3d/`, and `engine/`.
+- Gen1 engine module (`src/core/engine/`).
+- Old application runner and camera utilities tied to Gen1 GPU (`sampleApp.cpp`, `sampleApp.h`,
+  `sampleWorld.h`, `arcball.cpp`, `fpcamera.cpp`, `camera.h`).
+- Gen1 CEGUI integration (`src/core/cegui/`).
+- Gen1 samples (`bezier`, `dolphin`, `ripple`, `thickline`, `optix`, `portal`, `shadowmap`).
+- Gen1 tests (`engine`, `font`, `gpu`, `resdb`, `rt`, `sprite`, `d3d9`, `d3d11`, `cegui`, `ut/gfx`).
+
+Gen2 subsystems (`gpu2`, `rdg2`, `fx2`, `e2`, `fiz`) must compile and pass tests cleanly.
+
+---
+
+## Design
+
+### Reference Archive Directory Structure
+
+Archived code moves into `src/retired/gfx1/`:
+- `src/retired/gfx1/src/core/` (gpu, gfx, engine, app, cegui)
+- `src/retired/gfx1/src/inc/garnet/` (headers, gfx, d3d, engine)
+- `src/retired/gfx1/src/sample/` (bezier, dolphin, ripple, thickline, optix, etc.)
+- `src/retired/gfx1/src/test/` (engine, font, gpu, resdb, rt, sprite, d3d9, d3d11, cegui, ut/gfx)
+
+### Gen2 Continuity
+
+- `rapid-image` and `stb_image` implementation in `src/core/gfx/base/image.cpp` is relocated to
+  `src/core/base/image.cpp` so that `GN::gfx::img::Image` continues to be built into `GNcore`.
+- `src/inc/garnet/gfx/image.h` is preserved at its current path since `GNgpu2.h`, `e2`, and `fx2`
+  include it for pixel format and image definitions.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 0 — Setup and image implementation relocation
+In progress: Phase 1 — Retire Gen1 Engine, Application, and Camera Utilities
+--- END PROGRESS ---
+
+---
+
+Phase 0: Setup and Image Implementation Relocation
+  Task 0.1: Relocate `image.cpp` from `src/core/gfx/base/` to `src/core/base/`
+    Verify: `src/core/base/image.cpp` exists and compiles `STB_IMAGE` / `RAPID_IMAGE`
+    Commit: "refactor(base): relocate image implementation from gfx/base to base (Phase 0.1)"
+
+Phase 1: Retire Gen1 Engine, Application, and Camera Utilities
+  Task 1.1: Move `src/core/engine`, `src/inc/garnet/engine`, `src/inc/garnet/GNengine.h`, `sampleApp`, and engine-dependent camera utilities to `src/retired/gfx1/`
+    Verify: Files moved under `src/retired/gfx1/`, `GNutil.h` updated
+    Commit: "refactor(core): retire gen1 engine and sampleApp to src/retired/gfx1 (Phase 1.1)"
+
+Phase 2: Retire Old GFX and GPU Modules & Headers
+  Task 2.1: Move `src/core/gpu`, `src/core/gfx`, `GNgfx.h`, `GNogl.h`, `GNd3d.h`, `src/inc/garnet/d3d/`, and `src/inc/garnet/gfx/` (except `image.h`) to `src/retired/gfx1/`
+    Verify: Files moved to `src/retired/gfx1/`, `image.h` preserved in `src/inc/garnet/gfx/`
+    Commit: "refactor(core): retire old gpu and gfx modules to src/retired/gfx1 (Phase 2.1)"
+  Task 2.2: Move `src/core/cegui` to `src/retired/gfx1/` and update `src/core/CMakeLists.txt`
+    Verify: `src/core/CMakeLists.txt` contains only active modules; configure succeeds
+    Commit: "build(core): remove retired gfx and gpu folders from build (Phase 2.2)"
+
+Phase 3: Retire Gen1 Samples and Tests
+  Task 3.1: Move Gen1 samples to `src/retired/gfx1/sample/` and update `src/sample/CMakeLists.txt`
+    Verify: Gen2 samples remain, sample CMakeLists.txt updated
+    Commit: "refactor(sample): retire gen1 samples to src/retired/gfx1 (Phase 3.1)"
+  Task 3.2: Move Gen1 tests to `src/retired/gfx1/test/` and update `src/test/CMakeLists.txt`
+    Verify: Test suite contains only active tests, `GNtest-unit-tests` ut list updated
+    Commit: "refactor(test): retire gen1 tests to src/retired/gfx1 (Phase 3.2)"
+
+Phase 4: Build & CIT Verification
+  Task 4.1: Build and run test suite on `wip/retire-gfx1` worktree
+    Verify: `env/bin/cit.py -t` passes
+    Commit: "chore: verify build and tests after retiring gfx1 (Phase 4.1)"
