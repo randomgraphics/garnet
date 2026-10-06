@@ -32,13 +32,18 @@ int main(int argc, const char * argv[]) {
     host.gpu = GpuContext::create("cel-shading-sample", {});
     if (!host.gpu) return 1;
 
-    constexpr uint32_t width = 1280, height = 720;
+    uint32_t width = 1280, height = 720;
     if (!headless) {
         host.window.reset(win::createWindow({.caption = "FX2 bindless Cel / Anime NPR shading", .clientWidth = width, .clientHeight = height}));
         if (!host.window) return 1;
         host.window->show();
         host.surface = host.window->createVulkanSurfaceHandle(host.gpu->getVulkanInstanceHandle());
         if (!host.surface) return 1;
+        const auto size = host.window->getClientSize();
+        if (size.x != 0 && size.y != 0) {
+            width  = size.x;
+            height = size.y;
+        }
     }
 
     Swapchain::CreateDesc scDesc {.gpu = host.gpu, .width = width, .height = height};
