@@ -59,9 +59,10 @@ Shaders:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 1.1 - Create bindless cel shading and outline GLSL shaders and register in CMakeLists.txt
-In progress: Phase 2: FX2 C++ Public API and Core Implementation
+Last completed: Task 2.1 - Declare CelMaterial and CelKernel in garnet/fx2/bindless/cel.h and GNfx2.h
+In progress: Task 2.2: Implement CelKernel and CelMaterial in src/core/fx2/bindless-cel-kernel.cpp
 Phase 1: Shaders and C++ Material Data Layout
+Phase 2.1: FX2 C++ Public API Declaration
 --- END PROGRESS ---
 
 --- REFERENCE ---

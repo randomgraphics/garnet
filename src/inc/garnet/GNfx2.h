@@ -13,6 +13,7 @@ namespace GN::fx2 {};
 #include "fx2/bindless/lambertian.h"
 #include "fx2/bindless/sky.h"
 #include "fx2/bindless/pbr.h"
+#include "fx2/bindless/cel.h"
 #include "fx2/shared-shader-constants.h"
 #include "fx2/imgui-backend.h"
 #undef __GN_INSIDE_FX2_H__
