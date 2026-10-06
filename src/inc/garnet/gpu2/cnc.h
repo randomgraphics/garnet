@@ -15,6 +15,9 @@ namespace GN::gpu2 {
 /// is allowed afterward. This class is not thread-safe. All calls on one instance
 /// must be single-threaded or externally serialized; use separate instances for parallel recording.
 /// Transfer payloads restore touched textures to shader-readable state and buffers to read-ready state before GPU completion.
+///
+/// Note: For high-throughput compute dispatches and best performance, GN::gpu2::bindless::CnC
+/// is recommended to avoid per-dispatch descriptor set compilation and table scanning.
 struct GpuCnC : public RCRT64 {
 public:
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);

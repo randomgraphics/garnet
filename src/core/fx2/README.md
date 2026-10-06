@@ -5,71 +5,24 @@ rendering effects over gpu2. It has no E2 or RDG2 dependency and no geometry,
 surface, or asset ownership layer. Callers import/generate data, create buffers
 and textures, prepare uploads, and control submission/presentation.
 
-## Kernel contract
+## Bindless Kernels Architecture
 
-`Kernel` provides effect identity and an explicit raster/compute execution class.
-Each derived effect defines strongly typed inputs and recording operations.
-There is no string-based parameter map or central effect registry; applications
-can derive their own kernels without changing FX2 or E2.
+FX2 rendering kernels are built exclusively on `GN::gpu2::bindless`. Effects are declared
+in `garnet/fx2/bindless/` and operate against a persistent `DescriptorHeap` and `bindless::Raster` / `bindless::CnC`.
 
-| Kernel | Recording operation |
-| --- | --- |
-| `UnlitKernel` | Appends a triangle draw to the caller's raster |
-| `PbrKernel` | Appends a metallic/roughness lighting draw |
-| `LambertianKernel` | Appends a diffuse lighting draw |
-| `CelKernel` | Appends cel shading and an optional outline draw |
-| `SkyboxKernel` | Appends the background draw using SSC environment bindings |
-| `RasterGaussianBlurKernel` / `ComputeGaussianBlurKernel` | Produce horizontal and vertical filtering work |
-| `RasterMipmapKernel` / `ComputeMipmapKernel` | Produce ordered work for successive preallocated mip levels |
+| Kernel | Header | Recording operation |
+| --- | --- | --- |
+| `fx2::bindless::UnlitKernel` | `fx2/bindless/unlit.h` | Draws unlit geometry using bindless material records |
+| `fx2::bindless::LambertianKernel` | `fx2/bindless/lambertian.h` | Diffuse lighting with up to 16 direct lights |
+| `fx2::bindless::PbrKernel` | `fx2/bindless/pbr.h` | Metallic/roughness PBR with direct lights and tone mapping |
+| `fx2::bindless::SkyKernel` | `fx2/bindless/sky.h` | Procedural sky and background rendering |
 
-Raster and compute implementations are different kernel types. Higher-level
-code selects one based on capabilities and policy; FX2 does not silently fall
-back to another implementation. See `image-kernels.h` for current image-format,
-radius, extent, and level restrictions.
+Callers create a kernel with a persistent `DescriptorHeap`, create immutable materials with
+caller parameters, and append draws directly to `bindless::Raster` passes.
+Draws carry zero per-draw descriptor allocation or tracking overhead.
 
-```cpp
-auto effect = fx2::UnlitKernel::create(gpu);
-fx2::UnlitKernel::Inputs input;
-input.geometry = vertexAndIndexBindings; // gpu2::RasterGeometry, not an FX2 owner
-input.color = {0.8f, 0.2f, 0.1f, 1};
-input.worldFromObject = transform;
-if (!effect || !effect->record(raster, shared.set0Resources, input)) return false;
-```
-
-Position uses vertex location 0, normal 1, UV 2, tangent 3, and color 4.
-Only enabled features require their corresponding optional attributes. Lit
-kernels require position and normal; normal mapping additionally needs UV and
-tangent with handedness. Kernel validation rejects unsupported input layouts.
-GPU resources must belong to the kernel's creation device.
-
-Ordinary raster effects inherit the caller's depth, culling, blending, viewport,
-and scissor policy. Documented algorithm-required exceptions are local to draws
-or passes: skybox uses far-background depth/culling, cel outlines reverse culling,
-and image-generation passes require full output coverage and replacement writes.
-Transparent draw sorting and raster target blending remain caller responsibilities.
-Unlit bypasses lighting/exposure; lit effects preserve the shared lighting,
-exposure, and tone-mapping conventions. Moving tone mapping out is separate work.
-
-## Uploads and lifetime
-
-Reuse one kernel across many invocations and append ordinary triangle draws to
-one raster. Recording copies immediate CPU values and retains referenced GPU
-resources. It does not decode files, compile shaders, submit, or wait for the GPU.
-Retaining a resource keeps its allocation alive; callers still order writes to
-its contents against consumers.
-
-Lit kernel creation records fallback-texture initialization into the supplied
-`GpuCnC`; submit that work before any kernel use. Lit recording writes private
-constants into distinct per-invocation buffers through `prerequisiteUploads`.
-Seal and schedule those uploads before the raster payload. Do not discard
-initialization work and then use the kernel. Pooling private parameter allocations
-is a possible optimization; there is no reusable material/asset object to manage.
-
-Image kernels append ordered payloads to a work array. Keep that ordering and
-schedule input producers before it, output consumers afterward. Intermediates
-are retained by the work. FX2 records the effect's passes while gpu2 handles
-backend resource barriers. Image work consuming raster output belongs after
-that raster, never in a blanket upload batch before all draws.
+Position uses vertex location 0, normal location 1, and UV location 2.
+Readers follow gpu2's read-ready invariant and add no per-draw resource tracking.
 
 ## Shared shader constants
 
@@ -91,23 +44,7 @@ Set 0 is shared across effects: binding 0 scene/frame/lights, binding 1 camera,
 and bindings 2–5 skybox/irradiance/prefiltered environment/BRDF lookup. Set 1 holds
 kernel-private data. CPU parameters are packed into the shader ABI internally;
 callers should not include private packing headers. SSC owns shared data and
-environment preparation; `SkyboxKernel` owns background rendering.
-
-## Web and mobile compatibility
-
-The interfaces keep execution strategy explicit and use portable baseline
-algorithms: two-direction Gaussian blur and successive mip reductions. A raster
-path can target GLES 3.0/WebGL 2-class devices; compute requires appropriate native
-or WebGPU support. That direction is not a claim that those gpu2 backends exist.
-Current implementations and shader binaries use Vulkan; other backends, WGSL/GLSL
-ES shader lowering, uniform lowering for native push constants, and device testing
-remain platform work. Check actual formats/usages and limits, not OS names alone.
-
-Generated image effects filter color channels including alpha independently;
-premultiply colors before filtering when transparent-edge semantics require it.
-Normal-map reduction and depth pyramids need distinct algorithms. Callers allocate
-mip storage up front; mip generation does not resize textures. Image algorithm
-verification is tracked in `agent/completed/2026-10-03-214942-FX2_KERNEL_REFACTOR.txt`.
+environment preparation; `SkyKernel` owns background rendering.
 
 ## ImGui backend
 

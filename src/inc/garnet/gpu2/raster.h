@@ -485,6 +485,9 @@ struct RasterGeometry {
 /// no further recording or sealing is allowed afterward.
 /// This class is not thread-safe. All calls on one instance must be single-threaded
 /// or externally serialized; use separate instances for parallel recording.
+///
+/// Note: For high-draw-call workloads and best performance, GN::gpu2::bindless::Raster
+/// is recommended to avoid per-draw descriptor compilation and resource table scanning.
 class GpuRaster : public RCRT64 {
 public:
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);

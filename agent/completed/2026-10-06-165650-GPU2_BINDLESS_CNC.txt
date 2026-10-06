@@ -57,7 +57,7 @@ heap allocations.
 ---
 
 Last completed: Phase 5 — Cleanup of Instanced Draw Scaffolding
-In progress: Awaiting user sign-off
+Status: Signed off by user (2026-10-06)
 --- END PROGRESS ---
 
 --- REFERENCE ---

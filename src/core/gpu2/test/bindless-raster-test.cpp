@@ -123,11 +123,11 @@ TEST_CASE("bindless::Raster: creation validation and conflict checks", "[gpu2][b
         conflictTable[0].resize(1);
         conflictTable[0][0].append(GpuResourceView(targetTex));
 
-        // heapSetIndex = 0 collides with conflictTable[0]
+        // heapSetIndex = 0 collides with conflictTable[0]: creation fails
         auto r = bindless::Raster::create("conflict", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0, .passResources = conflictTable});
         CHECK_FALSE(r);
 
-        // heapSetIndex = 1 does NOT collide with conflictTable[0]
+        // heapSetIndex = 1 does NOT collide with conflictTable[0]: creation succeeds
         auto rCompat = bindless::Raster::create("compat", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 1, .passResources = conflictTable});
         CHECK(rCompat);
     }

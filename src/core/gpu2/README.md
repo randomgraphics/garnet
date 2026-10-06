@@ -167,13 +167,13 @@ struct Raster::CreateParameters {
     const RasterTarget *    target           = nullptr;
     AutoRef<DescriptorHeap> heap;
     uint32_t                heapSetIndex     = 0;   ///< Set index for the bindless heap (e.g. Set 0, Set 1)
-    GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 0 Camera UBO)
+    GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 1 Camera UBO)
     uint32_t                pushConstantSize = 128; ///< Max push constant bytes (default 128)
 };
 ```
 
-#### Fast Conflict Check
-`Raster::create()` validates that `passResources` does not define bindings for the set index reserved for `heapSetIndex`. If both claim the same set index, it fails fast with a descriptive error.
+#### Descriptor Heap Set Takeover and Fast Conflict Check
+The descriptor heap and related data take over the entire set reserved for `heapSetIndex`. `Raster::create()` validates that `passResources` does not define bindings in the same set as where the descriptor heap is located; if pass resources conflict with the heap set, creation will fail.
 
 #### Internal Pipeline Layout Caching
 `gpu2` hashes the POD configuration `(heapSetIndex, passResources layout, pushConstantSize)` and reuses or builds the `VkPipelineLayout` internally. The caller has zero pipeline layout boilerplate.
@@ -196,6 +196,14 @@ Bypasses `rv::Drawable` and descriptor pools entirely:
 - At pass start: Binds pass resources and the bindless descriptor set.
 - Per draw: Emits direct `vkCmdPushConstants`, `vkCmdBindVertexBuffers`, `vkCmdBindIndexBuffer`, and `vkCmdDrawIndexed` with consecutive state deduplication.
 - At pass end: `ctx.batchTracker->restoreAttachmentToShaderReadOnly()` transitions attachments to `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` with write-to-read barrier execution and synchronization with CPU tracker state.
+
+#### Future TODO: Interleaved Bind-Based Draws in `bindless::Raster`
+Currently, issuing bind-based draws requires closing the `bindless::Raster` pass and beginning a separate `GpuRaster` pass against the same render target (typically with `loadColor = true`). This incurs pass split overhead (`vkCmdEndRendering` / `vkCmdBeginRendering` transitions).
+- **Goal**: Allow `bindless::Raster` to optionally accept bind-based draws within the same render pass.
+- **Draw-Level Resource Table**: Support an optional `const GpuResourceTable *` or dedicated draw overload in `bindless::Raster`.
+- **Fast-Path Preservation**: Pure bindless draws must continue to incur zero descriptor compilation and zero hazard scanning.
+- **Dynamic Descriptor Sets**: When a draw supplies bound resources, descriptor sets for non-heap sets can be allocated from a pass-level or frame-level pool and bound on-demand, without invalidating the persistent bindless heap set.
+- **Hazard & Lifetime Tracking**: Retain bound resources for the duration of the pass, keeping CPU overhead isolated only to draws opting into traditional binding.
 
 ---
 

@@ -8,8 +8,7 @@ plus the completed gpu2 material mini heap/sample prerequisites. SSC uses
 a GPU context directly and has no descriptor-heap dependency.
 Downstream FX2 kernels, sky schemas, image effects, ImGui, FX2 samples and
 performance acceptance remain appendix references, not active work.
-Status: second attempt; gpu2 fixed-capacity material mini heap verified; FX2 SSC public interface and dummy shell implemented; actual stores not started. The gpu2 foundation is committed; the first-attempt FX2
-implementation is stashed and is reference only.
+Status: Signed off by user (2026-10-06).
 Approach: build the SSC skeleton first as an empty shell, then implement the two
 FX2 stores as independent units against fixed private interfaces.
 Completed foundation: standalone gpu2 samplers and typed bindless descriptor heap.

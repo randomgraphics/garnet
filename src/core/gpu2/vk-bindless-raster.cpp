@@ -84,9 +84,10 @@ AutoRef<bindless::Raster> createVkBindlessRaster(const StrA & name, const bindle
             return {};
         }
 
-    // Fast conflict check: passResources must not collide with heapSetIndex
+    // The descriptor heap and related data will take over the entire specified set (heapSetIndex).
+    // Fast conflict check: if pass resources conflict with the heap (stay in the same set as where the descriptor heap is), creation will fail.
     if (cp.heap && cp.heapSetIndex < cp.passResources.size() && !cp.passResources[cp.heapSetIndex].empty()) GN_UNLIKELY {
-            GN_ERROR(sLogger, "createVkBindlessRaster: passResources conflicts with heapSetIndex {}", cp.heapSetIndex);
+            GN_ERROR(sLogger, "createVkBindlessRaster: passResources conflicts with descriptor heap set {}", cp.heapSetIndex);
             return {};
         }
 

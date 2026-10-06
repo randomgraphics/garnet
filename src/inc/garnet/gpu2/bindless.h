@@ -132,6 +132,13 @@ protected:
 /// All draws execute against a unified, cached pipeline layout with the bindless descriptor set
 /// bound once at the start of the pass.
 ///
+/// The descriptor heap and related data will take over the entire specified set (CreateParameters::heapSetIndex).
+/// If pass resources conflict with the heap (stay in the same set as where the descriptor heap is), creation will fail.
+///
+/// TODO: Support occasional bind-based draws within bindless::Raster without requiring a separate
+/// render pass. Currently, mixing bindless draws with bound draws requires splitting passes (e.g.
+/// ending the bindless pass and opening a GpuRaster with loadColor = true).
+///
 /// This class is not thread-safe. All calls on one instance must be single-threaded or externally
 /// serialized; use separate instances for parallel recording.
 class Raster : public RCRT64 {
@@ -142,18 +149,18 @@ public:
     /// gpu2 automatically manages, hashes, and caches the native pipeline layout.
     struct CreateParameters {
         AutoRef<GpuContext>     gpu;
-        const RasterTarget *    target = nullptr;       ///< Borrowed for creation only; Raster stores its own copy.
-        AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap.
-        uint32_t                heapSetIndex = 0;       ///< Descriptor set index for the bindless heap (default 0).
-        GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 0 Camera UBO).
-        uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
+        const RasterTarget *    target = nullptr; ///< Borrowed for creation only; Raster stores its own copy.
+        AutoRef<DescriptorHeap> heap;             ///< Persistent global descriptor heap.
+        uint32_t                heapSetIndex = 0; ///< Descriptor set index for the bindless heap (default 0). Takes over this entire set.
+        GpuResourceTable passResources; ///< Optional pass-wide resources (e.g. Set 1 Camera UBO). If resources conflict with heapSetIndex, creation will fail.
+        uint32_t         maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
         /// Preallocates draw storage, geometry backing for eight buffers with eight attributes each per draw,
         /// and numberOfDrawsHint * maxImmediateSize immediate bytes. Recording may exceed this hint.
         size_t numberOfDrawsHint = 100;
     };
 
     /// Create a new bindless raster recorder. Performs a fast conflict check between
-    /// passResources and heapSetIndex, returning an empty ref if a collision is detected.
+    /// passResources and heapSetIndex; if pass resources conflict with the descriptor heap, creation will fail.
     GN_API static AutoRef<Raster> create(const StrA & name, const CreateParameters & cp);
 
     struct DrawParameters {
