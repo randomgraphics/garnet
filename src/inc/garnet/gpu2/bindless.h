@@ -149,11 +149,12 @@ public:
     /// gpu2 automatically manages, hashes, and caches the native pipeline layout.
     struct CreateParameters {
         AutoRef<GpuContext>     gpu;
-        const RasterTarget *    target = nullptr; ///< Borrowed for creation only; Raster stores its own copy.
-        AutoRef<DescriptorHeap> heap;             ///< Persistent global descriptor heap.
-        uint32_t                heapSetIndex = 0; ///< Descriptor set index for the bindless heap (default 0). Takes over this entire set.
-        GpuResourceTable passResources; ///< Optional pass-wide resources (e.g. Set 1 Camera UBO). If resources conflict with heapSetIndex, creation will fail.
-        uint32_t         maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
+        const RasterTarget *    target = nullptr;   ///< Borrowed for creation only; Raster stores its own copy.
+        AutoRef<DescriptorHeap> heap;               ///< Persistent global descriptor heap.
+        uint32_t                heapSetIndex  = 0;  ///< Descriptor set index for the bindless heap (default 0). Takes over this entire set.
+        GpuResourceTable        passResources = {}; ///< Optional pass-wide resources (e.g. Set 1 Camera UBO).
+                                                    ///< If resources conflict with heapSetIndex, creation will fail.
+        uint32_t maxImmediateSize = 128;            ///< Maximum immediate data size in bytes (default 128).
         /// Preallocates draw storage, geometry backing for eight buffers with eight attributes each per draw,
         /// and numberOfDrawsHint * maxImmediateSize immediate bytes. Recording may exceed this hint.
         size_t numberOfDrawsHint = 100;
@@ -222,8 +223,8 @@ public:
     struct CreateParameters {
         AutoRef<GpuContext>     gpu;
         AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap.
-        uint32_t                heapSetIndex = 0;       ///< Descriptor set index for the bindless heap (default 0).
-        GpuResourceTable        passResources;          ///< Optional pass-wide resources (e.g. Set 1 storage buffers/UBOs).
+        uint32_t                heapSetIndex     = 0;   ///< Descriptor set index for the bindless heap (default 0).
+        GpuResourceTable        passResources    = {};  ///< Optional pass-wide resources (e.g. Set 1 storage buffers/UBOs).
         uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
         size_t                  opCountHint      = 0;   ///< Expected operation count for preallocation; recording may exceed this hint.
     };

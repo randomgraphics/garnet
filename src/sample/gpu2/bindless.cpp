@@ -602,7 +602,7 @@ int main(int argc, const char ** argv) {
     rt.setDepthStencilTarget(depthView);
     rt.setClearColor(0.04f, 0.04f, 0.07f, 1.0f); // deep space background
     rt.setClearDepth(1.0f);
-    rt.states.setDepthState({RasterState::Compare::LESS, true});
+    rt.states.setDepthState(RasterState::DepthState {RasterState::Compare::LESS, true});
     rt.states.setCullMode(RasterState::CULL_BACK);
     rt.states.setFrontFace(RasterState::FRONT_CCW);
 

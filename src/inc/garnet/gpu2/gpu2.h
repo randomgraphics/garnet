@@ -249,8 +249,8 @@ struct Sampler : public RCRT64 {
         float   minLod = 0, maxLod = 1000;
     };
     struct CreateParameters {
-        AutoRef<GpuContext> context;
-        Descriptor          descriptor;
+        AutoRef<GpuContext> context    = {};
+        Descriptor          descriptor = {};
     };
     /// Create a device-owned sampler. Returns empty on invalid input or unsupported backends.
     GN_API static AutoRef<Sampler> create(const StrA & name, const CreateParameters &);

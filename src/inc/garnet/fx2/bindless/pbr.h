@@ -34,7 +34,7 @@ struct PbrMaterial : RCRT64 {
     /// Per-draw geometry, state, and transform for PBR.
     struct DrawParameters : CommonDrawParameters {
         glm::mat4            object2WorldTransform = glm::mat4(1);
-        AutoRef<SkyMaterial> skyMaterial;
+        AutoRef<SkyMaterial> skyMaterial           = {};
     };
 
     /// Append this material's draw. Position, normal, and UV attributes are required.

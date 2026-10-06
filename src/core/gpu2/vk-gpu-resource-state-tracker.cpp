@@ -23,11 +23,6 @@ namespace GN::gpu2 {
 
 namespace {
 
-/// Pack a (mip, face, aspectBit) tuple into a single key for the \c registered map.
-inline uint64_t packPlaneKey(uint32_t mip, uint32_t face, vk::ImageAspectFlagBits aspect) {
-    return (uint64_t(mip) << 48) | (uint64_t(face) << 16) | uint64_t(uint32_t(aspect));
-}
-
 inline vk::ImageAspectFlags aspectFromView(const GpuResourceView::ImageView & view, const Texture::Descriptor & d) {
     const auto viewFormat = (view.format == gfx::img::PixelFormat::UNKNOWN()) ? d.format : view.format;
     return aspectFromViewFormat(viewFormat, d.format);
