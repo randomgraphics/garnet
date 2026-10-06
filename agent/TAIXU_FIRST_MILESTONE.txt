@@ -34,10 +34,11 @@
 
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.2 — 基础世界场景已通过 headless PNG 验证
+Last completed: Phase 1.5 — 记录运行方式和 headless 图像验证流程
   Phase 0: 记录太虚首个里程碑和三个验收检查点
   Phase 1.2: 使用 FX2 typed unlit kernel 绘制地面、木屋、塔状和树形地标；1280×720 PNG 可读回，深度遮挡可见
-In progress: Phase 1.4 — headless 已打印地面交点并渲染标记；Phase 1.1/1.3/1.4 的窗口人工验收仍待可用图形会话
+  Phase 1.5: 添加构建、headless PNG 和窗口控制说明，按文档命令生成 1280×720 PNG
+In progress: Phase 1.4 — headless 已打印地面交点并渲染标记；需验证窗口鼠标视角与坐标面板
 --- END PROGRESS ---
 --- REFERENCE ---
 
@@ -76,9 +77,9 @@ Phase 1: C1——可运行的世界外壳
     Verify: headless 输出应打印有效地面交点并在 PNG 中显示标记；图形模式移动视线时坐标提示应随交点变化。图形交互验收待可用图形会话。
     Commit: "feat(taixu): 添加场景内编辑目标指示 (Phase 1.4)"
 
-  Task 1.5: 编写 Phase 1 运行说明并记录窗口、漫游与目标指示的人工验收步骤。
-    Verify: 按文档步骤可构建、启动、漫游并指定目标位置；任务状态和验证证据已记录。
-    Commit: "docs(taixu): 记录世界外壳操作与验收方式 (Phase 1.5)"
+  Task 1.5: 编写 sample 运行说明、headless 图像验证和窗口控制步骤。
+    Verify: 文档中的 build/headless 命令可复现 1280×720 PNG；窗口操作、目标坐标与未实现边界均有说明。
+    Commit: "docs(taixu): 记录太虚原型运行和验证步骤 (Phase 1.5)"
 
 Phase 2: C2——语义编辑基础
 ─────────────────────────────────────────────────────────────────────
@@ -111,7 +112,7 @@ Phase 0（里程碑定义）：
 
 Phase 1（世界外壳）：
   src/sample/CMakeLists.txt — 注册 Taixu sample 子目录
-  src/sample/taixu/ — NEW: 独立 prototype 窗口、Vulkan swapchain 和清屏循环
+  src/sample/taixu/ — NEW: 独立 prototype、Vulkan 窗口/离屏渲染和操作说明
 
 Phase 2（语义编辑基础）：
   src/taixu/ — 仅添加 C2 所需的最小语义模型、编辑验证、渲染适配和持久化功能
