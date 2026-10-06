@@ -37,7 +37,12 @@
 Last completed: Phase 2.1.3 — 具名 Form 场景、确定性编辑命令和木屋渲染均已完成并验证
   Phase 0: 记录太虚首个里程碑和三个验收检查点
   Phase 1: 建立独立 GNtaixu 应用；渲染地面与地标；验证 WASD、鼠标视角、Esc、地面目标标记和坐标面板；记录运行步骤
-In progress: Phase 2.2.1 — 2.1.1 Form 场景、2.1.2 确定性编辑命令、2.1.3 木屋 Forms 已完成并验证；下一步保存 Form/Facet 数据
+In progress: Phase 2.2.1 — 已推送 2.1.1–2.1.3；存档/重载尚未实现。当前未提交改动只有 `world-model.h` 中的 save/load 函数声明，尚未重新构建。继续时实现并验证版本化 Form/Facet 存档格式。
+  Latest pushed commit: 812fd29fb (`fix(taixu): use micrometer world coordinates`); branch `feature/taixu/main`。
+  2.1 验证：Debug 构建成功；基础与 `--add-house` headless 均生成 1280×720 PNG；木屋由 6 个 Form 组成，PrimeView 校验名称、Transform 与 Visual 数据；格式检查通过。
+  空间单位决定：`PhysicalScale::MICROMETER()`。地球直径约为 1.3e13 微米，位于 E2 局部整数坐标范围内，足以保留 prototype 的亚米精度。
+  当前未提交代码：`src/taixu/prototype/world-model.h` 新增 `saveWorldSnapshot` / `loadWorldSnapshot` 声明；`world-model.cpp` 与 CLI 尚无实现。
+  下一步：实现版本化存档，仅保存具名 Form、TransformFacet 与 VisualFacet 值；当前 MVP 应拒绝非根 Transform 与非空 MeshId，加载先完整解析校验，再构造临时 World，避免无效文件部分应用。随后接入 `--save-world` / `--load-world` 并 headless 往返验证。
 --- END PROGRESS ---
 --- REFERENCE ---
 
