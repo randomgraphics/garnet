@@ -44,7 +44,7 @@ TEST_CASE("FX2 bindless skybox renders fallback and custom environment maps", "[
     initialization->recordUploadImage(redCube, {redPixels, sizeof(redPixels)}, {regions, 6});
 
     auto customParams           = defaultParams;
-    customParams.skyboxMap      = GpuResourceView(redCube).setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    customParams.skyboxMap      = GpuResourceView {redCube}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     customParams.luminanceScale = 1.0f;
 
     auto customMaterial = kernel->createMaterial(*initialization, customParams);
@@ -81,7 +81,7 @@ TEST_CASE("FX2 bindless skybox renders fallback and custom environment maps", "[
     REQUIRE(renderTarget);
 
     RasterTarget target;
-    target.setColorTarget(0, GpuResourceView(renderTarget)).setClearColor(0, 0, 0, 1);
+    target.setColorTarget(0, GpuResourceView {renderTarget}).setClearColor(0, 0, 0, 1);
     target.states.cullMode = RasterState::CULL_NONE;
 
     auto raster = gpuBindless::Raster::create(
@@ -203,7 +203,7 @@ TEST_CASE("FX2 bindless PBR renders with sky material environment lighting", "[f
     REQUIRE(renderTarget);
 
     RasterTarget target;
-    target.setColorTarget(0, GpuResourceView(renderTarget)).setClearColor(0, 0, 0, 1);
+    target.setColorTarget(0, GpuResourceView {renderTarget}).setClearColor(0, 0, 0, 1);
     target.states.cullMode = RasterState::CULL_NONE;
 
     auto raster = gpuBindless::Raster::create(

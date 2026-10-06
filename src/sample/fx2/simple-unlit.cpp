@@ -88,7 +88,7 @@ int main(int argc, const char * argv[]) {
     region.imageExtent = {4, 4, 1};
     upload->recordUploadImage(checker, {pixels, sizeof(pixels)}, {&region, 1});
     auto materialParameters     = unlit->defaultMaterialParameters();
-    materialParameters.colorMap = GpuResourceView(checker).setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    materialParameters.colorMap = GpuResourceView {checker}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     materialParameters.sampler  = nearest;
     auto leftMaterial           = unlit->createMaterial(*upload, materialParameters);
     materialParameters.color    = {0.1f, 0.7f, 1, 1};

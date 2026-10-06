@@ -63,7 +63,7 @@ int main(int argc, const char * argv[]) {
     const auto depthDesc   = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::D_32_FLOAT()).setDimensions(width, height).setLevels(1);
     auto       depthBuffer = Texture::create("cel.depth", {.context = host.gpu, .descriptor = depthDesc});
     if (!depthBuffer) return 1;
-    GpuResourceView depthView(depthBuffer);
+    GpuResourceView depthView {depthBuffer};
 
     // Create sample sphere mesh
     RasterGeometry sphereGeometry = createSampleSphere(host.gpu, *upload);

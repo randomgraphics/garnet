@@ -96,12 +96,12 @@ public:
         lutSampler      = gpu2::Sampler::create("bindless.sky-default-lut-sampler", {.context = gpu, .descriptor = sDesc});
 
         if (!defaultCube || !defaultLut || !sampler || !lutSampler) return false;
-        cubemap         = gpu2::GpuResourceView(defaultCube).setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
-        brdfLut         = gpu2::GpuResourceView(defaultLut).setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
+        cubemap         = gpu2::GpuResourceView {defaultCube}.setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
+        brdfLut         = gpu2::GpuResourceView {defaultLut}.setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
         cubemapIndex    = mHeap->allocate(Heap::SAMPLED_TEXTURE, cubemap);
         brdfLutIndex    = mHeap->allocate(Heap::SAMPLED_TEXTURE, brdfLut);
-        samplerIndex    = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(sampler));
-        lutSamplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(lutSampler));
+        samplerIndex    = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler});
+        lutSamplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {lutSampler});
 
         return cubemapIndex != Heap::INVALID_DESCRIPTOR_INDEX && brdfLutIndex != Heap::INVALID_DESCRIPTOR_INDEX &&
                samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX && lutSamplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
@@ -166,7 +166,7 @@ public:
             const auto & defaultSamp = (i == 1) ? defaults.lutSampler : defaults.sampler;
             const auto & defaultIdx  = (i == 1) ? defaults.lutSamplerIndex : defaults.samplerIndex;
             mOwnSamplers[i]          = samplers[i] && samplers[i].get() != defaultSamp.get();
-            mSamplers[i]             = mOwnSamplers[i] ? mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(samplers[i])) : defaultIdx;
+            mSamplers[i]             = mOwnSamplers[i] ? mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {samplers[i]}) : defaultIdx;
             if (mSamplers[i] == Heap::INVALID_DESCRIPTOR_INDEX) return false;
         }
 

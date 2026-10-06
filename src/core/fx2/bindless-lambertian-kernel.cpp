@@ -104,11 +104,11 @@ public:
         auto       flat       = gpu2::Texture::create("bindless.lambertian-default-normal", {.context = gpu, .descriptor = descriptor});
         sampler               = gpu2::Sampler::create("bindless.lambertian-default-sampler", {.context = gpu});
         if (!white || !flat || !sampler) return false;
-        color        = gpu2::GpuResourceView(white).setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
-        normal       = gpu2::GpuResourceView(flat).setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
+        color        = gpu2::GpuResourceView {white}.setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
+        normal       = gpu2::GpuResourceView {flat}.setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
         colorIndex   = mHeap->allocate(Heap::SAMPLED_TEXTURE, color);
         normalIndex  = mHeap->allocate(Heap::SAMPLED_TEXTURE, normal);
-        samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(sampler));
+        samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler});
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
     void upload(gpu2::bindless::CnC & producer) const {
@@ -148,7 +148,7 @@ public:
         if (mColor == Heap::INVALID_DESCRIPTOR_INDEX) return false;
         mNormal = mOwnNormal ? mHeap->allocate(Heap::SAMPLED_TEXTURE, normal) : defaults.normalIndex;
         if (mOwnNormal && mNormal == Heap::INVALID_DESCRIPTOR_INDEX) return false;
-        mSampler = mOwnSampler ? mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(sampler)) : defaults.samplerIndex;
+        mSampler = mOwnSampler ? mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler}) : defaults.samplerIndex;
         if (mSampler == Heap::INVALID_DESCRIPTOR_INDEX) return false;
         mNeedsUv = mOwnColor || mOwnNormal;
         mToken   = mHeap->allocateMaterial(sizeof(LambertianMaterialData), sizeof(LambertianMaterialData));

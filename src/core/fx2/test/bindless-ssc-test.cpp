@@ -130,7 +130,7 @@ TEST_CASE("FX2 bindless unlit and Lambertian materials render expected pixels", 
              .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(extent, extent).setLevels(1)});
         REQUIRE(output);
         RasterTarget target;
-        target.setColorTarget(0, GpuResourceView(output)).setClearColor(0, 0, 0, 1);
+        target.setColorTarget(0, GpuResourceView {output}).setClearColor(0, 0, 0, 1);
         target.states.cullMode = RasterState::CULL_NONE;
         auto raster            = gpuBindless::Raster::create(
             "bindless-material-test.raster",
@@ -235,7 +235,7 @@ TEST_CASE("FX2 bindless PBR materials render expected pixels", "[fx2][bindless][
              .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(extent, extent).setLevels(1)});
         REQUIRE(output);
         RasterTarget target;
-        target.setColorTarget(0, GpuResourceView(output)).setClearColor(0, 0, 0, 1);
+        target.setColorTarget(0, GpuResourceView {output}).setClearColor(0, 0, 0, 1);
         target.states.cullMode = RasterState::CULL_NONE;
         auto raster            = gpuBindless::Raster::create(
             "bindless-pbr-test.raster",
@@ -286,7 +286,7 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
     initialization->recordUploadImage(sampled, {texel, sizeof(texel)}, {&region, 1});
 
     auto parameters     = kernel->defaultMaterialParameters();
-    parameters.colorMap = GpuResourceView(sampled).setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    parameters.colorMap = GpuResourceView {sampled}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     parameters.sampler  = sampler;
     auto material       = kernel->createMaterial(*initialization, parameters);
     REQUIRE(material);
@@ -319,7 +319,7 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
         {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(16, 16).setLevels(1)});
     REQUIRE(output);
     RasterTarget target;
-    target.setColorTarget(0, GpuResourceView(output)).setClearColor(0, 0, 0, 1);
+    target.setColorTarget(0, GpuResourceView {output}).setClearColor(0, 0, 0, 1);
     target.states.cullMode = RasterState::CULL_NONE;
     auto raster =
         gpuBindless::Raster::create("bindless-material-lifetime.raster",
@@ -401,7 +401,7 @@ TEST_CASE("FX2 bindless PBR material keeps heap allocations until completion or 
     initialization->recordUploadImage(sampled, {texel, sizeof(texel)}, {&region, 1});
 
     auto parameters         = kernel->defaultMaterialParameters();
-    parameters.baseColorMap = GpuResourceView(sampled).setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    parameters.baseColorMap = GpuResourceView {sampled}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     parameters.sampler      = sampler;
     auto material           = kernel->createMaterial(*initialization, parameters);
     REQUIRE(material);
@@ -435,7 +435,7 @@ TEST_CASE("FX2 bindless PBR material keeps heap allocations until completion or 
         {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(16, 16).setLevels(1)});
     REQUIRE(output);
     RasterTarget target;
-    target.setColorTarget(0, GpuResourceView(output)).setClearColor(0, 0, 0, 1);
+    target.setColorTarget(0, GpuResourceView {output}).setClearColor(0, 0, 0, 1);
     target.states.cullMode = RasterState::CULL_NONE;
     auto raster            = gpuBindless::Raster::create(
         "bindless-pbr-lifetime.raster", {.gpu = gpu, .target = &target, .heap = heap, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});

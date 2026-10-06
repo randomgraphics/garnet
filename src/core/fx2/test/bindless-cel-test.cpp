@@ -120,7 +120,7 @@ TEST_CASE("FX2 bindless cel material renders cartoon steps and outline", "[fx2][
     REQUIRE(output);
 
     RasterTarget target;
-    target.setColorTarget(0, GpuResourceView(output)).setClearColor(0, 0, 0, 1);
+    target.setColorTarget(0, GpuResourceView {output}).setClearColor(0, 0, 0, 1);
     target.states.cullMode = RasterState::CULL_NONE;
     auto raster            = gpuBindless::Raster::create(
         "bindless-cel-render-test.raster",

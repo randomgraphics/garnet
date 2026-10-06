@@ -55,20 +55,20 @@ TEST_CASE("bindless::DescriptorHeap: allocation, update, and free recycling", "[
     REQUIRE(tex3);
 
     // 1. Sequential allocation
-    auto slot0 = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(tex1));
+    auto slot0 = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {tex1});
     CHECK(slot0.slot == 0);
     CHECK(heap->size() == 1);
 
-    auto slot1 = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(tex2));
+    auto slot1 = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {tex2});
     CHECK(slot1.slot == 1);
     CHECK(heap->size() == 2);
 
     // 2. In-place update
-    bool updateOk = heap->update(slot0, GpuResourceView(tex3));
+    bool updateOk = heap->update(slot0, GpuResourceView {tex3});
     CHECK(updateOk);
     CHECK(heap->size() == 2);
 
-    bool badUpdate = heap->update(bindless::DescriptorHeap::DescriptorIndex {999}, GpuResourceView(tex3));
+    bool badUpdate = heap->update(bindless::DescriptorHeap::DescriptorIndex {999}, GpuResourceView {tex3});
     CHECK_FALSE(badUpdate);
 
     // 3. Freeing and recycling
@@ -76,7 +76,7 @@ TEST_CASE("bindless::DescriptorHeap: allocation, update, and free recycling", "[
     CHECK(heap->size() == 1);
 
     // Next allocation should reuse slot0
-    auto recycledSlot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(tex1));
+    auto recycledSlot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {tex1});
     CHECK(recycledSlot == slot0);
     CHECK(heap->size() == 2);
 
@@ -106,9 +106,9 @@ TEST_CASE("bindless::DescriptorHeap: concurrent multi-threaded allocation", "[gp
     for (int t = 0; t < kNumThreads; ++t) {
         threads.emplace_back([&heap, &tex]() {
             for (int i = 0; i < kItersPerThread; ++i) {
-                auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(tex));
+                auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {tex});
                 if (slot != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
-                    heap->update(slot, GpuResourceView(tex));
+                    heap->update(slot, GpuResourceView {tex});
                     heap->free(slot);
                 }
             }

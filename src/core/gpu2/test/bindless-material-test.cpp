@@ -93,7 +93,7 @@ TEST_CASE("heap material binding is readable after caller-recorded uploads", "[g
     GpuResourceTable resources;
     resources.resize(2);
     resources[1].resize(1);
-    resources[1][0].append(GpuResourceView(output).setBufferViewType(GpuResourceView::BufferView::STORAGE));
+    resources[1][0].append(GpuResourceView {output}.setBufferViewType(GpuResourceView::BufferView::STORAGE));
     auto compute = bindless::CnC::create("material-consumers", {.gpu = gpu, .heap = heap, .passResources = resources});
     REQUIRE(compute);
     for (uint32_t i = 0; i < chunks.size(); ++i) {

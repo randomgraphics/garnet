@@ -415,6 +415,10 @@ struct GpuResourceView {
         auto p = RuntimeType::cast<Buffer>(resource.get());
         return p ? GN::referenceTo(p) : AutoRef<Buffer>();
     }
+    GpuResourceView & setResource(AutoRef<RCRT64> & resource_) {
+        resource = resource_;
+        return *this;
+    }
     GpuResourceView & setCombinedTextureSampler(AutoRef<Sampler> sampler_) {
         combinedTextureSampler = std::move(sampler_);
         return *this;

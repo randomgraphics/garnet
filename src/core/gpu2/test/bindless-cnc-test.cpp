@@ -68,7 +68,7 @@ TEST_CASE("bindless::CnC: creation validation and conflict checks", "[gpu2][bind
         GpuResourceTable conflictTable;
         conflictTable.resize(1);
         conflictTable[0].resize(1);
-        conflictTable[0][0].append(GpuResourceView(dummyBuf));
+        conflictTable[0][0].append(GpuResourceView {dummyBuf});
 
         // heapSetIndex = 0 collides with conflictTable[0]
         auto cncConflict = bindless::CnC::create("conflict", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = conflictTable});
@@ -153,10 +153,10 @@ TEST_CASE("bindless::CnC: sample bindless texture in compute and download result
     REQUIRE(heap);
     auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
     REQUIRE(sharedSampler);
-    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sharedSampler}).slot == 0);
 
-    auto slotRed  = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texRed));
-    auto slotBlue = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texBlue));
+    auto slotRed  = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {texRed});
+    auto slotBlue = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {texBlue});
     REQUIRE(slotRed != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(slotBlue != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(slotRed != slotBlue);
@@ -169,7 +169,7 @@ TEST_CASE("bindless::CnC: sample bindless texture in compute and download result
     GpuResourceTable passResources;
     passResources.resize(2); // Set 0 empty (heapSetIndex = 0), Set 1 has storage buffer
     passResources[1].resize(1);
-    passResources[1][0].append(GpuResourceView(outBuf).setBufferViewType(GpuResourceView::BufferView::STORAGE));
+    passResources[1][0].append(GpuResourceView {outBuf}.setBufferViewType(GpuResourceView::BufferView::STORAGE));
 
     auto cs = makeShader(gpu, "bindless-cnc-cs", kBindlessCncTestCompSpv, sizeof(kBindlessCncTestCompSpv));
     REQUIRE(cs);
@@ -248,8 +248,8 @@ TEST_CASE("bindless::CnC: interleaved compute and buffer copy", "[gpu2][bindless
     REQUIRE(heap);
     auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
     REQUIRE(sharedSampler);
-    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
-    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texGreen));
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sharedSampler}).slot == 0);
+    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {texGreen});
     REQUIRE(slotGreen != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     constexpr size_t bufferSize = 16 * sizeof(float) * 4;
@@ -261,7 +261,7 @@ TEST_CASE("bindless::CnC: interleaved compute and buffer copy", "[gpu2][bindless
     GpuResourceTable passResources;
     passResources.resize(2);
     passResources[1].resize(1);
-    passResources[1][0].append(GpuResourceView(computeBuf).setBufferViewType(GpuResourceView::BufferView::STORAGE));
+    passResources[1][0].append(GpuResourceView {computeBuf}.setBufferViewType(GpuResourceView::BufferView::STORAGE));
 
     auto cs = makeShader(gpu, "bindless-cnc-cs", kBindlessCncTestCompSpv, sizeof(kBindlessCncTestCompSpv));
     REQUIRE(cs);
@@ -398,7 +398,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
     REQUIRE(heap);
     auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
     REQUIRE(sharedSampler);
-    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sharedSampler}).slot == 0);
 
     constexpr uint32_t W = 16, H = 16;
     auto               tex = makeRgba8Tex(gpu, "srv-restore-tex", W, H);
@@ -407,7 +407,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
     auto * vkTex = RuntimeType::cast<TextureVulkanBase>(tex.get());
     REQUIRE(vkTex);
 
-    auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(tex));
+    auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {tex});
     REQUIRE(slot != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     constexpr size_t bufferSize = 16 * sizeof(float) * 4;
@@ -417,7 +417,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
     GpuResourceTable passResources;
     passResources.resize(2);
     passResources[1].resize(1);
-    passResources[1][0].append(GpuResourceView(outBuf).setBufferViewType(GpuResourceView::BufferView::STORAGE));
+    passResources[1][0].append(GpuResourceView {outBuf}.setBufferViewType(GpuResourceView::BufferView::STORAGE));
 
     auto cs = makeShader(gpu, "bindless-cnc-cs", kBindlessCncTestCompSpv, sizeof(kBindlessCncTestCompSpv));
     REQUIRE(cs);
@@ -550,8 +550,8 @@ TEST_CASE("GpuCnC & GpuRaster: automated invariant restores buffer and render ta
     REQUIRE(depthTex);
 
     RasterTarget rt;
-    rt.setColorTarget(0, GpuResourceView(colorTex));
-    rt.depthStencilTarget.setView(GpuResourceView(depthTex));
+    rt.setColorTarget(0, GpuResourceView {colorTex});
+    rt.depthStencilTarget.setView(GpuResourceView {depthTex});
 
     auto raster = GpuRaster::create("test-raster", {.gpu = gpu, .target = &rt});
     REQUIRE(raster);
@@ -569,7 +569,7 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
     REQUIRE(heap);
     auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
     REQUIRE(sharedSampler);
-    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sharedSampler}).slot == 0);
 
     constexpr uint32_t W = 16, H = 16;
     auto               colorTex = makeRgba8Tex(gpu, "bindless-rt", W, H);
@@ -578,7 +578,7 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
     auto sampleTex = makeRgba8Tex(gpu, "sample-src", W, H);
     REQUIRE(sampleTex);
 
-    auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(sampleTex));
+    auto slot = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {sampleTex});
     REQUIRE(slot != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     constexpr uint64_t stagedSize = W * H * 4;
@@ -616,7 +616,7 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
 
     // Pass 2: bindless::Raster draws directly using vb and sampleTex without any caller-managed barriers
     RasterTarget target;
-    target.setColorTarget(0, GpuResourceView(colorTex));
+    target.setColorTarget(0, GpuResourceView {colorTex});
     target.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     auto vs = makeShader(gpu, "bindless-vs", kBindlessTestVertSpv, sizeof(kBindlessTestVertSpv));

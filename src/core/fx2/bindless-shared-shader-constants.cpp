@@ -101,7 +101,7 @@ public:
         if (bytes.empty() || bytes.size() > kMaxUniformRange || bytes.size() > mUniformCapacity) return {};
         auto allocation = mUniformPool->allocate(bytes.size(), kUniformAlignment);
         if (!allocation) return {};
-        gpu2::GpuResourceView view(mUniformBuffer);
+        gpu2::GpuResourceView view {mUniformBuffer};
         view.setBufferViewType(gpu2::GpuResourceView::BufferView::UNIFORM).setBufferViewOffset(allocation->offset).setBufferViewSize(bytes.size());
         auto state = AutoRef<UniformState>(new UniformStateImpl(allocation, view));
         producer.retainResource(allocation);
@@ -122,7 +122,7 @@ public:
             if (!streamingId) return {};
             mStreaming.emplace(streamingId, allocation);
         }
-        auto view = gpu2::GpuResourceView(mStreamBuffer);
+        auto view = gpu2::GpuResourceView {mStreamBuffer};
         view.setBufferViewType(gpu2::GpuResourceView::BufferView::STORAGE).setBufferViewOffset(allocation->offset).setBufferViewSize(size);
         return {streamingId, {static_cast<uint8_t *>(mStreamMapping.data()) + allocation->offset, static_cast<size_t>(size)}, view};
     }

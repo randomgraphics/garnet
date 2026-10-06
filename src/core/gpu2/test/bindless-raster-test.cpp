@@ -96,7 +96,7 @@ TEST_CASE("bindless::Raster: creation validation and conflict checks", "[gpu2][b
     REQUIRE(targetTex);
 
     RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView(targetTex)));
+    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView {targetTex}));
 
     auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
@@ -122,7 +122,7 @@ TEST_CASE("bindless::Raster: creation validation and conflict checks", "[gpu2][b
         GpuResourceTable conflictTable;
         conflictTable.resize(1);
         conflictTable[0].resize(1);
-        conflictTable[0][0].append(GpuResourceView(targetTex));
+        conflictTable[0][0].append(GpuResourceView {targetTex});
 
         // heapSetIndex = 0 collides with conflictTable[0]: creation fails
         auto r = bindless::Raster::create("conflict", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0, .passResources = conflictTable});
@@ -149,7 +149,7 @@ TEST_CASE("bindless::Raster: recordDraw, retainResource, and seal lifecycle", "[
     REQUIRE(targetTex);
 
     RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView(targetTex)));
+    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView {targetTex}));
 
     auto heap = bindless::DescriptorHeap::create("test-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
@@ -217,10 +217,10 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
     REQUIRE(heap);
     auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
     REQUIRE(sharedSampler);
-    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sharedSampler}).slot == 0);
 
-    auto slotRed   = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texRed));
-    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texGreen));
+    auto slotRed   = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {texRed});
+    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {texGreen});
     REQUIRE(slotRed != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(slotGreen != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(slotRed != slotGreen);
@@ -230,7 +230,7 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
     REQUIRE(targetTex);
 
     RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView(targetTex)));
+    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView {targetTex}));
     rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     auto vs = makeShader(gpu, "bindless-vert", kBindlessTestVertSpv, sizeof(kBindlessTestVertSpv));
@@ -300,29 +300,29 @@ TEST_CASE("bindless::Raster: interleaved bindless and bind-based draws in single
     REQUIRE(heap);
     auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
     REQUIRE(sharedSampler);
-    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sharedSampler}).slot == 0);
 
     // Green texture is in the bindless heap
-    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texGreen));
+    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {texGreen});
     REQUIRE(slotGreen != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     // Red texture is bound via drawResources at set 1
     GpuResourceTable boundTable;
     boundTable.resize(2);
     boundTable[1].resize(1);
-    boundTable[1][0].append(GpuResourceView(texRed));
+    boundTable[1][0].append(GpuResourceView {texRed});
 
     // Conflict check table: defines resource at set 0 (conflicts with heapSetIndex = 0)
     GpuResourceTable conflictTable;
     conflictTable.resize(1);
     conflictTable[0].resize(1);
-    conflictTable[0][0].append(GpuResourceView(texRed));
+    conflictTable[0][0].append(GpuResourceView {texRed});
 
     auto targetTex = makeRgba8Tex(gpu, "target", W, H);
     REQUIRE(targetTex);
 
     RasterTarget rt;
-    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView(targetTex)));
+    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView {targetTex}));
     rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     auto vs         = makeShader(gpu, "bindless-vert", kBindlessTestVertSpv, sizeof(kBindlessTestVertSpv));

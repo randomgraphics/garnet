@@ -125,10 +125,10 @@ inline GN::AutoRef<GN::fx2::bindless::SkyMaterial> createSkyMaterial(GN::AutoRef
     auto brdfLutTex     = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds"});
 
     auto skyParams = skyKernel->defaultMaterialParameters();
-    if (skyboxTex) skyParams.skyboxMap = GN::gpu2::GpuResourceView(skyboxTex).setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
-    if (irradianceTex) skyParams.irradianceMap = GN::gpu2::GpuResourceView(irradianceTex).setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
-    if (prefilteredTex) skyParams.prefilteredMap = GN::gpu2::GpuResourceView(prefilteredTex).setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
-    if (brdfLutTex) skyParams.brdfLut = GN::gpu2::GpuResourceView(brdfLutTex).setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
+    if (skyboxTex) skyParams.skyboxMap = GN::gpu2::GpuResourceView {skyboxTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
+    if (irradianceTex) skyParams.irradianceMap = GN::gpu2::GpuResourceView {irradianceTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
+    if (prefilteredTex) skyParams.prefilteredMap = GN::gpu2::GpuResourceView {prefilteredTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
+    if (brdfLutTex) skyParams.brdfLut = GN::gpu2::GpuResourceView {brdfLutTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
     skyParams.luminanceScale = luminanceScale;
     return skyKernel->createMaterial(uploads, skyParams);
 }

@@ -525,7 +525,7 @@ int main(int argc, const char ** argv) {
         std::fprintf(stderr, "Failed to create depth texture\n");
         return -1;
     }
-    GpuResourceView depthView(depthTex);
+    GpuResourceView depthView {depthTex};
 
     // 3. Global persistent DescriptorHeap
     constexpr uint32_t HEAP_CAPACITY = 1024;
@@ -550,12 +550,12 @@ int main(int argc, const char ** argv) {
             std::fprintf(stderr, "Failed to create and upload procedural texture %u\n", i);
             return -1;
         }
-        textureViews[i] = GpuResourceView(textures[i]);
+        textureViews[i] = GpuResourceView {textures[i]};
     }
 
     auto sampler = Sampler::create("bindless-shared-sampler", {.context = gpu});
     if (!sampler) return -1;
-    const auto samplerIndex = heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sampler));
+    const auto samplerIndex = heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sampler});
     if (samplerIndex == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX || samplerIndex.slot != 0) return -1;
     for (uint32_t i = 0; i < NUM_TEXTURES; ++i) {
         textureSlots[i] = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, textureViews[i]);
@@ -769,7 +769,7 @@ int main(int argc, const char ** argv) {
                     updateDynamicTextureImage(dynImg, TEX_SIZE, TEX_SIZE, s, simTime);
                     cnc->recordUploadImage(streamingTextures[s], dynImg);
 
-                    heap->update(textureSlots[s], GpuResourceView(streamingTextures[s]));
+                    heap->update(textureSlots[s], GpuResourceView {streamingTextures[s]});
                 }
                 uploadPayload = cnc->seal();
             }

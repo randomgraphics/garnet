@@ -22,9 +22,9 @@ TEST_CASE("bindless heap enforces descriptor type and view agreement", "[gpu2][b
     REQUIRE(texture);
     REQUIRE(buffer);
     REQUIRE(sampler);
-    std::array<GpuResourceView, 5> views = {GpuResourceView(texture), GpuResourceView(texture).setImageViewType(GpuResourceView::ImageView::STORAGE),
-                                            GpuResourceView(buffer), GpuResourceView(buffer).setBufferViewType(GpuResourceView::BufferView::STORAGE),
-                                            GpuResourceView(sampler)};
+    std::array<GpuResourceView, 5> views = {GpuResourceView {texture}, GpuResourceView {texture}.setImageViewType(GpuResourceView::ImageView::STORAGE),
+                                            GpuResourceView {buffer}, GpuResourceView {buffer}.setBufferViewType(GpuResourceView::BufferView::STORAGE),
+                                            GpuResourceView {sampler}};
     for (uint32_t type = 0; type < views.size(); ++type) {
         for (uint32_t other = 0; other < views.size(); ++other) {
             if (type == other) continue;
@@ -70,9 +70,9 @@ TEST_CASE("bindless heap enforces descriptor type and view agreement", "[gpu2][b
     CHECK(heap->size() == 1);
     heap->free(recycled);
     CHECK(heap->allocate(Heap::DescriptorType(15), views[0]) == Heap::INVALID_DESCRIPTOR_INDEX);
-    CHECK(heap->allocate(Heap::SAMPLED_TEXTURE, GpuResourceView(texture).setCombinedTextureSampler(sampler)) == Heap::INVALID_DESCRIPTOR_INDEX);
-    CHECK(heap->allocate(Heap::UNIFORM_BUFFER, GpuResourceView(buffer).setBufferViewOffset(1)) == Heap::INVALID_DESCRIPTOR_INDEX);
-    CHECK(heap->allocate(Heap::STORAGE_BUFFER, GpuResourceView(buffer).setBufferViewType(GpuResourceView::BufferView::STORAGE).setBufferViewSize(129)) ==
+    CHECK(heap->allocate(Heap::SAMPLED_TEXTURE, GpuResourceView {texture}.setCombinedTextureSampler(sampler)) == Heap::INVALID_DESCRIPTOR_INDEX);
+    CHECK(heap->allocate(Heap::UNIFORM_BUFFER, GpuResourceView {buffer}.setBufferViewOffset(1)) == Heap::INVALID_DESCRIPTOR_INDEX);
+    CHECK(heap->allocate(Heap::STORAGE_BUFFER, GpuResourceView {buffer}.setBufferViewType(GpuResourceView::BufferView::STORAGE).setBufferViewSize(129)) ==
           Heap::INVALID_DESCRIPTOR_INDEX);
     auto otherGpu = makeGpu();
     REQUIRE(otherGpu);
@@ -82,9 +82,9 @@ TEST_CASE("bindless heap enforces descriptor type and view agreement", "[gpu2][b
     REQUIRE(foreignTexture);
     REQUIRE(foreignBuffer);
     REQUIRE(foreignSampler);
-    CHECK(heap->allocate(Heap::SAMPLED_TEXTURE, GpuResourceView(foreignTexture)) == Heap::INVALID_DESCRIPTOR_INDEX);
-    CHECK(heap->allocate(Heap::UNIFORM_BUFFER, GpuResourceView(foreignBuffer)) == Heap::INVALID_DESCRIPTOR_INDEX);
-    CHECK(heap->allocate(Heap::SAMPLER, GpuResourceView(foreignSampler)) == Heap::INVALID_DESCRIPTOR_INDEX);
+    CHECK(heap->allocate(Heap::SAMPLED_TEXTURE, GpuResourceView {foreignTexture}) == Heap::INVALID_DESCRIPTOR_INDEX);
+    CHECK(heap->allocate(Heap::UNIFORM_BUFFER, GpuResourceView {foreignBuffer}) == Heap::INVALID_DESCRIPTOR_INDEX);
+    CHECK(heap->allocate(Heap::SAMPLER, GpuResourceView {foreignSampler}) == Heap::INVALID_DESCRIPTOR_INDEX);
     CHECK_FALSE(Heap::create("zero", {.gpu = gpu, .capacity = 0}));
     CHECK_FALSE(Heap::create("overflow", {.gpu = gpu, .capacity = 1, .bindingIndex = UINT32_MAX}));
 }
@@ -104,7 +104,7 @@ TEST_CASE("bindless heap uses all five resource types and four samplers for 1024
         cp.descriptor.addressU                            = i % 2 ? Address::CLAMP_TO_EDGE : Address::REPEAT;
         auto sampler                                      = Sampler::create("shared", cp);
         REQUIRE(sampler);
-        REQUIRE(heap->allocate(Heap::SAMPLER, GpuResourceView(sampler)).slot == i);
+        REQUIRE(heap->allocate(Heap::SAMPLER, GpuResourceView {sampler}).slot == i);
     }
     auto uniform = Buffer::create("uniform", {.context = gpu, .size = 16});
     auto input   = Buffer::create("input", {.context = gpu, .size = 16});
@@ -114,10 +114,10 @@ TEST_CASE("bindless heap uses all five resource types and four samplers for 1024
     REQUIRE(input);
     REQUIRE(output);
     REQUIRE(image);
-    const auto uniformIndex = heap->allocate(Heap::UNIFORM_BUFFER, GpuResourceView(uniform));
-    const auto inputView    = GpuResourceView(input).setBufferViewType(GpuResourceView::BufferView::STORAGE);
-    const auto outputView   = GpuResourceView(output).setBufferViewType(GpuResourceView::BufferView::STORAGE);
-    const auto imageView    = GpuResourceView(image).setImageViewType(GpuResourceView::ImageView::STORAGE);
+    const auto uniformIndex = heap->allocate(Heap::UNIFORM_BUFFER, GpuResourceView {uniform});
+    const auto inputView    = GpuResourceView {input}.setBufferViewType(GpuResourceView::BufferView::STORAGE);
+    const auto outputView   = GpuResourceView {output}.setBufferViewType(GpuResourceView::BufferView::STORAGE);
+    const auto imageView    = GpuResourceView {image}.setImageViewType(GpuResourceView::ImageView::STORAGE);
     const auto inputIndex   = heap->allocate(Heap::STORAGE_BUFFER, inputView);
     const auto outputIndex  = heap->allocate(Heap::STORAGE_BUFFER, outputView);
     const auto imageIndex   = heap->allocate(Heap::STORAGE_TEXTURE, imageView);
@@ -137,7 +137,7 @@ TEST_CASE("bindless heap uses all five resource types and four samplers for 1024
         GpuCnC::Region region;
         region.imageExtent = {2, 1, 1};
         uploads->recordUploadImage(texture, {pixels, sizeof(pixels)}, {&region, 1});
-        REQUIRE(heap->allocate(Heap::SAMPLED_TEXTURE, GpuResourceView(texture)).slot == i + 8);
+        REQUIRE(heap->allocate(Heap::SAMPLED_TEXTURE, GpuResourceView {texture}).slot == i + 8);
     }
     CHECK(heap->size() == COUNT + 8);
     submitAndWait(gpu, "initialize-typed-heap", uploads->seal());

@@ -64,10 +64,10 @@ int main(int argc, const char * argv[]) {
     auto brdfLutTex     = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds"});
 
     auto skyParams = sky->defaultMaterialParameters();
-    if (skyboxTex) skyParams.skyboxMap = GpuResourceView(skyboxTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    if (irradianceTex) skyParams.irradianceMap = GpuResourceView(irradianceTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    if (prefilteredTex) skyParams.prefilteredMap = GpuResourceView(prefilteredTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    if (brdfLutTex) skyParams.brdfLut = GpuResourceView(brdfLutTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (skyboxTex) skyParams.skyboxMap = GpuResourceView {skyboxTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (irradianceTex) skyParams.irradianceMap = GpuResourceView {irradianceTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (prefilteredTex) skyParams.prefilteredMap = GpuResourceView {prefilteredTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (brdfLutTex) skyParams.brdfLut = GpuResourceView {brdfLutTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     skyParams.luminanceScale = 1.0f;
     auto skyMaterial         = sky->createMaterial(*upload, skyParams);
     if (!skyMaterial) return 1;
@@ -104,11 +104,11 @@ int main(int argc, const char * argv[]) {
     auto metalRoughTex = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/model/DamagedHelmet/metallicRoughness_1.jpg"});
 
     auto helmetParams = pbr->defaultMaterialParameters();
-    if (baseColorTex) helmetParams.baseColorMap = GpuResourceView(baseColorTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    if (normalTex) helmetParams.normalMap = GpuResourceView(normalTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    if (emissiveTex) helmetParams.emissiveMap = GpuResourceView(emissiveTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    if (occlusionTex) helmetParams.occlusionMap = GpuResourceView(occlusionTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    if (metalRoughTex) helmetParams.metalRoughMap = GpuResourceView(metalRoughTex).setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (baseColorTex) helmetParams.baseColorMap = GpuResourceView {baseColorTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (normalTex) helmetParams.normalMap = GpuResourceView {normalTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (emissiveTex) helmetParams.emissiveMap = GpuResourceView {emissiveTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (occlusionTex) helmetParams.occlusionMap = GpuResourceView {occlusionTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    if (metalRoughTex) helmetParams.metalRoughMap = GpuResourceView {metalRoughTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     helmetParams.metallic  = 1.0f;
     helmetParams.roughness = 1.0f;
     auto helmetMaterial    = pbr->createMaterial(*upload, helmetParams);
@@ -133,7 +133,7 @@ int main(int argc, const char * argv[]) {
 
         RasterTarget target;
         target.setColorTarget(0, acquired.view).setClearColor(0.02f, 0.03f, 0.05f, 1);
-        target.setDepthStencilTarget(GpuResourceView(depthBuffer)).setClearDepth(1.0f);
+        target.setDepthStencilTarget(GpuResourceView {depthBuffer}).setClearDepth(1.0f);
 
         auto uniformUploads = gpuBindless::CnC::create("pbr.uniform-upload", {.gpu = host.gpu, .heap = heap});
         if (!uniformUploads) return 1;

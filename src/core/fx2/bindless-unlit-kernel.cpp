@@ -99,9 +99,9 @@ public:
         auto       white      = gpu2::Texture::create("bindless.unlit-default-white", {.context = gpu, .descriptor = descriptor});
         sampler               = gpu2::Sampler::create("bindless.unlit-default-sampler", {.context = gpu});
         if (!white || !sampler) return false;
-        color        = gpu2::GpuResourceView(white).setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
+        color        = gpu2::GpuResourceView {white}.setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
         colorIndex   = mHeap->allocate(Heap::SAMPLED_TEXTURE, color);
-        samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(sampler));
+        samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler});
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
     void upload(gpu2::bindless::CnC & producer) const {
@@ -134,7 +134,7 @@ public:
         mOwnSampler = sampler && sampler.get() != defaults.sampler.get();
         mColor      = mOwnColor ? mHeap->allocate(Heap::SAMPLED_TEXTURE, color) : defaults.colorIndex;
         if (mColor == Heap::INVALID_DESCRIPTOR_INDEX) return false;
-        mSampler = mOwnSampler ? mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(sampler)) : defaults.samplerIndex;
+        mSampler = mOwnSampler ? mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler}) : defaults.samplerIndex;
         if (mSampler == Heap::INVALID_DESCRIPTOR_INDEX) return false;
         mNeedsUv = mOwnColor;
         mToken   = mHeap->allocateMaterial(sizeof(UnlitMaterialData), sizeof(UnlitMaterialData));

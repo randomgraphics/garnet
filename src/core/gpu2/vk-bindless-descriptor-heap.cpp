@@ -198,7 +198,7 @@ GpuResourceView VkBindlessDescriptorHeap::materialView(MaterialToken token) cons
     std::lock_guard<std::mutex> lock(mMutex);
     const auto                  it = mMaterials.find(token);
     if (it == mMaterials.end()) GN_UNLIKELY return {};
-    return GpuResourceView(mMaterialBuffer)
+    return GpuResourceView {mMaterialBuffer}
         .setBufferViewType(GpuResourceView::BufferView::STORAGE)
         .setBufferViewOffset(it->second.offset)
         .setBufferViewSize(it->second.size);
