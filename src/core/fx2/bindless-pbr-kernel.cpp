@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "bindless-pbr-vert.spv.h"
 #include "bindless-pbr-frag.spv.h"
+#include "bindless-sky-material-impl.h"
 #include <glm/mat3x3.hpp>
 #include <cmath>
 
@@ -70,7 +71,7 @@ bool validDraw(const D & draw, const glm::mat4 & world) {
 struct Shaders {
     AutoRef<gpu2::GpuContext> gpu;
     AutoRef<gpu2::GpuShader>  vertex, fragment;
-    bool initialize(AutoRef<gpu2::GpuContext> context, const uint32_t * vs, size_t vsSize, const uint32_t * ps, size_t psSize) {
+    bool                      initialize(AutoRef<gpu2::GpuContext> context, const uint32_t * vs, size_t vsSize, const uint32_t * ps, size_t psSize) {
         gpu = std::move(context);
         if (!gpu) return false;
         vertex   = gpu2::GpuShader::create({.context = gpu, .name = "bindless-pbr.vert", .binary = vs, .size = vsSize});
@@ -106,8 +107,7 @@ public:
         colorIndex   = mHeap->allocate(Heap::SAMPLED_TEXTURE, color);
         normalIndex  = mHeap->allocate(Heap::SAMPLED_TEXTURE, normal);
         samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(sampler));
-        return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX &&
-               samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
+        return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
     void upload(gpu2::bindless::CnC & producer) const {
         const uint8_t               white[] = {255, 255, 255, 255};
@@ -149,7 +149,7 @@ public:
         mOwnSampler = p.sampler && p.sampler.get() != defaults.sampler.get();
         mSampler    = mOwnSampler ? mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(p.sampler)) : defaults.samplerIndex;
         if (mSampler == Heap::INVALID_DESCRIPTOR_INDEX) return false;
-        mToken = mHeap->allocateMaterial(sizeof(mData), alignof(PbrMaterialData));
+        mToken = mHeap->allocateMaterial(sizeof(mData), sizeof(mData));
         if (mToken == Heap::INVALID_MATERIAL_TOKEN) return false;
         mView = mHeap->materialView(mToken);
         if (!mView.buffer() || mView.bufferView.size != sizeof(mData) || mView.bufferView.offset % sizeof(mData) ||
@@ -186,14 +186,16 @@ public:
             GN_ERROR(logger, "PbrMaterial: invalid uniform state, geometry, UVs, or transform");
             return false;
         }
-        const DrawConstants                    values {input.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
+        const uint32_t                         skyIndex = getSkyMaterialIndex(input.skyMaterial.get());
+        const DrawConstants                    values {input.object2WorldTransform, glm::uvec4(mStorage.index(), skyIndex, 0, 0)};
         gpu2::bindless::Raster::DrawParameters draw {.geometry = input.geometry};
-        draw.vs         = mShaders.vertex;
-        draw.ps         = mShaders.fragment;
+        draw.vs = mShaders.vertex;
+        draw.ps = mShaders.fragment;
         if (input.states) draw.states = *input.states;
         draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
         input.raster.retainResource(input.ssc);
         input.raster.retainResource(referenceTo(this));
+        if (input.skyMaterial) input.raster.retainResource(input.skyMaterial);
         input.raster.recordDraw(draw);
         return true;
     }

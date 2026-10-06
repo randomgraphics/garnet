@@ -12,8 +12,7 @@ struct DirectLightUniform {
 layout(set = 1, binding = 1, std140) uniform SharedUniformBlock {
     uint               frameCounter;
     float              frameDurationMs;
-    uint               activeSkyMaterialIndex;
-    uint               framePadding;
+    vec2               framePadding;
     mat4               viewMatrix;
     mat4               projMatrix;
     mat4               projViewMatrix;

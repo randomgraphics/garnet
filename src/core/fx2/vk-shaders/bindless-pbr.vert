@@ -20,14 +20,14 @@ layout(location = 6) out vec2 uv;
 layout(location = 7) out vec3 worldPosition;
 void main() {
     PbrMaterialData material = pbrMaterialHeap.materials[draw.materialIndex.x];
-    vec4 p = draw.worldFromObject * vec4(position, 1.0);
-    gl_Position = sscUniforms.projViewMatrix * p;
-    worldPosition = p.xyz;
-    worldNormal = transpose(inverse(mat3(draw.worldFromObject))) * normal;
-    baseColor = material.baseColor;
-    emissive = material.emissive;
-    factors = material.factors;
-    textureIndices = material.textureIndices;
-    extraIndices = material.extraIndices;
-    uv = texcoord;
+    vec4            p        = draw.worldFromObject * vec4(position, 1.0);
+    gl_Position              = sscUniforms.projViewMatrix * p;
+    worldPosition            = p.xyz;
+    worldNormal              = transpose(inverse(mat3(draw.worldFromObject))) * normal;
+    baseColor                = material.baseColor;
+    emissive                 = material.emissive;
+    factors                  = material.factors;
+    textureIndices           = material.textureIndices;
+    extraIndices             = material.extraIndices;
+    uv                       = texcoord;
 }

@@ -23,14 +23,11 @@ struct DirectLightUniform {
 /// Upload the complete struct through recordUniformUpdate(). All floating-point inputs must be finite.
 /// Matrices are column-major. Environment textures/calibration belong to sky materials.
 struct SharedUniforms {
-    static constexpr uint32_t MAX_LIGHTS      = 16;
-    static constexpr uint32_t NO_SKY_MATERIAL = uint32_t(-1);
+    static constexpr uint32_t MAX_LIGHTS = 16;
 
     uint32_t frameCounter    = 0;
     float    frameDurationMs = 0;
-    /// Index interpreted by the sky kernel; NO_SKY_MATERIAL disables sky selection. Zero is a valid index.
-    uint32_t activeSkyMaterialIndex = NO_SKY_MATERIAL;
-    uint32_t framePadding           = 0; ///< Align the camera matrices to a std140 16-byte boundary.
+    float    framePadding[2] = {}; ///< Align the camera matrices to a std140 16-byte boundary.
 
     glm::mat4 viewMatrix = glm::mat4(1); ///< World to view.
     /// View to clip; the caller applies the backend's clip-space convention, including Vulkan Y inversion.

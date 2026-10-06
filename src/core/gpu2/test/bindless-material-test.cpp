@@ -58,6 +58,14 @@ TEST_CASE("heap material chunks are aligned, opaque and immediately reusable", "
     auto retainedView = heap->materialView(full);
     heap.clear();
     CHECK(retainedView.buffer());
+
+    auto nonPow2Heap = Heap::create("non-pow2-material", {.gpu = gpu, .capacity = 1, .materialCapacity = 256});
+    REQUIRE(nonPow2Heap);
+    const auto padChunk = nonPow2Heap->allocateMaterial(16, 4);
+    REQUIRE(padChunk);
+    const auto aligned80 = nonPow2Heap->allocateMaterial(80, 80);
+    REQUIRE(aligned80);
+    CHECK(nonPow2Heap->materialView(aligned80).bufferView.offset == 80);
     CHECK(retainedView.bufferView.size == 128);
     CHECK_FALSE(Heap::create("zero-material", {.gpu = gpu, .capacity = 1, .materialCapacity = 0}));
     CHECK_FALSE(Heap::create("oversized-material", {.gpu = gpu, .capacity = 1, .materialCapacity = UINT64_MAX}));

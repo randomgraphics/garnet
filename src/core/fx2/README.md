@@ -198,12 +198,10 @@ SSC's uniform management is generic: it allocates, versions, uploads, and
 recycles opaque byte ranges. The standard `SharedUniforms` schema is defined in
 the public bindless SSC header, without making the storage implementation
 interpret it. One 1,024-byte std140 UBO contains frame counter/duration, a fixed
-array of 16 legacy-compatible direct-light records with an active count, all
-camera/view fields, and an active sky-material index. There is no separate
-camera or light buffer. Environment texture bindings and calibration fields
-are absent; those belong to sky materials. `NO_SKY_MATERIAL` is UINT32_MAX;
-index zero remains valid. Callers fill the struct and upload all its bytes with
-`recordUniformUpdate()`.
+array of 16 legacy-compatible direct-light records with an active count, and all
+camera/view fields. There is no separate camera or light buffer. Environment
+texture bindings and calibration fields belong to sky materials. Callers fill the
+struct and upload all its bytes with `recordUniformUpdate()`.
 
 Each update captures its own bytes in a newly allocated, independently aligned
 range, so two updates are distinct GPU bytes rather than two writes into one

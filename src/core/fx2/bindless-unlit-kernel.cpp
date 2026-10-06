@@ -166,21 +166,20 @@ public:
     UnlitMaterialImpl(AutoRef<const UnlitKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap, const UnlitMaterial::Parameters & p)
         : UnlitMaterial(TYPE_INFO(), "bindless.unlit.material"), mKernel(std::move(kernel)), mParameters(p), mShaders(shaders), mStorage(std::move(heap)) {}
     bool initialize(const Fallbacks & defaults) {
-        return mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), {}, {}}, mParameters.colorMap,
-                                   mParameters.sampler, defaults);
+        return mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), {}, {}}, mParameters.colorMap, mParameters.sampler, defaults);
     }
     void upload(gpu2::bindless::CnC & producer) const { mStorage.upload(producer); }
     bool record(const UnlitMaterial::DrawParameters & inputs) const override {
         auto & raster = inputs.raster;
         auto   state  = inputs.ssc;
         if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, mStorage.textured())) GN_UNLIKELY {
-            GN_ERROR(logger, "UnlitMaterial: invalid uniform state, geometry, or transform");
-            return false;
-        }
+                GN_ERROR(logger, "UnlitMaterial: invalid uniform state, geometry, or transform");
+                return false;
+            }
         const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
         gpu2::bindless::Raster::DrawParameters draw {.geometry = inputs.geometry};
-        draw.vs         = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
-        draw.ps         = mShaders.fragment;
+        draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
+        draw.ps = mShaders.fragment;
         if (inputs.states) draw.states = *inputs.states;
         draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
         raster.retainResource(std::move(state));

@@ -109,8 +109,7 @@ public:
         colorIndex   = mHeap->allocate(Heap::SAMPLED_TEXTURE, color);
         normalIndex  = mHeap->allocate(Heap::SAMPLED_TEXTURE, normal);
         samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView(sampler));
-        return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX &&
-               samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
+        return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
     void upload(gpu2::bindless::CnC & producer) const {
         const uint8_t               white[] = {255, 255, 255, 255};
@@ -123,13 +122,13 @@ public:
 };
 
 class LambertianStorage : NoCopy {
-    AutoRef<Heap>         mHeap;
-    Heap::MaterialToken   mToken = Heap::INVALID_MATERIAL_TOKEN;
-    Heap::DescriptorIndex mColor = {}, mNormal = {}, mSampler = {};
-    bool                  mOwnColor = false, mOwnNormal = false, mOwnSampler = false, mNeedsUv = false;
-    gpu2::GpuResourceView mView;
-    LambertianMaterialData mData = {};
-    uint32_t              mIndex = 0;
+    AutoRef<Heap>          mHeap;
+    Heap::MaterialToken    mToken = Heap::INVALID_MATERIAL_TOKEN;
+    Heap::DescriptorIndex  mColor = {}, mNormal = {}, mSampler = {};
+    bool                   mOwnColor = false, mOwnNormal = false, mOwnSampler = false, mNeedsUv = false;
+    gpu2::GpuResourceView  mView;
+    LambertianMaterialData mData  = {};
+    uint32_t               mIndex = 0;
 
 public:
     explicit LambertianStorage(AutoRef<Heap> heap): mHeap(std::move(heap)) {}
@@ -158,7 +157,7 @@ public:
         if (!mView.buffer() || mView.bufferView.size != sizeof(LambertianMaterialData) || mView.bufferView.offset % sizeof(LambertianMaterialData) ||
             mView.bufferView.offset / sizeof(LambertianMaterialData) > uint64_t(uint32_t(-1)))
             return false;
-        mIndex = uint32_t(mView.bufferView.offset / sizeof(LambertianMaterialData));
+        mIndex              = uint32_t(mView.bufferView.offset / sizeof(LambertianMaterialData));
         data.textureIndices = glm::uvec4(mColor.slot, mNormal.slot, mSampler.slot, 1u | (mOwnNormal ? 2u : 0u));
         mData               = data;
         return true;
@@ -190,13 +189,13 @@ public:
         auto & raster = inputs.raster;
         auto   state  = inputs.ssc;
         if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, mStorage.textured())) GN_UNLIKELY {
-            GN_ERROR(logger, "LambertianMaterial: invalid uniform state, geometry, or transform");
-            return false;
-        }
+                GN_ERROR(logger, "LambertianMaterial: invalid uniform state, geometry, or transform");
+                return false;
+            }
         const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
         gpu2::bindless::Raster::DrawParameters draw {.geometry = inputs.geometry};
-        draw.vs         = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
-        draw.ps         = mShaders.fragment;
+        draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
+        draw.ps = mShaders.fragment;
         if (inputs.states) draw.states = *inputs.states;
         draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
         raster.retainResource(std::move(state));

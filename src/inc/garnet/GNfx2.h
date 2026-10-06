@@ -11,6 +11,7 @@ namespace GN::fx2 {};
 #include "fx2/bindless/shared-shader-constants.h"
 #include "fx2/bindless/unlit.h"
 #include "fx2/bindless/lambertian.h"
+#include "fx2/bindless/sky.h"
 #include "fx2/bindless/pbr.h"
 #include "fx2/shared-shader-constants.h"
 #include "fx2/kernel.h"

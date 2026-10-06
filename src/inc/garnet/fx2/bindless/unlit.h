@@ -48,7 +48,7 @@ protected:
 struct UnlitKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual UnlitMaterial::Parameters defaultMaterialParameters() const = 0;
+    virtual UnlitMaterial::Parameters defaultMaterialParameters() const                                                             = 0;
     virtual AutoRef<UnlitMaterial>    createMaterial(gpu2::bindless::CnC & initialization, const UnlitMaterial::Parameters &) const = 0;
 
     GN_API static AutoRef<UnlitKernel> create(gpu2::bindless::DescriptorHeap & heap, gpu2::bindless::CnC & initialization);

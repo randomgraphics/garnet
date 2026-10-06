@@ -176,10 +176,11 @@ uint32_t VkBindlessDescriptorHeap::size() const {
 
 VkBindlessDescriptorHeap::MaterialToken VkBindlessDescriptorHeap::allocateMaterial(uint64_t size, uint64_t alignment) {
     std::lock_guard<std::mutex> lock(mMutex);
-    if (!mDescriptorSet || !size || !alignment || (alignment & (alignment - 1))) GN_UNLIKELY return INVALID_MATERIAL_TOKEN;
+    if (!mDescriptorSet || !size || !alignment || (alignment % 4 != 0)) GN_UNLIKELY return INVALID_MATERIAL_TOKEN;
     for (auto it = mMaterialFreeRanges.begin(); it != mMaterialFreeRanges.end(); ++it) {
         const uint64_t start = it->first, available = it->second;
-        const uint64_t padding = (alignment - (start & (alignment - 1))) & (alignment - 1);
+        const uint64_t remainder = start % alignment;
+        const uint64_t padding   = remainder ? (alignment - remainder) : 0;
         if (padding > available || size > available - padding) continue;
         const uint64_t offset = start + padding;
         const auto     token  = NEXT_MATERIAL_TOKEN.fetch_add(1, std::memory_order_relaxed);

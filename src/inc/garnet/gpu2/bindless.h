@@ -97,7 +97,7 @@ public:
     using MaterialToken                                   = uint64_t;
     static constexpr MaterialToken INVALID_MATERIAL_TOKEN = 0;
 
-    /// Allocate an opaque, variable-sized chunk; alignment must be a nonzero power of two.
+    /// Allocate an opaque, variable-sized chunk; alignment must be a multiple of 4 bytes (32-bit boundary).
     /// No upload is recorded. Fill materialView(token) through a caller-owned CnC before use.
     /// The fixed-capacity allocator returns INVALID_MATERIAL_TOKEN on invalid input or exhaustion.
     virtual MaterialToken allocateMaterial(uint64_t size, uint64_t alignment = 4) = 0;
