@@ -20,6 +20,12 @@ if(VULKAN_FOUND)
                 ${_fx2_shader_dir}/bindless-lambertian.frag
                 ${_fx2_shader_dir}/bindless-pbr.vert
                 ${_fx2_shader_dir}/bindless-pbr.frag
+                ${_fx2_shader_dir}/bindless-cel.vert
+                ${_fx2_shader_dir}/bindless-cel-texture.vert
+                ${_fx2_shader_dir}/bindless-cel.frag
+                ${_fx2_shader_dir}/bindless-cel-outline.vert
+                ${_fx2_shader_dir}/bindless-cel-outline-texture.vert
+                ${_fx2_shader_dir}/bindless-cel-outline.frag
                 ${_fx2_shader_dir}/bindless-sky.vert
                 ${_fx2_shader_dir}/bindless-sky.frag
                 ${_fx2_shader_dir}/imgui.vert
