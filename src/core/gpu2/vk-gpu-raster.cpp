@@ -226,7 +226,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
         vk::RenderingAttachmentInfo att;
         att.setImageView(view)
             .setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
-            .setLoadOp(vk::AttachmentLoadOp::eClear)
+            .setLoadOp(mRenderTarget.loadColor ? vk::AttachmentLoadOp::eLoad : vk::AttachmentLoadOp::eClear)
             .setStoreOp(vk::AttachmentStoreOp::eStore)
             .setClearValue(vk::ClearValue(clearCv));
         colorAtts.push_back(att);

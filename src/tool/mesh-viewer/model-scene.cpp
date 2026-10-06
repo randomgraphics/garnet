@@ -199,44 +199,58 @@ AutoRef<ModelScene> ModelScene::createDebugVisualization(const Bounds & sourceBo
     AutoRef<ModelScene> result(new ModelScene(TYPE_INFO(), "model-debug-visualization"));
     result->sourcePath = "generated://model-debug-visualization";
 
-    Material material;
-    material.name      = "debug-vertex-color";
-    material.workflow  = MaterialWorkflow::UNLIT;
-    material.baseColor = glm::vec4(1.0f);
-    result->materials.append(material);
-
-    Primitive primitive;
-    primitive.name = "bounds-and-axes";
-    if (includeBounds) {
-        const glm::vec4 boundsColor(1.0f, 0.8f, 0.1f, 1.0f);
-        for (uint32_t varyingAxis = 0; varyingAxis < 3; ++varyingAxis) {
-            const uint32_t fixedAxis1 = (varyingAxis + 1) % 3;
-            const uint32_t fixedAxis2 = (varyingAxis + 2) % 3;
-            for (uint32_t corner = 0; corner < 4; ++corner) {
-                glm::vec3 start   = sourceBounds.minimum;
-                glm::vec3 end     = sourceBounds.minimum;
-                end[varyingAxis]  = sourceBounds.maximum[varyingAxis];
-                start[fixedAxis1] = end[fixedAxis1] = (corner & 1) ? sourceBounds.maximum[fixedAxis1] : sourceBounds.minimum[fixedAxis1];
-                start[fixedAxis2] = end[fixedAxis2] = (corner & 2) ? sourceBounds.maximum[fixedAxis2] : sourceBounds.minimum[fixedAxis2];
-                appendAxisAlignedSegment(primitive, start, end, varyingAxis, lineWidth, boundsColor);
-            }
-        }
-    }
-
+    // One unlit material per color: the bindless unlit kernel has no vertex-color input, so the
+    // cage and each tripod axis become separate primitives instead of one vertex-colored mesh.
+    struct DebugPart {
+        StrA      name;
+        glm::vec4 color;
+        int32_t   axis; ///< -1 for the bounds cage, otherwise the axis index of one tripod segment.
+    };
+    const float          axisLength = std::max(glm::length(sourceBounds.maximum - sourceBounds.minimum) * 0.2f, lineWidth * 10.0f);
+    DynaArray<DebugPart> parts;
+    if (includeBounds) parts.append({"bounds", glm::vec4(1.0f, 0.8f, 0.1f, 1.0f), -1});
     if (includeAxes) {
-        const float axisLength = std::max(glm::length(sourceBounds.maximum - sourceBounds.minimum) * 0.2f, lineWidth * 10.0f);
-        appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(axisLength, 0, 0), 0, lineWidth, glm::vec4(1, 0, 0, 1));
-        appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, axisLength, 0), 1, lineWidth, glm::vec4(0, 1, 0, 1));
-        appendAxisAlignedSegment(primitive, glm::vec3(0), glm::vec3(0, 0, axisLength), 2, lineWidth, glm::vec4(0, 0.4f, 1, 1));
+        parts.append({"axis-x", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 0});
+        parts.append({"axis-y", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), 1});
+        parts.append({"axis-z", glm::vec4(0.0f, 0.4f, 1.0f, 1.0f), 2});
     }
-    result->primitives.append(std::move(primitive));
 
     Node node;
     node.name = "bounds-and-axes";
-    node.primitives.append(0);
-    node.bounds = result->primitives[0].bounds;
+    for (const auto & part : parts) {
+        Material material;
+        material.name      = part.name;
+        material.workflow  = MaterialWorkflow::UNLIT;
+        material.baseColor = part.color;
+
+        Primitive primitive;
+        primitive.name     = part.name;
+        primitive.material = static_cast<uint32_t>(result->materials.size());
+        if (part.axis < 0) {
+            for (uint32_t varyingAxis = 0; varyingAxis < 3; ++varyingAxis) {
+                const uint32_t fixedAxis1 = (varyingAxis + 1) % 3;
+                const uint32_t fixedAxis2 = (varyingAxis + 2) % 3;
+                for (uint32_t corner = 0; corner < 4; ++corner) {
+                    glm::vec3 start   = sourceBounds.minimum;
+                    glm::vec3 end     = sourceBounds.minimum;
+                    end[varyingAxis]  = sourceBounds.maximum[varyingAxis];
+                    start[fixedAxis1] = end[fixedAxis1] = (corner & 1) ? sourceBounds.maximum[fixedAxis1] : sourceBounds.minimum[fixedAxis1];
+                    start[fixedAxis2] = end[fixedAxis2] = (corner & 2) ? sourceBounds.maximum[fixedAxis2] : sourceBounds.minimum[fixedAxis2];
+                    appendAxisAlignedSegment(primitive, start, end, varyingAxis, lineWidth, part.color);
+                }
+            }
+        } else {
+            glm::vec3 end(0);
+            end[part.axis] = axisLength;
+            appendAxisAlignedSegment(primitive, glm::vec3(0), end, part.axis, lineWidth, part.color);
+        }
+        include(node.bounds, primitive.bounds);
+        node.primitives.append(static_cast<uint32_t>(result->primitives.size()));
+        result->materials.append(std::move(material));
+        result->primitives.append(std::move(primitive));
+    }
     result->nodes.append(std::move(node));
-    result->bounds = result->primitives[0].bounds;
+    result->bounds = node.bounds;
     return result;
 }
 

@@ -84,21 +84,32 @@ TEST_CASE("viewer::ModelScene creates bounded debug axes without renderer depend
     const ModelScene::Bounds bounds {.minimum = {-2, -1, -3}, .maximum = {4, 5, 6}, .valid = true};
     const auto               scene = ModelScene::createDebugVisualization(bounds, 0.01f);
     REQUIRE(scene);
-    REQUIRE(scene->materials.size() == 1);
-    CHECK(scene->materials[0].workflow == ModelScene::MaterialWorkflow::UNLIT);
-    REQUIRE(scene->primitives.size() == 1);
-    CHECK(scene->primitives[0].vertices.size() == 15 * 8);
-    CHECK(scene->primitives[0].indices.size() == 15 * 36);
-    CHECK(scene->primitives[0].bounds.valid);
+    // One material/primitive per color: the cage plus three tripod axes.
+    REQUIRE(scene->materials.size() == 4);
+    REQUIRE(scene->primitives.size() == 4);
+    for (size_t i = 0; i < scene->materials.size(); ++i) {
+        CHECK(scene->materials[i].workflow == ModelScene::MaterialWorkflow::UNLIT);
+        CHECK(scene->primitives[i].material == i);
+        CHECK(scene->primitives[i].bounds.valid);
+    }
+    CHECK(scene->materials[0].baseColor == glm::vec4(1.0f, 0.8f, 0.1f, 1.0f));
+    // The cage is 12 segments of 8 corners; each axis is a single segment.
+    CHECK(scene->primitives[0].vertices.size() == 12 * 8);
+    CHECK(scene->primitives[0].indices.size() == 12 * 36);
+    CHECK(scene->primitives[1].indices.size() == 36);
+    CHECK(scene->primitives[3].indices.size() == 36);
     REQUIRE(scene->nodes.size() == 1);
-    CHECK(scene->nodes[0].primitives.size() == 1);
+    CHECK(scene->nodes[0].primitives.size() == 4);
+    CHECK(scene->bounds.valid);
 
     const auto boundsOnly = ModelScene::createDebugVisualization(bounds, 0.01f, true, false);
     const auto axesOnly   = ModelScene::createDebugVisualization(bounds, 0.01f, false, true);
     REQUIRE(boundsOnly);
     REQUIRE(axesOnly);
+    REQUIRE(boundsOnly->primitives.size() == 1);
     CHECK(boundsOnly->primitives[0].indices.size() == 12 * 36);
-    CHECK(axesOnly->primitives[0].indices.size() == 3 * 36);
+    REQUIRE(axesOnly->primitives.size() == 3);
+    for (const auto & axis : axesOnly->primitives) CHECK(axis.indices.size() == 36);
     CHECK_FALSE(ModelScene::createDebugVisualization(bounds, 0.01f, false, false));
 }
 

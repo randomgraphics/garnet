@@ -43,9 +43,10 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
             const StrA choice = argv[++i];
             if (choice == "pbr")
                 options.surface = viewer::Shading::PBR;
-            else if (choice == "cel")
-                options.surface = viewer::Shading::CEL;
-            else if (choice == "unlit")
+            else if (choice == "cel") {
+                GN_ERROR(sLogger, "Cel shading is temporarily disabled in the bindless mesh viewer");
+                return false;
+            } else if (choice == "unlit")
                 options.surface = viewer::Shading::UNLIT;
             else if (choice == "lambertian")
                 options.surface = viewer::Shading::LAMBERTIAN;
@@ -94,10 +95,10 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
             return false;
         }
     }
-    if (options.exposure == 0) options.exposure = options.surface == viewer::Shading::CEL ? 1.f : 0.002f;
+    if (options.exposure == 0) options.exposure = 0.002f;
     if (!options.path.empty()) return true;
     GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] "
-                      "[--surface pbr|cel|unlit|lambertian] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
+                      "[--surface pbr|unlit|lambertian] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
     return false;
 }
 
@@ -203,8 +204,6 @@ int main(int argc, const char * argv[]) {
     if (!host.initialize(options.headless)) return EXIT_FAILURE;
     SceneRenderer renderer;
     if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
-    auto &                     ssc         = renderer.ssc;
-    auto &                     environment = ssc->set0.envLighting;
     AutoRef<fx2::ImGuiBackend> ui;
     if (host.window) {
         ui = fx2::ImGuiBackend::create({.gpu = host.gpu, .window = *host.window});
@@ -212,12 +211,10 @@ int main(int argc, const char * argv[]) {
     }
     const glm::vec3 center     = (model->bounds.minimum + model->bounds.maximum) * 0.5f;
     const float     radius     = std::max(glm::length(model->bounds.maximum - model->bounds.minimum) * 0.5f, 0.001f);
-    auto &          camera     = ssc->set0.camera;
-    camera.nearPlane           = std::max(radius / 1000.0f, 0.0001f);
-    camera.farPlane            = std::max(radius * 20.0f, 1.0f);
+    const float     nearPlane  = std::max(radius / 1000.0f, 0.0001f);
+    const float     farPlane   = std::max(radius * 20.0f, 1.0f);
     constexpr float fovDegrees = 45.f;
-    camera.cameraFov           = ArcDegree(fovDegrees);
-    camera.exposure            = options.exposure;
+    float           exposure   = options.exposure;
 
     ArcballCameraController arcball;
     arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, fovDegrees);
@@ -279,8 +276,10 @@ int main(int argc, const char * argv[]) {
             ImGui::Checkbox("Bounds", &showBounds);
             ImGui::SameLine();
             ImGui::Checkbox("Axes", &showAxes);
-            ImGui::SliderFloat("Camera exposure", &camera.exposure, 0.0001f, 10.f, "%.4f", ImGuiSliderFlags_Logarithmic);
-            ImGui::SliderFloat("Environment luminance (nits)", &environment.environmentLuminanceScale, 0.0f, 8000.0f, "%.1f");
+            ImGui::SliderFloat("Camera exposure", &exposure, 0.0001f, 10.f, "%.4f", ImGuiSliderFlags_Logarithmic);
+            // The bindless sky material is immutable, so environment calibration is fixed at
+            // prepare() time by --environment-luminance and can only be reported here.
+            ImGui::TextDisabled("Environment luminance: %.1f nits", options.environmentLuminance);
 
             ImGui::SeparatorText("Hierarchy");
             if (ImGui::BeginChild("hierarchy", {0, 190}, ImGuiChildFlags_Borders)) {
@@ -362,17 +361,27 @@ int main(int argc, const char * argv[]) {
             havePointerSample = true;
         }
 
-        camera.cameraPosition                  = navigationMode == NavigationMode::ARCBALL ? arcball.eyePosition() : fly.position;
-        camera.cameraOrientation               = navigationMode == NavigationMode::ARCBALL ? arcball.orientation : fly.orientation;
-        camera.viewWidthInPixel                = host.width;
-        camera.viewHeightInPixel               = host.height;
-        camera.aspectRatio                     = static_cast<float>(host.width) / host.height;
-        ssc->set0.frameConstants.frameCounter  = frame;
-        ssc->set0.frameConstants.frameDuration = std::chrono::duration_cast<fx2::Microseconds>(std::chrono::duration<float>(elapsedSeconds));
-        const auto shared                      = ssc->takeSnapshot();
-        auto       acquired                    = host.swapchain->prepare();
+        auto acquired = host.swapchain->prepare();
         if (acquired.view.empty()) return EXIT_FAILURE;
         host.lastFrame = acquired.view.texture();
+
+        auto uniformUploads = bindless::CnC::create("viewer.uniforms", {.gpu = host.gpu, .heap = renderer.heap});
+        if (!uniformUploads) return EXIT_FAILURE;
+        const bool useArcball = navigationMode == NavigationMode::ARCBALL;
+        const auto uniforms   = renderer.updateUniforms(*uniformUploads, {.eye             = useArcball ? arcball.eyePosition() : fly.position,
+                                                                          .orientation     = useArcball ? arcball.orientation : fly.orientation,
+                                                                          .width           = host.width,
+                                                                          .height          = host.height,
+                                                                          .nearPlane       = nearPlane,
+                                                                          .farPlane        = farPlane,
+                                                                          .fovDegrees      = fovDegrees,
+                                                                          .exposure        = exposure,
+                                                                          .frameDurationMs = elapsedSeconds * 1000.f,
+                                                                          .frame           = static_cast<uint32_t>(frame)});
+        if (!uniforms) return EXIT_FAILURE;
+        auto uniformWork = uniformUploads->seal();
+        if (!uniformWork) return EXIT_FAILURE;
+
         RasterTarget    target;
         GpuResourceView depth;
         depth.resource = host.depth;
@@ -382,30 +391,42 @@ int main(int argc, const char * argv[]) {
         blend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
         blend.alphaSrc = RasterTarget::BlendState::ONE;
         blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
-        auto raster    = GpuRaster::create("viewer.frame", {.gpu = host.gpu, .target = &target});
-        if (!raster) return EXIT_FAILURE;
-        auto privateUploads = GpuCnC::create({.gpu = host.gpu});
-        if (!privateUploads || !renderer.record(*raster, *privateUploads, shared.set0Resources, showBounds, showAxes)) return EXIT_FAILURE;
-        auto privatePayload = privateUploads->seal();
-        if (!privatePayload) return EXIT_FAILURE;
-        AutoRef<GpuPayload> uiUpload;
-        if (ui && !ui->record(*raster, uiUpload)) return EXIT_FAILURE;
+
+        auto raster = bindless::Raster::create("viewer.frame", {.gpu               = host.gpu,
+                                                                .target            = &target,
+                                                                .heap              = renderer.heap,
+                                                                .passResources     = fx2::bindless::sharedUniformResources(uniforms),
+                                                                .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes)});
+        if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes)) return EXIT_FAILURE;
         auto rendered = raster->seal();
         if (!rendered) return EXIT_FAILURE;
-        GpuContext::SubmitParameters submit("mesh-viewer.frame");
-        if (renderer.initialization) submit.appendWork(renderer.initialization);
-        submit.appendWork(privatePayload);
-        for (const auto & payload : shared.set0Payloads) {
-            if (!payload) return EXIT_FAILURE;
-            submit.appendWork(payload);
+
+        // The ImGui backend still records into a legacy raster, so the overlay is a second pass
+        // over the same backbuffer. It loads rather than clears the scene's color and needs no depth.
+        AutoRef<GpuPayload> uiUpload, uiPass;
+        if (ui) {
+            RasterTarget uiTarget;
+            uiTarget.setColorTarget(0, acquired.view);
+            uiTarget.loadColor = true;
+            auto & uiBlend     = uiTarget.colorTargets[0].blendState;
+            uiBlend.colorSrc   = RasterTarget::BlendState::SRC_ALPHA;
+            uiBlend.colorDst   = RasterTarget::BlendState::INV_SRC_ALPHA;
+            uiBlend.alphaSrc   = RasterTarget::BlendState::ONE;
+            uiBlend.alphaDst   = RasterTarget::BlendState::INV_SRC_ALPHA;
+            auto uiRaster      = GpuRaster::create("viewer.ui", {.gpu = host.gpu, .target = &uiTarget});
+            if (!uiRaster || !ui->record(*uiRaster, uiUpload)) return EXIT_FAILURE;
+            uiPass = uiRaster->seal();
+            if (!uiPass) return EXIT_FAILURE;
         }
+
+        GpuContext::SubmitParameters submit("mesh-viewer.frame");
+        submit.appendWork(uniformWork);
         if (uiUpload) submit.appendWork(uiUpload);
-        // SSC's single UBO pair is safe because each frame's uploads precede its
-        // raster and the next frame's uploads follow it in GPU submission order.
         submit.appendWork(rendered).waitFor(acquired.ready);
+        submit.appendWork(uiPass);
         host.gpu->submit(submit);
-        renderer.initialization.clear();
-        host.swapchain->present(*rendered);
+        // Present must wait on the last payload touching the backbuffer, not just the scene pass.
+        host.swapchain->present(uiPass ? *uiPass : *rendered);
     }
     host.gpu->waitForIdle();
     if (!options.snapshot.empty()) {
