@@ -32,16 +32,15 @@ Archived code moves into `src/retired/gfx1/`:
 
 ### Gen2 Continuity
 
-- `rapid-image` and `stb_image` implementation in `src/core/gfx/base/image.cpp` is relocated to
-  `src/core/base/image.cpp` so that `GN::gfx::img::Image` continues to be built into `GNcore`.
-- `src/inc/garnet/gfx/image.h` is preserved at its current path since `GNgpu2.h`, `e2`, and `fx2`
-  include it for pixel format and image definitions.
+- `rapid-image` and `stb_image` implementation is relocated to `src/core/gpu2/image.cpp`.
+- `image.h` is relocated to `src/inc/garnet/gpu2/image.h` included by `GNgpu2.h`.
+- The `src/inc/garnet/gfx` directory has been retired completely.
 
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 3 — Retire Gen1 Samples and Tests
-In progress: Phase 4 — Build & CIT Verification
+Last completed: Phase 4 — Build & CIT Verification
+In progress: none — awaiting user sign-off
 --- END PROGRESS ---
 
 ---
