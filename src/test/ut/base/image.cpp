@@ -1,5 +1,5 @@
 #include "../testCommon.h"
-#include "garnet/GNgfx.h"
+#include "garnet/gfx/image.h"
 #include <png.h>
 
 class ImageTest : public CxxTest::TestSuite {
