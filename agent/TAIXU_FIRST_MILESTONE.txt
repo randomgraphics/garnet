@@ -34,10 +34,10 @@
 
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1 — 窗口漫游、目标选择和 headless 画面验证已完成
+Last completed: Phase 2.1.3 — 具名 Form 场景、确定性编辑命令和木屋渲染均已完成并验证
   Phase 0: 记录太虚首个里程碑和三个验收检查点
   Phase 1: 建立独立 GNtaixu 应用；渲染地面与地标；验证 WASD、鼠标视角、Esc、地面目标标记和坐标面板；记录运行步骤
-In progress: Phase 2.1.1 — prototype 可见场景对象已改为 E2 Form，PrimeView 驱动渲染；下一步细化语义编辑命令与验证
+In progress: Phase 2.2.1 — 2.1.1 Form 场景、2.1.2 确定性编辑命令、2.1.3 木屋 Forms 已完成并验证；下一步保存 Form/Facet 数据
 --- END PROGRESS ---
 --- REFERENCE ---
 
@@ -84,18 +84,27 @@ Phase 2: C2——语义编辑基础
 ─────────────────────────────────────────────────────────────────────
 Task 2.1: 定义添加示例实体所需的最简语义实体和世界编辑命令。
   2.1.1: 用具名 Form + TransformFacet + VisualFacet 承载 prototype 全部可见物体；以 PrimeView 作为渲染输入。
-    Verify: GNtaixu 构建成功；启动场景查询到 8 个同时具有 TransformFacet 和 VisualFacet 的 Form；headless PNG 中地面和地标可见。
+    Verify: GNtaixu 构建成功；基础场景查询到 6 个同时具有 TransformFacet 和 VisualFacet 的 Form；headless PNG 中地面和地标可见。
     Commit: "refactor(taixu): represent prototype objects as E2 Forms (Phase 2.1.1)"
   2.1.2: 从渲染数组中分离语义实体定义，建立确定性的添加实体编辑命令，并验证命令结果仍由 Form/Facet 状态表示。
-    Verify: 命令前后 PrimeView 的 Form 数量、Form 名称和空间/视觉 Facet 可检查；渲染结果出现新增实体。
+    Verify: `--add-house` 将 PrimeView 中 Form 数从 6 增至 12；六个新增具名 Form 的空间/视觉 Facet 与请求数据一致；无效位置不改变世界。
     Commit: "feat(taixu): add deterministic Form editing command (Phase 2.1.2)"
   2.1.3: 将简单木屋作为一组具名 Forms 添加，验证空间数据与视觉结果。
-    Verify: headless 图片出现木屋；查询结果包含木屋各部件及其 Transform/Visual 值。
+    Verify: `GNtaixu --headless /tmp/taixu.png --add-house` 图片出现木屋；查询结果包含墙、屋顶、门、窗共六个木屋 Form 及 Transform/Visual 值。
     Commit: "feat(taixu): add semantic wood-house scene command (Phase 2.1.3)"
-    Verify: 通过针对性模块测试或可执行检查，确认实体数据独立于渲染资源对象，且无效输入会被拒绝。
+    Verify: 运行时检查确认实体数据独立于渲染资源对象，且无效位置在写入世界前被拒绝。
     Commit: "feat(taixu): 定义语义世界编辑模型 (Phase 2.1)"
 
   Task 2.2: 通过语义模型应用并渲染示例修改，支持保存和重新载入。
+    2.2.1: 定义只包含 Form 名称、TransformFacet 和 VisualFacet 值的版本化场景存档格式。
+      Verify: 序列化后不包含 GPU handle 或 FX2 对象，字段与 PrimeView 值一一对应。
+      Commit: "feat(taixu): serialize Form-based world snapshot (Phase 2.2.1)"
+    2.2.2: 实现加载校验及以 E2 Form/Mold 重建世界；无效存档不部分应用。
+      Verify: 往返保存/加载后具名 Forms 数量、空间和视觉数据一致；损坏或非法数据被拒绝。
+      Commit: "feat(taixu): reload validated E2 world snapshot (Phase 2.2.2)"
+    2.2.3: 增加 `--save-world` / `--load-world` 命令行流程和 headless 往返验证。
+      Verify: 保存木屋场景，进程重启后加载并输出同一场景 PNG；PNG 尺寸为 1280×720。
+      Commit: "feat(taixu): add headless world save and load workflow (Phase 2.2.3)"
     Verify: 添加示例实体，在运行中的世界观察它；保存并重启或重新载入后，再次观察到相同的语义实体。
     Commit: "feat(taixu): 持久化语义世界修改 (Phase 2.2)"
 

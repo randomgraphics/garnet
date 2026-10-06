@@ -1,5 +1,7 @@
 // Minimal standalone host for the Taixu world prototype.
 
+#include "world-model.h"
+
 #include <garnet/GNfx2.h>
 #include <garnet/GNengine2.h>
 #include <garnet/GNwin.h>
@@ -38,28 +40,6 @@ struct Host {
         if (surface) window->destroyVulkanSurfaceHandle(gpu->getVulkanInstanceHandle(), surface);
     }
 };
-
-struct LandmarkDefinition {
-    const char * name;
-    glm::vec3    position;
-    glm::vec3    scale;
-    glm::vec4    color;
-};
-
-constexpr LandmarkDefinition kLandmarks[] = {
-    {"ground", {0.0f, -0.15f, 0.0f}, {24.0f, 0.3f, 24.0f}, {0.25f, 0.42f, 0.28f, 1.0f}},
-    {"hut-wall", {-3.5f, 0.8f, 0.0f}, {2.2f, 1.6f, 2.0f}, {0.72f, 0.34f, 0.18f, 1.0f}},
-    {"hut-roof", {-3.5f, 1.9f, 0.0f}, {2.5f, 0.35f, 2.3f}, {0.86f, 0.63f, 0.28f, 1.0f}},
-    {"blue-pillar", {3.5f, 1.1f, -1.0f}, {1.2f, 2.2f, 1.2f}, {0.30f, 0.54f, 0.78f, 1.0f}},
-    {"red-marker-base", {6.0f, 0.6f, -4.0f}, {1.0f, 1.2f, 1.0f}, {0.78f, 0.32f, 0.25f, 1.0f}},
-    {"red-marker-cap", {6.0f, 1.6f, -4.0f}, {1.8f, 0.35f, 1.8f}, {0.92f, 0.72f, 0.35f, 1.0f}},
-    {"tree-trunk", {-7.0f, 0.7f, -5.0f}, {0.55f, 1.4f, 0.55f}, {0.38f, 0.28f, 0.18f, 1.0f}},
-    {"tree-crown", {-7.0f, 1.8f, -5.0f}, {2.2f, 1.2f, 2.2f}, {0.20f, 0.52f, 0.30f, 1.0f}},
-};
-
-e2::FacetBinding makeBinding(const e2::TransformFacet::Value & value) { return {e2::Ref<const e2::Facet>(new e2::TransformFacet), value.clone()}; }
-
-e2::FacetBinding makeBinding(const e2::VisualFacet::Value & value) { return {e2::Ref<const e2::Facet>(new e2::VisualFacet), value.clone()}; }
 
 glm::vec3 toMeters(const e2::WorldVector3 & position, const e2::PhysicalScale & scale) {
     const auto local = e2::positionToMeters(position, scale);
@@ -124,27 +104,19 @@ class WorldScene {
 public:
     e2::Universe                   universe;
     AutoRef<e2::World>             world;
-    e2::PhysicalScale              scale = e2::PhysicalScale::METER();
+    e2::PhysicalScale              scale = e2::PhysicalScale::MILLIMETER();
     AutoRef<UnlitKernel>           kernel;
     AutoRef<SharedShaderConstants> constants;
     RasterGeometry                 box;
     AutoRef<GpuPayload>            initialUpload;
 
-    bool initialize(const AutoRef<GpuContext> & gpu) {
+    bool initialize(const AutoRef<GpuContext> & gpu, bool addHouse) {
         world = e2::World::create(universe, "taixu-prototype");
-        if (!world || !world->registerFacet(e2::TransformFacet {}) || !world->registerFacet(e2::VisualFacet {})) return false;
-        for (const auto & definition : kLandmarks) {
-            e2::TransformFacet::Value transform;
-            transform.position = e2::positionFromMeters(glm::dvec3(definition.position), scale);
-            e2::VisualFacet::Value visual;
-            visual.halfExtent = definition.scale * 0.5f;
-            visual.color      = definition.color;
-            auto mold         = e2::Mold::create(universe, definition.name, {makeBinding(transform), makeBinding(visual)},
-                                                 [name = StrA(definition.name)](e2::FormId id) { return e2::Form::create(id, name); });
-            if (!mold || !world->createForm(*mold)) return false;
-        }
-        const auto initialPrime = world->primeSnapshot();
-        if (!initialPrime || initialPrime->query<e2::TransformFacet, e2::VisualFacet>().size() != std::size(kLandmarks)) return false;
+        if (!world || !taixu::prototype::createWorld(universe, *world, scale)) return false;
+        if (addHouse && !taixu::prototype::addWoodHouse(universe, *world, scale, {-3.5, 0.0, 0.0})) return false;
+        const auto   initialPrime      = world->primeSnapshot();
+        const size_t expectedFormCount = addHouse ? 12 : 6;
+        if (!initialPrime || initialPrime->query<e2::TransformFacet, e2::VisualFacet>().size() != expectedFormCount) return false;
 
         kernel       = UnlitKernel::create(gpu);
         constants    = SharedShaderConstants::create({.gpu = gpu});
@@ -288,14 +260,26 @@ bool renderHeadless(const AutoRef<GpuContext> & gpu, WorldScene & scene, const C
 } // namespace
 
 int main(int argc, const char ** argv) {
-    bool         headless   = false;
-    const char * outputPath = "taixu-headless.png";
-    if (argc > 1 && std::string(argv[1]) == "--headless") {
-        headless = true;
-        if (argc > 2) outputPath = argv[2];
-    } else if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
-        std::puts("Usage: GNtaixu [--headless [output.png]]");
-        return 0;
+    bool         headless        = false;
+    bool         addHouse        = false;
+    const char * outputPath      = "taixu-headless.png";
+    bool         outputSpecified = false;
+    for (int i = 1; i < argc; ++i) {
+        const std::string argument(argv[i]);
+        if (argument == "--headless") {
+            headless = true;
+        } else if (argument == "--add-house") {
+            addHouse = true;
+        } else if (argument == "--help" || argument == "-h") {
+            std::puts("Usage: GNtaixu [--headless [output.png]] [--add-house]");
+            return 0;
+        } else if (headless && !outputSpecified && !argument.starts_with("-")) {
+            outputPath      = argv[i];
+            outputSpecified = true;
+        } else {
+            std::fprintf(stderr, "Unknown or misplaced argument: %s\n", argv[i]);
+            return 1;
+        }
     }
 
     if (headless) {
@@ -312,7 +296,7 @@ int main(int argc, const char ** argv) {
     if (!host.gpu) return 1;
 
     WorldScene scene;
-    if (!scene.initialize(host.gpu)) return 1;
+    if (!scene.initialize(host.gpu, addHouse)) return 1;
 
     FirstPersonController controller;
     if (headless) return renderHeadless(host.gpu, scene, controller.pose, outputPath) ? 0 : 1;
