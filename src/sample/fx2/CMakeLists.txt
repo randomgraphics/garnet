@@ -4,3 +4,6 @@ target_link_libraries(GNsample-fx2-pbr GNcore)
 
 add_executable(GNsample-fx2-unlit simple-unlit.cpp)
 target_link_libraries(GNsample-fx2-unlit GNcore)
+
+add_executable(GNsample-fx2-cel-shading simple-cel-shading.cpp)
+target_link_libraries(GNsample-fx2-cel-shading GNcore)

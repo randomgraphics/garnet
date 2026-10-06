@@ -4,7 +4,7 @@
 #include <cmath>
 
 // Sample-owned CPU generation and GPU upload; FX2 only sees ordinary buffer bindings.
-inline GN::gpu2::RasterGeometry createSampleSphere(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::GpuCnC & uploads) {
+inline GN::gpu2::RasterGeometry createSampleSphere(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads) {
     using namespace GN;
     using namespace GN::gpu2;
     struct Vertex {
