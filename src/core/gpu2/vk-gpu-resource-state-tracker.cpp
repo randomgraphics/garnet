@@ -600,7 +600,9 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
 }
 
 void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb) {
-    if (!tex || !tex->nativeImage()) return;
+    // Swapchain images are presentation targets and commonly lack sampled usage; their
+    // final layout is selected by present(), so never transition them to shader-read-only.
+    if (!tex || !tex->nativeImage() || tex->isBackbuffer()) return;
     auto                 vkImg    = tex->nativeImage();
     const auto &         desc     = tex->descriptor();
     const auto           resolved = resolveRange(view.imageView.range, desc);

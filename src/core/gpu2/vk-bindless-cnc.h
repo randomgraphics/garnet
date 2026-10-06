@@ -10,6 +10,10 @@
 
 namespace GN::gpu2 {
 
+/// Build descriptor sets for pass resources outside the bindless heap.
+bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTable & passResources, uint32_t heapSetIndex, vk::ShaderStageFlags stageFlags,
+                                     vk::DescriptorPool & outPool, std::vector<vk::DescriptorSet> & outSets);
+
 struct StoredBindlessCompute {
     AutoRef<GpuShader> cs;
     uint32_t           x = 1, y = 1, z = 1;

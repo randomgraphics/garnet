@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-bindless-raster.h"
+#include "vk-bindless-cnc.h"
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-format-utils.h"
 
@@ -103,6 +104,11 @@ AutoRef<bindless::Raster> createVkBindlessRaster(const StrA & name, const bindle
 
     vk::DescriptorPool             passPool {};
     std::vector<vk::DescriptorSet> passSets;
+
+    if (!buildBindlessPassDescriptorSets(*vkGpu, cp.passResources, cp.heapSetIndex, vk::ShaderStageFlagBits::eAllGraphics, passPool, passSets)) {
+        GN_ERROR(sLogger, "createVkBindlessRaster: failed to build pass descriptor sets");
+        return {};
+    }
 
     return AutoRef<bindless::Raster>(
         new VkBindlessRaster(name, vkGpu, *cp.target, cp.heap, cp.heapSetIndex, pl, passPool, passSets, cp.numberOfDrawsHint, cp.maxImmediateSize));

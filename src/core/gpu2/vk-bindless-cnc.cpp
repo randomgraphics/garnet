@@ -8,10 +8,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless.cnc");
 
 namespace GN::gpu2 {
 
-namespace {
-
-static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTable & passResources, uint32_t heapSetIndex, vk::DescriptorPool & outPool,
-                                    std::vector<vk::DescriptorSet> & outSets) {
+bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTable & passResources, uint32_t heapSetIndex, vk::ShaderStageFlags stageFlags,
+                                     vk::DescriptorPool & outPool, std::vector<vk::DescriptorSet> & outSets) {
     if (passResources.empty()) return true;
 
     auto vkDev = gpu.vulkanDevice().handle();
@@ -80,7 +78,7 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
             if (slot.empty()) continue;
 
             vk::DescriptorSetLayoutBinding bind;
-            bind.setBinding(static_cast<uint32_t>(b)).setDescriptorCount(static_cast<uint32_t>(slot.size())).setStageFlags(vk::ShaderStageFlagBits::eCompute);
+            bind.setBinding(static_cast<uint32_t>(b)).setDescriptorCount(static_cast<uint32_t>(slot.size())).setStageFlags(stageFlags);
 
             if (slot[0].isTexture()) {
                 bind.setDescriptorType(slot[0].imageView.type == GpuResourceView::ImageView::STORAGE ? vk::DescriptorType::eStorageImage
@@ -163,7 +161,7 @@ static bool buildPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceTa
     return true;
 }
 
-} // anonymous namespace
+// The helper is shared with bindless raster creation so both pass types bind identical resources.
 
 VkBindlessCnC::VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
                              vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets,
@@ -450,7 +448,7 @@ AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::Cn
     vk::DescriptorPool             passPool {};
     std::vector<vk::DescriptorSet> passSets;
 
-    if (!buildPassDescriptorSets(*vkGpu, cp.passResources, cp.heapSetIndex, passPool, passSets)) {
+    if (!buildBindlessPassDescriptorSets(*vkGpu, cp.passResources, cp.heapSetIndex, vk::ShaderStageFlagBits::eCompute, passPool, passSets)) {
         GN_ERROR(sLogger, "createVkBindlessCnc: failed to build pass descriptor sets");
         return {};
     }

@@ -195,13 +195,21 @@ reject unsupported attachment feedback before recording.
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: compile-only simple-unlit sample uses bindless SSC/kernel flow plus heap checker texture and nearest sampler; target compile/link passed
+Last completed: SSC stores, bindless unlit/Lambertian rendered-image verification, and windowed unlit sample launch passed with Vulkan validation.
   Phase 0.1: FX2/gpu2 design split; material storage assigned to the gpu2 heap, not to FX2.
   Phase 0.2: Full Debug build and cit.py -l passed; existing gpu2/FX2 regression passed with Vulkan validation.
   Phase 0.3: Opaque aligned chunks, immediate free/coalescing, stale/foreign rejection, caller uploads and GPU SSBO readback verified; 31,930 bindless assertions/20 cases, 86,775 regression assertions/108 cases, sample pixel check passed.
   Phase 0.4: Default-capacity boundary test, 100,000 persistent material chunks with one initial upload; targeted Debug build, lint, 31,933 assertions/20 cases, 1,000/100,000-draw headless pixel checks passed under validation.
   Phase 0.5: gpu2 descriptor handles made invalid-by-default and tagged; targeted Debug build/lint, 31,955 assertions/20 bindless cases and sample headless pixels passed under Vulkan validation.
-In progress: expose separate unlit/Lambertian kernel and immutable material interfaces. Kernels own the heap reference and shared shader/fallback state, and return default parameter values. Materials accept resource views/samplers and reclaim heap allocations after producer/draw references release. Descriptor deduplication is deferred. Debug sample and internal test targets compile/link; no tests executed.
+Phase 1: Bindless unlit/Lambertian kernel and immutable material interfaces are in place; kernel/material upload and draw submission paths compile and link.
+Phase 2.1/2.3: SSC uniform store and streaming pool implemented using separate fixed-capacity buffers and aligned reusable ranges. Producer payload and UniformState retain each uniform allocation; streaming IDs are globally unique and explicitly released.
+Verify: `python.exe env/bin/build.py -C d --target GNtest-internal` passed. `GNtest-internal.exe "[fx2][bindless][ssc]"` passed 18 assertions with `VK_LAYER_KHRONOS_validation`, no validation diagnostics. `GNsample-fx2-unlit` Debug build passed. Existing legacy `[fx2][lit]` tests passed 30,729 assertions, but emitted error logs in negative-input and repeated-payload test cases; this does not verify the new bindless Lambertian image path. `cit.py -l` reports pre-existing formatting violations in bindless-simple-kernels.cpp, simple-kernels.h, and simple-unlit.cpp; those files were left unchanged.
+Phase 3: Added a Vulkan readback test for bindless unlit and Lambertian materials. The test found pass descriptors were laid out but never allocated/bound for bindless raster; shared pass descriptor construction now serves raster and compute, with all-graphics versus compute shader visibility.
+Verify: `python.exe env/bin/build.py -C d --target GNtest-internal` and `python.exe env/bin/build.py -C d --target GNsample-fx2-unlit` passed. `GNtest-internal.exe "[fx2][bindless]"` passed 78 assertions in 3 cases with validation layers enabled and no validation diagnostics. Pixel checks confirm unlit color and Lambertian directional response/exposure tone mapping. Commit: not requested; leave uncommitted review.
+Material lifetime follow-up: added a fixed-capacity test that releases a material's only caller reference while upload and draw payloads retain it. It proves the sole material chunk cannot be reused early, descriptor/chunk capacity returns after GPU completion, and discard releases upload and draw references in sequence before reuse.
+Verify: same focused `[fx2][bindless]` run passed 78 assertions in 3 cases under Vulkan validation with no diagnostics. Commit: not requested; leave uncommitted review.
+Window launch fix: Vulkan validation caught the state tracker transitioning swapchain backbuffers to shader-read-only despite missing sampled-image usage. Skip that transition for backbuffers; present() selects their final layout. Verify: Debug sample rebuild passed, headless sample completed without validation diagnostics, and windowed process remains responsive with title `FX2 bindless unlit kernel`.
+Complete; awaiting user sign-off. Keep this task file active until explicit sign-off or archive request.
 --- END PROGRESS ---
 
 --- REFERENCE ---
