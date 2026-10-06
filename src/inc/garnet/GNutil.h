@@ -13,7 +13,7 @@ namespace GN {
 namespace util {}
 } // namespace GN
 
-#include "util/fps.h"
+#include "base/fps.h"
 
 // *****************************************************************************
 //                                     EOF

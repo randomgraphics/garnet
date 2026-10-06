@@ -116,6 +116,9 @@ namespace internal {}
 // light-weight performance profiler
 #include "base/profiler.h"
 
+// FPS calculator
+#include "base/fps.h"
+
 // XML parser
 #include "base/xml.h"
 
