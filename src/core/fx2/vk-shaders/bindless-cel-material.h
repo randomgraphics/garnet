@@ -12,7 +12,5 @@ struct CelMaterialData {
     vec4  outlineColor;   // rgba = outlineColor
     uvec4 textureIndices; // x = colorIndex, y = normalIndex, z = samplerIndex, w = flags (bit 0: colorMap, bit 1: normalMap)
 };
-layout(set = 0, binding = 0, std430) readonly buffer CelMaterialBuffer {
-    CelMaterialData materials[];
-}
+layout(set = 0, binding = 0, std430) readonly buffer CelMaterialBuffer { CelMaterialData materials[]; }
 celMaterialHeap;

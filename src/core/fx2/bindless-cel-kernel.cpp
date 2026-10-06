@@ -88,12 +88,13 @@ struct Shaders {
                     size_t texturedOvsSize) {
         gpu = std::move(context);
         if (!gpu) return false;
-        vertex                = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel.vert", .binary = vs, .size = vsSize});
-        fragment              = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel.frag", .binary = ps, .size = psSize});
-        texturedVertex        = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-texture.vert", .binary = texturedVs, .size = texturedVsSize});
-        outlineVertex         = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-outline.vert", .binary = ovs, .size = ovsSize});
-        outlineFragment       = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-outline.frag", .binary = ops, .size = opsSize});
-        texturedOutlineVertex = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-outline-texture.vert", .binary = texturedOvs, .size = texturedOvsSize});
+        vertex          = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel.vert", .binary = vs, .size = vsSize});
+        fragment        = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel.frag", .binary = ps, .size = psSize});
+        texturedVertex  = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-texture.vert", .binary = texturedVs, .size = texturedVsSize});
+        outlineVertex   = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-outline.vert", .binary = ovs, .size = ovsSize});
+        outlineFragment = gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-outline.frag", .binary = ops, .size = opsSize});
+        texturedOutlineVertex =
+            gpu2::GpuShader::create({.context = gpu, .name = "bindless-cel-outline-texture.vert", .binary = texturedOvs, .size = texturedOvsSize});
         return vertex && texturedVertex && fragment && outlineVertex && texturedOutlineVertex && outlineFragment;
     }
 };
@@ -194,17 +195,16 @@ public:
 };
 
 class CelMaterialImpl : public CelMaterial {
-    AutoRef<const CelKernel>  mKernel;
+    AutoRef<const CelKernel>      mKernel;
     const CelMaterial::Parameters mParameters;
-    const Shaders             mShaders;
-    CelStorage                mStorage;
+    const Shaders                 mShaders;
+    CelStorage                    mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(CelMaterial);
 
     CelMaterialImpl(AutoRef<const CelKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap, const CelMaterial::Parameters & p)
-        : CelMaterial(TYPE_INFO(), "bindless.cel.material"), mKernel(std::move(kernel)), mParameters(p), mShaders(shaders),
-          mStorage(std::move(heap)) {}
+        : CelMaterial(TYPE_INFO(), "bindless.cel.material"), mKernel(std::move(kernel)), mParameters(p), mShaders(shaders), mStorage(std::move(heap)) {}
 
     bool initialize(const Fallbacks & defaults) {
         CelMaterialData data {};
@@ -228,9 +228,9 @@ public:
         auto & raster = inputs.raster;
         auto   state  = inputs.ssc;
         if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, mStorage.textured())) GN_UNLIKELY {
-            GN_ERROR(logger, "CelMaterial: invalid uniform state, geometry, or transform");
-            return false;
-        }
+                GN_ERROR(logger, "CelMaterial: invalid uniform state, geometry, or transform");
+                return false;
+            }
 
         const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
         gpu2::bindless::Raster::DrawParameters draw {.geometry = inputs.geometry};

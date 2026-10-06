@@ -59,11 +59,12 @@ Shaders:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 3.2 - Modernize sample-sphere.h and implement simple-cel-shading sample application
-In progress: Phase 4: Verification and Quality
+Last completed: Task 4.1 - Format sources, run cit.py -l and cit.py -t, and update documentation
+In progress: Complete - awaiting user sign-off
 Phase 1: Shaders and C++ Material Data Layout
 Phase 2: FX2 C++ Public API and Core Implementation
 Phase 3: Unit Tests and Sample Application
+Phase 4: Verification and Quality
 --- END PROGRESS ---
 
 --- REFERENCE ---

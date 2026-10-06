@@ -14,6 +14,7 @@ in `garnet/fx2/bindless/` and operate against a persistent `DescriptorHeap` and 
 | --- | --- | --- |
 | `fx2::bindless::UnlitKernel` | `fx2/bindless/unlit.h` | Draws unlit geometry using bindless material records |
 | `fx2::bindless::LambertianKernel` | `fx2/bindless/lambertian.h` | Diffuse lighting with up to 16 direct lights |
+| `fx2::bindless::CelKernel` | `fx2/bindless/cel.h` | Anime NPR cel shading with multi-band shadow ramps and inverted-hull outline |
 | `fx2::bindless::PbrKernel` | `fx2/bindless/pbr.h` | Metallic/roughness PBR with direct lights and tone mapping |
 | `fx2::bindless::SkyKernel` | `fx2/bindless/sky.h` | Procedural sky and background rendering |
 
@@ -244,6 +245,10 @@ results are historical evidence, not verification of the second attempt.
 ### Bindless metallic/roughness PBR
 
 `fx2::bindless::PbrKernel` and `PbrMaterial` are declared in `fx2/bindless/pbr.h` and use a PBR-specific material record. Parameters include base color, emissive, metallic, roughness, normal scale, occlusion strength, opacity, and optional base-color/normal/emissive/occlusion/metal-roughness maps. The Vulkan shader evaluates GGX distribution, Schlick Fresnel, Smith geometry, direct point and directional lights, and Reinhard tone mapping with SSC exposure. Metal/roughness maps use G for roughness and B for metallic; normal maps use a derivative-built tangent frame. This kernel has no image based lighting path. `GNsample-fx2-pbr` demonstrates two materials with contrasting metallic and roughness values through the public bindless API.
+
+### Bindless cel shading
+
+`fx2::bindless::CelKernel` and `CelMaterial` are declared in `fx2/bindless/cel.h`. The effect provides stylized anime/cartoon NPR rendering with multi-band quantized diffuse shadow ramps (cool/warm shadow tints), sharp stepped Blinn-Phong specular highlights, stylized Fresnel rim lighting with light-direction bias, and an inverted-hull silhouette outline pass with clip-space aspect-ratio-corrected normal extrusion. `GNsample-fx2-cel-shading` demonstrates the effect over a procedural sphere using the public bindless API.
 
 `fx2::bindless::UnlitKernel` and `LambertianKernel` use only SSC's public
 `UniformState` contract and the standard `SharedUniforms` schema in the SSC

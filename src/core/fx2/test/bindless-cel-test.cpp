@@ -71,9 +71,7 @@ TEST_CASE("FX2 bindless cel material renders cartoon steps and outline", "[fx2][
 
     // CCW triangle in front facing orientation
     const float vertexData[] = {
-        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -1.0f,  3.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f,
-         3.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 3.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 3.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 0.0f,
     };
     auto vb = Buffer::create("bindless-cel-render-test.vb", {.context = gpu, .size = sizeof(vertexData)});
     REQUIRE(vb);

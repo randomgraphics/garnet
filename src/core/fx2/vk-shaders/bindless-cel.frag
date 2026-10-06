@@ -26,15 +26,13 @@ layout(location = 0) out vec4 outColor;
 void main() {
     CelMaterialData material  = celMaterialHeap.materials[draw.materialIndex.x];
     vec4            baseColor = material.baseColor;
-    if ((material.textureIndices.w & 1u) != 0u) {
-        baseColor *= sampleHeap(material.textureIndices.x, material.textureIndices.z, uv);
-    }
+    if ((material.textureIndices.w & 1u) != 0u) { baseColor *= sampleHeap(material.textureIndices.x, material.textureIndices.z, uv); }
 
     vec3 n = worldNormal / max(length(worldNormal), 1e-20);
     if ((material.textureIndices.w & 2u) != 0u) {
-        vec3  dpdx  = dFdx(worldPosition), dpdy = dFdy(worldPosition);
+        vec3  dpdx = dFdx(worldPosition), dpdy = dFdy(worldPosition);
         vec2  duvdx = dFdx(uv), duvdy = dFdy(uv);
-        vec3  p1     = cross(dpdy, n), p2 = cross(n, dpdx);
+        vec3  p1 = cross(dpdy, n), p2 = cross(n, dpdx);
         vec3  t      = p1 * duvdx.x + p2 * duvdy.x;
         vec3  b      = p1 * duvdx.y + p2 * duvdy.y;
         float scale  = max(dot(t, t), dot(b, b));
@@ -55,8 +53,9 @@ void main() {
         uint               type      = uint(light.positionOrDir.w + 0.5);
         vec3               delta     = light.positionOrDir.xyz - worldPosition;
         float              distance2 = max(dot(delta, delta), 0.0001);
-        vec3               l = type == SHARED_LIGHT_TYPE_DIRECTIONAL ? -light.positionOrDir.xyz / max(length(light.positionOrDir.xyz), 1e-20) : delta * inversesqrt(distance2);
-        float              attenuation = type == SHARED_LIGHT_TYPE_DIRECTIONAL ? 1.0 : 1.0 / distance2;
+        vec3               l =
+            type == SHARED_LIGHT_TYPE_DIRECTIONAL ? -light.positionOrDir.xyz / max(length(light.positionOrDir.xyz), 1e-20) : delta * inversesqrt(distance2);
+        float attenuation = type == SHARED_LIGHT_TYPE_DIRECTIONAL ? 1.0 : 1.0 / distance2;
         if (type != SHARED_LIGHT_TYPE_DIRECTIONAL && light.colorAndRange.w > 0.0) {
             attenuation *= pow(clamp(1.0 - sqrt(distance2) / light.colorAndRange.w, 0.0, 1.0), 2.0);
         }
@@ -79,9 +78,7 @@ void main() {
         float specFactor = smoothstep(material.specularParams.x - 0.02, material.specularParams.x + 0.02, specLobe);
         specularAccum += specFactor * material.specularParams.z * lightColor * attenuation * shadow1;
 
-        if (i == 0u) {
-            mainShadow = shadow1;
-        }
+        if (i == 0u) { mainShadow = shadow1; }
     }
 
     // 3. Stylized Rim Light (Fresnel silhouette glow)
