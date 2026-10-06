@@ -1,3 +1,7 @@
+# Instrument every production source compiled below. Must precede all target creation in
+# this scope, since add_compile_options() only affects targets defined after the call.
+GN_enable_code_coverage()
+
 # =======================
 # generate feature header
 # =======================
