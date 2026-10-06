@@ -6,6 +6,9 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -39,6 +42,51 @@ struct Landmark {
     glm::vec4 color;
 };
 
+struct CameraPose {
+    glm::vec3 position {0.0f, 1.8f, 12.0f};
+    float     yaw   = 0.0f;
+    float     pitch = -0.08f;
+};
+
+class FirstPersonController {
+public:
+    CameraPose pose;
+
+    void update(win::Window & window, float elapsedSeconds) {
+        const float dt          = std::clamp(elapsedSeconds, 0.0f, 0.1f);
+        const float forwardAxis = static_cast<float>(window.getKeyStatus(win::KeyCode::W).down) - static_cast<float>(window.getKeyStatus(win::KeyCode::S).down);
+        const float rightAxis   = static_cast<float>(window.getKeyStatus(win::KeyCode::D).down) - static_cast<float>(window.getKeyStatus(win::KeyCode::A).down);
+        const glm::vec3 forward(std::sin(pose.yaw), 0.0f, -std::cos(pose.yaw));
+        const glm::vec3 right(std::cos(pose.yaw), 0.0f, std::sin(pose.yaw));
+        glm::vec3       movement = forward * forwardAxis + right * rightAxis;
+        if (glm::dot(movement, movement) > 1.0f) movement = glm::normalize(movement);
+        const float speed = window.getKeyStatus(win::KeyCode::LSHIFT).down ? 8.0f : 4.0f;
+        pose.position += movement * speed * dt;
+
+        if (!window.getKeyStatus(win::KeyCode::MOUSEBTN_0).down) {
+            mHasPreviousMousePosition = false;
+            return;
+        }
+
+        int x = 0, y = 0;
+        window.getMousePosition(x, y);
+        if (mHasPreviousMousePosition) {
+            pose.yaw += static_cast<float>(x - mPreviousMouseX) * kMouseSensitivity;
+            pose.pitch -= static_cast<float>(y - mPreviousMouseY) * kMouseSensitivity;
+            pose.pitch = std::clamp(pose.pitch, -1.5f, 1.5f);
+        }
+        mPreviousMouseX           = x;
+        mPreviousMouseY           = y;
+        mHasPreviousMousePosition = true;
+    }
+
+private:
+    static constexpr float kMouseSensitivity         = 0.0025f;
+    int                    mPreviousMouseX           = 0;
+    int                    mPreviousMouseY           = 0;
+    bool                   mHasPreviousMousePosition = false;
+};
+
 class WorldScene {
 public:
     AutoRef<UnlitKernel>           kernel;
@@ -63,12 +111,12 @@ public:
         return !!initialUpload;
     }
 
-    bool record(GpuRaster & raster, const RasterTarget & target) {
-        constexpr glm::vec3 eye(0.0f, 4.0f, 12.0f);
-        constexpr glm::vec3 focus(0.0f, 0.8f, 0.0f);
-        const auto          rasterSize           = target.calcRasterSizeInPixel();
-        constants->set0.camera.cameraPosition    = eye;
-        constants->set0.camera.cameraOrientation = glm::quat_cast(glm::mat3(glm::inverse(glm::lookAtRH(eye, focus, glm::vec3(0, 1, 0)))));
+    bool record(GpuRaster & raster, const RasterTarget & target, const CameraPose & pose) {
+        const glm::vec3 forward(std::sin(pose.yaw) * std::cos(pose.pitch), std::sin(pose.pitch), -std::cos(pose.yaw) * std::cos(pose.pitch));
+        const auto      rasterSize            = target.calcRasterSizeInPixel();
+        constants->set0.camera.cameraPosition = pose.position;
+        constants->set0.camera.cameraOrientation =
+            glm::quat_cast(glm::mat3(glm::inverse(glm::lookAtRH(pose.position, pose.position + forward, glm::vec3(0, 1, 0)))));
         constants->set0.camera.aspectRatio       = static_cast<float>(rasterSize.x) / static_cast<float>(rasterSize.y);
         constants->set0.camera.viewWidthInPixel  = rasterSize.x;
         constants->set0.camera.viewHeightInPixel = rasterSize.y;
@@ -105,7 +153,7 @@ private:
     SharedShaderConstants::Snapshot mLatestSnapshot;
 };
 
-bool renderFrame(const AutoRef<GpuContext> & gpu, WorldScene & scene, const AutoRef<Texture> & color, const AutoRef<Texture> & depth,
+bool renderFrame(const AutoRef<GpuContext> & gpu, WorldScene & scene, const CameraPose & camera, const AutoRef<Texture> & color, const AutoRef<Texture> & depth,
                  const GpuResourceView * swapchainView = nullptr, const AutoRef<GpuPayload> * ready = nullptr, AutoRef<GpuPayload> * renderedOut = nullptr) {
     RasterTarget    target;
     GpuResourceView colorView;
@@ -120,7 +168,7 @@ bool renderFrame(const AutoRef<GpuContext> & gpu, WorldScene & scene, const Auto
     target.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
 
     auto raster = GpuRaster::create("taixu.world-frame", {.gpu = gpu, .target = &target});
-    if (!raster || !scene.record(*raster, target)) return false;
+    if (!raster || !scene.record(*raster, target, camera)) return false;
     auto frame = raster->seal();
     if (!frame) return false;
 
@@ -139,10 +187,10 @@ AutoRef<Texture> createTexture(const AutoRef<GpuContext> & gpu, const char * nam
     return Texture::create(name, {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(format).setDimensions(kWidth, kHeight).setLevels(1)});
 }
 
-bool renderHeadless(const AutoRef<GpuContext> & gpu, WorldScene & scene, const char * outputPath) {
+bool renderHeadless(const AutoRef<GpuContext> & gpu, WorldScene & scene, const CameraPose & camera, const char * outputPath) {
     auto color = createTexture(gpu, "taixu.headless-color", gfx::img::PixelFormat::RGBA8());
     auto depth = createTexture(gpu, "taixu.headless-depth", gfx::img::PixelFormat::D_32_FLOAT());
-    if (!color || !depth || !renderFrame(gpu, scene, color, depth)) return false;
+    if (!color || !depth || !renderFrame(gpu, scene, camera, color, depth)) return false;
 
     // Texture readback waits for GPU completion; this path is intentionally for verification.
     const auto image = color->readback();
@@ -181,9 +229,10 @@ int main(int argc, const char ** argv) {
     WorldScene scene;
     if (!scene.initialize(host.gpu)) return 1;
 
-    if (headless) return renderHeadless(host.gpu, scene, outputPath) ? 0 : 1;
+    FirstPersonController controller;
+    if (headless) return renderHeadless(host.gpu, scene, controller.pose, outputPath) ? 0 : 1;
 
-    host.window.reset(win::createWindow({.caption = "Taixu", .clientWidth = kWidth, .clientHeight = kHeight}));
+    host.window.reset(win::createWindow({.caption = "Taixu | WASD move, hold left mouse to look, Esc quit", .clientWidth = kWidth, .clientHeight = kHeight}));
     if (!host.window) return 1;
     host.window->show();
 
@@ -197,11 +246,18 @@ int main(int argc, const char ** argv) {
 
     auto depth = createTexture(host.gpu, "taixu.window-depth", gfx::img::PixelFormat::D_32_FLOAT());
     if (!depth) return 1;
+    auto previousFrameTime = std::chrono::steady_clock::now();
     while (host.window->runUntilNoNewEvents()) {
+        const auto  now            = std::chrono::steady_clock::now();
+        const float elapsedSeconds = std::chrono::duration<float>(now - previousFrameTime).count();
+        previousFrameTime          = now;
+        if (host.window->getKeyStatus(win::KeyCode::ESCAPE).down) break;
+        controller.update(*host.window, elapsedSeconds);
+
         auto acquired = host.swapchain->prepare();
         if (acquired.view.empty()) return 1;
         AutoRef<GpuPayload> rendered;
-        if (!renderFrame(host.gpu, scene, {}, depth, &acquired.view, &acquired.ready, &rendered)) return 1;
+        if (!renderFrame(host.gpu, scene, controller.pose, {}, depth, &acquired.view, &acquired.ready, &rendered)) return 1;
         host.swapchain->present(*rendered);
     }
 
