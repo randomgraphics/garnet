@@ -1,6 +1,6 @@
-# Taixu prototype sample
+# Taixu prototype application
 
-The sample opens a small 3D scene with a ground plane and colored landmarks. It is a
+The application opens a small 3D scene with a ground plane and colored landmarks. It is a
 standalone prototype host for the first Taixu milestone.
 
 ## Build
@@ -9,7 +9,7 @@ From the repository root:
 
 ```bash
 source env/garnet.rc
-build.py -C d --target GNsample-taixu
+build.py -C d --target GNtaixu
 ```
 
 ## Headless image verification
@@ -17,7 +17,7 @@ build.py -C d --target GNsample-taixu
 Render one frame without creating a window and save the result as a PNG:
 
 ```bash
-build/linux.gcc.d/bin/GNsample-taixu --headless /tmp/taixu.png
+build/linux.gcc.d/bin/GNtaixu --headless /tmp/taixu.png
 ```
 
 The sample prints the camera ray's ground intersection and writes a 1280×720 RGBA

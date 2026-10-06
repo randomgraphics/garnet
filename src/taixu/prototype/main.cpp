@@ -256,7 +256,7 @@ int main(int argc, const char ** argv) {
         headless = true;
         if (argc > 2) outputPath = argv[2];
     } else if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
-        std::puts("Usage: GNsample-taixu [--headless [output.png]]");
+        std::puts("Usage: GNtaixu [--headless [output.png]]");
         return 0;
     }
 

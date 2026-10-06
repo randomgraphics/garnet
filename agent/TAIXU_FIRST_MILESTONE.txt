@@ -34,21 +34,20 @@
 
 ---
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Phase 1.5 — 记录运行方式和 headless 图像验证流程
+Last completed: Phase 1 — 窗口漫游、目标选择和 headless 画面验证已完成
   Phase 0: 记录太虚首个里程碑和三个验收检查点
-  Phase 1.2: 使用 FX2 typed unlit kernel 绘制地面、木屋、塔状和树形地标；1280×720 PNG 可读回，深度遮挡可见
-  Phase 1.5: 添加构建、headless PNG 和窗口控制说明，按文档命令生成 1280×720 PNG
-In progress: Phase 1.4 — headless 已打印地面交点并渲染标记；需验证窗口鼠标视角与坐标面板
+  Phase 1: 建立独立 GNtaixu 应用；渲染地面与地标；验证 WASD、鼠标视角、Esc、地面目标标记和坐标面板；记录运行步骤
+In progress: none — 按用户要求暂停；下一步为 Phase 2（语义编辑基础）
 --- END PROGRESS ---
 --- REFERENCE ---
 
 - 产品愿景与原则：`src/taixu/README.md`
-- Garnet 应用与渲染模式：选择原型宿主时检查 `src/sample/`。
+- Garnet 应用与渲染模式：选择原型宿主时检查 `src/taixu/`。
 - 仓库构建说明：`AGENTS.md`（用户提供的仓库指南）和 `agent/skills/garnet-build-test/SKILL.md`。
 
 --- BUILD / CI ---
 
-Phase 0 的里程碑定义已完成；Phase 1 实现中。实施各检查点时，先运行 `source env/garnet.rc`，再使用 `AGENTS.md` 中说明的项目构建和 CIT 脚本。Taixu 离屏验证命令：`build/linux.gcc.d/bin/GNsample-taixu --headless /tmp/taixu-headless.png`；应生成 1280×720 RGBA PNG。headless 模式会在 Vulkan 初始化前屏蔽 `DISPLAY`，避免连接不可用的 X11 服务。每个检查点都必须记录可运行样例或应用的准确位置，以及手动交互步骤。
+Phase 0 和 Phase 1 已完成。实施各检查点时，先运行 `source env/garnet.rc`，再使用 `AGENTS.md` 中说明的项目构建和 CIT 脚本。Taixu 离屏验证命令：`build/linux.gcc.d/bin/GNtaixu --headless /tmp/taixu-headless.png`；应生成 1280×720 RGBA PNG。headless 模式会在 Vulkan 初始化前屏蔽 `DISPLAY`，避免连接不可用的 X11 服务。每个检查点都必须记录可运行样例或应用的准确位置，以及手动交互步骤。
 
 --- WORKFLOW / CONVENTIONS ---
 
@@ -61,23 +60,23 @@ Phase 0 的里程碑定义已完成；Phase 1 实现中。实施各检查点时�
 
 Phase 1: C1——可运行的世界外壳
 ─────────────────────────────────────────────────────────────────────
-  Task 1.1: 创建独立的 Taixu sample 目标、窗口/GPU 生命周期、交互清屏循环和可验证的 headless PNG 捕获。
-    Verify: 构建 GNsample-taixu；headless 模式完成离屏清屏、读回并写出有效 PNG。图形窗口人工验收仍需图形会话。
+  Task 1.1: 创建独立的 Taixu 应用目标、窗口/GPU 生命周期、交互清屏循环和可验证的 headless PNG 捕获。
+    Verify: 构建 GNtaixu；headless 输出有效 PNG；Xvfb 窗口启动成功并响应 Esc 正常退出。
     Commit: "feat(taixu): 添加太虚原型宿主与 headless PNG 捕获 (Phase 1.1)"
 
   Task 1.2: 添加有地面、天空背景和可识别地标的基础 3D 世界场景。
-    Verify: `GNsample-taixu --headless <output.png>` 生成 1280×720 PNG；检查地面、多个地标和正确深度遮挡。
+    Verify: `GNtaixu --headless <output.png>` 生成 1280×720 PNG；检查地面、多个地标和正确深度遮挡。
     Commit: "feat(taixu): 添加原型世界基础场景 (Phase 1.2)"
 
   Task 1.3: 实现带帧时间的第一人称相机移动和鼠标视角控制。
-    Verify: 手动确认 WASD 平移、鼠标转向和退出操作响应稳定，并记录控制方式。
+    Verify: Xvfb 注入 WASD 与左键鼠标转向后窗口图像发生变化；Esc 退出成功。
     Commit: "feat(taixu): 添加第一人称世界漫游 (Phase 1.3)"
 
   Task 1.4: 实现屏幕中心指向与地面交点提示，作为后续编辑位置输入。
-    Verify: headless 输出应打印有效地面交点并在 PNG 中显示标记；图形模式移动视线时坐标提示应随交点变化。图形交互验收待可用图形会话。
+    Verify: headless 输出打印地面交点并在 PNG 中显示标记；Xvfb 移动视线后窗口坐标面板中的地面交点从 Z=-10.45 变为 Z=-13.25。
     Commit: "feat(taixu): 添加场景内编辑目标指示 (Phase 1.4)"
 
-  Task 1.5: 编写 sample 运行说明、headless 图像验证和窗口控制步骤。
+  Task 1.5: 编写原型应用运行说明、headless 图像验证和窗口控制步骤。
     Verify: 文档中的 build/headless 命令可复现 1280×720 PNG；窗口操作、目标坐标与未实现边界均有说明。
     Commit: "docs(taixu): 记录太虚原型运行和验证步骤 (Phase 1.5)"
 
@@ -112,7 +111,7 @@ Phase 0（里程碑定义）：
 
 Phase 1（世界外壳）：
   src/sample/CMakeLists.txt — 注册 Taixu sample 子目录
-  src/sample/taixu/ — NEW: 独立 prototype、Vulkan 窗口/离屏渲染和操作说明
+  src/taixu/prototype/ — NEW: 独立 prototype、Vulkan 窗口/离屏渲染和操作说明
 
 Phase 2（语义编辑基础）：
   src/taixu/ — 仅添加 C2 所需的最小语义模型、编辑验证、渲染适配和持久化功能

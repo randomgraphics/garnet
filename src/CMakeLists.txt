@@ -1,5 +1,6 @@
 add_subdirectory(3rdparty)
 add_subdirectory(core)
+add_subdirectory(taixu)
 
 if (GN_BUILD_SAMPLES)
     add_subdirectory(sample)
