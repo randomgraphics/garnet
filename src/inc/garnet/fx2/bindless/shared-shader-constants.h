@@ -117,4 +117,9 @@ protected:
     using RCRT64::RCRT64;
 };
 
+/// Build pass bindings from a captured SharedUniforms state; invalid views yield an empty table.
+/// Supply the table when creating the caller's raster. It retains the buffer, not the uniform
+/// lease; each material draw retains that lease until payload cleanup.
+GN_API gpu2::GpuResourceTable sharedUniformResources(const AutoRef<SharedShaderConstants::UniformState> & state);
+
 } // namespace GN::fx2::bindless

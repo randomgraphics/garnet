@@ -154,4 +154,15 @@ GN_API AutoRef<SharedShaderConstants> SharedShaderConstants::create(const Create
     return result;
 }
 
+GN_API gpu2::GpuResourceTable sharedUniformResources(const AutoRef<SharedShaderConstants::UniformState> & state) {
+    if (!state) return {};
+    auto view = state->view();
+    if (!view.buffer() || view.bufferView.type != gpu2::GpuResourceView::BufferView::UNIFORM || view.bufferView.size < sizeof(SharedUniforms)) { return {}; }
+    gpu2::GpuResourceTable resources;
+    resources.resize(2);
+    resources[1].resize(2);
+    resources[1][1].append(std::move(view));
+    return resources;
+}
+
 } // namespace GN::fx2::bindless

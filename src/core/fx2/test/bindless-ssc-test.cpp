@@ -119,9 +119,9 @@ TEST_CASE("FX2 bindless unlit and Lambertian materials render expected pixels", 
     geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 6 * sizeof(float)});
     geometry.vertexCount = 3;
     geometry.format.attributes.push_back(
-        {.location = CommonDrawParameter::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+        {.location = LambertianMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
     geometry.format.attributes.push_back(
-        {.location = CommonDrawParameter::NORMAL_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_3});
+        {.location = LambertianMaterial::NORMAL_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_3});
 
     const auto renderAndRead = [&](bool useLambertian) {
         auto output = Texture::create(
@@ -137,10 +137,10 @@ TEST_CASE("FX2 bindless unlit and Lambertian materials render expected pixels", 
             {.gpu = gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
         REQUIRE(raster);
         if (useLambertian) {
-            LambertianMaterial::DrawParameters draw {{*raster, state, geometry, {}}};
+            LambertianMaterial::DrawParameters draw {{*raster, state, geometry}};
             REQUIRE(lambertMaterial->record(draw));
         } else {
-            UnlitMaterial::DrawParameters draw {{*raster, state, geometry, {}}};
+            UnlitMaterial::DrawParameters draw {{*raster, state, geometry}};
             REQUIRE(unlitMaterial->record(draw));
         }
         auto draws = raster->seal();
@@ -162,6 +162,104 @@ TEST_CASE("FX2 bindless unlit and Lambertian materials render expected pixels", 
     CHECK(litPixel[0] > 40);
     CHECK(litPixel[1] > 8);
     CHECK(litPixel[0] < unlitPixel[0]);
+}
+
+TEST_CASE("FX2 bindless PBR materials render expected pixels", "[fx2][bindless][material][pbr][gpu]") {
+    auto gpu = GpuContext::create("bindless-pbr-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No Vulkan GPU context available");
+
+    constexpr uint32_t extent = 64;
+    auto               heap   = gpuBindless::DescriptorHeap::create("bindless-pbr-test.heap", {.gpu = gpu, .capacity = 64});
+    REQUIRE(heap);
+    auto initialization = gpuBindless::CnC::create("bindless-pbr-test.init", {.gpu = gpu, .heap = heap});
+    REQUIRE(initialization);
+    auto pbr = PbrKernel::create(*heap, *initialization);
+    REQUIRE(pbr);
+
+    auto dielectricParams      = pbr->defaultMaterialParameters();
+    dielectricParams.baseColor = {0.8f, 0.2f, 0.1f, 1};
+    dielectricParams.metallic  = 0.0f;
+    dielectricParams.roughness = 0.8f;
+    auto dielectricMaterial    = pbr->createMaterial(*initialization, dielectricParams);
+    REQUIRE(dielectricMaterial);
+
+    auto metallicParams      = pbr->defaultMaterialParameters();
+    metallicParams.baseColor = {0.8f, 0.2f, 0.1f, 1};
+    metallicParams.metallic  = 1.0f;
+    metallicParams.roughness = 0.2f;
+    auto metallicMaterial    = pbr->createMaterial(*initialization, metallicParams);
+    REQUIRE(metallicMaterial);
+
+    // CCW triangle: (-1, -1), (-1, 3), (3, -1) so gl_FrontFacing is true in Vulkan clip space.
+    const float vertexData[] = {
+        -1, -1, 0, 0, 0, 1, 0, 0, -1, 3, 0, 0, 0, 1, 0, 2, 3, -1, 0, 0, 0, 1, 2, 0,
+    };
+    auto vertices = Buffer::create("bindless-pbr-test.vertices", {.context = gpu, .size = sizeof(vertexData)});
+    REQUIRE(vertices);
+    initialization->recordUploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(vertexData), sizeof(vertexData)});
+    auto initWork = initialization->seal();
+    REQUIRE(initWork);
+
+    auto ssc = SharedShaderConstants::create({.gpu = gpu, .uniformCapacity = 4096, .streamingCapacity = 256});
+    REQUIRE(ssc);
+    SharedUniforms uniforms;
+    uniforms.renderTargetSize        = {float(extent), float(extent)};
+    uniforms.cameraPosition          = {0, 0, 2, 1};
+    uniforms.exposure                = 1;
+    uniforms.numLights               = 1;
+    uniforms.lights[0].positionOrDir = {0, 0, -1, float(DirectLightUniform::DIRECTIONAL)};
+    uniforms.lights[0].colorAndRange = {4, 4, 4, 0};
+    auto uniformProducer             = gpuBindless::CnC::create("bindless-pbr-test.uniform", {.gpu = gpu, .heap = heap});
+    REQUIRE(uniformProducer);
+    auto state = ssc->recordUniformUpdate(*uniformProducer, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
+    REQUIRE(state);
+    auto uniformWork = uniformProducer->seal();
+    REQUIRE(uniformWork);
+    gpu->submit(GpuContext::SubmitParameters("bindless-pbr-test.uploads").appendWork(initWork).appendWork(uniformWork));
+    gpu->waitForIdle();
+
+    RasterGeometry geometry;
+    geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 8 * sizeof(float)});
+    geometry.vertexCount = 3;
+    geometry.format.attributes.push_back(
+        {.location = PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back(
+        {.location = PbrMaterial::NORMAL_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back(
+        {.location = PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 6 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
+
+    const auto renderAndRead = [&](const AutoRef<PbrMaterial> & material) {
+        auto output = Texture::create(
+            "bindless-pbr-test.output",
+            {.context    = gpu,
+             .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(extent, extent).setLevels(1)});
+        REQUIRE(output);
+        RasterTarget target;
+        target.setColorTarget(0, GpuResourceView(output)).setClearColor(0, 0, 0, 1);
+        target.states.cullMode = RasterState::CULL_NONE;
+        auto raster            = gpuBindless::Raster::create(
+            "bindless-pbr-test.raster",
+            {.gpu = gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
+        REQUIRE(raster);
+        PbrMaterial::DrawParameters draw {{*raster, state, geometry}};
+        REQUIRE(material->record(draw));
+        auto draws = raster->seal();
+        REQUIRE(draws);
+        gpu->submit(GpuContext::SubmitParameters("bindless-pbr-test.draw").appendWork(draws));
+        gpu->waitForIdle();
+        return output->readback();
+    };
+
+    auto dielectricImage = renderAndRead(dielectricMaterial);
+    auto metallicImage   = renderAndRead(metallicMaterial);
+    REQUIRE_FALSE(dielectricImage.empty());
+    REQUIRE_FALSE(metallicImage.empty());
+    const auto dielectricPixel = static_cast<const uint8_t *>(dielectricImage.data()) + (extent / 2 * extent + extent / 2) * 4;
+    const auto metallicPixel   = static_cast<const uint8_t *>(metallicImage.data()) + (extent / 2 * extent + extent / 2) * 4;
+    CHECK(dielectricPixel[0] > 0);
+    CHECK(metallicPixel[0] > 0);
+    CHECK(dielectricPixel[3] == 255);
+    CHECK(metallicPixel[3] == 255);
 }
 
 TEST_CASE("FX2 bindless material keeps heap allocations until completion or discard", "[fx2][bindless][material][lifetime][gpu]") {
@@ -230,11 +328,11 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
     RasterGeometry geometry;
     geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 5 * sizeof(float)});
     geometry.format.attributes.push_back(
-        {.location = CommonDrawParameter::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+        {.location = UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
     geometry.format.attributes.push_back(
-        {.location = CommonDrawParameter::TEXCOORD_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
+        {.location = UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
     geometry.vertexCount = 3;
-    UnlitMaterial::DrawParameters draw {{*raster, state, geometry, {}}};
+    UnlitMaterial::DrawParameters draw {{*raster, state, geometry}};
     REQUIRE(material->record(draw));
     auto drawWork = raster->seal();
     REQUIRE(drawWork);
@@ -266,7 +364,124 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
         gpuBindless::Raster::create("bindless-material-lifetime.discard-raster",
                                     {.gpu = gpu, .target = &target, .heap = heap, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
     REQUIRE(replacementRaster);
-    UnlitMaterial::DrawParameters replacementDraw {{*replacementRaster, state, geometry, {}}};
+    UnlitMaterial::DrawParameters replacementDraw {{*replacementRaster, state, geometry}};
+    REQUIRE(replacement->record(replacementDraw));
+    auto discardDrawWork = replacementRaster->seal();
+    REQUIRE(discardDrawWork);
+    replacement.clear();
+    auto replacementWork = replacementProducer->seal();
+    REQUIRE(replacementWork);
+    replacementWork.clear();
+    CHECK(heap->size() == kernelDescriptorCount + 2);
+    discardDrawWork.clear();
+    CHECK(heap->size() == kernelDescriptorCount);
+}
+
+TEST_CASE("FX2 bindless PBR material keeps heap allocations until completion or discard", "[fx2][bindless][material][pbr][lifetime][gpu]") {
+    auto gpu = GpuContext::create("bindless-pbr-lifetime", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
+    if (!gpu) SKIP("No Vulkan GPU context available");
+
+    auto heap = gpuBindless::DescriptorHeap::create("bindless-pbr-lifetime.heap", {.gpu = gpu, .capacity = 8, .materialCapacity = 80});
+    REQUIRE(heap);
+    auto initialization = gpuBindless::CnC::create("bindless-pbr-lifetime.init", {.gpu = gpu, .heap = heap});
+    REQUIRE(initialization);
+    auto kernel = PbrKernel::create(*heap, *initialization);
+    REQUIRE(kernel);
+    const uint32_t kernelDescriptorCount = heap->size();
+
+    auto sampled = Texture::create(
+        "bindless-pbr-lifetime.sampled",
+        {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(1, 1).setLevels(1)});
+    auto sampler = Sampler::create("bindless-pbr-lifetime.sampler", {.context = gpu});
+    REQUIRE(sampled);
+    REQUIRE(sampler);
+    const uint8_t            texel[] = {255, 255, 255, 255};
+    gpuBindless::CnC::Region region;
+    region.imageExtent = {1, 1, 1};
+    initialization->recordUploadImage(sampled, {texel, sizeof(texel)}, {&region, 1});
+
+    auto parameters         = kernel->defaultMaterialParameters();
+    parameters.baseColorMap = GpuResourceView(sampled).setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    parameters.sampler      = sampler;
+    auto material           = kernel->createMaterial(*initialization, parameters);
+    REQUIRE(material);
+    CHECK(heap->size() == kernelDescriptorCount + 2);
+    auto initWork = initialization->seal();
+    REQUIRE(initWork);
+
+    auto ssc = SharedShaderConstants::create({.gpu = gpu, .uniformCapacity = 1024, .streamingCapacity = 256});
+    REQUIRE(ssc);
+    SharedUniforms uniforms;
+    auto           uniformProducer = gpuBindless::CnC::create("bindless-pbr-lifetime.uniform", {.gpu = gpu, .heap = heap});
+    REQUIRE(uniformProducer);
+    auto state = ssc->recordUniformUpdate(*uniformProducer, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
+    REQUIRE(state);
+    auto uniformWork = uniformProducer->seal();
+    REQUIRE(uniformWork);
+
+    const float vertexData[] = {
+        -1, -1, 0, 0, 0, 1, 0, 0, -1, 3, 0, 0, 0, 1, 0, 2, 3, -1, 0, 0, 0, 1, 2, 0,
+    };
+    auto vertices = Buffer::create("bindless-pbr-lifetime.vertices", {.context = gpu, .size = sizeof(vertexData)});
+    REQUIRE(vertices);
+    auto geometryProducer = gpuBindless::CnC::create("bindless-pbr-lifetime.geometry", {.gpu = gpu, .heap = heap});
+    REQUIRE(geometryProducer);
+    geometryProducer->recordUploadBuffer(vertices, 0, {reinterpret_cast<const uint8_t *>(vertexData), sizeof(vertexData)});
+    auto geometryWork = geometryProducer->seal();
+    REQUIRE(geometryWork);
+
+    auto output = Texture::create(
+        "bindless-pbr-lifetime.output",
+        {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(16, 16).setLevels(1)});
+    REQUIRE(output);
+    RasterTarget target;
+    target.setColorTarget(0, GpuResourceView(output)).setClearColor(0, 0, 0, 1);
+    target.states.cullMode = RasterState::CULL_NONE;
+    auto raster            = gpuBindless::Raster::create(
+        "bindless-pbr-lifetime.raster", {.gpu = gpu, .target = &target, .heap = heap, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
+    REQUIRE(raster);
+    RasterGeometry geometry;
+    geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 8 * sizeof(float)});
+    geometry.format.attributes.push_back(
+        {.location = PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back(
+        {.location = PbrMaterial::NORMAL_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back(
+        {.location = PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 6 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
+    geometry.vertexCount = 3;
+    PbrMaterial::DrawParameters draw {{*raster, state, geometry}};
+    REQUIRE(material->record(draw));
+    auto drawWork = raster->seal();
+    REQUIRE(drawWork);
+
+    // An unsubmitted contender cannot reuse the sole material chunk while payloads retain the material.
+    auto contenderProducer = gpuBindless::CnC::create("bindless-pbr-lifetime.contender", {.gpu = gpu, .heap = heap});
+    REQUIRE(contenderProducer);
+    CHECK_FALSE(kernel->createMaterial(*contenderProducer, parameters));
+    CHECK(heap->size() == kernelDescriptorCount + 2);
+    material.clear();
+
+    GpuContext::SubmitParameters submit("bindless-pbr-lifetime.submit");
+    submit.appendWork(initWork).appendWork(uniformWork).appendWork(geometryWork).appendWork(drawWork);
+    gpu->submit(submit);
+    initWork.clear();
+    uniformWork.clear();
+    geometryWork.clear();
+    drawWork.clear();
+    gpu->waitForIdle();
+    CHECK(heap->size() == kernelDescriptorCount);
+
+    // Completion released the chunk and custom descriptor slots, so a replacement can allocate them.
+    auto replacementProducer = gpuBindless::CnC::create("bindless-pbr-lifetime.replacement", {.gpu = gpu, .heap = heap});
+    REQUIRE(replacementProducer);
+    auto replacement = kernel->createMaterial(*replacementProducer, parameters);
+    REQUIRE(replacement);
+    CHECK(heap->size() == kernelDescriptorCount + 2);
+    auto replacementRaster =
+        gpuBindless::Raster::create("bindless-pbr-lifetime.discard-raster",
+                                    {.gpu = gpu, .target = &target, .heap = heap, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
+    REQUIRE(replacementRaster);
+    PbrMaterial::DrawParameters replacementDraw {{*replacementRaster, state, geometry}};
     REQUIRE(replacement->record(replacementDraw));
     auto discardDrawWork = replacementRaster->seal();
     REQUIRE(discardDrawWork);

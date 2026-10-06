@@ -306,6 +306,10 @@ results are historical evidence, not verification of the second attempt.
 
 ### Simple bindless kernels
 
+### Bindless metallic/roughness PBR
+
+`fx2::bindless::PbrKernel` and `PbrMaterial` are declared in `fx2/bindless/pbr.h` and use a PBR-specific material record. Parameters include base color, emissive, metallic, roughness, normal scale, occlusion strength, opacity, and optional base-color/normal/emissive/occlusion/metal-roughness maps. The Vulkan shader evaluates GGX distribution, Schlick Fresnel, Smith geometry, direct point and directional lights, and Reinhard tone mapping with SSC exposure. Metal/roughness maps use G for roughness and B for metallic; normal maps use a derivative-built tangent frame. This kernel has no image based lighting path. `GNsample-fx2-pbr` demonstrates two materials with contrasting metallic and roughness values through the public bindless API.
+
 `fx2::bindless::UnlitKernel` and `LambertianKernel` use only SSC's public
 `UniformState` contract and the standard `SharedUniforms` schema in the SSC
 header. Upload the bytes with `recordUniformUpdate()`, then use
@@ -324,14 +328,13 @@ tangent-space normal map, deriving its tangent frame from world-position/UV
 derivatives. UV location 2 is needed only when a map is enabled; normal
 location 1 is needed for Lambertian.
 Unlit bypasses lighting/exposure. Lambertian handles up to 16 direct lights, inverse-transpose normals, back faces, and exposure/Reinhard.
-Both support emissive and alpha cutoff, inherit raster policy, and use 128
+Both preserve material alpha and add emissive, inherit raster policy, and use 128
 vertex-stage push bytes. These draws need no streaming allocation.
 
 Readers follow gpu2's read-ready invariant and add no per-draw resource
 tracking. Callers schedule writers first and avoid attachment feedback. FX2
 retains material descriptor slots through recorded/in-flight draws. SSC has no
-heap dependency. Its current implementation is still a dummy, so this exercise
-has compile/link verification only; runtime rendering has not been tested.
+heap dependency. Runtime PBR rendering and pixel readback tests pass with Vulkan validation.
 
 The standard direct-light ABI matches legacy FX2's three vec4 light records.
 Lambertian handles directional and point attenuation/range; SPOT currently

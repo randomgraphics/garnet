@@ -30,6 +30,8 @@ if(VULKAN_FOUND)
                 ${_fx2_shader_dir}/bindless-lambertian.vert
                 ${_fx2_shader_dir}/bindless-lambertian-texture.vert
                 ${_fx2_shader_dir}/bindless-lambertian.frag
+                ${_fx2_shader_dir}/bindless-pbr.vert
+                ${_fx2_shader_dir}/bindless-pbr.frag
                 ${_fx2_shader_dir}/image-kernel.vert
                 ${_fx2_shader_dir}/blur-kernel.frag ${_fx2_shader_dir}/blur-kernel.comp
                 ${_fx2_shader_dir}/mipmap-kernel.frag ${_fx2_shader_dir}/mipmap-kernel.comp
