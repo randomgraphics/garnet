@@ -5,7 +5,8 @@ namespace GN::e2 {
 
 /// Committed spatial hierarchy. Root poses are world-space; child poses are parent-local.
 /// Attach Value through a Mold; Laws write local poses and consumers call resolveWorldTransform() for world poses.
-struct TransformFacet : Facet {
+/// Export the full facet because applications construct prototypes for World::registerFacet().
+struct GN_API TransformFacet : Facet {
     GN_API GN_REGISTER_RUNTIME_TYPE(Facet);
 
     /// Versioned payload; derived values must override clone to preserve their dynamic type.
@@ -154,7 +155,8 @@ struct CollisionStatsFacet : Facet {
 
 /// Box presentation capability without GPU resource ownership.
 /// Attach with TransformFacet for the sample renderer; presentation combines its Value with a resolved world pose.
-struct VisualFacet : Facet {
+/// Export the full facet because applications construct prototypes for World::registerFacet().
+struct GN_API VisualFacet : Facet {
     GN_API GN_REGISTER_RUNTIME_TYPE(Facet);
 
     /// Versioned payload; derived values must override clone to preserve their dynamic type.

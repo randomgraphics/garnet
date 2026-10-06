@@ -37,7 +37,7 @@
 Last completed: Phase 1 — 窗口漫游、目标选择和 headless 画面验证已完成
   Phase 0: 记录太虚首个里程碑和三个验收检查点
   Phase 1: 建立独立 GNtaixu 应用；渲染地面与地标；验证 WASD、鼠标视角、Esc、地面目标标记和坐标面板；记录运行步骤
-In progress: none — 按用户要求暂停；下一步为 Phase 2（语义编辑基础）
+In progress: Phase 2.1.1 — prototype 可见场景对象已改为 E2 Form，PrimeView 驱动渲染；下一步细化语义编辑命令与验证
 --- END PROGRESS ---
 --- REFERENCE ---
 
@@ -82,7 +82,16 @@ Phase 1: C1——可运行的世界外壳
 
 Phase 2: C2——语义编辑基础
 ─────────────────────────────────────────────────────────────────────
-  Task 2.1: 定义添加示例实体所需的最简语义实体和世界编辑命令。
+Task 2.1: 定义添加示例实体所需的最简语义实体和世界编辑命令。
+  2.1.1: 用具名 Form + TransformFacet + VisualFacet 承载 prototype 全部可见物体；以 PrimeView 作为渲染输入。
+    Verify: GNtaixu 构建成功；启动场景查询到 8 个同时具有 TransformFacet 和 VisualFacet 的 Form；headless PNG 中地面和地标可见。
+    Commit: "refactor(taixu): represent prototype objects as E2 Forms (Phase 2.1.1)"
+  2.1.2: 从渲染数组中分离语义实体定义，建立确定性的添加实体编辑命令，并验证命令结果仍由 Form/Facet 状态表示。
+    Verify: 命令前后 PrimeView 的 Form 数量、Form 名称和空间/视觉 Facet 可检查；渲染结果出现新增实体。
+    Commit: "feat(taixu): add deterministic Form editing command (Phase 2.1.2)"
+  2.1.3: 将简单木屋作为一组具名 Forms 添加，验证空间数据与视觉结果。
+    Verify: headless 图片出现木屋；查询结果包含木屋各部件及其 Transform/Visual 值。
+    Commit: "feat(taixu): add semantic wood-house scene command (Phase 2.1.3)"
     Verify: 通过针对性模块测试或可执行检查，确认实体数据独立于渲染资源对象，且无效输入会被拒绝。
     Commit: "feat(taixu): 定义语义世界编辑模型 (Phase 2.1)"
 

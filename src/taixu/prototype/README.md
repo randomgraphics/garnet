@@ -3,6 +3,14 @@
 The application opens a small 3D scene with a ground plane and colored landmarks. It is a
 standalone prototype host for the first Taixu milestone.
 
+## World data
+
+Every visible scene object is an `e2::Form`. The startup scene creates one Form per
+named object and attaches E2's `TransformFacet` and `VisualFacet`; the committed
+`PrimeView` is the source of transforms, extents, and colors each frame. FX2 only
+turns that snapshot into GPU draws. The crosshair ground target remains a transient
+presentation marker rather than a world entity.
+
 ## Build
 
 From the repository root:

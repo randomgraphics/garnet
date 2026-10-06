@@ -1,6 +1,7 @@
 // Minimal standalone host for the Taixu world prototype.
 
 #include <garnet/GNfx2.h>
+#include <garnet/GNengine2.h>
 #include <garnet/GNwin.h>
 
 #include <glm/ext/matrix_transform.hpp>
@@ -18,6 +19,7 @@
 using namespace GN;
 using namespace GN::fx2;
 using namespace GN::gpu2;
+namespace e2 = GN::e2;
 
 namespace {
 
@@ -37,11 +39,32 @@ struct Host {
     }
 };
 
-struct Landmark {
-    glm::vec3 position;
-    glm::vec3 scale;
-    glm::vec4 color;
+struct LandmarkDefinition {
+    const char * name;
+    glm::vec3    position;
+    glm::vec3    scale;
+    glm::vec4    color;
 };
+
+constexpr LandmarkDefinition kLandmarks[] = {
+    {"ground", {0.0f, -0.15f, 0.0f}, {24.0f, 0.3f, 24.0f}, {0.25f, 0.42f, 0.28f, 1.0f}},
+    {"hut-wall", {-3.5f, 0.8f, 0.0f}, {2.2f, 1.6f, 2.0f}, {0.72f, 0.34f, 0.18f, 1.0f}},
+    {"hut-roof", {-3.5f, 1.9f, 0.0f}, {2.5f, 0.35f, 2.3f}, {0.86f, 0.63f, 0.28f, 1.0f}},
+    {"blue-pillar", {3.5f, 1.1f, -1.0f}, {1.2f, 2.2f, 1.2f}, {0.30f, 0.54f, 0.78f, 1.0f}},
+    {"red-marker-base", {6.0f, 0.6f, -4.0f}, {1.0f, 1.2f, 1.0f}, {0.78f, 0.32f, 0.25f, 1.0f}},
+    {"red-marker-cap", {6.0f, 1.6f, -4.0f}, {1.8f, 0.35f, 1.8f}, {0.92f, 0.72f, 0.35f, 1.0f}},
+    {"tree-trunk", {-7.0f, 0.7f, -5.0f}, {0.55f, 1.4f, 0.55f}, {0.38f, 0.28f, 0.18f, 1.0f}},
+    {"tree-crown", {-7.0f, 1.8f, -5.0f}, {2.2f, 1.2f, 2.2f}, {0.20f, 0.52f, 0.30f, 1.0f}},
+};
+
+e2::FacetBinding makeBinding(const e2::TransformFacet::Value & value) { return {e2::Ref<const e2::Facet>(new e2::TransformFacet), value.clone()}; }
+
+e2::FacetBinding makeBinding(const e2::VisualFacet::Value & value) { return {e2::Ref<const e2::Facet>(new e2::VisualFacet), value.clone()}; }
+
+glm::vec3 toMeters(const e2::WorldVector3 & position, const e2::PhysicalScale & scale) {
+    const auto local = e2::positionToMeters(position, scale);
+    return {static_cast<float>(local.x), static_cast<float>(local.y), static_cast<float>(local.z)};
+}
 
 struct CameraPose {
     glm::vec3 position {0.0f, 1.8f, 12.0f};
@@ -99,12 +122,30 @@ private:
 
 class WorldScene {
 public:
+    e2::Universe                   universe;
+    AutoRef<e2::World>             world;
+    e2::PhysicalScale              scale = e2::PhysicalScale::METER();
     AutoRef<UnlitKernel>           kernel;
     AutoRef<SharedShaderConstants> constants;
     RasterGeometry                 box;
     AutoRef<GpuPayload>            initialUpload;
 
     bool initialize(const AutoRef<GpuContext> & gpu) {
+        world = e2::World::create(universe, "taixu-prototype");
+        if (!world || !world->registerFacet(e2::TransformFacet {}) || !world->registerFacet(e2::VisualFacet {})) return false;
+        for (const auto & definition : kLandmarks) {
+            e2::TransformFacet::Value transform;
+            transform.position = e2::positionFromMeters(glm::dvec3(definition.position), scale);
+            e2::VisualFacet::Value visual;
+            visual.halfExtent = definition.scale * 0.5f;
+            visual.color      = definition.color;
+            auto mold         = e2::Mold::create(universe, definition.name, {makeBinding(transform), makeBinding(visual)},
+                                                 [name = StrA(definition.name)](e2::FormId id) { return e2::Form::create(id, name); });
+            if (!mold || !world->createForm(*mold)) return false;
+        }
+        const auto initialPrime = world->primeSnapshot();
+        if (!initialPrime || initialPrime->query<e2::TransformFacet, e2::VisualFacet>().size() != std::size(kLandmarks)) return false;
+
         kernel       = UnlitKernel::create(gpu);
         constants    = SharedShaderConstants::create({.gpu = gpu});
         auto uploads = GpuCnC::create({.gpu = gpu});
@@ -135,11 +176,18 @@ public:
         constants->set0.camera.exposure          = 1.0f;
 
         const auto snapshot = constants->takeSnapshot();
-        for (const auto & landmark : landmarks()) {
+        auto       prime    = world->primeSnapshot();
+        if (!prime) return false;
+        for (const auto formId : prime->query<e2::TransformFacet, e2::VisualFacet>()) {
+            e2::WorldTransform transform;
+            const auto *       visual = prime->get<e2::VisualFacet>(formId);
+            if (!visual || !e2::resolveWorldTransform(*prime, formId, transform)) return false;
             UnlitKernel::Inputs input;
-            input.geometry        = box;
-            input.color           = landmark.color;
-            input.worldFromObject = glm::translate(glm::mat4(1.0f), landmark.position) * glm::scale(glm::mat4(1.0f), landmark.scale);
+            input.geometry      = box;
+            input.color         = visual->color;
+            const auto position = toMeters(transform.position, scale);
+            input.worldFromObject =
+                glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(transform.orientation) * glm::scale(glm::mat4(1.0f), visual->halfExtent * 2.0f);
             if (!kernel->record(raster, snapshot.set0Resources, input)) return false;
         }
         if (targetPosition) {
@@ -158,16 +206,6 @@ public:
     const SharedShaderConstants::Snapshot & latestSnapshot() const { return mLatestSnapshot; }
 
 private:
-    static ArrayView<const Landmark> landmarks() {
-        static constexpr Landmark scene[] = {
-            {{0.0f, -0.15f, 0.0f}, {24.0f, 0.3f, 24.0f}, {0.25f, 0.42f, 0.28f, 1.0f}}, {{-3.5f, 0.8f, 0.0f}, {2.2f, 1.6f, 2.0f}, {0.72f, 0.34f, 0.18f, 1.0f}},
-            {{-3.5f, 1.9f, 0.0f}, {2.5f, 0.35f, 2.3f}, {0.86f, 0.63f, 0.28f, 1.0f}},   {{3.5f, 1.1f, -1.0f}, {1.2f, 2.2f, 1.2f}, {0.30f, 0.54f, 0.78f, 1.0f}},
-            {{6.0f, 0.6f, -4.0f}, {1.0f, 1.2f, 1.0f}, {0.78f, 0.32f, 0.25f, 1.0f}},    {{6.0f, 1.6f, -4.0f}, {1.8f, 0.35f, 1.8f}, {0.92f, 0.72f, 0.35f, 1.0f}},
-            {{-7.0f, 0.7f, -5.0f}, {0.55f, 1.4f, 0.55f}, {0.38f, 0.28f, 0.18f, 1.0f}}, {{-7.0f, 1.8f, -5.0f}, {2.2f, 1.2f, 2.2f}, {0.20f, 0.52f, 0.30f, 1.0f}},
-        };
-        return {scene, 8};
-    }
-
     SharedShaderConstants::Snapshot mLatestSnapshot;
 };
 
