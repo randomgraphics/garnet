@@ -14,12 +14,13 @@ public:
     GN_REGISTER_RUNTIME_TYPE(bindless::Raster);
 
     VkBindlessRaster(const StrA & name, AutoRef<GpuContextVulkan2> gpu, RasterTarget target, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
-                     vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, size_t numberOfDrawsHint,
-                     uint32_t maxImmediateSize);
+                     vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, GpuResourceTable passResources,
+                     size_t numberOfDrawsHint, uint32_t maxImmediateSize);
 
     ~VkBindlessRaster() override;
 
     void                recordDraw(const DrawParameters & params) override;
+    void                recordBindBasedDraw(const DrawParameters & params, const GpuResourceTable & drawResources) override;
     void                addCleanupCallback(std::function<void()> cleanup) override;
     AutoRef<GpuPayload> seal() override;
 
@@ -31,6 +32,11 @@ private:
     vk::PipelineLayout                mPipelineLayout {};
     vk::DescriptorPool                mPassDescriptorPool {};
     std::vector<vk::DescriptorSet>    mPassDescriptorSets;
+    GpuResourceTable                  mPassResources;
+    uint32_t                          mMaxImmediateSize = 128;
+
+    std::vector<GpuResourceTable> mBoundResourceTables;
+    uint32_t                      mLastBoundResourceIndex = ~0u;
 
     std::unique_ptr<BindlessDrawStorage> mStorage;
     std::vector<uint8_t>                 mImmediateData;

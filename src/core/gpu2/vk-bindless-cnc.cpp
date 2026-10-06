@@ -3,6 +3,7 @@
 #include "vk-bindless-cnc-payload.h"
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-bindless-pipeline-layout.h"
+#include "vk-sampler.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless.cnc");
 
@@ -62,13 +63,6 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
 
     outSets.resize(passResources.size());
 
-    // Create a default linear sampler for combined image samplers
-    rv::Ref<rv::Sampler>             defaultSampler;
-    rv::Sampler::ConstructParameters scp;
-    scp.gi = gpu.vulkanDevice().gi();
-    scp.setLinear();
-    defaultSampler = rv::Ref<rv::Sampler>::make(scp);
-
     for (size_t s = 0; s < passResources.size(); ++s) {
         if (s == heapSetIndex || passResources[s].empty()) continue;
 
@@ -121,7 +115,12 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
                         ii.imageLayout = vk::ImageLayout::eGeneral;
                     } else {
                         ii.imageLayout = shaderReadOnlyLayout(tex->descriptor().format);
-                        ii.sampler     = defaultSampler->handle();
+                        if (v.combinedTextureSampler) {
+                            auto * samp = RuntimeType::cast<SamplerVulkan>(v.combinedTextureSampler.get());
+                            ii.sampler  = samp ? samp->nativeSampler() : gpu.defaultLinearSampler();
+                        } else {
+                            ii.sampler = gpu.defaultLinearSampler();
+                        }
                     }
                     curImageInfos.push_back(ii);
                 }

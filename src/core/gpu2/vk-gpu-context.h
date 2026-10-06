@@ -101,6 +101,9 @@ public:
         return mFencePool.value();
     }
 
+    /// Default linear sampler with maxLod=VK_LOD_CLAMP_NONE. Only valid when ready().
+    vk::Sampler defaultLinearSampler() const;
+
     GpuContext::Caps caps() const override { return mCaps; }
 
     intptr_t getVulkanInstanceHandle() const override {
@@ -129,6 +132,7 @@ private:
     mutable std::unique_ptr<VkBindlessPsoCache>            mBindlessPsoCache;
     mutable std::unique_ptr<VkBindlessComputePsoCache>     mBindlessComputePsoCache;
     mutable std::optional<FencePoolVulkan>                 mFencePool;
+    mutable rv::Ref<rv::Sampler>                           mDefaultLinearSampler;
 
     // Other internal impl details that we'd like to hide from public context header.
     struct Impl;

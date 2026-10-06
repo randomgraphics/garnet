@@ -6,6 +6,7 @@
 
     #include "bindless-test-vert.spv.h"
     #include "bindless-test-frag.spv.h"
+    #include "bindless-bound-test-frag.spv.h"
 
     #include <catch2/catch_test_macros.hpp>
     #include <garnet/GNgpu2.h>
@@ -279,6 +280,106 @@ TEST_CASE("bindless::Raster: render textured quad via bindless heap with auto-re
     {
         gfx::img::Image result = targetTex->readback();
         checkPixels(result, 255, 0, 0, 255);
+    }
+}
+
+TEST_CASE("bindless::Raster: interleaved bindless and bind-based draws in single pass", "[gpu2][bindless][gpu]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    constexpr uint32_t W = 8, H = 8;
+
+    auto texGreen = makeRgba8Tex(gpu, "texGreen", W, H);
+    auto texRed   = makeRgba8Tex(gpu, "texRed", W, H);
+    REQUIRE(texGreen);
+    REQUIRE(texRed);
+    REQUIRE(texGreen->setContent(makeSolidImage(W, H, 0, 255, 0, 255)));
+    REQUIRE(texRed->setContent(makeSolidImage(W, H, 255, 0, 0, 255)));
+
+    auto heap = bindless::DescriptorHeap::create("heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+    auto sharedSampler = Sampler::create("shared-sampler", {.context = gpu});
+    REQUIRE(sharedSampler);
+    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView(sharedSampler)).slot == 0);
+
+    // Green texture is in the bindless heap
+    auto slotGreen = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView(texGreen));
+    REQUIRE(slotGreen != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+
+    // Red texture is bound via drawResources at set 1
+    GpuResourceTable boundTable;
+    boundTable.resize(2);
+    boundTable[1].resize(1);
+    boundTable[1][0].append(GpuResourceView(texRed));
+
+    // Conflict check table: defines resource at set 0 (conflicts with heapSetIndex = 0)
+    GpuResourceTable conflictTable;
+    conflictTable.resize(1);
+    conflictTable[0].resize(1);
+    conflictTable[0][0].append(GpuResourceView(texRed));
+
+    auto targetTex = makeRgba8Tex(gpu, "target", W, H);
+    REQUIRE(targetTex);
+
+    RasterTarget rt;
+    rt.colorTargets.append(RasterTarget::ColorTarget(GpuResourceView(targetTex)));
+    rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    auto vs         = makeShader(gpu, "bindless-vert", kBindlessTestVertSpv, sizeof(kBindlessTestVertSpv));
+    auto psBindless = makeShader(gpu, "bindless-frag", kBindlessTestFragSpv, sizeof(kBindlessTestFragSpv));
+    auto psBound    = makeShader(gpu, "bound-frag", kBindlessBoundTestFragSpv, sizeof(kBindlessBoundTestFragSpv));
+    REQUIRE(vs);
+    REQUIRE(psBindless);
+    REQUIRE(psBound);
+
+    RasterGeometry geom {};
+    geom.vertexCount = 3;
+
+    // 1. Conflict test: recordBindBasedDraw with conflictTable fails safely and is rejected
+    {
+        auto raster = bindless::Raster::create("conflict-test", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0});
+        REQUIRE(raster);
+        raster->recordBindBasedDraw({.vs = vs, .ps = psBound, .geometry = geom}, conflictTable);
+        auto payload = raster->seal();
+        REQUIRE(payload);
+    }
+
+    // 2. Interleaved pass: Bindless (Green) -> Bound (Red) in same pass. Final pixels must be Red.
+    {
+        auto raster = bindless::Raster::create("interleaved-green-then-red", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0});
+        REQUIRE(raster);
+
+        // Draw 1: Pure bindless draw (green)
+        raster->recordDraw({.vs = vs, .ps = psBindless, .geometry = geom, .immediates = makePushConstants(slotGreen.slot)});
+
+        // Draw 2: Bind-based draw (red)
+        raster->recordBindBasedDraw({.vs = vs, .ps = psBound, .geometry = geom}, boundTable);
+
+        auto payload = raster->seal();
+        REQUIRE(payload);
+        submitAndWait(gpu, "submit-green-then-red", payload);
+
+        gfx::img::Image result = targetTex->readback();
+        checkPixels(result, 255, 0, 0, 255);
+    }
+
+    // 3. Reverse interleaved pass: Bound (Red) -> Bindless (Green) in same pass. Final pixels must be Green.
+    {
+        auto raster = bindless::Raster::create("interleaved-red-then-green", {.gpu = gpu, .target = &rt, .heap = heap, .heapSetIndex = 0});
+        REQUIRE(raster);
+
+        // Draw 1: Bind-based draw (red)
+        raster->recordBindBasedDraw({.vs = vs, .ps = psBound, .geometry = geom}, boundTable);
+
+        // Draw 2: Pure bindless draw (green)
+        raster->recordDraw({.vs = vs, .ps = psBindless, .geometry = geom, .immediates = makePushConstants(slotGreen.slot)});
+
+        auto payload = raster->seal();
+        REQUIRE(payload);
+        submitAndWait(gpu, "submit-red-then-green", payload);
+
+        gfx::img::Image result = targetTex->readback();
+        checkPixels(result, 0, 255, 0, 255);
     }
 }
 

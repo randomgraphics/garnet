@@ -197,13 +197,18 @@ Bypasses `rv::Drawable` and descriptor pools entirely:
 - Per draw: Emits direct `vkCmdPushConstants`, `vkCmdBindVertexBuffers`, `vkCmdBindIndexBuffer`, and `vkCmdDrawIndexed` with consecutive state deduplication.
 - At pass end: `ctx.batchTracker->restoreAttachmentToShaderReadOnly()` transitions attachments to `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` with write-to-read barrier execution and synchronization with CPU tracker state.
 
-#### Future TODO: Interleaved Bind-Based Draws in `bindless::Raster`
-Currently, issuing bind-based draws requires closing the `bindless::Raster` pass and beginning a separate `GpuRaster` pass against the same render target (typically with `loadColor = true`). This incurs pass split overhead (`vkCmdEndRendering` / `vkCmdBeginRendering` transitions).
-- **Goal**: Allow `bindless::Raster` to optionally accept bind-based draws within the same render pass.
-- **Draw-Level Resource Table**: Support an optional `const GpuResourceTable *` or dedicated draw overload in `bindless::Raster`.
-- **Fast-Path Preservation**: Pure bindless draws must continue to incur zero descriptor compilation and zero hazard scanning.
-- **Dynamic Descriptor Sets**: When a draw supplies bound resources, descriptor sets for non-heap sets can be allocated from a pass-level or frame-level pool and bound on-demand, without invalidating the persistent bindless heap set.
-- **Hazard & Lifetime Tracking**: Retain bound resources for the duration of the pass, keeping CPU overhead isolated only to draws opting into traditional binding.
+#### Interleaved Bind-Based Draws in `bindless::Raster` (`recordBindBasedDraw`)
+`bindless::Raster` supports occasional bind-based draws within the same render pass via:
+```cpp
+virtual void recordBindBasedDraw(const DrawParameters & params, const GpuResourceTable & drawResources) = 0;
+```
+This allows incorporating overlays (such as Dear ImGui UI rendering via `fx2::ImGuiBackend`) directly into the main bindless scene pass without closing the pass or performing expensive backbuffer reloads.
+
+- **Fast-Path Preservation**: Pure bindless draws (`recordDraw`) retain their zero-overhead fast path with zero descriptor compilation, zero hazard scanning, and compiler branch hints (`GN_UNLIKELY`) that bypass bound draw switching.
+- **Dedicated Method & Usage Guidance**: Intended strictly for occasional use (e.g. issuing a small number of UI draws at the end of a bindless pass). Bound draws compile descriptor sets, track resource hazards, and switch pipeline layouts; abusing this method will degrade bindless render pass performance.
+- **Descriptor Heap Set Conflict Check**: `drawResources` must not define bindings in the same descriptor set as `heapSetIndex`. If a conflict occurs, the draw fails and is rejected immediately.
+- **Dynamic Descriptor Sets & Pipeline Layout Switching**: Unique bound resource tables are compiled into descriptor sets at `seal()` time. During submit, `VkBindlessPayload` switches pipeline layouts and non-heap descriptor sets on demand, restoring the baseline pass layout for subsequent pure bindless draws.
+- **Hazard & Lifetime Tracking**: Bound resource tables are registered with `GpuResourceStateTrackerVulkan` for automated barrier generation, and all referenced resources are retained for the lifetime of the sealed payload and GPU execution.
 
 ---
 

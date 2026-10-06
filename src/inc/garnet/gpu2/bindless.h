@@ -173,6 +173,18 @@ public:
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;
 
+    /// Record a bind-based draw call with per-draw resource bindings.
+    ///
+    /// NOTE: This is intended strictly for occasional use (e.g. rendering a small UI overlay
+    /// such as ImGui at the end of a bindless pass). Bound draws compile descriptor sets,
+    /// track hazards, and may switch pipeline layouts, which will hurt bindless render pass
+    /// performance if abused. Pure bindless draws (recordDraw) remain on the zero-overhead fast path.
+    /// Ideally, only issue a small amount of bound draws at the end of a bindless pass.
+    ///
+    /// Fast conflict check: if drawResources conflicts with heapSetIndex (defines bindings in
+    /// the same set as where the descriptor heap is located), the draw will fail.
+    virtual void recordBindBasedDraw(const DrawParameters & params, const GpuResourceTable & drawResources) = 0;
+
     /// Register a cleanup callback invoked once when the payload completes or is destroyed without submission.
     virtual void addCleanupCallback(std::function<void()> cleanup) = 0;
 

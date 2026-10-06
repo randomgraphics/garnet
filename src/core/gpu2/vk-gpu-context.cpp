@@ -189,12 +189,25 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
 GpuContextVulkan2::~GpuContextVulkan2() {
     GN_INFO(sLoggerVk, "Wait for GPU idle ...");
     pumpInternal(true);
+    mDefaultLinearSampler.clear();
     mBindlessComputePsoCache.reset();
     mBindlessPsoCache.reset();
     mBindlessPipelineLayoutCache.reset();
     mPsoFactory.reset();
     mFencePool.reset();
     GN_INFO(sLoggerVk, "Destroying Vulkan GPU context");
+}
+
+vk::Sampler GpuContextVulkan2::defaultLinearSampler() const {
+    GN_ASSERT(ready());
+    if (!mDefaultLinearSampler.valid()) {
+        rv::Sampler::ConstructParameters scp;
+        scp.gi = vulkanDevice().gi();
+        scp.setLinear();
+        scp.info.maxLod       = VK_LOD_CLAMP_NONE;
+        mDefaultLinearSampler = rv::Ref<rv::Sampler>::make(scp);
+    }
+    return mDefaultLinearSampler->handle();
 }
 
 void GpuContextVulkan2::beginDebugLabel(const char * labelName) {

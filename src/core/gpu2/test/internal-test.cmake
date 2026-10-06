@@ -29,6 +29,7 @@ if (VULKAN_FOUND)
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/mixed-cnc-raster.comp
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-test.vert
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-test.frag
+                ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-bound-test.frag
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-material.comp
             ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-types.comp
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-cnc-test.comp

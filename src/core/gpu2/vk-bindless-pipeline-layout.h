@@ -47,6 +47,12 @@ public:
     /// Get or create a VkPipelineLayout matching the given bindless compute (CnC) configuration.
     vk::PipelineLayout getOrCreateCompute(const bindless::CnC::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap);
 
+    /// Get or create a VkPipelineLayout with explicit heap index, max immediate size, and pass/draw resources.
+    vk::PipelineLayout getOrCreate(uint32_t heapSetIndex, uint32_t maxImmediateSize, const GpuResourceTable & resources, VkBindlessDescriptorHeap * vkHeap,
+                                   vk::ShaderStageFlags stageFlags = vk::ShaderStageFlagBits::eAllGraphics) {
+        return getOrCreateInternal(heapSetIndex, maxImmediateSize, resources, vkHeap, stageFlags);
+    }
+
 private:
     vk::PipelineLayout getOrCreateInternal(uint32_t heapSetIndex, uint32_t maxImmediateSize, const GpuResourceTable & passResources,
                                            VkBindlessDescriptorHeap * vkHeap, vk::ShaderStageFlags stageFlags);

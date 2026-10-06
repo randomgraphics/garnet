@@ -206,7 +206,7 @@ int main(int argc, const char * argv[]) {
     if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
     AutoRef<fx2::ImGuiBackend> ui;
     if (host.window) {
-        ui = fx2::ImGuiBackend::create({.gpu = host.gpu, .window = *host.window});
+        ui = fx2::ImGuiBackend::create({.gpu = host.gpu, .window = *host.window, .resourceSetIndex = 2});
         if (!ui) return EXIT_FAILURE;
     }
     const glm::vec3 center     = (model->bounds.minimum + model->bounds.maximum) * 0.5f;
@@ -396,37 +396,20 @@ int main(int argc, const char * argv[]) {
                                                                 .target            = &target,
                                                                 .heap              = renderer.heap,
                                                                 .passResources     = fx2::bindless::sharedUniformResources(uniforms),
-                                                                .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes)});
+                                                                .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
         if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes)) return EXIT_FAILURE;
+
+        AutoRef<GpuPayload> uiUpload;
+        if (ui && !ui->record(*raster, uiUpload)) return EXIT_FAILURE;
         auto rendered = raster->seal();
         if (!rendered) return EXIT_FAILURE;
-
-        // The ImGui backend still records into a legacy raster, so the overlay is a second pass
-        // over the same backbuffer. It loads rather than clears the scene's color and needs no depth.
-        AutoRef<GpuPayload> uiUpload, uiPass;
-        if (ui) {
-            RasterTarget uiTarget;
-            uiTarget.setColorTarget(0, acquired.view);
-            uiTarget.loadColor = true;
-            auto & uiBlend     = uiTarget.colorTargets[0].blendState;
-            uiBlend.colorSrc   = RasterTarget::BlendState::SRC_ALPHA;
-            uiBlend.colorDst   = RasterTarget::BlendState::INV_SRC_ALPHA;
-            uiBlend.alphaSrc   = RasterTarget::BlendState::ONE;
-            uiBlend.alphaDst   = RasterTarget::BlendState::INV_SRC_ALPHA;
-            auto uiRaster      = GpuRaster::create("viewer.ui", {.gpu = host.gpu, .target = &uiTarget});
-            if (!uiRaster || !ui->record(*uiRaster, uiUpload)) return EXIT_FAILURE;
-            uiPass = uiRaster->seal();
-            if (!uiPass) return EXIT_FAILURE;
-        }
 
         GpuContext::SubmitParameters submit("mesh-viewer.frame");
         submit.appendWork(uniformWork);
         if (uiUpload) submit.appendWork(uiUpload);
         submit.appendWork(rendered).waitFor(acquired.ready);
-        submit.appendWork(uiPass);
         host.gpu->submit(submit);
-        // Present must wait on the last payload touching the backbuffer, not just the scene pass.
-        host.swapchain->present(uiPass ? *uiPass : *rendered);
+        host.swapchain->present(*rendered);
     }
     host.gpu->waitForIdle();
     if (!options.snapshot.empty()) {

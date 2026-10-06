@@ -42,16 +42,26 @@ VkBindlessPayload::VkBindlessPayload(const StrA & name, ConstructParameters para
     : GpuPayloadVulkan(name), mGpu(std::move(params.gpu)), mRenderTarget(std::move(params.target)), mHeap(std::move(params.heap)),
       mHeapSetIndex(params.heapSetIndex), mPipelineLayout(params.pipelineLayout), mStorage(std::move(params.storage)),
       mImmediateData(std::move(params.immediateData)), mRetainedCleanups(std::move(params.retainedCleanups)), mPassDescriptorPool(params.passDescriptorPool),
-      mPassDescriptorSets(std::move(params.passDescriptorSets)) {}
+      mPassDescriptorSets(std::move(params.passDescriptorSets)), mBoundResources(std::move(params.boundResources)),
+      mBoundResourceTables(std::move(params.boundResourceTables)) {}
 
 VkBindlessPayload::~VkBindlessPayload() {
     for (auto & cleanup : mRetainedCleanups) {
         if (cleanup) cleanup();
     }
     mRetainedCleanups.clear();
-    if (mGpu && mGpu->ready() && mPassDescriptorPool) {
-        mGpu->vulkanDevice().handle().destroyDescriptorPool(mPassDescriptorPool);
-        mPassDescriptorPool = vk::DescriptorPool {};
+    if (mGpu && mGpu->ready()) {
+        auto dev = mGpu->vulkanDevice().handle();
+        if (mPassDescriptorPool) {
+            dev.destroyDescriptorPool(mPassDescriptorPool);
+            mPassDescriptorPool = vk::DescriptorPool {};
+        }
+        for (auto & entry : mBoundResources) {
+            if (entry.descriptorPool) {
+                dev.destroyDescriptorPool(entry.descriptorPool);
+                entry.descriptorPool = vk::DescriptorPool {};
+            }
+        }
     }
 }
 
@@ -75,6 +85,9 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
             ctx.batchTracker->addStorageBuffer(RuntimeType::cast<BufferVulkan>(heap->materialBuffer().get()), false, vk::PipelineStageFlagBits::eAllGraphics);
         }
         ctx.batchTracker->addRasterTarget(mRenderTarget);
+        if (!mBoundResourceTables.empty()) GN_UNLIKELY {
+                for (const auto & table : mBoundResourceTables) { ctx.batchTracker->addGpuResourceTable(table); }
+            }
         ctx.batchTracker->emitPrePassBarriers(vkcb);
     } else {
         // Fallback barrier when no batch tracker is active
@@ -184,11 +197,12 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
 
     vkcb.beginRendering(ri);
 
-    // 3. Bind global descriptor heap once at heapSetIndex
+    // 3. Bind global descriptor heap and pass resources initially to mPipelineLayout
+    vk::DescriptorSet heapSet {};
     if (mHeap && mPipelineLayout) {
         auto * vkHeap = RuntimeType::cast<VkBindlessDescriptorHeap>(mHeap.get());
         if (vkHeap && vkHeap->nativeDescriptorSet()) {
-            auto heapSet = vkHeap->nativeDescriptorSet();
+            heapSet = vkHeap->nativeDescriptorSet();
             vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mHeapSetIndex, 1, &heapSet, 0, nullptr);
         }
     }
@@ -201,11 +215,13 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     }
 
     // 4. Record draws directly to Vulkan command buffer
-    vk::Pipeline activePipeline {};
-    vk::Viewport activeViewport {};
-    vk::Rect2D   activeScissor {};
-    bool         hasActiveViewport = false;
-    bool         hasActiveScissor  = false;
+    vk::PipelineLayout activePipelineLayout = mPipelineLayout;
+    uint32_t           activeBoundIndex     = ~0u;
+    vk::Pipeline       activePipeline {};
+    vk::Viewport       activeViewport {};
+    vk::Rect2D         activeScissor {};
+    bool               hasActiveViewport = false;
+    bool               hasActiveScissor  = false;
 
     std::vector<vk::Buffer>     vkBuffers;
     std::vector<vk::DeviceSize> vkOffsets;
@@ -221,6 +237,15 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         auto * gsVk = RuntimeType::cast<GpuShaderVulkan>(d.gs.get());
         auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
         if (!vsVk || !vsVk->rvShader()) continue;
+
+        vk::PipelineLayout         drawLayout = mPipelineLayout;
+        const BoundResourceEntry * boundEntry = nullptr;
+        if (d.boundResourceIndex != ~0u) GN_UNLIKELY {
+                if (d.boundResourceIndex < mBoundResources.size()) {
+                    boundEntry = &mBoundResources[d.boundResourceIndex];
+                    if (boundEntry->pipelineLayout) drawLayout = boundEntry->pipelineLayout;
+                }
+            }
 
         // Viewport and Scissor: only update when changed
         vk::Viewport vp =
@@ -239,7 +264,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         }
 
         // Get-or-create graphics pipeline
-        vk::Pipeline pipe = psoCache.getOrCreate(mPipelineLayout, vsVk, hsVk, dsVk, gsVk, psVk, d.mergedState, d.geometry, formats, mRenderTarget.colorTargets);
+        vk::Pipeline pipe = psoCache.getOrCreate(drawLayout, vsVk, hsVk, dsVk, gsVk, psVk, d.mergedState, d.geometry, formats, mRenderTarget.colorTargets);
         if (!pipe) continue;
 
         if (pipe != activePipeline) {
@@ -247,9 +272,52 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
             activePipeline = pipe;
         }
 
+        // Bind descriptor sets if layout or bound resources changed
+        if (drawLayout != activePipelineLayout) GN_UNLIKELY {
+                if (heapSet) { vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawLayout, mHeapSetIndex, 1, &heapSet, 0, nullptr); }
+                for (size_t s = 0; s < mPassDescriptorSets.size(); ++s) {
+                    if (s != mHeapSetIndex && mPassDescriptorSets[s]) {
+                        bool overridden = boundEntry && s < boundEntry->descriptorSets.size() && boundEntry->descriptorSets[s];
+                        if (!overridden) {
+                            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawLayout, static_cast<uint32_t>(s), 1, &mPassDescriptorSets[s], 0,
+                                                    nullptr);
+                        }
+                    }
+                }
+                if (boundEntry) {
+                    for (size_t s = 0; s < boundEntry->descriptorSets.size(); ++s) {
+                        if (s != mHeapSetIndex && boundEntry->descriptorSets[s]) {
+                            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawLayout, static_cast<uint32_t>(s), 1, &boundEntry->descriptorSets[s],
+                                                    0, nullptr);
+                        }
+                    }
+                }
+                activePipelineLayout = drawLayout;
+                activeBoundIndex     = d.boundResourceIndex;
+            }
+        else if (d.boundResourceIndex != activeBoundIndex)
+            GN_UNLIKELY {
+                if (boundEntry) {
+                    for (size_t s = 0; s < boundEntry->descriptorSets.size(); ++s) {
+                        if (s != mHeapSetIndex && boundEntry->descriptorSets[s]) {
+                            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawLayout, static_cast<uint32_t>(s), 1, &boundEntry->descriptorSets[s],
+                                                    0, nullptr);
+                        }
+                    }
+                } else {
+                    for (size_t s = 0; s < mPassDescriptorSets.size(); ++s) {
+                        if (s != mHeapSetIndex && mPassDescriptorSets[s]) {
+                            vkcb.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawLayout, static_cast<uint32_t>(s), 1, &mPassDescriptorSets[s], 0,
+                                                    nullptr);
+                        }
+                    }
+                }
+                activeBoundIndex = d.boundResourceIndex;
+            }
+
         // Push constants / immediates
-        if (d.immediateSize > 0 && mPipelineLayout && (d.immediateOffset + d.immediateSize <= mImmediateData.size())) {
-            vkcb.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, d.immediateSize, mImmediateData.data() + d.immediateOffset);
+        if (d.immediateSize > 0 && drawLayout && (d.immediateOffset + d.immediateSize <= mImmediateData.size())) {
+            vkcb.pushConstants(drawLayout, vk::ShaderStageFlagBits::eAllGraphics, 0, d.immediateSize, mImmediateData.data() + d.immediateOffset);
         }
 
         // Vertex buffer bindings
