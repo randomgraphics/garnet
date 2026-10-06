@@ -59,10 +59,11 @@ Shaders:
 ---
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
-Last completed: Task 2.2 - Implement CelKernel and CelMaterial in src/core/fx2/bindless-cel-kernel.cpp
-In progress: Phase 3: Unit Tests and Sample Application
+Last completed: Task 3.1 - Add unit tests in src/core/fx2/test/bindless-cel-test.cpp
+In progress: Task 3.2: Modernize sample-sphere.h and implement simple-cel-shading sample application
 Phase 1: Shaders and C++ Material Data Layout
 Phase 2: FX2 C++ Public API and Core Implementation
+Phase 3.1: Unit Tests for Bindless Cel Shading
 --- END PROGRESS ---
 
 --- REFERENCE ---
