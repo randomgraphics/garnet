@@ -13,9 +13,7 @@ draw;
 layout(set = 0, binding = 1) uniform texture2D heapTextures[];
 layout(set = 0, binding = 5) uniform sampler heapSamplers[];
 
-vec4 sampleHeap(uint textureIndex, uint samplerIndex, vec2 uv) {
-    return texture(sampler2D(heapTextures[nonuniformEXT(textureIndex)], heapSamplers[nonuniformEXT(samplerIndex)]), uv);
-}
+vec4 sampleHeap(uint textureIndex, uint samplerIndex, vec2 uv) { return texture(sampler2D(heapTextures[textureIndex], heapSamplers[samplerIndex]), uv); }
 
 layout(location = 0) in vec3 worldNormal;
 layout(location = 1) in vec2 uv;

@@ -13,9 +13,7 @@ draw;
 layout(set = 0, binding = 1) uniform texture2D heapTextures[];
 layout(set = 0, binding = 1) uniform textureCube heapCubemaps[];
 layout(set = 0, binding = 5) uniform sampler heapSamplers[];
-vec4 sampleHeap(uint textureIndex, uint samplerIndex, vec2 uv) {
-    return texture(sampler2D(heapTextures[nonuniformEXT(textureIndex)], heapSamplers[nonuniformEXT(samplerIndex)]), uv);
-}
+vec4 sampleHeap(uint textureIndex, uint samplerIndex, vec2 uv) { return texture(sampler2D(heapTextures[textureIndex], heapSamplers[samplerIndex]), uv); }
 layout(location = 0) in vec3 worldNormal;
 layout(location = 1) flat in vec4 baseColor;
 layout(location = 2) flat in vec4 emissive;
@@ -93,16 +91,15 @@ void main() {
         vec3  fr = fresnelSchlickR(nv, f0, roughness);
         vec3  kd = (vec3(1.0) - fr) * (1.0 - metallic);
 
-        vec3 irradiance = texture(samplerCube(heapCubemaps[nonuniformEXT(irrTex)], heapSamplers[nonuniformEXT(skySamp)]), n).rgb * lumScale;
-        vec3 reflected  = reflect(-v, n);
-        vec3 envRadiance =
-            textureLod(samplerCube(heapCubemaps[nonuniformEXT(prefTex)], heapSamplers[nonuniformEXT(skySamp)]), reflected, roughness * 4.0).rgb * lumScale;
+        vec3 irradiance  = texture(samplerCube(heapCubemaps[irrTex], heapSamplers[skySamp]), n).rgb * lumScale;
+        vec3 reflected   = reflect(-v, n);
+        vec3 envRadiance = textureLod(samplerCube(heapCubemaps[prefTex], heapSamplers[skySamp]), reflected, roughness * 4.0).rgb * lumScale;
         if (floorLum > 0.0) {
             vec3 floorLighting = vec3(floorLum);
             irradiance         = max(irradiance, floorLighting);
             envRadiance        = max(envRadiance, floorLighting);
         }
-        vec2 brdf = texture(sampler2D(heapTextures[nonuniformEXT(brdfTex)], heapSamplers[nonuniformEXT(lutSamp)]), vec2(nv, roughness)).rg;
+        vec2 brdf = texture(sampler2D(heapTextures[brdfTex], heapSamplers[lutSamp]), vec2(nv, roughness)).rg;
         radiance += kd * albedo.rgb * irradiance + envRadiance * (fr * brdf.x + brdf.y);
     }
     vec3 exposed = max(radiance * ao + emissiveRadiance, vec3(0.0)) * max(sscUniforms.exposure, 0.0);

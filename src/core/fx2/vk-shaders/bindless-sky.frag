@@ -31,6 +31,6 @@ void main() {
     uint            skyboxSamp = material.samplerIndices.x;
     float           lumScale   = material.factors.x;
 
-    vec3 raw = texture(samplerCube(heapCubemaps[nonuniformEXT(skyboxTex)], heapSamplers[nonuniformEXT(skyboxSamp)]), v_dir).rgb * lumScale;
+    vec3 raw = texture(samplerCube(heapCubemaps[skyboxTex], heapSamplers[skyboxSamp]), v_dir).rgb * lumScale;
     outColor = vec4(gn_tonemap(raw, sscUniforms.exposure), 1.0);
 }
