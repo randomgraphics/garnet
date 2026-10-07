@@ -11,113 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.pso");
 
 namespace GN::gpu2 {
 
-// ── State → Vulkan conversion helpers ────────────────────────────────────────
-
-static vk::CompareOp compareToVk(RasterState::Compare c) {
-    switch (c) {
-    case RasterState::Compare::NEVER:
-        return vk::CompareOp::eNever;
-    case RasterState::Compare::LESS:
-        return vk::CompareOp::eLess;
-    case RasterState::Compare::LESS_EQUAL:
-        return vk::CompareOp::eLessOrEqual;
-    case RasterState::Compare::EQUAL:
-        return vk::CompareOp::eEqual;
-    case RasterState::Compare::GREATER_EQUAL:
-        return vk::CompareOp::eGreaterOrEqual;
-    case RasterState::Compare::GREATER:
-        return vk::CompareOp::eGreater;
-    case RasterState::Compare::NOT_EQUAL:
-        return vk::CompareOp::eNotEqual;
-    case RasterState::Compare::ALWAYS:
-        return vk::CompareOp::eAlways;
-    default:
-        return vk::CompareOp::eAlways;
-    }
-}
-
-static vk::StencilOp stencilOpToVk(RasterState::StencilState::Op op) {
-    switch (op) {
-    case RasterState::StencilState::KEEP:
-        return vk::StencilOp::eKeep;
-    case RasterState::StencilState::ZERO:
-        return vk::StencilOp::eZero;
-    case RasterState::StencilState::REPLACE:
-        return vk::StencilOp::eReplace;
-    case RasterState::StencilState::INC_SAT:
-        return vk::StencilOp::eIncrementAndClamp;
-    case RasterState::StencilState::DEC_SAT:
-        return vk::StencilOp::eDecrementAndClamp;
-    case RasterState::StencilState::INVERT:
-        return vk::StencilOp::eInvert;
-    case RasterState::StencilState::INC:
-        return vk::StencilOp::eIncrementAndWrap;
-    case RasterState::StencilState::DEC:
-        return vk::StencilOp::eDecrementAndWrap;
-    default:
-        return vk::StencilOp::eKeep;
-    }
-}
-
-static vk::BlendFactor blendArgToVk(RasterTarget::BlendState::Arg a) {
-    using Arg = RasterTarget::BlendState::Arg;
-    switch (a) {
-    case Arg::ZERO:
-        return vk::BlendFactor::eZero;
-    case Arg::ONE:
-        return vk::BlendFactor::eOne;
-    case Arg::SRC_COLOR:
-        return vk::BlendFactor::eSrcColor;
-    case Arg::INV_SRC_COLOR:
-        return vk::BlendFactor::eOneMinusSrcColor;
-    case Arg::SRC_ALPHA:
-        return vk::BlendFactor::eSrcAlpha;
-    case Arg::INV_SRC_ALPHA:
-        return vk::BlendFactor::eOneMinusSrcAlpha;
-    case Arg::DEST_ALPHA:
-        return vk::BlendFactor::eDstAlpha;
-    case Arg::INV_DEST_ALPHA:
-        return vk::BlendFactor::eOneMinusDstAlpha;
-    case Arg::DEST_COLOR:
-        return vk::BlendFactor::eDstColor;
-    case Arg::INV_DEST_COLOR:
-        return vk::BlendFactor::eOneMinusDstColor;
-    case Arg::BLEND_FACTOR:
-        return vk::BlendFactor::eConstantColor;
-    case Arg::INV_BLEND_FACTOR:
-        return vk::BlendFactor::eOneMinusConstantColor;
-    default:
-        return vk::BlendFactor::eOne;
-    }
-}
-
-static vk::BlendOp blendOpToVk(RasterTarget::BlendState::Op o) {
-    using Op = RasterTarget::BlendState::Op;
-    switch (o) {
-    case Op::ADD:
-        return vk::BlendOp::eAdd;
-    case Op::SUB:
-        return vk::BlendOp::eSubtract;
-    case Op::REV_SUB:
-        return vk::BlendOp::eReverseSubtract;
-    case Op::MIN:
-        return vk::BlendOp::eMin;
-    case Op::MAX:
-        return vk::BlendOp::eMax;
-    default:
-        return vk::BlendOp::eAdd;
-    }
-}
-
-static vk::ColorComponentFlags writeMaskToVk(uint8_t w) {
-    vk::ColorComponentFlags f;
-    if (w & 1) f |= vk::ColorComponentFlagBits::eR;
-    if (w & 2) f |= vk::ColorComponentFlagBits::eG;
-    if (w & 4) f |= vk::ColorComponentFlagBits::eB;
-    if (w & 8) f |= vk::ColorComponentFlagBits::eA;
-    // Default to full write mask if nothing is set.
-    return f ? f : (vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
-}
+// State → Vulkan conversion helpers are in vk-format-utils.h/cpp.
 
 // ── Gpu2RasterPsoKey ──────────────────────────────────────────────────────────
 //
@@ -136,9 +30,6 @@ struct Gpu2RasterPsoKey {
             uint64_t stride0     : 12; ///< binding 0 stride in bytes (max 4095)
             uint64_t stride1     : 12;
             uint64_t stride2     : 12;
-            uint64_t instanced0  : 1; ///< binding is per-instance
-            uint64_t instanced1  : 1;
-            uint64_t instanced2  : 1;
             uint64_t numAttribs  : 5;
             uint64_t attrHash    : 16; ///< hash of {location, binding, offset, format} × N
         };
@@ -204,19 +95,6 @@ Gpu2RasterPsoKey Gpu2RasterPsoKey::make(const GpuShaderVulkan & vs, const GpuSha
                 k.stride1 = vb.stride & 0xFFF;
             else if (bi == 2)
                 k.stride2 = vb.stride & 0xFFF;
-            ++bi;
-        }
-        for (const auto & ib : geom.instances) {
-            if (bi == 0) {
-                k.stride0    = ib.stride & 0xFFF;
-                k.instanced0 = 1;
-            } else if (bi == 1) {
-                k.stride1    = ib.stride & 0xFFF;
-                k.instanced1 = 1;
-            } else if (bi == 2) {
-                k.stride2    = ib.stride & 0xFFF;
-                k.instanced2 = 1;
-            }
             ++bi;
         }
         k.numBindings = (uint64_t) std::min(bi, (size_t) 7);
@@ -326,9 +204,8 @@ static rv::Ref<rv::GraphicsPipeline> buildPipeline(const Gpu2RasterPsoCreatePara
     // Viewport/scissor are always dynamic in this backend.
     gcp.dynamicViewport(1).dynamicScissor(1);
 
-    // Vertex input: vertex buffers first, then instance buffers (mirrors binding index assignment).
+    // Vertex input: vertex buffers (mirrors binding index assignment).
     for (const auto & vb : params.geometry.vertices) gcp.addVertexBuffer(vb.stride);
-    for (const auto & ib : params.geometry.instances) gcp.addInstanceBuffer(ib.stride);
     // Shader locations can be sparse (e.g. position at 0 and color at 4).
     // setVertexAttribute() expands by location and leaves invalid holes, whereas
     // Vulkan expects a compact array of descriptions with explicit locations.

@@ -35,25 +35,9 @@ using namespace GN::gpu2;
 using namespace GN::util;
 using namespace fizsample;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.fiz.solids");
-
 namespace {
 
-static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, const RasterTarget & target, const glm::vec3 & eye, const glm::vec3 & targetPos,
-                                                 int frameIdx) {
-    const glm::vec3 kUp(0.0f, 1.0f, 0.0f);
-    const glm::mat4 camToWorld = glm::inverse(glm::lookAtRH(eye, targetPos, kUp));
-    const auto      rasterSize = target.calcRasterSizeInPixel();
-
-    ssc->set0.camera.cameraPosition       = eye;
-    ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
-    ssc->set0.camera.aspectRatio          = static_cast<float>(rasterSize.x) / static_cast<float>(rasterSize.y);
-    ssc->set0.camera.viewWidthInPixel     = rasterSize.x;
-    ssc->set0.camera.viewHeightInPixel    = rasterSize.y;
-    ssc->set0.frameConstants.frameCounter = frameIdx;
-
-    return ssc->takeSnapshot();
-}
+static GN::Logger * sLogger = GN::getLogger("GN.sample.fiz.solids");
 
 enum ModelKind : uint8_t { MODEL_FLOOR = 0, MODEL_BOX = 1, MODEL_SPHERE = 2, MODEL_PROJECTILE = 3, MODEL_WALL = 4, MODEL_COUNT = 5 };
 
@@ -218,37 +202,55 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
-    auto ssc = SharedShaderConstants::create({.gpu = gpuContext});
+    auto heap = gpu2::bindless::DescriptorHeap::create("fiz.heap", {.gpu = gpuContext, .capacity = 256, .materialCapacity = 1024 * 1024});
+    if (!heap) return -1;
+
+    auto ssc = fx2::bindless::SharedShaderConstants::create({.gpu = gpuContext, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!ssc) return -1;
 
-    ssc->set0.envLighting = {
-        .skyboxPath                = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
-        .irradiancePath            = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
-        .prefilteredPath           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
-        .brdfLutPath               = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
-        .environmentLuminanceScale = 3000.f,
-    };
+    auto initialization = gpu2::bindless::CnC::create("fiz.initialization", {.gpu = gpuContext, .heap = heap});
+    auto geomUploads    = GpuCnC::create({.gpu = gpuContext});
+    if (!initialization || !geomUploads) return -1;
 
-    auto initialization = GpuCnC::create({.gpu = gpuContext});
-    if (!initialization) return -1;
-    auto pbr    = PbrKernel::create(gpuContext, *initialization);
-    auto skybox = SkyboxKernel::create(gpuContext);
-    if (!pbr || !skybox) return -1;
+    auto pbr = fx2::bindless::PbrKernel::create(*heap, *initialization);
+    auto sky = fx2::bindless::SkyKernel::create(*heap, *initialization);
+    if (!pbr || !sky) return -1;
+
+    auto skyMaterial = createSkyMaterial(gpuContext, sky, *initialization, 3000.f);
 
     // Build procedural 3D model assets: Floor, Box, Sphere, Projectile, Wall
-    PbrKernel::Inputs modelAssets[MODEL_COUNT];
-    modelAssets[MODEL_FLOOR]      = boxInputs(gpuContext, *initialization, {40.0f, 1.0f, 40.0f}, {0.25f, 0.28f, 0.32f, 1.0f}, 0.1f, 0.8f);
-    modelAssets[MODEL_BOX]        = boxInputs(gpuContext, *initialization, {0.6f, 0.6f, 0.6f}, {0.92f, 0.68f, 0.20f, 1.0f}, 0.3f, 0.4f); // Golden boxes
-    modelAssets[MODEL_SPHERE]     = sphereInputs(gpuContext, *initialization, 0.6f, 16, 12, {0.20f, 0.75f, 0.85f, 1.0f}, 0.5f, 0.2f); // Cyan metallic spheres
-    modelAssets[MODEL_PROJECTILE] = sphereInputs(gpuContext, *initialization, 1.8f, 24, 18, {0.95f, 0.25f, 0.20f, 1.0f}, 0.8f, 0.2f); // Heavy red wrecker ball
-    modelAssets[MODEL_WALL]       = boxInputs(gpuContext, *initialization, {1.0f, 1.0f, 1.0f}, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f);
+    gpu2::RasterGeometry                modelGeometries[MODEL_COUNT];
+    AutoRef<fx2::bindless::PbrMaterial> modelMaterials[MODEL_COUNT];
+
+    modelGeometries[MODEL_FLOOR] = boxGeometry(gpuContext, *geomUploads, {40.0f, 1.0f, 40.0f});
+    modelMaterials[MODEL_FLOOR]  = createPbrMaterial(pbr, *initialization, {0.25f, 0.28f, 0.32f, 1.0f}, 0.1f, 0.8f);
+
+    modelGeometries[MODEL_BOX] = boxGeometry(gpuContext, *geomUploads, {0.6f, 0.6f, 0.6f});
+    modelMaterials[MODEL_BOX]  = createPbrMaterial(pbr, *initialization, {0.92f, 0.68f, 0.20f, 1.0f}, 0.3f, 0.4f);
+
+    modelGeometries[MODEL_SPHERE] = sphereGeometry(gpuContext, *geomUploads, 0.6f, 16, 12);
+    modelMaterials[MODEL_SPHERE]  = createPbrMaterial(pbr, *initialization, {0.20f, 0.75f, 0.85f, 1.0f}, 0.5f, 0.2f);
+
+    modelGeometries[MODEL_PROJECTILE] = sphereGeometry(gpuContext, *geomUploads, 1.8f, 24, 18);
+    modelMaterials[MODEL_PROJECTILE]  = createPbrMaterial(pbr, *initialization, {0.95f, 0.25f, 0.20f, 1.0f}, 0.8f, 0.2f);
+
+    modelGeometries[MODEL_WALL] = boxGeometry(gpuContext, *geomUploads, {1.0f, 1.0f, 1.0f});
+    modelMaterials[MODEL_WALL]  = createPbrMaterial(pbr, *initialization, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f);
 
     for (int k = 0; k < MODEL_COUNT; ++k) {
-        if (!modelAssets[k].geometry.indexCount) {
+        if (!modelGeometries[k].indexCount || !modelMaterials[k]) {
             GN_ERROR(sLogger, "Failed to create model asset {}", k);
             return -1;
         }
     }
+
+    GpuContext::SubmitParameters initSubmit("fiz.init");
+    auto                         geomInitWork = geomUploads->seal();
+    auto                         matInitWork  = initialization->seal();
+    if (geomInitWork) initSubmit.appendWork(geomInitWork);
+    if (matInitWork) initSubmit.appendWork(matInitWork);
+    gpuContext->submit(initSubmit);
+    gpuContext->waitForIdle();
 
     // ─── Window & Swapchain ──────────────────────────────────────────────────
     std::unique_ptr<win::Window> window;
@@ -278,9 +280,6 @@ int main(int argc, const char ** argv) {
     rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.08f, 0.09f, 0.12f, 1.f).setClearDepth(1.f);
     // Lit kernels inherit depth policy; depth writes keep the later skybox behind the solids.
     rasterTarget.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
-
-    // Initial asset uploads
-    bool initialUploadsSubmitted = false;
 
     // ─── Physics Simulation Setup ────────────────────────────────────────────
     SimulationArena arena;
@@ -484,18 +483,24 @@ int main(int argc, const char ** argv) {
 
         rasterTarget.setColorTarget(0, frame.view);
 
-        glm::vec3                       eye(cameraDist * std::sin(orbitAngle), cameraHeight, cameraDist * std::cos(orbitAngle));
-        SharedShaderConstants::Snapshot sscSnapshot = updateSsc(ssc.get(), rasterTarget, eye, cameraCenter, frameIdx);
+        auto uploadCnc = gpu2::bindless::CnC::create(StrA::format("fiz-frame-{}-uploads", frameIdx), {.gpu = gpuContext, .heap = heap});
+        if (!uploadCnc) return -1;
 
-        DynaArray<AutoRef<GpuPayload>> renderWorks;
-        renderWorks.append(sscSnapshot.set0Payloads);
+        glm::vec3 eye(cameraDist * std::sin(orbitAngle), cameraHeight, cameraDist * std::cos(orbitAngle));
+        auto      uniformState = updateUniforms(ssc, *uploadCnc, rasterTarget, eye, cameraCenter, frameIdx);
+        if (!uniformState) return -1;
 
-        auto                        tRaster0 = std::chrono::high_resolution_clock::now();
-        GpuRaster::CreateParameters rcp;
-        rcp.gpu            = gpuContext;
-        rcp.target         = &rasterTarget;
-        auto kernelUploads = GpuCnC::create({.gpu = gpuContext});
-        auto r             = GpuRaster::create("fiz-solids-raster", rcp);
+        auto uniformWork = uploadCnc->seal();
+
+        auto                                     tRaster0 = std::chrono::high_resolution_clock::now();
+        gpu2::bindless::Raster::CreateParameters rcp;
+        rcp.gpu               = gpuContext;
+        rcp.target            = &rasterTarget;
+        rcp.heap              = heap;
+        rcp.heapSetIndex      = 0;
+        rcp.passResources     = fx2::bindless::sharedUniformResources(uniformState);
+        rcp.numberOfDrawsHint = 2000;
+        auto r                = gpu2::bindless::Raster::create("fiz-solids-raster", rcp);
         if (r) {
             for (int k = 0; k < MODEL_COUNT; ++k) modelTransforms[k].clear();
 
@@ -506,7 +511,7 @@ int main(int argc, const char ** argv) {
                     // Containment boundary walls are invisible physics barriers so they don't occlude the scene or skybox.
                     continue;
                 }
-                if (e.kind >= MODEL_COUNT || !modelAssets[e.kind].geometry.indexCount) continue;
+                if (e.kind >= MODEL_COUNT || !modelGeometries[e.kind].indexCount) continue;
 
                 Transform t = e.solid->transform();
 
@@ -515,41 +520,32 @@ int main(int argc, const char ** argv) {
                 modelTransforms[e.kind].push_back(worldTransform);
             }
 
-            // Draw all physical solids in per-model batches sharing material and pipeline configuration
+            // Draw all physical solids
             for (int k = 0; k < MODEL_COUNT; ++k) {
                 if (modelTransforms[k].empty()) continue;
-                modelAssets[k].worldFromObject = modelTransforms[k][0];
-                ArrayView<const glm::mat4> additionalTransforms(modelTransforms[k].data() + 1, modelTransforms[k].size() - 1);
-                if (!pbr->record(*r, *kernelUploads, sscSnapshot.set0Resources, modelAssets[k], additionalTransforms)) {
-                    GN_ERROR(sLogger, "Failed to record PBR draw for model {}", k);
+                for (const auto & transform : modelTransforms[k]) {
+                    fx2::bindless::PbrMaterial::DrawParameters draw {{*r, uniformState, modelGeometries[k]}, transform, skyMaterial};
+                    if (!modelMaterials[k]->record(draw)) { GN_ERROR(sLogger, "Failed to record PBR draw for model {}", k); }
                 }
             }
 
             // Skybox
-            if (!skybox->record(*r, sscSnapshot.set0Resources)) { GN_ERROR(sLogger, "Failed to record skybox"); }
-            renderWorks.append(kernelUploads->seal());
-            renderWorks.append(r->seal());
+            if (skyMaterial) {
+                fx2::bindless::SkyMaterial::DrawParameters skyDraw {*r, uniformState};
+                skyMaterial->record(skyDraw);
+            }
         }
         auto  tRaster1 = std::chrono::high_resolution_clock::now();
         float drawMs   = std::chrono::duration<float, std::milli>(tRaster1 - tRaster0).count();
         avgDrawMs      = (avgDrawMs == 0.0f) ? drawMs : (avgDrawMs * 0.95f + drawMs * 0.05f);
 
         // Submit GPU work
+        auto                         rasterWork = r ? r->seal() : AutoRef<GpuPayload> {};
         GpuContext::SubmitParameters submit(StrA::format("frame {}", frameIdx));
-        if (!initialUploadsSubmitted) {
-            submit.appendWork(initialization->seal());
-            initialUploadsSubmitted = true;
-        }
-
-        for (size_t i = 0; i < renderWorks.size(); ++i) {
-            if (!renderWorks[i]) continue;
-            if (i + 1 == renderWorks.size())
-                submit.appendWork(renderWorks[i]).waitFor(frame.ready);
-            else
-                submit.appendWork(renderWorks[i]);
-        }
+        if (uniformWork) submit.appendWork(uniformWork);
+        if (rasterWork) submit.appendWork(rasterWork).waitFor(frame.ready);
         gpuContext->submit(submit);
-        if (!renderWorks.empty() && renderWorks.back()) swapchain->present(*renderWorks.back());
+        if (rasterWork) swapchain->present(*rasterWork);
     }
 
     if (testMode) {

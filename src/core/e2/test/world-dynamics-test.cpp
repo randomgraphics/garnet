@@ -298,3 +298,44 @@ TEST_CASE("E2 dynamics: moving parent does not apply its motion twice to a dynam
     CHECK(std::abs(positionToMeters(pose.position, dynamics.scale).x - 2) < 1e-6);
     CHECK(std::abs(positionToMeters(prime->get<TransformFacet>(id)->position, dynamics.scale).x - 1.9) < 1e-6);
 }
+
+TEST_CASE("E2 lifetime: FIFO cube deletion maintains population cap in creation order", "[e2][world-dynamics]") {
+    Universe universe;
+    auto     world = World::create(universe);
+    REQUIRE(world);
+    REQUIRE(registerDynamicsFacets(*world));
+    REQUIRE(world->initializeState(LifetimeState {}));
+    REQUIRE(world->addLaw(createDynamicsLaw()));
+    LifetimeOptions options;
+    options.maximumPopulation = 4;
+    REQUIRE(world->addLaw(createLifetimeLaw(universe, options)));
+    for (int i = 0; i < 4; ++i) { REQUIRE(world->tick(UnitOfTime {10'000'000})); }
+    auto prime = world->primeSnapshot();
+    auto cubes = prime->query<LifetimeFacet>();
+    REQUIRE(cubes.size() == 4);
+    auto c0 = cubes[0], c1 = cubes[1], c2 = cubes[2], c3 = cubes[3];
+
+    // Deleting oldest c0 allows spawning c4 while maintaining the cap
+    REQUIRE(world->submit(DestroyFormIntent {c0}));
+    REQUIRE(world->tick(UnitOfTime {10'000'000}));
+    prime = world->primeSnapshot();
+    cubes = prime->query<LifetimeFacet>();
+    REQUIRE(cubes.size() == 4);
+    CHECK_FALSE(prime->form(c0));
+    CHECK(cubes[0] == c1);
+    CHECK(cubes[1] == c2);
+    CHECK(cubes[2] == c3);
+    auto c4 = cubes[3];
+    CHECK(c4 != c0);
+
+    // Deleting oldest c1 allows spawning c5 in creation order
+    REQUIRE(world->submit(DestroyFormIntent {c1}));
+    REQUIRE(world->tick(UnitOfTime {10'000'000}));
+    prime = world->primeSnapshot();
+    cubes = prime->query<LifetimeFacet>();
+    REQUIRE(cubes.size() == 4);
+    CHECK_FALSE(prime->form(c1));
+    CHECK(cubes[0] == c2);
+    CHECK(cubes[1] == c3);
+    CHECK(cubes[2] == c4);
+}

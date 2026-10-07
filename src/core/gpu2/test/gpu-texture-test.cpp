@@ -12,7 +12,7 @@ static gfx::img::Image makeSolidImage(uint32_t w, uint32_t h, uint32_t depth, ui
     gfx::img::Extent3D extent;
     extent.set(w, h, depth);
     gfx::img::PlaneDesc planeDesc = gfx::img::PlaneDesc::make(gfx::img::PixelFormat::RGBA8(), extent);
-    gfx::img::ImageDesc imageDesc = gfx::img::ImageDesc::make(planeDesc, faces, 1, 1);
+    gfx::img::ImageDesc imageDesc = gfx::img::ImageDesc::make(planeDesc, 1, faces, 1);
     gfx::img::Image     image(imageDesc);
     auto *              p = (uint8_t *) image.data();
     for (size_t i = 0; i < image.size(); i += 4) {

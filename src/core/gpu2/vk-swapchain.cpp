@@ -46,6 +46,8 @@ public:
         mDescriptor = {};
     }
 
+    bool isBackbuffer() const override { return true; }
+
     /// stable per-backbuffer payload; returned as frame.ready from prepare()
     AutoRef<SwapchainReadyPayloadVulkan> readyPayload = AutoRef<SwapchainReadyPayloadVulkan>::make(name + "/ready");
 

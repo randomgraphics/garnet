@@ -1,0 +1,11 @@
+#version 450
+layout(local_size_x = 1) in;
+layout(std430, set = 0, binding = 0) readonly buffer MaterialData { uint words[]; }
+materials;
+layout(std430, set = 1, binding = 0) writeonly buffer OutputData { uint words[]; }
+outputData;
+layout(push_constant) uniform Parameters { uint sourceWord, destinationWord; }
+p;
+void main() {
+    for (uint i = 0; i < 4; ++i) outputData.words[p.destinationWord + i] = materials.words[p.sourceWord + i];
+}
