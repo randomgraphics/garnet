@@ -15,6 +15,13 @@ struct BufferStateVulkan {
     bool operator!=(const BufferStateVulkan & o) const { return !(*this == o); }
 
     static constexpr BufferStateVulkan UNDEFINED() { return {vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eTopOfPipe}; }
+
+    static inline BufferStateVulkan READ_READY() {
+        return {vk::AccessFlagBits::eVertexAttributeRead | vk::AccessFlagBits::eIndexRead | vk::AccessFlagBits::eUniformRead | vk::AccessFlagBits::eShaderRead |
+                    vk::AccessFlagBits::eIndirectCommandRead | vk::AccessFlagBits::eTransferRead,
+                vk::PipelineStageFlagBits::eAllGraphics | vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eTransfer |
+                    vk::PipelineStageFlagBits::eDrawIndirect};
+    }
 };
 
 } // namespace GN::gpu2

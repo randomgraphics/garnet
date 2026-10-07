@@ -16,7 +16,11 @@ public:
     gfx::img::Image readback() const override;
     bool            setContent(const gfx::img::Image & image) override;
 
-    vk::Image nativeImage() const { return mImage; }
+    GpuContextVulkan2 * context() const { return mGpu.get(); }
+    vk::Image           nativeImage() const { return mImage; }
+
+    /// Returns true if this texture represents a swapchain-owned backbuffer.
+    virtual bool isBackbuffer() const { return false; }
 
     /// Returns a VkImageView matching the requested subresource range and format.
     /// If \p v.format is UNKNOWN the image's native format is used. Views are cached
@@ -32,18 +36,6 @@ public:
         const bool isDs = (aspect & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil)) != vk::ImageAspectFlags {};
         vp.format       = pixelFormatToVkFormat(isDs ? mDescriptor.format : viewFmt);
         return mRvImage->getView(vp);
-    }
-
-    /// Returns a snapshot-by-reference of the image's current per-subresource GPU state.
-    /// Valid only when nativeImage() is non-null; returns an empty default state otherwise.
-    const rv::Image::State & getState() const {
-        if (mRvImage) return mRvImage->getState();
-        static const rv::Image::State sEmpty {};
-        return sEmpty;
-    }
-
-    void setState(const rv::Image::State::PlaneState & newState, const vk::ImageSubresourceRange & range = {}) {
-        if (mRvImage) mRvImage->setState(newState, range);
     }
 
 protected:

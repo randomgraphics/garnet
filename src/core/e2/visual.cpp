@@ -1,7 +1,9 @@
 // visual.cpp — the official Visual service implementation.
-// A single Lambertian raster pass presents each Tableau without a render graph.
+// A single bindless Lambertian raster pass presents each Tableau without a render graph.
 
 #include <garnet/GNengine2.h>
+#include <algorithm>
+#include <cmath>
 
 using namespace GN;
 using namespace GN::e2;
@@ -28,8 +30,10 @@ struct VisualImpl : Visual {
         mGpu->waitForIdle();
         mRenderTarget.setColorTarget(0, {});
         mLastFrameTexture.clear();
-        mPendingUploads.clear();
+        mWhiteMaterial.clear();
+        mLambert.clear();
         mSsc.clear();
+        mHeap.clear();
         // Destroy swapchain views before the surface, while the GPU instance remains alive.
         mSwapchain.clear();
         if (mSurface && mOs) {
@@ -98,31 +102,40 @@ struct VisualImpl : Visual {
         mRenderTarget.states.setCullMode(RasterState::CULL_BACK);
         mRenderTarget.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
 
-        mSsc = fx2::SharedShaderConstants::create({.gpu = mGpu});
-        if (!mSsc) {
-            GN_ERROR(sLogger, "Failed to create FX2 shared shader constants.");
+        mHeap = gpu2::bindless::DescriptorHeap::create("e2-heap", {.gpu = mGpu, .capacity = 256, .materialCapacity = 1024 * 1024});
+        if (!mHeap) {
+            GN_ERROR(sLogger, "Failed to create bindless descriptor heap.");
             return false;
         }
-        mSsc->set0.envLighting.environmentLuminanceScale = 0.f;
+
+        mSsc = fx2::bindless::SharedShaderConstants::create({.gpu = mGpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+        if (!mSsc) {
+            GN_ERROR(sLogger, "Failed to create bindless shared shader constants.");
+            return false;
+        }
 
         if (cp.assets) {
             mAssets = cp.assets;
         } else {
             mAssets = Assets::create({.universe = mUniverse, .gpu = mGpu});
         }
-        auto initialization = GpuCnC::create({.gpu = mGpu});
-        if (!mAssets || !initialization) return false;
-        mLambert     = fx2::LambertianKernel::create(mGpu, *initialization);
-        auto payload = initialization->seal();
-        if (!mLambert || !payload) return false;
-        mPendingUploads.append(payload);
+        if (!mAssets) return false;
+
+        auto initialization = gpu2::bindless::CnC::create("e2-init-uploads", {.gpu = mGpu, .heap = mHeap});
+        if (!initialization) return false;
+        mLambert = fx2::bindless::LambertianKernel::create(*mHeap, *initialization);
+        if (!mLambert) return false;
+
+        auto matParams = mLambert->defaultMaterialParameters();
         // A small uniform fill keeps unlit faces readable in this white-model preview.
-        mSsc->set0.envLighting.environmentAmbientFloor = 50.f;
-        fx2::SharedShaderConstants::DirectLight light;
-        light.type                    = fx2::SharedShaderConstants::DirectLight::DIRECTIONAL;
-        light.directional.orientation = glm::quat(glm::vec3(0.6f, 0.8f, 0.f));
-        light.directional.irradiance  = {1.f, 1.f, 1.f, {1500.f}};
-        mSsc->set0.directLighting.append(light);
+        matParams.emissive = glm::vec3(50.f / 3.14159265359f);
+        mWhiteMaterial     = mLambert->createMaterial(*initialization, matParams);
+        if (!mWhiteMaterial) return false;
+
+        auto payload = initialization->seal();
+        if (!payload) return false;
+        mGpu->submit(GpuContext::SubmitParameters("e2-visual-init").appendWork(payload));
+        mGpu->waitForIdle();
         return true;
     }
 
@@ -136,33 +149,46 @@ struct VisualImpl : Visual {
         auto frame = mSwapchain->prepare();
         if (frame.view.empty()) return;
         mRenderTarget.setColorTarget(0, frame.view);
-        auto raster  = GpuRaster::create("e2-white-model", {.gpu = mGpu, .target = &mRenderTarget});
-        auto uploads = GpuCnC::create({.gpu = mGpu});
-        if (!raster || !uploads) return;
+
+        auto uploadCnc = gpu2::bindless::CnC::create(StrA::format("e2-frame-{}-uploads", mFrameCounter), {.gpu = mGpu, .heap = mHeap});
+        if (!uploadCnc) return;
+
         ++mFrameCounter;
-        auto snapshot = prepareSharedShaderConstants(*mSsc, tableau);
-        // SSC hands initialization out only once; retain it if recording is abandoned.
-        for (const auto & payload : snapshot.set0Payloads) mPendingUploads.append(payload);
-        if (snapshot.set0Resources.empty()) return;
+        auto uniformState = updateUniforms(*uploadCnc, tableau);
+        if (!uniformState) return;
+
+        gpu2::bindless::Raster::CreateParameters rcp;
+        rcp.gpu               = mGpu;
+        rcp.target            = &mRenderTarget;
+        rcp.heap              = mHeap;
+        rcp.heapSetIndex      = 0;
+        rcp.passResources     = fx2::bindless::sharedUniformResources(uniformState);
+        rcp.numberOfDrawsHint = tableau.objects.size();
+        auto raster           = gpu2::bindless::Raster::create("e2-white-model", rcp);
+        if (!raster) return;
+
         for (const auto & object : tableau.objects) {
             auto mesh = mAssets->findMesh(object.meshId ? object.meshId : Assets::MESH_BOX);
             if (!mesh) continue;
-            fx2::LambertianKernel::Inputs draw;
-            draw.geometry = mesh->geometry();
-            auto position = tableau.scale.toMeters(spatial::toLocal(tableau.camera.position, object.transform.position));
-            draw.worldFromObject =
+            auto      position = tableau.scale.toMeters(spatial::toLocal(tableau.camera.position, object.transform.position));
+            glm::mat4 object2WorldTransform =
                 glm::translate(glm::mat4(1.f), position) * glm::mat4_cast(object.transform.orientation) * glm::scale(glm::mat4(1.f), object.transform.scale);
-            if (!mLambert->record(*raster, *uploads, snapshot.set0Resources, draw)) return;
+            fx2::bindless::LambertianMaterial::DrawParameters draw {
+                {*raster, uniformState, mesh->geometry(), &mRenderTarget.states},
+                object2WorldTransform,
+            };
+            if (!mWhiteMaterial->record(draw)) return;
         }
-        auto parameters = uploads->seal();
-        auto draws      = raster->seal();
-        if (!parameters || !draws) return;
+
+        auto uniformWork = uploadCnc->seal();
+        auto rasterWork  = raster->seal();
+        if (!rasterWork) return;
+
         GpuContext::SubmitParameters submission("e2-white-model");
-        for (const auto & payload : mPendingUploads) submission.appendWork(payload);
-        submission.appendWork(parameters).appendWork(draws).waitFor(frame.ready);
+        if (uniformWork) submission.appendWork(uniformWork);
+        submission.appendWork(rasterWork).waitFor(frame.ready);
         mGpu->submit(submission);
-        mPendingUploads.clear();
-        mSwapchain->present(*draws);
+        mSwapchain->present(*rasterWork);
         // The preview deliberately serializes frames to bound resources and SSC reuse.
         mGpu->waitForIdle();
         mLastFrameTexture = frame.view.texture();
@@ -175,38 +201,55 @@ struct VisualImpl : Visual {
     }
 
 private:
-    fx2::SharedShaderConstants::Snapshot prepareSharedShaderConstants(fx2::SharedShaderConstants & constants, const Tableau & tableau) {
-        constants.set0.frameConstants.frameCounter = (int) mFrameCounter;
-        const auto & cam                           = tableau.camera;
-        constants.set0.camera                      = {};
-        constants.set0.camera.cameraPosition       = glm::vec3(0.f);
-        constants.set0.camera.cameraOrientation    = cam.orientation;
-        constants.set0.camera.cameraFov            = ArcDegree(cam.fovYInDegree);
-        constants.set0.camera.nearPlane            = tableau.scale.toMeters(spatial::toLocal(WorldCoordinate::ZERO(), cam.nearPlane));
-        constants.set0.camera.farPlane             = tableau.scale.toMeters(spatial::toLocal(WorldCoordinate::ZERO(), cam.farPlane));
-        constants.set0.camera.exposure             = cam.exposure;
-        constants.set0.camera.aspectRatio          = mHeight ? (float) mWidth / (float) mHeight : 1.f;
-        constants.set0.camera.viewWidthInPixel     = mWidth;
-        constants.set0.camera.viewHeightInPixel    = mHeight;
-        return constants.takeSnapshot();
+    AutoRef<fx2::bindless::SharedShaderConstants::UniformState> updateUniforms(gpu2::bindless::CnC & uploads, const Tableau & tableau) {
+        fx2::bindless::SharedUniforms uniforms {};
+        uniforms.frameCounter = mFrameCounter;
+
+        const auto & cam = tableau.camera;
+        // E2 rebases all positions against the observing camera before rendering, so
+        // the camera sits at the origin and its view matrix carries orientation only.
+        const glm::vec3 pos(0.f);
+        glm::mat4       camToWorld = glm::translate(glm::mat4(1.f), pos) * glm::mat4_cast(cam.orientation);
+        uniforms.viewMatrix        = glm::inverse(camToWorld);
+
+        const float aspect    = mHeight ? (float) mWidth / (float) mHeight : 1.f;
+        const float nearPlane = tableau.scale.toMeters(spatial::toLocal(WorldCoordinate::ZERO(), cam.nearPlane));
+        const float farPlane  = tableau.scale.toMeters(spatial::toLocal(WorldCoordinate::ZERO(), cam.farPlane));
+        uniforms.projMatrix   = glm::perspectiveRH_ZO(glm::radians(std::clamp(cam.fovYInDegree, 1.f, 179.f)), aspect, nearPlane, farPlane);
+        uniforms.projMatrix[1][1] *= -1.f; // Vulkan clip space
+        uniforms.projViewMatrix   = uniforms.projMatrix * uniforms.viewMatrix;
+        uniforms.cameraPosition   = glm::vec4(pos, 1.f);
+        uniforms.renderTargetSize = glm::vec2((float) mWidth, (float) mHeight);
+        uniforms.nearPlane        = nearPlane;
+        uniforms.farPlane         = farPlane;
+        uniforms.exposure         = cam.exposure;
+
+        // Fixed directional light matching the white-model preview illumination.
+        glm::vec3 dir                    = glm::mat3_cast(glm::quat(glm::vec3(0.6f, 0.8f, 0.f))) * glm::vec3(0.f, 0.f, -1.f);
+        uniforms.numLights               = 1;
+        uniforms.lights[0].positionOrDir = glm::vec4(dir, float(fx2::bindless::DirectLightUniform::DIRECTIONAL));
+        uniforms.lights[0].colorAndRange = glm::vec4(1500.f, 1500.f, 1500.f, 0.f);
+
+        return mSsc->recordUniformUpdate(uploads, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
     }
 
-    Universe &                          mUniverse;
-    AutoRef<Texture>                    mLastFrameTexture;
-    bool                                mFrameSucceeded = false;
-    Ref<Platform>                       mOs;
-    AutoRef<GpuContext>                 mGpu;
-    intptr_t                            mSurface = 0;
-    AutoRef<Swapchain>                  mSwapchain;
-    AutoRef<Texture>                    mDepth;
-    AutoRef<fx2::SharedShaderConstants> mSsc;
-    Ref<Assets>                         mAssets;
-    AutoRef<fx2::LambertianKernel>      mLambert;
-    DynaArray<AutoRef<GpuPayload>>      mPendingUploads;
-    RasterTarget                        mRenderTarget;
-    uint32_t                            mFrameCounter = 0;
-    uint32_t                            mWidth        = 1280;
-    uint32_t                            mHeight       = 720;
+    Universe &                                    mUniverse;
+    AutoRef<Texture>                              mLastFrameTexture;
+    bool                                          mFrameSucceeded = false;
+    Ref<Platform>                                 mOs;
+    AutoRef<GpuContext>                           mGpu;
+    intptr_t                                      mSurface = 0;
+    AutoRef<Swapchain>                            mSwapchain;
+    AutoRef<Texture>                              mDepth;
+    AutoRef<gpu2::bindless::DescriptorHeap>       mHeap;
+    AutoRef<fx2::bindless::SharedShaderConstants> mSsc;
+    Ref<Assets>                                   mAssets;
+    AutoRef<fx2::bindless::LambertianKernel>      mLambert;
+    AutoRef<fx2::bindless::LambertianMaterial>    mWhiteMaterial;
+    RasterTarget                                  mRenderTarget;
+    uint32_t                                      mFrameCounter = 0;
+    uint32_t                                      mWidth        = 1280;
+    uint32_t                                      mHeight       = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN

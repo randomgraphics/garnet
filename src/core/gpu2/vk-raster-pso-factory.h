@@ -5,19 +5,11 @@
 #include <garnet/GNgpu2.h>
 #include "vk-gpu-context.h"
 #include "vk-gpu-shader.h"
+#include "vk-format-utils.h"
 
 #include <vector>
 
 namespace GN::gpu2 {
-
-// ── PassFormats ───────────────────────────────────────────────────────────────
-// Resolved VkFormats for the current render pass; shared between the factory
-// (PSO key) and the raster payload (beginRendering).
-
-struct PassFormats {
-    std::vector<vk::Format> colors;
-    vk::Format              depth = vk::Format::eUndefined;
-};
 
 // ── Gpu2RasterPsoCreateParams ─────────────────────────────────────────────────
 // Everything the factory needs to look up or create a pipeline.

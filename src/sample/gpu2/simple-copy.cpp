@@ -1,7 +1,7 @@
 /// simple-copy: demonstrates GpuCnC buffer-to-buffer copy.
 ///
 /// Creates two GPU buffers, fills the source with sequential float values,
-/// copies it to the destination via GpuCnC::recordCopyBufferToBuffer(), then reads
+/// copies it to the destination via GpuCnC::recordCopyBuffer(), then reads
 /// back the destination and verifies the data.
 #include <garnet/GNgpu2.h>
 
@@ -59,7 +59,7 @@ int main() {
         std::fprintf(stderr, "Failed to create GpuCnC\n");
         return -1;
     }
-    cnc->recordCopyBufferToBuffer({.src = src, .dst = dst, .size = BYTE_SIZE});
+    cnc->recordCopyBuffer({.src = src, .dst = dst, .size = BYTE_SIZE});
     submitAndWait(gpu.get(), cnc->seal());
 
     // Read back and verify.

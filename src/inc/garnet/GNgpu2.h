@@ -13,6 +13,7 @@ namespace GN::gpu2 {};
 #include "gpu2/swapchain.h"
 #include "gpu2/raster.h"
 #include "gpu2/cnc.h"
+#include "gpu2/bindless.h"
 #undef __GN_INSIDE_GPU2_H__
 
 #endif

@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "vk-texture.h"
+#include "vk-gpu-cnc.h"
+#include "vk-cnc-common.h"
 #include "vk-format-utils.h"
 
 #include <garnet/base/filesys.h>
@@ -61,29 +63,14 @@ rv::Ref<rv::Image> createVkImage(const Texture::Descriptor & descriptor, const r
     // Storage usage is needed for compute dispatch reads/writes; add it whenever the format supports it.
     if (optimalFeatures & vk::FormatFeatureFlagBits::eStorageImage) cp.info.usage |= vk::ImageUsageFlagBits::eStorage;
 
-    if (descriptor.faces == 6 && descriptor.depth == 1)
-        cp.setCube(descriptor.width).setLevels(descriptor.levels).setFormat(cp.info.format);
-    else
-        cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
+    // The 2D/cube helpers overwrite imageType and depth; preserve the explicit 3D description above for volumes.
+    if (descriptor.depth == 1) {
+        if (descriptor.faces == 6)
+            cp.setCube(descriptor.width).setLevels(descriptor.levels).setFormat(cp.info.format);
+        else
+            cp.set2D(descriptor.width, descriptor.height, descriptor.faces).setLevels(descriptor.levels).setFormat(cp.info.format);
+    }
     return rv::Ref<rv::Image>(new rv::Image(cp));
-}
-
-gfx::img::Image contentToImage(const rv::Image::Content & content, size_t subresourceIndex = 0) {
-    if (subresourceIndex >= content.subresources.size() || content.storage.empty()) return gfx::img::Image();
-    gfx::img::PixelFormat pf = vkFormatToPixelFormat(content.format);
-    if (pf == gfx::img::PixelFormat::UNKNOWN()) return gfx::img::Image();
-    const auto & sub = content.subresources[subresourceIndex];
-    uint32_t     w   = sub.extent.width;
-    uint32_t     h   = sub.extent.height;
-    uint32_t     d   = sub.extent.depth;
-    if (w == 0 || h == 0) return gfx::img::Image();
-    gfx::img::Extent3D extent;
-    extent.set(w, h, d);
-    gfx::img::PlaneDesc planeDesc = gfx::img::PlaneDesc::make(pf, extent);
-    gfx::img::ImageDesc imageDesc = gfx::img::ImageDesc::make(planeDesc, 1, 1, 1);
-    const uint8_t *     src       = content.storage.data() + sub.offset;
-    size_t              sz        = (size_t) sub.pitch * h * d;
-    return gfx::img::Image(imageDesc, src, sz);
 }
 
 } // namespace
@@ -97,64 +84,59 @@ TextureVulkanBase::TextureVulkanBase(const GN::RuntimeType::TypeInfo & leafType,
 TextureVulkanBase::~TextureVulkanBase() = default;
 
 gfx::img::Image TextureVulkanBase::readback() const {
-    if (!mRvImage || !mImage) {
-        GN_ERROR(sLogger, "TextureVulkanBase::readback: no image, name='{}'", name);
-        return gfx::img::Image();
+    if (!mGpu || !mGpu->ready() || !mImage || mDescriptor.samples != 1 || !singleCopyAspect(mDescriptor)) return {};
+    const auto &       d = mDescriptor;
+    gfx::img::Extent3D extent;
+    extent.set(d.width, d.height, d.depth);
+    const auto                planeDesc = gfx::img::PlaneDesc::make(d.format, extent);
+    gfx::img::Image           image(gfx::img::ImageDesc::make(planeDesc, 1, d.faces, d.levels));
+    DynaArray<GpuCnC::Region> regions;
+    for (uint32_t face = 0; face < d.faces; ++face) {
+        for (uint32_t level = 0; level < d.levels; ++level) {
+            GpuCnC::Region region;
+            region.face        = face;
+            region.mip         = level;
+            region.imageExtent = {std::max(1u, d.width >> level), std::max(1u, d.height >> level), std::max(1u, d.depth >> level)};
+            regions.append(region);
+        }
     }
-    if (!mGpu || !mGpu->ready()) {
-        GN_ERROR(sLogger, "TextureVulkanBase::readback: no GpuContext, name='{}'", name);
-        return gfx::img::Image();
+    auto cnc = GpuCnC::create({.gpu = mGpu});
+    if (!cnc) return {};
+    auto future  = cnc->recordDownloadImage(AutoRef<Texture>(const_cast<TextureVulkanBase *>(this)), regions);
+    auto payload = cnc->seal();
+    if (!payload) return {};
+    // Use the tracked transfer path so all downloaded subresources return to shader-readable state.
+    mGpu->submit(GpuContext::SubmitParameters(name + "/readback").appendWork(payload));
+    mGpu->waitForIdle();
+    auto content = future.get();
+    if (!content.blob || content.regions.size() != regions.size()) return {};
+    const auto     layout = d.format.layoutDesc();
+    const uint64_t bb = d.format.bytesPerBlock(), bw = std::max(1u, (uint32_t) layout.blockWidth), bh = std::max(1u, (uint32_t) layout.blockHeight);
+    for (const auto & region : content.regions) {
+        const gfx::img::PlaneCoord coord {0, region.face, region.mip};
+        const auto &               plane    = image.plane(coord);
+        const uint64_t             rows     = (region.imageExtent.y + bh - 1) / bh;
+        const uint64_t             rowBytes = ((region.imageExtent.x + bw - 1) / bw) * bb;
+        const auto *               src      = (const uint8_t *) content.blob->data() + region.dataOffset;
+        auto *                     dst      = (uint8_t *) image.at(coord);
+        for (uint32_t z = 0; z < region.imageExtent.z; ++z)
+            for (uint64_t y = 0; y < rows; ++y) memcpy(dst + z * plane.slice + y * plane.pitch, src + (z * rows + y) * rowBytes, (size_t) rowBytes);
     }
-    const rv::Device & dev = mGpu->vulkanDevice();
-    rv::CommandQueue * gq  = dev.graphics();
-    if (!gq) {
-        GN_ERROR(sLogger, "TextureVulkanBase::readback: no graphics queue, name='{}'", name);
-        return gfx::img::Image();
-    }
-    mGpu->waitForIdle(); // Ensure all submitted GPU operations are complete before readback.
-    rv::Image::ReadContentParameters readParams;
-    readParams.setQueue(*gq);
-    auto content = mRvImage->readContent(readParams);
-    if (!content) return {};
-    return contentToImage(content);
+    return image;
 }
 
 bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
-    if (!mRvImage || !mImage) {
-        GN_ERROR(sLogger, "TextureVulkanBase::setContent: texture not writable or not initialized, name='{}'", name);
+    if (!mGpu || !mGpu->ready() || !mImage || image.empty() || mDescriptor.samples != 1 || !singleCopyAspect(mDescriptor)) return false;
+    if (image.format() != mDescriptor.format || image.width() != mDescriptor.width || image.height() != mDescriptor.height ||
+        image.depth() != mDescriptor.depth || image.desc().faces != mDescriptor.faces || image.desc().levels != mDescriptor.levels) {
+        GN_ERROR(sLogger, "TextureVulkanBase::setContent: incompatible image, name='{}'", name);
         return false;
     }
-    if (image.empty()) {
-        GN_ERROR(sLogger, "TextureVulkanBase::setContent: input image is empty, name='{}'", name);
-        return false;
-    }
-    if (!mGpu || !mGpu->ready()) return false;
-    const rv::Device & dev = mGpu->vulkanDevice();
-    if (!dev.gi()) return false;
-    rv::CommandQueue * gq = dev.graphics();
-    if (!gq) return false;
-    mGpu->waitForIdle(); // Ensure all submitted GPU operations are complete before setting new content.
-    for (uint32_t f = 0; f < mDescriptor.faces; ++f) {
-        for (uint32_t l = 0; l < mDescriptor.levels; ++l) {
-            gfx::img::PlaneCoord pc {};
-            pc.face              = (size_t) f;
-            pc.level             = (size_t) l;
-            const auto &   plane = image.plane(pc);
-            const uint32_t w     = (uint32_t) plane.extent.w;
-            const uint32_t h     = (uint32_t) plane.extent.h;
-            if (w == 0 || h == 0) continue;
-            rv::Image::SetContentParameters sc;
-            sc.setQueue(*gq);
-            sc.mipLevel   = l;
-            sc.arrayLayer = f;
-            sc.area.w     = w;
-            sc.area.h     = h;
-            sc.area.d     = 1;
-            sc.pitch      = (size_t) plane.pitch;
-            sc.pixels     = image.at(pc);
-            mRvImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
-        }
-    }
+    auto payload = createCncImageUploadPayload(mGpu, AutoRef<Texture>(this), image);
+    if (!payload) return false;
+    // The CNC payload restores the tracked shader-readable invariant before signaling completion.
+    mGpu->submit(GpuContext::SubmitParameters(name + "/set-content").appendWork(payload));
+    mGpu->waitForIdle();
     return true;
 }
 
@@ -239,15 +221,14 @@ public:
                 const uint32_t w     = (uint32_t) plane.extent.w;
                 const uint32_t h     = (uint32_t) plane.extent.h;
                 if (w == 0 || h == 0) continue;
+                const size_t                    planeSize = (size_t) plane.slice * (plane.extent.d ? (size_t) plane.extent.d : 1u);
                 rv::Image::SetContentParameters sc;
-                sc.setQueue(*gq).mipLevel = l;
-                sc.arrayLayer             = f;
-                sc.area.w                 = w;
-                sc.area.h                 = h;
-                sc.area.d                 = 1;
-                sc.pitch                  = (size_t) plane.pitch;
-                sc.pixels                 = image.at(pc);
-                mOwnedImage->setContent(sc); // auto-updates state to TRANSFER_DST on success
+                sc.setQueue(*gq);
+                sc.mipLevel   = l;
+                sc.arrayLayer = f;
+                sc.pitch      = (size_t) plane.pitch;
+                sc.setPixels(planeSize, image.at(pc));
+                mOwnedImage->setContent(sc);
             }
 
         GN_INFO(sLogger, "Loaded texture '{}'", path);

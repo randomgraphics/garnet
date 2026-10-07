@@ -2,6 +2,9 @@
 #define RAPID_VULKAN_IMPLEMENTATION
 #include "vk-gpu-context.h"
 #include "vk-raster-pso-factory.h"
+#include "vk-bindless-pipeline-layout.h"
+#include "vk-bindless-pso-cache.h"
+#include "vk-bindless-compute-pso-cache.h"
 #include "vk-format-utils.h"
 #include "vk-gpu-payload.h"
 
@@ -136,14 +139,31 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     dp.addDeviceExtension("VK_KHR_dynamic_rendering");
 #endif
     dp.addFeature(vk::PhysicalDeviceVulkan13Features().setDynamicRendering(true).setSynchronization2(true));
-    // Allow depth and stencil planes of a D+S image to be transitioned independently;
-    // without this, separate-aspect barriers on D+S formats are a validation error.
-    dp.addFeature(vk::PhysicalDeviceVulkan12Features().setSeparateDepthStencilLayouts(true).setTimelineSemaphore(true));
+    dp.addFeature(vk::PhysicalDeviceVulkan12Features()
+                      .setSeparateDepthStencilLayouts(true)
+                      .setTimelineSemaphore(true)
+                      .setBufferDeviceAddress(true)
+                      .setDescriptorIndexing(true)
+                      .setRuntimeDescriptorArray(true)
+                      .setShaderSampledImageArrayNonUniformIndexing(true)
+                      .setShaderStorageImageArrayNonUniformIndexing(true)
+                      .setShaderUniformBufferArrayNonUniformIndexing(true)
+                      .setShaderStorageBufferArrayNonUniformIndexing(true)
+                      .setDescriptorBindingStorageImageUpdateAfterBind(true)
+                      .setDescriptorBindingUniformBufferUpdateAfterBind(true)
+                      .setDescriptorBindingStorageBufferUpdateAfterBind(true)
+                      .setDescriptorBindingPartiallyBound(true)
+                      .setDescriptorBindingVariableDescriptorCount(true)
+                      .setDescriptorBindingSampledImageUpdateAfterBind(true));
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
     if (!mDevice->handle()) return;
 
     // Initialize caps
+    const auto & props             = mDevice->gi()->physical.getProperties();
+    mCaps.maxImmediateSize         = props.limits.maxPushConstantsSize;
+    mCaps.maxBindlessSampledImages = props.limits.maxDescriptorSetSampledImages;
+
     vk::Format depthVk = rv::queryDepthFormat(mDevice->gi()->physical, 1);
     if (depthVk != vk::Format::eUndefined) {
         mCaps.defaultDepthFormat = vkFormatToPixelFormat(depthVk);
@@ -156,7 +176,10 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     }
 
     // Create sub objects
-    mPsoFactory = std::make_unique<RasterPsoFactory>(*this);
+    mPsoFactory                  = std::make_unique<RasterPsoFactory>(*this);
+    mBindlessPipelineLayoutCache = std::make_unique<VkBindlessPipelineLayoutCache>(*this);
+    mBindlessPsoCache            = std::make_unique<VkBindlessPsoCache>(*this);
+    mBindlessComputePsoCache     = std::make_unique<VkBindlessComputePsoCache>(*this);
     mFencePool.emplace(std::make_unique<FenceTraits>(*mDevice->gi()));
 
     // All done
@@ -166,7 +189,25 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
 GpuContextVulkan2::~GpuContextVulkan2() {
     GN_INFO(sLoggerVk, "Wait for GPU idle ...");
     pumpInternal(true);
+    mDefaultLinearSampler.clear();
+    mBindlessComputePsoCache.reset();
+    mBindlessPsoCache.reset();
+    mBindlessPipelineLayoutCache.reset();
+    mPsoFactory.reset();
+    mFencePool.reset();
     GN_INFO(sLoggerVk, "Destroying Vulkan GPU context");
+}
+
+vk::Sampler GpuContextVulkan2::defaultLinearSampler() const {
+    GN_ASSERT(ready());
+    if (!mDefaultLinearSampler.valid()) {
+        rv::Sampler::ConstructParameters scp;
+        scp.gi = vulkanDevice().gi();
+        scp.setLinear();
+        scp.info.maxLod       = VK_LOD_CLAMP_NONE;
+        mDefaultLinearSampler = rv::Ref<rv::Sampler>::make(scp);
+    }
+    return mDefaultLinearSampler->handle();
 }
 
 void GpuContextVulkan2::beginDebugLabel(const char * labelName) {
@@ -206,6 +247,8 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     // collect semaphores to wait from dependencies
     std::vector<rv::CommandQueue::SyncPoint> waitPoints;   // timeline dependencies
     std::vector<rv::CommandQueue::SyncPoint> waitBinaries; // binary dependencies
+    waitPoints.reserve(sp.dependencies.size());
+    waitBinaries.reserve(sp.dependencies.size());
     for (size_t i = 0; i < sp.dependencies.size(); ++i) {
         auto d = sp.dependencies[i];
         if (!d) GN_UNLIKELY continue;
@@ -278,10 +321,6 @@ void GpuContextVulkan2::submit(const SubmitParameters & sp) {
     auto submissionId  = queue->submit2(qsp);
     if (!submissionId) return; // submission failed somehow. bail out.
 
-    // The GPU has accepted the commands. Update CPU-side resource state now so subsequent
-    // submissions compute correct "from" layouts for their barriers.
-    batchTracker.flushToResources();
-
     // Mark all workload as "submitted"
     for (auto & w : works) {
         w->setTimelinePoint(mainPoint);
@@ -345,6 +384,8 @@ void GpuContextVulkan2::pumpInternal(bool waitForIdle) {
             GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} onComplete callback threw exception: {}", s.name, e.what());
         } catch (...) { GN_ERROR(sLoggerVk, "GpuContextVulkan2: {} onComplete callback threw unknown exception", s.name); }
     }
+
+    finishedSubmissions.clear();
 
     // Our pending list doesn't cover all in-flight work (e.g. bridge submits in the swapchain
     // that have no completion callback). A device-level idle wait covers those too.

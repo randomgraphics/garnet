@@ -284,7 +284,7 @@ struct LifetimeOptions {
     WorldVector3  origin {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(),
                           WorldCoordinate::ZERO()}; ///< Absolute anchor for the local metric simulation/spawn region.
     double        spawnPerSecond         = 100;     ///< Positive generation rate per simulation second, subject to the population cap.
-    size_t        maximumPopulation      = 1000;    ///< Maximum Forms carrying LifetimeFacet; zero disables generation.
+    size_t        maximumPopulation      = 1024;    ///< Maximum Forms carrying LifetimeFacet; zero disables generation.
     double        maximumHorizontalSpeed = 0.5;     ///< Initial XZ speed is sampled uniformly from zero to this value in metres per second.
     glm::dvec3    spawnMinimum {-4.2, 4, -4.2};     ///< Lower spawn-region corner in metres relative to origin.
     glm::dvec3    spawnMaximum {4.2, 8, 4.2};       ///< Upper spawn-region corner; each component must be at least the corresponding minimum.

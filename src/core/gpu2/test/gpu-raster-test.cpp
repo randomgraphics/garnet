@@ -8,31 +8,24 @@ using namespace GN::gpu2;
 
 TEST_CASE("GPU2: geometry and resource tables transfer storage on move", "[gpu2][raster]") {
     RasterGeometry geometry;
-    geometry.format.attributes.append(RasterGeometry::VertexAttribute {.location = 3});
-    geometry.vertices.append(RasterGeometry::GeometryBuffer {.offset = 16, .stride = 24});
-    geometry.instances.append(RasterGeometry::GeometryBuffer {.offset = 32, .stride = 48});
+    geometry.format.attributes.push_back(RasterGeometry::VertexAttribute {.location = 3});
+    geometry.vertices.push_back(RasterGeometry::GeometryBuffer {.offset = 16, .stride = 24});
     geometry.indices.offset   = 64;
     geometry.vertexCount      = 7;
-    geometry.instanceCount    = 2;
     geometry.indexCount       = 9;
     const auto     attributes = geometry.format.attributes.data();
     const auto     vertices   = geometry.vertices.data();
-    const auto     instances  = geometry.instances.data();
     RasterGeometry moved(std::move(geometry));
     CHECK(moved.format.attributes.data() == attributes);
     CHECK(moved.vertices.data() == vertices);
-    CHECK(moved.instances.data() == instances);
     CHECK(geometry.format.attributes.empty());
     CHECK(geometry.vertices.empty());
-    CHECK(geometry.instances.empty());
-    geometry.vertices.append(RasterGeometry::GeometryBuffer {});
+    geometry.vertices.push_back(RasterGeometry::GeometryBuffer {});
     geometry = std::move(moved);
     CHECK(geometry.format.attributes.data() == attributes);
     CHECK(geometry.vertices.data() == vertices);
-    CHECK(geometry.instances.data() == instances);
     CHECK(geometry.indices.offset == 64);
     CHECK(geometry.vertexCount == 7);
-    CHECK(geometry.instanceCount == 2);
     CHECK(geometry.indexCount == 9);
 
     GpuResourceTable table;
@@ -63,7 +56,8 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
 
     // Offscreen RGBA8 texture used as the render target.
     auto texture = Texture::create(
-        "rt", Texture::CreateParameters {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H)});
+        "rt", Texture::CreateParameters {.context    = gpu,
+                                         .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H).setLevels(1)});
     if (!texture) SKIP("RGBA8 color-attachment texture unavailable");
 
     // Clear-only raster pass: no draw calls, pure blue clear color.
@@ -103,7 +97,7 @@ TEST_CASE("GPU2: raster validates attachment subresources and clips to depth mip
     auto gpu = GpuContext::create("mip-target-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!gpu) SKIP("No GPU context available");
     auto color = Texture::create(
-        "mip-color", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(8, 8).setLevels(4)});
+        "mip-color", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(8, 8).setLevels(1)});
     REQUIRE(color);
     GpuResourceView colorView;
     colorView.resource = color;

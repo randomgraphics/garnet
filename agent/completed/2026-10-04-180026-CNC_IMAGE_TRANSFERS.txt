@@ -1,0 +1,33 @@
+# Assignment: CNC image transfers and upload staging arena
+---
+## Goals
+Expose six buffer/image transfer methods on both CNC interfaces. Uploads copy CPU data into an internal staging arena; image copies transfer between textures.
+---
+## Design
+CPU Region layouts use byte offsets, byte pitches between pixel-block rows, and byte pitches between depth slices. Offsets/extents in images remain texels, with compressed-block alignment and mip-edge exceptions.
+Use private CNC-only mapped upload storage, repacking rows directly into aligned suballocations. Mappings move into payloads and close at submission; operation records retain backing buffers until GPU completion.
+Removed public staged-texture loaders and buffer-to-image structures. CPU-image uploads cover all faces, mips, and depth slices. Image copies support explicit regions between distinct matching textures.
+Synchronous texture setContent/readback and buffer setContent use tracked CNC transfers. Depth sampled descriptors and ready-state tracking share one format-appropriate read-only layout. Fixed volume creation preserving 3D extent and the cube-test face count.
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 1.2: Debug build and gpu2/FX2 tests passed (55,877 assertions in 105 cases), with Vulkan validation enabled.
+In progress: None. Implementation, debug build, lint, and 105 gpu2/FX2 tests complete. User signed off and requested commit/push.
+--- END PROGRESS ---
+--- REFERENCE ---
+src/inc/garnet/gpu2/cnc.h; src/inc/garnet/gpu2/bindless.h; src/core/gpu2/vk-cnc-common.h
+--- BUILD / CI ---
+Initialize env/garnet.ps1; use python.exe env/bin/build.py d and env/bin/cit.py.
+Debug build passed. CIT -i "[gpu2],[fx2]" passed: 55,877 assertions across 105 tests, no Vulkan VUID messages. Negative tests emit expected application error logs.
+Verification logs: build/cnc-verification/.
+--- WORKFLOW / CONVENTIONS ---
+Keep implementation private. Do not commit further work without a new request. Keep assignment active awaiting user sign-off.
+--- TASK BREAKDOWN ---
+Phase 1: Implement and verify
+  Task 1.1: Implement six transfer methods and shared upload staging arena, migrate callers.
+    Verify: Debug build and lint.
+    Commit: "feat(gpu2): add CNC image transfers and upload staging arena"
+  Task 1.2: Verify upload ownership, image copy regions, batching, and lifecycle on both recorders.
+    Verify: CNC tests under Vulkan validation with no unexpected warnings/errors.
+    Commit: "test(gpu2): cover CNC image transfers and staged upload batching"
+--- SUMMARY OF FILES TO TOUCH ---
+Public CNC headers, private Vulkan recorder/payload/common implementation, transfer callers, and gpu2 tests.

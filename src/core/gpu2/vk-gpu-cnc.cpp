@@ -8,6 +8,7 @@
 #include "vk-buffer.h"
 #include "vk-texture.h"
 #include "vk-format-utils.h"
+#include "vk-cnc-common.h"
 #include "gpu-context.h"
 
 #include <cstring>
@@ -23,91 +24,21 @@ namespace {
 // ── Stored operation records (built during compute/copy calls, consumed by seal/record) ──
 
 struct StoredCompute {
-    AutoRef<GpuShader>  cs;
-    GpuResourceTable    resources;
-    AutoRef<const Blob> immediates;
-    uint32_t            x = 1, y = 1, z = 1;
+    AutoRef<GpuShader>   cs;
+    GpuResourceTable     resources;
+    std::vector<uint8_t> immediates;
+    uint32_t             x = 1, y = 1, z = 1;
 };
 
-struct StoredBufferToBuffer {
-    AutoRef<Buffer> src;
-    AutoRef<Buffer> dst;
-    uint64_t        srcOffset = 0;
-    uint64_t        dstOffset = 0;
-    uint64_t        size      = 0;
-};
-
-struct StoredBufferToImage {
-    AutoRef<Buffer>                          src;
-    AutoRef<Texture>                         dst;
-    DynaArray<Buffer::StagedTexture::Region> regions;
-};
-
-// Async upload: a pre-filled, host-visible staging buffer that is copied into dst on the GPU.
-// The staging buffer is owned here, so it is kept alive for exactly as long as the GPU needs it
-// (released by the payload's onGpuComplete()/destructor — see below).
-struct StoredUploadBuffer {
-    AutoRef<Buffer> staging; ///< host-visible; pre-filled with the upload content at enqueue time
-    AutoRef<Buffer> dst;
-    uint64_t        dstOffset = 0;
-    uint64_t        size      = 0;
-};
-
-// A movable promise wrapper that *always* signals its future exactly once. If it is destroyed
-// before being explicitly resolved — the owning payload is dropped without submission, or the whole
-// GpuContext is torn down with the work still pending — it fulfills the future with a
-// default-constructed (empty) value instead of letting the promise break. This makes a canceled
-// download observable as an empty result rather than a std::future_error, matching the public
-// "signaled when ... failed or canceled" contract. Held by unique_ptr so the wrapper is cheaply
-// movable (as required inside the StoredOp variant) and a moved-from instance becomes inert.
-template<typename T>
-class DownloadResult {
-public:
-    DownloadResult(): mPromise(std::make_unique<std::promise<T>>()) {}
-    DownloadResult(DownloadResult &&) noexcept             = default;
-    DownloadResult & operator=(DownloadResult &&) noexcept = default;
-    ~DownloadResult() { resolve(T {}); } // empty result if not already resolved / moved-from
-
-    std::future<T> future() { return mPromise->get_future(); }
-
-    void resolve(T value) {
-        if (!mPromise) return; // already resolved, or moved-from
-        try {
-            mPromise->set_value(std::move(value));
-        } catch (const std::future_error &) {
-            // Defensive: the underlying promise was somehow already satisfied. Ignore.
-        }
-        mPromise.reset();
-    }
-
-private:
-    std::unique_ptr<std::promise<T>> mPromise;
-};
-
-// Async download: a GPU copy from src into a host-visible staging buffer, read back on the CPU once
-// the GPU work completes. The result Blob is delivered through the DownloadResult future.
-struct StoredDownloadBuffer {
-    AutoRef<Buffer>                     src;
-    AutoRef<Buffer>                     staging; ///< host-visible transfer destination; read back on completion
-    uint64_t                            srcOffset = 0;
-    uint64_t                            size      = 0;
-    DownloadResult<AutoRef<const Blob>> result;
-};
-
-struct StoredDownloadImage {
-    AutoRef<Texture>                         src;
-    AutoRef<Buffer>                          staging; ///< host-visible transfer destination, tightly packed
-    DynaArray<Buffer::StagedTexture::Region> regions; ///< bufferOffset of each region filled at enqueue time
-    DownloadResult<GpuCnC::TextureContent>   result;
-};
-
-using StoredOp = std::variant<StoredCompute, StoredBufferToBuffer, StoredBufferToImage, StoredUploadBuffer, StoredDownloadBuffer, StoredDownloadImage>;
+using StoredOp =
+    std::variant<StoredCompute, StoredBufferToBuffer, StoredBufferToImage, StoredImageToImage, StoredUploadBuffer, StoredDownloadBuffer, StoredDownloadImage>;
 
 // ── GpuCncPayloadVulkan ──────────────────────────────────────────────────────────────
 
 class GpuCncPayloadVulkan final : public GpuPayloadVulkan {
 public:
-    GpuCncPayloadVulkan(const StrA & name, std::vector<StoredOp> ops): GpuPayloadVulkan(name), mOps(std::move(ops)) {}
+    GpuCncPayloadVulkan(const StrA & name, std::vector<StoredOp> ops, std::unique_ptr<CncUploadStorage> uploads)
+        : GpuPayloadVulkan(name), mOps(std::move(ops)), mUploadStorage(std::move(uploads)) {}
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
 
@@ -118,7 +49,8 @@ public:
     void onGpuComplete() override;
 
 private:
-    std::vector<StoredOp> mOps;
+    std::vector<StoredOp>             mOps;
+    std::unique_ptr<CncUploadStorage> mUploadStorage = std::make_unique<CncUploadStorage>();
 
     void recordCompute(const StoredCompute & op, const RecordContext & ctx);
     void recordBufToBuf(const StoredBufferToBuffer & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker);
@@ -198,14 +130,16 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
     dcp.setPipeline(pipeline);
     rv::Drawable drawable(dcp);
 
-    if (op.immediates && !op.immediates->empty()) {
-        if (op.immediates->size() > 128) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncPayloadVulkan: immediates size {} exceeds 128 bytes", op.immediates->size());
+    if (!op.immediates.empty()) {
+        if (op.immediates.size() > 128) GN_UNLIKELY {
+                GN_ERROR(sLogger, "GpuCncPayloadVulkan: immediates size {} exceeds 128 bytes", op.immediates.size());
             }
-        else { drawable.c(0, op.immediates->size(), op.immediates->data(), vk::ShaderStageFlagBits::eCompute); }
+        else { drawable.c(0, op.immediates.size(), op.immediates.data(), vk::ShaderStageFlagBits::eCompute); }
     }
 
-    rv::Ref<rv::Sampler> defaultSampler;
+    rv::Ref<rv::Sampler>          defaultSampler;
+    std::vector<rv::ImageSampler> imgs;
+    std::vector<rv::BufferView>   bufs;
     for (size_t setIdx = 0; setIdx < op.resources.size(); ++setIdx) {
         const auto & set = op.resources[setIdx];
         for (size_t bindIdx = 0; bindIdx < set.size(); ++bindIdx) {
@@ -213,14 +147,14 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
             if (slot.empty()) continue;
             rv::DescriptorIdentifier descId((uint32_t) setIdx, (uint32_t) bindIdx);
             if (slot[0].isTexture()) {
-                std::vector<rv::ImageSampler> imgs;
+                imgs.clear();
                 imgs.reserve(slot.size());
                 for (const auto & view : slot) {
                     if (view.empty() || !view.isTexture()) continue;
                     auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
                     if (!tex) continue;
-                    vk::ImageLayout layout =
-                        (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral : vk::ImageLayout::eShaderReadOnlyOptimal;
+                    vk::ImageLayout  layout = (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral
+                                                                                                           : shaderReadOnlyLayout(tex->descriptor().format);
                     rv::ImageSampler is;
                     is.view   = tex->nativeView(view.imageView);
                     is.layout = layout;
@@ -233,7 +167,7 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
                 }
                 if (!imgs.empty()) drawable.t(descId, vk::ArrayProxy<const rv::ImageSampler>((uint32_t) imgs.size(), imgs.data()));
             } else if (slot[0].isBuffer()) {
-                std::vector<rv::BufferView> bufs;
+                bufs.clear();
                 bufs.reserve(slot.size());
                 for (const auto & view : slot) {
                     if (view.empty() || !view.isBuffer()) continue;
@@ -262,29 +196,6 @@ void GpuCncPayloadVulkan::recordCompute(const StoredCompute & op, const RecordCo
 
 // ── Buffer-to-buffer copy ────────────────────────────────────────────────────────────
 
-// Shared core for every buffer→buffer transfer (plain copy, upload staging→dst, download src→staging).
-// Registers the transfer states, emits the barrier, and records the copy. Caller guarantees src != dst.
-static void emitBufferCopy(BufferVulkan * srcVk, BufferVulkan * dstVk, uint64_t srcOffset, uint64_t dstOffset, uint64_t size, vk::CommandBuffer cb,
-                           GpuResourceStateTrackerVulkan & tracker) {
-    if (size == 0) return;
-    if (!srcVk || !dstVk) GN_UNLIKELY {
-            GN_ERROR(sLogger, "GpuCncPayloadVulkan: buffer copy: null Vulkan buffer");
-            return;
-        }
-    vk::Buffer srcBuf = srcVk->nativeBuffer();
-    vk::Buffer dstBuf = dstVk->nativeBuffer();
-    if (!srcBuf || !dstBuf) GN_UNLIKELY {
-            GN_ERROR(sLogger, "GpuCncPayloadVulkan: buffer copy: buffer missing Vulkan handle");
-            return;
-        }
-
-    tracker.addTransferSrcBuffer(srcVk);
-    tracker.addTransferDstBuffer(dstVk);
-    tracker.emitPrePassBarriers(cb);
-
-    cb.copyBuffer(srcBuf, dstBuf, vk::BufferCopy(srcOffset, dstOffset, size));
-}
-
 void GpuCncPayloadVulkan::recordBufToBuf(const StoredBufferToBuffer & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
     if (op.size == 0) return;
 
@@ -298,7 +209,8 @@ void GpuCncPayloadVulkan::recordBufToBuf(const StoredBufferToBuffer & op, vk::Co
 }
 
 void GpuCncPayloadVulkan::recordUploadBuffer(const StoredUploadBuffer & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
-    emitBufferCopy(RuntimeType::cast<BufferVulkan>(op.staging.get()), RuntimeType::cast<BufferVulkan>(op.dst.get()), 0, op.dstOffset, op.size, cb, tracker);
+    emitBufferCopy(RuntimeType::cast<BufferVulkan>(op.staging.get()), RuntimeType::cast<BufferVulkan>(op.dst.get()), op.srcOffset, op.dstOffset, op.size, cb,
+                   tracker);
 }
 
 void GpuCncPayloadVulkan::recordDownloadBuffer(const StoredDownloadBuffer & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
@@ -308,124 +220,20 @@ void GpuCncPayloadVulkan::recordDownloadBuffer(const StoredDownloadBuffer & op, 
 // ── Buffer-to-image copy ─────────────────────────────────────────────────────────────
 
 void GpuCncPayloadVulkan::recordBufToImg(const StoredBufferToImage & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
-    if (op.regions.empty()) return;
-
-    auto * srcVk = RuntimeType::cast<BufferVulkan>(op.src.get());
-    auto * dstVk = RuntimeType::cast<TextureVulkanBase>(op.dst.get());
-    if (!srcVk || !dstVk) GN_UNLIKELY {
-            GN_ERROR(sLogger, "GpuCncPayloadVulkan: copyBufferToImage: null Vulkan resource");
-            return;
-        }
-
-    vk::Buffer srcBuf = srcVk->nativeBuffer();
-    vk::Image  dstImg = dstVk->nativeImage();
-    if (!srcBuf || !dstImg) GN_UNLIKELY {
-            GN_ERROR(sLogger, "GpuCncPayloadVulkan: copyBufferToImage: resource has no Vulkan handle");
-            return;
-        }
-
-    tracker.addTransferSrcBuffer(srcVk);
-    // Transition the whole image: vkCmdCopyBufferToImage can target any mip/face per region,
-    // so the barrier must cover all subresources to be conservative.
-    GpuResourceView::ImageView fullRange;
-    tracker.addTransferDstImage(dstVk, fullRange);
-    tracker.emitPrePassBarriers(cb);
-
-    // Derive the aspect flags from the destination texture's format.
-    const auto & desc    = dstVk->descriptor();
-    auto         aspects = aspectFromViewFormat(desc.format, desc.format);
-    if (!aspects) aspects = vk::ImageAspectFlagBits::eColor;
-
-    std::vector<vk::BufferImageCopy> copies;
-    copies.reserve(op.regions.size());
-    for (const auto & r : op.regions) {
-        vk::BufferImageCopy c;
-        c.setBufferOffset(r.bufferOffset)
-            .setBufferRowLength(r.bufferRowLength)
-            .setBufferImageHeight(r.bufferHeight)
-            .setImageSubresource({aspects, r.mip, r.face, 1})
-            .setImageOffset({(int32_t) r.imageOffset.x, (int32_t) r.imageOffset.y, (int32_t) r.imageOffset.z})
-            .setImageExtent({r.imageExtent.x, r.imageExtent.y, r.imageExtent.z});
-        copies.push_back(c);
-    }
-
-    cb.copyBufferToImage(srcBuf, dstImg, vk::ImageLayout::eTransferDstOptimal, (uint32_t) copies.size(), copies.data());
+    GN::gpu2::recordBufToImg(op, cb, tracker);
 }
 
 // ── Image-to-buffer copy (download) ──────────────────────────────────────────────────
 
 void GpuCncPayloadVulkan::recordDownloadImage(const StoredDownloadImage & op, vk::CommandBuffer cb, GpuResourceStateTrackerVulkan & tracker) {
-    if (op.regions.empty()) return;
-
-    auto * srcVk = RuntimeType::cast<TextureVulkanBase>(op.src.get());
-    auto * dstVk = RuntimeType::cast<BufferVulkan>(op.staging.get());
-    if (!srcVk || !dstVk) GN_UNLIKELY {
-            GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadImage: null Vulkan resource");
-            return;
-        }
-
-    vk::Image  srcImg = srcVk->nativeImage();
-    vk::Buffer dstBuf = dstVk->nativeBuffer();
-    if (!srcImg || !dstBuf) GN_UNLIKELY {
-            GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadImage: resource has no Vulkan handle");
-            return;
-        }
-
-    // Conservatively transition the whole image to transfer-src (any mip/face may be read).
-    tracker.addTransferDstBuffer(dstVk);
-    GpuResourceView::ImageView fullRange;
-    tracker.addTransferSrcImage(srcVk, fullRange);
-    tracker.emitPrePassBarriers(cb);
-
-    const auto & desc    = srcVk->descriptor();
-    auto         aspects = aspectFromViewFormat(desc.format, desc.format);
-    if (!aspects) aspects = vk::ImageAspectFlagBits::eColor;
-
-    std::vector<vk::BufferImageCopy> copies;
-    copies.reserve(op.regions.size());
-    for (const auto & r : op.regions) {
-        vk::BufferImageCopy c;
-        c.setBufferOffset(r.bufferOffset)
-            .setBufferRowLength(r.bufferRowLength) // 0 = tightly packed (rows == imageExtent.x)
-            .setBufferImageHeight(r.bufferHeight)
-            .setImageSubresource({aspects, r.mip, r.face, 1})
-            .setImageOffset({(int32_t) r.imageOffset.x, (int32_t) r.imageOffset.y, (int32_t) r.imageOffset.z})
-            .setImageExtent({r.imageExtent.x, r.imageExtent.y, r.imageExtent.z});
-        copies.push_back(c);
-    }
-
-    cb.copyImageToBuffer(srcImg, vk::ImageLayout::eTransferSrcOptimal, dstBuf, (uint32_t) copies.size(), copies.data());
+    GN::gpu2::recordDownloadImage(op, cb, tracker);
 }
 
 // ── Download read-back (CPU side, after GPU completion) ───────────────────────────────
 
-void GpuCncPayloadVulkan::resolveDownloadBuffer(StoredDownloadBuffer & op) {
-    AutoRef<const Blob> blob;
-    if (op.staging && op.size > 0) {
-        auto m = op.staging->map();
-        if (m.data()) {
-            blob = AutoRef<const Blob>(new SimpleBlob<uint8_t>((size_t) op.size, (const uint8_t *) m.data()));
-        } else
-            GN_UNLIKELY { GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadBuffer: failed to map staging buffer for read-back"); }
-        // m unmaps on scope exit (RAII)
-    }
-    op.staging.clear(); // transient data done; release immediately on GPU completion.
-    op.result.resolve(std::move(blob));
-}
+void GpuCncPayloadVulkan::resolveDownloadBuffer(StoredDownloadBuffer & op) { GN::gpu2::resolveDownloadBuffer(op); }
 
-void GpuCncPayloadVulkan::resolveDownloadImage(StoredDownloadImage & op) {
-    GpuCnC::TextureContent content;
-    if (op.staging && !op.regions.empty()) {
-        auto m = op.staging->map();
-        if (m.data()) {
-            content.blob = AutoRef<const Blob>(new SimpleBlob<uint8_t>(m.size(), (const uint8_t *) m.data()));
-            for (const auto & r : op.regions) content.regions.append(r);
-        } else
-            GN_UNLIKELY { GN_ERROR(sLogger, "GpuCncPayloadVulkan: downloadImage: failed to map staging buffer for read-back"); }
-    }
-    op.staging.clear();
-    op.result.resolve(std::move(content));
-}
+void GpuCncPayloadVulkan::resolveDownloadImage(StoredDownloadImage & op) { GN::gpu2::resolveDownloadImage(op); }
 
 void GpuCncPayloadVulkan::onGpuComplete() {
     for (auto & op : mOps) {
@@ -434,6 +242,8 @@ void GpuCncPayloadVulkan::onGpuComplete() {
                 using T = std::decay_t<decltype(o)>;
                 if constexpr (std::is_same_v<T, StoredUploadBuffer>)
                     o.staging.clear(); // transient upload staging done; release immediately.
+                else if constexpr (std::is_same_v<T, StoredBufferToImage>)
+                    o.src.clear();
                 else if constexpr (std::is_same_v<T, StoredDownloadBuffer>)
                     resolveDownloadBuffer(o);
                 else if constexpr (std::is_same_v<T, StoredDownloadImage>)
@@ -446,29 +256,78 @@ void GpuCncPayloadVulkan::onGpuComplete() {
 // ── recordForVulkanSubmit ────────────────────────────────────────────────────────────
 
 void GpuCncPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
+    mUploadStorage->unmapForSubmit();
     if (!ctx.dev || ctx.cmd.empty() || !ctx.batchTracker) return;
     GpuResourceStateTrackerVulkan & tracker = *ctx.batchTracker;
     vk::CommandBuffer               vkcb    = ctx.cmd.handle();
+
+    std::vector<BufferVulkan *>                                  writtenBuffers;
+    std::vector<std::pair<TextureVulkanBase *, GpuResourceView>> writtenTextures;
+
+    auto addWrittenBuffer = [&](BufferVulkan * b) {
+        if (b && std::find(writtenBuffers.begin(), writtenBuffers.end(), b) == writtenBuffers.end()) { writtenBuffers.push_back(b); }
+    };
+    auto addWrittenTexture = [&](TextureVulkanBase * t, const GpuResourceView & v) {
+        if (!t) return;
+        for (const auto & [existingT, existingV] : writtenTextures) {
+            if (existingT == t) return;
+        }
+        writtenTextures.push_back({t, v});
+    };
 
     for (const auto & op : mOps) {
         std::visit(
             [&](const auto & o) {
                 using T = std::decay_t<decltype(o)>;
-                if constexpr (std::is_same_v<T, StoredCompute>)
+                if constexpr (std::is_same_v<T, StoredCompute>) {
                     recordCompute(o, ctx);
-                else if constexpr (std::is_same_v<T, StoredBufferToBuffer>)
+                    for (size_t setIdx = 0; setIdx < o.resources.size(); ++setIdx) {
+                        const auto & set = o.resources[setIdx];
+                        for (size_t bindIdx = 0; bindIdx < set.size(); ++bindIdx) {
+                            const auto & slot = set[bindIdx];
+                            for (const auto & view : slot) {
+                                if (view.empty()) continue;
+                                if (view.isBuffer() && view.bufferView.type == GpuResourceView::BufferView::STORAGE) {
+                                    auto * buf = RuntimeType::cast<BufferVulkan>(view.buffer().get());
+                                    addWrittenBuffer(buf);
+                                } else if (view.isTexture() && view.imageView.type == GpuResourceView::ImageView::STORAGE) {
+                                    auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
+                                    addWrittenTexture(tex, view);
+                                }
+                            }
+                        }
+                    }
+                } else if constexpr (std::is_same_v<T, StoredBufferToBuffer>) {
                     recordBufToBuf(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredBufferToImage>)
+                    auto * dstVk = RuntimeType::cast<BufferVulkan>(o.dst.get());
+                    addWrittenBuffer(dstVk);
+                    addWrittenBuffer(RuntimeType::cast<BufferVulkan>(o.src.get()));
+                } else if constexpr (std::is_same_v<T, StoredBufferToImage>) {
                     recordBufToImg(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredUploadBuffer>)
+                    auto * dstVk = RuntimeType::cast<TextureVulkanBase>(o.dst.get());
+                    addWrittenTexture(dstVk, GpuResourceView {});
+                } else if constexpr (std::is_same_v<T, StoredImageToImage>) {
+                    recordImageCopy(o, vkcb, tracker);
+                    addWrittenTexture(RuntimeType::cast<TextureVulkanBase>(o.src.get()), GpuResourceView {});
+                    addWrittenTexture(RuntimeType::cast<TextureVulkanBase>(o.dst.get()), GpuResourceView {});
+                } else if constexpr (std::is_same_v<T, StoredUploadBuffer>) {
                     recordUploadBuffer(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredDownloadBuffer>)
+                    auto * dstVk = RuntimeType::cast<BufferVulkan>(o.dst.get());
+                    addWrittenBuffer(dstVk);
+                } else if constexpr (std::is_same_v<T, StoredDownloadBuffer>) {
                     recordDownloadBuffer(o, vkcb, tracker);
-                else if constexpr (std::is_same_v<T, StoredDownloadImage>)
+                    addWrittenBuffer(RuntimeType::cast<BufferVulkan>(o.src.get()));
+                } else if constexpr (std::is_same_v<T, StoredDownloadImage>) {
                     recordDownloadImage(o, vkcb, tracker);
+                    auto * srcVk = RuntimeType::cast<TextureVulkanBase>(o.src.get());
+                    addWrittenTexture(srcVk, GpuResourceView {});
+                }
             },
             op);
     }
+
+    if (!writtenBuffers.empty()) { tracker.restoreBuffersToReadReady(writtenBuffers, vkcb); }
+    for (const auto & [tex, view] : writtenTextures) { tracker.restoreAttachmentToShaderReadOnly(tex, view, vkcb); }
 }
 
 // ── GpuCncVulkan2 ────────────────────────────────────────────────────────────────────
@@ -476,6 +335,8 @@ void GpuCncPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
 class GpuCncVulkan2 final : public GpuCnC {
 public:
     GN_REGISTER_RUNTIME_TYPE(GpuCnC);
+
+    bool hasRecordedWork() const { return !mOps.empty(); }
 
     GpuCncVulkan2(const StrA & entityName, const CreateParameters & cp): GpuCnC(TYPE_INFO(), entityName), mGpu(cp.gpu) {}
 
@@ -485,64 +346,83 @@ public:
                 return;
             }
         StoredCompute op;
-        op.cs         = cp.cs;
-        op.resources  = cp.resources;
-        op.x          = cp.x;
-        op.y          = cp.y;
-        op.z          = cp.z;
-        op.immediates = cp.immediates;
+        op.cs        = cp.cs;
+        op.resources = cp.resources;
+        op.x         = cp.x;
+        op.y         = cp.y;
+        op.z         = cp.z;
+        if (!cp.immediates.empty()) { op.immediates.assign(cp.immediates.begin(), cp.immediates.end()); }
         mOps.emplace_back(std::move(op));
     }
 
-    void recordCopyBufferToBuffer(const BufferToBuffer & p) override {
+    void recordCopyBuffer(const BufferToBuffer & p) override {
         if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::recordCopyBufferToBuffer: already sealed");
+                GN_ERROR(sLogger, "GpuCncVulkan2::recordCopyBuffer: already sealed");
                 return;
             }
         mOps.emplace_back(StoredBufferToBuffer {p.src, p.dst, p.srcOffset, p.dstOffset, p.size});
     }
 
-    void recordCopyBufferToImage(const BufferToImage & p) override {
-        if (mSealed) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::recordCopyBufferToImage: already sealed");
+    void recordUploadImage(AutoRef<Texture> dst, ArrayView<const uint8_t> content, ArrayView<const Region> regions) override {
+        if (mSealed || !validImageUpload(dst.get(), content, regions)) GN_UNLIKELY {
+                GN_ERROR(sLogger, "CNC::recordUploadImage: sealed recorder or empty upload");
                 return;
             }
         StoredBufferToImage op;
+        op.dst = dst;
+        for (auto region : regions) {
+            auto slice = mUploadStorage->copyImage(mGpu, name, content, dst->descriptor(), region);
+            if (!slice.buffer) GN_UNLIKELY {
+                    GN_ERROR(sLogger, "CNC::recordUploadImage: staging allocation failed");
+                    return;
+                }
+            if (op.src && op.src.get() != slice.buffer.get()) {
+                mOps.emplace_back(std::move(op));
+                op     = StoredBufferToImage {};
+                op.dst = dst;
+            }
+            op.src                 = std::move(slice.buffer);
+            region.dataOffset      = slice.offset;
+            region.rowPitchBytes   = 0;
+            region.slicePitchBytes = 0;
+            op.regions.append(region);
+        }
+        mOps.emplace_back(std::move(op));
+    }
+
+    void recordCopyImage(const ImageToImage & p) override {
+        if (mSealed || !validImageCopy(p)) GN_UNLIKELY {
+                GN_ERROR(sLogger, "CNC::recordCopyImage: sealed recorder or invalid copy resources");
+                return;
+            }
+        StoredImageToImage op;
         op.src = p.src;
         op.dst = p.dst;
         for (const auto & r : p.regions) op.regions.append(r);
         mOps.emplace_back(std::move(op));
     }
 
-    void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, AutoRef<const Blob> content) override {
+    void recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) override {
         if (mSealed) GN_UNLIKELY {
                 GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: already sealed");
                 return;
             }
-        if (!dst || !content || content->empty()) GN_UNLIKELY {
+        if (!dst || content.empty()) GN_UNLIKELY {
                 GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: null destination or empty content");
                 return;
             }
-        const uint64_t size    = content->size();
-        auto           staging = createStaging("upload_stg", size);
-        if (!staging) GN_UNLIKELY {
-                GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: staging buffer allocation failed");
+        const uint64_t size  = content.size();
+        auto           slice = mUploadStorage->copy(mGpu, name, content);
+        if (!slice.buffer) GN_UNLIKELY {
+                GN_ERROR(sLogger, "CNC::recordUploadBuffer: staging allocation failed");
                 return;
             }
-        {
-            auto m = staging->map();
-            if (!m.data()) GN_UNLIKELY {
-                    GN_ERROR(sLogger, "GpuCncVulkan2::recordUploadBuffer: failed to map staging buffer");
-                    return;
-                }
-            memcpy(m.data(), content->data(), (size_t) size);
-            // m unmaps on scope exit (RAII)
-        }
         StoredUploadBuffer op;
-        op.staging   = std::move(staging);
+        op.staging   = std::move(slice.buffer);
         op.dst       = std::move(dst);
         op.dstOffset = offset;
         op.size      = size;
+        op.srcOffset = slice.offset;
         mOps.emplace_back(std::move(op));
     }
 
@@ -597,6 +477,17 @@ public:
                 return future;
             }
 
+        if (srcVk->descriptor().samples != 1 || !singleCopyAspect(srcVk->descriptor())) GN_UNLIKELY {
+                GN_ERROR(sLogger, "CNC::recordDownloadImage: image downloads require a single-sample, single-aspect format");
+                return future;
+            }
+        for (const auto & region : regions) {
+            if (!validImageRegion(srcVk->descriptor(), region.mip, region.face, region.imageOffset, region.imageExtent)) GN_UNLIKELY {
+                    GN_ERROR(sLogger, "CNC::recordDownloadImage: invalid image region");
+                    return future;
+                }
+        }
+
         // Lay out the requested regions tightly in the staging buffer, honoring Vulkan's bufferOffset
         // alignment (multiple of 4 and of the texel block size). Each region is read back tightly packed.
         const auto     fmt = srcVk->descriptor().format;
@@ -616,8 +507,8 @@ public:
         };
         const uint64_t align = lcm4(bb);
 
-        DynaArray<Buffer::StagedTexture::Region> packed;
-        uint64_t                                 cursor = 0;
+        DynaArray<GpuCnC::Region> packed;
+        uint64_t                  cursor = 0;
         for (const auto & r : regions) {
             const uint32_t w        = r.imageExtent.x ? r.imageExtent.x : 1;
             const uint32_t h        = r.imageExtent.y ? r.imageExtent.y : 1;
@@ -628,10 +519,10 @@ public:
 
             cursor = ((cursor + align - 1) / align) * align;
 
-            Buffer::StagedTexture::Region pr = r;
-            pr.bufferOffset                  = cursor;
-            pr.bufferRowLength               = 0; // tightly packed: rows == imageExtent.x
-            pr.bufferHeight                  = 0;
+            GpuCnC::Region pr  = r;
+            pr.dataOffset      = cursor;
+            pr.rowPitchBytes   = blocksX * bb;
+            pr.slicePitchBytes = blocksX * blocksY * bb;
             packed.append(pr);
 
             cursor += regBytes;
@@ -663,13 +554,14 @@ public:
                 return {};
             }
         mSealed = true;
-        return AutoRef<GpuPayload>(new GpuCncPayloadVulkan(name + "/payload", std::move(mOps)));
+        return AutoRef<GpuPayload>(new GpuCncPayloadVulkan(name + "/payload", std::move(mOps), std::move(mUploadStorage)));
     }
 
 private:
-    AutoRef<GpuContext>   mGpu;
-    bool                  mSealed = false;
-    std::vector<StoredOp> mOps;
+    AutoRef<GpuContext>               mGpu;
+    bool                              mSealed = false;
+    std::vector<StoredOp>             mOps;
+    std::unique_ptr<CncUploadStorage> mUploadStorage = std::make_unique<CncUploadStorage>();
 
     /// Allocate a host-visible staging buffer owned by the upcoming payload.
     AutoRef<Buffer> createStaging(const char * suffix, uint64_t size) {
@@ -678,6 +570,18 @@ private:
 };
 
 } // anonymous namespace
+
+AutoRef<GpuPayload> createCncBufferUploadPayload(AutoRef<GpuContext> gpu, AutoRef<Buffer> dst, ArrayView<const uint8_t> content, uint64_t offset) {
+    auto cnc = AutoRef<GpuCncVulkan2>(new GpuCncVulkan2(dst->name + "/upload", {.gpu = std::move(gpu)}));
+    cnc->recordUploadBuffer(std::move(dst), offset, content);
+    return cnc->hasRecordedWork() ? cnc->seal() : AutoRef<GpuPayload> {};
+}
+
+AutoRef<GpuPayload> createCncImageUploadPayload(AutoRef<GpuContext> gpu, AutoRef<Texture> dst, const gfx::img::Image & content) {
+    auto cnc = AutoRef<GpuCncVulkan2>(new GpuCncVulkan2(dst->name + "/upload", {.gpu = std::move(gpu)}));
+    cnc->GpuCnC::recordUploadImage(std::move(dst), content);
+    return cnc->hasRecordedWork() ? cnc->seal() : AutoRef<GpuPayload> {};
+}
 
 // ── Factory ──────────────────────────────────────────────────────────────────────────
 

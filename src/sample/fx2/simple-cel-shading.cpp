@@ -1,146 +1,168 @@
 #include "sample-sphere.h"
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
-#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <memory>
 #include <cmath>
 
 using namespace GN;
-using namespace GN::fx2;
 using namespace GN::gpu2;
+namespace fxBindless  = GN::fx2::bindless;
+namespace gpuBindless = GN::gpu2::bindless;
 
-static GN::Logger * sLogger = GN::getLogger("GN.sample.fx2.cel");
-
-static SharedShaderConstants::Snapshot updateSsc(SharedShaderConstants * ssc, const RasterTarget & target, int frameIdx) {
-    // Orbit camera around Y axis.
-    const float            orbitAngle = static_cast<float>(frameIdx) * 0.002f;
-    constexpr float        kRadius    = 3.0f;
-    const glm::vec3        eye        = {kRadius * std::sin(orbitAngle), 1.2f, kRadius * std::cos(orbitAngle)};
-    static const glm::vec3 kTarget(0.f, 0.f, 0.f), kUp(0.f, 1.f, 0.f);
-    const glm::mat4        camToWorld = glm::inverse(glm::lookAtRH(eye, kTarget, kUp));
-
-    const auto rasterSize = target.calcRasterSizeInPixel();
-
-    ssc->set0.camera.cameraPosition       = eye;
-    ssc->set0.camera.cameraOrientation    = glm::quat_cast(glm::mat3(camToWorld));
-    ssc->set0.camera.aspectRatio          = static_cast<float>(rasterSize.x) / static_cast<float>(rasterSize.y);
-    ssc->set0.camera.viewWidthInPixel     = rasterSize.x;
-    ssc->set0.camera.viewHeightInPixel    = rasterSize.y;
-    ssc->set0.frameConstants.frameCounter = frameIdx;
-
-    // Direct directional sun light for crisp cel shadows
-    ssc->set0.directLighting.clear();
-    SharedShaderConstants::DirectLight sun;
-    sun.type                    = SharedShaderConstants::DirectLight::DIRECTIONAL;
-    sun.directional.orientation = glm::quat(glm::vec3(0.6f, 0.8f, 0.0f));
-    // SSC uses photometric lighting and defaults to exposure 0.002 (a 500-nit reference).
-    sun.directional.irradiance = {1.0f, 0.98f, 0.95f, {500.0f}};
-    ssc->set0.directLighting.append(sun);
-
-    ssc->set0.envLighting.environmentAmbientFloor   = 0.1f;
-    ssc->set0.envLighting.environmentLuminanceScale = 1200.0f;
-
-    return ssc->takeSnapshot();
-}
-
-int main(int argc, const char ** argv) {
-    bool testMode = (argc > 1) && (argv[1][0] == 't');
-    if (testMode) { GN_INFO(sLogger, "Running in test mode"); }
-
-    enableCRTMemoryCheck();
-
-    const uint32_t W = 1280, H = 720;
-
-    // ─── GPU ──────────────────────────────────────────────────────────────────
-    auto gpuContext = GpuContext::create("gpu", GpuContext::CreateParameters {});
-    if (!gpuContext) return -1;
-
-    // ─── Shared shader constants ──────────────────────────────────────────────
-    auto ssc = SharedShaderConstants::create({.gpu = gpuContext});
-    if (!ssc) return -1;
-    auto skybox = SkyboxKernel::create(gpuContext);
-    if (!skybox) return -1;
-
-    ssc->set0.envLighting = {
-        .skyboxPath                = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds",
-        .irradiancePath            = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds",
-        .prefilteredPath           = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds",
-        .brdfLutPath               = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds",
-        .environmentLuminanceScale = 1200.f,
-    };
-
-    auto initializationRecorder = GpuCnC::create({.gpu = gpuContext});
-    if (!initializationRecorder) return -1;
-    auto kernel = CelKernel::create(gpuContext, *initializationRecorder);
-    if (!kernel) return -1;
-    CelKernel::Inputs inputs;
-    inputs.geometry = createSampleSphere(gpuContext, *initializationRecorder);
-    if (!inputs.geometry.indexCount) return -1;
-    inputs.states.cullMode   = RasterState::CULL_BACK;
-    inputs.states.frontFace  = RasterState::FRONT_CCW;
-    inputs.states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
-    inputs.color             = {0.8f, 0.3f, 0.08f, 1};
-    inputs.outlineWidth      = 0.01f;
-    inputs.rimIntensity      = 150.0f; // Keep the stylized rim visible at the same camera exposure.
-    auto initialization      = initializationRecorder->seal();
-    if (!initialization) return -1;
-
-    // ─── Window + swapchain ───────────────────────────────────────────────────
+namespace {
+struct Host {
+    AutoRef<GpuContext>          gpu;
     std::unique_ptr<win::Window> window;
     intptr_t                     surface = 0;
-    if (!testMode) {
-        window.reset(win::createWindow(win::WindowCreateParameters {.caption = "Garnet 3D - Cel / Anime NPR (fx2)", .clientWidth = W, .clientHeight = H}));
-        if (!window) return -1;
-        window->show();
-        surface = window->createVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle());
-        if (!surface) return -1;
+    AutoRef<Swapchain>           swapchain;
+
+    ~Host() {
+        if (gpu) gpu->waitForIdle();
+        swapchain.clear();
+        if (surface) window->destroyVulkanSurfaceHandle(gpu->getVulkanInstanceHandle(), surface);
     }
-    Swapchain::CreateDesc scDesc {.gpu = gpuContext, .width = W, .height = H};
-    if (surface) scDesc.setSurface(surface);
-    auto swapchain = Swapchain::create(scDesc);
-    if (!swapchain) return -1;
+};
+} // namespace
 
-    auto depthTex = Texture::create(
-        "depth", {.context = gpuContext, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::D_32_FLOAT()).setDimensions(W, H)});
-    if (!depthTex) return -1;
-    GpuResourceView depthView;
-    depthView.resource = depthTex;
+int main(int argc, const char * argv[]) {
+    const bool headless = argc > 1 && argv[1][0] == 't';
+    Host       host;
+    host.gpu = GpuContext::create("cel-shading-sample", {});
+    if (!host.gpu) return 1;
 
-    RasterTarget rasterTarget;
-    rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
-    rasterTarget.setDepthStencilTarget(depthView).setClearColor(0.1f, 0.12f, 0.16f, 1.f).setClearDepth(1.f);
+    uint32_t width = 1280, height = 720;
+    if (!headless) {
+        host.window.reset(win::createWindow({.caption = "FX2 bindless Cel / Anime NPR shading", .clientWidth = width, .clientHeight = height}));
+        if (!host.window) return 1;
+        host.window->show();
+        host.surface = host.window->createVulkanSurfaceHandle(host.gpu->getVulkanInstanceHandle());
+        if (!host.surface) return 1;
+        const auto size = host.window->getClientSize();
+        if (size.x != 0 && size.y != 0) {
+            width  = size.x;
+            height = size.y;
+        }
+    }
 
-    int totalFrames = testMode ? 5 : 0;
+    Swapchain::CreateDesc scDesc {.gpu = host.gpu, .width = width, .height = height};
+    scDesc.setSurface(host.surface);
+    host.swapchain = Swapchain::create(scDesc);
+
+    auto heap = gpuBindless::DescriptorHeap::create("cel.heap", {.gpu = host.gpu, .capacity = 32});
+    if (!heap) return 1;
+    auto upload = gpuBindless::CnC::create("cel.initialization", {.gpu = host.gpu, .heap = heap});
+    if (!upload) return 1;
+
+    auto cel       = fxBindless::CelKernel::create(*heap, *upload);
+    auto constants = fxBindless::SharedShaderConstants::create({.gpu = host.gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    if (!host.swapchain || !heap || !cel || !constants) return 1;
+
+    // Depth buffer
+    const auto depthDesc   = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::D_32_FLOAT()).setDimensions(width, height).setLevels(1);
+    auto       depthBuffer = Texture::create("cel.depth", {.context = host.gpu, .descriptor = depthDesc});
+    if (!depthBuffer) return 1;
+    GpuResourceView depthView {depthBuffer};
+
+    // Create sample sphere mesh
+    RasterGeometry sphereGeometry = createSampleSphere(host.gpu, *upload);
+    if (!sphereGeometry.indexCount) return 1;
+
+    // Stylized anime NPR material tuning
+    auto celParams                = cel->defaultMaterialParameters();
+    celParams.color               = {0.9f, 0.45f, 0.25f, 1.0f};
+    celParams.shadowThreshold     = 0.5f;
+    celParams.shadowFeather       = 0.02f;
+    celParams.deepShadowThreshold = 0.25f;
+    celParams.deepShadowFeather   = 0.02f;
+    celParams.shadowTint          = {0.55f, 0.55f, 0.72f};
+    celParams.deepShadowTint      = {0.35f, 0.35f, 0.50f};
+    celParams.specularThreshold   = 0.75f;
+    celParams.specularShininess   = 40.0f;
+    celParams.specularIntensity   = 1.2f;
+    celParams.rimThreshold        = 0.60f;
+    celParams.rimFeather          = 0.05f;
+    celParams.rimIntensity        = 0.75f;
+    celParams.rimTint             = {1.0f, 0.95f, 0.9f};
+    celParams.outlineWidth        = 0.008f;
+    celParams.outlineColor        = {0.12f, 0.10f, 0.15f, 1.0f};
+
+    auto material = cel->createMaterial(*upload, celParams);
+    if (!material) return 1;
+
+    auto initializationWork = upload->seal();
+    if (!initializationWork) return 1;
+
+    RasterTarget target;
+    target.setDepthStencilTarget(depthView);
+    target.states.cullMode   = RasterState::CULL_BACK;
+    target.states.frontFace  = RasterState::FRONT_CCW;
+    target.states.depthState = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, true};
+
+    int totalFrames = headless ? 5 : 0;
     int frameIdx    = 0;
+
     while (totalFrames == 0 || frameIdx < totalFrames) {
         ++frameIdx;
-        if (window && !window->runUntilNoNewEvents()) break;
+        if (host.window && !host.window->runUntilNoNewEvents()) break;
 
-        Swapchain::Frame frame = swapchain->prepare();
-        if (frame.view.empty()) return -1;
+        auto frame = host.swapchain->prepare();
+        if (frame.view.empty()) return 1;
 
-        rasterTarget.setColorTarget(0, frame.view);
-        SharedShaderConstants::Snapshot sscSnapshot = updateSsc(ssc, rasterTarget, frameIdx);
-        auto                            uploads     = GpuCnC::create({.gpu = gpuContext});
-        auto                            raster      = GpuRaster::create("sample.frame", {.gpu = gpuContext, .target = &rasterTarget});
-        if (!uploads || !raster || !kernel->record(*raster, *uploads, sscSnapshot.set0Resources, inputs) || !skybox->record(*raster, sscSnapshot.set0Resources))
-            return -1;
-        auto parameters = uploads->seal();
-        auto rendered   = raster->seal();
-        if (!parameters || !rendered) return -1;
-        GpuContext::SubmitParameters submit("sample.frame");
-        if (initialization) submit.appendWork(initialization);
-        for (const auto & payload : sscSnapshot.set0Payloads) {
-            if (!payload) return -1;
-            submit.appendWork(payload);
+        target.setColorTarget(0, frame.view).setClearColor(0.12f, 0.14f, 0.18f, 1.0f).setClearDepth(1.0f);
+
+        // Orbit camera around Y axis
+        const float     angle  = static_cast<float>(frameIdx) * 0.015f;
+        constexpr float radius = 2.8f;
+        const glm::vec3 eye {radius * std::sin(angle), 0.8f, radius * std::cos(angle)};
+
+        fxBindless::SharedUniforms uniforms {};
+        uniforms.frameCounter     = static_cast<uint32_t>(frameIdx);
+        uniforms.renderTargetSize = {float(width), float(height)};
+        uniforms.cameraPosition   = {eye.x, eye.y, eye.z, 1.0f};
+        uniforms.viewMatrix       = glm::lookAtRH(eye, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        uniforms.projMatrix       = glm::perspectiveRH_ZO(glm::radians(45.0f), float(width) / float(height), uniforms.nearPlane, uniforms.farPlane);
+        uniforms.projMatrix[1][1] *= -1; // Vulkan clip space
+        uniforms.projViewMatrix = uniforms.projMatrix * uniforms.viewMatrix;
+        uniforms.exposure       = 1.0f;
+
+        // Directional sun light
+        uniforms.numLights               = 1;
+        uniforms.lights[0].positionOrDir = {0.6f, 0.8f, 0.5f, float(fxBindless::DirectLightUniform::DIRECTIONAL)};
+        uniforms.lights[0].colorAndRange = {1.8f, 1.75f, 1.6f, 0.0f};
+
+        auto frameProducer = gpuBindless::CnC::create("cel.uniform", {.gpu = host.gpu, .heap = heap});
+        if (!frameProducer) return 1;
+        auto state = constants->recordUniformUpdate(*frameProducer, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
+        if (!state) return 1;
+        auto uniformWork = frameProducer->seal();
+        if (!uniformWork) return 1;
+
+        auto raster = gpuBindless::Raster::create(
+            "cel.raster",
+            {.gpu = host.gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 2});
+        if (!raster) return 1;
+
+        fxBindless::CelMaterial::DrawParameters draw {{*raster, state, sphereGeometry, &target.states}};
+        draw.object2WorldTransform = glm::mat4(1.0f);
+        draw.renderOutline         = true;
+        if (!material->record(draw)) return 1;
+
+        auto rasterWork = raster->seal();
+        if (!rasterWork) return 1;
+
+        GpuContext::SubmitParameters submit("cel.frame");
+        if (initializationWork) {
+            submit.appendWork(initializationWork);
+            initializationWork.clear();
         }
-        submit.appendWork(parameters).appendWork(rendered).waitFor(frame.ready);
-        gpuContext->submit(submit);
-        initialization.clear();
-        swapchain->present(*rendered);
+        submit.appendWork(uniformWork).appendWork(rasterWork).waitFor(frame.ready);
+        host.gpu->submit(submit);
+
+        host.swapchain->present(*rasterWork);
     }
 
-    gpuContext->waitForIdle();
-    swapchain.clear();
-    if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
+    if (host.gpu) host.gpu->waitForIdle();
     return 0;
 }
