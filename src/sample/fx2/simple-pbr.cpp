@@ -3,6 +3,7 @@
 #include <garnet/GNwin.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
+#include <cmath>
 #include <memory>
 
 using namespace GN;

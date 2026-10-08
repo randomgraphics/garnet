@@ -1,6 +1,5 @@
 #include <garnet/GNgpu2.h>
 #include <garnet/GNwin.h>
-#include <garnet/GNutil.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

@@ -13,10 +13,7 @@ namespace GN {
 namespace util {}
 } // namespace GN
 
-#include "util/camera.h"
-#include "util/fps.h"
-// #include "util/sampleWorld.h"
-#include "util/sampleApp.h"
+#include "base/fps.h"
 
 // *****************************************************************************
 //                                     EOF

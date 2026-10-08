@@ -1,5 +1,5 @@
-#ifndef __GN_UTIL_FPS_H__
-#define __GN_UTIL_FPS_H__
+#ifndef __GN_BASE_FPS_H__
+#define __GN_BASE_FPS_H__
 // *****************************************************************************
 /// \file
 /// \brief   FPS calculator
@@ -7,7 +7,6 @@
 // *****************************************************************************
 
 namespace GN {
-namespace util {
 ///
 /// Simple FPS calculator
 ///
@@ -89,10 +88,13 @@ public:
     ///
     const StrW & fpsString() const { return mFpsString; }
 };
-} // namespace util
+
+namespace util {
+using FpsCalculator = GN::FpsCalculator;
+}
 } // namespace GN
 
 // *****************************************************************************
 //                                     EOF
 // *****************************************************************************
-#endif // __GN_UTIL_FPS_H__
+#endif // __GN_BASE_FPS_H__

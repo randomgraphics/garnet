@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "garnet/gpu2/image.h"
 
 #ifdef _MSC_VER
     #define __STDC_LIB_EXT1__ // this is to tell stb image header to use secure version of the C library.
@@ -7,6 +8,7 @@
     #pragma clang diagnostic ignored "-Wdeprecated-declarations"    // this is to suppress warning from stb image header.
 #elif defined(__GNUC__)
     #pragma GCC diagnostic ignored "-Wmissing-field-initializers" // this is to suppress warning from stb image header.
+    #pragma GCC diagnostic ignored "-Wstringop-overflow"          // this is to suppress warning from stb image header.
 #endif
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION

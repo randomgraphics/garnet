@@ -27,7 +27,6 @@
 #include <garnet/GNrdg2.h>
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
-#include <garnet/GNutil.h>
 
 #include "cube-face-vert.spv.h"
 #include "cube-face-frag.spv.h"
