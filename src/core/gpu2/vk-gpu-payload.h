@@ -44,7 +44,7 @@ struct GpuPayloadVulkan : GpuPayload {
     virtual void recordForVulkanSubmit(const RecordContext &) {}
 
     /// Hook fired right after vkQueueSubmit returns. Available for any post-submit bookkeeping;
-    /// resource state flushing is handled by submit() via batchTracker->flushToResources().
+    /// resources maintain the always-ready-to-read invariant restored by writers at pass end.
     virtual void onSubmitComplete() {}
 
     /// Hook fired once from pump()/waitForIdle() after this payload's submission fence has signaled,

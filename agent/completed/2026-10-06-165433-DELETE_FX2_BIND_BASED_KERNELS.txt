@@ -1,0 +1,74 @@
+# Assignment: Delete FX2 Bind-Based Kernels
+
+---
+
+## Goals
+
+Entirely remove all 9 bind-based FX2 kernels (classes deriving from `GN::fx2::Kernel`),
+their public headers, core implementations, associated GLSL shaders, unit tests, and
+legacy samples. Keep bind-based gpu2 features and `ImGuiBackend` intact.
+
+---
+
+## Design
+
+### Decoupling `fiz` Sample Helpers
+`src/sample/fiz/render-helpers.h` currently calls `LitKernelInputs::createBox` and
+`createSphere` from `lit-kernels.h`. Make `boxGeometry` and `sphereGeometry` self-contained
+in `render-helpers.h` so that `fiz` does not depend on `lit-kernels.h`.
+
+### Kernel Headers to Remove
+- `src/inc/garnet/fx2/kernel.h`
+- `src/inc/garnet/fx2/lit-kernels.h`
+- `src/inc/garnet/fx2/unlit-kernel.h`
+- `src/inc/garnet/fx2/skybox-kernel.h`
+- `src/inc/garnet/fx2/image-kernels.h`
+- Remove includes from `src/inc/garnet/GNfx2.h`.
+
+### Core Sources and Shaders to Remove
+- `src/core/fx2/lit-kernels.cpp`
+- `src/core/fx2/lit-kernel-geometry.cpp`
+- `src/core/fx2/raster-kernels.cpp`
+- `src/core/fx2/image-kernels.cpp`
+- Associated vk-shaders in `src/core/fx2/vk-shaders/` (model, cel-model, cel-outline, image blur/mipmap, unlit, skybox).
+- Update `src/core/fx2/CMakeLists.txt`.
+
+### Tests and Samples to Remove
+- `src/sample/fx2/simple-cel-shading.cpp`
+- `src/sample/fx2/image-effects.cpp`
+- Update `src/sample/fx2/CMakeLists.txt`.
+- `src/core/fx2/test/kernel-test.cpp`
+- `src/core/fx2/test/image-kernel-test.cpp`
+- `src/core/fx2/test/lit-kernel-test.cpp`
+- Update `src/core/fx2/test/internal-test.cmake`.
+
+---
+
+## Plan
+
+[x] Task 1: Decouple `src/sample/fiz/render-helpers.h` and `src/core/e2/asset.cpp` from `LitKernelInputs`.
+    Verify: `render-helpers.h` and `asset.cpp` compile with standalone geometry builders.
+
+[x] Task 2: Remove legacy bind-based samples and update `src/sample/fx2/CMakeLists.txt`.
+    Verify: Samples build without `GNsample-fx2-cel-shading` or `GNsample-fx2-image-effects`.
+
+[x] Task 3: Remove bind-based unit test files and update `src/core/fx2/test/internal-test.cmake`.
+    Verify: Test CMake configuration succeeds.
+
+[x] Task 4: Remove bind-based kernel source files, unused shaders, and update `src/core/fx2/CMakeLists.txt`.
+    Verify: CMake shader compilation targets update cleanly.
+
+[x] Task 5: Remove bind-based kernel public headers, update `GNfx2.h`, and update `src/core/fx2/README.md`.
+    Verify: No references remain to bind-based kernels in headers or documentation.
+
+[x] Task 6: Build all targets, format code, and run test suite via CIT.
+    Verify: `python env\bin\build.py -C d`, `python env\bin\cit.py -l`, `python env\bin\cit.py -t`.
+
+---
+
+## Progress
+
+- Status: Signed off
+- Started: 2026-10-06
+- Completed: 2026-10-06
+- Signed off: 2026-10-06

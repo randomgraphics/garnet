@@ -3,7 +3,9 @@
     #error "Do not include <garnet/gpu2/raster.h> directly. Include <garnet/GNgpu2.h> instead."
 #endif
 
+#include <memory_resource>
 #include <optional>
+#include <vector>
 
 namespace GN::gpu2 {
 
@@ -284,7 +286,8 @@ struct RasterTarget {
 
     ColorTargetArray colorTargets;
     GenericTarget    depthStencilTarget;
-    ClearColorValue  clearColor   = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    bool             loadColor    = false;                      ///< Reuse existing color contents instead of clearing color attachments at pass begin.
+    ClearColorValue  clearColor   = {{0.0f, 0.0f, 0.0f, 1.0f}}; ///< ignored when loadColor is true.
     float            clearDepth   = 1.0f;
     uint32_t         clearStencil = 0;
     RasterState      states       = RasterState::WithDefaults {}; ///< full render state baseline; every field has a value
@@ -362,9 +365,9 @@ struct RasterTarget {
     }
 
     bool operator==(const RasterTarget & other) const {
-        return colorTargets == other.colorTargets && depthStencilTarget == other.depthStencilTarget && clearColor.u4[0] == other.clearColor.u4[0] &&
-               clearColor.u4[1] == other.clearColor.u4[1] && clearColor.u4[2] == other.clearColor.u4[2] && clearColor.u4[3] == other.clearColor.u4[3] &&
-               clearDepth == other.clearDepth && clearStencil == other.clearStencil && states == other.states;
+        return colorTargets == other.colorTargets && depthStencilTarget == other.depthStencilTarget && loadColor == other.loadColor &&
+               clearColor.u4[0] == other.clearColor.u4[0] && clearColor.u4[1] == other.clearColor.u4[1] && clearColor.u4[2] == other.clearColor.u4[2] &&
+               clearColor.u4[3] == other.clearColor.u4[3] && clearDepth == other.clearDepth && clearStencil == other.clearStencil && states == other.states;
     }
     bool operator!=(const RasterTarget & other) const { return !operator==(other); }
 };
@@ -374,6 +377,10 @@ struct RasterTarget {
 // -----------------------------
 
 /// GPU renderable geometry (mirrors v1 \c GpuDraw::GpuGeometry in \c actions.h).
+///
+/// Arrays are std::pmr::vector so recorders can snapshot geometry into a per-pass arena via the
+/// allocator-extended copy constructor instead of hitting the global heap once per draw.
+/// Plain copies use the default memory resource, so caller-owned geometry behaves like std::vector.
 struct RasterGeometry {
     /// API-agnostic vertex attribute format; backend maps to native (e.g. VkFormat).
     enum class AttributeFormat : uint8_t {
@@ -439,7 +446,12 @@ struct RasterGeometry {
     };
 
     struct VertexFormat {
-        DynaArray<VertexAttribute> attributes;
+        std::pmr::vector<VertexAttribute> attributes;
+
+        VertexFormat() = default;
+        explicit VertexFormat(std::pmr::memory_resource * r): attributes(r) {}
+        /// Allocator-extended copy: duplicates \p other into storage owned by \p r.
+        VertexFormat(const VertexFormat & other, std::pmr::memory_resource * r): attributes(other.attributes, r) {}
 
         bool empty() const { return attributes.empty(); }
         bool operator==(const VertexFormat & other) const { return attributes == other.attributes; }
@@ -452,13 +464,17 @@ struct RasterGeometry {
         uint32_t        stride = 0;
     };
 
-    VertexFormat              format;
-    DynaArray<GeometryBuffer> instances;
-    uint32_t                  instanceCount = 1;
-    DynaArray<GeometryBuffer> vertices;
-    uint32_t                  vertexCount = 0;
-    GeometryBuffer            indices;
-    uint32_t                  indexCount = 0;
+    VertexFormat                     format;
+    std::pmr::vector<GeometryBuffer> vertices;
+    uint32_t                         vertexCount = 0;
+    GeometryBuffer                   indices;
+    uint32_t                         indexCount = 0;
+
+    RasterGeometry() = default;
+    explicit RasterGeometry(std::pmr::memory_resource * r): format(r), vertices(r) {}
+    /// Allocator-extended copy: duplicates \p other into storage owned by \p r.
+    RasterGeometry(const RasterGeometry & other, std::pmr::memory_resource * r)
+        : format(other.format, r), vertices(other.vertices, r), vertexCount(other.vertexCount), indices(other.indices), indexCount(other.indexCount) {}
 };
 
 // -----------------------------
@@ -469,6 +485,9 @@ struct RasterGeometry {
 /// no further recording or sealing is allowed afterward.
 /// This class is not thread-safe. All calls on one instance must be single-threaded
 /// or externally serialized; use separate instances for parallel recording.
+///
+/// Note: For high-draw-call workloads and best performance, GN::gpu2::bindless::Raster
+/// is recommended to avoid per-draw descriptor compilation and resource table scanning.
 class GpuRaster : public RCRT64 {
 public:
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
@@ -478,7 +497,7 @@ public:
         const RasterTarget * target = nullptr; ///< borrowed for creation only; GpuRaster stores its own copy
 
         //< optional hint for expected number of draw calls, used to minimize internal allocations. The number of draws can exceed this hint.
-        size_t numberOfDrawsHint = 1000;
+        size_t numberOfDrawsHint = 100;
     };
     GN_API static AutoRef<GpuRaster> create(const StrA & name, const CreateParameters &);
 

@@ -12,3 +12,4 @@ tmp/
 *.*~
 Thumbs.db
 .DS_store
+*.diagsession

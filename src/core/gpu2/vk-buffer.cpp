@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "vk-buffer.h"
+#include "vk-gpu-cnc.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
@@ -39,7 +40,8 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
     // Mappable buffers live in host-visible coherent memory; device-local buffers use staging for uploads.
     constexpr vk::BufferUsageFlags kAllUsages = vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst |
                                                 vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eStorageBuffer |
-                                                vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer;
+                                                vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer |
+                                                vk::BufferUsageFlagBits::eShaderDeviceAddress;
 
     rv::Buffer::ConstructParameters cp;
     cp.name  = name.c_str();
@@ -56,7 +58,10 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
         return false;
     }
 
-    gpuState = BufferStateVulkan::UNDEFINED();
+    vk::BufferDeviceAddressInfo info {};
+    info.buffer    = mRvBuffer->handle();
+    mDeviceAddress = dev.handle().getBufferAddress(info);
+
     return true;
 }
 
@@ -85,31 +90,18 @@ Buffer::Mapped BufferVulkan::map() {
 void BufferVulkan::unmap(const Mapped &) {
     if (mRvBuffer && mIsMapped) {
         mRvBuffer->unmap();
-        mIsMapped       = false;
-        gpuState.access = vk::AccessFlagBits::eHostWrite;
-        gpuState.stages = vk::PipelineStageFlagBits::eHost;
+        mIsMapped = false;
     }
 }
 
 bool BufferVulkan::setContent(ArrayView<const uint8_t> data, size_t offset) {
-    if (!mRvBuffer) {
-        GN_ERROR(sLogger, "BufferVulkan::setContent: buffer not initialized, name='{}'", name);
-        return false;
-    }
+    if (!mRvBuffer || !mGpu || !mGpu->ready() || offset > mSize || data.size() > mSize - offset) return false;
     if (data.empty()) return true;
-    if (!mGpu || !mGpu->ready()) return false;
-    const rv::Device & dev = mGpu->vulkanDevice();
-    rv::CommandQueue * gq  = dev.graphics();
-    if (!gq) {
-        GN_ERROR(sLogger, "BufferVulkan::setContent: no graphics queue, name='{}'", name);
-        return false;
-    }
+    auto payload = createCncBufferUploadPayload(mGpu, AutoRef<Buffer>(this), data, offset);
+    if (!payload) return false;
+    // Shared CNC barriers restore READ_READY rather than leaving this buffer in transfer-write state.
+    mGpu->submit(GpuContext::SubmitParameters(name + "/set-content").appendWork(payload));
     mGpu->waitForIdle();
-    rv::Buffer::SetContentParameters sc;
-    sc.setQueue(*gq).setData(data.data(), data.size()).setOffset((vk::DeviceSize) offset);
-    mRvBuffer->setContent(sc);
-    gpuState.access = vk::AccessFlagBits::eTransferWrite;
-    gpuState.stages = vk::PipelineStageFlagBits::eTransfer;
     return true;
 }
 
@@ -128,9 +120,7 @@ std::vector<uint8_t> BufferVulkan::readContent(size_t offset, size_t size) const
     mGpu->waitForIdle();
     rv::Buffer::ReadParameters rp;
     rp.setQueue(*gq).setRange((vk::DeviceSize) offset, size == (size_t) -1 ? vk::DeviceSize(-1) : (vk::DeviceSize) size);
-    auto result     = mRvBuffer->readContent(rp);
-    gpuState.access = vk::AccessFlagBits::eTransferRead;
-    gpuState.stages = vk::PipelineStageFlagBits::eTransfer;
+    auto result = mRvBuffer->readContent(rp);
     return result;
 }
 
@@ -143,7 +133,6 @@ void BufferVulkan::reset() {
     mSize     = 0;
     mMappable = false;
     mGpu.clear();
-    gpuState = BufferStateVulkan::UNDEFINED();
 }
 
 // -----------------------------------------------------------------------------

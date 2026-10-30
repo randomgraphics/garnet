@@ -5,7 +5,7 @@
 namespace GN::gpu2 {};
 
 #include "GNbase.h"
-#include "gfx/image.h"
+#include "gpu2/image.h"
 
 // gpu2 subheaders must only be included through this file.
 #define __GN_INSIDE_GPU2_H__ 1
@@ -13,6 +13,7 @@ namespace GN::gpu2 {};
 #include "gpu2/swapchain.h"
 #include "gpu2/raster.h"
 #include "gpu2/cnc.h"
+#include "gpu2/bindless.h"
 #undef __GN_INSIDE_GPU2_H__
 
 #endif

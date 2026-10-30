@@ -192,7 +192,10 @@ TEST_CASE("GPU2/CnC async: downloadImage reads back texture pixels", "[gpu2][cnc
 
     auto up = GpuCnC::create({.gpu = gpu});
     REQUIRE(up);
-    up->recordCopyBufferToImage({.src = staging, .dst = tex, .regions = ArrayView<const GpuCnC::Region>(&region, 1)});
+    {
+        auto mapped = staging->map();
+        up->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+    }
     submitAndWait(gpu, "img-upload", up->seal());
 
     // Download the texture back into a blob.
@@ -205,7 +208,7 @@ TEST_CASE("GPU2/CnC async: downloadImage reads back texture pixels", "[gpu2][cnc
     REQUIRE(content.blob);
     REQUIRE(content.blob->size() == imgBytes);
     REQUIRE(content.regions.size() == 1);
-    CHECK(content.regions[0].bufferOffset == 0);
+    CHECK(content.regions[0].dataOffset == 0);
 
     const auto * px = reinterpret_cast<const uint8_t *>(content.blob->data());
     for (uint32_t y = 0; y < H; ++y)

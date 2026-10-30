@@ -21,6 +21,7 @@ struct TrackerPayload : GpuPayloadVulkan {
 
     AutoRef<Texture> texture;
     Usage            usage;
+    vk::ImageLayout  recordedLayout = vk::ImageLayout::eUndefined;
 
     TrackerPayload(const StrA & name, AutoRef<Texture> t, Usage u): GpuPayloadVulkan(name), texture(std::move(t)), usage(u) {}
 
@@ -38,6 +39,7 @@ struct TrackerPayload : GpuPayloadVulkan {
             tracker.addSampledTexture(vkTex, view);
 
         tracker.emitPrePassBarriers(ctx.cmd.handle());
+        recordedLayout = tracker.texturePassLayout(vkTex);
     }
 };
 
@@ -64,14 +66,6 @@ static void submitAndWait(const AutoRef<GpuContext> & gpu, Payloads &&... payloa
     while (!done) gpu->pump();
 }
 
-// Return the final layout of the color plane at (mip=0, face=0) after flushToResources().
-static vk::ImageLayout finalColorLayout(const AutoRef<Texture> & tex) {
-    const auto * vkTex = RuntimeType::cast<TextureVulkanBase>(tex.get());
-    if (!vkTex) return vk::ImageLayout::eUndefined;
-    const auto * plane = vkTex->getState().get(0, 0, vk::ImageAspectFlagBits::eColor);
-    return plane ? plane->layout : vk::ImageLayout::eUndefined;
-}
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -81,7 +75,6 @@ static vk::ImageLayout finalColorLayout(const AutoRef<Texture> & tex) {
 // Both recorded into the same VkCommandBuffer via one submit() call.
 // The tracker must emit a barrier for P2 using eColorAttachmentOptimal as oldLayout
 // (not eUndefined), which is exactly what cross-payload state propagation provides.
-// After flushToResources(), the texture's stored layout must be eShaderReadOnlyOptimal.
 TEST_CASE("RasterStateTracker: cross-payload color-attachment to sampled transition", "[gpu2][tracker][gpu]") {
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
@@ -92,7 +85,8 @@ TEST_CASE("RasterStateTracker: cross-payload color-attachment to sampled transit
     auto p2 = AutoRef<TrackerPayload>::make("p2-sampled", tex, TrackerPayload::Usage::SAMPLED_TEXTURE);
     submitAndWait(gpu, p1, p2);
 
-    CHECK(finalColorLayout(tex) == vk::ImageLayout::eShaderReadOnlyOptimal);
+    CHECK(p1->recordedLayout == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(p2->recordedLayout == vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
 // Both payloads use the same layout; the tracker must not emit a barrier for P2
@@ -107,7 +101,8 @@ TEST_CASE("RasterStateTracker: cross-payload same layout requires no inter-paylo
     auto p2 = AutoRef<TrackerPayload>::make("p2", tex, TrackerPayload::Usage::COLOR_TARGET);
     submitAndWait(gpu, p1, p2);
 
-    CHECK(finalColorLayout(tex) == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(p1->recordedLayout == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(p2->recordedLayout == vk::ImageLayout::eColorAttachmentOptimal);
 }
 
 // Three-payload chain: color → sampled → color.
@@ -125,7 +120,9 @@ TEST_CASE("RasterStateTracker: three-payload layout chain propagates correctly",
 
     // P3 left the texture in eColorAttachmentOptimal; the P2→P3 barrier must have used
     // eShaderReadOnlyOptimal as oldLayout (not eUndefined) — validated by debug layers.
-    CHECK(finalColorLayout(tex) == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(p1->recordedLayout == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(p2->recordedLayout == vk::ImageLayout::eShaderReadOnlyOptimal);
+    CHECK(p3->recordedLayout == vk::ImageLayout::eColorAttachmentOptimal);
 }
 
 // Two independent textures, each touched by a subset of payloads.
@@ -144,8 +141,9 @@ TEST_CASE("RasterStateTracker: two textures, interleaved payloads, independent s
     auto pA2 = AutoRef<TrackerPayload>::make("A2", texA, TrackerPayload::Usage::SAMPLED_TEXTURE);
     submitAndWait(gpu, pA1, pB1, pA2);
 
-    CHECK(finalColorLayout(texA) == vk::ImageLayout::eShaderReadOnlyOptimal);
-    CHECK(finalColorLayout(texB) == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(pA1->recordedLayout == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(pB1->recordedLayout == vk::ImageLayout::eColorAttachmentOptimal);
+    CHECK(pA2->recordedLayout == vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
 #endif // GN_BUILD_HAS_VULKAN

@@ -9,6 +9,15 @@ built and checked; see the validation section and active assignment for results.
 SimpleWorld and mesh-viewer, including their dependent tests and samples, are
 outside this refactor. Their separate removal work must not constrain this design.
 
+## High-Priority TODO: Built-in Facet & Law Decoupling / Cleanup
+
+> [!IMPORTANT]
+> **HIGH PRIORITY TODO**: Review and clean up all built-in Facets, Laws, and configuration options to ensure the core `e2` module does not define or impose restrictions on what the world looks like or how it functions.
+>
+> 1. **Core Runtime vs. World/Simulation Policy**: The core `e2` module must strictly be an unopinionated, data-driven world runtime infrastructure (Universe, World, Form, Facet, Prime, Slate, Law dispatch, Intent and Event routing). It should have zero definition or restriction on what the world looks like, its topology, scene layout, or gameplay/simulation rules.
+> 2. **Review and Cleanup of Built-in Facets**: Thoroughly audit all built-in facets (such as `TransformFacet`, `MotionFacet`, `BodyFacet`, `ContactFacet`, `CollisionStatsFacet`, `VisualFacet`). Ensure that any facets provided by the core engine represent truly common and universal functions needed across any game world. Any domain-specific, sample-specific, or physics/demo-specific facets must be extracted out of core into application space or optional extension modules.
+> 3. **Decouple Demo Laws and Options (e.g. `LifetimeLaw` & `LifetimeOptions`)**: Policies like `LifetimeLaw` (which hardcodes sample-specific box spawning intervals, spawn velocities, population limits, ground boundaries, and deletion thresholds like `destroyBelowY`) are sample-specific and do not belong in the core engine. Core runtime should provide general entity lifecycle primitives, while concrete spawning rules, lifetime management, and world constraints must live in sample/gameplay code.
+
 ## Object model
 
 | Concept | Contract |
@@ -316,6 +325,14 @@ The architecture permits spheres later; high-quality general physics is not the
 MVP goal. Its target is runtime ownership, data access, multi-body solving,
 structural changes, routing and independent presentation.
 
+> [!NOTE]
+> The built-in facets and demo laws detailed in this section (`BodyFacet`, `ContactFacet`,
+> `CollisionStatsFacet`, `LifetimeLaw`, and associated options) are part of this initial MVP.
+> Per the [High-Priority TODO](#high-priority-todo-built-in-facet--law-decoupling--cleanup),
+> all built-in facets and laws will be audited and cleaned up so that demo-specific assumptions
+> and non-universal facets are moved out of the core `e2` module.
+
+
 | Facet | Its versioned Value |
 | --- | --- |
 | TransformFacet | Parent FormId and actual local position/orientation; roots store world pose. |
@@ -378,7 +395,7 @@ creation/removal plus persistent generation progress and RNG state. It consumes
 same-tick deletion requests, then applies generation rules:
 
 - Simulation-time spawn interval at least 10 ms (at most 100 per second).
-- At most 1000 generated dynamic bodies; ground is excluded.
+- At most 1024 generated dynamic bodies; ground is excluded.
 - Capacity includes accepted deletions and already staged creations.
 - Do not accumulate spawn credit while at capacity.
 - Spawn above the finite ground, with vertical initial velocity zero.
@@ -444,10 +461,10 @@ Use the monolithic `garnet/GNengine2.h`. Presentation uses the basis services:
   and transforms, clear values, and reserved environment data. It owns no GPU work.
 - `extractTableau()` adapts committed Prime data into this presentation snapshot.
 - `basis::Visual` draws opaque white models with fixed directional and ambient
-  diffuse lighting using FX2 LambertianKernel. Texture/environment inputs are not
+  diffuse lighting using the bindless FX2 LambertianKernel. Texture/environment inputs are not
   consumed by this initial implementation.
-- Visual directly acquires, uploads, draws, submits and presents through gpu2;
-  there is no RDG dependency or frame graph. Frames complete serially for simplicity.
+- Visual directly acquires, uploads, draws, submits and presents through gpu2 bindless
+  raster and CnC passes; there is no RDG dependency or frame graph. Frames complete serially for simplicity.
 - Positions are rebased against the camera and converted to metres before FX2.
   Object scale is a mesh multiplier; the built-in box spans [-1, 1].
 - One-time uploads survive abandoned recording. GPU resources, submission and
