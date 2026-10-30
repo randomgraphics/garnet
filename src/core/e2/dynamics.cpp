@@ -336,7 +336,7 @@ Ref<Law> createDynamicsLaw(const DynamicsOptions & options) {
     return Ref<Law>(new DynamicsLawImpl(options));
 }
 Ref<Law> createLifetimeLaw(Universe & universe, const LifetimeOptions & options) {
-    if (!std::isfinite(options.spawnPerSecond) || options.spawnPerSecond <= 0 || options.spawnPerSecond > 100 || options.maximumPopulation > 1000 ||
+    if (!std::isfinite(options.spawnPerSecond) || options.spawnPerSecond <= 0 || options.spawnPerSecond > 100 || options.maximumPopulation > 1024 ||
         !std::isfinite(options.maximumHorizontalSpeed) || options.maximumHorizontalSpeed < 0 || !finite(options.spawnMinimum) ||
         !finite(options.spawnMaximum) || glm::any(glm::greaterThan(options.spawnMinimum, options.spawnMaximum)))
         return {};

@@ -22,3 +22,4 @@ before starting a task it covers.
 - `garnet-git-workflow`: git workflow for assignments, branches, and commits.
 - `garnet-submodules`: git submodule rules.
 - `garnet-android-docker`: Android build verification via Docker.
+- `garnet-vulkan-verification`: verification requirements for Vulkan-based apps, samples, and tests under validation layers.

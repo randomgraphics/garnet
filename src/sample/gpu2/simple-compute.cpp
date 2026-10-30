@@ -83,7 +83,7 @@ int main() {
     GpuCnC::ComputeParameters cp;
     cp.cs         = cs;
     cp.resources  = resources;
-    cp.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(pc), reinterpret_cast<const uint8_t *>(&pc)));
+    cp.immediates = {reinterpret_cast<const uint8_t *>(&pc), sizeof(pc)};
     cp.x          = GROUPS;
     cnc->recordCompute(cp);
     submitAndWait(gpu.get(), cnc->seal());

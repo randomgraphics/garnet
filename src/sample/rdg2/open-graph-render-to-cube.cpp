@@ -27,7 +27,6 @@
 #include <garnet/GNrdg2.h>
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
-#include <garnet/GNutil.h>
 
 #include "cube-face-vert.spv.h"
 #include "cube-face-frag.spv.h"
@@ -360,11 +359,11 @@ public:
                          rcp.target = &mRenderTarget;
 
                          RasterGeometry geom;
-                         geom.format.attributes.append(
+                         geom.format.attributes.push_back(
                              RasterGeometry::VertexAttribute {.location = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-                         geom.format.attributes.append(
+                         geom.format.attributes.push_back(
                              RasterGeometry::VertexAttribute {.location = 1, .offset = 12, .format = RasterGeometry::AttributeFormat::F32_1});
-                         geom.vertices.append(RasterGeometry::GeometryBuffer {.buffer = mVb, .offset = 0, .stride = kVertexStride});
+                         geom.vertices.push_back(RasterGeometry::GeometryBuffer {.buffer = mVb, .offset = 0, .stride = kVertexStride});
                          geom.indices    = RasterGeometry::GeometryBuffer {.buffer = mIb, .offset = 0, .stride = sizeof(uint16_t)};
                          geom.indexCount = kIndexCount;
 

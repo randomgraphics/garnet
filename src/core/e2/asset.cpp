@@ -44,15 +44,65 @@ struct AssetsImpl : Assets {
 
     AssetsImpl(Universe & u, AutoRef<GpuContext> gpu): Assets(TYPE_INFO(), u.generateUniqueIdentifier(), "assets"), mGpu(std::move(gpu)) {}
 
+    struct BoxVertex {
+        glm::vec3 position;
+        glm::vec3 normal;
+        glm::vec2 uv;
+    };
+
+    static gpu2::RasterGeometry createBoxGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, float halfExtent) {
+        using AF = gpu2::RasterGeometry::AttributeFormat;
+        gpu2::RasterGeometry geometry;
+        geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = AF::F32_3});
+        geometry.format.attributes.push_back({.location = 1, .binding = 0, .offset = 12, .format = AF::F32_3});
+        geometry.format.attributes.push_back({.location = 2, .binding = 0, .offset = 24, .format = AF::F32_2});
+
+        const float     h          = halfExtent;
+        const glm::vec3 corners[8] = {
+            {-h, -h, -h}, {h, -h, -h}, {h, h, -h}, {-h, h, -h}, {-h, -h, h}, {h, -h, h}, {h, h, h}, {-h, h, h},
+        };
+        static const glm::vec3 normals[6] = {
+            {0, 0, -1}, {0, -1, 0}, {1, 0, 0}, {0, 1, 0}, {-1, 0, 0}, {0, 0, 1},
+        };
+        static const int faceCorners[6][4] = {
+            {0, 1, 2, 3}, {0, 4, 5, 1}, {1, 5, 6, 2}, {2, 6, 7, 3}, {3, 7, 4, 0}, {7, 6, 5, 4},
+        };
+        static const glm::vec2 uvs[4] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+
+        DynaArray<BoxVertex> verts;
+        DynaArray<uint16_t>  indices;
+        for (int f = 0; f < 6; ++f) {
+            uint16_t base = static_cast<uint16_t>(verts.size());
+            for (int v = 0; v < 4; ++v) { verts.append({corners[faceCorners[f][v]], normals[f], uvs[v]}); }
+            indices.append(base + 2);
+            indices.append(base + 1);
+            indices.append(base + 0);
+            indices.append(base + 3);
+            indices.append(base + 2);
+            indices.append(base + 0);
+        }
+
+        const uint32_t stride = sizeof(BoxVertex);
+        auto           vb     = gpu2::Buffer::create("e2.box.vb", {.context = gpu, .size = verts.size() * stride});
+        auto           ib     = gpu2::Buffer::create("e2.box.ib", {.context = gpu, .size = indices.size() * sizeof(uint16_t)});
+        if (!vb || !ib) return {};
+
+        uploads.recordUploadBuffer(vb, 0, {reinterpret_cast<const uint8_t *>(verts.data()), verts.size() * stride});
+        uploads.recordUploadBuffer(ib, 0, {reinterpret_cast<const uint8_t *>(indices.data()), indices.size() * sizeof(uint16_t)});
+
+        geometry.vertices.push_back({.buffer = vb, .offset = 0, .stride = stride});
+        geometry.indices     = {.buffer = ib, .offset = 0, .stride = sizeof(uint16_t)};
+        geometry.vertexCount = static_cast<uint32_t>(verts.size());
+        geometry.indexCount  = static_cast<uint32_t>(indices.size());
+        return geometry;
+    }
+
     bool init() {
         if (!mGpu) return true; // Headless / GPU-less support
 
         auto uploads = GpuCnC::create({.gpu = mGpu});
         if (!uploads) return false;
-        fx2::LitKernelInputs::CubeCreateOptions options;
-        options.width = options.height = options.depth = 2.f;
-        options.uv = options.tangent = false;
-        auto geometry                = fx2::LitKernelInputs::createBox(mGpu, *uploads, options);
+        auto geometry = createBoxGeometry(mGpu, *uploads, 1.0f);
         if (geometry.vertices.empty()) return false;
         auto payload = uploads->seal();
         if (!payload) return false;

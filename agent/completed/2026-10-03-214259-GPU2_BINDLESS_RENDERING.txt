@@ -1,0 +1,171 @@
+# Assignment: GPU2 Bindless Rendering Subsystem
+
+---
+
+## Goals
+
+Implement a high-performance bindless rendering foundation in `GN::gpu2::bindless` capable of
+rendering tens of thousands of unique draws at maximum GPU throughput by eliminating per-draw
+descriptor set compilation, per-draw table scanning, and per-draw heap allocations.
+
+1. **Persistent Global Descriptor Heap (`bindless::DescriptorHeap`)**:
+   Introduce a long-lived, thread-safe descriptor heap with Vulkan 1.2 `UPDATE_AFTER_BIND` and
+   `PARTIALLY_BOUND`, managing stable integer indices with recycling and in-place `update()` for
+   background streaming.
+2. **Bindless Raster Recorder (`bindless::Raster`)**:
+   Implement direct Vulkan command recording with lean `DrawParameters` (no `GpuResourceTable`),
+   plain POD `CreateParameters` with conflict validation against `heapSetIndex`, internal
+   `VkPipelineLayout` caching in `gpu2`, and `retainResource()` for parameter buffer lifetime
+   management.
+3. **Bindless Payload & Automated Invariants (`bindless::Payload`)**:
+   Implement automated attachment transitions on `beginRendering` and `endRendering`, restoring
+   resources to `SHADER_READ_ONLY_OPTIMAL` with write-cache flushes. Output an opaque `GpuPayload`.
+4. **Verification & Demonstration**:
+   Validate with comprehensive unit and stress tests in `GNtest-internal`, and build a runnable
+   sample application in `src/sample/` demonstrating the bindless renderer.
+
+---
+
+## Design
+
+### 1. `bindless::DescriptorHeap`
+- Public interface in `<garnet/gpu2/bindless.h>` under `namespace GN::gpu2::bindless`.
+- Thread-safe slot allocator with free-list recycling.
+- Allocates persistent descriptors in an unbounded array (e.g. Set 0 or Set 1: `sampler2D u_textures[]`).
+- Supports sampled textures, storage images, and buffers via `GpuResourceView`.
+- In-place `update(slot, view)` allows swapping placeholder textures on the fly.
+
+### 2. `bindless::Raster` & Pipeline Layout Caching
+- Accepts plain POD `CreateParameters`: `heap`, `heapSetIndex`, `passResources`, `pushConstantSize`.
+- Fast validation in `create()`: checks `passResources` does not conflict with `heapSetIndex`.
+- Internal hashing and caching of `VkPipelineLayout` in `gpu2`.
+- Direct Vulkan recording emitting `vkCmd*` calls, completely bypassing `rv::Drawable`.
+- `retainResource(AutoRef<RCRT64>)` keeps dynamic parameter buffers alive in the payload.
+
+### 3. Automated Barriers & `GpuPayload`
+- The pass begins with attachments transitioned to optimal write layouts.
+- At pass end, attachments transition automatically to `SHADER_READ_ONLY_OPTIMAL` with cache flush.
+- Sealed `GpuPayload` plugs directly into `GpuContext::submit()`.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 4: Alternating dual-pipeline stress test (10k-100k draws switching between lit cube and holographic gem shaders) defeating instancing, live UPDATE_AFTER_BIND streaming, and frame-rate dependent animation. Work signed off by user.
+In progress: Complete.
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+src/core/gpu2/README.md
+src/inc/garnet/gpu2/bindless.h
+src/inc/garnet/GNgpu2.h
+src/core/gpu2/vk-gpu-context.cpp
+src/core/gpu2/vk-gpu-raster.cpp
+src/core/gpu2/vk-raster-pso-factory.h
+src/core/gpu2/vk-raster-pso-factory.cpp
+
+--- BUILD / CI ---
+
+python.exe env/bin/build.py -C d
+build/windows.vc.d/bin/Debug/GNtest-internal.exe "[gpu2]"
+python.exe env/bin/format-all-sources.py -dqn
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Keep changes local, incremental, and verifiable.
+- All code in `namespace GN::gpu2::bindless`.
+- Warnings are errors. Maintain portability across MSVC, Clang, GCC.
+- Doxygen comments explaining why, ownership, and invariants on public APIs.
+- Use `AutoRef<T>` and `RuntimeType::cast<T>()`.
+- Keep line lengths clean.
+
+--- TASK BREAKDOWN ---
+
+Phase 1: Persistent Global Descriptor Heap (`bindless::DescriptorHeap`)
+───────────────────────────────────────────────────────────────────────
+[x] Task 1.1: Declare `bindless::DescriptorHeap` public interface in `<garnet/gpu2/bindless.h>`
+    and include in `<garnet/GNgpu2.h>`.
+    Verify: Header compiles cleanly in all consumers.
+    Commit: feat(gpu2): declare bindless::DescriptorHeap public interface
+
+[x] Task 1.2: Implement `VkBindlessDescriptorHeap` in `src/core/gpu2/` with `UPDATE_AFTER_BIND`,
+    thread-safe slot allocator (bump + free list), `allocate()`, `update()`, and `free()`.
+    Verify: Internal test allocates, updates, and recycles descriptor slots.
+    Commit: feat(gpu2): implement VkBindlessDescriptorHeap with thread-safe slot recycling
+
+[x] Task 1.3: Unit tests in `src/core/gpu2/test/` verifying descriptor allocation, recycling,
+    and texture registration.
+    Verify: `GNtest-internal.exe "[gpu2][bindless]"` passes.
+    Commit: test(gpu2): add unit tests for bindless::DescriptorHeap
+
+Phase 2: Bindless Raster Recorder & Pipeline Layout Caching
+───────────────────────────────────────────────────────────
+[x] Task 2.1: Declare `bindless::Raster` in `<garnet/gpu2/bindless.h>` with plain POD
+    `CreateParameters`, `DrawParameters`, and `retainResource()`.
+    Verify: Header compiles cleanly.
+    Commit: feat(gpu2): declare bindless::Raster public interface
+
+[x] Task 2.2: Implement internal pipeline layout caching and fast conflict check in `gpu2`.
+    Verify: Conflicting `passResources` fails fast; compatible configurations reuse cached layout.
+    Commit: feat(gpu2): internal pipeline layout caching and conflict check for bindless::Raster
+
+[x] Task 2.3: Implement direct Vulkan command recording in `VkBindlessRaster` bypassing `rv::Drawable`.
+    Verify: Draws record push constants and geometry bindings directly without descriptor thrashing.
+    Commit: feat(gpu2): implement VkBindlessRaster direct command recording
+
+Phase 3: Bindless Payload, Automatic Barriers & Verification
+────────────────────────────────────────────────────────────
+[x] Task 3.1: Implement `VkBindlessPayload` with pass-level descriptor binding, automatic
+    attachment transitions at `beginRendering` and `endRendering`, and resource retention.
+    Verify: Work submits and renders correctly through `GpuContext::submit()`.
+    Commit: feat(gpu2): implement VkBindlessPayload with automatic attachment transitions
+
+[x] Task 3.2: Comprehensive unit tests in `GNtest-internal` for single-draw, multi-draw, and
+    attachment state transitions.
+    Verify: `GNtest-internal.exe "[gpu2]"` passes all tests.
+    Commit: test(gpu2): add comprehensive bindless raster unit tests
+
+Phase 4: Sample Application Demonstration
+─────────────────────────────────────────
+[x] Task 4.1: Create a runnable sample in `src/sample/` demonstrating the bindless renderer
+    rendering multiple objects with distinct bindless textures and push constant parameters.
+    Verify: Sample builds and renders smoothly at high frame rate with 256 textures and up to 40k draws.
+    Commit: sample(gpu2): add bindless rendering demonstration sample
+
+[x] Task 4.2: Implement alternating dual-pipeline anti-instancing benchmark (10k-100k draws alternating
+    every single draw between solid lit cube and holographic gemstone shaders sharing Set 0 bindless heap).
+    Verify: Headless test passes with verifyBackbuffer: PASSED (draws=2000, rendered non-background pixels=127473).
+    Commit: feat(sample): alternate draws between 2 distinct pipelines up to 100k draws to demonstrate bindless advantage over instancing
+
+[x] Task 4.3: Make animation speed frame-rate dependent so higher FPS directly yields faster simulation.
+    Verify: Sim and camera orbit speed advances proportionally to FPS.
+    Commit: feat(sample): make animation speed frame-rate dependent
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1:
+  src/inc/garnet/gpu2/bindless.h (new)
+  src/inc/garnet/GNgpu2.h
+  src/core/gpu2/vk-bindless-descriptor-heap.h (new)
+  src/core/gpu2/vk-bindless-descriptor-heap.cpp (new)
+  src/core/gpu2/CMakeLists.txt
+  src/core/gpu2/test/bindless-heap-test.cpp (new)
+  src/core/gpu2/test/CMakeLists.txt
+
+Phase 2:
+  src/inc/garnet/gpu2/bindless.h
+  src/core/gpu2/vk-bindless-raster.h (new)
+  src/core/gpu2/vk-bindless-raster.cpp (new)
+  src/core/gpu2/vk-bindless-pipeline-layout.h (new)
+  src/core/gpu2/vk-bindless-pipeline-layout.cpp (new)
+  src/core/gpu2/CMakeLists.txt
+
+Phase 3:
+  src/core/gpu2/vk-bindless-payload.h (new)
+  src/core/gpu2/vk-bindless-payload.cpp (new)
+  src/core/gpu2/test/bindless-raster-test.cpp (new)
+  src/core/gpu2/test/CMakeLists.txt
+
+Phase 4:
+  src/sample/bindless-sample/ (new)
+  src/sample/CMakeLists.txt

@@ -10,6 +10,40 @@
 
 namespace GN::gpu2 {
 
+/// Access and layout state of a single texture plane (aspect of a mip/face subresource).
+struct TexturePlaneStateVulkan {
+    vk::ImageLayout        layout = vk::ImageLayout::eUndefined;
+    vk::AccessFlags        access = {};
+    vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eTopOfPipe;
+    const char *           usage  = nullptr;
+
+    bool isWrite() const {
+        return bool(access & (vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eShaderWrite |
+                              vk::AccessFlagBits::eTransferWrite | vk::AccessFlagBits::eHostWrite));
+    }
+
+    bool operator==(const TexturePlaneStateVulkan & o) const { return layout == o.layout && access == o.access && stages == o.stages; }
+    bool operator!=(const TexturePlaneStateVulkan & o) const { return !(*this == o); }
+
+    static inline TexturePlaneStateVulkan SHADER_READ_ONLY() {
+        return {
+            vk::ImageLayout::eShaderReadOnlyOptimal,
+            vk::AccessFlagBits::eShaderRead,
+            vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eVertexShader,
+            "shader read-only",
+        };
+    }
+
+    static inline TexturePlaneStateVulkan UNDEFINED() {
+        return {
+            vk::ImageLayout::eUndefined,
+            {},
+            vk::PipelineStageFlagBits::eTopOfPipe,
+            "undefined",
+        };
+    }
+};
+
 /// Tracks Vulkan image/buffer state transitions across one or more raster passes in a batch.
 ///
 /// Lifetime matches one GpuContextVulkan2::submit() call. Shared by all payloads via RecordContext.
@@ -20,11 +54,12 @@ namespace GN::gpu2 {
 ///      "incoming" state to the post-barrier value and clear out registered state. So subsequent
 ///      payloads see the correct "from" layout without any extra bookkeeping.
 ///   3. (record the render pass)
-///
-/// After all payloads are recorded and vkQueueSubmit succeeds, call flushToResources() once to
-/// write the batch's final resource states back to actual texture/buffer objects.
 class GpuResourceStateTrackerVulkan {
 public:
+    static inline uint64_t packPlaneKey(uint32_t mip, uint32_t face, vk::ImageAspectFlagBits aspect) {
+        return (uint64_t(mip) << 48) | (uint64_t(face) << 16) | uint64_t(uint32_t(aspect));
+    }
+
     /// Returns false if a hazard was detected; the caller should abort the render pass.
     bool addColorTarget(TextureVulkanBase * tex, const GpuResourceView & view);
     bool addDepthStencilTarget(TextureVulkanBase * tex, const GpuResourceView & view, bool readOnly = false);
@@ -62,31 +97,48 @@ public:
     /// add*() calls will have a fresh start that represents the updated baseline.
     void emitPrePassBarriers(vk::CommandBuffer cb);
 
-    /// Write the batch's final resource states to actual texture/buffer objects.
-    /// Call once after vkQueueSubmit succeeds. For images: writes all planes of the updated
-    /// incoming state. For buffers: writes the committed access/stage accumulated this batch.
-    void flushToResources();
+    /// Advance a texture's tracked incoming state and emit a barrier restoring it to SHADER_READ_ONLY_OPTIMAL.
+    /// Used by bindless passes to satisfy the "writer restores to read-ready" invariant.
+    void restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb);
 
-    bool addTexture(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state);
+    /// Advance a buffer's tracked state and emit a barrier restoring it to read-ready access
+    /// (shader read, uniform read, vertex/index attribute read, indirect read, transfer read).
+    /// Used by passes to satisfy the universal "writer restores to read-ready" invariant.
+    void restoreBufferToReadReady(BufferVulkan * buf, vk::CommandBuffer cb);
+
+    /// Batched variant: restores multiple buffers to read-ready state in a single pipeline barrier.
+    void restoreBuffersToReadReady(ArrayView<BufferVulkan * const> bufs, vk::CommandBuffer cb);
+
+    bool addTexture(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const TexturePlaneStateVulkan & state);
 
 private:
     struct TrackedTexture {
-        bool                activeThisPass = false;
-        TextureVulkanBase * tex            = nullptr;
-        /// Running batch baseline. Initialized from tex->getState() on first registration.
-        /// Updated in-place by emitPrePassBarriers() whenever a barrier is emitted for a plane,
-        /// so subsequent payloads always see the correct "from" state without extra bookkeeping.
-        rv::Image::State incoming;
+        bool                 activeThisPass = false;
+        TextureVulkanBase *  tex            = nullptr;
+        uint32_t             numMips        = 0;
+        uint32_t             numLayers      = 0;
+        vk::ImageAspectFlags validAspects   = {};
+        /// Running batch baseline per plane key. Updated in-place by emitPrePassBarriers()
+        /// and restoreAttachmentToShaderReadOnly().
+        std::unordered_map<uint64_t, TexturePlaneStateVulkan> incoming;
         /// Per-pass intended states. Cleared by emitPrePassBarriers() between payloads.
-        std::unordered_map<uint64_t, rv::Image::State::PlaneState> registered;
-        bool                                                       hasWrite = false;
+        std::unordered_map<uint64_t, TexturePlaneStateVulkan> registered;
+        bool                                                  hasWrite = false;
+
+        const TexturePlaneStateVulkan * getIncoming(uint32_t mip, uint32_t face, vk::ImageAspectFlagBits aspect) const {
+            auto it = incoming.find(packPlaneKey(mip, face, aspect));
+            return it != incoming.end() ? &it->second : nullptr;
+        }
+        void setIncoming(uint32_t mip, uint32_t face, vk::ImageAspectFlagBits aspect, const TexturePlaneStateVulkan & s) {
+            incoming[packPlaneKey(mip, face, aspect)] = s;
+        }
     };
     std::unordered_map<int64_t, TrackedTexture> mTextures;
 
     struct TrackedBuffer {
         BufferVulkan * buf = nullptr;
-        /// Running committed state (analogous to TrackedTexture::incoming for images).
-        /// Initialized from buf->gpuState on first registration; updated by emitPrePassBarriers().
+        /// Running committed state across the batch. Initialized to BufferStateVulkan::READ_READY()
+        /// on first registration; updated by emitPrePassBarriers() and restoreBuffersToReadReady().
         vk::AccessFlags        committedAccess = {};
         vk::PipelineStageFlags committedStages = vk::PipelineStageFlagBits::eTopOfPipe;
         /// Per-pass intended access. Reset by emitPrePassBarriers() between payloads.
@@ -104,6 +156,10 @@ private:
     std::vector<TrackedBuffer *>  mActiveBuffers;
     std::vector<TrackedTexture *> mActiveTextures;
     bool                          mHasReadOnlyDepthStencil = false;
+
+    // Barrier emissions within a submit are sequential; retain scratch capacity between passes.
+    std::vector<vk::BufferMemoryBarrier> mBufferBarriers;
+    std::vector<vk::ImageMemoryBarrier>  mImageBarriers;
 };
 
 } // namespace GN::gpu2

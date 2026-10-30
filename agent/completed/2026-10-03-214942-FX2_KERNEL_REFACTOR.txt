@@ -1,0 +1,515 @@
+# Assignment: Replace FX2 geometry, assets, and surfaces with typed GPU kernels
+---
+## Goals
+
+Provide a simple, typed, graph-independent effect system over gpu2. Kernels
+consume GPU buffer/texture views and immediate CPU values. Remove FX2 Geometry,
+GeometryAsset, Surface, and Surface::Asset from the final public interface.
+Preserve viewer and active FX2 sample behavior while migrating callers. The
+suspended E2 Simple-world sample and dependent tests are explicitly excluded.
+
+Expose raster and compute implementations as distinct kernels. Higher-level
+code selects implementations; FX2 must not silently switch between them.
+Keep SSC's current single GPU version per instance and document its ordering
+requirements. Web and mobile portability constrain the design; implementing
+all missing platform backends is outside this refactor.
+---
+## Design
+
+### Status and relationship to existing work
+
+This is the reviewed plan for the kernel redesign discussed with the user.
+The user approved this plan and authorized implementation. Kernel work is active. The viewer independence and ImGui
+relocation prerequisite is verified, awaiting user sign-off. SSC usage comments
+have been added.
+At the user's request, this plan replaces the deleted Geometry/Surface reorg
+assignment. The pending Geometry/Surface implementation is also obsolete, per the user.
+Do not build new clients on it. Replace its APIs during the kernel migration;
+preserve unrelated importer behavior and user changes. The mesh viewer must
+remain independent of E2, including transitive UI and navigation dependencies. Remove GNui2 entirely;
+ImGuiBackend becomes GN::fx2::ImGuiBackend, exposed through GNfx2.h.
+Implementation is authorized. Commits, pushes, and new platform backend projects
+remain outside the requested scope. Keep this assignment active.
+
+### Module boundaries and transitional code
+
+The viewer owns its importer, hierarchy, navigation, window/swapchain, GPU
+resource uploads, and frame ordering. It invokes FX2/gpu2 directly and neither
+includes nor calls E2. RDG2 is optional higher-level scheduling, not a new
+mandatory dependency to replace E2. Keep print-only import GPU-independent.
+
+ImGuiBackend belongs to FX2 and records against gpu2, with explicit prerequisite
+upload output. It does not inherit VisualMoment/VisualOverlay or take an E2
+context. E2 clients can wrap it in an application-defined moment; an application adapter can establish this direction without making FX2 depend
+on an E2 test scene. Remove GNui2 public headers,
+namespace, shader/build targets, and live documentation references.
+ImGuiBackend also owns UI context/input integration; these are not generic
+Kernel responsibilities. During kernel migration, route its GPU effect logic
+through the same typed raster conventions without forcing scene/UI lifecycle
+methods into Kernel. Do not invent an additional public UI abstraction merely
+to relocate the existing backend.
+
+The viewer may temporarily bind the existing FX2 shaders directly while the
+new typed kernels are absent. This bridge must stay tool-private and must be
+removed when mesh kernels arrive. Do not duplicate shader sources or create
+another public effect/asset framework. Keep this temporary stage buildable.
+
+### Viewer rewrite after the kernel implementation
+
+The current E2-free viewer is a transitional implementation, not the final
+viewer design. Once typed mesh/skybox kernels and the FX2 ImGui recording path
+are available, rewrite or substantially simplify its rendering integration.
+A mechanical replacement of Surface calls or shader bindings is insufficient.
+Keep useful importer, hierarchy inspection, navigation, and regression coverage;
+replace rendering plumbing wherever that makes the flow simpler.
+
+Use one explicit application flow:
+  import/generate CPU scene -> create buffers/textures and record uploads ->
+  update input/camera/UI -> acquire target and prepare SSC -> record typed
+  model/debug/skybox/ImGui work -> submit in dependency order -> present/read back.
+
+Keep CPU import and print-only inspection independent of GPU initialization.
+Share GPU vertex/index buffers and textures across model instances; preserve
+full affine instance transforms. Represent prepared inputs as straightforward
+application-owned data, not a new Asset hierarchy or generic effect framework.
+Select concrete kernels in the viewer; pass typed arguments directly. The
+viewer owns render policy (ordering, targets, depth/culling/blending defaults),
+while kernels own shader bindings and algorithm-required state.
+
+Keep main.cpp focused on startup and the application loop. Separate import,
+resource preparation, rendering, and UI/navigation only where their lifetimes
+or responsibilities justify it; avoid creating a framework of tiny wrappers.
+Windowed rendering and headless snapshots must use the same scene recording
+path, differing only in target/presentation/UI handling. Do not add blur or
+mipmap demonstrations to the viewer unless an actual viewer feature needs them.
+
+Delete model-draws.cpp's direct shader/descriptor/UBO packing bridge, its private
+FX2 shader-header includes, and its generated-shader build dependency. The
+viewer must consume public module APIs only. Remove obsolete comments, options
+documentation, and tests tied to abandoned rendering architecture while keeping
+user-facing features and meaningful importer/output coverage.
+
+The obsolete Geometry/Surface implementation may remain only to keep unmigrated
+clients buildable during staged work; it is not an accepted design to retain.
+The final removal includes headers, implementations, tests, examples, and docs.
+Do not delete unrelated E2 functionality or importer coverage along with it.
+
+### Suspended E2 Simple world
+
+Per the user's instruction, disable the Simple-world implementation/public
+include, its sample, and dependent tests. Preserve sources for later design
+review; do not migrate, repair, or reactivate them as part of FX2 completion.
+This includes mesh tests using Simple, Simple-dependent visual-moment cases,
+and the Simple-world portion of ImGui integration coverage. Keep independent
+E2 coverage and the standalone gpu2 ImGui test active.
+
+The E2 integration discussion below describes an extension route, not a
+requirement to salvage Simple world. E2 migration addresses active consumers
+only. Disabled Simple sources may retain historical API references; distinguish
+those from live callers during the final obsolete-API audit.
+
+### Kernel contract
+
+Kernel is a small abstract, device-associated interface using existing RCRT64
+and AutoRef patterns. Concrete effects expose strongly typed argument schemas
+and recording operations. Shader/state implementations and caches stay private.
+External derivation must be possible without registering a central effect enum.
+Add RasterKernel/ComputeKernel bases only if they provide useful contracts;
+the concrete type always makes the execution strategy explicit.
+
+Initial mesh effects: raster PBR, cel, unlit, Lambertian, and skybox kernels.
+Image effects: RasterGaussianBlurKernel, ComputeGaussianBlurKernel,
+RasterMipmapKernel, and ComputeMipmapKernel. Equivalent variants may share
+plain parameter schemas; they remain separate types with no automatic fallback.
+Unsupported capabilities or inputs produce actionable failures.
+
+Kernels retain shaders and reusable implementation state. Each invocation
+supplies typed GPU resources and values, not persistent string-based bindings.
+Steady-state recording must not compile shaders, decode files, wait for GPU
+idle, or use blocking setContent/readback calls. Prepare reusable resources
+outside the draw loop. Small private constants can use copied immediates or
+batched uploads; do not require a new owning wrapper per material or draw.
+Reuse gpu2 raster geometry/buffer descriptions rather than introducing another
+FX2 mesh owner. Document vertex semantics and optional-attribute requirements;
+removing Geometry does not remove the need to validate input layouts.
+SSC is required only for effects that actually consume its shared parameters.
+Skybox rendering moves from SSC into its typed raster kernel. SSC continues
+owning shared environment bindings and the existing constant/upload behavior;
+separating the draw operation must not introduce SSC versioning.
+
+### Ownership after removing assets
+
+Geometry generation, file decoding, import, CPU mesh/material descriptions,
+GPU buffer/texture creation, and uploads belong to callers or existing lower
+level utilities. Identify destinations from actual call sites before moving
+code. Preserve procedural box/sphere and viewer functionality; do not replace
+Asset with a newly named FX2 resource bundle.
+
+The obsolete E2 MeshVisualFacet/createMeshForm path and its device asset caches
+have been removed: all its callers belonged to suspended Simple-world code.
+Reuse the existing public VisualFacet::snapshot() -> VisualMoment::record()
+extension point. CPU resource preparation remains application-owned; captured
+moments retain ordinary GPU resources and typed values. There is no new asset
+wrapper, effect-kind switch, or generic untyped Kernel invocation.
+
+An effect-specific moment retains a typed kernel and captured
+typed arguments or the immutable CPU inputs needed to prepare them. Its record()
+calls that kernel directly. The domain still invokes only VisualMoment::record().
+An application can add a new VisualFacet/VisualMoment and a new typed Kernel
+without editing E2's central renderer. Direct FX2 users need no E2 adapter.
+Keep mutable caches outside captured scene values; do not read live forms or
+mutable materials during record(). Preparation services must be usable by custom
+moments without casts to private VisualRecordContext or private cache access.
+
+The current public RenderContext exposes raster(), ssc(), and upload(), where
+upload work precedes the entire shared raster. This is sufficient for prepared
+mesh draws but cannot express postprocessing that consumes preceding draws.
+If an E2 client needs postprocessing, extend its bridge with ordered pass boundaries: finish the
+active raster, append dependent raster/compute work, and resume a raster only
+when requested with explicit attachment load/store behavior. Borrowed raster
+references cannot remain valid across a boundary. Ordinary moments continue
+sharing a raster; image effects must not masquerade as upload() operations.
+This is a documented extension point, not a prerequisite for standalone FX2
+blur/mipmap kernels or the E2 typed mesh migration. Do not build an E2-wide
+postprocessing framework without a concrete E2 client requiring it.
+The application supplies explicit image inputs/outputs and logical ordering;
+the domain retains submission/presentation ownership. Do not assume the
+swapchain image supports sampling or storage writes; scene postprocessing may
+need a separate render texture followed by final composition.
+
+Custom moments receive default camera/light SSC bindings plus selected environment
+textures. A concrete custom multiview renderer supplies separate prepared SSC
+instances when views share one raster. No automatic scene/view association is
+implied; the single-version ordering contract still applies.
+
+Caller-provided GPU data must be initialized before use through ordered GPU
+work. Retaining a resource keeps its allocation alive, not its contents stable.
+Immediate CPU values are copied during recording. Borrowed input arrays need
+not survive a successful record operation. Recorded work retains resources
+until it is abandoned or finished; scratch reuse respects GPU completion.
+Initial scratch allocations can be separate per invocation; pooling is later
+optimization, not a prerequisite or a new public asset abstraction.
+
+### Recording and synchronization
+
+The first implementation selects these small contracts instead of a general
+RecordingContext framework:
+  - UnlitKernel::record(GpuRaster &, const GpuResourceSet & shared, const Inputs &)
+    appends one draw, copies immediate values, and inherits caller states.
+  - SkyboxKernel::record(GpuRaster &, const GpuResourceSet & shared) appends the
+    fullscreen background draw with its documented depth/cull overrides.
+  - Image-kernel contract: record(const Inputs &,
+    DynaArray<AutoRef<GpuPayload>> & work) appends a complete ordered sequence.
+    Raster and compute variants are separate classes with typed inputs. Build
+    work locally and append only after all steps succeed. The caller submits.
+    All four image kernels implement this contract; CPU-reference and GPU tests pass.
+
+No new owning geometry/material wrapper or generic named-argument interface is
+introduced. The concrete shader programs retain the device resources they need.
+
+Mesh kernels append draws to a caller-owned raster pass, so many objects share
+attachments and one pass. A cel surface draw plus outline need not open two
+physical render passes. Ordering between different objects stays with callers.
+
+Multipass image kernels record ordered raster passes or compute dispatches
+through a minimal recording context/output sink. Reuse GpuRaster, GpuCnC, and
+GpuPayload; do not implement another graph or submission scheduler in FX2.
+Raster target boundaries are explicit. Do not inject copies or dependent
+compute work inside an open physical raster pass.
+
+Separate initialization, prerequisite uploads, and rendering in the invocation
+contract. A mesh kernel can append draws to an existing raster while returning
+private-uniform uploads to a caller-owned prerequisite recorder; those uploads
+must use distinct storage when multiple pending draws require different values.
+A multipass kernel returns/appends ordered GPU work whose intermediate steps
+cannot be moved into that prerequisite bucket. Phase 1 must demonstrate both
+forms with concrete signatures before adding any generalized context API.
+Internal lazy initialization must retain its dependency until it is actually
+scheduled; recording or caching resources alone does not establish readiness.
+SSC retains its explicitly documented existing exception to this policy.
+
+Validate invocation requirements before appending work. On failure, either
+append nothing (preferred) or explicitly invalidate the enclosing recording;
+never report success with missing passes. Use the project's error conventions.
+
+Texture uses identify mip/layer ranges and sampled/storage/attachment access.
+gpu2 owns backend barriers. Prove its tracking handles the examples; changes
+must address concrete gaps, not duplicate synchronization in FX2.
+Do not reorder uploads/draws, fuse passes, or sort effects across dependencies.
+FX2 records work; higher-level code submits/presents. FX2 must not depend on RDG2.
+
+### Raster state
+
+Effective state is the caller's baseline plus documented algorithm-required
+kernel overrides. Caller policy controls ordinary culling, depth, blending,
+viewport/scissor, and draw ordering. Overrides are scoped to the affected draw
+or pass. gpu2 owns native pipeline caching and must include effective state in
+its key; do not introduce a duplicate FX2 pipeline cache as part of this design.
+
+Blur/mipmap intermediate passes require full valid output coverage and
+replacement writes; disable depth/blending or inherited scissor when these
+would invalidate the algorithm. Define output-producing effects separately
+from compositing, which can use a caller-controlled raster operation.
+Compute kernels have no fixed-function raster-state inheritance.
+
+### Shared and private constants
+
+Keep SSC's current single scene/camera UBO pair per instance. Snapshots capture
+CPU values into upload work, not independent GPU UBO versions. Required order:
+upload A -> every consumer of A -> upload B -> every consumer of B, including
+the associated GPU read/write dependencies. CPU recording can run ahead.
+An upload cannot occur between draws in one open raster pass; use pass
+boundaries or separate SSC instances when distinct camera values are needed.
+
+Do not gather all SSC uploads before all draws when they target the same UBOs.
+Test this explicit contract, not the rejected independent-snapshot guarantee.
+Preserve initialization payloads from discarded snapshots before later uses;
+current pending uploads are transferred once, not resupplied automatically.
+Do not change this behavior or add SSC versioning during this refactor.
+The public mutable set0 input is caller-synchronized; an internal mutex is not
+a promise that external mutations can race safely with takeSnapshot().
+
+Retain set 0 as the common binding contract and set 1 as kernel-private
+bindings. Centralize shared shader layout and semantics for effect authors.
+Keep current shared lighting/exposure conventions and visual behavior for the
+initial migration. Moving tone mapping to a separate effect is deferred;
+define image kernels' input/output color semantics explicitly in the meantime.
+
+Typed CPU parameters are packed into shader ABI layouts by the kernel; do not
+assume arbitrary C++ structs can be memcpy'd into uniforms. Immediate values
+can lower to push constants or uniform data according to backend capabilities.
+External uniform-buffer inputs, when needed, use a typed, documented ABI view
+with validated range, alignment, device, and producer ordering. No reflection
+or runtime string binding is required in the normal invocation path.
+SSC's single-version rule does not permit overwriting private constants used
+by earlier recorded invocations: retain copied immediate data or distinct
+private buffer ranges until their uses are complete.
+
+### Image algorithms and portability
+
+Blur initially uses horizontal then vertical passes/dispatches, with defined
+sigma/radius, edge handling, dimensions, format, and aliasing rules. Scratch
+belongs to the recording lifetime. Reject unsupported aliasing explicitly.
+
+Mipmap generation reads level N and writes N+1, with each next step dependent
+on the preceding write. Explicitly define base/last mip, supported layers,
+odd-dimension filtering, and the no-work case. Restrict the first implementation
+to color filtering; depth reduction and normal-map renormalization are separate
+semantics. Preserve base mip data. Define linear/sRGB conversion consistently.
+No kernel resizes a caller texture or adds absent mip storage: the caller must
+provide the destination levels and supported usages. Specify whether alpha is
+filtered as straight or premultiplied data, and keep raster/compute variants
+equivalent under that documented convention. Zero-radius blur and an empty mip
+range need explicit copy/no-work semantics rather than accidental behavior.
+
+Raster variants establish a path for WebGL 2 / GLES 3.0-class capabilities;
+compute variants target capable native APIs and WebGPU. Higher-level selection
+checks actual formats, texture usages, limits, and features, not OS names alone.
+Shader portability includes WGSL/GLSL ES output and shared ABI validation;
+the current Vulkan shader binaries alone do not establish web compatibility.
+Native backend implementation and a full shader-toolchain replacement are
+outside scope; record concrete gaps instead of claiming untested support.
+
+Check sampleable, filterable, renderable, and storage-writable support
+separately. Do not require subgroups, float atomics, cross-workgroup barriers,
+native push constants, or large workgroup memory for baseline implementations.
+Subresource feedback restrictions can require scratch/copy strategies on some
+backends; logical mip views alone do not prove legality on every API.
+Do not claim all kernels support every arbitrary buffer/texture feature on
+every platform. Each kernel has explicit capability requirements.
+
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phases 0–7 implementation and available validation (2026-09-30 UTC).
+  Phase 0: Viewer independent of E2; GNui2 removed and ImGuiBackend moved to FX2;
+    Simple world/public include/dependent tests/sample remain disabled.
+  Phase 1: Typed abstract Kernel contract and public GPU-resource invocation APIs;
+    external derivation and custom E2 VisualMoment adapter verified.
+  Phase 2: Unlit/Skybox kernels, caller raster-state inheritance/overrides, and
+    SSC single-version ordering/initialization comments and GPU tests complete.
+  Phase 3: Distinct raster/compute Gaussian blur and mipmap kernels implemented.
+    CPU-reference tests cover edge filtering, odd mip extents, every generated
+    mip, unchanged base mip, independent invocations recorded before submission,
+    in-place blur, invalid inputs, and no-work ranges. Public image-effects sample
+    demonstrates all four kernels. Initial format is linear RGBA8_UNORM 2D;
+    Gaussian radius 1–15. Unsupported configurations are rejected explicitly.
+  Phase 4: Typed Pbr/Cel/Lambertian kernels and migrated samples complete;
+    fallback initialization and independent per-invocation uniforms verified.
+  Phase 5: Viewer rebuilt around prepared GPU resources and typed kernels with
+    one shared windowed/headless recording path. Temporary private shader bridge
+    removed. CPU importer/hierarchy tests and procedural/imported renders pass.
+  Phase 6: Obsolete Geometry/Surface/asset APIs and active callers removed;
+    independent E2 custom moments verified without restoring Simple world.
+  Phase 7: Canonical FX2/viewer/E2 docs updated, GCC Debug build and full headless
+    CIT pass. Formatting and dependency audits pass. Publication authorized by user.
+In progress: Complete. Work signed off by user.
+Limits: Two display-dependent tests skipped; interactive resize/navigation/UI
+  capture not exercised. Vulkan/Linux is tested. Web/mobile/other native backend
+  execution, shader lowering, and device capability coverage remain platform
+  work outside this refactor. No claim of verified WebGL/WebGPU/GLES support.
+--- END PROGRESS ---
+--- REFERENCE ---
+src/core/e2/visual.cpp — custom moment recording and default SSC preparation
+src/inc/garnet/e2/visual.h, world.h — public custom facet/moment extension points
+src/inc/garnet/GNfx2.h and fx2/*.h — current public API
+src/core/fx2/shared-shader-constants.cpp — shared UBO/upload lifetime
+src/core/fx2/{raster-kernels,lit-kernels,image-kernels}.cpp — typed recording implementations
+src/inc/garnet/gpu2/raster.h, cnc.h, gpu2.h — recording and resource contracts
+src/core/gpu2/vk-gpu-raster.cpp, vk-gpu-cnc.cpp — resource tracking
+src/inc/garnet/e2/world.h and src/core/e2/visual.cpp — migration consumers
+--- BUILD / CI ---
+source env/garnet.rc
+build.py d
+env/bin/format-all-sources.py -dqn
+env/bin/cit.py
+Use focused module tests and image samples per task, then full required checks.
+Report hardware/backend skips. Software Vulkan does not prove mobile performance
+or browser compatibility. Plan-only changes need no build; implementation steps
+require the relevant checks above. Latest cleanup evidence is in
+/tmp/garnet-kernel-viewer-build.log, /tmp/garnet-kernel-viewer-cit.log, and
+/tmp/garnet-viewer-independent/ (temporary local artifacts).
+Phase 2 verification: GCC Debug build and full headless CIT passed (133 internal
+cases passed, 2 display-dependent skips, 4495 assertions; viewer 14 cases/2863
+assertions). GNsample-fx2-unlit t and a viewer unlit/skybox snapshot passed.
+Logs: /tmp/garnet-kernels-build.log, /tmp/garnet-kernels-cit.log,
+/tmp/garnet-unlit-sample.log, /tmp/garnet-kernel-viewer.log. Windowed rendering
+and non-Vulkan backends remain unverified.
+
+Concrete backend findings: gpu2's Vulkan pipeline builder used the shader
+location as an array index and emitted invalid holes for sparse attributes.
+It now appends compact descriptions retaining explicit locations. Optional
+Unlit texture/color rendering exercises locations 0/2/4 as a regression.
+Overlapping vertex/fragment push-constant updates also exposed an existing
+backend limitation. Unlit keeps its 96-byte push range vertex-only and passes
+fragment values through varyings; no third-party changes were made for this.
+Final verification (2026-09-30 UTC):
+- GCC Debug build: /tmp/garnet-final-build.log.
+- Full headless CIT: /tmp/garnet-final-cit.log, exit 0. Internal tests: 129 passed,
+  2 display-dependent skips, 5319 assertions; viewer: 14 cases/2863 assertions.
+  Legacy unit tests and standard CIT sample checks also passed.
+- No Vulkan validation VUID/errors/warnings in final CIT output.
+- Lit focused tests: 2 cases/56 assertions, /tmp/lit-tests-final.log.
+- Viewer/sample smoke artifacts: /tmp/fx2-kernel-viewer/. Four sphere shading
+  modes, imported DamagedHelmet glTF, import-only printing, expected image-output
+  failures, PBR/cel samples, and all four image kernels passed. Raster/compute
+  image sample previews have identical SHA256 hashes.
+- gpu2 fixes required by real kernel usage: sparse vertex locations remain compact
+  in native attribute descriptions; color/depth attachments derive render extent
+  from selected mip and reject invalid mip/face selections. Depth-mip clipping
+  has an independent regression test; image tests exercise color mip extents.
+- New files formatted explicitly (changed-file wrapper omits untracked sources).
+  Dirty rapid-vulkan submodule and unrelated user edits preserved.
+
+Cel varying optimization follow-up (2026-10-01):
+- Cel fragment variants now use constant UV/color/tangent inputs when disabled;
+  matching vertex variants omit those outputs. World position/normal remain
+  interpolated. No-feature cel draws remove ten varying scalar components.
+- Shared fragment implementation lives in cel-model-fragment.h; the full-feature
+  cel-model.frag and seven reduced wrappers select the same LIT_INPUTS mask as VS.
+- Verify: Debug build passed; focused lit tests passed (2 cases/56 assertions);
+  SPIR-V inspection confirmed matching VS outputs/FS inputs for all eight masks.
+  Headless cel sphere PNG is byte-identical to the pre-change snapshot, with no
+  Vulkan validation diagnostics. Logs: /tmp/garnet-cel-varyings-{build,tests,viewer}.log.
+- Commit: "perf(fx2): omit disabled cel fragment varyings" (included in the parent refactor commit).
+
+rapid-vulkan descriptor-layout regression follow-up (2026-10-01):
+- Added descriptor-reuse-across-incompatible-pipeline-layouts to rapid-vulkan's
+  compute-test.cpp, plus two GLSL/SPIR-V fixtures. The same storage-buffer set is
+  used by consecutive compute pipelines; only the second has push constants.
+  Shaders write distinct output words to avoid conflating descriptor compatibility
+  with a data hazard. The existing test harness requires validation and breaks
+  on validation errors; no new test-only production hooks were introduced.
+- Verify: Built with rapid-vulkan/dev/bin/build.py -n d and ran its cit.py -t
+  filter. With both existing fixes, five regression assertions pass and GPU words
+  are 17/29. Temporarily reverted ONLY the first previousSet layout guard, rebuilt,
+  and reran: fails with VUID-vkCmdDispatch-None-08600 (SIGTRAP from the harness),
+  reporting incompatible push-constant ranges for descriptor set 0. Second fix
+  remained enabled. Exact original implementation restored and rebuilt afterward.
+- Evidence: /tmp/rv-layout-fixed.log, /tmp/rv-layout-unfixed.log,
+  /tmp/rv-layout-final.log, and corresponding *-build.log files.
+- This proves a compatibility guard/rebind is needed; it does not prove exact
+  VkPipelineLayout handle equality is the least conservative possible predicate.
+- Commit: "test: reject descriptor reuse across incompatible pipeline layouts"
+  (published as rapid-vulkan 7aaf463 on wip/fx2-surface-descriptor-layouts).
+
+Publication (2026-10-01):
+User explicitly requested committing and pushing everything. rapid-vulkan fixes
+and their regression test are published as 7aaf463 on
+origin/wip/fx2-surface-descriptor-layouts. The parent refactor commit includes
+that submodule reference and all staged implementation, tests, and documentation
+on wip/cell-shading. Keep this assignment active pending explicit sign-off or
+an archive request.
+
+PR publication follow-up (2026-10-01):
+- rapid-vulkan PR #56 merged into main as bd7c239 after all required CI checks,
+  including Linux, Android, and Windows builds. The merged tree matches the
+  locally verified PR head. Completed source branch removed locally/remotely.
+- Garnet now references bd7c239 on rapid-vulkan main. The whole wip/cell-shading
+  branch is being submitted to Garnet master as explicitly requested; do not
+  merge that parent PR without authorization.
+- Latest parent Debug build and headless CIT passed with the newer automatic
+  GPU pumping and Windows declaration/export fixes: 130 internal cases passed,
+  2 display-dependent skips, 5322 assertions; viewer 14 cases/2863 assertions.
+  Logs: /tmp/garnet-pr-build.log and /tmp/garnet-pr-cit.log.
+- Commit: "build: advance rapid-vulkan to merged descriptor layout fixes".
+
+--- WORKFLOW / CONVENTIONS ---
+Preserve all existing user edits and the dirty rapid-vulkan submodule.
+Follow AGENTS.md and relevant module/API/build skills before implementation.
+Keep public headers minimal and implementations private; use lowercase filenames.
+Commit lines below are proposed messages, not permission to commit or push.
+Keep assignment files active until explicit sign-off or archival instruction.
+--- TASK BREAKDOWN ---
+Phase 0: Viewer independence prerequisite
+  Task 0.1: Remove viewer E2/obsolete geometry/surface usage and relocate the ImGui backend into FX2.
+    Verify: Build, importer and UI tests, headless snapshots, and dependency scan; preserve model hierarchy, affine transforms, controls, and image output.
+    Commit: "refactor(viewer): record directly through gpu2 without E2 (Phase 0.1)"
+  Task 0.2: Disable E2 Simple world and its dependent tests/sample without restoring it during FX2 migration.
+    Verify: Build excludes Simple implementation/sample; active tests compile without Simple declarations; standalone ImGui and independent E2/CIT tests pass.
+    Commit: "build(e2): suspend simple world during FX2 redesign (Phase 0.2)"
+Phase 1: Establish minimal contracts and caller migration design
+  Task 1.1: Define typed kernel recording contracts and map every removed API's callers and resource ownership.
+    Verify: Compile/review one typed mesh invocation and raster/compute image invocations with explicit upload/work ownership; demonstrate external kernel derivation without E2; document the existing E2 adapter route without requiring Simple-world or new E2 pass scheduling.
+    Commit: "docs(fx2): define kernel recording and migration contracts (Phase 1.1)"
+Phase 2: Prove raster recording and SSC usage
+  Task 2.1: Implement common kernel support and migrate unlit/skybox as vertical slices.
+    Verify: Build and render many draws in one raster pass; inherited state and scoped overrides; ordered A/draw-A/B/draw-B SSC behavior; preserve initialization when abandoning draws.
+    Commit: "feat(fx2): add typed raster kernels (Phase 2.1)"
+Phase 3: Prove multipass image operations
+  Task 3.1: Implement distinct raster and compute Gaussian blur kernels.
+    Verify: Compare both against CPU filtering within tolerance; edges, invalid inputs, repeated invocations before submission, scratch lifetime, and barrier validation.
+    Commit: "feat(fx2): add raster and compute Gaussian blur (Phase 3.1)"
+  Task 3.2: Implement distinct raster and compute mipmap kernels.
+    Verify: Compare all generated levels against defined reference filtering; odd sizes, 1x1, nonzero base, format/color rules, preserved base, per-mip barriers, and rejected unsupported inputs.
+    Commit: "feat(fx2): add raster and compute mip generation (Phase 3.2)"
+Phase 4: Complete typed mesh effects
+  Task 4.1: Implement typed PBR, cel, and Lambertian kernels using the proven raster contract.
+    Verify: Check effect output, required vertex attributes, caller state inheritance, outline overrides, and private parameter lifetimes.
+    Commit: "feat(fx2): add typed mesh shading kernels (Phase 4.1)"
+  Task 4.2: Migrate standalone samples to typed kernels and verify the public invocation patterns.
+    Verify: Build and render samples using public headers and typed buffers/textures/values; no obsolete FX2 geometry/surface inputs.
+    Commit: "refactor(fx2): migrate samples to typed kernels (Phase 4.2)"
+Phase 5: Rebuild the viewer rendering flow around the completed FX2 kernels
+  Task 5.1: Simplify viewer resource preparation and frame recording; replace and delete the temporary shader-binding implementation.
+    Verify: One shared windowed/headless scene-recording path; public FX2/gpu2 APIs only; no E2, assets/surfaces, private shader includes, or duplicated effect logic; preserve buffer/texture sharing and affine instances.
+    Commit: "refactor(viewer): streamline rendering around FX2 kernels (Phase 5.1)"
+  Task 5.2: Clean viewer docs/tests and validate preserved functionality against the new implementation.
+    Verify: Import/print without a GPU; procedural/imported snapshots across shading choices; hierarchy/affine transforms, exposure, bounds/axes, image output/errors, resize, navigation, and ImGui capture; report display-dependent skips.
+    Commit: "test(viewer): verify the kernel-based rendering workflow (Phase 5.2)"
+Phase 6: Migrate E2 and remove obsolete FX2 interfaces
+  Task 6.1: Migrate remaining active E2 callers, then remove obsolete FX2 geometry/assets/surfaces and active obsolete docs/tests; retain commented-out Simple-world sources for later review.
+    Verify: Preserve independent active E2 tests and validate remaining live callers; verify upload/lifetime rules; audit active clients for removed APIs, excluding suspended Simple-world sources; do not reactivate Simple to satisfy this step.
+    Commit: "refactor(fx2): remove obsolete geometry and surface interfaces (Phase 6.1)"
+Phase 7: Validate and document the final interface
+  Task 7.1: Update canonical docs and run complete available checks with an explicit portability gap list.
+    Verify: Build, format check, CIT, effect samples, and interface review; distinguish native-tested behavior from future web/mobile backend support.
+    Commit: "docs(fx2): document kernel usage and portability limits (Phase 7.1)"
+--- SUMMARY OF FILES TO TOUCH ---
+src/inc/garnet/GNfx2.h, src/inc/garnet/fx2/ — new kernels, remove obsolete types
+src/core/fx2/ — implementations, ImGui backend, shared shader contract, docs, shader/build rules
+src/core/ui2/, src/inc/garnet/ui2/, src/inc/garnet/GNui2.h — remove after relocation
+src/core/fx2/test/ — parameter, lifetime, algorithm, and rendering verification
+src/inc/garnet/e2/, src/core/e2/ — caller/preparation migration
+src/sample/fx2/, src/tool/mesh-viewer/ — resource ownership and typed invocation
+src/core/gpu2/, src/inc/garnet/gpu2/ — only demonstrated capability/tracking gaps
+agent/FX2_KERNEL_REFACTOR.txt — progress and review evidence

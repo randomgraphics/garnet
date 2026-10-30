@@ -27,35 +27,6 @@ struct StoredDraw {
 
 // PassFormats is defined in vk-raster-pso-factory.h (shared with the PSO factory).
 
-static bool attachmentExtent(const GpuResourceView & view, vk::Extent2D & extent) {
-    auto texture = view.texture();
-    if (!texture) return false;
-    const auto & d     = texture->descriptor();
-    const auto & range = view.imageView.range;
-    if (range.i.mip >= d.levels || range.i.mip >= 32 || range.i.face >= d.faces || range.e.numMipLevels != 1 || range.e.numArrayLayers != 1) return false;
-    // Dynamic rendering area and default viewport must match the attached mip,
-    // not the base image, or downsampling can rasterize outside its destination.
-    extent = vk::Extent2D(std::max(1u, d.width >> range.i.mip), std::max(1u, d.height >> range.i.mip));
-    return d.width && d.height;
-}
-
-static inline bool resolveColorAttachment(const GpuResourceView & v, vk::Image * outImage, vk::ImageView * outView, vk::Extent2D * outExt,
-                                          vk::Format * outVkFormat) {
-    if (v.empty() || !v.isTexture() || !attachmentExtent(v, *outExt)) return false;
-    auto * base = RuntimeType::cast<TextureVulkanBase>(v.texture().get());
-    if (!base || !base->nativeImage()) return false;
-    gfx::img::PixelFormat pf = v.imageView.format;
-    if (pf == gfx::img::PixelFormat::UNKNOWN()) pf = base->descriptor().format;
-    vk::Format fmt = pixelFormatToVkFormat(pf);
-    if (fmt == vk::Format::eUndefined) return false;
-    vk::ImageView view = base->nativeView(v.imageView);
-    if (!view) return false;
-    *outImage    = base->nativeImage();
-    *outView     = view;
-    *outVkFormat = fmt;
-    return true;
-}
-
 static rv::Sampler * ensureLinearSampler(const rv::Device * dev, rv::Ref<rv::Sampler> & slot) {
     if (slot.valid()) return slot.get();
     rv::Sampler::ConstructParameters scp;
@@ -67,31 +38,6 @@ static rv::Sampler * ensureLinearSampler(const rv::Device * dev, rv::Ref<rv::Sam
     slot            = rv::Ref<rv::Sampler>::make(scp);
     return slot.get();
 }
-
-// Merge non-empty fields from src into dst. Used once per draw at record time to fold draw-level
-// overrides into the target baseline, producing a fully self-contained per-draw state.
-static void mergeRenderState(RasterState & dst, const RasterState & src) {
-    if (src.fillMode) dst.fillMode = src.fillMode;
-    if (src.cullMode) dst.cullMode = src.cullMode;
-    if (src.frontFace) dst.frontFace = src.frontFace;
-    if (src.depthState) dst.depthState = src.depthState;
-    if (src.stencilState) dst.stencilState = src.stencilState;
-    if (src.viewport) dst.viewport = src.viewport;
-    if (src.scissorRect) dst.scissorRect = src.scissorRect;
-}
-
-// Convert RasterState viewport/scissor to Vulkan, using the render extent as the fallback for FLT_MAX/~0u.
-static vk::Viewport rsViewportToVk(const RasterState::Viewport & vp, vk::Extent2D ext) {
-    return vk::Viewport(vp.x, vp.y, (vp.width == FLT_MAX) ? (float) ext.width : vp.width, (vp.height == FLT_MAX) ? (float) ext.height : vp.height, vp.minDepth,
-                        vp.maxDepth);
-}
-
-static vk::Rect2D rsScissorToVk(const RasterState::ScissorRect & sr, vk::Extent2D ext) {
-    return vk::Rect2D(vk::Offset2D(sr.x, sr.y),
-                      vk::Extent2D((sr.width == (~0u)) ? ext.width : (uint32_t) sr.width, (sr.height == (~0u)) ? ext.height : (uint32_t) sr.height));
-}
-
-// State → Vulkan conversion helpers are in vk-raster-pso-factory.cpp (single authoritative source).
 
 static AutoRef<GpuContextVulkan2> checkGpu(const AutoRef<GpuContext> & gpu) {
     AutoRef<GpuContextVulkan2> vkGpu = RuntimeType::cast<GpuContextVulkan2>(gpu);
@@ -165,17 +111,12 @@ private:
 };
 
 static inline bool sameGeometry(const RasterGeometry & a, const RasterGeometry & b) {
-    if (a.vertexCount != b.vertexCount || a.indexCount != b.indexCount || a.instanceCount != b.instanceCount) return false;
+    if (a.vertexCount != b.vertexCount || a.indexCount != b.indexCount) return false;
     if (a.indices.buffer.get() != b.indices.buffer.get() || a.indices.offset != b.indices.offset || a.indices.stride != b.indices.stride) return false;
-    if (a.vertices.size() != b.vertices.size() || a.instances.size() != b.instances.size()) return false;
+    if (a.vertices.size() != b.vertices.size()) return false;
     for (size_t i = 0; i < a.vertices.size(); ++i) {
         if (a.vertices[i].buffer.get() != b.vertices[i].buffer.get() || a.vertices[i].offset != b.vertices[i].offset ||
             a.vertices[i].stride != b.vertices[i].stride)
-            return false;
-    }
-    for (size_t i = 0; i < a.instances.size(); ++i) {
-        if (a.instances[i].buffer.get() != b.instances[i].buffer.get() || a.instances[i].offset != b.instances[i].offset ||
-            a.instances[i].stride != b.instances[i].stride)
             return false;
     }
     if (a.format != b.format) return false;
@@ -285,7 +226,7 @@ bool GpuRasterPayloadVulkan::buildAndBeginRendering(vk::CommandBuffer vkcb, GpuR
         vk::RenderingAttachmentInfo att;
         att.setImageView(view)
             .setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
-            .setLoadOp(vk::AttachmentLoadOp::eClear)
+            .setLoadOp(mRenderTarget.loadColor ? vk::AttachmentLoadOp::eLoad : vk::AttachmentLoadOp::eClear)
             .setStoreOp(vk::AttachmentStoreOp::eStore)
             .setClearValue(vk::ClearValue(clearCv));
         colorAtts.push_back(att);
@@ -337,7 +278,6 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
     // Early exit: nothing to draw.
     const RasterGeometry & geom = mGeometries[d.geometryIndex];
     if (geom.vertexCount == 0 && geom.indexCount == 0) GN_UNLIKELY return {};
-    if (geom.instanceCount == 0 && !geom.instances.empty()) GN_UNLIKELY return {};
 
     auto * vsVk = RuntimeType::cast<GpuShaderVulkan>(d.vs.get());
     auto * psVk = RuntimeType::cast<GpuShaderVulkan>(d.ps.get());
@@ -451,8 +391,8 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                         auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
                         if (!tex) continue;
                         if (std::find(invalidResourceIds.begin(), invalidResourceIds.end(), tex->id) != invalidResourceIds.end()) continue;
-                        vk::ImageLayout layout =
-                            (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral : vk::ImageLayout::eShaderReadOnlyOptimal;
+                        vk::ImageLayout  layout = (view.imageView.type == GpuResourceView::ImageView::STORAGE) ? vk::ImageLayout::eGeneral
+                                                                                                               : shaderReadOnlyLayout(tex->descriptor().format);
                         rv::ImageSampler is;
                         is.view    = tex->nativeView(view.imageView);
                         is.layout  = layout;
@@ -481,12 +421,11 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
         }
     }
 
-    // --- Vertex and instance buffer binding ---
-    // Binding order mirrors gcp.addVertexBuffer / addInstanceBuffer above.
+    // --- Vertex buffer binding ---
     if (initializeGeometry) {
         {
             std::vector<rv::BufferView> vbViews;
-            vbViews.reserve(geom.vertices.size() + geom.instances.size());
+            vbViews.reserve(geom.vertices.size());
             auto pushGeomBuf = [&](const RasterGeometry::GeometryBuffer & gb) {
                 rv::BufferView bv;
                 if (gb.buffer) {
@@ -498,7 +437,6 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
                 vbViews.push_back(bv);
             };
             for (const auto & vb : geom.vertices) pushGeomBuf(vb);
-            for (const auto & ib : geom.instances) pushGeomBuf(ib);
             if (!vbViews.empty()) drawable.v(vk::ArrayProxy<const rv::BufferView>((uint32_t) vbViews.size(), vbViews.data()));
         }
 
@@ -520,7 +458,6 @@ rv::Ref<const rv::DrawPack> GpuRasterPayloadVulkan::recordDraw(size_t di, const 
         } else {
             drawParams.setNonIndexed(geom.vertexCount, 0);
         }
-        drawParams.setInstance(geom.instanceCount);
 
         drawable.draw(drawParams);
     }
@@ -541,11 +478,10 @@ struct CachedDrawConfig {
     std::vector<vk::Buffer>        vertexBuffers;
     std::vector<vk::DeviceSize>    vertexOffsets;
     vk::Buffer                     indexBuffer {};
-    vk::DeviceSize                 indexOffset   = 0;
-    vk::IndexType                  indexType     = vk::IndexType::eUint16;
-    uint32_t                       indexCount    = 0;
-    uint32_t                       vertexCount   = 0;
-    uint32_t                       instanceCount = 1;
+    vk::DeviceSize                 indexOffset = 0;
+    vk::IndexType                  indexType   = vk::IndexType::eUint16;
+    uint32_t                       indexCount  = 0;
+    uint32_t                       vertexCount = 0;
 };
 
 static void pushImmediates(vk::CommandBuffer command, const rv::Pipeline & pipeline, const Blob & data) {
@@ -624,9 +560,9 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
             const auto & cfg = configs[activeConfigIndex];
             if (d.immediates) pushImmediates(vkcb, *cfg.pipeline, *d.immediates);
             if (cfg.indexCount > 0) {
-                vkcb.drawIndexed(cfg.indexCount, cfg.instanceCount, 0, 0, 0);
+                vkcb.drawIndexed(cfg.indexCount, 1, 0, 0, 0);
             } else {
-                vkcb.draw(cfg.vertexCount, cfg.instanceCount, 0, 0);
+                vkcb.draw(cfg.vertexCount, 1, 0, 0);
             }
             continue;
         }
@@ -701,9 +637,9 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
 
             // Draw
             if (cfg.indexCount > 0) {
-                vkcb.drawIndexed(cfg.indexCount, cfg.instanceCount, 0, 0, 0);
+                vkcb.drawIndexed(cfg.indexCount, 1, 0, 0, 0);
             } else {
-                vkcb.draw(cfg.vertexCount, cfg.instanceCount, 0, 0);
+                vkcb.draw(cfg.vertexCount, 1, 0, 0);
             }
 
             activeConfigIndex = foundIndex;
@@ -735,7 +671,6 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
         newCfg.indexType     = pack->indexType;
         newCfg.indexCount    = geom.indexCount;
         newCfg.vertexCount   = geom.vertexCount;
-        newCfg.instanceCount = geom.instanceCount;
 
         // Update hardware tracking state
         boundPipeline      = newCfg.pipeline->handle();
@@ -755,6 +690,21 @@ void GpuRasterPayloadVulkan::recordForVulkanSubmit(const RecordContext & ctx) {
     }
 
     vkcb.endRendering();
+
+    // Automated invariant: restore attachments to SHADER_READ_ONLY_OPTIMAL with pipeline barrier
+    if (ctx.batchTracker) {
+        auto & tracker = *ctx.batchTracker;
+        for (const auto & ct : mRenderTarget.colorTargets) {
+            if (!ct.target.texture) continue;
+            auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture.get());
+            if (!tex || !tex->nativeImage()) continue;
+            tracker.restoreAttachmentToShaderReadOnly(tex, ct.view(), vkcb);
+        }
+        if (mRenderTarget.depthStencilTarget.texture) {
+            auto * dTex = RuntimeType::cast<TextureVulkanBase>(mRenderTarget.depthStencilTarget.texture.get());
+            if (dTex && dTex->nativeImage()) { tracker.restoreAttachmentToShaderReadOnly(dTex, mRenderTarget.depthStencilTarget.view(), vkcb); }
+        }
+    }
 }
 
 static inline bool isRasterStateEmpty(const RasterState & s) {

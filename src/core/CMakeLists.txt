@@ -66,19 +66,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/../inc PREFIX "Header Files" FILES
 list(APPEND garnet_headers ${BUILD_HEADER_INC}/base/features.h)
 
 # gather sources
-set(sources app/sampleApp.cpp)
+set(sources)
 GN_add_source_folder(sources base PCH_SOURCE base/pch.cpp)
-GN_add_source_folder(sources engine PCH_SOURCE engine/pch.cpp)
-GN_add_source_folder(sources gfx/base PCH_SOURCE gfx/base/pch.cpp)
-GN_add_source_folder(sources gfx/d3d PCH_SOURCE gfx/d3d/pch.cpp)
-GN_add_source_folder(sources gfx/gpures PCH_SOURCE gfx/gpures/pch.cpp)
-GN_add_source_folder(sources gfx/misc PCH_SOURCE gfx/misc/pch.cpp)
-GN_add_source_folder(sources gfx/rt PCH_SOURCE gfx/rt/pch.cpp)
-GN_add_source_folder(sources gpu/common PCH_SOURCE gpu/common/pch.cpp)
-GN_add_source_folder(sources gpu/util PCH_SOURCE gpu/util/pch.cpp SOURCE_WILDCARDS gpu*.cpp)
 GN_add_source_folder(sources gpu2 PCH_SOURCE gpu2/pch.cpp)
 include(fx2/CMakeLists.txt)
-GN_add_source_folder(sources util PCH_SOURCE util/pch.cpp)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
 # Keep RDG2 source setup in this directory scope. GN_setup_pch and generated
@@ -92,17 +83,6 @@ include(fiz/CMakeLists.txt)
 
 # engine2 (e2) sources + its GLSL shaders. Same in-parent-scope include rationale as rdg2.
 include(e2/CMakeLists.txt)
-
-# OpenGL GPU Sources
-if(GN_BUILD_HAS_OGL)
-    GN_add_source_folder(sources gpu/ogl PCH_SOURCE gpu/ogl/pch.cpp)
-    GN_add_source_folder(sources gfx/ogl PCH_SOURCE gfx/ogl/pch.cpp)
-endif()
-
-# D3D11 GPU Sources
-if(D3D11_FOUND)
-    GN_add_source_folder(sources gpu/d3d11 PCH_SOURCE gpu/d3d11/pch.cpp)
-endif()
 
 # (D3D12 gpu2 backend removed; gpu2 sources are compiled via the unconditional GN_add_source_folder above)
 
