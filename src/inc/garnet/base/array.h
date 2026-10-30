@@ -145,12 +145,12 @@ class StackArray {
     void doInsert(SIZE_TYPE position, const T & t) {
         GN_ASSERT(mCount <= N);
 
-        if (N == mCount) {
+        if (mCount >= N) {
             GN_ERROR(getLogger("GN.base.StackArray"), "Can't insert more. Stack array is full already!");
             return;
         }
 
-        if (position > mCount) {
+        if (position > mCount || position >= N) {
             GN_ERROR(getLogger("GN.base.StackArray"), "invalid insert position.");
             return;
         }

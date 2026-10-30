@@ -1,6 +1,9 @@
 # Core utilities
 termcolor>=2.0
 
+# Coverage reporting (env/bin/code-coverage.py, coverage build variant 'c')
+gcovr>=8.0         # gcov front end: HTML, JSON and function-level reports
+
 # Image I/O
 Pillow>=9.0
 numpy>=1.24

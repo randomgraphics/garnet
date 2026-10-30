@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "vk-gpu-resource-state-tracker.h"
 #include "vk-gpu-context.h"
+#include "vk-format-utils.h"
+#include <unordered_set>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.tracker");
 
@@ -21,11 +23,6 @@ namespace GN::gpu2 {
 
 namespace {
 
-/// Pack a (mip, face, aspectBit) tuple into a single key for the \c registered map.
-inline uint64_t packPlaneKey(uint32_t mip, uint32_t face, vk::ImageAspectFlagBits aspect) {
-    return (uint64_t(mip) << 48) | (uint64_t(face) << 16) | uint64_t(uint32_t(aspect));
-}
-
 inline vk::ImageAspectFlags aspectFromView(const GpuResourceView::ImageView & view, const Texture::Descriptor & d) {
     const auto viewFormat = (view.format == gfx::img::PixelFormat::UNKNOWN()) ? d.format : view.format;
     return aspectFromViewFormat(viewFormat, d.format);
@@ -43,25 +40,24 @@ inline GpuResourceView::SubresourceRange resolveRange(GpuResourceView::Subresour
 
 } // namespace
 
-bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const rv::Image::State::PlaneState & state) {
+bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const TexturePlaneStateVulkan & state) {
     auto & tracked = mTextures[tex->id];
     if (!tracked.tex) {
-        // First registration of this texture in the batch. Initialize incoming from the actual
-        // resource state; emit barrier method keeps it up-to-date after each payload so subsequent
-        // payloads in the same command buffer see the correct "from" layout.
-        tracked.tex      = tex;
-        tracked.incoming = tex->getState();
-        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' incoming initialized ({} mips, {} faces)", tex->name, tracked.incoming.numMips,
-                   tracked.incoming.numLayers);
+        tracked.tex          = tex;
+        const auto & desc    = tex->descriptor();
+        tracked.numMips      = desc.levels;
+        tracked.numLayers    = desc.faces;
+        tracked.validAspects = aspectFromViewFormat(desc.format, desc.format);
+        if (!tracked.validAspects) tracked.validAspects = vk::ImageAspectFlagBits::eColor;
+        GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' tracked initialized ({} mips, {} faces)", tex->name, tracked.numMips, tracked.numLayers);
     }
 
     const auto & desc = tex->descriptor();
 
     // Aspect comes from the view's format (or the texture's format if the view doesn't override).
-    // Intersect with validAspects() so any bit that isn't actually a plane on this texture's
-    // format gets dropped silently — this also guarantees every remaining bit is present in
-    // \c incoming, so subsequent \c incoming.get(...) calls always succeed.
-    auto aspects = aspectFromView(view, desc) & tracked.incoming.validAspects;
+    // Intersect with validAspects so any bit that isn't actually a plane on this texture's
+    // format gets dropped silently.
+    auto aspects = aspectFromView(view, desc) & tracked.validAspects;
     if (!aspects) GN_UNLIKELY {
             GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: view of texture '{}' references no aspect plane the texture has", tex->name);
             return false;
@@ -70,6 +66,23 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
     const auto     resolved = resolveRange(view.range, desc);
     const uint32_t mipEnd   = resolved.i.mip + resolved.e.numMipLevels;
     const uint32_t faceEnd  = resolved.i.face + resolved.e.numArrayLayers;
+
+    // Ensure incoming baseline exists for all referenced planes
+    for (uint32_t mip = resolved.i.mip; mip < mipEnd; ++mip) {
+        for (uint32_t face = resolved.i.face; face < faceEnd; ++face) {
+            forEachAspectBit(aspects, [&](vk::ImageAspectFlagBits bit) {
+                if (!tracked.getIncoming(mip, face, bit)) {
+                    if (tex->isBackbuffer() || state.isWrite()) {
+                        tracked.setIncoming(mip, face, bit, TexturePlaneStateVulkan::UNDEFINED());
+                    } else {
+                        auto ready   = TexturePlaneStateVulkan::SHADER_READ_ONLY();
+                        ready.layout = shaderReadOnlyLayout(desc.format);
+                        tracked.setIncoming(mip, face, bit, ready);
+                    }
+                }
+            });
+        }
+    }
 
     // Hazard pass: check every (mip, face, plane) in this binding against the planes already
     // registered this pass. A plane is hazardous iff already registered AND at least one side is
@@ -112,7 +125,7 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
         vk::ImageLayout layout = vk::ImageLayout::eUndefined;
         forEachAspectBit(aspects, [&](vk::ImageAspectFlagBits bit) {
             if (layout != vk::ImageLayout::eUndefined) return;
-            if (const auto * ps = tracked.incoming.get(resolved.i.mip, resolved.i.face, bit)) layout = ps->layout;
+            if (const auto * ps = tracked.getIncoming(resolved.i.mip, resolved.i.face, bit)) layout = ps->layout;
         });
         return layout;
     };
@@ -134,7 +147,7 @@ bool GpuResourceStateTrackerVulkan::addTexture(TextureVulkanBase * tex, const Gp
 
 bool GpuResourceStateTrackerVulkan::addColorTarget(TextureVulkanBase * tex, const GpuResourceView & view) {
     if (!tex) GN_UNLIKELY return true;
-    rv::Image::State::PlaneState state;
+    TexturePlaneStateVulkan state;
     state.layout = vk::ImageLayout::eColorAttachmentOptimal;
     state.access = vk::AccessFlagBits::eColorAttachmentWrite;
     state.stages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
@@ -145,7 +158,7 @@ bool GpuResourceStateTrackerVulkan::addColorTarget(TextureVulkanBase * tex, cons
 bool GpuResourceStateTrackerVulkan::addDepthStencilTarget(TextureVulkanBase * tex, const GpuResourceView & view, bool readOnly) {
     if (!tex) GN_UNLIKELY return true;
     if (readOnly) mHasReadOnlyDepthStencil = true;
-    rv::Image::State::PlaneState state;
+    TexturePlaneStateVulkan state;
     state.layout = readOnly ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eDepthStencilAttachmentOptimal;
     state.access = vk::AccessFlagBits::eDepthStencilAttachmentRead;
     if (!readOnly) state.access |= vk::AccessFlagBits::eDepthStencilAttachmentWrite;
@@ -156,8 +169,8 @@ bool GpuResourceStateTrackerVulkan::addDepthStencilTarget(TextureVulkanBase * te
 
 bool GpuResourceStateTrackerVulkan::addSampledTexture(TextureVulkanBase * tex, const GpuResourceView & view, vk::PipelineStageFlags stages) {
     if (!tex) GN_UNLIKELY return true;
-    rv::Image::State::PlaneState state;
-    state.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    TexturePlaneStateVulkan state;
+    state.layout = shaderReadOnlyLayout(tex->descriptor().format);
     state.access = vk::AccessFlagBits::eShaderRead;
     state.stages = stages;
     state.usage  = "sampled texture";
@@ -166,7 +179,7 @@ bool GpuResourceStateTrackerVulkan::addSampledTexture(TextureVulkanBase * tex, c
 
 bool GpuResourceStateTrackerVulkan::addStorageTexture(TextureVulkanBase * tex, const GpuResourceView & view, vk::PipelineStageFlags stages) {
     if (!tex) GN_UNLIKELY return true;
-    rv::Image::State::PlaneState state;
+    TexturePlaneStateVulkan state;
     state.layout = vk::ImageLayout::eGeneral;
     state.access = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
     state.stages = stages;
@@ -188,11 +201,10 @@ bool GpuResourceStateTrackerVulkan::checkBufferHazard(const TrackedBuffer & inco
 bool GpuResourceStateTrackerVulkan::addBuffer(TrackedBuffer b) {
     auto it = mBuffers.find(b.buf->id);
     if (it == mBuffers.end()) {
-        // First registration in this batch: snapshot the actual resource state as the baseline
-        // so emitPrePassBarriers() computes the correct "from" side of the first barrier.
-        b.committedAccess = b.buf->gpuState.access;
-        b.committedStages = b.buf->gpuState.stages;
-        b.activeThisPass  = true;
+        const auto readReady = BufferStateVulkan::READ_READY();
+        b.committedAccess    = readReady.access;
+        b.committedStages    = readReady.stages;
+        b.activeThisPass     = true;
         GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: register buffer '{}' as '{}' committed={} pass={}", b.buf->name, b.usageName,
                    vk::to_string(b.committedAccess), vk::to_string(b.passAccess));
         auto entry = mBuffers.emplace(b.buf->id, std::move(b)).first;
@@ -292,7 +304,7 @@ bool GpuResourceStateTrackerVulkan::addTransferDstBuffer(BufferVulkan * buf) {
 
 bool GpuResourceStateTrackerVulkan::addTransferDstImage(TextureVulkanBase * tex, const GpuResourceView::ImageView & view) {
     if (!tex) GN_UNLIKELY return true;
-    rv::Image::State::PlaneState state;
+    TexturePlaneStateVulkan state;
     state.layout = vk::ImageLayout::eTransferDstOptimal;
     state.access = vk::AccessFlagBits::eTransferWrite;
     state.stages = vk::PipelineStageFlagBits::eTransfer;
@@ -302,7 +314,7 @@ bool GpuResourceStateTrackerVulkan::addTransferDstImage(TextureVulkanBase * tex,
 
 bool GpuResourceStateTrackerVulkan::addTransferSrcImage(TextureVulkanBase * tex, const GpuResourceView::ImageView & view) {
     if (!tex) GN_UNLIKELY return true;
-    rv::Image::State::PlaneState state;
+    TexturePlaneStateVulkan state;
     state.layout = vk::ImageLayout::eTransferSrcOptimal;
     state.access = vk::AccessFlagBits::eTransferRead;
     state.stages = vk::PipelineStageFlagBits::eTransfer;
@@ -344,11 +356,6 @@ bool GpuResourceStateTrackerVulkan::addRasterGeometry(const RasterGeometry & geo
         if (auto * buf = RuntimeType::cast<BufferVulkan>(vb.buffer.get()))
             if (!addVertexBuffer(buf)) ok = false;
     }
-    for (const auto & ib : geom.instances) {
-        if (!ib.buffer) continue;
-        if (auto * buf = RuntimeType::cast<BufferVulkan>(ib.buffer.get()))
-            if (!addVertexBuffer(buf)) ok = false;
-    }
     if (geom.indices.buffer) {
         if (auto * buf = RuntimeType::cast<BufferVulkan>(geom.indices.buffer.get()))
             if (!addIndexBuffer(buf)) ok = false;
@@ -372,9 +379,9 @@ bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
     if (depthStencilView.isTexture() && depthStencilView.texture()) {
         auto * tex = RuntimeType::cast<TextureVulkanBase>(depthStencilView.texture().get());
         if (tex) {
-            const auto & ds = rt.states;
-            bool         ro = ds.depthState && !ds.depthState->writeEnabled() && !(ds.stencilState && ds.stencilState->enabled());
-            if (!addDepthStencilTarget(tex, depthStencilView, ro)) {
+            // Render targets are cleared upon pass begin (loadOp = eClear) which is an attachment write;
+            // depth-stencil target must be in attachment-optimal layout during rendering.
+            if (!addDepthStencilTarget(tex, depthStencilView, /*readOnly=*/false)) {
                 GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: render target hazard on depth-stencil target; aborting render pass");
                 ok = false;
             }
@@ -389,7 +396,7 @@ void GpuResourceStateTrackerVulkan::upgradeForDrawRasterState(const RasterState 
     bool needsStencilWrite = drawState.stencilState && drawState.stencilState->enabled();
     if (!needsDepthWrite && !needsStencilWrite) return;
 
-    rv::Image::State::PlaneState promoted;
+    TexturePlaneStateVulkan promoted;
     promoted.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     promoted.access = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
     promoted.stages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
@@ -444,8 +451,8 @@ vk::ImageLayout GpuResourceStateTrackerVulkan::texturePassLayout(const TextureVu
     vk::ImageLayout colorLayout   = vk::ImageLayout::eUndefined;
     vk::ImageLayout depthLayout   = vk::ImageLayout::eUndefined;
     vk::ImageLayout stencilLayout = vk::ImageLayout::eUndefined;
-    forEachAspectBit(tracked.incoming.validAspects, [&](vk::ImageAspectFlagBits bit) {
-        const auto * ps = tracked.incoming.get(mip, face, bit);
+    forEachAspectBit(tracked.validAspects, [&](vk::ImageAspectFlagBits bit) {
+        const auto * ps = tracked.getIncoming(mip, face, bit);
         if (!ps) return;
         if (bit == vk::ImageAspectFlagBits::eColor)
             colorLayout = ps->layout;
@@ -480,15 +487,21 @@ vk::ImageLayout GpuResourceStateTrackerVulkan::texturePassLayout(const TextureVu
 }
 
 void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
-    DynaArray<vk::BufferMemoryBarrier> bufferBarriers;
-    DynaArray<vk::ImageMemoryBarrier>  barriers;
-    vk::PipelineStageFlags             srcStages = {};
-    vk::PipelineStageFlags             dstStages = {};
+    auto & bufferBarriers = mBufferBarriers;
+    auto & barriers       = mImageBarriers;
+    bufferBarriers.clear();
+    barriers.clear();
+    vk::PipelineStageFlags srcStages = {};
+    vk::PipelineStageFlags dstStages = {};
 
     for (auto * active : mActiveBuffers) {
         auto & b = *active;
 
-        if (b.committedAccess != b.passAccess || b.committedStages != b.passStages) {
+        bool prevHadWrite = bool(b.committedAccess & (vk::AccessFlagBits::eTransferWrite | vk::AccessFlagBits::eShaderWrite));
+        bool needsBarrier =
+            prevHadWrite || b.isWrite || ((b.committedAccess & b.passAccess) != b.passAccess) || ((b.committedStages & b.passStages) != b.passStages);
+
+        if (needsBarrier) {
             vk::Buffer vkBuf = b.buf->nativeBuffer();
             if (!vkBuf) GN_UNLIKELY {
                     GN_WARN(sLogger, "GpuResourceStateTrackerVulkan: buffer '{}' has no VkBuffer handle; skipping barrier", b.buf->name);
@@ -504,7 +517,7 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                     .setBuffer(vkBuf)
                     .setOffset(0)
                     .setSize(VK_WHOLE_SIZE);
-                bufferBarriers.append(barrier);
+                bufferBarriers.push_back(barrier);
                 srcStages |= b.committedStages;
                 dstStages |= b.passStages;
                 b.committedAccess = b.passAccess;
@@ -536,8 +549,8 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
             uint32_t                face   = uint32_t((key >> 16) & 0xffffu);
             vk::ImageAspectFlagBits aspect = static_cast<vk::ImageAspectFlagBits>(uint32_t(key & 0xffffu));
 
-            const auto * prev = tracked.incoming.get(mip, face, aspect);
-            if (!prev) GN_UNLIKELY continue; // incoming should always have the plane (snapshot from gpuStates)
+            const auto * prev = tracked.getIncoming(mip, face, aspect);
+            if (!prev) GN_UNLIKELY continue;
             if (*prev == next) continue;
 
             GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image barrier '{}' [mip={} face={} {}] : {} -> {} ({})", tracked.tex->name, mip, face,
@@ -551,21 +564,15 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                 .setDstAccessMask(next.access)
                 .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-            barriers.append(b);
+            barriers.push_back(b);
             srcStages |= prev->stages;
             dstStages |= next.stages;
 
             // Advance the running incoming state so the next payload's add*() calls see the
             // correct post-barrier layout without any extra bookkeeping.
-            if (mip < tracked.incoming.numMips && face < tracked.incoming.numLayers) {
-                auto & sr = tracked.incoming.subresources[tracked.incoming.subresourceIndex(mip, face)];
-                auto   it = sr.planes.find(aspect);
-                if (it != sr.planes.end()) {
-                    it->second = next;
-                    GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' [mip={} face={} {}] incoming updated to {}", tracked.tex->name, mip, face,
-                               vk::to_string(aspect), vk::to_string(next.layout));
-                }
-            }
+            tracked.setIncoming(mip, face, aspect, next);
+            GN_VERBOSE(sLogger, "GpuResourceStateTrackerVulkan: image '{}' [mip={} face={} {}] incoming updated to {}", tracked.tex->name, mip, face,
+                       vk::to_string(aspect), vk::to_string(next.layout));
         }
 
         // Registered states are baked into barriers; clear so the next payload starts fresh.
@@ -587,27 +594,151 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
                        vk::ArrayProxy<const vk::ImageMemoryBarrier>((uint32_t) barriers.size(), barriers.data()));
 }
 
-void GpuResourceStateTrackerVulkan::flushToResources() {
-    // Write the batch-final image layout for every tracked subresource back to each texture so
-    // the next submit's barriers use the correct "from" layout.
-    for (const auto & [id, tracked] : mTextures) {
-        if (!tracked.tex) continue;
-        for (uint32_t mip = 0; mip < tracked.incoming.numMips; ++mip) {
-            for (uint32_t face = 0; face < tracked.incoming.numLayers; ++face) {
-                forEachAspectBit(tracked.incoming.validAspects, [t = tracked, m = mip, f = face](vk::ImageAspectFlagBits aspect) {
-                    const auto * ps = t.incoming.get(m, f, aspect);
-                    if (!ps) return;
-                    t.tex->setState(*ps, vk::ImageSubresourceRange(aspect, m, 1, f, 1));
-                });
+void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb) {
+    // Swapchain images are presentation targets and commonly lack sampled usage; their
+    // final layout is selected by present(), so never transition them to shader-read-only.
+    if (!tex || !tex->nativeImage() || tex->isBackbuffer()) return;
+    auto                 vkImg    = tex->nativeImage();
+    const auto &         desc     = tex->descriptor();
+    const auto           resolved = resolveRange(view.imageView.range, desc);
+    uint32_t             mip      = resolved.i.mip;
+    uint32_t             face     = resolved.i.face;
+    uint32_t             numMips  = resolved.e.numMipLevels;
+    uint32_t             numFaces = resolved.e.numArrayLayers;
+    vk::ImageAspectFlags aspect   = aspectFromView(view.imageView, desc);
+    if (!aspect) aspect = vk::ImageAspectFlagBits::eColor;
+    bool            isDepthStencil = bool(aspect & (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil));
+    vk::ImageLayout targetLayout   = shaderReadOnlyLayout(desc.format);
+
+    auto                   it        = mTextures.find(tex->id);
+    vk::ImageLayout        oldLayout = isDepthStencil ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
+    vk::AccessFlags        srcAccess = isDepthStencil ? vk::AccessFlagBits::eDepthStencilAttachmentWrite : vk::AccessFlagBits::eColorAttachmentWrite;
+    vk::PipelineStageFlags srcStages = isDepthStencil ? (vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests)
+                                                      : vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+    if (it != mTextures.end()) {
+        auto & tracked = it->second;
+        forEachAspectBit(aspect, [&](vk::ImageAspectFlagBits bit) {
+            const auto * prev = tracked.getIncoming(mip, face, bit);
+            if (prev) {
+                oldLayout = prev->layout;
+                srcAccess = prev->access;
+                srcStages = prev->stages;
+            }
+        });
+    }
+
+    if (isDepthStencil && srcAccess == vk::AccessFlagBits::eColorAttachmentWrite) {
+        srcAccess = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+        srcStages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
+    }
+
+    bool hasWrite = bool(srcAccess & (vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite |
+                                      vk::AccessFlagBits::eTransferWrite | vk::AccessFlagBits::eShaderWrite));
+    if (oldLayout == targetLayout && !hasWrite) {
+        return; // Already in target read-only layout without pending write flushes
+    }
+
+    vk::AccessFlags dstAccess =
+        isDepthStencil ? (vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eDepthStencilAttachmentRead) : vk::AccessFlagBits::eShaderRead;
+    vk::PipelineStageFlags dstStages =
+        isDepthStencil
+            ? (vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eEarlyFragmentTests)
+            : (vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader);
+
+    vk::ImageMemoryBarrier b;
+    b.setOldLayout(oldLayout)
+        .setNewLayout(targetLayout)
+        .setImage(vkImg)
+        .setSubresourceRange({aspect, mip, numMips, face, numFaces})
+        .setSrcAccessMask(srcAccess)
+        .setDstAccessMask(dstAccess)
+        .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+        .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+
+    cb.pipelineBarrier(srcStages, dstStages, {}, 0, nullptr, 0, nullptr, 1, &b);
+
+    TexturePlaneStateVulkan next;
+    next.layout = targetLayout;
+    next.access = dstAccess;
+    next.stages = dstStages;
+    next.usage  = isDepthStencil ? "auto-restore depth-stencil read only" : "auto-restore shader read only";
+
+    if (it != mTextures.end()) {
+        auto & tracked = it->second;
+        for (uint32_t m = mip; m < mip + numMips && m < tracked.numMips; ++m) {
+            for (uint32_t f = face; f < face + numFaces && f < tracked.numLayers; ++f) {
+                forEachAspectBit(aspect, [&](vk::ImageAspectFlagBits bit) { tracked.setIncoming(m, f, bit, next); });
             }
         }
     }
-    // Write the batch-final buffer access/stage back to each buffer.
-    for (const auto & [id, b] : mBuffers) {
-        if (!b.buf) continue;
-        b.buf->gpuState.access = b.committedAccess;
-        b.buf->gpuState.stages = b.committedStages;
+}
+
+void GpuResourceStateTrackerVulkan::restoreBuffersToReadReady(ArrayView<BufferVulkan * const> bufs, vk::CommandBuffer cb) {
+    if (bufs.empty()) return;
+
+    const auto readReady = BufferStateVulkan::READ_READY();
+
+    DynaArray<vk::BufferMemoryBarrier> barriers;
+    vk::PipelineStageFlags             srcStages = {};
+
+    std::unordered_set<int64_t> seen;
+
+    for (auto * buf : bufs) {
+        if (!buf || !buf->nativeBuffer()) continue;
+        if (!seen.insert(buf->id).second) continue;
+
+        auto                   it        = mBuffers.find(buf->id);
+        vk::AccessFlags        srcAccess = {};
+        vk::PipelineStageFlags bufStages = vk::PipelineStageFlagBits::eTopOfPipe;
+
+        if (it != mBuffers.end()) {
+            auto & tracked = it->second;
+            if (tracked.committedAccess) {
+                srcAccess = tracked.committedAccess;
+                bufStages = tracked.committedStages;
+            }
+        } else {
+            srcAccess = vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eTransferWrite;
+            bufStages = vk::PipelineStageFlagBits::eAllCommands;
+        }
+
+        bool hasWrite = bool(srcAccess & (vk::AccessFlagBits::eTransferWrite | vk::AccessFlagBits::eShaderWrite));
+        if (!hasWrite && (srcAccess & readReady.access) == readReady.access && (bufStages & readReady.stages) == readReady.stages) { continue; }
+
+        if (!bufStages) bufStages = vk::PipelineStageFlagBits::eTopOfPipe;
+
+        vk::BufferMemoryBarrier b;
+        b.setSrcAccessMask(srcAccess)
+            .setDstAccessMask(readReady.access)
+            .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+            .setBuffer(buf->nativeBuffer())
+            .setOffset(0)
+            .setSize(VK_WHOLE_SIZE);
+
+        barriers.append(b);
+        srcStages |= bufStages;
+
+        if (it != mBuffers.end()) {
+            auto & tracked          = it->second;
+            tracked.committedAccess = readReady.access;
+            tracked.committedStages = readReady.stages;
+            tracked.passAccess      = {};
+            tracked.passStages      = vk::PipelineStageFlagBits::eBottomOfPipe;
+            tracked.isWrite         = false;
+        }
     }
+
+    if (barriers.empty()) return;
+    if (!srcStages) srcStages = vk::PipelineStageFlagBits::eTopOfPipe;
+
+    cb.pipelineBarrier(srcStages, readReady.stages, {}, 0, nullptr, static_cast<uint32_t>(barriers.size()), barriers.data(), 0, nullptr);
+}
+
+void GpuResourceStateTrackerVulkan::restoreBufferToReadReady(BufferVulkan * buf, vk::CommandBuffer cb) {
+    if (!buf) return;
+    restoreBuffersToReadReady(ArrayView<BufferVulkan * const>(&buf, 1), cb);
 }
 
 } // namespace GN::gpu2

@@ -49,31 +49,31 @@ struct PrimeImpl : PrimeView {
     std::shared_ptr<const Data> data;
     explicit PrimeImpl(std::shared_ptr<const Data> d): PrimeView(TYPE_INFO(), 0, "prime"), data(std::move(d)) {}
     uint64_t        tick() const override { return data->tick; }
-    Ref<const Form> form(FormId id) const override {
-        auto i = data->forms.find(id);
+    Ref<const Form> form(FormId formId) const override {
+        auto i = data->forms.find(formId);
         return i == data->forms.end() ? Ref<const Form> {} : i->second;
     }
-    const Entry * entry(FormId id, const RuntimeType::TypeInfo & type) const {
+    const Entry * entry(FormId formId, const RuntimeType::TypeInfo & type) const {
         auto exact = data->columns.find(type.id);
         if (exact != data->columns.end()) {
-            auto item = exact->second.find(id);
+            auto item = exact->second.find(formId);
             if (item != exact->second.end()) return &item->second;
         }
         const Entry * result = nullptr;
         for (const auto & column : data->columns) {
-            auto i = column.second.find(id);
+            auto i = column.second.find(formId);
             if (i == column.second.end() || !i->second.facet->typeInfo().isDerivedFrom(type)) continue;
             if (result) return nullptr; // A base lookup is ambiguous when multiple sibling capabilities match.
             result = &i->second;
         }
         return result;
     }
-    Ref<const Facet> facet(FormId id, const RuntimeType::TypeInfo & type) const override {
-        auto e = entry(id, type);
+    Ref<const Facet> facet(FormId formId, const RuntimeType::TypeInfo & type) const override {
+        auto e = entry(formId, type);
         return e ? e->facet : Ref<const Facet> {};
     }
-    Ref<const FacetValue> value(FormId id, const RuntimeType::TypeInfo & type) const override {
-        auto e = entry(id, type);
+    Ref<const FacetValue> value(FormId formId, const RuntimeType::TypeInfo & type) const override {
+        auto e = entry(formId, type);
         return e ? e->value : Ref<const FacetValue> {};
     }
     Ref<const FacetValue> state(const RuntimeType::TypeInfo & type) const override {
@@ -102,7 +102,7 @@ struct MoldImpl : Mold {
     MoldImpl(Universe & u, const StrA & name, DynaArray<FacetBinding> b, FormFactory f)
         : Mold(TYPE_INFO(), u.generateUniqueIdentifier(), name), bindings(std::move(b)), factory(std::move(f)) {}
     const DynaArray<FacetBinding> & facets() const override { return bindings; }
-    Ref<Form>                       createForm(FormId id) const override { return factory ? factory(id) : Form::create(id); }
+    Ref<Form>                       createForm(FormId formId) const override { return factory ? factory(formId) : Form::create(formId); }
 };
 
 struct Registration {
@@ -163,9 +163,9 @@ struct Runtime : World, Registry {
     Runtime(Universe & u, const StrA & name, size_t c): World(TYPE_INFO(), u.generateUniqueIdentifier(), name), universe(u), capacity(c) {}
     bool registerFacet(const Facet & f, DeletionCleanup cleanup) override {
         std::lock_guard<std::mutex> g(access);
-        auto                        id = f.typeInfo().id;
-        if (stopped || facets.count(id) || states.count(id) || !f.valueType().isDerivedFrom(FacetValue::TYPE_INFO())) return false;
-        facets.emplace(id, Registration {&f.typeInfo(), &f.valueType(), std::move(cleanup)});
+        auto                        typeId = f.typeInfo().id;
+        if (stopped || facets.count(typeId) || states.count(typeId) || !f.valueType().isDerivedFrom(FacetValue::TYPE_INFO())) return false;
+        facets.emplace(typeId, Registration {&f.typeInfo(), &f.valueType(), std::move(cleanup)});
         return true;
     }
     bool registerState(const RuntimeType::TypeInfo & type) override {
@@ -200,56 +200,56 @@ struct Runtime : World, Registry {
         return {snapshot(f), snapshot(v)};
     }
     FormId createIn(Data & data, const Mold & mold, const Registry & registry) {
-        auto id   = universe.generateUniqueIdentifier();
-        auto form = mold.createForm(id);
-        if (!form || form->formId() != id) throw std::runtime_error("Mold factory must preserve reserved Form identity");
+        auto formId = universe.generateUniqueIdentifier();
+        auto form   = mold.createForm(formId);
+        if (!form || form->formId() != formId) throw std::runtime_error("Mold factory must preserve reserved Form identity");
         std::map<TypeId, Entry> values;
         for (const auto & b : mold.facets()) {
             if (!b.facet || !b.value || values.count(b.facet->typeInfo().id)) throw std::runtime_error("invalid Mold binding");
             values.emplace(b.facet->typeInfo().id, binding(*b.facet, *b.value, registry));
         }
-        data.forms[id] = form;
-        for (auto & v : values) data.columns[v.first][id] = std::move(v.second);
-        return id;
+        data.forms[formId] = form;
+        for (auto & v : values) data.columns[v.first][formId] = std::move(v.second);
+        return formId;
     }
     FormId createForm(const Mold & mold) override {
         std::lock_guard<std::mutex> guard(access);
         if (stopped) return 0;
         try {
             if (!started) {
-                auto next = std::make_shared<Data>(*published);
-                auto id   = createIn(*next, mold, *this);
+                auto next   = std::make_shared<Data>(*published);
+                auto formId = createIn(*next, mold, *this);
                 validateComposition(*next);
                 published = next;
-                return id;
+                return formId;
             }
             Data addition;
-            auto id = createIn(addition, mold, *this);
+            auto formId = createIn(addition, mold, *this);
             queued.forms.insert(addition.forms.begin(), addition.forms.end());
             for (auto & column : addition.columns) {
                 queued.columns[column.first].insert(column.second.begin(), column.second.end());
-                reservedAttachments.emplace(id, column.first);
+                reservedAttachments.emplace(formId, column.first);
             }
-            reservedForms.insert(id);
-            return id;
+            reservedForms.insert(formId);
+            return formId;
         } catch (...) { return 0; }
     }
-    bool addFacet(FormId id, const Facet & facet, const FacetValue & value) override {
+    bool addFacet(FormId formId, const Facet & facet, const FacetValue & value) override {
         std::lock_guard<std::mutex> guard(access);
         auto                        type = facet.typeInfo().id;
-        if (stopped || (!published->forms.count(id) && !reservedForms.count(id)) || reservedAttachments.count({id, type})) return false;
+        if (stopped || (!published->forms.count(formId) && !reservedForms.count(formId)) || reservedAttachments.count({formId, type})) return false;
         auto column = published->columns.find(type);
-        if (column != published->columns.end() && column->second.count(id)) return false;
+        if (column != published->columns.end() && column->second.count(formId)) return false;
         try {
             auto entry = binding(facet, value, *this);
             if (!started) {
-                auto next               = std::make_shared<Data>(*published);
-                next->columns[type][id] = std::move(entry);
+                auto next                   = std::make_shared<Data>(*published);
+                next->columns[type][formId] = std::move(entry);
                 validateComposition(*next);
                 published = next;
             } else {
-                queued.columns[type][id] = std::move(entry);
-                reservedAttachments.emplace(id, type);
+                queued.columns[type][formId] = std::move(entry);
+                reservedAttachments.emplace(formId, type);
             }
             return true;
         } catch (...) { return false; }
@@ -436,9 +436,9 @@ bool Runtime::tick(UnitOfTime dt) {
             Context c(*view, slate, dt, current[n], registry, n, current, future, output);
             registry.laws[n]->tick(c);
         }
-        for (auto id : slate.deleted) {
-            candidate->forms.erase(id);
-            for (auto & c : candidate->columns) c.second.erase(id);
+        for (auto formId : slate.deleted) {
+            candidate->forms.erase(formId);
+            for (auto & c : candidate->columns) c.second.erase(formId);
         }
         if (!slate.deleted.empty())
             for (auto & c : candidate->columns)

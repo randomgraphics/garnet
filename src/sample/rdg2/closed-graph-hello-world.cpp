@@ -9,7 +9,6 @@
 
 #include <garnet/GNrdg2.h>
 #include <garnet/GNwin.h>
-#include <garnet/GNutil.h>
 
 using namespace GN;
 using namespace GN::rdg2;

@@ -5,7 +5,6 @@
 #include <garnet/GNwin.h>
 
 #include <memory>
-#include <string>
 
 using namespace GN;
 using namespace GN::e2;

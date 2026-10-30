@@ -24,6 +24,10 @@ endfunction()
 
 add_subdirectory(3rdparty)
 
+# Deliberately after the Catch2 subdirectory: vendored test framework code must not be
+# instrumented, or its lines would dominate the report.
+GN_enable_code_coverage()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include)
 
 # this is needed for fmt to build correctly with unicode support on Windows platform.
@@ -34,25 +38,11 @@ endif()
 if (GLUT_FOUND)
     add_simple_test(assimp)
 endif()
-if (D3D9_FOUND)
-    add_simple_test(d3d9)
-endif()
-#add_subdirectory(d3d11)
-if (D3D12_FOUND)
-    add_simple_test(d3d12)
-endif()
 add_simple_test(stack-dump)
-add_simple_test(engine)
-add_simple_test(font)
 if (GLUT_FOUND)
     add_simple_test(ft2)
 endif()
-add_simple_test(gpu)
 add_simple_test(pcre)
-add_simple_test(resdb)
-add_simple_test(rt)
-#add_simple_test(simd)
-add_simple_test(sprite)
 add_subdirectory(ut)
 add_subdirectory(internal)
 add_simple_test(xml)

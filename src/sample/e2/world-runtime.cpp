@@ -30,14 +30,15 @@ int main(int argc, const char * argv[]) {
         std::cerr << "--snapshot requires --headless\n";
         return 1;
     }
-    Universe   universe;
-    auto       world = World::create(universe, "falling-bodies");
-    const auto scale = PhysicalScale::MICROMETER();
+    Universe         universe;
+    auto             world     = World::create(universe, "falling-bodies");
+    const auto       scale     = PhysicalScale::MICROMETER();
+    constexpr size_t MAX_CUBES = 256;
     if (!world || !registerDynamicsFacets(*world)) {
         std::cerr << "Failed to register world capabilities\n";
         return 1;
     }
-    if (!world->addLaw(createDynamicsLaw({.scale = scale})) || !world->addLaw(createLifetimeLaw(universe, {.scale = scale}))) {
+    if (!world->addLaw(createDynamicsLaw({.scale = scale})) || !world->addLaw(createLifetimeLaw(universe, {.scale = scale, .maximumPopulation = MAX_CUBES}))) {
         std::cerr << "Failed to register laws\n";
         return 1;
     }
@@ -79,6 +80,12 @@ int main(int argc, const char * argv[]) {
     std::jthread simulation([&](std::stop_token stop) {
         auto deadline = std::chrono::steady_clock::now();
         for (uint64_t tick = 0; !stop.stop_requested() && (!testMode || tick < 600); ++tick) {
+            auto prime = world->primeSnapshot();
+            auto cubes = prime->query<LifetimeFacet>();
+            if (cubes.size() >= MAX_CUBES) {
+                const size_t toDelete = cubes.size() - MAX_CUBES + 1;
+                for (size_t i = 0; i < toDelete && i < cubes.size(); ++i) { world->submit(DestroyFormIntent {cubes[i]}); }
+            }
             if (!world->tick(UnitOfTime {10'000'000})) {
                 simulationFailed = true;
                 break;
@@ -98,7 +105,7 @@ int main(int argc, const char * argv[]) {
         auto prime = world->primeSnapshot();
         if (prime->tick() < lastTick || initial->tick() != 0 || initial->query<>().size() != 1) return 1;
         lastTick = prime->tick();
-        if (prime->query<LifetimeFacet>().size() > 1000) return 1;
+        if (prime->query<LifetimeFacet>().size() > MAX_CUBES) return 1;
 
         auto tableau       = extractTableau(*prime, camera, scale);
         tableau.clearColor = {{0.025f, 0.035f, 0.055f, 1.0f}};

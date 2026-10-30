@@ -1,292 +1,219 @@
 # Garnet Fiz (`GN::fiz`)
 
-`fiz` is Garnet's low-level physics, dynamics, and continuous media simulation
-module. It occupies the same architectural layer as `gpu2` and `fx2`: atomic,
-reusable, high-performance, and entirely independent of any specific world,
-entity, or game-engine architecture.
+`fiz` provides standalone CPU rigid-body and soft-body simulation backed by Jolt
+Physics. It has no E2, gpu2, FX2 or RDG2 dependency in its solver implementation.
+Rendering and conversion from E2 world coordinates belong to callers.
 
-## Architectural Role and Principles
+This document describes the current code. The broader continuous-media roadmap
+in `agent/FIZ_PHYSICS_MODULE.txt` is not an implemented API contract.
 
-- **Canonical Temporal Definition (`UnitOfTime`)**: `fiz` defines the engine's canonical
-  discrete temporal unit as `using UnitOfTime = std::chrono::nanoseconds;`. Higher-level
-  modules (`e2`) inherit this exact definition.
-- **Physical Scale & Unit Agnosticism (`Scalar`)**: `fiz` operates on floating-point precision
-  via `using Scalar = float;`. Crucially, `fiz` **does not hardcode SI meters or any specific physical dimension**.
-  A scalar unit of `1.0` can represent a meter, an astronomical unit (AU) for planetary orbits,
-  or a nanometer for molecular dynamics. The caller (`e2::PhysicalScale` or standalone client)
-  defines the meaning of the unit.
-- **100% Strict Forward Determinism**: Given an initial physical state $S_0$ and a sequence of discrete
-  integer timestamps, the simulation is guaranteed to reach the exact same, bit-identical state
-  every single run. Non-determinism is eliminated via:
-  1. Strict IEEE 754 compliance (`/fp:precise` on MSVC, `-ffp-contract=off -fno-fast-math` on Clang/GCC).
-  2. Deterministic parallel reduction: constraint solving, contact generation, and force summation
-     are executed in a stable order keyed by immutable unique entity IDs, eliminating thread-scheduling races.
-- **$T$-Symmetry (Time-Reversibility Where Physically Permissible)**: Physical laws in `fiz`
-  strive for time-direction neutrality. Conservative systems (gravity, orbital mechanics, elastic
-  springs, conservative XPBD constraints) support negative integer timesteps ($-\Delta t$) via
-  symplectic integrators (e.g., Velocity Verlet), returning to identical initial states without
-  history caches. Where physical laws themselves introduce thermodynamic dissipation (e.g. inelastic
-  energy loss or plastic deformation), physical entropy is respected.
-- **Zero E2 Dependency**: `fiz` does not include `<garnet/GNengine2.h>` and has
-  no knowledge of `Universe`, `World`, `Form`, or `Facet`. It operates strictly
-  on raw numerical coordinates, geometry buffers, and `gpu2` resources. 128-bit world coordinate
-  rebasing is handled entirely at the E2 boundary.
-- **Dual Consumption**:
-  - **With E2**: consumed by a World DynamicsLaw through the contracts in
-    [`../e2/README.md`](../e2/README.md). The Law reads the starting Prime,
-    solves in a local workspace and writes final Facet state to Slate. Physics
-    substeps belong to the World tick; independent mutable Form writeback is
-    superseded. Mutable solver continuation state requires explicit ownership.
-    The initial World MVP halts on failure rather than promising backend rollback.
-  - **Standalone**: usable independently in offline baking tools, unit tests,
-    dedicated headless servers, or lightweight non-E2 applications.
-- **Zero CPU-GPU Readback for GPU Simulations**: flexible bodies, volumetric
-  fluids, and ocean surfaces run directly via `gpu2` Compute Shaders. Their
-  output buffers and 3D textures transition seamlessly into `rdg2` artifacts for
-  rendering without round-trips to CPU host memory.
+## Implemented API
 
-## Public API Layout
-
-Client code includes only:
+Include the monolithic header; the subheaders reject direct inclusion:
 
 ```cpp
 #include <garnet/GNfiz.h>
 ```
 
-Subheaders live under `src/inc/garnet/fiz/` and reject direct inclusion via the
-`__GN_INSIDE_FIZ_H__` guard macro:
+| Public subheader | Current functionality |
+| --- | --- |
+| `common.h` | `UnitOfTime`, `Scalar`, math types, `Transform`, motion/collision enums and `SimulationMode`. |
+| `temper.h` | Density, restitution, friction, damping and compliance data, plus material presets. |
+| `hull.h` | `Hull::createBox`, `createSphere`, `createCapsule`, `createCylinder`, `createConvex` and `createMesh`; typed shape inspection interfaces. |
+| `solid.h` | `SolidEngine`, `SolidDesc`, rigid-body state/control and raycasts. |
+| `gel.h` | `GelMesh`, `GelDesc`, `Gel`, `GelSolver`, soft-body surface extraction and rigid bodies in the same solver. |
 
-- `common.h`: canonical `UnitOfTime` (`std::chrono::nanoseconds`), scalar types, math types, error codes, and shared enumerations.
-- `temper.h`: `Temper` material definitions (friction, restitution, mass, stiffness, damping).
-- `hull.h`: collision shapes and bounding geometry (`Hull`, `BoxHull`, `SphereHull`, `ConvexHull`, `MeshHull`).
-- `solid.h`: rigid-body dynamics (`Solid`, `SolidDesc`, `SolidEngine`).
-- `gel.h`: soft and bouncy volumetric body simulation (`Gel`, `GelDesc`, `GelSolver`).
-- `weft.h`: XPBD cloth simulation (`Weft`, `WeftDesc`, `WeftSolver`).
-- `strand.h`: hair and rod dynamics (`Strand`, `StrandSolver`).
-- `plume.h`: 3D grid-based smoke and fire solvers (`Plume`, `Blaze`).
-- `tide.h`: ocean wave spectrum and shallow-water simulation (`Tide`, `Current`).
-- `domain.h`: standalone physical simulation space (`Domain`).
+Factories return owning `AutoRef` objects. `SolidEngine` owns its simulated solids;
+`GelSolver` owns its gels and solids. Remove bodies through their owning solver.
+A retained object reference is not an immutable physics snapshot; copy the
+numerical state or surface data needed by another consumer. Keep the solver alive
+while using its bodies, particularly Gel objects and solids owned by GelSolver.
 
-## Physical Manifestations
+## Rigid bodies
 
-`fiz` models physical reality through distinct fundamental manifestations of matter,
-named in harmony with Garnet's evocative conceptual aesthetic:
+`SolidEngine` wraps a Jolt physics system and worker pool. Supported features are:
 
-### 1. Solid (`Solid` — Large-Scale Rigid Body Physics)
+- Static, kinematic and dynamic bodies, with box, sphere, capsule, cylinder,
+  convex and triangle-mesh hull factories. Mesh hulls are primarily for static scenery.
+- Position/orientation, linear/angular velocity, force/torque, impulses, sleep
+  control, AABB queries and runtime material updates through `Solid`.
+- Gravity, body counts and nearest raycast queries through `SolidEngine`.
+- Optional CCD through `SolidDesc::ccd = true`, mapped to Jolt's `LinearCast`
+  motion quality. The default is discrete collision detection.
 
-`Solid` represents impenetrable, rigid physical bodies governed by classical
-Newtonian-Eulerian mechanics:
+Mass is set by `SolidDesc::massOverride` when positive, otherwise calculated from
+hull volume and `Temper::density` (with a positive fallback). `Temper` does not
+have a `mass` field. Body pose is `SolidDesc::transform`, not a direct `position`
+field. Hull creation is through `Hull` factories, not `BoxHull::create()`.
 
-- **Collision Hulls (`Hull`)**: Box, Sphere, Capsule, Cylinder, Convex Mesh, and
-  Static Triangle Mesh.
-- **Physical Temper (`Temper`)**: density, mass, center of mass, linear/angular
-  damping, friction, and restitution coefficients.
-- **Solver Engine**: multithreaded CPU rigid-body engine backed by Jolt Physics,
-  supporting continuous collision detection (CCD), island sleeping, and constraint
-  joints.
-- **Debris Acceleration**: optional lightweight GPU compute path for tens of
-  thousands of non-interactive or particle-like rigid debris fragments.
+The GNfiz API does not currently expose joints, convex sweeps, trajectory
+prediction, speculative simulation sandboxes or a GPU debris solver. Jolt's
+underlying capabilities do not imply corresponding GNfiz interfaces.
 
-### 2. Gel (`Gel` — Soft & Bouncy Volumetric Bodies)
+## Soft bodies
 
-`Gel` represents deformable, viscoelastic, and bouncy volumetric bodies
-(such as rubber balls, cushions, silicone, gelatin, inflatables, and squishy organics):
+`GelSolver` also uses a CPU Jolt physics system. It creates both soft gels and
+rigid solids in one simulation for soft/rigid interaction; a separately created
+`SolidEngine` is a separate simulation and does not exchange contacts with it.
 
-- **Formulation**: Tetrahedral mesh **XPBD (Extended Position-Based Dynamics)**
-  and Shape Matching solvers running on GPU Compute (`gpu2`).
-- **Constitutive Constraints**:
-  - **Elastic Recovery**: edge and Neo-Hookean volumetric strain constraints
-    restoring the body's rest shape.
-  - **Hydrostatic Incompressibility**: tetrahedral volume preservation preventing
-    artificial volume collapse during impacts, creating natural squash-and-stretch bulging.
-  - **Inflatables**: internal pneumatic overpressure constraints for balloons, tyres,
-    and air-filled bouncy balls.
-- **Bounciness & Damping**: configurable restitution, internal viscoelastic damping,
-  and surface friction.
-- **Collisions**: continuous collision with `Solid` hulls and dynamic self-collision.
+`GelMesh` provides cube, tetrahedral sphere, hollow sphere and custom mesh
+factories. Custom construction groups surface vertices first and remaps indices.
+`GelDesc` configures XPBD edge-distance and tetrahedral-volume constraints,
+solver iteration count, damping, friction, restitution and pneumatic pressure.
+Nonzero pressure at creation omits tetrahedral-volume constraints to avoid
+conflicting constraints. `setPressure()` updates pressure; it does not rebuild
+the constraint set selected at creation.
 
-### 3. Weft & Strand (Flexible Bodies: Cloth & Hair)
+`Gel::surfaceVertices()` creates a CPU `Blob` of deformed positions and normals,
+in world space by default or center-of-mass space when requested.
+`surfaceIndices()` supplies the matching surface topology. The gel sample reads
+this CPU data and uploads it with gpu2 before rendering through FX2. This is not
+a GPU compute solver or a zero-copy, zero-upload physics/rendering path.
 
-- **`Weft` (Cloth & Fabrics)**:
-  - Formulated using **XPBD (Extended Position-Based Dynamics)** on GPU Compute.
-  - Enforces distance, shear, and dihedral-angle bending constraints.
-  - Aerodynamic lift and drag forces based on surface triangle normals.
-  - Collision handled against dynamic spheres, capsules, and signed distance
-    fields (SDFs).
-- **`Strand` (Hair, Fur & Ropes)**:
-  - Cosserat rod formulation / XPBD chain dynamics on GPU Compute.
-  - Simulates guide strands with stretching, bending, and torsion constraints.
-  - Tessellation/interpolation from guide strands to dense visual hair strands.
+Current implementation details callers should account for:
 
-### 4. Plume & Blaze (Gaseous Phenomena: Smoke & Fire)
+- Particle inverse masses come from `GelMesh::Vertex::invMass`.
+  `Gel::mass()` reports rest volume times material density; the solver does not
+  rescale particle inverse masses from that reported mass.
+- Creation uses `GelDesc::linearVelocity` for particle velocities; per-vertex
+  initial velocity and `GelDesc::angularVelocity` are not applied by the adapter.
+- Edge and volume compliance come from `GelDesc`; individual mesh constraint
+  compliance values are not passed through by the current adapter.
+- GNfiz does not expose a soft-body CCD or self-collision configuration contract.
+  The rigid-body CCD regression is not evidence of continuous soft-body collision.
 
-- **`Plume` (Smoke & Vapor)**:
-  - 3D Eulerian grid simulation solving incompressible Navier-Stokes equations
-    on `gpu2` Compute.
-  - High-order MacCormack advection, Boussinesq thermal buoyancy, and vorticity
-    confinement to preserve fine, turbulent swirling details.
-- **`Blaze` (Fire & Combustion)**:
-  - Coupled reaction model: fuel consumption, heat generation, expansion, and
-    soot production.
-  - Outputs 3D density and temperature volume textures directly imported into
-    `rdg2` as relics for raymarched volumetric shading.
+## Time, scale and repeatability
 
-### 5. Current & Tide (Liquids: Water & Ocean)
+`UnitOfTime` is `std::chrono::nanoseconds`, shared with E2. This makes duration
+arithmetic exact at the API boundary. Solvers convert the duration to floating-point
+seconds internally and subdivide positive steps to approximately 1/60 s or less.
+There is no persistent fixed-step accumulator promising equivalence between
+arbitrary groupings of calls to `step()`.
 
-- **`Current` (Small-Scale & Splash Fluid)**:
-  - Lagrangian particle simulation using SPH (Smoothed Particle Hydrodynamics)
-    or FLIP/PIC via GPU Compute.
-  - Accelerated by GPU spatial hashing grid.
-  - Rendered via screen-space fluid (SSF) or surface reconstruction.
-- **`Tide` (Large-Scale Water & Ocean)**:
-  - Tessendorf 2D IFFT wave spectrum (Phillips / JONSWAP wave spectra).
-  - Dynamic displacement maps, folding foam maps, and normal maps computed on GPU.
-  - 2D Shallow Water Equations (SWE) for near-shore shallow waves, boat wakes,
-    and obstacle ripples.
+`Scalar` is `float`. Callers choose consistent length, mass, density, gravity and
+velocity units. Default gravity and material values suit metre/kilogram-style
+scenes, but unit choice and numerically suitable shape sizes remain the caller's
+responsibility. GNfiz does not perform E2's 128-bit coordinate rebasing.
 
-## Shared Geometry & Procedural Object Data Flow
+Stepping behavior differs by solver:
 
-To maximize efficiency and eliminate redundant VRAM allocations, GPU-based physics
-and visual rendering share geometry data seamlessly:
+| Operation | `SolidEngine` | `GelSolver` |
+| --- | --- | --- |
+| Positive duration | Advance the Jolt simulation. | Advance the Jolt simulation. |
+| Zero duration | No-op. | No-op. |
+| Negative duration | Invert dynamic-body velocities, step forward by the magnitude, then invert back and correct the gravity position offset. | No-op; backward soft-body evolution is not implemented. |
 
-### 1. Zero-Copy Shared GPU Geometry Buffer
-- **Unified Buffer Allocation**: For deformable volumetric bodies (`Gel`), cloth (`Weft`),
-  hair rods (`Strand`), and ocean surfaces (`Tide`), the simulation compute shader writes
-  updated vertex positions, normals, and tangents directly into a `gpu2::Buffer`
-  (bound as an SSBO / Storage Buffer during compute dispatch).
-- **Direct Rendering Consumption**: In `rdg2`, this exact same `gpu2::Buffer` is declared
-  as a shared artifact. A GPU pipeline barrier (`Compute Write -> Vertex / Index / Shader Read`)
-  transitions the resource, allowing raster passes to bind it immediately as a Vertex/Index
-  Buffer or Storage Buffer for rendering.
-- **Zero CPU Readback & Zero GPU Duplication**: Physics and rendering share the exact same
-  underlying GPU memory without CPU involvement or duplicate GPU copies.
+The rigid negative-step path is tested for undamped translation and gravitational
+freefall with numerical tolerances. It is not an exact inverse of arbitrary
+collisions, friction, damping, sleeping or solver history, and does not guarantee
+return to a bit-identical state. `SimulationMode` is currently stored and returned
+by the solvers; changing it does not select a different integration algorithm or
+automatically disable dissipative material properties.
 
-### 2. Procedural Objects: Stream-Out vs. Dual Evaluation
-For procedural geometry (marching cubes, terrain tessellation, fractured meshes, procedural foliage/hair):
-- **Stream-Out Architecture (Approach B, Default)**: The procedural generator runs **once**.
-  The resulting vertices and indices are streamed out / stored into a unified GPU storage buffer
-  first, and then shared by rendering and the DynamicsLaw/GNfiz adapter with explicit
-  resource version/lifetime and GPU synchronization. A retained CPU reference alone
-  does not preserve immutable contents of an overwritten GPU buffer.
-  - **100% Bit-Identical Guaranteed**: The visible silhouette and physical collision boundaries
-    match identically down to the last float.
-  - **Optimal Compute**: Saves 50% procedural generation overhead by evaluating geometry once.
-- **Dual Evaluation (Approach A, Opt-In)**: Rerunning procedural evaluation twice is reserved
-  only as an explicit opt-in for trivial, purely analytical functions (e.g., mathematical planes or
-  simple trigonometric ripples) where intermediate buffer memory would be wasteful compared to
-  evaluating a simple formula inline.
+Repeatability tests cover specific scenes in the current build. The rigid test
+compares final positions, orientations and velocities bit-for-bit for 16 bodies
+and 60 steps across ten additional single-worker runs. A separate 1/2/4-worker
+check compares one body's final height within 0.01 units. The gel test compares
+surface positions/normals across two single-worker runs. These checks do not
+establish universal cross-platform or cross-thread-count bit identity.
+`entityId` is exposed as caller metadata; the adapter does not implement its own
+entity-ID-sorted contact/reduction pipeline.
 
-## Standalone Usage Example
+## E2 boundary
 
+The [E2 World runtime](../e2/README.md) shares the time type but its active
+`DynamicsLaw` still uses a local AABB box solver. It does not invoke `SolidEngine`
+or `GelSolver`. In particular, E2's demo has no CCD even though GNfiz rigid
+bodies can enable it.
+
+A future adapter must read tick-start Prime, rebase E2 coordinates into a suitable
+local physical frame, solve and write final FacetValues through Slate. Mutable
+Jolt continuation state needs explicit ownership and failure handling; retaining
+a PrimeView does not version or roll back a live Jolt solver. E2 currently halts
+on tick failure and does not promise automatic backend recovery.
+
+## Standalone rigid-body example
+
+This uses the current public API and needs no window or GPU:
 
 ```cpp
 #include <garnet/GNfiz.h>
 
-using namespace GN::fiz;
+bool simulateFallingBox() {
+    using namespace GN::fiz;
 
-// 1. Create a standalone physical domain
-Domain::CreateParameters cp;
-cp.gravity = {0.0f, -9.81f, 0.0f};
-auto domain = Domain::create(cp);
+    SolidEngineDesc settings;
+    settings.gravity = {0.0f, -9.81f, 0.0f};
+    settings.numWorkerThreads = 1;
+    auto engine = SolidEngine::create(settings);
+    if (!engine) return false;
 
-// 2. Define collision shape and material properties
-auto boxHull = BoxHull::create({1.0f, 1.0f, 1.0f});
-Temper temper;
-temper.mass = 5.0f;
-temper.friction = 0.5f;
+    SolidDesc floor;
+    floor.hull = Hull::createBox({10.0f, 0.5f, 10.0f});
+    floor.motionType = MotionType::STATIC;
+    floor.layer = CollisionLayer::NON_MOVING;
+    floor.transform.position = {0.0f, -0.5f, 0.0f};
+    if (!engine->createSolid(floor)) return false;
 
-// 3. Spawn a rigid solid
-SolidDesc solidDesc;
-solidDesc.hull = boxHull;
-solidDesc.temper = temper;
-solidDesc.position = {0.0f, 10.0f, 0.0f};
-auto box = domain->createSolid(solidDesc);
+    SolidDesc box;
+    box.hull = Hull::createBox({0.5f, 0.5f, 0.5f});
+    box.transform.position = {0.0f, 5.0f, 0.0f};
+    box.massOverride = 5.0f;
+    box.temper.friction = 0.5f;
+    box.ccd = true;
+    auto body = engine->createSolid(box);
+    if (!body) return false;
 
-// 4. Advance simulation independently (integer nanosecond UnitOfTime)
-domain->advance(UnitOfTime(5'000'000)); // +5 ms forward
-auto currentTransform = box->transform();
-
-// 5. True T-symmetric time reversal: advance backward in time with negative duration
-domain->advance(UnitOfTime(-5'000'000)); // -5 ms backward, returns to identical initial state
+    for (int i = 0; i < 120; ++i) engine->step(UnitOfTime {16'666'667});
+    return body->position().y < box.transform.position.y;
+}
 ```
 
-## Standalone Sample Applications (`src/sample/fiz/`)
+## Samples and checks
 
-To validate and demonstrate each unique physical feature independently of `engine2`
-(`e2`), dedicated standalone sample applications live under `src/sample/fiz/`:
+Only two standalone fiz sample targets currently exist:
 
-1. **`GNsample-fiz-solids` (`solids.cpp`)**:
-   - **Demonstrates**: Large-scale rigid body mechanics (thousands of falling boxes,
-     spheres, capsules, and convex hulls stacking and interacting).
-   - **Validates**: Jolt Physics multithreaded solving, continuous collision detection (CCD),
-     friction, restitution, and sleeping performance without E2 involvement.
-2. **`GNsample-fiz-gel` (`gel.cpp`)**:
-   - **Demonstrates**: Soft & bouncy volumetric bodies (`fiz::Gel`).
-   - **Validates**: XPBD tetrahedral volume constraints, squash-and-stretch bulging,
-     viscoelastic damping, and high-restitution bouncing impacts against static and dynamic hulls.
-3. **`GNsample-fiz-cloth` (`cloth.cpp`)**:
-   - **Demonstrates**: GPU XPBD cloth physics (`fiz::Weft`).
-   - **Validates**: Pinned and draped fabric, wind/aerodynamic drag interaction,
-     and dynamic collision against moving solid obstacles.
-4. **`GNsample-fiz-hair` (`hair.cpp`)**:
-   - **Demonstrates**: GPU hair and strand chain dynamics (`fiz::Strand`).
-   - **Validates**: Guide-strand bending/twisting constraints and visual interpolation
-     under rotational and translational acceleration.
-5. **`GNsample-fiz-smoke-fire` (`smoke-fire.cpp`)**:
-   - **Demonstrates**: Real-time 3D Eulerian grid simulation (`fiz::Plume` & `fiz::Blaze`).
-   - **Validates**: Buoyancy, vorticity confinement, combustion reactions, and direct
-     RDG2 raymarched volumetric rendering.
-6. **`GNsample-fiz-fluid-particles` (`fluid-particles.cpp`)**:
-   - **Demonstrates**: Small-scale particle fluids (`fiz::Current`).
-   - **Validates**: GPU SPH/FLIP particle simulation, neighbor search spatial hashing,
-     and fluid splashing in dynamic containers.
-7. **`GNsample-fiz-ocean` (`ocean.cpp`)**:
-   - **Demonstrates**: Large-scale water and ocean waves (`fiz::Tide`).
-   - **Validates**: GPU 2D IFFT Tessendorf wave spectrum, interactive shallow-water ripples,
-     and dynamic foam map generation rendered with PBR water shaders.
+- `GNsample-fiz-solids`: interactive rigid-body scene and a finite 60-step test mode.
+- `GNsample-fiz-gel`: interactive soft-body scene and a finite 180-step test mode
+  checking freefall, impact, rebound and volume stability.
 
-## Deterministic Verification & Internal Unit Tests (`src/core/fiz/test/`)
+Both visualize CPU simulation using gpu2/FX2. The solver library itself is
+headless; the visual samples still require a working GPU backend in test mode.
 
-To safeguard `fiz` behavior with zero shortcuts, an exhaustive battery of Catch2 unit
-tests lives under `src/core/fiz/test/`, automatically executed by `GNtest-internal`:
+```bash
+source env/garnet.rc
+build.py d --target GNtest-internal GNsample-fiz-solids GNsample-fiz-gel
+env/bin/cit.py -i '[fiz]'
+DISPLAY= build/linux.gcc.d/bin/GNsample-fiz-solids t
+DISPLAY= build/linux.gcc.d/bin/GNsample-fiz-gel t
+# Omit t to run a sample interactively on a display.
+```
 
-1. **`deterministic-forward-test.cpp` (100% Strict Forward Determinism)**:
-   - **Multi-Run Bit-Identical Repeatability**: Simulates a chaotic 500-body colliding and
-     stacking scene for 1,000 steps across 10 repeated runs. Asserts that every position,
-     quaternion, velocity, and contact impulse matches **bit-for-bit** across all 10 runs.
-   - **Thread-Count Invariance**: Executes the identical 1,000-step simulation using 1, 2, 4,
-     and 8 worker threads. Asserts bit-identical results, proving parallel work partitioning
-     and constraint sorting are completely immune to thread-scheduling order.
-   - **Substepping Consistency**: Asserts that stepping 10 $\times 5\text{ ms}$ sub-steps
-     yields the bit-identical result to stepping $1 \times 50\text{ ms}$ with internal accumulator.
-2. **`t-reversal-symmetry-test.cpp` ($T$-Symmetry & Reversibility)**:
-   - **Conservative Motion Reversal**: Integrates harmonic springs, gravitational trajectories,
-     and ballistic paths $+1{,}000$ steps forward, then $-1{,}000$ steps backward. Asserts that
-     bodies return to initial positions within machine precision ($\epsilon$).
-   - **Planetary Orbital Symplectic Test**: Simulates N-body gravitational orbits for 5,000 steps,
-     verifying strict conservation of total energy and angular momentum.
-3. **`integer-time-test.cpp` (Temporal Precision)**:
-   - Validates that `UnitOfTime` (`std::chrono::nanoseconds`) arithmetic accumulates zero drift
-     over $10^7$ steps, with exact algebraic cancellation: $+t + (-t) \equiv 0\text{ ns}$.
-4. **`scale-and-coordinate-test.cpp` (Scale Agnosticism & Precision)**:
-   - Validates numerical stability and solver convergence across extreme physical scales:
-     planetary orbits ($1.0 = 1\text{ AU}$), human scale ($1.0 = 1\text{ m}$), and microscopic
-     structures ($1.0 = 1\text{ nm}$).
-   - Verifies that 128-bit coordinate rebasing against anchor $O_{sim}$ preserves sub-millimeter
-     precision at coordinates $10^{18}$ units from world origin.
-5. **`solid-collision-test.cpp` (Rigid Body Mechanics & CCD)**:
-   - Verifies 20-box vertical stacking equilibrium without drift or explosive jitter.
-   - Verifies static and kinetic friction thresholds against analytical inclined planes.
-   - Verifies continuous collision detection (CCD) prevents high-speed bullet tunneling through thin walls.
-6. **`gel-softbody-test.cpp` (Soft Body Incompressibility & Recovery)**:
-   - Asserts hydrostatic tetrahedral volume preservation: total volume under extreme impact load
-     remains constant within $\pm 0.5\%$.
-   - Asserts complete elastic recovery to rest shape after compressive release.
-7. **`query-prediction-test.cpp` (Lookahead & Spatial Queries)**:
-   - Asserts raycast and convex sweep hits against dynamic bodies match exact ground truth.
-   - Asserts `predictTrajectory()` predicts the exact impact point that standard simulation hits.
-   - Asserts speculative ghost sandboxes can be created, stepped, and destroyed with zero side-effects
-     on live world state.
+Tests under `src/core/fiz/test/` cover:
 
+| Test file | Actual coverage |
+| --- | --- |
+| `solid-test.cpp` | Hull volumes/bounds, body lifecycle, motion/impulses and raycast results. |
+| `solid-collision-test.cpp` | Five-box stacking, relative restitution and a fast projectile against a thin wall with CCD. |
+| `deterministic-forward-test.cpp` | The repeated-run and worker-count checks described above. |
+| `t-reversal-symmetry-test.cpp` | Undamped translation and freefall reversal, with 0.05/0.1-unit tolerances. |
+| `integer-time-test.cpp` | 3,600-step integer duration accumulation/cancellation and chrono unit conversion. |
+| `scale-and-coordinate-test.cpp` | Kilometer- and centimeter-scale freefall; no E2 coordinate-rebasing test. |
+| `gel-softbody-test.cpp` | Mesh generation/remapping, lifecycle, impact volume error within 0.5% for the tested cube, recovery, repeated surface output and inflatable pressure/rebound. |
 
+There is no `query-prediction-test.cpp` and no test establishing the previously
+planned orbital, arbitrary substep-equivalence or universal reversibility claims.
+On 2026-10-05, the full Linux GCC debug build and Xvfb CIT passed (211 unit
+tests and 185 internal cases / 58,778 assertions, including fiz). Both finite fiz
+samples exited successfully: 60 rigid steps and 180 gel steps with all scenario
+checks passing. The standalone C++ example above passed a compiler syntax check.
+Windows and Android were not checked in this run. Detailed integration verification is recorded in
+[`agent/E2_MASTER_PREPARATION.txt`](../../../agent/E2_MASTER_PREPARATION.txt).
 
+## Not implemented
+
+Cloth (`Weft`), hair/rods (`Strand`), smoke/fire (`Plume`/`Blaze`), particle fluids
+(`Current`), ocean/shallow water (`Tide`) and a unified `Domain` remain roadmap
+concepts. Their previously described public headers, solvers and sample targets
+do not exist. GPU physics buffers shared directly with rendering, procedural
+stream-out integration and automatic RDG2 imports are also future work.

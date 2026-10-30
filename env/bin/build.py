@@ -7,6 +7,7 @@ utils = importlib.import_module("garnet-utils")
 def get_cmake_build_info(args):
     # determine build type
     build_type = str(args.variant).lower()
+    is_coverage = False
     if "d" == build_type or "debug" == build_type:
         suffix = ".d"
         build_type = "Debug"
@@ -16,9 +17,18 @@ def get_cmake_build_info(args):
     elif "r" == build_type or "release" == build_type:
         suffix = ".r"
         build_type = "Release"
-    elif "c" == build_type or "clean" == build_type:
-        # return [None, None, None] indicating a clear action.
-        return [None, None, None]
+    elif "c" == build_type or "coverage" == build_type:
+        # Coverage is Debug plus --coverage, kept in its own build folder. CMake's Debug
+        # flags are only "-g", so GCC already compiles at -O0; that matters because gcov
+        # drops the function record of anything the compiler inlines, and this codebase
+        # marks many header-defined helpers inline. Folding --coverage into the .d folder
+        # would instead put that overhead on every daily debug build.
+        suffix = ".c"
+        build_type = "Debug"
+        is_coverage = True
+    elif "x" == build_type or "clean" == build_type:
+        # return [None, None, None, None] indicating a clear action.
+        return [None, None, None, None]
     else:
         utils.rip(f"[ERROR] unrecognized build variant : {args.variant}.")
 
@@ -29,10 +39,17 @@ def get_cmake_build_info(args):
 
     # check for platform and compiler
     system = utils.BuildSystem(android = args.android_build, use_clang = args.use_clang)
+
+    # gcov instrumentation is only wired up for Linux desktop builds so far. Failing loudly
+    # here avoids silently producing an uninstrumented build whose report reads as 0%.
+    if is_coverage and (args.android_build or "Linux" != platform.system()):
+        utils.rip(f"[ERROR] the coverage variant 'c' is only supported on Linux. Detected: "
+                  f"{'Android' if args.android_build else platform.system()}.")
+
     build_dir = build_dir / f"{system.build_dir()}{suffix}"
 
     #done
-    return [build_type, build_dir, system.android_abi]
+    return [build_type, build_dir, system.android_abi, is_coverage]
 
 # Run cmake command. the args is list of arguments.
 def cmake(build_dir, cmdline):
@@ -90,10 +107,12 @@ def get_android_path(name):
     if not p.is_dir(): utils.rip(f"{p} folder not found.")
     return p
 
-def cmake_config(args, build_dir, build_type):
+def cmake_config(args, build_dir, build_type, is_coverage):
     update_submodules()
     os.makedirs(build_dir, exist_ok=True)
     config = f"-S {sdk_root_dir} -B {build_dir} -DCMAKE_BUILD_TYPE={build_type}"
+    if is_coverage:
+        config += " -DGN_BUILD_CODE_COVERAGE=ON"
     if args.android_build:
         sdk = get_android_path('ANDROID_SDK_ROOT')
         ndk = get_android_path('ANDROID_NDK_ROOT')
@@ -141,7 +160,7 @@ def print_compiler_info():
     print("CPPFLAGS =", os.environ.get("CPPFLAGS"))
     print("================================================================")
 
-def build_all(args, build_dir, build_type):
+def build_all(args, build_dir, build_type, is_coverage):
     # on MacOS, we sometimes need to explicitly set CPATH=/usr/local/include for CMake to find Vulkan headers.
     # This depends on which version of python is used and if MacOS SDK is detected and used or not.
     # To make things more deterministic, we explicitly set CPATH=/usr/local/include here.
@@ -149,7 +168,7 @@ def build_all(args, build_dir, build_type):
         os.environ["CPATH"] = "/usr/local/include"
 
     if not args.skip_config:
-        cmake_config(args, build_dir, build_type)
+        cmake_config(args, build_dir, build_type, is_coverage)
     if not args.config_only:
         jobs = ["-j8"] # limit to 8 cores.
         cmake(build_dir, ["--build", "."] + jobs + ["--config", build_type] + args.extra)
@@ -169,7 +188,8 @@ ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake c
 ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
 ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")
 ap.add_argument("--clang", dest="use_clang", action="store_true", help="Use CLANG instead of GCC as the compiler. This option is only valid on Linux.")
-ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(lean). "
+ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(overage, Linux only)/x (clean). "
+                                         "Note the positional 'c' selects the coverage variant while the '-c' flag means configure-only. "
                                          "Note that all parameters alert this one will be considered \"extra\" and passed to CMake directly.")
 ap.add_argument("extra", nargs=argparse.REMAINDER, help="Extra arguments passing to cmake.")
 args = ap.parse_args()
@@ -180,7 +200,7 @@ sdk_root_dir = utils.get_root_folder()
 # print(f"PhysRay-SDK root folder = {sdk_root_dir}")
 
 # get cmake build variant and build folder
-build_type, build_dir, android_abi = get_cmake_build_info(args)
+build_type, build_dir, android_abi, is_coverage = get_cmake_build_info(args)
 
 # Check if the build type is None. If it is, then we need to clean the build directory.
 if build_type is None:
@@ -196,4 +216,6 @@ if build_type is None:
 else:
     # do the actual build here.
     print_compiler_info()
-    build_all(args, build_dir, build_type)
+    if is_coverage:
+        print(f"[GARNET] code coverage instrumentation ON -> {build_dir}")
+    build_all(args, build_dir, build_type, is_coverage)

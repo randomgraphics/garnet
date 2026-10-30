@@ -4,7 +4,8 @@
 
 namespace GN::e2::basis {
 
-/// Asset service managing GPU visual assets such as meshes, textures, and shading effects.
+/// Retains registered GPU meshes/textures; create directly or use Visual::assets().
+/// A GPU-backed service initializes MESH_BOX before returning from create().
 struct Assets : Being {
     GN_E2_DEFINE_A_BEING(Being);
 
@@ -45,7 +46,7 @@ struct Assets : Being {
         AutoRef<gpu2::GpuContext> gpu;
     };
 
-    /// Well-known mesh IDs for built-in geometries.
+    /// Well-known mesh IDs. MESH_SPHERE is reserved and is not currently populated.
     static inline const MeshId MESH_BOX    = (MeshId) (uintptr_t) 1;
     static inline const MeshId MESH_SPHERE = (MeshId) (uintptr_t) 2;
 

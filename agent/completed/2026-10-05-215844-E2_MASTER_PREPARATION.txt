@@ -1,0 +1,103 @@
+# Assignment: E2 staging integration and master preparation
+
+---
+## Goals
+Merge the current E2 World runtime into feature/phys/main, then clean and verify
+the resulting change for a future merge into master. Do not merge master yet.
+
+---
+## Design
+Squash the verified runtime and current README status into the physics staging
+branch. Keep cleanup local to active E2 code, documentation and regression checks.
+Preserve suspended SimpleWorld/mesh-viewer and all unrelated work. Keep active
+assignments until explicit archival approval.
+
+---
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Phase 2.2 — verification and final master-diff review complete
+  Phase 1.1: staging tree matched the source branch exactly before committing; push succeeded
+  Phase 2.1: API/source/test audit, full debug build, CIT and standalone samples passed
+  Phase 2.2: full validation passed; master is an ancestor and GPU2/FX2/submodule changes are absent
+In progress: Phase 3.1 — PR #52 authorized for master merge; rechecking CI after MSVC shadowing fix
+--- END PROGRESS ---
+
+--- REFERENCE ---
+src/core/e2/README.md
+agent/E2_WORLD_RUNTIME.txt
+agent/E2_SIMPLE_VISUAL.txt
+
+--- BUILD / CI ---
+source env/garnet.rc
+build.py d
+xvfb-run -a env/bin/cit.py
+env/bin/cit.py -l
+build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless
+
+Verification on 2026-10-05 after staging integration and cleanup:
+- Full Linux GCC debug build: build.py d --parallel 2, exit 0.
+- Xvfb CIT: formatting, 211 unit tests, 185 internal cases / 58,778 assertions,
+  RDG2 triangle and gpu2 copy/compute smoke samples all pass; no internal skips.
+- World headless: 600 ticks / 343 frames / 928 events / 74,133 white-model pixels.
+- World Xvfb window-test: 600 ticks / 370 frames / 928 events; clean exit.
+- fiz solids: 60 steps; fiz gel: 180 steps, all four scenario checks pass.
+- E2 and fiz README C++ examples compiler-checked with debug target flags.
+- Local links in both module READMEs and sample README resolve; diff checks pass.
+- Logs: /tmp/e2-prep-{build,cit,headless,window,solids,gel,lint}.log.
+- Not checked: physical-window interaction, Windows, Android. No master merge.
+- Final review: origin/master is an ancestor; no GPU2/FX2 implementation or
+  submodule-pointer differences from master; no unrelated worktree changes.
+- Cleanup commit: 25ad47e52; final documentation/verification record follows it.
+
+Documentation audit findings:
+- Replaced fiz's nonexistent Domain and future cloth/fluid API/sample claims
+  with the five actual public subheaders and two Jolt CPU solvers.
+- Corrected soft-body upload flow, CCD scope, negative-step behavior, stored-only
+  SimulationMode and exact limits of determinism/reversal/scale tests.
+- Corrected E2 Slate operation names/order, no arbitrary future Intent tick,
+  cross-Universe ID limitation, Visual metadata and configurable spawn speed.
+- Removed two empty E2 translation units, unused member/includes; clarified
+  renderer comments and initialized reserved texture handles.
+
+--- WORKFLOW / CONVENTIONS ---
+- User authorized merging into physics staging, followed by cleanup for master.
+- Repo workflow requires squash integration and pushing the staging branch.
+- Do not merge master or archive assignments without further authorization.
+
+--- TASK BREAKDOWN ---
+Phase 1: Staging integration
+─────────────────────────────────────────────────────────────────────
+  Task 1.1: Commit current status and squash current E2 work into physics staging
+    Verify: fetched target ancestry, clean squash, identical integrated source tree
+    Commit: "feat(e2): integrate versioned World runtime into physics staging (Phase 1.1)"
+
+Phase 2: Cleanup and validation
+─────────────────────────────────────────────────────────────────────
+  Task 2.1: Review staging diff and clean active E2 implementation and documentation
+    Verify: review public contracts, unused code/includes, stale guidance and formatting
+    Commit: "docs(physics): reconcile E2 and fiz implementation contracts (Phase 2.1)"
+  Task 2.2: Verify build, regressions and samples; record master readiness
+    Verify: full debug build, relevant CIT checks, headless samples, final diff review
+    Commit: "docs(e2): record verified master preparation (Phase 2.2)"
+
+Phase 3: Authorized master integration
+─────────────────────────────────────────────────────────────────────
+  Task 3.1: Fix MSVC member-shadowing warnings and merge PR #52 after required CI
+    Verify: E2 targets build; Xvfb E2 tests 38 passed / 702 assertions; required cross-platform build-and-test succeeds before merge
+    Commit: "fix(e2): avoid inherited identity member shadowing on MSVC (Phase 3.1)"
+
+PR #52 initially passed Android and Linux Clang configurations but Windows
+reported C4458 warnings-as-errors where local id/name hid Being fields. Renamed
+only parameters and local variables in active E2 implementations/tests and the
+README extension example; behavior and API signatures are unchanged. Local
+GCC debug targets and all 38 E2/spatial cases pass. Required remote CI is pending.
+The separate autoptr race audit/proposed patch is not applied or included here.
+
+--- SUMMARY OF FILES TO TOUCH ---
+Phase 1 (integration):
+  src/core/e2/README.md — current verified implementation status
+  agent/E2_MASTER_PREPARATION.txt — integration and cleanup progress
+Phase 2 (cleanup and verification):
+  src/core/fiz/README.md — replace unimplemented API/solver/test promises with current behavior
+  src/core/e2/, src/inc/garnet/e2/ — focused cleanup as review warrants
+  src/sample/e2/ — sample documentation and checks as needed
+  agent/E2_MASTER_PREPARATION.txt — findings and final verification results

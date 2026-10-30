@@ -63,11 +63,11 @@ struct ChargeLaw final : Law {
     ChargeLaw(): Law(TYPE_INFO()) {}
     LawContract contract() const override { return {"charge", {&Charge::TYPE_INFO()}, {}, false}; }
     void        tick(LawContext & c) override {
-        for (auto id : c.prime.query<Charge>()) {
-            auto next  = c.prime.get<Charge>(id)->clone();
+        for (auto formId : c.prime.query<Charge>()) {
+            auto next  = c.prime.get<Charge>(formId)->clone();
             auto value = GN::RuntimeType::cast<Charge::Value>(next.get());
             ++value->amount;
-            c.slate.set<Charge>(id, *value);
+            c.slate.set<Charge>(formId, *value);
         }
     }
 };
@@ -78,12 +78,12 @@ struct AuditLaw final : Law {
     LawContract contract() const override { return {"audit", {&Audit::TYPE_INFO(), &Added::TYPE_INFO()}, {}, true}; }
     void        tick(LawContext & c) override {
         Audit audit;
-        for (auto id : c.prime.query<Charge>()) {
-            audit.observed += c.prime.get<Charge>(id)->amount;
-            if (c.prime.get<Added>(id))
-                c.slate.remove<Added>(id);
+        for (auto formId : c.prime.query<Charge>()) {
+            audit.observed += c.prime.get<Charge>(formId)->amount;
+            if (c.prime.get<Added>(formId))
+                c.slate.remove<Added>(formId);
             else
-                c.slate.add(id, Added {}, Added::Value {});
+                c.slate.add(formId, Added {}, Added::Value {});
         }
         c.slate.setState(audit);
     }

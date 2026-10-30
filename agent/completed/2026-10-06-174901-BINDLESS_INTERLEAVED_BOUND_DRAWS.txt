@@ -1,0 +1,135 @@
+# Assignment: Bindless Raster Interleaved Bind-Based Draws and ImGui Integration
+
+---
+
+## Goals
+
+1. Add a dedicated method `recordBindBasedDraw(const DrawParameters & params, const GpuResourceTable & drawResources)` to `GN::gpu2::bindless::Raster`.
+2. Enforce the descriptor heap set conflict invariant: `drawResources` must not define bindings in the same set as `heapSetIndex`. If a conflict occurs, the draw fails.
+3. Preserve zero descriptor compilation and zero hazard scanning overhead for pure bindless passes and pure bindless draws.
+4. Support dynamic pipeline layouts and descriptor set binding per draw for bind-based draws within the same render pass, keeping bound resources alive for the duration of the pass.
+5. Make `fx2::ImGuiBackend` descriptor set index configurable via `CreateParameters::resourceSetIndex` (default 0), patching the fragment SPIR-V binary when `resourceSetIndex != 0`.
+6. Add an overload `ImGuiBackend::record(gpu2::bindless::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads)` to record UI draws directly into a bindless raster pass.
+7. Migrate `mesh-viewer` to render its ImGui UI overlay within the same bindless render pass, eliminating the secondary pass and backbuffer reload.
+8. Add comprehensive unit tests in `src/core/gpu2/test/bindless-raster-test.cpp` and `src/core/fx2/test/imgui-backend-test.cpp`.
+
+---
+
+## Design
+
+### 1. Dedicated Method on `bindless::Raster`
+In `src/inc/garnet/gpu2/bindless.h`:
+```cpp
+virtual void recordBindBasedDraw(const DrawParameters & params, const GpuResourceTable & drawResources) = 0;
+```
+- Validates `drawResources`: if `heapSetIndex < drawResources.size() && !drawResources[heapSetIndex].empty()`, logs an error and returns without recording.
+- If `drawResources` is empty, delegates to pure bindless recording.
+- Non-empty `drawResources` are deduplicated into `mBoundResourceTables`.
+- Each recorded draw in `mStorage->draws` stores `boundResourceIndex` (`~0u` for pure bindless draws).
+
+### 2. Descriptor Allocation and Pipeline Layout Caching
+- At `seal()` time, if `mBoundResourceTables` is non-empty:
+  - Allocates a pass-level `vk::DescriptorPool` for all bound draw tables.
+  - For each unique table:
+    - Merges with `mPassResources` into `combinedTable`.
+    - Retrieves or creates `drawLayout` from `VkBindlessPipelineLayoutCache`.
+    - Allocates and updates `vk::DescriptorSet`s for sets in `drawResources` (`s != heapSetIndex`).
+    - Stores entry `{ drawLayout, descriptorSets }`.
+- In `VkBindlessPayload`:
+  - Registers all bound resource tables into `ctx.batchTracker` for automatic barrier generation.
+  - When submitting draws:
+    - Tracks `activePipelineLayout` and `activeBoundResourceIndex`.
+    - Binds the draw's pipeline layout and descriptor sets only when changed.
+    - Subsequent pure bindless draws revert to `mPipelineLayout` and pass sets.
+
+### 3. Configurable `ImGuiBackend` Set Index and Bindless Recording
+- `fx2::ImGuiBackend::CreateParameters` adds `uint32_t resourceSetIndex = 0;`.
+- When `resourceSetIndex != 0`, SPIR-V words for `kImguiFragSpv` are patched by replacing `OpDecorate %uiTexture DescriptorSet 0` with `resourceSetIndex`.
+- `ImGuiBackend::record(gpu2::bindless::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads)`:
+  - Prepares vertex/index buffers and upload work via CnC.
+  - For each draw command: creates `drawResources` with `drawResources[resourceSetIndex][0][0] = texture`, and calls `raster.recordBindBasedDraw(draw, drawResources)`.
+
+---
+
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: Task 5 - Migrate mesh-viewer to single-pass bindless + ImGui rendering
+In progress: Complete - signed off by user
+--- END PROGRESS ---
+
+--- REFERENCE ---
+
+Key source files:
+- `src/inc/garnet/gpu2/bindless.h`
+- `src/core/gpu2/vk-bindless-raster.h`
+- `src/core/gpu2/vk-bindless-raster.cpp`
+- `src/core/gpu2/vk-bindless-payload.h`
+- `src/core/gpu2/vk-bindless-payload.cpp`
+- `src/inc/garnet/fx2/imgui-backend.h`
+- `src/core/fx2/imgui-backend.cpp`
+- `src/tool/mesh-viewer/main.cpp`
+- `src/core/gpu2/test/bindless-raster-test.cpp`
+- `src/core/fx2/test/imgui-backend-test.cpp`
+
+--- BUILD / CI ---
+
+```powershell
+python env\bin\build.py -C d
+python env\bin\cit.py -i "[bindless]"
+python env\bin\cit.py -l
+```
+
+--- WORKFLOW / CONVENTIONS ---
+
+- Follow coding rules in `AGENTS.md`.
+- Keep pure bindless fast paths completely free of per-draw descriptor compilation.
+- Ensure all tests pass with Vulkan validation enabled.
+
+--- TASK BREAKDOWN ---
+
+- [x] Task 1: Public API & VkBindlessRaster support for recordBindBasedDraw
+  - Add `recordBindBasedDraw` to `bindless::Raster` in `src/inc/garnet/gpu2/bindless.h`.
+  - Update `VkBindlessRaster` and `StoredBindlessDraw` to capture bound resource tables and conflict check against `heapSetIndex`.
+  Verify: `python env\bin\build.py -C d`
+  Commit: feat(gpu2): add recordBindBasedDraw to bindless::Raster
+
+- [x] Task 2: VkBindlessPayload execution and descriptor management for bound draws
+  - Build descriptor sets and pipeline layouts in `seal()` for unique bound resource tables.
+  - Implement dynamic pipeline layout switching and descriptor set binding in `VkBindlessPayload::recordForVulkanSubmit`.
+  - Register bound resource tables in `ctx.batchTracker`.
+  Verify: `python env\bin\build.py -C d && python env\bin\cit.py -i "[bindless]"`
+  Commit: feat(gpu2): implement interleaved bound draws in VkBindlessPayload
+
+- [x] Task 3: Unit tests for interleaved bind-based draws in bindless::Raster
+  - Add unit tests verifying conflict rejection, pure bindless + bound interleaved execution, and pixel correctness.
+  Verify: `python env\bin\cit.py -i "[bindless]"`
+  Commit: test(gpu2): add unit tests for bindless::Raster interleaved bound draws
+
+- [x] Task 4: Configurable set index and bindless::Raster overload in ImGuiBackend
+  - Add `resourceSetIndex` to `ImGuiBackend::CreateParameters` and SPIR-V patching in `ImGuiBackendImpl`.
+  - Implement `ImGuiBackend::record(gpu2::bindless::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads)`.
+  - Add tests in `src/core/fx2/test/imgui-backend-test.cpp`.
+  Verify: `python env\bin\cit.py -i "[imgui]"`
+  Commit: feat(fx2): support configurable set index and bindless raster in ImGuiBackend
+
+- [x] Task 5: Migrate mesh-viewer to single-pass bindless + ImGui rendering
+  - Update `src/tool/mesh-viewer/main.cpp` to record ImGui directly into the scene's `bindless::Raster`.
+  - Verify headless snapshot and interactive build.
+  Verify: `python env\bin\cit.py -l && build\windows.vc.d\bin\Debug\GNtool-mesh-viewer.exe --box --snapshot build\viewer-test.png`
+  Commit: refactor(mesh-viewer): render ImGui in main bindless raster pass
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+Phase 1 (gpu2):
+- `src/inc/garnet/gpu2/bindless.h`
+- `src/core/gpu2/vk-bindless-raster.h`
+- `src/core/gpu2/vk-bindless-raster.cpp`
+- `src/core/gpu2/vk-bindless-payload.h`
+- `src/core/gpu2/vk-bindless-payload.cpp`
+- `src/core/gpu2/test/bindless-raster-test.cpp`
+
+Phase 2 (fx2 & sample):
+- `src/inc/garnet/fx2/imgui-backend.h`
+- `src/core/fx2/imgui-backend.cpp`
+- `src/core/fx2/test/imgui-backend-test.cpp`
+- `src/tool/mesh-viewer/main.cpp`
+- `src/core/gpu2/README.md`

@@ -12,6 +12,7 @@ before starting a task it covers.
 - `garnet-feature-workflow`: top-level lifecycle for feature work.
 - `garnet-execution-plan`: detailed, resumable plans with an Overview, dedicated workspace, progress tracking, and stepwise execution.
 - `garnet-build-test`: build, test, lint, and format through project wrappers.
+- `garnet-code-coverage`: coverage build variant and function-level test coverage reports.
 - `garnet-assignment-tracking`: create and maintain assignment files in `agent/`.
 - `garnet-agent-doc-archive`: archive finished agent docs into `agent/completed/`.
 - `garnet-public-interface`: public API boundaries, opaque contracts, and implementation-only declarations.
@@ -21,3 +22,4 @@ before starting a task it covers.
 - `garnet-git-workflow`: git workflow for assignments, branches, and commits.
 - `garnet-submodules`: git submodule rules.
 - `garnet-android-docker`: Android build verification via Docker.
+- `garnet-vulkan-verification`: verification requirements for Vulkan-based apps, samples, and tests under validation layers.
