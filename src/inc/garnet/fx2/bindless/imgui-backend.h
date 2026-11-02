@@ -1,5 +1,5 @@
 #if !defined(__GN_INSIDE_FX2_H__)
-    #error "Do not include <garnet/fx2/imgui-backend.h> directly. Include <garnet/GNfx2.h> instead."
+    #error "Do not include <garnet/fx2/bindless/imgui-backend.h> directly. Include <garnet/GNfx2.h> instead."
 #endif
 
 #include <imgui.h>
@@ -9,6 +9,7 @@ class Window;
 }
 
 namespace GN::gpu2::bindless {
+class DescriptorHeap;
 class Raster;
 }
 
@@ -22,7 +23,8 @@ struct ImGuiBackend : RCRT64 {
     struct CreateParameters {
         AutoRef<gpu2::GpuContext> gpu;
         win::Window &             window;
-        uint32_t                  resourceSetIndex = 0; ///< Descriptor set index for ImGui texture bindings (default 0).
+        AutoRef<gpu2::bindless::DescriptorHeap> heap; ///< Must be the heap used by the Raster passed to record().
+        uint32_t heapSetIndex = 0;                    ///< Descriptor set index occupied by heap (default 0).
     };
 
     /// Create a backend and a dedicated Dear ImGui context. Only one backend may be current
@@ -35,13 +37,9 @@ struct ImGuiBackend : RCRT64 {
     /// Finalize UI construction. The resulting draw data is consumed by record().
     virtual void render() = 0;
 
-    /// Append UI draws to raster and return their prerequisite upload work (empty for no draws).
+    /// Append UI draws to the configured bindless raster and return their prerequisite upload work.
+    /// The raster must use the same descriptor heap and heap set index supplied at creation.
     /// Submit uploads before the raster payload. On failure, discard the raster recording.
-    /// Call before the next newFrame(); the recorded work retains its buffers and textures.
-    virtual bool record(gpu2::GpuRaster & raster, AutoRef<gpu2::GpuPayload> & uploads) const = 0;
-
-    /// Append UI draws to bindless raster and return their prerequisite upload work (empty for no draws).
-    /// Uses recordBindBasedDraw with this backend's configured resourceSetIndex.
     /// Call before the next newFrame(); the recorded work retains its buffers and textures.
     virtual bool record(gpu2::bindless::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads) const = 0;
 

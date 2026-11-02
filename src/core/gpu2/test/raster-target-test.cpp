@@ -6,6 +6,16 @@
 using namespace GN;
 using namespace GN::gpu2;
 
+namespace {
+
+AutoRef<bindless::Raster> createRaster(const AutoRef<GpuContext> & gpu, const StrA & name, const RasterTarget * target) {
+    auto heap = bindless::DescriptorHeap::create("raster-test-heap", {.gpu = gpu, .capacity = 16});
+    if (!heap) return {};
+    return bindless::Raster::create(name, {.gpu = gpu, .target = target, .heap = heap});
+}
+
+} // namespace
+
 TEST_CASE("GPU2: geometry and resource tables transfer storage on move", "[gpu2][raster]") {
     RasterGeometry geometry;
     geometry.format.attributes.push_back(RasterGeometry::VertexAttribute {.location = 3});
@@ -48,7 +58,7 @@ TEST_CASE("GPU2: geometry and resource tables transfer storage on move", "[gpu2]
     CHECK(table[0][0].data() == views);
 }
 
-TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][raster][gpu]") {
+TEST_CASE("GPU2: bindless raster empty pass clears render target to blue", "[gpu2][raster][gpu]") {
     auto gpu = GpuContext::create("gpu", GpuContext::CreateParameters {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});
     if (!gpu) SKIP("No GPU context available");
 
@@ -66,9 +76,9 @@ TEST_CASE("GPU2: GpuRaster empty raster clears render target to blue", "[gpu2][r
     RasterTarget rt;
     rt.colorTargets.append(RasterTarget::ColorTarget(view));
     rt.setClearColor(0.0f, 0.0f, 1.0f);
-    auto raster = GpuRaster::create("clear-blue", {.gpu = gpu, .target = &rt});
+    auto raster = createRaster(gpu, "clear-blue", &rt);
     REQUIRE(raster);
-    REQUIRE(raster->target().clearColor.f4[3] == 1.0f);
+    CHECK(rt.clearColor.f4[3] == 1.0f);
     AutoRef<GpuPayload> rasterPayload = raster->seal();
 
     // Submit and block on CPU until the GPU fence fires.
@@ -104,10 +114,10 @@ TEST_CASE("GPU2: raster validates attachment subresources and clips to depth mip
     RasterTarget target;
     target.setColorTarget(0, colorView);
     target.colorTargets[0].target.mip = 4;
-    CHECK_FALSE(GpuRaster::create("invalid-color-mip", {.gpu = gpu, .target = &target}));
+    CHECK_FALSE(createRaster(gpu, "invalid-color-mip", &target));
     target.colorTargets[0].target.mip  = 0;
     target.colorTargets[0].target.face = 1;
-    CHECK_FALSE(GpuRaster::create("invalid-color-face", {.gpu = gpu, .target = &target}));
+    CHECK_FALSE(createRaster(gpu, "invalid-color-face", &target));
     target.colorTargets[0].target.face = 0;
     const auto depthFormat             = gpu->caps().defaultDepthFormat;
     if (depthFormat == gfx::img::PixelFormat::UNKNOWN()) SKIP("No depth attachment format");
@@ -117,18 +127,18 @@ TEST_CASE("GPU2: raster validates attachment subresources and clips to depth mip
     depthView.resource = depth;
     target.setDepthStencilTarget(depthView);
     target.depthStencilTarget.mip = 4;
-    CHECK_FALSE(GpuRaster::create("invalid-depth-mip", {.gpu = gpu, .target = &target}));
+    CHECK_FALSE(createRaster(gpu, "invalid-depth-mip", &target));
     target.depthStencilTarget.mip  = 0;
     target.depthStencilTarget.face = 1;
-    CHECK_FALSE(GpuRaster::create("invalid-depth-face", {.gpu = gpu, .target = &target}));
+    CHECK_FALSE(createRaster(gpu, "invalid-depth-face", &target));
     target.depthStencilTarget.face = 0;
     target.setClearColor(1, 0, 0, 1);
-    auto initial = GpuRaster::create("clear-base-red", {.gpu = gpu, .target = &target});
+    auto initial = createRaster(gpu, "clear-base-red", &target);
     REQUIRE(initial);
     // A smaller depth mip limits rendering even when the color attachment remains mip zero.
     target.depthStencilTarget.mip = 1;
     target.setClearColor(0, 0, 1, 1);
-    auto smaller = GpuRaster::create("clear-depth-mip-blue", {.gpu = gpu, .target = &target});
+    auto smaller = createRaster(gpu, "clear-depth-mip-blue", &target);
     REQUIRE(smaller);
     gpu->submit(GpuContext::SubmitParameters("depth-mip-extent").appendWork(initial->seal()).appendWork(smaller->seal()));
     gpu->waitForIdle();

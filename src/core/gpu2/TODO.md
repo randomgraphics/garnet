@@ -1,18 +1,14 @@
-## Raster DrawBundle and Payload optimization.
+## Bindless Raster DrawBundle and Payload optimization
 
-- Create a new class DrawBundle that is to record a series of draws for certain GpuRaster class. Multiple draw bundles
-  can record draw calls in parallel. Once seal is called, information of all draw bundles are connected/packed together
-  to become the final payload od the GpuRaster class.
-- Refactor code to move most of the heavy lifting logic from Payload's record-for-submit method back to draw/dispatch/copy and seal.
-  the goal is to keep payload's record-for-submit as lightweight as possible.
+- Create a draw bundle for `bindless::Raster` so multiple bundles can record draws in parallel and be packed into one payload at seal time.
+- Move suitable work from payload submission into recording and sealing so submit-time recording stays lightweight.
 
 ## Shader Hot Reload
 
 Add `GpuShader::reload()` for live shader reloading:
 
 - Valid only for shaders created via `GpuShader::load()` (no-op for binary-blob `create()`).
-- On success, invalidates all cached PSOs that reference the shader; they are rebuilt
-  transparently on the next `GpuRaster::seal()` / submit.
+- On success, invalidates cached bindless raster and compute PSOs that reference the shader; they are rebuilt on later GPU work submission.
 - Must not be called while GPU work referencing the shader is in flight.
 
 Transient Buffer and Texture Arena

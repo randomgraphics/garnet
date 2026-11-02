@@ -2,6 +2,7 @@
 
 #include "model-scene.h"
 #include <garnet/GNfx2.h>
+#include <glm/gtc/quaternion.hpp>
 
 namespace GN::viewer {
 
@@ -24,7 +25,7 @@ struct RenderModel {
     DynaArray<Material> materials;
     DynaArray<Instance> instances;
 
-    bool prepare(AutoRef<gpu2::GpuContext> gpu, gpu2::GpuCnC & geometryUploads, gpu2::bindless::CnC & materialUploads, AutoRef<fx2::bindless::PbrKernel> pbr,
+    bool prepare(AutoRef<gpu2::GpuContext> gpu, gpu2::bindless::CnC & geometryUploads, gpu2::bindless::CnC & materialUploads, AutoRef<fx2::bindless::PbrKernel> pbr,
                  AutoRef<fx2::bindless::LambertianKernel> lambertian, AutoRef<fx2::bindless::UnlitKernel> unlit, const ModelScene & scene, Shading shading,
                  const glm::mat4 & modelTransform);
 };

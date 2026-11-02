@@ -50,7 +50,7 @@ struct AssetsImpl : Assets {
         glm::vec2 uv;
     };
 
-    static gpu2::RasterGeometry createBoxGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, float halfExtent) {
+    static gpu2::RasterGeometry createBoxGeometry(AutoRef<GpuContext> gpu, gpu2::bindless::CnC & uploads, float halfExtent) {
         using AF = gpu2::RasterGeometry::AttributeFormat;
         gpu2::RasterGeometry geometry;
         geometry.format.attributes.push_back({.location = 0, .binding = 0, .offset = 0, .format = AF::F32_3});
@@ -100,7 +100,7 @@ struct AssetsImpl : Assets {
     bool init() {
         if (!mGpu) return true; // Headless / GPU-less support
 
-        auto uploads = GpuCnC::create({.gpu = mGpu});
+        auto uploads = gpu2::bindless::CnC::create("e2-box-geometry-uploads", {.gpu = mGpu});
         if (!uploads) return false;
         auto geometry = createBoxGeometry(mGpu, *uploads, 1.0f);
         if (geometry.vertices.empty()) return false;

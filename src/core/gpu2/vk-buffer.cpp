@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "vk-buffer.h"
-#include "vk-gpu-cnc.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk");
 
@@ -97,7 +96,10 @@ void BufferVulkan::unmap(const Mapped &) {
 bool BufferVulkan::setContent(ArrayView<const uint8_t> data, size_t offset) {
     if (!mRvBuffer || !mGpu || !mGpu->ready() || offset > mSize || data.size() > mSize - offset) return false;
     if (data.empty()) return true;
-    auto payload = createCncBufferUploadPayload(mGpu, AutoRef<Buffer>(this), data, offset);
+    auto cnc = bindless::CnC::create(name + "/set-content", {.gpu = mGpu});
+    if (!cnc) return false;
+    cnc->recordUploadBuffer(AutoRef<Buffer>(this), offset, data);
+    auto payload = cnc->seal();
     if (!payload) return false;
     // Shared CNC barriers restore READ_READY rather than leaving this buffer in transfer-write state.
     mGpu->submit(GpuContext::SubmitParameters(name + "/set-content").appendWork(payload));

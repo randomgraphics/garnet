@@ -206,7 +206,7 @@ int main(int argc, const char * argv[]) {
     if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
     AutoRef<fx2::ImGuiBackend> ui;
     if (host.window) {
-        ui = fx2::ImGuiBackend::create({.gpu = host.gpu, .window = *host.window, .resourceSetIndex = 2});
+        ui = fx2::ImGuiBackend::create({.gpu = host.gpu, .window = *host.window, .heap = renderer.heap});
         if (!ui) return EXIT_FAILURE;
     }
     const glm::vec3 center     = (model->bounds.minimum + model->bounds.maximum) * 0.5f;

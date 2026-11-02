@@ -182,6 +182,10 @@ void VkBindlessCnC::recordCompute(const ComputeParameters & params) {
             GN_ERROR(sLogger, "VkBindlessCnC::recordCompute: cannot record compute into a sealed CnC recorder");
             return;
         }
+    if (!mHeap) GN_UNLIKELY {
+            GN_ERROR(sLogger, "VkBindlessCnC::recordCompute: a descriptor heap is required for compute");
+            return;
+        }
     if (!params.cs) GN_UNLIKELY {
             GN_ERROR(sLogger, "VkBindlessCnC::recordCompute: compute shader is required");
             return;
@@ -311,9 +315,9 @@ void VkBindlessCnC::recordCopyImage(const ImageToImage & p) {
     mOps.emplace_back(std::move(op));
 }
 
-std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) {
-    DownloadResult<GpuCnC::TextureContent> result;
-    auto                                   future = result.future();
+std::future<bindless::CnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) {
+    DownloadResult<bindless::CnC::TextureContent> result;
+    auto                                          future = result.future();
 
     auto * srcVk = RuntimeType::cast<TextureVulkanBase>(src.get());
     if (mSealed || !srcVk || regions.empty()) GN_UNLIKELY {
@@ -350,7 +354,7 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
     };
     const uint64_t align = lcm4(bb);
 
-    DynaArray<GpuCnC::Region> packed;
+    DynaArray<Region> packed;
     uint64_t                  cursor = 0;
     for (const auto & r : regions) {
         const uint32_t w        = r.imageExtent.x ? r.imageExtent.x : 1;
@@ -362,7 +366,7 @@ std::future<GpuCnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<T
 
         cursor = ((cursor + align - 1) / align) * align;
 
-        GpuCnC::Region pr  = r;
+        Region         pr  = r;
         pr.dataOffset      = cursor;
         pr.rowPitchBytes   = blocksX * bb;
         pr.slicePitchBytes = blocksX * blocksY * bb;
@@ -426,18 +430,22 @@ AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::Cn
             return {};
         }
 
-    if (!cp.heap) GN_UNLIKELY {
-            GN_ERROR(sLogger, "createVkBindlessCnc: null DescriptorHeap");
+    if (!cp.heap && !cp.passResources.empty()) GN_UNLIKELY {
+            GN_ERROR(sLogger, "createVkBindlessCnc: passResources requires a DescriptorHeap");
             return {};
         }
 
     // Fast conflict check: passResources must not collide with heapSetIndex
-    if (cp.heapSetIndex < cp.passResources.size() && !cp.passResources[cp.heapSetIndex].empty()) GN_UNLIKELY {
+    if (cp.heap && cp.heapSetIndex < cp.passResources.size() && !cp.passResources[cp.heapSetIndex].empty()) GN_UNLIKELY {
             GN_ERROR(sLogger, "createVkBindlessCnc: passResources conflicts with heapSetIndex {}", cp.heapSetIndex);
             return {};
         }
 
-    auto *             vkHeap = RuntimeType::cast<VkBindlessDescriptorHeap>(cp.heap.get());
+    auto *             vkHeap = cp.heap ? RuntimeType::cast<VkBindlessDescriptorHeap>(cp.heap.get()) : nullptr;
+    if (cp.heap && !vkHeap) GN_UNLIKELY {
+            GN_ERROR(sLogger, "createVkBindlessCnc: DescriptorHeap is not a Vulkan heap");
+            return {};
+        }
     vk::PipelineLayout pl     = vkGpu->bindlessPipelineLayoutCache().getOrCreateCompute(cp, vkHeap);
     if (!pl) GN_UNLIKELY {
             GN_ERROR(sLogger, "createVkBindlessCnc: failed to obtain VkPipelineLayout for compute");

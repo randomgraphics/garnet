@@ -208,7 +208,7 @@ int main(int argc, const char ** argv) {
     if (!ssc) return -1;
 
     auto initialization = gpu2::bindless::CnC::create("fiz.initialization", {.gpu = gpuContext, .heap = heap});
-    auto geomUploads    = GpuCnC::create({.gpu = gpuContext});
+    auto geomUploads    = gpu2::bindless::CnC::create("fiz-solids-geometry-uploads", {.gpu = gpuContext});
     if (!initialization || !geomUploads) return -1;
 
     auto pbr = fx2::bindless::PbrKernel::create(*heap, *initialization);

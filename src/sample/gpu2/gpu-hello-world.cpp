@@ -58,6 +58,13 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
+    // Bindless Raster requires a heap even for clear-only passes with no draws.
+    auto heap = bindless::DescriptorHeap::create("hello-world-heap", {.gpu = gpu, .capacity = 1});
+    if (!heap) {
+        std::fprintf(stderr, "Failed to create descriptor heap\n");
+        return -1;
+    }
+
     RasterTarget rt;
     rt.colorTargets.append(RasterTarget::ColorTarget {});
     rt.setClearColor(0.0f, 0.0f, 1.0f);
@@ -80,7 +87,11 @@ int main(int argc, const char ** argv) {
         // Empty raster pass: no draw calls, just clears the backbuffer to pure blue.
         // seal() is called immediately so it acts as a clear-only pass.
         rt.setColorTarget(0, frame.view);
-        auto                raster        = GpuRaster::create("hello-world", {.gpu = gpu, .target = &rt});
+        auto                raster        = bindless::Raster::create("hello-world", {.gpu = gpu, .target = &rt, .heap = heap});
+        if (!raster) {
+            std::fprintf(stderr, "Failed to create raster\n");
+            return -1;
+        }
         AutoRef<GpuPayload> rasterPayload = raster->seal();
 
         // Submit the clear pass, gated on frame.ready so we don't write before the image is acquired.

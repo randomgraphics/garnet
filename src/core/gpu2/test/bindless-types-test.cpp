@@ -129,7 +129,7 @@ TEST_CASE("bindless heap uses all five resource types and four samplers for 1024
     REQUIRE(inputIndex != Heap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(outputIndex != Heap::INVALID_DESCRIPTOR_INDEX);
     REQUIRE(imageIndex != Heap::INVALID_DESCRIPTOR_INDEX);
-    auto uploads = GpuCnC::create({.gpu = gpu});
+    auto uploads = bindless::CnC::create("typed-heap-upload", {.gpu = gpu});
     REQUIRE(uploads);
     const float a[4] = {1, 2, 3, 4}, b[4] = {2, 3, 4, 5};
     uploads->recordUploadBuffer(uniform, 0, {reinterpret_cast<const uint8_t *>(a), sizeof(a)});
@@ -138,7 +138,7 @@ TEST_CASE("bindless heap uses all five resource types and four samplers for 1024
         auto texture = makeRgba8Tex(gpu, "sampled", 2, 1);
         REQUIRE(texture);
         const uint8_t  pixels[8] = {uint8_t(i), 64, 32, 255, uint8_t(255 - uint8_t(i)), 192, 96, 255};
-        GpuCnC::Region region;
+        bindless::CnC::Region region;
         region.imageExtent = {2, 1, 1};
         uploads->recordUploadImage(texture, {pixels, sizeof(pixels)}, {&region, 1});
         REQUIRE(heap->allocate(Heap::SAMPLED_TEXTURE, GpuResourceView {texture}).slot == i + 8);
@@ -158,7 +158,7 @@ TEST_CASE("bindless heap uses all five resource types and four samplers for 1024
     const uint32_t p[] = {8, COUNT, uniformIndex.slot, inputIndex.slot, outputIndex.slot, imageIndex.slot};
     compute->recordCompute({.cs = shader, .x = COUNT / 64, .immediates = {reinterpret_cast<const uint8_t *>(p), sizeof(p)}});
     submitAndWait(gpu, "typed-dispatch", compute->seal());
-    auto downloads = GpuCnC::create({.gpu = gpu});
+    auto downloads = bindless::CnC::create("typed-heap-readback", {.gpu = gpu});
     REQUIRE(downloads);
     auto download = downloads->recordDownloadBuffer(output);
     submitAndWait(gpu, "typed-readback", downloads->seal());

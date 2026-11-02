@@ -20,18 +20,22 @@ static void submitAndWait(GpuContext * gpu, AutoRef<GpuPayload> payload) {
     while (!done) gpu->pump();
 }
 
-// ── GpuCnC creation ──────────────────────────────────────────────────────────────────
+static AutoRef<bindless::CnC> makeCnc(const AutoRef<GpuContext> & gpu) {
+    return bindless::CnC::create("gpu2-cnc-test", {.gpu = gpu});
+}
+
+// ── bindless::CnC creation ───────────────────────────────────────────────────────────
 
 TEST_CASE("GPU2/CnC: create returns valid object", "[gpu2][cnc][gpu]") {
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = makeCnc(gpu);
     REQUIRE(cnc);
 }
 
 TEST_CASE("GPU2/CnC: create with null gpu returns empty", "[gpu2][cnc]") {
-    auto cnc = GpuCnC::create({.gpu = {}});
+    auto cnc = bindless::CnC::create("missing-gpu", {.gpu = {}});
     REQUIRE_FALSE(cnc);
 }
 
@@ -41,7 +45,7 @@ TEST_CASE("GPU2/CnC: empty seal returns valid payload", "[gpu2][cnc][gpu]") {
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = makeCnc(gpu);
     REQUIRE(cnc);
 
     AutoRef<GpuPayload> payload = cnc->seal();
@@ -52,7 +56,7 @@ TEST_CASE("GPU2/CnC: double seal returns empty", "[gpu2][cnc][gpu]") {
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = makeCnc(gpu);
     REQUIRE(cnc);
 
     cnc->seal();
@@ -84,7 +88,7 @@ TEST_CASE("GPU2/CnC: copyBufferToBuffer copies data correctly", "[gpu2][cnc][gpu
     auto dst = Buffer::create("dst", {.context = gpu, .size = SIZE});
     REQUIRE(dst);
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = makeCnc(gpu);
     REQUIRE(cnc);
     cnc->recordCopyBuffer({.src = src, .dst = dst, .size = SIZE});
     submitAndWait(gpu.get(), cnc->seal());
@@ -116,7 +120,7 @@ TEST_CASE("GPU2/CnC: copyBufferToBuffer with offsets", "[gpu2][cnc][gpu]") {
     auto dst = Buffer::create("dst", {.context = gpu, .size = FULL});
     REQUIRE(dst);
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = makeCnc(gpu);
     REQUIRE(cnc);
     cnc->recordCopyBuffer({.src = src, .dst = dst, .srcOffset = 2 * sizeof(uint32_t), .dstOffset = 0, .size = 4 * sizeof(uint32_t)});
     submitAndWait(gpu.get(), cnc->seal());
@@ -160,15 +164,15 @@ TEST_CASE("GPU2/CnC: copyBufferToImage uploads pixel data", "[gpu2][cnc][gpu]") 
     auto tex = Texture::create("dst-tex", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H)});
     if (!tex) SKIP("RGBA8 texture unavailable");
 
-    GpuCnC::Region region;
+    bindless::CnC::Region region;
     region.imageOffset = {0, 0, 0};
     region.imageExtent = {W, H, 1};
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = makeCnc(gpu);
     REQUIRE(cnc);
     {
         auto mapped = staging->map();
-        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const bindless::CnC::Region>(&region, 1));
     }
     submitAndWait(gpu.get(), cnc->seal());
 
@@ -198,7 +202,9 @@ TEST_CASE("GPU2/CnC: compute with null shader logs error but does not crash", "[
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto heap = bindless::DescriptorHeap::create("null-shader-heap", {.gpu = gpu, .capacity = 1});
+    REQUIRE(heap);
+    auto cnc = bindless::CnC::create("null-shader-cnc", {.gpu = gpu, .heap = heap});
     REQUIRE(cnc);
 
     // Record a dispatch with no compute shader: payload records error during record time, not crash.

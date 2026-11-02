@@ -27,36 +27,27 @@ Readers follow gpu2's read-ready invariant and add no per-draw resource tracking
 
 ## Shared shader constants
 
-SSC retains one scene/camera GPU buffer pair per instance. A snapshot captures
-CPU values into upload work; it does not allocate an independent GPU version.
-
-```text
-upload A -> every consumer of A -> upload B -> every consumer of B
-```
-
-Uploading A and B first and then drawing both makes both draws observe B. An
-upload cannot occur between draws inside one physical raster pass: use pass
-boundaries or separate SSC instances for distinct views. Preserve initialization
-payloads when discarding a snapshot; SSC transfers pending initialization work
-once and does not automatically return it again. Mutations of public `set0` and
-snapshot creation must be caller-synchronized.
-
-Set 0 is shared across effects: binding 0 scene/frame/lights, binding 1 camera,
-and bindings 2–5 skybox/irradiance/prefiltered environment/BRDF lookup. Set 1 holds
-kernel-private data. CPU parameters are packed into the shader ABI internally;
-callers should not include private packing headers. SSC owns shared data and
-environment preparation; `SkyKernel` owns background rendering.
+`fx2::bindless::SharedShaderConstants` owns versioned uniform storage shared by
+bindless kernels. Callers create an SSC with fixed uniform and streaming budgets,
+fill the public `bindless::SharedUniforms` schema, and record each version through
+the caller's bindless CnC. Every update has an independent GPU range, so producers
+can be submitted before consumers without snapshots aliasing later CPU updates.
+See the versioned uniform store section below for ownership and ordering details.
 
 ## ImGui backend
 
-`fx2::ImGuiBackend` owns a Dear ImGui context and records into the caller's
-`gpu2::GpuRaster`. The caller owns the native event loop. Call `newFrame()`, build
+`fx2::ImGuiBackend` owns a Dear ImGui context and records into a caller-owned
+`gpu2::bindless::Raster`. Supply the same `DescriptorHeap` and heap set index to
+the backend and each raster. The backend allocates sampled-texture indices for
+the font atlas and registered textures, then writes those indices into each draw's
+immediate data. The caller owns the native event loop. Call `newFrame()`, build
 widgets, `render()`, then `record(raster, uploads)`. Submit returned uploads before
 the raster. On recording failure, discard the raster. Callers select target alpha
 blending; the backend sets UI depth/culling/scissor state per draw.
 
 Record before starting the next ImGui frame or modifying registered textures.
-Payloads retain their buffers/textures until completion. The backend disables
+Raster payloads retain each texture descriptor lease until completion, so
+unregistered slots are not recycled while recorded work can still use them. The backend disables
 `imgui.ini` persistence by default. An E2 application can wrap it in a
 `VisualOverlay`; standalone tools use it directly without E2.
 
@@ -64,18 +55,6 @@ Payloads retain their buffers/textures until completion. The backend disables
 headless run). The mesh viewer uses public typed effects and owns import,
 navigation, GPU resource preparation, and frame submission. No tool should
 include FX2's private shader headers or recreate effect parameter packing.
-
-## Bindless design: separate `fx2::bindless` implementation
-
-The second implementation attempt adds new classes in `GN::fx2::bindless`.
-Existing `GN::fx2` classes, shader contracts, and callers remain intact. The first
-attempt is retained in a stash as reference; it is not the implementation baseline.
-The resumable plan is [FX2_BINDLESS_DEVICE.txt](../../../agent/completed/fx2-bindless-device-2026-10-06-165650/FX2_BINDLESS_DEVICE.txt).
-
-Implement one small, verifiable step at a time. New bindless classes use the existing
-`gpu2::bindless::DescriptorHeap`, `Raster`, and `CnC` facilities. Applications opt
-into the new path explicitly; wholesale caller migration and legacy API removal
-are outside this attempt. Keep `gpu2::GpuContext` named as-is.
 
 ### GPU resource layout
 
@@ -150,8 +129,7 @@ upload A -> upload B -> consumers B -> consumers A
 ```
 
 Range offsets and sizes must obey GPU uniform buffer alignment and range limits.
-Multiple passes share one state without duplicating producer work. The existing
-`fx2::SharedShaderConstants` and its snapshot API are unchanged.
+Multiple passes share one state without duplicating producer work.
 
 #### Streaming pool
 

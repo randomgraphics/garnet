@@ -54,10 +54,15 @@ TEST_CASE("bindless::CnC: creation validation and conflict checks", "[gpu2][bind
         CHECK_FALSE(cnc);
     }
 
-    // 2. Null heap returns empty
+    // 2. A missing heap permits transfer-only recording.
     {
         auto cnc = bindless::CnC::create("null-heap", {.gpu = gpu, .heap = nullptr});
-        CHECK_FALSE(cnc);
+        CHECK(cnc);
+
+        GpuResourceTable passResources;
+        passResources.resize(1);
+        auto resourceCnc = bindless::CnC::create("null-heap-with-pass-resources", {.gpu = gpu, .heap = nullptr, .passResources = passResources});
+        CHECK_FALSE(resourceCnc);
     }
 
     // 3. Fast conflict check: passResources collides with heapSetIndex
@@ -84,6 +89,35 @@ TEST_CASE("bindless::CnC: creation validation and conflict checks", "[gpu2][bind
         auto cnc = bindless::CnC::create("pure-bindless", {.gpu = gpu, .heap = heap, .heapSetIndex = 0});
         CHECK(cnc);
     }
+}
+
+TEST_CASE("bindless::CnC: transfer-only recording without descriptor heap", "[gpu2][bindless][cnc][gpu]") {
+    auto gpu = makeGpu();
+    if (!gpu) SKIP("No GPU context available");
+
+    constexpr size_t bufferSize = 16;
+    const uint8_t    input[bufferSize] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    auto             src = Buffer::create("transfer-only-src", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
+    auto             dst = Buffer::create("transfer-only-dst", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
+    REQUIRE(src);
+    REQUIRE(dst);
+
+    auto cnc = bindless::CnC::create("transfer-only", {.gpu = gpu});
+    REQUIRE(cnc);
+    cnc->recordUploadBuffer(src, 0, ArrayView<const uint8_t>(input, bufferSize));
+    cnc->recordCopyBuffer({.src = src, .dst = dst, .size = bufferSize});
+    auto download = cnc->recordDownloadBuffer(dst, 0, bufferSize);
+
+    auto payload = cnc->seal();
+    REQUIRE(payload);
+    submitAndWait(gpu, "submit-transfer-only", payload);
+
+    REQUIRE(download.valid());
+    auto blob = download.get();
+    REQUIRE(blob);
+    REQUIRE(blob->size() == bufferSize);
+    const auto * downloaded = static_cast<const uint8_t *>(blob->data());
+    for (size_t i = 0; i < bufferSize; ++i) CHECK(downloaded[i] == input[i]);
 }
 
 TEST_CASE("bindless::CnC: retainResource, addCleanupCallback, and seal lifecycle", "[gpu2][bindless][cnc]") {
@@ -368,7 +402,7 @@ TEST_CASE("bindless::CnC: automated invariant restores uploaded texture to SHADE
         auto m = staging->map();
         std::memset(m.data(), 128, stagingSize);
     }
-    GpuCnC::Region region;
+    bindless::CnC::Region region;
     region.imageOffset = {0, 0, 0};
     region.imageExtent = {16, 16, 1};
 
@@ -376,7 +410,7 @@ TEST_CASE("bindless::CnC: automated invariant restores uploaded texture to SHADE
     REQUIRE(cnc);
     {
         auto mapped = staging->map();
-        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const bindless::CnC::Region>(&region, 1));
     }
 
     auto payload = cnc->seal();
@@ -437,7 +471,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
                 p[i * 4 + 3] = 255;
             }
         }
-        GpuCnC::Region region;
+        bindless::CnC::Region region;
         region.imageOffset = {0, 0, 0};
         region.imageExtent = {W, H, 1};
 
@@ -445,7 +479,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
         REQUIRE(cnc1);
         {
             auto mapped = stagingBlue->map();
-            cnc1->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+            cnc1->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const bindless::CnC::Region>(&region, 1));
         }
         auto payload1 = cnc1->seal();
         REQUIRE(payload1);
@@ -490,7 +524,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
                 p[i * 4 + 3] = 255;
             }
         }
-        GpuCnC::Region region;
+        bindless::CnC::Region region;
         region.imageOffset = {0, 0, 0};
         region.imageExtent = {W, H, 1};
 
@@ -500,7 +534,7 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
         // Interleave: copy buffer to image, then immediately sample in compute within the SAME pass
         {
             auto mapped = stagingYellow->map();
-            cnc3->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&region, 1));
+            cnc3->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const bindless::CnC::Region>(&region, 1));
         }
         PushConstantData pc {slot.slot, 2.0f};
         cnc3->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
@@ -523,16 +557,16 @@ TEST_CASE("bindless::CnC: copyBufferToImage transitions to writable and restores
     }
 }
 
-TEST_CASE("GpuCnC & GpuRaster: automated invariant restores buffer and render target states", "[gpu2][cnc][raster][invariant]") {
+TEST_CASE("bindless CnC and Raster: automated invariant restores buffer and render target states", "[gpu2][cnc][raster][invariant]") {
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    // 1. Traditional GpuCnC upload restores destination buffer to read-ready
+    // 1. Bindless CnC upload restores destination buffer to read-ready
     auto buf = Buffer::create("cnc-buf", Buffer::CreateParameters {.context = gpu, .size = 128});
     REQUIRE(buf);
 
     std::vector<uint8_t> data(128, 77);
-    auto                 cnc = GpuCnC::create({.gpu = gpu});
+    auto                 cnc = bindless::CnC::create("invariant-upload", {.gpu = gpu});
     REQUIRE(cnc);
     cnc->recordUploadBuffer(buf, 0, data);
     submitAndWait(gpu, "cnc-upload", cnc->seal());
@@ -541,7 +575,7 @@ TEST_CASE("GpuCnC & GpuRaster: automated invariant restores buffer and render ta
     REQUIRE(readBack.size() == 128);
     CHECK(readBack[0] == 77);
 
-    // 2. Traditional GpuRaster rendering restores color target to SHADER_READ_ONLY_OPTIMAL and depth target to DEPTH_STENCIL_READ_ONLY_OPTIMAL
+    // 2. Bindless Raster rendering restores attachments to readable layouts.
     auto colorTex = makeRgba8Tex(gpu, "raster-color", 16, 16);
     auto depthTex = Texture::create(
         "raster-depth",
@@ -553,7 +587,9 @@ TEST_CASE("GpuCnC & GpuRaster: automated invariant restores buffer and render ta
     rt.setColorTarget(0, GpuResourceView {colorTex});
     rt.depthStencilTarget.setView(GpuResourceView {depthTex});
 
-    auto raster = GpuRaster::create("test-raster", {.gpu = gpu, .target = &rt});
+    auto heap = bindless::DescriptorHeap::create("invariant-raster-heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+    auto raster = bindless::Raster::create("test-raster", {.gpu = gpu, .target = &rt, .heap = heap});
     REQUIRE(raster);
     submitAndWait(gpu, "raster-clear", raster->seal());
 
@@ -594,7 +630,7 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
             p[i * 4 + 3] = 255;
         }
     }
-    GpuCnC::Region texRegion;
+    bindless::CnC::Region texRegion;
     texRegion.imageOffset = {0, 0, 0};
     texRegion.imageExtent = {W, H, 1};
 
@@ -608,7 +644,7 @@ TEST_CASE("bindless::CnC + bindless::Raster: uploaded vertex buffer directly dra
     REQUIRE(cnc);
     {
         auto mapped = stagedTex->map();
-        cnc->recordUploadImage(sampleTex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const GpuCnC::Region>(&texRegion, 1));
+        cnc->recordUploadImage(sampleTex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const bindless::CnC::Region>(&texRegion, 1));
     }
     cnc->recordUploadBuffer(vb, 0, dummyVbData);
     auto cncPayload = cnc->seal();

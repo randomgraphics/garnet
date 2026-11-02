@@ -654,7 +654,7 @@ int main(int argc, const char ** argv) {
         obj.materialIndex = static_cast<uint32_t>(view.bufferView.offset / sizeof(MaterialData));
     }
 
-    auto materialUploads = GpuCnC::create({.gpu = gpu});
+    auto materialUploads = bindless::CnC::create("bindless-material-upload", {.gpu = gpu});
     if (!materialUploads) return -1;
     materialUploads->recordUploadBuffer(materialBuffer, 0, {reinterpret_cast<const uint8_t *>(materials.data()), materials.size() * sizeof(MaterialData)});
     auto materialInitialization = materialUploads->seal();
@@ -762,7 +762,7 @@ int main(int argc, const char ** argv) {
         // â”€â”€â”€ Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action via CnC) â”€â”€â”€
         AutoRef<GpuPayload> uploadPayload;
         if (streamingEnabled && !testMode) {
-            auto cnc = GpuCnC::create({.gpu = gpu});
+            auto cnc = bindless::CnC::create("bindless-texture-streaming", {.gpu = gpu});
             if (cnc) {
                 for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
                     updateDynamicTextureImage(dynImg, TEX_SIZE, TEX_SIZE, s, simTime);

@@ -1,5 +1,7 @@
 # Mip Level Handling in Garnet GPU2 and RDG2
 
+> Historical research note. This document describes the earlier bound raster implementation; references to `GpuRaster` and its payload are not current API guidance. GPU2 raster work now uses `bindless::Raster`.
+
 ## Overview
 This document details how render targets with mip levels are initialized, tracked, and transitioned in the Garnet 3D engine, specifically focusing on the Vulkan backend's GPU2 abstraction layer and RDG2 implementation.
 
@@ -359,7 +361,7 @@ vk::ImageLayout GpuResourceStateTrackerVulkan::texturePassLayout(const TextureVu
 
 ## 5. Usage in Render Pass Recording
 
-**File:** [src/core/gpu2/vk-gpu-raster.cpp](src/core/gpu2/vk-gpu-raster.cpp) - Lines 130-240
+**Historical source:** `vk-gpu-raster.cpp`, removed when GPU2 became bindless-only. The following excerpt documents the former implementation.
 
 The tracker is used to determine which layout to put render target attachments in:
 

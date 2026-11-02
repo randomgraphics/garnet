@@ -12,7 +12,7 @@ using namespace gpu2;
 
 namespace {
 
-AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, GpuCnC & uploads, const ModelScene::Texture & source) {
+AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, bindless::CnC & uploads, const ModelScene::Texture & source) {
     gfx::img::Image image;
     if (!source.path.empty()) {
         auto file = fs::openFile(source.path, std::ios::in | std::ios::binary);
@@ -43,7 +43,7 @@ AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, GpuCnC & uploads, const Mo
 
 } // namespace
 
-bool RenderModel::prepare(AutoRef<GpuContext> gpu, GpuCnC & geometryUploads, bindless::CnC & materialUploads, AutoRef<fx2::bindless::PbrKernel> pbrKernel,
+bool RenderModel::prepare(AutoRef<GpuContext> gpu, bindless::CnC & geometryUploads, bindless::CnC & materialUploads, AutoRef<fx2::bindless::PbrKernel> pbrKernel,
                           AutoRef<fx2::bindless::LambertianKernel> lambertianKernel, AutoRef<fx2::bindless::UnlitKernel> unlitKernel, const ModelScene & scene,
                           Shading choice, const glm::mat4 & modelTransform) {
     DynaArray<ModelInstance> collected;
@@ -165,7 +165,7 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
     if (!heap || !ssc) return false;
 
     auto initialization  = bindless::CnC::create("viewer.material-init", {.gpu = gpu, .heap = heap});
-    auto geometryUploads = GpuCnC::create({.gpu = gpu});
+    auto geometryUploads = bindless::CnC::create("viewer.geometry-init", {.gpu = gpu});
     if (!initialization || !geometryUploads) return false;
     pbr        = fx2::bindless::PbrKernel::create(*heap, *initialization);
     lambertian = fx2::bindless::LambertianKernel::create(*heap, *initialization);

@@ -12,7 +12,7 @@ struct HelperVertex {
     glm::vec2 uv;
 };
 
-inline GN::gpu2::RasterGeometry makeGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::GpuCnC & uploads, const GN::DynaArray<HelperVertex> & verts,
+inline GN::gpu2::RasterGeometry makeGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads, const GN::DynaArray<HelperVertex> & verts,
                                              const GN::DynaArray<uint32_t> & indices) {
     using AF = GN::gpu2::RasterGeometry::AttributeFormat;
     GN::gpu2::RasterGeometry geometry;
@@ -45,7 +45,7 @@ inline GN::gpu2::RasterGeometry makeGeometry(GN::AutoRef<GN::gpu2::GpuContext> g
     return geometry;
 }
 
-inline GN::gpu2::RasterGeometry boxGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::GpuCnC & uploads, glm::vec3 halfExtents) {
+inline GN::gpu2::RasterGeometry boxGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads, glm::vec3 halfExtents) {
     const float     hx = halfExtents.x, hy = halfExtents.y, hz = halfExtents.z;
     const glm::vec3 corners[8] = {
         {-hx, -hy, -hz}, {hx, -hy, -hz}, {hx, hy, -hz}, {-hx, hy, -hz}, {-hx, -hy, hz}, {hx, -hy, hz}, {hx, hy, hz}, {-hx, hy, hz},
@@ -73,7 +73,7 @@ inline GN::gpu2::RasterGeometry boxGeometry(GN::AutoRef<GN::gpu2::GpuContext> gp
     return makeGeometry(gpu, uploads, verts, indices);
 }
 
-inline GN::gpu2::RasterGeometry sphereGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::GpuCnC & uploads, float radius, uint32_t slices,
+inline GN::gpu2::RasterGeometry sphereGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads, float radius, uint32_t slices,
                                                uint32_t stacks) {
     GN::DynaArray<HelperVertex> verts;
     GN::DynaArray<uint32_t>     indices;

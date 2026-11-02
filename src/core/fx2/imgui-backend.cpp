@@ -19,6 +19,33 @@ struct UiVertex {
     glm::vec4 color;
 };
 
+struct UiConstants {
+    glm::vec2 scale;
+    glm::vec2 translate;
+    uint32_t textureIndex;
+    uint32_t samplerIndex;
+};
+
+struct UiTextureSlot {
+    AutoRef<gpu2::bindless::DescriptorHeap> heap;
+    AutoRef<gpu2::Texture> texture;
+    gpu2::bindless::DescriptorHeap::DescriptorIndex index = gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
+
+    ~UiTextureSlot() {
+        if (heap && index != gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) heap->free(index);
+    }
+};
+
+struct UiSamplerSlot {
+    AutoRef<gpu2::bindless::DescriptorHeap> heap;
+    AutoRef<gpu2::Sampler> sampler;
+    gpu2::bindless::DescriptorHeap::DescriptorIndex index = gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
+
+    ~UiSamplerSlot() {
+        if (heap && index != gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) heap->free(index);
+    }
+};
+
 ImGuiKey toImGuiKey(win::KeyCode key) {
     using K = win::KeyCode;
     switch (key) {
@@ -136,8 +163,8 @@ ImGuiKey toImGuiKey(win::KeyCode key) {
 struct ImGuiBackendImpl final : ImGuiBackend {
     GN_REGISTER_RUNTIME_TYPE(ImGuiBackend);
 
-    ImGuiBackendImpl(AutoRef<gpu2::GpuContext> gpu, win::Window & window, uint32_t resourceSetIndex)
-        : ImGuiBackend(TYPE_INFO(), "imgui-gpu2-backend"), mGpu(std::move(gpu)), mWindow(window), mResourceSetIndex(resourceSetIndex) {}
+    ImGuiBackendImpl(AutoRef<gpu2::GpuContext> gpu, win::Window & window, AutoRef<gpu2::bindless::DescriptorHeap> heap, uint32_t heapSetIndex)
+        : ImGuiBackend(TYPE_INFO(), "imgui-gpu2-backend"), mGpu(std::move(gpu)), mWindow(window), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex) {}
 
     ~ImGuiBackendImpl() override {
         mKeyTether.clear();
@@ -147,6 +174,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
     }
 
     bool init() {
+        if (!mHeap || mHeap->gpu() != mGpu) return false;
         mContext = ImGui::CreateContext();
         if (!mContext) return false;
         selectContext();
@@ -180,19 +208,36 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         // Font creation is one-shot initialization; the blocking helper avoids retaining atlas
         // staging resources across the first application frame.
         if (!mFontTexture->setContent(fontImage)) return false;
-        mTextures.emplace(1, mFontTexture);
+        auto font = std::make_shared<UiTextureSlot>();
+        font->heap = mHeap;
+        font->texture = mFontTexture;
+        font->index = mHeap->allocate(gpu2::bindless::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {mFontTexture});
+        if (font->index == gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
+        mTextures.emplace(1, std::move(font));
         io.Fonts->SetTexID(1);
+
+        auto sampler = gpu2::Sampler::create("imgui-sampler", {.context = mGpu});
+        if (!sampler) return false;
+        mSamplerSlot = std::make_shared<UiSamplerSlot>();
+        mSamplerSlot->heap = mHeap;
+        mSamplerSlot->sampler = sampler;
+        mSamplerSlot->index = mHeap->allocate(gpu2::bindless::DescriptorHeap::SAMPLER, gpu2::GpuResourceView {sampler});
+        if (mSamplerSlot->index == gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
 
         mVs = gpu2::GpuShader::create({.context = mGpu, .name = "imgui.vert", .binary = kImguiVertSpv, .size = sizeof(kImguiVertSpv)});
 
         std::vector<uint32_t> fragSpv(kImguiFragSpv, kImguiFragSpv + sizeof(kImguiFragSpv) / sizeof(uint32_t));
-        if (mResourceSetIndex != 0) {
+        if (mHeapSetIndex != 0 || mHeap->bindingIndex() != 0) {
             for (size_t i = 5; i < fragSpv.size();) {
                 uint32_t word   = fragSpv[i];
                 uint16_t opcode = word & 0xFFFF;
                 uint16_t length = (word >> 16) & 0xFFFF;
                 if (length == 0) break;
-                if (opcode == 71 && length >= 4 && fragSpv[i + 2] == 34) { fragSpv[i + 3] = mResourceSetIndex; }
+                if (opcode == 71 && length >= 4) {
+                    if (fragSpv[i + 2] == 34) fragSpv[i + 3] = mHeapSetIndex;
+                    if (fragSpv[i + 2] == 33 && (fragSpv[i + 3] == 1 || fragSpv[i + 3] == 5))
+                        fragSpv[i + 3] += mHeap->bindingIndex();
+                }
                 i += length;
             }
         }
@@ -225,8 +270,13 @@ struct ImGuiBackendImpl final : ImGuiBackend {
 
     ImTextureID registerTexture(AutoRef<gpu2::Texture> texture) override {
         if (!texture) return ImTextureID_Invalid;
+        auto slot = std::make_shared<UiTextureSlot>();
+        slot->heap = mHeap;
+        slot->texture = std::move(texture);
+        slot->index = mHeap->allocate(gpu2::bindless::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {slot->texture});
+        if (slot->index == gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return ImTextureID_Invalid;
         const ImTextureID tid = ++mNextTextureId;
-        mTextures.emplace(tid, std::move(texture));
+        mTextures.emplace(tid, std::move(slot));
         return tid;
     }
 
@@ -244,16 +294,11 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         return ImGui::GetIO().WantCaptureKeyboard;
     }
 
-    struct PushConstants {
-        glm::vec2 scale;
-        glm::vec2 translate;
-    };
-
     struct PreparedFrame {
         AutoRef<gpu2::Buffer>     vertexBuffer;
         AutoRef<gpu2::Buffer>     indexBuffer;
         AutoRef<gpu2::GpuPayload> uploads;
-        PushConstants             constants {};
+        UiConstants               constants {};
     };
 
     bool prepareFrame(PreparedFrame & frame) const {
@@ -263,7 +308,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         const uint64_t indexBytes  = static_cast<uint64_t>(mDrawData->TotalIdxCount) * sizeof(ImDrawIdx);
         frame.vertexBuffer         = gpu2::Buffer::create("imgui-frame-vb", {.context = mGpu, .size = vertexBytes});
         frame.indexBuffer          = gpu2::Buffer::create("imgui-frame-ib", {.context = mGpu, .size = indexBytes});
-        auto cnc                   = gpu2::GpuCnC::create({.gpu = mGpu});
+        auto cnc                   = gpu2::bindless::CnC::create("imgui-frame-uploads", {.gpu = mGpu});
         if (!frame.vertexBuffer || !frame.indexBuffer || !cnc) { return false; }
 
         DynaArray<uint8_t> vertices, indices;
@@ -304,66 +349,6 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         return bool(frame.uploads);
     }
 
-    bool record(gpu2::GpuRaster & raster, AutoRef<gpu2::GpuPayload> & uploads) const override {
-        uploads.clear();
-        PreparedFrame frame;
-        if (!prepareFrame(frame)) return false;
-        uploads = std::move(frame.uploads);
-        if (!frame.vertexBuffer) return true;
-
-        uint64_t globalVertexOffset = 0, globalIndexOffset = 0;
-        for (const ImDrawList * list : mDrawData->CmdLists) {
-            for (const ImDrawCmd & command : list->CmdBuffer) {
-                if (command.UserCallback) {
-                    if (command.UserCallback != ImDrawCallback_ResetRenderState) command.UserCallback(list, &command);
-                    continue;
-                }
-                const float   clipX = (command.ClipRect.x - mDrawData->DisplayPos.x) * mDrawData->FramebufferScale.x;
-                const float   clipY = (command.ClipRect.y - mDrawData->DisplayPos.y) * mDrawData->FramebufferScale.y;
-                const float   clipZ = (command.ClipRect.z - mDrawData->DisplayPos.x) * mDrawData->FramebufferScale.x;
-                const float   clipW = (command.ClipRect.w - mDrawData->DisplayPos.y) * mDrawData->FramebufferScale.y;
-                const int32_t x     = static_cast<int32_t>(std::max(clipX, 0.0f));
-                const int32_t y     = static_cast<int32_t>(std::max(clipY, 0.0f));
-                if (clipZ <= x || clipW <= y) continue;
-
-                const auto texture = mTextures.find(command.GetTexID());
-                if (texture == mTextures.end()) continue;
-
-                gpu2::RasterGeometry            drawGeometry;
-                gpu2::GpuResourceTable          drawResources;
-                gpu2::GpuRaster::DrawParameters draw {.geometry = drawGeometry, .resources = drawResources};
-                draw.vs = mVs;
-                draw.ps = mPs;
-                drawGeometry.format.attributes.push_back(
-                    {.location = 0, .binding = 0, .offset = offsetof(UiVertex, position), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
-                drawGeometry.format.attributes.push_back(
-                    {.location = 1, .binding = 0, .offset = offsetof(UiVertex, texcoord), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
-                drawGeometry.format.attributes.push_back(
-                    {.location = 2, .binding = 0, .offset = offsetof(UiVertex, color), .format = gpu2::RasterGeometry::AttributeFormat::F32_4});
-                drawGeometry.vertices.push_back({.buffer = frame.vertexBuffer,
-                                                 .offset = globalVertexOffset + static_cast<uint64_t>(command.VtxOffset) * sizeof(UiVertex),
-                                                 .stride = sizeof(UiVertex)});
-                drawGeometry.indices    = {.buffer = frame.indexBuffer,
-                                           .offset = globalIndexOffset + static_cast<uint64_t>(command.IdxOffset) * sizeof(ImDrawIdx),
-                                           .stride = sizeof(ImDrawIdx)};
-                drawGeometry.indexCount = command.ElemCount;
-                draw.states.cullMode    = gpu2::RasterState::CULL_NONE;
-                draw.states.depthState  = gpu2::RasterState::DepthState {};
-                draw.states.scissorRect =
-                    gpu2::RasterState::ScissorRect {.x = x, .y = y, .width = static_cast<uint32_t>(clipZ - x), .height = static_cast<uint32_t>(clipW - y)};
-                drawResources.resize(mResourceSetIndex + 1);
-                drawResources[mResourceSetIndex].resize(1);
-                drawResources[mResourceSetIndex][0].resize(1);
-                drawResources[mResourceSetIndex][0][0].resource = texture->second;
-                draw.immediates = referenceTo(new SimpleBlob<uint8_t>(sizeof(frame.constants), reinterpret_cast<const uint8_t *>(&frame.constants)));
-                raster.recordDraw(draw);
-            }
-            globalVertexOffset += static_cast<uint64_t>(list->VtxBuffer.Size) * sizeof(UiVertex);
-            globalIndexOffset += static_cast<uint64_t>(list->IdxBuffer.Size) * sizeof(ImDrawIdx);
-        }
-        return true;
-    }
-
     bool record(gpu2::bindless::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads) const override {
         uploads.clear();
         PreparedFrame frame;
@@ -392,7 +377,6 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 if (texture == mTextures.end()) continue;
 
                 gpu2::RasterGeometry                   drawGeometry;
-                gpu2::GpuResourceTable                 drawResources;
                 gpu2::bindless::Raster::DrawParameters draw {.geometry = drawGeometry};
                 draw.vs = mVs;
                 draw.ps = mPs;
@@ -413,12 +397,12 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 draw.states.depthState  = gpu2::RasterState::DepthState {};
                 draw.states.scissorRect =
                     gpu2::RasterState::ScissorRect {.x = x, .y = y, .width = static_cast<uint32_t>(clipZ - x), .height = static_cast<uint32_t>(clipW - y)};
-                drawResources.resize(mResourceSetIndex + 1);
-                drawResources[mResourceSetIndex].resize(1);
-                drawResources[mResourceSetIndex][0].resize(1);
-                drawResources[mResourceSetIndex][0][0].resource = texture->second;
-                draw.immediates                                 = {reinterpret_cast<const uint8_t *>(&frame.constants), sizeof(frame.constants)};
-                raster.recordBindBasedDraw(draw, drawResources);
+                frame.constants.textureIndex = texture->second->index.slot;
+                frame.constants.samplerIndex = mSamplerSlot->index.slot;
+                draw.immediates = {reinterpret_cast<const uint8_t *>(&frame.constants), sizeof(frame.constants)};
+                raster.retainResource(texture->second);
+                raster.retainResource(mSamplerSlot);
+                raster.recordDraw(draw);
             }
             globalVertexOffset += static_cast<uint64_t>(list->VtxBuffer.Size) * sizeof(UiVertex);
             globalIndexOffset += static_cast<uint64_t>(list->IdxBuffer.Size) * sizeof(ImDrawIdx);
@@ -455,13 +439,15 @@ struct ImGuiBackendImpl final : ImGuiBackend {
 
     AutoRef<gpu2::GpuContext>                               mGpu;
     win::Window &                                           mWindow;
-    uint32_t                                                mResourceSetIndex = 0;
+    AutoRef<gpu2::bindless::DescriptorHeap>                 mHeap;
+    uint32_t                                                mHeapSetIndex = 0;
     ImGuiContext *                                          mContext          = nullptr;
     ImDrawData *                                            mDrawData         = nullptr;
     AutoRef<gpu2::GpuShader>                                mVs, mPs;
     AutoRef<gpu2::Texture>                                  mFontTexture;
+    std::shared_ptr<UiSamplerSlot>                          mSamplerSlot;
     ImTextureID                                             mNextTextureId = 1;
-    std::unordered_map<ImTextureID, AutoRef<gpu2::Texture>> mTextures;
+    std::unordered_map<ImTextureID, std::shared_ptr<UiTextureSlot>> mTextures;
     Tether                                                  mKeyTether;
     Tether                                                  mCharTether;
     Tether                                                  mAxisTether;
@@ -470,8 +456,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
 } // namespace
 
 AutoRef<ImGuiBackend> ImGuiBackend::create(const CreateParameters & parameters) {
-    if (!parameters.gpu) return {};
-    AutoRef<ImGuiBackendImpl> backend(new ImGuiBackendImpl(parameters.gpu, parameters.window, parameters.resourceSetIndex));
+    if (!parameters.gpu || !parameters.heap) return {};
+    AutoRef<ImGuiBackendImpl> backend(new ImGuiBackendImpl(parameters.gpu, parameters.window, parameters.heap, parameters.heapSetIndex));
     if (!backend->init()) return {};
     return backend;
 }

@@ -47,7 +47,7 @@ struct GelVertex {
     glm::vec4 color = glm::vec4(1);
 };
 
-static RasterGeometry gelGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, const AutoRef<GelMesh> & mesh) {
+static RasterGeometry gelGeometry(AutoRef<GpuContext> gpu, gpu2::bindless::CnC & uploads, const AutoRef<GelMesh> & mesh) {
     RasterGeometry result;
     if (!mesh) return result;
     DynaArray<uint32_t> indices;
@@ -114,7 +114,7 @@ public:
     RasterGeometry                      rigidGeometries[RIGID_COUNT];
     AutoRef<fx2::bindless::PbrMaterial> rigidMaterials[RIGID_COUNT];
 
-    bool initMeshesAndAssets(AutoRef<GpuContext> gpu, GpuCnC & uploads, AutoRef<fx2::bindless::PbrKernel> pbr, gpu2::bindless::CnC & matUploads) {
+    bool initMeshesAndAssets(AutoRef<GpuContext> gpu, gpu2::bindless::CnC & uploads, AutoRef<fx2::bindless::PbrKernel> pbr, gpu2::bindless::CnC & matUploads) {
         // Soft body meshes
         meshCube   = GelMesh::createCube(4, 1.4f);
         meshSphere = GelMesh::createSphere(2.0f, 20, 14); // Single big bouncy ball (radius 2.0m)
@@ -359,7 +359,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2
 
             // 3. GPU Buffer Streaming
             auto tU0 = std::chrono::high_resolution_clock::now();
-            auto cnc = GpuCnC::create({.gpu = gpu});
+            auto cnc = gpu2::bindless::CnC::create("fiz-gel-benchmark-streaming", {.gpu = gpu});
             for (auto & g : arena.gels) {
                 if (!g.gel) continue;
                 const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);
@@ -504,7 +504,7 @@ int main(int argc, const char ** argv) {
     if (!ssc) return -1;
 
     auto initialization = gpu2::bindless::CnC::create("fiz-gel-init", {.gpu = gpuContext, .heap = heap});
-    auto geomUploads    = GpuCnC::create({.gpu = gpuContext});
+    auto geomUploads    = gpu2::bindless::CnC::create("fiz-gel-geometry-uploads", {.gpu = gpuContext});
     if (!initialization || !geomUploads) return -1;
 
     auto pbr = fx2::bindless::PbrKernel::create(*heap, *initialization);
@@ -850,7 +850,7 @@ int main(int argc, const char ** argv) {
 
         // 2. GPU Dynamic streaming upload into vertex buffer
         auto tUpload0 = std::chrono::high_resolution_clock::now();
-        auto cnc      = GpuCnC::create({.gpu = gpuContext});
+        auto cnc      = gpu2::bindless::CnC::create("fiz-gel-frame-streaming", {.gpu = gpuContext});
         for (auto & g : arena.gels) {
             if (!g.gel) continue;
             const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);

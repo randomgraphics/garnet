@@ -3,6 +3,8 @@
     #error "Do not include <garnet/gpu2/bindless.h> directly. Include <garnet/GNgpu2.h> instead."
 #endif
 
+#include <future>
+
 namespace GN::gpu2::bindless {
 
 /// Persistent global descriptor heap managing unbounded resource arrays for bindless shaders.
@@ -135,10 +137,6 @@ protected:
 /// The descriptor heap and related data will take over the entire specified set (CreateParameters::heapSetIndex).
 /// If pass resources conflict with the heap (stay in the same set as where the descriptor heap is), creation will fail.
 ///
-/// TODO: Support occasional bind-based draws within bindless::Raster without requiring a separate
-/// render pass. Currently, mixing bindless draws with bound draws requires splitting passes (e.g.
-/// ending the bindless pass and opening a GpuRaster with loadColor = true).
-///
 /// This class is not thread-safe. All calls on one instance must be single-threaded or externally
 /// serialized; use separate instances for parallel recording.
 class Raster : public RCRT64 {
@@ -173,18 +171,6 @@ public:
 
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;
-
-    /// Record a bind-based draw call with per-draw resource bindings.
-    ///
-    /// NOTE: This is intended strictly for occasional use (e.g. rendering a small UI overlay
-    /// such as ImGui at the end of a bindless pass). Bound draws compile descriptor sets,
-    /// track hazards, and may switch pipeline layouts, which will hurt bindless render pass
-    /// performance if abused. Pure bindless draws (recordDraw) remain on the zero-overhead fast path.
-    /// Ideally, only issue a small amount of bound draws at the end of a bindless pass.
-    ///
-    /// Fast conflict check: if drawResources conflicts with heapSetIndex (defines bindings in
-    /// the same set as where the descriptor heap is located), the draw will fail.
-    virtual void recordBindBasedDraw(const DrawParameters & params, const GpuResourceTable & drawResources) = 0;
 
     /// Register a cleanup callback invoked once when the payload completes or is destroyed without submission.
     virtual void addCleanupCallback(std::function<void()> cleanup) = 0;
@@ -222,15 +208,16 @@ public:
     /// gpu2 automatically manages, hashes, and caches the native pipeline layout.
     struct CreateParameters {
         AutoRef<GpuContext>     gpu;
-        AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap.
+        AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap; required for compute, optional for transfer-only recording.
         uint32_t                heapSetIndex     = 0;   ///< Descriptor set index for the bindless heap (default 0).
         GpuResourceTable        passResources    = {};  ///< Optional pass-wide resources (e.g. Set 1 storage buffers/UBOs).
         uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).
         size_t                  opCountHint      = 0;   ///< Expected operation count for preallocation; recording may exceed this hint.
     };
 
-    /// Create a new bindless CnC recorder. Performs a fast conflict check between
-    /// passResources and heapSetIndex, returning an empty ref if a collision is detected.
+    /// Create a new bindless CnC recorder. The heap may be empty for transfer-only work;
+    /// in that case passResources must also be empty and recordCompute() is rejected.
+    /// Performs a fast conflict check between passResources and heapSetIndex when a heap is supplied.
     GN_API static AutoRef<CnC> create(const StrA & name, const CreateParameters & cp);
 
     struct ComputeParameters {
@@ -241,10 +228,16 @@ public:
         ArrayView<const uint8_t> immediates = {}; ///< Inline uniform data (push constants).
     };
 
-    /// Record a compute dispatch using the bindless descriptor set and pass resources.
+    /// Record a compute dispatch using the bindless descriptor set and pass resources. A recorder created without a heap rejects compute dispatches.
     virtual void recordCompute(const ComputeParameters & params) = 0;
 
-    using BufferToBuffer = GpuCnC::BufferToBuffer;
+    struct BufferToBuffer {
+        AutoRef<Buffer> src;
+        AutoRef<Buffer> dst;
+        uint64_t        srcOffset = 0; ///< Byte offset within the source buffer.
+        uint64_t        dstOffset = 0; ///< Byte offset within the destination buffer.
+        uint64_t        size      = 0; ///< Number of bytes to copy. 0 = copy nothing.
+    };
 
     /// Record a buffer copy for execution when the sealed payload is submitted.
     virtual void recordCopyBuffer(const BufferToBuffer &) = 0;
@@ -258,9 +251,35 @@ public:
     /// is signaled with the downloaded Blob on success, or empty Blob if failed or canceled.
     virtual std::future<AutoRef<const Blob>> recordDownloadBuffer(AutoRef<Buffer> src, uint64_t offset = 0, uint64_t size = uint64_t(~0)) = 0;
 
-    using Region          = GpuCnC::Region;
-    using ImageCopyRegion = GpuCnC::ImageCopyRegion;
-    using ImageToImage    = GpuCnC::ImageToImage;
+    /// Describes CPU pixel layout and the destination image subresource for uploads/downloads.
+    struct Region {
+        uint32_t          mip         = 0;         ///< Image mip level.
+        uint32_t          face        = 0;         ///< Image array layer or cube face.
+        Vector3<uint32_t> imageOffset = {0, 0, 0}; ///< Offset in texels, including compressed formats; must align to compression blocks.
+        Vector3<uint32_t> imageExtent = {0, 0, 0}; ///< Dimensions in texels; compressed extents align to blocks unless reaching the mip edge.
+        uint64_t          dataOffset  = 0;         ///< Byte offset in the CPU content.
+        /// Byte stride between pixel-block rows, matching rapid-image PlaneDesc::pitch. An uncompressed block is one pixel.
+        /// May include arbitrary trailing byte padding, even for compressed rows. 0 = tightly packed.
+        uint64_t rowPitchBytes = 0;
+        /// Byte stride between depth slices, matching rapid-image PlaneDesc::slice. 0 = effective row pitch times block-row count.
+        uint64_t slicePitchBytes = 0;
+    };
+
+    /// Region for an image-to-image copy. Source and destination must have matching formats and sample counts.
+    struct ImageCopyRegion {
+        uint32_t          srcMip = 0, srcFace = 0;
+        uint32_t          dstMip = 0, dstFace = 0;
+        Vector3<uint32_t> srcOffset = {0, 0, 0};
+        Vector3<uint32_t> dstOffset = {0, 0, 0};
+        Vector3<uint32_t> extent    = {0, 0, 0};
+    };
+
+    /// Image copy resources and regions. Copies retain both textures and snapshot region descriptions.
+    struct ImageToImage {
+        AutoRef<Texture>                 src;
+        AutoRef<Texture>                 dst;
+        ArrayView<const ImageCopyRegion> regions;
+    };
 
     /// Snapshot CPU pixel content immediately; image transfer executes after submission.
     /// Region data offsets are relative to content. The caller may release or modify content on return.
@@ -272,7 +291,10 @@ public:
     /// Record copies between distinct textures with matching formats and sample counts; snapshots the regions.
     virtual void recordCopyImage(const ImageToImage &) = 0;
 
-    using TextureContent = GpuCnC::TextureContent;
+    struct TextureContent {
+        AutoRef<const Blob> blob;
+        DynaArray<Region>   regions;
+    };
 
     /// Enqueue a texture download operation. The data is copied from the source texture into an internal staging buffer,
     /// then transferred into a TextureContent.

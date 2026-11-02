@@ -76,7 +76,7 @@ TEST_CASE("heap material binding is readable after caller-recorded uploads", "[g
     REQUIRE(gpu);
     auto heap = Heap::create("material-gpu", {.gpu = gpu, .capacity = 8, .materialCapacity = 256});
     REQUIRE(heap);
-    auto uploads = GpuCnC::create({.gpu = gpu});
+    auto uploads = bindless::CnC::create("material-test-upload", {.gpu = gpu});
     REQUIRE(uploads);
     auto output = Buffer::create("material-output", {.context = gpu, .size = 48});
     REQUIRE(output);

@@ -1,7 +1,7 @@
-/// simple-copy: demonstrates GpuCnC buffer-to-buffer copy.
+/// simple-copy: demonstrates heap-free bindless CnC buffer-to-buffer copy.
 ///
 /// Creates two GPU buffers, fills the source with sequential float values,
-/// copies it to the destination via GpuCnC::recordCopyBuffer(), then reads
+/// copies it to the destination via bindless::CnC::recordCopyBuffer(), then reads
 /// back the destination and verifies the data.
 #include <garnet/GNgpu2.h>
 
@@ -54,9 +54,9 @@ int main() {
     }
 
     // Record and submit the copy.
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = bindless::CnC::create("simple-copy", {.gpu = gpu});
     if (!cnc) {
-        std::fprintf(stderr, "Failed to create GpuCnC\n");
+        std::fprintf(stderr, "Failed to create bindless CnC\n");
         return -1;
     }
     cnc->recordCopyBuffer({.src = src, .dst = dst, .size = BYTE_SIZE});
