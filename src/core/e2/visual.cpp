@@ -49,6 +49,7 @@ struct VisualImpl : Visual {
     gpu2::GpuContext & gpu() const override { return *mGpu; }
 
     bool init(const CreateParameters & cp) {
+        GN_INFO(sLogger, "Initializing Visual (platform={}, supplied assets={}).", bool(cp.platform), bool(cp.assets));
         mOs = cp.platform;
 
         mGpu = GpuContext::create("e2-gpu", GpuContext::CreateParameters {});
@@ -119,21 +120,37 @@ struct VisualImpl : Visual {
         } else {
             mAssets = Assets::create({.universe = mUniverse, .gpu = mGpu});
         }
-        if (!mAssets) return false;
+        if (!mAssets) {
+            GN_ERROR(sLogger, "Visual initialization failed: Assets::create returned null.");
+            return false;
+        }
 
+        GN_INFO(sLogger, "Creating initialization CnC (gpu={}, descriptor heap={}).", bool(mGpu), bool(mHeap));
         auto initialization = gpu2::CnC::create("e2-init-uploads", {.gpu = mGpu, .heap = mHeap});
-        if (!initialization) return false;
+        if (!initialization) {
+            GN_ERROR(sLogger, "Visual initialization failed: CnC::create returned null (gpu={}, descriptor heap={}).", bool(mGpu), bool(mHeap));
+            return false;
+        }
         mLambert = fx2::LambertianKernel::create(*mHeap, *initialization);
-        if (!mLambert) return false;
+        if (!mLambert) {
+            GN_ERROR(sLogger, "Visual initialization failed: LambertianKernel::create returned null.");
+            return false;
+        }
 
         auto matParams = mLambert->defaultMaterialParameters();
         // A small uniform fill keeps unlit faces readable in this white-model preview.
         matParams.emissive = glm::vec3(50.f / 3.14159265359f);
         mWhiteMaterial     = mLambert->createMaterial(*initialization, matParams);
-        if (!mWhiteMaterial) return false;
+        if (!mWhiteMaterial) {
+            GN_ERROR(sLogger, "Visual initialization failed: Lambertian material creation returned null.");
+            return false;
+        }
 
         auto payload = initialization->seal();
-        if (!payload) return false;
+        if (!payload) {
+            GN_ERROR(sLogger, "Visual initialization failed: sealing initialization uploads returned null.");
+            return false;
+        }
         mGpu->submit(GpuContext::SubmitParameters("e2-visual-init").appendWork(payload));
         mGpu->waitForIdle();
         return true;
@@ -260,12 +277,16 @@ namespace GN::e2::basis {
 
 Ref<Visual> Visual::create(const CreateParameters & cp) {
 #if GN_BUILD_HAS_VULKAN
+    GN_INFO(GN::getLogger("GN.e2.visual"), "Visual::create called (Vulkan enabled).");
     auto d = referenceTo(new VisualImpl(cp.universe));
-    if (!d->init(cp)) return {};
+    if (!d->init(cp)) {
+        GN_ERROR(GN::getLogger("GN.e2.visual"), "Visual::create returning null because VisualImpl::init failed.");
+        return {};
+    }
     return d;
 #else
     (void) cp;
-    GN_ERROR(GN::getLogger("GN.e2.visual"), "Visual requires a Vulkan-enabled build.");
+    GN_ERROR(GN::getLogger("GN.e2.visual"), "Visual::create returning null: this build has no Vulkan support.");
     return {};
 #endif
 }
