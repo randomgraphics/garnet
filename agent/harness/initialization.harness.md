@@ -33,6 +33,55 @@ content, or discard user changes.
 
 ## Bootstrap stages
 
+### 0. Require and initialize CodeGraph
+
+CodeGraph is a required structural-analysis dependency for harness
+initialization. Before repository-wide analysis, check that the `codegraph`
+command is available and can report its installed version. If it is missing,
+stop initialization with a clear `CodeGraph not installed` error, explain that
+initialization is blocked, and give the user the official installation
+instructions. Do not silently skip CodeGraph or install software on the user's
+behalf.
+
+Official installation options are documented in the
+[CodeGraph repository](https://github.com/colbymchenry/codegraph):
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex
+
+# Alternative when Node.js/npm is already installed
+npm install -g @colbymchenry/codegraph
+```
+
+```sh
+# macOS/Linux
+curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+
+# Alternative when Node.js/npm is already installed
+npm install -g @colbymchenry/codegraph
+```
+
+After installation, the user may need to open a new terminal or restart the
+agent so the updated `PATH` and agent-tool configuration are visible. Then
+resume initialization.
+
+From the host repository root, run `codegraph init` to build its project graph.
+Verify the graph with `codegraph status` and perform a focused
+`codegraph explore` query against a known source area. The active agent runtime
+must be able to use CodeGraph, through its configured MCP tool or the CLI. If
+the CLI exists but the graph cannot be built, is unhealthy, or cannot be
+queried, stop and report the error and recovery steps; do not claim
+initialization readiness. CodeGraph installation and per-project
+initialization are separate steps.
+
+The graph is a derived structural index: use it to navigate symbols, calls, and
+relationships, then verify high-impact claims against the current working tree,
+tests, and build configuration. Record the CodeGraph version, initialized
+project path, status result, and any excluded or unsupported areas in the
+initialization report. Respect the host's policy for generated index files and
+do not overwrite curated knowledge with generated output.
+
 ### 1. Establish repository boundaries
 
 Identify the repository root, Git state, active instructions, submodules,
@@ -52,8 +101,9 @@ Build a shallow, evidence-linked inventory of:
   entrypoints;
 - third-party dependencies, generated code, and resource pipelines.
 
-Use repository search, build metadata, compiler databases, symbol indexes, and
-existing docs. Do not infer module boundaries from directory names alone.
+Use CodeGraph for structural queries and repository search, build metadata,
+compiler databases, and existing docs for complementary evidence. Do not infer
+module boundaries from directory names alone.
 
 ### 3. Analyze modules in bounded assignments
 
@@ -99,10 +149,10 @@ into skill instructions. Apply
 when classifying or promoting initialization findings.
 
 Keep curated Markdown and schema-validated structured data distinct from
-rebuildable symbol, reference, dependency, or semantic indexes. Do not commit
-large derived caches unless the host repository explicitly requires it. Check
-the Git diff before writing; preserve human-authored content. Agents are the
-primary maintainers, while humans may add, edit, move, or delete shared
+rebuildable symbol, reference, dependency, CodeGraph, or semantic indexes. Do
+not commit large derived caches unless the host repository explicitly requires
+it. Check the Git diff before writing; preserve human-authored content. Agents
+are the primary maintainers, while humans may add, edit, move, or delete shared
 knowledge.
 
 ### 6. Establish the initial reusable skills
@@ -127,6 +177,7 @@ Produce an initialization report that includes:
 - repository/module coverage and areas not analyzed;
 - the knowledge entries and skills created, updated, or retained;
 - validation performed and exact environments used;
+- CodeGraph version, project index path/status, and any graph/query failures;
 - contradictions, stale docs, missing tools, and unresolved risks;
 - a short list of high-value follow-up investigations or infrastructure work.
 

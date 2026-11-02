@@ -228,6 +228,13 @@ this platform limitation?" It is a retrieval capability for the code analysis
 and context-building modules, not a replacement for reading and validating the
 source.
 
+For initialization and structural code analysis, the host integration requires
+CodeGraph. Its project graph is a derived index used to navigate symbols,
+relationships, and impact; it does not replace curated knowledge, skills, or
+the current source of truth. See
+[`initialization.harness.md`](initialization.harness.md) for the required
+presence check, initialization, health check, and missing-tool behavior.
+
 The host integration configures a knowledge root and provides its initial
 catalog. [`initialization.harness.md`](initialization.harness.md) defines how to
 create it.

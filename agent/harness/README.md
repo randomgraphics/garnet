@@ -10,8 +10,8 @@ must not contain project-specific coding rules, module maps, or task state.
   coordination, bounded assignments, context management, dynamic task graphs,
   evidence-based completion, and skill lifecycle.
 - [`initialization.harness.md`](initialization.harness.md) — the bootstrap
-  process for analyzing a host codebase and producing its first knowledge base
-  and reusable skills.
+  process for checking and initializing required CodeGraph tooling, analyzing
+  a host codebase, and producing its first knowledge base and reusable skills.
 - [`requirement-refinement.harness.md`](requirement-refinement.harness.md) —
   how to explore incomplete goals and evolve requirements with the human.
 - [`roles/README.md`](roles/README.md) — role routing index. Dispatch an agent
