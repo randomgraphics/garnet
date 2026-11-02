@@ -3,12 +3,19 @@
 ## Overview
 
 - Branch/worktree: `wip/agent-harness` (existing harness task branch).
-- Overall status: Bindless-only API and namespace simplification are implemented; static namespace/format/diff checks pass. Targeted FX2 translation units compile. GPU2/client compile coverage and runtime validation remain subject to the paused build investigation before user sign-off.
+- Overall status: Complete; user signed off and requested archival. Bindless-only API and namespace simplification are implemented; static namespace/format/diff checks pass. Targeted FX2 translation units compile. GPU2/client compile coverage and runtime validation remain unverified because the build investigation was paused at the user's request; this limitation is accepted for task closure.
 - Completed: verified the bootstrap catalog/CodeGraph; confirmed full bindless-only scope; completed GPU2/FX2 impact analysis; implemented A10/A11 and the A12 sample source migration.
-- Current step: A93a/A93b namespace flattening and A93c client migration are source-complete; final static checks are clean. A90 build investigation remains paused at the user's request.
-- Remaining: obtain a fresh linked test executable/GPU runtime checks when build investigation resumes, then hand off for user sign-off.
+- Current step: All implementation and namespace simplification work is complete, independently reviewed, and signed off. Archive the task workspace.
+- Remaining: None for this signed-off task. The A90 build investigation and fresh GPU runtime validation are deferred follow-up work, not blockers to this closure.
 - Latest verification: A93b targeted Ninja Debug compilation passed for the changed FX2 implementation, ImGui, and tests after compiling within VsDevCmd. A93a's agent compile attempt ran without the toolchain environment and failed at missing standard headers before source diagnostics. Global formatter, diff check, and active namespace search pass. No fresh test executable/runtime result.
 - Blockers: Exact `python .\\env\\bin\\build.py d` configure/generate succeeds but the full wrapper exits 1 after MSBuild `Checking File Globs` with no diagnostic. Ninja Debug compiled the owned core and selected changed test/sample units, while full test linking reaches a third-party Assimp `/Zi` PDB-manager mismatch (C1902). Build investigation is paused at the user's request; fresh GPU runtime evidence remains pending.
+
+## Final disposition
+
+- User sign-off: Explicitly given on 2026-11-02; user requested the task be marked complete.
+- Code commits: `07b6c4d45 refactor(gpu2): retire bind-based raster and cnc`; `024e61b28 refactor(gpu2): flatten bindless namespaces`.
+- Final review: Independent A93 review found no stale active bindless namespace references, collisions, or runtime-type parent mismatches. Static format, diff, and namespace checks pass; targeted FX2 translation units compile.
+- Accepted limitation: The paused A90 build investigation and fresh GPU runtime validation remain unresolved/unverified. Do not describe these as passed; resume them only as a separately authorized follow-up.
 
 ---
 
