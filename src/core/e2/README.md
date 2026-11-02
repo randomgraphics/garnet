@@ -2,7 +2,7 @@
 
 This is the canonical approved design for the data-driven World Runtime. The
 implementation assignment and historical verification records live in
-[`agent/E2_WORLD_RUNTIME.txt`](../../../agent/E2_WORLD_RUNTIME.txt). The object-oriented runtime described below is implemented. The earlier
+[`agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt`](../../../agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt). The object-oriented runtime described below is implemented. The earlier
 plain-value/schema-ID prototype has been replaced and the replacement has been
 built and checked; see the validation section and active assignment for results.
 
@@ -565,7 +565,7 @@ Xvfb verifies a virtual-display path; physical-window interaction, Windows and
 Android were not checked in this run. SimpleWorld and its dependent samples/tests
 remain suspended; migration of all legacy consumers is not complete. Master has
 not been merged. See
-[`agent/E2_MASTER_PREPARATION.txt`](../../../agent/E2_MASTER_PREPARATION.txt)
+[`agent/completed/e2-master-preparation-2026-10-05-215844/2026-10-05-215844-E2_MASTER_PREPARATION.txt`](../../../agent/completed/e2-master-preparation-2026-10-05-215844/2026-10-05-215844-E2_MASTER_PREPARATION.txt)
 for the integration/verification record. Earlier assignment counts describe their
 original checkpoints; assignments remain active pending user sign-off.
 

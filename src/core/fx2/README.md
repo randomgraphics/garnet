@@ -70,7 +70,7 @@ include FX2's private shader headers or recreate effect parameter packing.
 The second implementation attempt adds new classes in `GN::fx2::bindless`.
 Existing `GN::fx2` classes, shader contracts, and callers remain intact. The first
 attempt is retained in a stash as reference; it is not the implementation baseline.
-The resumable plan is [FX2_BINDLESS_DEVICE.txt](../../../agent/FX2_BINDLESS_DEVICE.txt).
+The resumable plan is [FX2_BINDLESS_DEVICE.txt](../../../agent/completed/fx2-bindless-device-2026-10-06-165650/FX2_BINDLESS_DEVICE.txt).
 
 Implement one small, verifiable step at a time. New bindless classes use the existing
 `gpu2::bindless::DescriptorHeap`, `Raster`, and `CnC` facilities. Applications opt

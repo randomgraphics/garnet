@@ -8,7 +8,7 @@ description: Plan and track substantial, multi-step Garnet work in a resumable a
 Create the execution plan before implementation and keep it synchronized with
 the real repository state until handoff.
 
-Relatively complex work must have an active plan under `agent/`. The plan is
+Relatively complex work must have an active plan under `agent/workspace/<task>/`. The plan is
 both the detailed execution design and the authoritative current-status record;
 a human or another agent should be able to understand and resume the work by
 reading its beginning and progress block.
@@ -28,8 +28,8 @@ reading its beginning and progress block.
 
 ## Write the plan
 
-Store a resumable plan at `agent/<SCREAMING_SNAKE_TITLE>.txt` using the format
-in `agent/README.md`. Add an `## Overview` immediately after the assignment
+Store a resumable plan at `agent/workspace/<task>/TASK.md` using the format
+in `agent/harness/README.md`. Add an `## Overview` immediately after the assignment
 title, before the normal required sections.
 
 The Overview must state:
@@ -92,7 +92,7 @@ an untested backend as verified.
   remains.
 - Keep the finished plan active and marked as awaiting manual user sign-off.
 - Only after explicit user sign-off or an explicit archive request, move the
-  plan to `agent/completed/` with `git mv` semantics and
+  plan to `agent/completed/<task>-<date-time>/` with `git mv` semantics and
   a current UTC `yyyy-mm-dd-hhmmss-` filename prefix, following
   `garnet-agent-doc-archive`. Always use UTC, never local time, and update live
   references to its old path.

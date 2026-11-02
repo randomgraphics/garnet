@@ -35,7 +35,7 @@ part of that statistic. Presentation owns the camera and GPU resources. No rende
 code can mutate a Prime snapshot.
 
 See [the canonical design](../../core/e2/README.md) and
-[the active assignment](../../../agent/E2_WORLD_RUNTIME.txt) for runtime contracts,
+[the historical task record](../../../agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt) for runtime contracts,
 implementation status and verification limitations.
 
 Capabilities derive from `Facet` with nested `FacetValue` subclasses. Both use

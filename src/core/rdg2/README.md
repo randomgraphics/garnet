@@ -7,7 +7,7 @@ submission and presentation without learning what a camera, material, light, or
 scene means.
 
 This README is the canonical RDG2 design and status document. Design changes
-belong here once a real client requires them. Files under `agent/` track only
+belong here once a real client requires them. Files under `agent/harness/` track only
 concrete implementation assignments and their verification steps.
 
 ## First Validated Client: E2 Visual Rendering
@@ -49,7 +49,7 @@ This integration requires and verifies that RDG2 can:
   internal topology or content types.
 
 The completed E2 refactor and its verification are recorded in
-`agent/completed/E2_VISUAL_BACKEND.txt`.
+`agent/completed/e2-visual-backend-2026-09-07-155654/E2_VISUAL_BACKEND.txt`.
 
 ## Module Boundary
 
@@ -234,7 +234,7 @@ Implemented and exercised:
 ## Design Change Policy
 
 New RDG2 design work starts with a concrete client requirement and acceptance
-test recorded in an assignment under `agent/`. Once implemented, its settled
+test recorded in an assignment under `agent/workspace/<task>/`. Once implemented, its settled
 contract is documented here.
 
 ## Verification

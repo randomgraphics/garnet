@@ -5,7 +5,7 @@ Physics. It has no E2, gpu2, FX2 or RDG2 dependency in its solver implementation
 Rendering and conversion from E2 world coordinates belong to callers.
 
 This document describes the current code. The broader continuous-media roadmap
-in `agent/FIZ_PHYSICS_MODULE.txt` is not an implemented API contract.
+in `agent/completed/fiz-physics-module-2026-10-03-214816/2026-10-03-214816-FIZ_PHYSICS_MODULE.txt` is not an implemented API contract.
 
 ## Implemented API
 
@@ -208,7 +208,7 @@ tests and 185 internal cases / 58,778 assertions, including fiz). Both finite fi
 samples exited successfully: 60 rigid steps and 180 gel steps with all scenario
 checks passing. The standalone C++ example above passed a compiler syntax check.
 Windows and Android were not checked in this run. Detailed integration verification is recorded in
-[`agent/E2_MASTER_PREPARATION.txt`](../../../agent/E2_MASTER_PREPARATION.txt).
+[`agent/completed/e2-master-preparation-2026-10-05-215844/2026-10-05-215844-E2_MASTER_PREPARATION.txt`](../../../agent/completed/e2-master-preparation-2026-10-05-215844/2026-10-05-215844-E2_MASTER_PREPARATION.txt).
 
 ## Not implemented
 

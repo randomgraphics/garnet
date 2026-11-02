@@ -30,7 +30,7 @@ RDG2 is a playground for graph designs with two generations:
   `OOO()` means the next publish. This is now reference material.
 - Render graph take 2 (`closed-graph.h`): the active design — `Quest`, `Plan`,
   `Execution` over versioned `Artifact`/`Relic` data. Design and status live in
-  `src/core/rdg2/README.md`; `agent/` holds concrete work assignments.
+  `src/core/rdg2/README.md`; concrete work assignments live under `agent/workspace/<task>/`.
 
 ## gpu2
 
