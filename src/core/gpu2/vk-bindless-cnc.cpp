@@ -162,10 +162,10 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
 
 // The helper is shared with bindless raster creation so both pass types bind identical resources.
 
-VkBindlessCnC::VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
+VkBindlessCnC::VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<DescriptorHeap> heap, uint32_t heapSetIndex,
                              vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets,
                              GpuResourceTable passResources, size_t opCountHint)
-    : bindless::CnC(TYPE_INFO(), name), mGpu(std::move(gpu)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex), mPipelineLayout(pipelineLayout),
+    : CnC(TYPE_INFO(), name), mGpu(std::move(gpu)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex), mPipelineLayout(pipelineLayout),
       mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)), mPassResources(std::move(passResources)) {
     mOps.reserve(opCountHint);
 }
@@ -315,8 +315,8 @@ void VkBindlessCnC::recordCopyImage(const ImageToImage & p) {
     mOps.emplace_back(std::move(op));
 }
 
-std::future<bindless::CnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) {
-    DownloadResult<bindless::CnC::TextureContent> result;
+std::future<CnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) {
+    DownloadResult<CnC::TextureContent> result;
     auto                                          future = result.future();
 
     auto * srcVk = RuntimeType::cast<TextureVulkanBase>(src.get());
@@ -423,7 +423,7 @@ AutoRef<GpuPayload> VkBindlessCnC::seal() {
     return AutoRef<GpuPayload>(new VkBindlessCncPayload(name, std::move(cp)));
 }
 
-AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::CnC::CreateParameters & cp) {
+AutoRef<CnC> createVkBindlessCnc(const StrA & name, const CnC::CreateParameters & cp) {
     AutoRef<GpuContextVulkan2> vkGpu(RuntimeType::cast<GpuContextVulkan2>(cp.gpu.get()));
     if (!vkGpu || !vkGpu->ready()) GN_UNLIKELY {
             GN_ERROR(sLogger, "createVkBindlessCnc: null or unready GpuContextVulkan2");
@@ -460,7 +460,7 @@ AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::Cn
         return {};
     }
 
-    return AutoRef<bindless::CnC>(new VkBindlessCnC(name, vkGpu, cp.heap, cp.heapSetIndex, pl, passPool, passSets, cp.passResources, cp.opCountHint));
+    return AutoRef<CnC>(new VkBindlessCnC(name, vkGpu, cp.heap, cp.heapSetIndex, pl, passPool, passSets, cp.passResources, cp.opCountHint));
 }
 
 } // namespace GN::gpu2

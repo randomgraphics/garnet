@@ -18,7 +18,7 @@ struct StoredBindlessDraw {
     uint32_t           immediateOffset = 0;
     uint32_t           immediateSize   = 0;
 
-    StoredBindlessDraw(const bindless::Raster::DrawParameters & params, const RasterState & state, std::pmr::memory_resource * memRes, uint32_t immOffset,
+    StoredBindlessDraw(const Raster::DrawParameters & params, const RasterState & state, std::pmr::memory_resource * memRes, uint32_t immOffset,
                        uint32_t immSize)
         : vs(params.vs), hs(params.hs), ds(params.ds), gs(params.gs), ps(params.ps), mergedState(state), geometry(params.geometry, memRes),
           immediateOffset(immOffset), immediateSize(immSize) {}
@@ -55,7 +55,7 @@ public:
     struct ConstructParameters {
         AutoRef<GpuContextVulkan2>           gpu;
         RasterTarget                         target;
-        AutoRef<bindless::DescriptorHeap>    heap;
+        AutoRef<DescriptorHeap>    heap;
         uint32_t                             heapSetIndex = 0;
         vk::PipelineLayout                   pipelineLayout {};
         std::unique_ptr<BindlessDrawStorage> storage;
@@ -74,7 +74,7 @@ public:
 private:
     AutoRef<GpuContextVulkan2>           mGpu;
     RasterTarget                         mRenderTarget;
-    AutoRef<bindless::DescriptorHeap>    mHeap;
+    AutoRef<DescriptorHeap>    mHeap;
     uint32_t                             mHeapSetIndex = 0;
     vk::PipelineLayout                   mPipelineLayout {};
     std::unique_ptr<BindlessDrawStorage> mStorage;

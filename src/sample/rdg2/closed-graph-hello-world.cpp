@@ -57,7 +57,7 @@ static bool verifySolidColor(const GpuResourceView & view, uint32_t width, uint3
 /// A clear-only "renderer": reads the acquired frame relic, records a raster
 /// pass with no draws (the render pass clear does the work), republishes the
 /// backbuffer, and emits the sealed payload.
-static QuestRef makeClearQuest(ArtifactRef backbuffer, AutoRef<bindless::DescriptorHeap> heap) {
+static QuestRef makeClearQuest(ArtifactRef backbuffer, AutoRef<DescriptorHeap> heap) {
     Quest::CreateParameters q;
     q.name = "clear";
     // The read side binds to frame-begin's in-plan publication — an in-plan
@@ -72,7 +72,7 @@ static QuestRef makeClearQuest(ArtifactRef backbuffer, AutoRef<bindless::Descrip
         target.setClearColor(kClearR, kClearG, kClearB, kClearA);
         target.setColorTarget(0, acquired->frame.view);
 
-        auto raster = bindless::Raster::create("clear", {.gpu = ctx.gpu(), .target = &target, .heap = heap});
+        auto raster = Raster::create("clear", {.gpu = ctx.gpu(), .target = &target, .heap = heap});
         if (!raster) return QuestResult::failed("raster creation failed");
         ctx.emit(raster->seal());
 
@@ -92,7 +92,7 @@ int main(int argc, const char ** argv) {
     if (!gpu) return -1;
 
     // Bindless Raster requires a heap even for clear-only passes with no draws.
-    auto heap = bindless::DescriptorHeap::create("closed-graph-hello-world-heap", {.gpu = gpu, .capacity = 1});
+    auto heap = DescriptorHeap::create("closed-graph-hello-world-heap", {.gpu = gpu, .capacity = 1});
     if (!heap) return -1;
 
     // Create a main window and surface; test mode runs headless.

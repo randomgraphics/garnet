@@ -6,7 +6,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 
 /// One std140-compatible direct-light record, matching the legacy FX2 scene uniform.
 struct DirectLightUniform {
@@ -96,7 +96,7 @@ public:
     /// is appended. The recorder and its sealed payload retain the range until completion
     /// or discard; each consumer must additionally retain the returned state.
     /// Submit the producer once before all consumers, with the required GPU dependencies.
-    virtual AutoRef<UniformState> recordUniformUpdate(gpu2::bindless::CnC & producer, ArrayView<const uint8_t> bytes) = 0;
+    virtual AutoRef<UniformState> recordUniformUpdate(::GN::gpu2::CnC & producer, ArrayView<const uint8_t> bytes) = 0;
 
     /// Allocate exactly size writable bytes, with shader-compatible alignment chosen internally.
     /// Returns an invalid ID, empty bytes, and an empty view for zero size, insufficient capacity, or failure.
@@ -119,4 +119,4 @@ protected:
 /// lease; each material draw retains that lease until payload cleanup.
 GN_API gpu2::GpuResourceTable sharedUniformResources(const AutoRef<SharedShaderConstants::UniformState> & state);
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

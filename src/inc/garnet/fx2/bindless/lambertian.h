@@ -5,7 +5,7 @@
 
 #include <glm/mat4x4.hpp>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 
 /// Immutable Lambertian material retaining its kernel, stable values, and heap allocations.
 struct LambertianMaterial : RCRT64 {
@@ -42,12 +42,12 @@ struct LambertianKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     virtual LambertianMaterial::Parameters defaultMaterialParameters() const                                                                  = 0;
-    virtual AutoRef<LambertianMaterial>    createMaterial(gpu2::bindless::CnC & initialization, const LambertianMaterial::Parameters &) const = 0;
+    virtual AutoRef<LambertianMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const LambertianMaterial::Parameters &) const = 0;
 
-    GN_API static AutoRef<LambertianKernel> create(gpu2::bindless::DescriptorHeap & heap, gpu2::bindless::CnC & initialization);
+    GN_API static AutoRef<LambertianKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 
 protected:
     using RCRT64::RCRT64;
 };
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

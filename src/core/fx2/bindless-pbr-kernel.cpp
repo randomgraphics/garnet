@@ -5,9 +5,9 @@
 #include <glm/mat3x3.hpp>
 #include <cmath>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 namespace {
-using Heap    = gpu2::bindless::DescriptorHeap;
+using Heap    = ::GN::gpu2::DescriptorHeap;
 auto * logger = getLogger("GN.fx2.bindless.pbr");
 
 struct PbrMaterialData {
@@ -109,10 +109,10 @@ public:
         samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler});
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         const uint8_t               white[] = {255, 255, 255, 255};
         const uint8_t               flat[]  = {128, 128, 255, 255};
-        gpu2::bindless::CnC::Region region;
+        ::GN::gpu2::CnC::Region region;
         region.imageExtent = {1, 1, 1};
         producer.recordUploadImage(color.texture(), {white, sizeof(white)}, {&region, 1});
         producer.recordUploadImage(normal.texture(), {flat, sizeof(flat)}, {&region, 1});
@@ -164,7 +164,7 @@ public:
                  glm::uvec4(mTextures[4].slot, mSampler.slot, flags, p.opaque ? 1u : 0u)};
         return true;
     }
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         producer.recordUploadBuffer(mView.buffer(), mView.bufferView.offset, {reinterpret_cast<const uint8_t *>(&mData), sizeof(mData)});
     }
     uint32_t index() const { return mIndex; }
@@ -180,7 +180,7 @@ public:
     PbrMaterialImpl(AutoRef<const PbrKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap)
         : PbrMaterial(TYPE_INFO(), "bindless.pbr.material"), mKernel(std::move(kernel)), mShaders(shaders), mStorage(std::move(heap)) {}
     bool initialize(const Parameters & p, const Fallbacks & defaults) { return mStorage.initialize(p, defaults); }
-    void upload(gpu2::bindless::CnC & producer) const { mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
     bool record(const PbrMaterial::DrawParameters & input) const override {
         if (!input.ssc || !validUniform(input.ssc->view()) || !validDraw(input, input.object2WorldTransform)) {
             GN_ERROR(logger, "PbrMaterial: invalid uniform state, geometry, UVs, or transform");
@@ -188,7 +188,7 @@ public:
         }
         const uint32_t                         skyIndex = getSkyMaterialIndex(input.skyMaterial.get());
         const DrawConstants                    values {input.object2WorldTransform, glm::uvec4(mStorage.index(), skyIndex, 0, 0)};
-        gpu2::bindless::Raster::DrawParameters draw {.geometry = input.geometry};
+        ::GN::gpu2::Raster::DrawParameters draw {.geometry = input.geometry};
         draw.vs = mShaders.vertex;
         draw.ps = mShaders.fragment;
         if (input.states) draw.states = *input.states;
@@ -213,13 +213,13 @@ public:
         return mShaders.initialize(heap->gpu(), kBindlessPbrVertSpv, sizeof(kBindlessPbrVertSpv), kBindlessPbrFragSpv, sizeof(kBindlessPbrFragSpv)) &&
                mDefaults.initialize(std::move(heap));
     }
-    void                    uploadDefaults(gpu2::bindless::CnC & producer) const { mDefaults.upload(producer); }
+    void                    uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
     PbrMaterial::Parameters defaultMaterialParameters() const override {
         PbrMaterial::Parameters p;
         p.sampler = mDefaults.sampler;
         return p;
     }
-    AutoRef<PbrMaterial> createMaterial(gpu2::bindless::CnC & producer, const PbrMaterial::Parameters & p) const override {
+    AutoRef<PbrMaterial> createMaterial(::GN::gpu2::CnC & producer, const PbrMaterial::Parameters & p) const override {
         bool valid = std::isfinite(p.metallic) && p.metallic >= 0 && p.metallic <= 1 && std::isfinite(p.roughness) && p.roughness >= 0 && p.roughness <= 1 &&
                      std::isfinite(p.normalScale) && std::isfinite(p.occlusionStrength) && p.occlusionStrength >= 0 && p.occlusionStrength <= 1;
         for (int i = 0; i < 4; ++i) valid &= std::isfinite(p.baseColor[i]);
@@ -237,7 +237,7 @@ public:
 
 } // namespace
 
-AutoRef<PbrKernel> PbrKernel::create(gpu2::bindless::DescriptorHeap & heap, gpu2::bindless::CnC & initialization) {
+AutoRef<PbrKernel> PbrKernel::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<PbrImpl>(new PbrImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
@@ -245,4 +245,4 @@ AutoRef<PbrKernel> PbrKernel::create(gpu2::bindless::DescriptorHeap & heap, gpu2
     return impl;
 }
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

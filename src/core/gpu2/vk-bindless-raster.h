@@ -8,12 +8,12 @@
 
 namespace GN::gpu2 {
 
-/// Vulkan implementation of bindless::Raster pass recorder.
-class VkBindlessRaster final : public bindless::Raster {
+/// Vulkan implementation of Raster pass recorder.
+class VkBindlessRaster final : public Raster {
 public:
-    GN_REGISTER_RUNTIME_TYPE(bindless::Raster);
+    GN_REGISTER_RUNTIME_TYPE(Raster);
 
-    VkBindlessRaster(const StrA & name, AutoRef<GpuContextVulkan2> gpu, RasterTarget target, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
+    VkBindlessRaster(const StrA & name, AutoRef<GpuContextVulkan2> gpu, RasterTarget target, AutoRef<DescriptorHeap> heap, uint32_t heapSetIndex,
                      vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, size_t numberOfDrawsHint,
                      uint32_t maxImmediateSize);
 
@@ -26,7 +26,7 @@ public:
 private:
     AutoRef<GpuContextVulkan2>        mGpu;
     RasterTarget                      mRenderTarget;
-    AutoRef<bindless::DescriptorHeap> mHeap;
+    AutoRef<DescriptorHeap> mHeap;
     uint32_t                          mHeapSetIndex = 0;
     vk::PipelineLayout                mPipelineLayout {};
     vk::DescriptorPool                mPassDescriptorPool {};
@@ -38,6 +38,6 @@ private:
     bool                                 mSealed = false;
 };
 
-AutoRef<bindless::Raster> createVkBindlessRaster(const StrA & name, const bindless::Raster::CreateParameters & cp);
+AutoRef<Raster> createVkBindlessRaster(const StrA & name, const Raster::CreateParameters & cp);
 
 } // namespace GN::gpu2

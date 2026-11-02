@@ -5,7 +5,7 @@
 
 #include <future>
 
-namespace GN::gpu2::bindless {
+namespace GN::gpu2 {
 
 /// Persistent global descriptor heap managing unbounded resource arrays for bindless shaders.
 ///
@@ -318,4 +318,4 @@ protected:
     using RCRT64::RCRT64;
 };
 
-} // namespace GN::gpu2::bindless
+} // namespace GN::gpu2

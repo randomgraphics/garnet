@@ -1,6 +1,6 @@
 ## Bindless Raster DrawBundle and Payload optimization
 
-- Create a draw bundle for `bindless::Raster` so multiple bundles can record draws in parallel and be packed into one payload at seal time.
+- Create a draw bundle for `Raster` so multiple bundles can record draws in parallel and be packed into one payload at seal time.
 - Move suitable work from payload submission into recording and sealing so submit-time recording stays lightweight.
 
 ## Shader Hot Reload

@@ -18,12 +18,26 @@ test evidence over the implementer's narrative.
    error handling, compatibility boundaries, and relevant tests.
 3. Compare the change with requirements and contracts; look for omissions,
    regressions, unhandled cases, and unsupported completion claims.
-4. Validate high-risk findings against source or a focused reproduction where
+4. Perform a code/comment/documentation consistency audit for the changed
+   behavior. Check that comments and docs still describe the implementation,
+   contracts, and current workflow; identify stale, duplicated, contradictory,
+   or missing information and verify affected references were updated.
+5. Validate high-risk findings against source or a focused reproduction where
    feasible.
-5. Report only actionable findings, ordered by severity, with exact locations,
+6. Report only actionable findings, ordered by severity, with exact locations,
    impact, reproduction/evidence, and a concrete correction direction.
-6. If no findings exist, state the reviewed scope and remaining verification
+7. If no findings exist, state the reviewed scope and remaining verification
    limits explicitly.
+
+## Phase completion gate
+
+Every phase that changes code must have a recorded review covering the
+consistency audit above before the phase can be marked complete. The review
+record must identify the revision and changed scope, summarize the code versus
+comment/documentation check, list any stale or duplicated information found
+and its disposition, and link evidence. If findings remain, create repair and
+re-review work; do not close the phase until they are resolved or explicitly
+accepted by the task owner as a documented limitation.
 
 ## Deliverable
 

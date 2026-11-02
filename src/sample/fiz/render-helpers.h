@@ -12,7 +12,7 @@ struct HelperVertex {
     glm::vec2 uv;
 };
 
-inline GN::gpu2::RasterGeometry makeGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads, const GN::DynaArray<HelperVertex> & verts,
+inline GN::gpu2::RasterGeometry makeGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::CnC & uploads, const GN::DynaArray<HelperVertex> & verts,
                                              const GN::DynaArray<uint32_t> & indices) {
     using AF = GN::gpu2::RasterGeometry::AttributeFormat;
     GN::gpu2::RasterGeometry geometry;
@@ -45,7 +45,7 @@ inline GN::gpu2::RasterGeometry makeGeometry(GN::AutoRef<GN::gpu2::GpuContext> g
     return geometry;
 }
 
-inline GN::gpu2::RasterGeometry boxGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads, glm::vec3 halfExtents) {
+inline GN::gpu2::RasterGeometry boxGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::CnC & uploads, glm::vec3 halfExtents) {
     const float     hx = halfExtents.x, hy = halfExtents.y, hz = halfExtents.z;
     const glm::vec3 corners[8] = {
         {-hx, -hy, -hz}, {hx, -hy, -hz}, {hx, hy, -hz}, {-hx, hy, -hz}, {-hx, -hy, hz}, {hx, -hy, hz}, {hx, hy, hz}, {-hx, hy, hz},
@@ -73,7 +73,7 @@ inline GN::gpu2::RasterGeometry boxGeometry(GN::AutoRef<GN::gpu2::GpuContext> gp
     return makeGeometry(gpu, uploads, verts, indices);
 }
 
-inline GN::gpu2::RasterGeometry sphereGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads, float radius, uint32_t slices,
+inline GN::gpu2::RasterGeometry sphereGeometry(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::CnC & uploads, float radius, uint32_t slices,
                                                uint32_t stacks) {
     GN::DynaArray<HelperVertex> verts;
     GN::DynaArray<uint32_t>     indices;
@@ -108,7 +108,7 @@ inline GN::gpu2::RasterGeometry sphereGeometry(GN::AutoRef<GN::gpu2::GpuContext>
     return makeGeometry(gpu, uploads, verts, indices);
 }
 
-inline GN::AutoRef<GN::fx2::bindless::PbrMaterial> createPbrMaterial(GN::AutoRef<GN::fx2::bindless::PbrKernel> kernel, GN::gpu2::bindless::CnC & uploads,
+inline GN::AutoRef<GN::fx2::PbrMaterial> createPbrMaterial(GN::AutoRef<GN::fx2::PbrKernel> kernel, GN::gpu2::CnC & uploads,
                                                                      glm::vec4 color, float metallic, float roughness) {
     auto p      = kernel->defaultMaterialParameters();
     p.baseColor = color;
@@ -117,8 +117,8 @@ inline GN::AutoRef<GN::fx2::bindless::PbrMaterial> createPbrMaterial(GN::AutoRef
     return kernel->createMaterial(uploads, p);
 }
 
-inline GN::AutoRef<GN::fx2::bindless::SkyMaterial> createSkyMaterial(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::AutoRef<GN::fx2::bindless::SkyKernel> skyKernel,
-                                                                     GN::gpu2::bindless::CnC & uploads, float luminanceScale = 3000.f) {
+inline GN::AutoRef<GN::fx2::SkyMaterial> createSkyMaterial(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::AutoRef<GN::fx2::SkyKernel> skyKernel,
+                                                                     GN::gpu2::CnC & uploads, float luminanceScale = 3000.f) {
     auto skyboxTex      = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds"});
     auto irradianceTex  = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds"});
     auto prefilteredTex = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds"});
@@ -133,15 +133,15 @@ inline GN::AutoRef<GN::fx2::bindless::SkyMaterial> createSkyMaterial(GN::AutoRef
     return skyKernel->createMaterial(uploads, skyParams);
 }
 
-inline GN::AutoRef<GN::fx2::bindless::SharedShaderConstants::UniformState> updateUniforms(GN::AutoRef<GN::fx2::bindless::SharedShaderConstants> ssc,
-                                                                                          GN::gpu2::bindless::CnC &                             uploads,
+inline GN::AutoRef<GN::fx2::SharedShaderConstants::UniformState> updateUniforms(GN::AutoRef<GN::fx2::SharedShaderConstants> ssc,
+                                                                                          GN::gpu2::CnC &                             uploads,
                                                                                           const GN::gpu2::RasterTarget & target, const glm::vec3 & eye,
                                                                                           const glm::vec3 & targetPos, int frameIdx) {
     const glm::vec3 kUp(0.0f, 1.0f, 0.0f);
     const auto      rasterSize = target.calcRasterSizeInPixel();
     const float     aspect     = static_cast<float>(rasterSize.x) / static_cast<float>(std::max(1u, rasterSize.y));
 
-    GN::fx2::bindless::SharedUniforms uniforms;
+    GN::fx2::SharedUniforms uniforms;
     uniforms.frameCounter   = static_cast<uint32_t>(frameIdx);
     uniforms.cameraPosition = {eye, 1.0f};
     uniforms.viewMatrix     = glm::lookAtRH(eye, targetPos, kUp);

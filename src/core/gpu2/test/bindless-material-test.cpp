@@ -7,7 +7,7 @@
 
 using namespace GN;
 using namespace GN::gpu2;
-using Heap = bindless::DescriptorHeap;
+using Heap = DescriptorHeap;
 
 TEST_CASE("heap material chunks are aligned, opaque and immediately reusable", "[gpu2][bindless][material]") {
     auto gpu = makeGpu();
@@ -76,7 +76,7 @@ TEST_CASE("heap material binding is readable after caller-recorded uploads", "[g
     REQUIRE(gpu);
     auto heap = Heap::create("material-gpu", {.gpu = gpu, .capacity = 8, .materialCapacity = 256});
     REQUIRE(heap);
-    auto uploads = bindless::CnC::create("material-test-upload", {.gpu = gpu});
+    auto uploads = CnC::create("material-test-upload", {.gpu = gpu});
     REQUIRE(uploads);
     auto output = Buffer::create("material-output", {.context = gpu, .size = 48});
     REQUIRE(output);
@@ -94,7 +94,7 @@ TEST_CASE("heap material binding is readable after caller-recorded uploads", "[g
     resources.resize(2);
     resources[1].resize(1);
     resources[1][0].append(GpuResourceView {output}.setBufferViewType(GpuResourceView::BufferView::STORAGE));
-    auto compute = bindless::CnC::create("material-consumers", {.gpu = gpu, .heap = heap, .passResources = resources});
+    auto compute = CnC::create("material-consumers", {.gpu = gpu, .heap = heap, .passResources = resources});
     REQUIRE(compute);
     for (uint32_t i = 0; i < chunks.size(); ++i) {
         std::array<uint32_t, 2> args {uint32_t(heap->materialView(chunks[i]).bufferView.offset / sizeof(uint32_t)), i * 4};

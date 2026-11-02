@@ -1,6 +1,6 @@
 # Mip Level Handling in Garnet GPU2 and RDG2
 
-> Historical research note. This document describes the earlier bound raster implementation; references to `GpuRaster` and its payload are not current API guidance. GPU2 raster work now uses `bindless::Raster`.
+> Historical research note. This document describes the earlier bound raster implementation; references to `GpuRaster` and its payload are not current API guidance. GPU2 raster work now uses `Raster`.
 
 ## Overview
 This document details how render targets with mip levels are initialized, tracked, and transitioned in the Garnet 3D engine, specifically focusing on the Vulkan backend's GPU2 abstraction layer and RDG2 implementation.

@@ -12,7 +12,7 @@ using namespace gpu2;
 
 namespace {
 
-AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, bindless::CnC & uploads, const ModelScene::Texture & source) {
+AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, CnC & uploads, const ModelScene::Texture & source) {
     gfx::img::Image image;
     if (!source.path.empty()) {
         auto file = fs::openFile(source.path, std::ios::in | std::ios::binary);
@@ -43,8 +43,8 @@ AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, bindless::CnC & uploads, c
 
 } // namespace
 
-bool RenderModel::prepare(AutoRef<GpuContext> gpu, bindless::CnC & geometryUploads, bindless::CnC & materialUploads, AutoRef<fx2::bindless::PbrKernel> pbrKernel,
-                          AutoRef<fx2::bindless::LambertianKernel> lambertianKernel, AutoRef<fx2::bindless::UnlitKernel> unlitKernel, const ModelScene & scene,
+bool RenderModel::prepare(AutoRef<GpuContext> gpu, CnC & geometryUploads, CnC & materialUploads, AutoRef<fx2::PbrKernel> pbrKernel,
+                          AutoRef<fx2::LambertianKernel> lambertianKernel, AutoRef<fx2::UnlitKernel> unlitKernel, const ModelScene & scene,
                           Shading choice, const glm::mat4 & modelTransform) {
     DynaArray<ModelInstance> collected;
     if (!collectModelInstances(scene, collected)) return false;
@@ -160,17 +160,17 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
     // Each material allocates one descriptor per map it owns, and every kernel adds its own
     // fallback descriptors, so size the heap from the import rather than guessing a constant.
     const uint32_t heapCapacity = static_cast<uint32_t>(std::min<uint64_t>(64 + source.materials.size() * 6, 1u << 20));
-    heap                        = bindless::DescriptorHeap::create("viewer.heap", {.gpu = gpu, .capacity = heapCapacity, .materialCapacity = 4 * 1024 * 1024});
-    ssc                         = fx2::bindless::SharedShaderConstants::create({.gpu = gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    heap                        = DescriptorHeap::create("viewer.heap", {.gpu = gpu, .capacity = heapCapacity, .materialCapacity = 4 * 1024 * 1024});
+    ssc                         = fx2::SharedShaderConstants::create({.gpu = gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!heap || !ssc) return false;
 
-    auto initialization  = bindless::CnC::create("viewer.material-init", {.gpu = gpu, .heap = heap});
-    auto geometryUploads = bindless::CnC::create("viewer.geometry-init", {.gpu = gpu});
+    auto initialization  = CnC::create("viewer.material-init", {.gpu = gpu, .heap = heap});
+    auto geometryUploads = CnC::create("viewer.geometry-init", {.gpu = gpu});
     if (!initialization || !geometryUploads) return false;
-    pbr        = fx2::bindless::PbrKernel::create(*heap, *initialization);
-    lambertian = fx2::bindless::LambertianKernel::create(*heap, *initialization);
-    unlit      = fx2::bindless::UnlitKernel::create(*heap, *initialization);
-    sky        = fx2::bindless::SkyKernel::create(*heap, *initialization);
+    pbr        = fx2::PbrKernel::create(*heap, *initialization);
+    lambertian = fx2::LambertianKernel::create(*heap, *initialization);
+    unlit      = fx2::UnlitKernel::create(*heap, *initialization);
+    sky        = fx2::SkyKernel::create(*heap, *initialization);
     if (!pbr || !lambertian || !unlit || !sky) return false;
 
     const auto env = [](AutoRef<Texture> texture) {
@@ -212,8 +212,8 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
     return true;
 }
 
-AutoRef<fx2::bindless::SharedShaderConstants::UniformState> SceneRenderer::updateUniforms(bindless::CnC & uploads, const FrameParameters & frame) {
-    fx2::bindless::SharedUniforms uniforms;
+AutoRef<fx2::SharedShaderConstants::UniformState> SceneRenderer::updateUniforms(CnC & uploads, const FrameParameters & frame) {
+    fx2::SharedUniforms uniforms;
     const auto                    cameraToWorld = glm::translate(glm::mat4(1), frame.eye) * glm::mat4_cast(frame.orientation);
     uniforms.viewMatrix                         = glm::inverse(cameraToWorld);
     uniforms.projMatrix =
@@ -234,8 +234,8 @@ size_t SceneRenderer::drawCount(bool showBounds, bool showAxes) const {
     return model.instances.size() + (showBounds ? bounds.instances.size() : 0) + (showAxes ? axes.instances.size() : 0) + 1;
 }
 
-bool SceneRenderer::recordModel(const RenderModel & source, bindless::Raster & raster,
-                                const AutoRef<fx2::bindless::SharedShaderConstants::UniformState> & state) const {
+bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster,
+                                const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
     for (const auto & instance : source.instances) {
         const auto & material = source.materials[instance.material];
         RasterState  states;
@@ -244,17 +244,17 @@ bool SceneRenderer::recordModel(const RenderModel & source, bindless::Raster & r
         states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
         switch (material.shading) {
         case Shading::PBR: {
-            fx2::bindless::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
+            fx2::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
             if (!material.pbr->record(draw)) return false;
             break;
         }
         case Shading::LAMBERTIAN: {
-            fx2::bindless::LambertianMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform};
+            fx2::LambertianMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform};
             if (!material.lambertian->record(draw)) return false;
             break;
         }
         case Shading::UNLIT: {
-            fx2::bindless::UnlitMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform};
+            fx2::UnlitMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform};
             if (!material.unlit->record(draw)) return false;
             break;
         }
@@ -266,7 +266,7 @@ bool SceneRenderer::recordModel(const RenderModel & source, bindless::Raster & r
     return true;
 }
 
-bool SceneRenderer::record(bindless::Raster & raster, const AutoRef<fx2::bindless::SharedShaderConstants::UniformState> & state, bool showBounds,
+bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds,
                            bool showAxes) const {
     if (!recordModel(model, raster, state)) return false;
     if (showBounds && !recordModel(bounds, raster, state)) return false;

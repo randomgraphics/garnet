@@ -5,9 +5,9 @@
 #include <glm/ext/matrix_clip_space.hpp>
 
 using namespace GN;
-using namespace GN::fx2::bindless;
+using namespace GN::fx2;
 using namespace GN::gpu2;
-namespace gpuBindless = GN::gpu2::bindless;
+namespace gpuBindless = GN::gpu2;
 
 TEST_CASE("FX2 bindless skybox renders fallback and custom environment maps", "[fx2][bindless][sky][gpu]") {
     auto gpu = GpuContext::create("bindless-sky-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});

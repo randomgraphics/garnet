@@ -64,14 +64,14 @@ int main() {
     }
 
     // The shader resolves this storage buffer through the descriptor heap.
-    auto heap = bindless::DescriptorHeap::create("simple-compute-heap", {.gpu = gpu, .capacity = 1});
+    auto heap = DescriptorHeap::create("simple-compute-heap", {.gpu = gpu, .capacity = 1});
     if (!heap) {
         std::fprintf(stderr, "Failed to create bindless descriptor heap\n");
         return -1;
     }
     const auto bufferView = GpuResourceView {buf}.setBufferViewType(GpuResourceView::BufferView::STORAGE);
-    const auto dataIndex  = heap->allocate(bindless::DescriptorHeap::STORAGE_BUFFER, bufferView);
-    if (dataIndex == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
+    const auto dataIndex  = heap->allocate(DescriptorHeap::STORAGE_BUFFER, bufferView);
+    if (dataIndex == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
         std::fprintf(stderr, "Failed to allocate storage-buffer descriptor\n");
         return -1;
     }
@@ -87,12 +87,12 @@ int main() {
 
     PushConstants pc {(uint32_t) COUNT, INCREMENT, dataIndex.slot};
 
-    auto cnc = bindless::CnC::create("simple-compute", {.gpu = gpu, .heap = heap, .passResources = resources});
+    auto cnc = CnC::create("simple-compute", {.gpu = gpu, .heap = heap, .passResources = resources});
     if (!cnc) {
         std::fprintf(stderr, "Failed to create bindless CnC\n");
         return -1;
     }
-    bindless::CnC::ComputeParameters cp;
+    CnC::ComputeParameters cp;
     cp.cs         = cs;
     cp.immediates = {reinterpret_cast<const uint8_t *>(&pc), sizeof(pc)};
     cp.x          = GROUPS;

@@ -99,6 +99,13 @@ review explicitly requires a specific handoff.
 6. On task archival, preserve `TASK.md`, all assignment files, and linked
    evidence according to the host repository's archive policy.
 
+Before marking any code-changing phase complete, dispatch or perform a review
+assignment that checks code/comment/documentation consistency for that phase.
+The handoff records the revision and scope, whether affected comments and docs
+match current behavior and contracts, stale/duplicated/contradictory or missing
+information found, disposition, and evidence. Findings add repair and
+re-review nodes; the phase stays open until the review gate is satisfied.
+
 Do not invent historical agent ownership when migrating an existing task. If
 the task has no currently dispatched assignment, keep its existing charter and
 create per-agent files when work is next assigned or resumed.

@@ -15,13 +15,13 @@ To the caller, all unsubmitted GPU work—whether rasterization, compute, or mem
 - Under the hood, `GpuPayload` subclasses manage native command buffers and keep all dependent resources (geometry, textures, constant buffers, transient memory) alive until GPU execution completes (`onGpuComplete()`).
 
 ### Bindless Raster Passes
-GPU2 raster work is recorded through `GN::gpu2::bindless::Raster`. Draws access heap resources by descriptor index; pass-wide descriptors use `CreateParameters::passResources`. There is no per-draw resource table binding path.
+GPU2 raster work is recorded through `GN::gpu2::Raster`. Draws access heap resources by descriptor index; pass-wide descriptors use `CreateParameters::passResources`. There is no per-draw resource table binding path.
 
 ---
 
-## 2. Bindless Rendering Architecture (`GN::gpu2::bindless`)
+## 2. Bindless Rendering Architecture (`GN::gpu2`)
 
-The bindless subsystem lives entirely within `namespace GN::gpu2::bindless` and is declared in `<garnet/gpu2/bindless.h>` (included via `<garnet/GNgpu2.h>`).
+The bindless subsystem lives entirely within `namespace GN::gpu2` and is declared in `<garnet/gpu2/bindless.h>` (included via `<garnet/GNgpu2.h>`).
 
 ### A. The "Read-Ready" Invariant (Zero Per-Draw Barrier Overhead)
 Bindless raster draws avoid scanning per-draw resource tables. Resources that need state tracking across a pass are declared through pass resources, while sampled heap resources are expected to be in read-ready layouts.
@@ -38,7 +38,7 @@ Layout and barrier management is completely automated and invisible to the user.
 
 ---
 
-### B. Persistent Global Descriptor Heap (`bindless::DescriptorHeap`)
+### B. Persistent Global Descriptor Heap (`DescriptorHeap`)
 
 The heap owns one persistent descriptor set containing a material SSBO followed
 by five typed resource arrays.
@@ -80,7 +80,7 @@ must still be declared through the recorder's existing pass resources.
 ### B.1. Built-in Material Buffer
 
 The first implementation of this extension is a fixed-capacity mini heap inside
-`bindless::DescriptorHeap`. The growth design below is a subsequent step. The heap will own both its existing descriptor arrays and a material buffer.
+`DescriptorHeap`. The growth design below is a subsequent step. The heap will own both its existing descriptor arrays and a material buffer.
 The buffer is a generic store for relatively long-lived, read-only, non-uniform
 GPU records. "Material" names its common use; gpu2 does not know the contents of
 any record, shader schema, FX2 kernel type, or descriptor indices packed inside.
@@ -153,13 +153,13 @@ verify consumption of heap-owned records, not another allocation implementation.
 
 ---
 
-### C. Bindless Raster Recorder (`bindless::Raster`)
+### C. Bindless Raster Recorder (`Raster`)
 
 #### Plain POD Configuration
 Callers describe their pass requirements using a plain POD `CreateParameters` struct without touching native pipeline layout objects:
 
 ```cpp
-namespace GN::gpu2::bindless {
+namespace GN::gpu2 {
 
 struct Raster::CreateParameters {
     AutoRef<GpuContext>     gpu;
@@ -185,7 +185,7 @@ Draws do not carry a `GpuResourceTable`. They specify only:
 - Push constants (`immediates`: transforms, material BDA addresses, bindless texture IDs)
 
 #### Parameter Buffer Retention
-`bindless::Raster::retainResource(AutoRef<RCRT64> resource)` allows higher-level modules (`fx2`) to attach dynamic per-draw parameter buffers, material buffers, or textures to the recorder. The sealed `GpuPayload` holds these references until GPU execution completes.
+`Raster::retainResource(AutoRef<RCRT64> resource)` allows higher-level modules (`fx2`) to attach dynamic per-draw parameter buffers, material buffers, or textures to the recorder. The sealed `GpuPayload` holds these references until GPU execution completes.
 
 #### Direct Vulkan Recording & Dynamic Rendering
 Bypasses `rv::Drawable` and descriptor pools entirely:
@@ -215,7 +215,7 @@ All shader resources used by raster passes are addressed through the persistent 
 
 ---
 
-### E. Future Extensibility to Copy and Compute (`bindless::CnC`)
+### E. Future Extensibility to Copy and Compute (`CnC`)
 The bindless model extends naturally to compute and memory operations:
 - `DescriptorHeap` allocates storage image (UAV) and storage buffer indices via `GpuResourceView`.
 - Compute dispatches take push constants (BDA addresses, storage indices) without a `GpuResourceTable`.

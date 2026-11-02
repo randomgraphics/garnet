@@ -528,7 +528,7 @@ int main(int argc, const char ** argv) {
 
     // 3. Global persistent DescriptorHeap
     constexpr uint32_t HEAP_CAPACITY = 1024;
-    auto               heap          = bindless::DescriptorHeap::create("global-bindless-heap", {.gpu = gpu, .capacity = HEAP_CAPACITY});
+    auto               heap          = DescriptorHeap::create("global-bindless-heap", {.gpu = gpu, .capacity = HEAP_CAPACITY});
     if (!heap) {
         std::fprintf(stderr, "Failed to create bindless descriptor heap\n");
         return -1;
@@ -539,7 +539,7 @@ int main(int argc, const char ** argv) {
     constexpr uint32_t                                     TEX_SIZE     = 128;
     std::vector<AutoRef<Texture>>                          textures(NUM_TEXTURES);
     std::vector<GpuResourceView>                           textureViews(NUM_TEXTURES);
-    std::vector<bindless::DescriptorHeap::DescriptorIndex> textureSlots(NUM_TEXTURES);
+    std::vector<DescriptorHeap::DescriptorIndex> textureSlots(NUM_TEXTURES);
 
     for (uint32_t i = 0; i < NUM_TEXTURES; ++i) {
         textures[i] = Texture::create(
@@ -554,11 +554,11 @@ int main(int argc, const char ** argv) {
 
     auto sampler = Sampler::create("bindless-shared-sampler", {.context = gpu});
     if (!sampler) return -1;
-    const auto samplerIndex = heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sampler});
-    if (samplerIndex == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX || samplerIndex.slot != 0) return -1;
+    const auto samplerIndex = heap->allocate(DescriptorHeap::SAMPLER, GpuResourceView {sampler});
+    if (samplerIndex == DescriptorHeap::INVALID_DESCRIPTOR_INDEX || samplerIndex.slot != 0) return -1;
     for (uint32_t i = 0; i < NUM_TEXTURES; ++i) {
-        textureSlots[i] = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, textureViews[i]);
-        if (textureSlots[i] == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return -1;
+        textureSlots[i] = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, textureViews[i]);
+        if (textureSlots[i] == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return -1;
     }
 
     // 5. Dynamic Streaming Textures: dedicated textures updated live in-place (demonstrating UPDATE_AFTER_BIND)
@@ -654,7 +654,7 @@ int main(int argc, const char ** argv) {
         obj.materialIndex = static_cast<uint32_t>(view.bufferView.offset / sizeof(MaterialData));
     }
 
-    auto materialUploads = bindless::CnC::create("bindless-material-upload", {.gpu = gpu});
+    auto materialUploads = CnC::create("bindless-material-upload", {.gpu = gpu});
     if (!materialUploads) return -1;
     materialUploads->recordUploadBuffer(materialBuffer, 0, {reinterpret_cast<const uint8_t *>(materials.data()), materials.size() * sizeof(MaterialData)});
     auto materialInitialization = materialUploads->seal();
@@ -762,7 +762,7 @@ int main(int argc, const char ** argv) {
         // â”€â”€â”€ Dynamic Live Texture Streaming (UPDATE_AFTER_BIND in action via CnC) â”€â”€â”€
         AutoRef<GpuPayload> uploadPayload;
         if (streamingEnabled && !testMode) {
-            auto cnc = bindless::CnC::create("bindless-texture-streaming", {.gpu = gpu});
+            auto cnc = CnC::create("bindless-texture-streaming", {.gpu = gpu});
             if (cnc) {
                 for (uint32_t s = 0; s < NUM_STREAMING_SLOTS; ++s) {
                     updateDynamicTextureImage(dynImg, TEX_SIZE, TEX_SIZE, s, simTime);
@@ -801,7 +801,7 @@ int main(int argc, const char ** argv) {
         constexpr float ambient  = 0.22f;
 
         // â”€â”€â”€ Bindless Raster Recorder Creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        bindless::Raster::CreateParameters rcp;
+        Raster::CreateParameters rcp;
         rcp.gpu               = gpu;
         rcp.target            = &rt;
         rcp.heap              = heap;
@@ -809,7 +809,7 @@ int main(int argc, const char ** argv) {
         rcp.maxImmediateSize  = sizeof(PushConstants);
         rcp.numberOfDrawsHint = activeDrawCount;
 
-        auto raster = bindless::Raster::create("bindless-raster", rcp);
+        auto raster = Raster::create("bindless-raster", rcp);
         if (!raster) {
             std::fprintf(stderr, "Failed to create bindless raster recorder\n");
             return -1;

@@ -4,9 +4,9 @@
 #include <cmath>
 
 using namespace GN;
-using namespace GN::fx2::bindless;
+using namespace GN::fx2;
 using namespace GN::gpu2;
-namespace gpuBindless = GN::gpu2::bindless;
+namespace gpuBindless = GN::gpu2;
 
 TEST_CASE("FX2 bindless cel kernel validates parameters and manages material storage", "[fx2][bindless][cel][gpu]") {
     auto gpu = GpuContext::create("bindless-cel-test", {.howToPrintDeviceCaps = GpuContext::Verbosity::SILENCE});

@@ -27,22 +27,22 @@ struct UiConstants {
 };
 
 struct UiTextureSlot {
-    AutoRef<gpu2::bindless::DescriptorHeap> heap;
+    AutoRef<::GN::gpu2::DescriptorHeap> heap;
     AutoRef<gpu2::Texture> texture;
-    gpu2::bindless::DescriptorHeap::DescriptorIndex index = gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
+    ::GN::gpu2::DescriptorHeap::DescriptorIndex index = ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
 
     ~UiTextureSlot() {
-        if (heap && index != gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) heap->free(index);
+        if (heap && index != ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) heap->free(index);
     }
 };
 
 struct UiSamplerSlot {
-    AutoRef<gpu2::bindless::DescriptorHeap> heap;
+    AutoRef<::GN::gpu2::DescriptorHeap> heap;
     AutoRef<gpu2::Sampler> sampler;
-    gpu2::bindless::DescriptorHeap::DescriptorIndex index = gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
+    ::GN::gpu2::DescriptorHeap::DescriptorIndex index = ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
 
     ~UiSamplerSlot() {
-        if (heap && index != gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) heap->free(index);
+        if (heap && index != ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) heap->free(index);
     }
 };
 
@@ -163,7 +163,7 @@ ImGuiKey toImGuiKey(win::KeyCode key) {
 struct ImGuiBackendImpl final : ImGuiBackend {
     GN_REGISTER_RUNTIME_TYPE(ImGuiBackend);
 
-    ImGuiBackendImpl(AutoRef<gpu2::GpuContext> gpu, win::Window & window, AutoRef<gpu2::bindless::DescriptorHeap> heap, uint32_t heapSetIndex)
+    ImGuiBackendImpl(AutoRef<gpu2::GpuContext> gpu, win::Window & window, AutoRef<::GN::gpu2::DescriptorHeap> heap, uint32_t heapSetIndex)
         : ImGuiBackend(TYPE_INFO(), "imgui-gpu2-backend"), mGpu(std::move(gpu)), mWindow(window), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex) {}
 
     ~ImGuiBackendImpl() override {
@@ -211,8 +211,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         auto font = std::make_shared<UiTextureSlot>();
         font->heap = mHeap;
         font->texture = mFontTexture;
-        font->index = mHeap->allocate(gpu2::bindless::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {mFontTexture});
-        if (font->index == gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
+        font->index = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {mFontTexture});
+        if (font->index == ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
         mTextures.emplace(1, std::move(font));
         io.Fonts->SetTexID(1);
 
@@ -221,8 +221,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         mSamplerSlot = std::make_shared<UiSamplerSlot>();
         mSamplerSlot->heap = mHeap;
         mSamplerSlot->sampler = sampler;
-        mSamplerSlot->index = mHeap->allocate(gpu2::bindless::DescriptorHeap::SAMPLER, gpu2::GpuResourceView {sampler});
-        if (mSamplerSlot->index == gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
+        mSamplerSlot->index = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLER, gpu2::GpuResourceView {sampler});
+        if (mSamplerSlot->index == ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
 
         mVs = gpu2::GpuShader::create({.context = mGpu, .name = "imgui.vert", .binary = kImguiVertSpv, .size = sizeof(kImguiVertSpv)});
 
@@ -273,8 +273,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         auto slot = std::make_shared<UiTextureSlot>();
         slot->heap = mHeap;
         slot->texture = std::move(texture);
-        slot->index = mHeap->allocate(gpu2::bindless::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {slot->texture});
-        if (slot->index == gpu2::bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return ImTextureID_Invalid;
+        slot->index = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {slot->texture});
+        if (slot->index == ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return ImTextureID_Invalid;
         const ImTextureID tid = ++mNextTextureId;
         mTextures.emplace(tid, std::move(slot));
         return tid;
@@ -308,7 +308,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         const uint64_t indexBytes  = static_cast<uint64_t>(mDrawData->TotalIdxCount) * sizeof(ImDrawIdx);
         frame.vertexBuffer         = gpu2::Buffer::create("imgui-frame-vb", {.context = mGpu, .size = vertexBytes});
         frame.indexBuffer          = gpu2::Buffer::create("imgui-frame-ib", {.context = mGpu, .size = indexBytes});
-        auto cnc                   = gpu2::bindless::CnC::create("imgui-frame-uploads", {.gpu = mGpu});
+        auto cnc                   = ::GN::gpu2::CnC::create("imgui-frame-uploads", {.gpu = mGpu});
         if (!frame.vertexBuffer || !frame.indexBuffer || !cnc) { return false; }
 
         DynaArray<uint8_t> vertices, indices;
@@ -349,7 +349,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         return bool(frame.uploads);
     }
 
-    bool record(gpu2::bindless::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads) const override {
+    bool record(::GN::gpu2::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads) const override {
         uploads.clear();
         PreparedFrame frame;
         if (!prepareFrame(frame)) return false;
@@ -377,7 +377,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 if (texture == mTextures.end()) continue;
 
                 gpu2::RasterGeometry                   drawGeometry;
-                gpu2::bindless::Raster::DrawParameters draw {.geometry = drawGeometry};
+                ::GN::gpu2::Raster::DrawParameters draw {.geometry = drawGeometry};
                 draw.vs = mVs;
                 draw.ps = mPs;
                 drawGeometry.format.attributes.push_back(
@@ -439,7 +439,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
 
     AutoRef<gpu2::GpuContext>                               mGpu;
     win::Window &                                           mWindow;
-    AutoRef<gpu2::bindless::DescriptorHeap>                 mHeap;
+    AutoRef<::GN::gpu2::DescriptorHeap>                 mHeap;
     uint32_t                                                mHeapSetIndex = 0;
     ImGuiContext *                                          mContext          = nullptr;
     ImDrawData *                                            mDrawData         = nullptr;

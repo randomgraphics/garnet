@@ -96,7 +96,7 @@ void BufferVulkan::unmap(const Mapped &) {
 bool BufferVulkan::setContent(ArrayView<const uint8_t> data, size_t offset) {
     if (!mRvBuffer || !mGpu || !mGpu->ready() || offset > mSize || data.size() > mSize - offset) return false;
     if (data.empty()) return true;
-    auto cnc = bindless::CnC::create(name + "/set-content", {.gpu = mGpu});
+    auto cnc = CnC::create(name + "/set-content", {.gpu = mGpu});
     if (!cnc) return false;
     cnc->recordUploadBuffer(AutoRef<Buffer>(this), offset, data);
     auto payload = cnc->seal();

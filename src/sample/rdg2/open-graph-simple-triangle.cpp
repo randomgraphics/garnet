@@ -120,7 +120,7 @@ int main(int argc, const char ** argv) {
     RasterTarget rasterTarget;
     rasterTarget.colorTargets.append(RasterTarget::ColorTarget {});
     rasterTarget.setClearColor(0.0f, 0.0f, 1.0f, 1.0f); // Clear to solid blue.
-    auto heap = bindless::DescriptorHeap::create("open-graph-triangle-heap", {.gpu = gpuContext, .capacity = 1});
+    auto heap = DescriptorHeap::create("open-graph-triangle-heap", {.gpu = gpuContext, .capacity = 1});
     if (!heap) return -1;
 
     // Capture "shaders published at least once" tokens before the loop so they remain
@@ -146,18 +146,18 @@ int main(int argc, const char ** argv) {
             auto psContent = solidPs->content<ShaderArtifactContent>();
             if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) return;
 
-            bindless::Raster::CreateParameters rcp;
+            Raster::CreateParameters rcp;
             rcp.gpu = gpuContext;
             rcp.target = &rasterTarget;
             rcp.heap = heap;
 
             RasterGeometry                   drawParamsGeometry;
-            bindless::Raster::DrawParameters drawParams {.geometry = drawParamsGeometry};
+            Raster::DrawParameters drawParams {.geometry = drawParamsGeometry};
             drawParams.vs                  = vsContent->shader;
             drawParams.ps                  = psContent->shader;
             drawParamsGeometry.vertexCount = 3; ///< Full-screen triangle from gl_VertexIndex (no vertex buffer).
 
-            auto r = bindless::Raster::create("open-graph-simple-triangle", rcp);
+            auto r = Raster::create("open-graph-simple-triangle", rcp);
             if (!r) return;
             r->recordDraw(drawParams);
             colorPassWork = r->seal();

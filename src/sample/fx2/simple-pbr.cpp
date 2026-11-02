@@ -8,8 +8,8 @@
 
 using namespace GN;
 using namespace GN::gpu2;
-namespace fxBindless  = GN::fx2::bindless;
-namespace gpuBindless = GN::gpu2::bindless;
+namespace fx  = GN::fx2;
+namespace gpu = GN::gpu2;
 
 namespace {
 // Drain before destroying the native surface, including early failure returns.
@@ -43,14 +43,14 @@ int main(int argc, const char * argv[]) {
     swapchain.setSurface(host.surface);
     host.swapchain = Swapchain::create(swapchain);
 
-    auto heap = gpuBindless::DescriptorHeap::create("pbr.heap", {.gpu = host.gpu, .capacity = 128});
+    auto heap = gpu::DescriptorHeap::create("pbr.heap", {.gpu = host.gpu, .capacity = 128});
     if (!heap) return 1;
-    auto upload = gpuBindless::CnC::create("pbr.initialization", {.gpu = host.gpu, .heap = heap});
+    auto upload = gpu::CnC::create("pbr.initialization", {.gpu = host.gpu, .heap = heap});
     if (!upload) return 1;
 
-    auto pbr       = fxBindless::PbrKernel::create(*heap, *upload);
-    auto sky       = fxBindless::SkyKernel::create(*heap, *upload);
-    auto constants = fxBindless::SharedShaderConstants::create({.gpu = host.gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    auto pbr       = fx::PbrKernel::create(*heap, *upload);
+    auto sky       = fx::SkyKernel::create(*heap, *upload);
+    auto constants = fx::SharedShaderConstants::create({.gpu = host.gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!host.swapchain || !heap || !pbr || !sky || !constants) return 1;
 
     // ─── Depth buffer ──────────────────────────────────────────────────────────
@@ -86,12 +86,12 @@ int main(int argc, const char * argv[]) {
         upload->recordUploadBuffer(fallbackVb, 0, {reinterpret_cast<const uint8_t *>(fallbackPositions), sizeof(fallbackPositions)});
         helmetGeometry.vertices.push_back({.buffer = fallbackVb, .offset = 0, .stride = 8 * sizeof(float)});
         helmetGeometry.format.attributes.push_back(
-            {.location = fxBindless::PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-        helmetGeometry.format.attributes.push_back({.location = fxBindless::PbrMaterial::NORMAL_LOCATION,
+            {.location = fx::PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+        helmetGeometry.format.attributes.push_back({.location = fx::PbrMaterial::NORMAL_LOCATION,
                                                     .binding  = 0,
                                                     .offset   = 3 * sizeof(float),
                                                     .format   = RasterGeometry::AttributeFormat::F32_3});
-        helmetGeometry.format.attributes.push_back({.location = fxBindless::PbrMaterial::TEXCOORD_LOCATION,
+        helmetGeometry.format.attributes.push_back({.location = fx::PbrMaterial::TEXCOORD_LOCATION,
                                                     .binding  = 0,
                                                     .offset   = 6 * sizeof(float),
                                                     .format   = RasterGeometry::AttributeFormat::F32_2});
@@ -136,15 +136,15 @@ int main(int argc, const char * argv[]) {
         target.setColorTarget(0, acquired.view).setClearColor(0.02f, 0.03f, 0.05f, 1);
         target.setDepthStencilTarget(GpuResourceView {depthBuffer}).setClearDepth(1.0f);
 
-        auto uniformUploads = gpuBindless::CnC::create("pbr.uniform-upload", {.gpu = host.gpu, .heap = heap});
+        auto uniformUploads = gpu::CnC::create("pbr.uniform-upload", {.gpu = host.gpu, .heap = heap});
         if (!uniformUploads) return 1;
 
-        fxBindless::SharedUniforms uniforms;
+        fx::SharedUniforms uniforms;
         const float                camAngle = static_cast<float>(frame) * 0.01f;
         constexpr float            camDist  = 2.6f;
         uniforms.cameraPosition             = {camDist * std::sin(camAngle), 0.5f, camDist * std::cos(camAngle), 1};
         uniforms.numLights                  = 1;
-        uniforms.lights[0].positionOrDir    = {0.5f, 1.0f, 0.5f, float(fxBindless::DirectLightUniform::DIRECTIONAL)};
+        uniforms.lights[0].positionOrDir    = {0.5f, 1.0f, 0.5f, float(fx::DirectLightUniform::DIRECTIONAL)};
         uniforms.lights[0].colorAndRange    = {2.5f, 2.5f, 2.5f, 0.0f};
         uniforms.exposure                   = 1.0f;
         uniforms.renderTargetSize           = {width, height};
@@ -159,21 +159,21 @@ int main(int argc, const char * argv[]) {
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return 1;
 
-        auto raster = gpuBindless::Raster::create("pbr.render", {.gpu               = host.gpu,
+        auto raster = gpu::Raster::create("pbr.render", {.gpu               = host.gpu,
                                                                  .target            = &target,
                                                                  .heap              = heap,
                                                                  .heapSetIndex      = 0,
-                                                                 .passResources     = fxBindless::sharedUniformResources(state),
+                                                                 .passResources     = fx::sharedUniformResources(state),
                                                                  .numberOfDrawsHint = 2});
         if (!raster) return 1;
 
         // 1. Draw skybox
-        fxBindless::SkyMaterial::DrawParameters skyDraw {*raster, state, &skyState};
+        fx::SkyMaterial::DrawParameters skyDraw {*raster, state, &skyState};
         if (!skyMaterial->record(skyDraw)) return 1;
 
         // 2. Draw helmet oriented upright
         const glm::mat4                         helmetRotation = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(1, 0, 0));
-        fxBindless::PbrMaterial::DrawParameters helmetDraw {{*raster, state, helmetGeometry, &helmetState}, helmetRotation, skyMaterial};
+        fx::PbrMaterial::DrawParameters helmetDraw {{*raster, state, helmetGeometry, &helmetState}, helmetRotation, skyMaterial};
         if (!helmetMaterial->record(helmetDraw)) return 1;
 
         auto draws = raster->seal();

@@ -8,7 +8,7 @@ namespace GN::win {
 class Window;
 }
 
-namespace GN::gpu2::bindless {
+namespace GN::gpu2 {
 class DescriptorHeap;
 class Raster;
 }
@@ -23,7 +23,7 @@ struct ImGuiBackend : RCRT64 {
     struct CreateParameters {
         AutoRef<gpu2::GpuContext> gpu;
         win::Window &             window;
-        AutoRef<gpu2::bindless::DescriptorHeap> heap; ///< Must be the heap used by the Raster passed to record().
+        AutoRef<::GN::gpu2::DescriptorHeap> heap; ///< Must be the heap used by the Raster passed to record().
         uint32_t heapSetIndex = 0;                    ///< Descriptor set index occupied by heap (default 0).
     };
 
@@ -41,7 +41,7 @@ struct ImGuiBackend : RCRT64 {
     /// The raster must use the same descriptor heap and heap set index supplied at creation.
     /// Submit uploads before the raster payload. On failure, discard the raster recording.
     /// Call before the next newFrame(); the recorded work retains its buffers and textures.
-    virtual bool record(gpu2::bindless::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads) const = 0;
+    virtual bool record(::GN::gpu2::Raster & raster, AutoRef<gpu2::GpuPayload> & uploads) const = 0;
 
     /// Register a sampled gpu2 texture and return an ImGui texture identifier.
     virtual ImTextureID registerTexture(AutoRef<gpu2::Texture> texture) = 0;

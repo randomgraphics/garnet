@@ -20,11 +20,11 @@ static void submitAndWait(GpuContext * gpu, AutoRef<GpuPayload> payload) {
     while (!done) gpu->pump();
 }
 
-static AutoRef<bindless::CnC> makeCnc(const AutoRef<GpuContext> & gpu) {
-    return bindless::CnC::create("gpu2-cnc-test", {.gpu = gpu});
+static AutoRef<CnC> makeCnc(const AutoRef<GpuContext> & gpu) {
+    return CnC::create("gpu2-cnc-test", {.gpu = gpu});
 }
 
-// ── bindless::CnC creation ───────────────────────────────────────────────────────────
+// ── CnC creation ───────────────────────────────────────────────────────────
 
 TEST_CASE("GPU2/CnC: create returns valid object", "[gpu2][cnc][gpu]") {
     auto gpu = makeGpu();
@@ -35,7 +35,7 @@ TEST_CASE("GPU2/CnC: create returns valid object", "[gpu2][cnc][gpu]") {
 }
 
 TEST_CASE("GPU2/CnC: create with null gpu returns empty", "[gpu2][cnc]") {
-    auto cnc = bindless::CnC::create("missing-gpu", {.gpu = {}});
+    auto cnc = CnC::create("missing-gpu", {.gpu = {}});
     REQUIRE_FALSE(cnc);
 }
 
@@ -164,7 +164,7 @@ TEST_CASE("GPU2/CnC: copyBufferToImage uploads pixel data", "[gpu2][cnc][gpu]") 
     auto tex = Texture::create("dst-tex", {.context = gpu, .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA8()).setDimensions(W, H)});
     if (!tex) SKIP("RGBA8 texture unavailable");
 
-    bindless::CnC::Region region;
+    CnC::Region region;
     region.imageOffset = {0, 0, 0};
     region.imageExtent = {W, H, 1};
 
@@ -172,7 +172,7 @@ TEST_CASE("GPU2/CnC: copyBufferToImage uploads pixel data", "[gpu2][cnc][gpu]") 
     REQUIRE(cnc);
     {
         auto mapped = staging->map();
-        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const bindless::CnC::Region>(&region, 1));
+        cnc->recordUploadImage(tex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const CnC::Region>(&region, 1));
     }
     submitAndWait(gpu.get(), cnc->seal());
 
@@ -202,9 +202,9 @@ TEST_CASE("GPU2/CnC: compute with null shader logs error but does not crash", "[
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    auto heap = bindless::DescriptorHeap::create("null-shader-heap", {.gpu = gpu, .capacity = 1});
+    auto heap = DescriptorHeap::create("null-shader-heap", {.gpu = gpu, .capacity = 1});
     REQUIRE(heap);
-    auto cnc = bindless::CnC::create("null-shader-cnc", {.gpu = gpu, .heap = heap});
+    auto cnc = CnC::create("null-shader-cnc", {.gpu = gpu, .heap = heap});
     REQUIRE(cnc);
 
     // Record a dispatch with no compute shader: payload records error during record time, not crash.

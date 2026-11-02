@@ -8,10 +8,10 @@ using namespace GN::gpu2;
 
 namespace {
 
-AutoRef<bindless::Raster> createRaster(const AutoRef<GpuContext> & gpu, const StrA & name, const RasterTarget * target) {
-    auto heap = bindless::DescriptorHeap::create("raster-test-heap", {.gpu = gpu, .capacity = 16});
+AutoRef<Raster> createRaster(const AutoRef<GpuContext> & gpu, const StrA & name, const RasterTarget * target) {
+    auto heap = DescriptorHeap::create("raster-test-heap", {.gpu = gpu, .capacity = 16});
     if (!heap) return {};
-    return bindless::Raster::create(name, {.gpu = gpu, .target = target, .heap = heap});
+    return Raster::create(name, {.gpu = gpu, .target = target, .heap = heap});
 }
 
 } // namespace

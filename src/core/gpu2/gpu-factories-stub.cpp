@@ -8,7 +8,7 @@
 #include "vk-bindless-raster.h"
 
 namespace GN::gpu2 {
-AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::CnC::CreateParameters & cp);
+AutoRef<CnC> createVkBindlessCnc(const StrA & name, const CnC::CreateParameters & cp);
 }
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2");
@@ -139,7 +139,7 @@ AutoRef<Texture> Texture::load(const LoadParameters & params) {
 
 } // namespace GN::gpu2
 
-namespace GN::gpu2::bindless {
+namespace GN::gpu2 {
 
 AutoRef<DescriptorHeap> DescriptorHeap::create(const StrA & name, const CreateParameters & cp) {
     if (!cp.gpu) {
@@ -214,4 +214,4 @@ AutoRef<CnC> CnC::create(const StrA & name, const CreateParameters & cp) {
     }
 }
 
-} // namespace GN::gpu2::bindless
+} // namespace GN::gpu2

@@ -33,7 +33,7 @@ TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[
     auto gpu = gpu2::GpuContext::create("imgui-test", {});
     if (!gpu) SKIP("No Vulkan GPU context is available");
     TestWindow window;
-    auto heap = gpu2::bindless::DescriptorHeap::create("imgui-smoke-heap", {.gpu = gpu, .capacity = 16});
+    auto heap = ::GN::gpu2::DescriptorHeap::create("imgui-smoke-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
     auto backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window, .heap = heap});
     REQUIRE(backend);
@@ -66,7 +66,7 @@ TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[
     auto & blend   = target.colorTargets[0].blendState;
     blend.colorSrc = gpu2::RasterTarget::BlendState::SRC_ALPHA;
     blend.colorDst = gpu2::RasterTarget::BlendState::INV_SRC_ALPHA;
-    auto raster = gpu2::bindless::Raster::create("imgui-test-raster", {.gpu = gpu, .target = &target, .heap = heap});
+    auto raster = ::GN::gpu2::Raster::create("imgui-test-raster", {.gpu = gpu, .target = &target, .heap = heap});
     REQUIRE(raster);
 
     AutoRef<gpu2::GpuPayload> upload;
@@ -99,7 +99,7 @@ TEST_CASE("fx2 ImGui backend samples registered textures through bindless indice
     if (!gpu) SKIP("No Vulkan GPU context is available");
 
     TestWindow window;
-    auto heap = gpu2::bindless::DescriptorHeap::create("imgui-test-heap", {.gpu = gpu, .capacity = 16});
+    auto heap = ::GN::gpu2::DescriptorHeap::create("imgui-test-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
     auto backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window, .heap = heap, .heapSetIndex = 2});
     REQUIRE(backend);
@@ -138,7 +138,7 @@ TEST_CASE("fx2 ImGui backend samples registered textures through bindless indice
     blend.colorSrc = gpu2::RasterTarget::BlendState::SRC_ALPHA;
     blend.colorDst = gpu2::RasterTarget::BlendState::INV_SRC_ALPHA;
 
-    auto raster = gpu2::bindless::Raster::create("imgui-bindless-raster", {
+    auto raster = ::GN::gpu2::Raster::create("imgui-bindless-raster", {
                                                                               .gpu          = gpu,
                                                                               .target       = &target,
                                                                               .heap         = heap,

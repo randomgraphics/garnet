@@ -348,6 +348,16 @@ separate verifier role or independent validation step. Failed checks create
 diagnosis and repair work in the graph. Report unsupported environments and
 unverified claims explicitly; do not mark them passed.
 
+Every code-changing phase has a mandatory review gate before it can be marked
+complete. The reviewer checks implementation against its comments and relevant
+documentation, including affected references, for stale, contradictory,
+duplicated, or missing information. Record the reviewed revision and scope,
+the audit result and evidence in a review assignment. Findings create repair
+and re-review nodes; keep the phase open until they are resolved or explicitly
+accepted as a documented limitation by the task owner. This gate applies at
+each phase boundary, not only during final integration, and does not prevent
+the task graph or phase plan from evolving as evidence changes.
+
 ## Execution modes
 
 Modes are selectable and revisitable, not a rigid pipeline:

@@ -7,7 +7,7 @@ namespace {
 template<typename Recorder>
 void uploadImage(Recorder & recorder, AutoRef<Texture> dst, const gfx::img::Image & image) {
     if (!dst || image.empty()) return;
-    DynaArray<bindless::CnC::Region> regions;
+    DynaArray<CnC::Region> regions;
     const auto                format = image.format();
     const uint32_t            bytes  = format.bytesPerBlock();
     if (!bytes) return;
@@ -15,7 +15,7 @@ void uploadImage(Recorder & recorder, AutoRef<Texture> dst, const gfx::img::Imag
         for (uint32_t level = 0; level < image.desc().levels; ++level) {
             const gfx::img::PlaneCoord coord {0, face, level};
             const auto &               plane = image.plane(coord);
-            bindless::CnC::Region     region;
+            CnC::Region     region;
             region.face        = face;
             region.mip         = level;
             region.imageExtent = {(uint32_t) plane.extent.w, (uint32_t) plane.extent.h, (uint32_t) plane.extent.d};
@@ -31,6 +31,6 @@ void uploadImage(Recorder & recorder, AutoRef<Texture> dst, const gfx::img::Imag
 
 } // namespace
 
-void bindless::CnC::recordUploadImage(AutoRef<Texture> dst, const gfx::img::Image & content) { uploadImage(*this, std::move(dst), content); }
+void CnC::recordUploadImage(AutoRef<Texture> dst, const gfx::img::Image & content) { uploadImage(*this, std::move(dst), content); }
 
 } // namespace GN::gpu2

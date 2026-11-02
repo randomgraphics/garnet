@@ -23,10 +23,10 @@ static bool validateRasterTarget(const RasterTarget & target) {
     return true;
 }
 
-VkBindlessRaster::VkBindlessRaster(const StrA & name, AutoRef<GpuContextVulkan2> gpu, RasterTarget target, AutoRef<bindless::DescriptorHeap> heap,
+VkBindlessRaster::VkBindlessRaster(const StrA & name, AutoRef<GpuContextVulkan2> gpu, RasterTarget target, AutoRef<DescriptorHeap> heap,
                                    uint32_t heapSetIndex, vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool,
                                    std::vector<vk::DescriptorSet> passSets, size_t numberOfDrawsHint, uint32_t maxImmediateSize)
-    : bindless::Raster(TYPE_INFO(), name), mGpu(std::move(gpu)), mRenderTarget(std::move(target)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex),
+    : Raster(TYPE_INFO(), name), mGpu(std::move(gpu)), mRenderTarget(std::move(target)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex),
       mPipelineLayout(pipelineLayout), mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)), mStorage(std::make_unique<BindlessDrawStorage>(numberOfDrawsHint)) {
     if (maxImmediateSize && numberOfDrawsHint > mImmediateData.max_size() / maxImmediateSize)
         throw std::length_error("Bindless immediate storage size overflow");
@@ -91,7 +91,7 @@ AutoRef<GpuPayload> VkBindlessRaster::seal() {
     return AutoRef<GpuPayload>(new VkBindlessPayload(name, std::move(cp)));
 }
 
-AutoRef<bindless::Raster> createVkBindlessRaster(const StrA & name, const bindless::Raster::CreateParameters & cp) {
+AutoRef<Raster> createVkBindlessRaster(const StrA & name, const Raster::CreateParameters & cp) {
     AutoRef<GpuContextVulkan2> vkGpu(RuntimeType::cast<GpuContextVulkan2>(cp.gpu.get()));
     if (!vkGpu || !vkGpu->ready()) GN_UNLIKELY {
             GN_ERROR(sLogger, "createVkBindlessRaster: null or unready GpuContextVulkan2");
@@ -126,7 +126,7 @@ AutoRef<bindless::Raster> createVkBindlessRaster(const StrA & name, const bindle
         return {};
     }
 
-    return AutoRef<bindless::Raster>(new VkBindlessRaster(name, vkGpu, *cp.target, cp.heap, cp.heapSetIndex, pl, passPool, passSets,
+    return AutoRef<Raster>(new VkBindlessRaster(name, vkGpu, *cp.target, cp.heap, cp.heapSetIndex, pl, passPool, passSets,
                                                           cp.numberOfDrawsHint, cp.maxImmediateSize));
 }
 

@@ -365,7 +365,7 @@ int main(int argc, const char * argv[]) {
         if (acquired.view.empty()) return EXIT_FAILURE;
         host.lastFrame = acquired.view.texture();
 
-        auto uniformUploads = bindless::CnC::create("viewer.uniforms", {.gpu = host.gpu, .heap = renderer.heap});
+        auto uniformUploads = CnC::create("viewer.uniforms", {.gpu = host.gpu, .heap = renderer.heap});
         if (!uniformUploads) return EXIT_FAILURE;
         const bool useArcball = navigationMode == NavigationMode::ARCBALL;
         const auto uniforms   = renderer.updateUniforms(*uniformUploads, {.eye             = useArcball ? arcball.eyePosition() : fly.position,
@@ -392,10 +392,10 @@ int main(int argc, const char * argv[]) {
         blend.alphaSrc = RasterTarget::BlendState::ONE;
         blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
 
-        auto raster = bindless::Raster::create("viewer.frame", {.gpu               = host.gpu,
+        auto raster = Raster::create("viewer.frame", {.gpu               = host.gpu,
                                                                 .target            = &target,
                                                                 .heap              = renderer.heap,
-                                                                .passResources     = fx2::bindless::sharedUniformResources(uniforms),
+                                                                .passResources     = fx2::sharedUniformResources(uniforms),
                                                                 .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
         if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes)) return EXIT_FAILURE;
 

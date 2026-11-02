@@ -3,11 +3,11 @@
 ## Overview
 
 - Branch/worktree: `wip/agent-harness` (existing harness task branch).
-- Overall status: Source implementation is complete; iterative verification found and repaired compile defects. Core and changed test/sample translation units now compile with a fresh Ninja Debug configuration; runtime validation and updated independent review remain open before user sign-off.
+- Overall status: Bindless-only API and namespace simplification are implemented; static namespace/format/diff checks pass. Targeted FX2 translation units compile. GPU2/client compile coverage and runtime validation remain subject to the paused build investigation before user sign-off.
 - Completed: verified the bootstrap catalog/CodeGraph; confirmed full bindless-only scope; completed GPU2/FX2 impact analysis; implemented A10/A11 and the A12 sample source migration.
-- Current step: Source rework and A91 review complete; A90 build investigation paused at the user's request after the exact wrapper command exited 1 without an underlying diagnostic.
-- Remaining: obtain a fresh linked test executable and GPU runtime checks, finish updated independent review, then hand off for user sign-off.
-- Latest verification: fresh Ninja Debug `GNcore-objects` build passes; all migrated GPU2/FX2 test translation units and affected sample/tool translation units compile after two source-level reworks. Format, diff, and active-source searches pass. The full internal-test target is blocked inside third-party Assimp compilation by MSVC C1902; no fresh test executable/runtime result yet.
+- Current step: A93a/A93b namespace flattening and A93c client migration are source-complete; final static checks are clean. A90 build investigation remains paused at the user's request.
+- Remaining: obtain a fresh linked test executable/GPU runtime checks when build investigation resumes, then hand off for user sign-off.
+- Latest verification: A93b targeted Ninja Debug compilation passed for the changed FX2 implementation, ImGui, and tests after compiling within VsDevCmd. A93a's agent compile attempt ran without the toolchain environment and failed at missing standard headers before source diagnostics. Global formatter, diff check, and active namespace search pass. No fresh test executable/runtime result.
 - Blockers: Exact `python .\\env\\bin\\build.py d` configure/generate succeeds but the full wrapper exits 1 after MSBuild `Checking File Globs` with no diagnostic. Ninja Debug compiled the owned core and selected changed test/sample units, while full test linking reaches a third-party Assimp `/Zi` PDB-manager mismatch (C1902). Build investigation is paused at the user's request; fresh GPU runtime evidence remains pending.
 
 ---
@@ -68,13 +68,18 @@ User authorized full public API retirement, including transfer-only uses and bou
 | A15 | Implementer | Migrate ImGui to descriptor-index recording and retire the GpuRaster overload | A10, bindless raster heap/index contract | source implemented; format/GLSL/static checks pass; C++/GPU test pending |
 | A90 | Test/verifier | Run full test/build/lint matrix and record criterion evidence | A11-A17, A92 | partial; core and migrated test/sample translation units compile; full test executable/runtime blocked by third-party Assimp C1902 |
 | A91 | Reviewer/integrator | Audit diff and call graph, assign repairs, reconcile acceptance | A10-A17 source slices | complete (static review; fresh build/GPU evidence deferred to A90) |
-| A92 | Implementer/rework | Migrate synchronous Buffer/Texture setContent helpers to bindless CnC; repair compile findings exposed by fresh build | A90 | implementation complete; core and selected tests/samples compile; updated independent review pending |
+| A92 | Implementer/rework | Migrate synchronous Buffer/Texture setContent helpers to bindless CnC; repair compile findings exposed by fresh build | A90 | implementation complete; core and selected tests/samples compile; independent review clear |
+| A93 | Analyst/decomposer | Confirm redundant namespace removal scope and split namespace migration into disjoint slices | A92 | complete; independent audit confirms both modules can flatten without collisions |
+| A93a | Implementer | Flatten GPU2 public/internal `GN::gpu2::bindless` types into `GN::gpu2` | A93 | complete; source/static checks pass, compile attempt was missing VsDevCmd environment (`assignments/A93a-flatten-gpu2-namespace.md`) |
+| A93b | Implementer | Flatten FX2 kernels/materials/SSC `GN::fx2::bindless` types into `GN::fx2` | A93 | complete; FX2-owned translation units compile |
+| A93c | Implementer/integrator | Update shared clients, tests, docs and finish namespace acceptance checks | A93a, A93b | source/static checks complete; active namespace search and format/diff checks pass |
 
 ## Progress
 
 --- PROGRESS (resume from "Last completed" / "In progress") ---
 Last completed: Phase 0.1 baseline; A00 requirements and scope decisions; A01 GPU2/CnC/Raster inventory; A02 FX2 audit; A03 rolling decomposition; A91 independent static review; A92 implementation rework and fresh core/test/sample translation-unit compilation.
-In progress: A90 linked test/runtime verification and updated A91 review remain open. Fresh builds exposed a deleted-helper call, invalid C++ designated-initializer order, a Catch assertion on a void pointer, and a missing direct GLM quaternion include; all were repaired and affected owned translation units recompiled. Do not use pre-existing test binaries as changed-source validation.
+In progress: A93a/A93b flattening and A93c client/doc migration are source-complete. A93b's targeted Ninja Debug builds passed for all changed FX2 implementation and test translation units after correcting FX2-owned references to the public `GN::gpu2` namespace. Global active source search for old bindless namespace qualifiers returns no matches; formatter and diff checks pass. A90 linked test/runtime verification remains open but its investigation is paused at the user's request. Do not use pre-existing test binaries as changed-source validation.
+Phase A93a: implementation complete — GPU2 public/internal declarations, backend, helper types, factories and tests now use `GN::gpu2`; scoped old-namespace search is clean, formatter and diff checks pass. Affected Ninja Debug core/test object compilation was attempted but MSVC could not find standard headers (`stdint.h`, `cstddef`), so no source compile result is claimed. See `assignments/A93a-flatten-gpu2-namespace.md`.
 Phase 0.1: complete — bootstrap catalog verified; CodeGraph healthy.
 Phase 1.1: complete — requirement revision 0.2 and migration boundary confirmed by user.
 Phase 1.2: complete — old/new Raster and CnC contracts, call sites, implementation, tests and build wiring inventoried.
@@ -98,6 +103,7 @@ Phase 3.7e/A14e: source migration complete, fresh build/runtime pending — the 
 Phase 3.7f/A14f: source migration complete, fresh build/runtime pending — mixed invariant case keeps heap-free bindless CnC upload and attachment readback, while clear-only rendering now uses bindless Raster and a minimal descriptor heap. The test name was cleared during A17; formatting/diff/API-scoped checks pass.
 Phase 3.9/A16: legacy FX2 SSC public API, implementation, legacy tests, split-UBO shader headers and stale README claims removed after A14c migrated the only production caller. Formatting, diff and scoped legacy-symbol search pass; fresh C++ build remains pending.
 Phase 3.7g/A17: source retirement complete — removed `GpuRaster`, its factory/Vulkan implementation and obsolete standalone raster PSO factory/context ownership; removed `recordBindBasedDraw` and per-draw bound descriptor tables, layouts and payload lifetime plumbing. Kept common RasterTarget/Geometry/State, `PassFormats`, attachment helpers, bindless PSO cache, and pass-wide `GpuResourceTable`. Renamed the migrated target test and cleared the mixed invariant test name. README/TODO now describe bindless-only raster; MIP research is explicitly historical. Formatting, diff and active source/file-name searches pass; fresh build is still pending.
+Phase 5/A93: source namespace simplification complete — flattened GPU2 and FX2 APIs to `GN::gpu2` and `GN::fx2`, migrated shared callers/docs, and retained bindless header directories. Formatter/diff checks and active source search pass; FX2 changed TUs compile. Independent review found no stale active namespace references, name collisions, forward-declaration issues, or RuntimeType parent mismatches. GPU2 compilation/runtime remain unverified while A90 build investigation is paused.
 --- END PROGRESS ---
 
 --- REFERENCE ---

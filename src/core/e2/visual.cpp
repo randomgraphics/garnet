@@ -102,13 +102,13 @@ struct VisualImpl : Visual {
         mRenderTarget.states.setCullMode(RasterState::CULL_BACK);
         mRenderTarget.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
 
-        mHeap = gpu2::bindless::DescriptorHeap::create("e2-heap", {.gpu = mGpu, .capacity = 256, .materialCapacity = 1024 * 1024});
+        mHeap = gpu2::DescriptorHeap::create("e2-heap", {.gpu = mGpu, .capacity = 256, .materialCapacity = 1024 * 1024});
         if (!mHeap) {
             GN_ERROR(sLogger, "Failed to create bindless descriptor heap.");
             return false;
         }
 
-        mSsc = fx2::bindless::SharedShaderConstants::create({.gpu = mGpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+        mSsc = fx2::SharedShaderConstants::create({.gpu = mGpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
         if (!mSsc) {
             GN_ERROR(sLogger, "Failed to create bindless shared shader constants.");
             return false;
@@ -121,9 +121,9 @@ struct VisualImpl : Visual {
         }
         if (!mAssets) return false;
 
-        auto initialization = gpu2::bindless::CnC::create("e2-init-uploads", {.gpu = mGpu, .heap = mHeap});
+        auto initialization = gpu2::CnC::create("e2-init-uploads", {.gpu = mGpu, .heap = mHeap});
         if (!initialization) return false;
-        mLambert = fx2::bindless::LambertianKernel::create(*mHeap, *initialization);
+        mLambert = fx2::LambertianKernel::create(*mHeap, *initialization);
         if (!mLambert) return false;
 
         auto matParams = mLambert->defaultMaterialParameters();
@@ -150,21 +150,21 @@ struct VisualImpl : Visual {
         if (frame.view.empty()) return;
         mRenderTarget.setColorTarget(0, frame.view);
 
-        auto uploadCnc = gpu2::bindless::CnC::create(StrA::format("e2-frame-{}-uploads", mFrameCounter), {.gpu = mGpu, .heap = mHeap});
+        auto uploadCnc = gpu2::CnC::create(StrA::format("e2-frame-{}-uploads", mFrameCounter), {.gpu = mGpu, .heap = mHeap});
         if (!uploadCnc) return;
 
         ++mFrameCounter;
         auto uniformState = updateUniforms(*uploadCnc, tableau);
         if (!uniformState) return;
 
-        gpu2::bindless::Raster::CreateParameters rcp;
+        gpu2::Raster::CreateParameters rcp;
         rcp.gpu               = mGpu;
         rcp.target            = &mRenderTarget;
         rcp.heap              = mHeap;
         rcp.heapSetIndex      = 0;
-        rcp.passResources     = fx2::bindless::sharedUniformResources(uniformState);
+        rcp.passResources     = fx2::sharedUniformResources(uniformState);
         rcp.numberOfDrawsHint = tableau.objects.size();
-        auto raster           = gpu2::bindless::Raster::create("e2-white-model", rcp);
+        auto raster           = gpu2::Raster::create("e2-white-model", rcp);
         if (!raster) return;
 
         for (const auto & object : tableau.objects) {
@@ -173,7 +173,7 @@ struct VisualImpl : Visual {
             auto      position = tableau.scale.toMeters(spatial::toLocal(tableau.camera.position, object.transform.position));
             glm::mat4 object2WorldTransform =
                 glm::translate(glm::mat4(1.f), position) * glm::mat4_cast(object.transform.orientation) * glm::scale(glm::mat4(1.f), object.transform.scale);
-            fx2::bindless::LambertianMaterial::DrawParameters draw {
+            fx2::LambertianMaterial::DrawParameters draw {
                 {*raster, uniformState, mesh->geometry(), &mRenderTarget.states},
                 object2WorldTransform,
             };
@@ -201,8 +201,8 @@ struct VisualImpl : Visual {
     }
 
 private:
-    AutoRef<fx2::bindless::SharedShaderConstants::UniformState> updateUniforms(gpu2::bindless::CnC & uploads, const Tableau & tableau) {
-        fx2::bindless::SharedUniforms uniforms {};
+    AutoRef<fx2::SharedShaderConstants::UniformState> updateUniforms(gpu2::CnC & uploads, const Tableau & tableau) {
+        fx2::SharedUniforms uniforms {};
         uniforms.frameCounter = mFrameCounter;
 
         const auto & cam = tableau.camera;
@@ -227,7 +227,7 @@ private:
         // Fixed directional light matching the white-model preview illumination.
         glm::vec3 dir                    = glm::mat3_cast(glm::quat(glm::vec3(0.6f, 0.8f, 0.f))) * glm::vec3(0.f, 0.f, -1.f);
         uniforms.numLights               = 1;
-        uniforms.lights[0].positionOrDir = glm::vec4(dir, float(fx2::bindless::DirectLightUniform::DIRECTIONAL));
+        uniforms.lights[0].positionOrDir = glm::vec4(dir, float(fx2::DirectLightUniform::DIRECTIONAL));
         uniforms.lights[0].colorAndRange = glm::vec4(1500.f, 1500.f, 1500.f, 0.f);
 
         return mSsc->recordUniformUpdate(uploads, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
@@ -241,11 +241,11 @@ private:
     intptr_t                                      mSurface = 0;
     AutoRef<Swapchain>                            mSwapchain;
     AutoRef<Texture>                              mDepth;
-    AutoRef<gpu2::bindless::DescriptorHeap>       mHeap;
-    AutoRef<fx2::bindless::SharedShaderConstants> mSsc;
+    AutoRef<gpu2::DescriptorHeap>       mHeap;
+    AutoRef<fx2::SharedShaderConstants> mSsc;
     Ref<Assets>                                   mAssets;
-    AutoRef<fx2::bindless::LambertianKernel>      mLambert;
-    AutoRef<fx2::bindless::LambertianMaterial>    mWhiteMaterial;
+    AutoRef<fx2::LambertianKernel>      mLambert;
+    AutoRef<fx2::LambertianMaterial>    mWhiteMaterial;
     RasterTarget                                  mRenderTarget;
     uint32_t                                      mFrameCounter = 0;
     uint32_t                                      mWidth        = 1280;

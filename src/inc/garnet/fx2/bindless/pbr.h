@@ -2,7 +2,7 @@
     #error "Include <garnet/GNfx2.h> instead."
 #endif
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 
 struct SkyMaterial;
 
@@ -48,11 +48,11 @@ protected:
 struct PbrKernel : RCRT64 {
     GN_API                           GN_REGISTER_RUNTIME_TYPE(RCRT64);
     virtual PbrMaterial::Parameters  defaultMaterialParameters() const                                                                      = 0;
-    virtual AutoRef<PbrMaterial>     createMaterial(gpu2::bindless::CnC & initialization, const PbrMaterial::Parameters & parameters) const = 0;
-    GN_API static AutoRef<PbrKernel> create(gpu2::bindless::DescriptorHeap & heap, gpu2::bindless::CnC & initialization);
+    virtual AutoRef<PbrMaterial>     createMaterial(::GN::gpu2::CnC & initialization, const PbrMaterial::Parameters & parameters) const = 0;
+    GN_API static AutoRef<PbrKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 
 protected:
     using RCRT64::RCRT64;
 };
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

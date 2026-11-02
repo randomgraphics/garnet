@@ -5,9 +5,9 @@
 #include <glm/mat3x3.hpp>
 #include <cmath>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 namespace {
-using Heap    = gpu2::bindless::DescriptorHeap;
+using Heap    = ::GN::gpu2::DescriptorHeap;
 auto * logger = getLogger("GN.fx2.bindless.lambertian");
 
 // 64-byte std430 packing matching bindless-lambertian-material.h
@@ -111,10 +111,10 @@ public:
         samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler});
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         const uint8_t               white[] = {255, 255, 255, 255};
         const uint8_t               flat[]  = {128, 128, 255, 255};
-        gpu2::bindless::CnC::Region region;
+        ::GN::gpu2::CnC::Region region;
         region.imageExtent = {1, 1, 1};
         producer.recordUploadImage(color.texture(), {white, sizeof(white)}, {&region, 1});
         producer.recordUploadImage(normal.texture(), {flat, sizeof(flat)}, {&region, 1});
@@ -162,7 +162,7 @@ public:
         mData               = data;
         return true;
     }
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         producer.recordUploadBuffer(mView.buffer(), mView.bufferView.offset, {reinterpret_cast<const uint8_t *>(&mData), sizeof(mData)});
     }
     uint32_t index() const { return mIndex; }
@@ -184,7 +184,7 @@ public:
         return mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), glm::vec4(mParameters.diffuseMultiplier, 0, 0, 0), {}},
                                    mParameters.colorMap, mParameters.normalMap, mParameters.sampler, defaults);
     }
-    void upload(gpu2::bindless::CnC & producer) const { mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
     bool record(const LambertianMaterial::DrawParameters & inputs) const override {
         auto & raster = inputs.raster;
         auto   state  = inputs.ssc;
@@ -193,7 +193,7 @@ public:
                 return false;
             }
         const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
-        gpu2::bindless::Raster::DrawParameters draw {.geometry = inputs.geometry};
+        ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
         draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
         draw.ps = mShaders.fragment;
         if (inputs.states) draw.states = *inputs.states;
@@ -219,7 +219,7 @@ public:
                                    sizeof(kBindlessLambertianFragSpv), kBindlessLambertianTextureVertSpv, sizeof(kBindlessLambertianTextureVertSpv)) &&
                mDefaults.initialize(std::move(heap));
     }
-    void                           uploadDefaults(gpu2::bindless::CnC & producer) const { mDefaults.upload(producer); }
+    void                           uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
     LambertianMaterial::Parameters defaultMaterialParameters() const override {
         LambertianMaterial::Parameters p;
         p.colorMap  = mDefaults.color;
@@ -227,7 +227,7 @@ public:
         p.sampler   = mDefaults.sampler;
         return p;
     }
-    AutoRef<LambertianMaterial> createMaterial(gpu2::bindless::CnC & producer, const LambertianMaterial::Parameters & p) const override {
+    AutoRef<LambertianMaterial> createMaterial(::GN::gpu2::CnC & producer, const LambertianMaterial::Parameters & p) const override {
         if (!validMap(p.colorMap) || !validMap(p.normalMap) || !std::isfinite(p.diffuseMultiplier) || p.diffuseMultiplier < 0) return {};
         for (int i = 0; i < 4; ++i)
             if (!std::isfinite(p.color[i])) return {};
@@ -243,7 +243,7 @@ public:
 
 } // namespace
 
-AutoRef<LambertianKernel> LambertianKernel::create(Heap & heap, gpu2::bindless::CnC & initialization) {
+AutoRef<LambertianKernel> LambertianKernel::create(Heap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<LambertianImpl>(new LambertianImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
@@ -251,4 +251,4 @@ AutoRef<LambertianKernel> LambertianKernel::create(Heap & heap, gpu2::bindless::
     return impl;
 }
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

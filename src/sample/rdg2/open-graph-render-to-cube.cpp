@@ -80,9 +80,9 @@ static constexpr uint32_t kCubemapSize = 512;
 struct SharedCtx {
     GraphPtr                                  graph;
     AutoRef<GpuContext>                       gpu;
-    AutoRef<bindless::DescriptorHeap>         heap;
-    bindless::DescriptorHeap::DescriptorIndex samplerIndex;
-    AutoRef<fx2::bindless::SharedShaderConstants> ssc;
+    AutoRef<DescriptorHeap>         heap;
+    DescriptorHeap::DescriptorIndex samplerIndex;
+    AutoRef<fx2::SharedShaderConstants> ssc;
     uint32_t                                  width, height;
 };
 
@@ -115,8 +115,8 @@ public:
                 return {};
             }
             r.mFaceTextureIndices[i] = ctx.heap->allocate(
-                bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mFaceTextures[i]}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
-            if (r.mFaceTextureIndices[i] == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
+                DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mFaceTextures[i]}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
+            if (r.mFaceTextureIndices[i] == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
                 GN_ERROR(sLogger, "CubemapRenderer: failed to allocate descriptor for face texture {}", i);
                 return {};
             }
@@ -134,8 +134,8 @@ public:
             return {};
         }
         r.mCubemapIndex = ctx.heap->allocate(
-            bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mCubemap}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
-        if (r.mCubemapIndex == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
+            DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mCubemap}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
+        if (r.mCubemapIndex == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
             GN_ERROR(sLogger, "CubemapRenderer: failed to allocate descriptor for output cubemap");
             return {};
         }
@@ -178,7 +178,7 @@ public:
 
     AutoRef<Texture> cubemap() const { return mCubemap; }
 
-    bindless::DescriptorHeap::DescriptorIndex cubemapIndex() const { return mCubemapIndex; }
+    DescriptorHeap::DescriptorIndex cubemapIndex() const { return mCubemapIndex; }
 
     // Capture the OOO token for this frame's cubemap publish. Must be called before
     // addFrameNode — the OOO token targets the *next* version, so it must be created
@@ -202,21 +202,21 @@ public:
                     rt.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f)));
                     rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-                    bindless::Raster::CreateParameters rcp;
+                    Raster::CreateParameters rcp;
                     rcp.gpu = mCtx.gpu;
                     rcp.target = &rt;
                     rcp.heap = mCtx.heap;
                     rcp.maxImmediateSize = sizeof(FaceDrawConstants);
 
                     RasterGeometry            dpGeometry;
-                    bindless::Raster::DrawParameters dp {.geometry = dpGeometry};
+                    Raster::DrawParameters dp {.geometry = dpGeometry};
                     dp.vs                  = vsContent->shader;
                     dp.ps                  = psContent->shader;
                     dpGeometry.vertexCount = 3; // fullscreen triangle, no VBO
                     const FaceDrawConstants constants {mFaceTextureIndices[f].slot, mCtx.samplerIndex.slot};
                     dp.immediates = {reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)};
 
-                    auto rast = bindless::Raster::create("cubemap-face", rcp);
+                    auto rast = Raster::create("cubemap-face", rcp);
                     if (!rast) return;
                     rast->recordDraw(dp);
                     outPayloads.push_back(rast->seal());
@@ -236,7 +236,7 @@ public:
                     return;
                 }
 
-                bindless::Raster::CreateParameters rcp;
+                Raster::CreateParameters rcp;
                 rcp.gpu = mCtx.gpu;
                 rcp.heap = mCtx.heap;
                 rcp.maxImmediateSize = sizeof(AllFacesDrawConstants);
@@ -246,7 +246,7 @@ public:
                 rcp.target = &rt;
 
                 RasterGeometry                   dpGeometry;
-                bindless::Raster::DrawParameters dp {.geometry = dpGeometry};
+                Raster::DrawParameters dp {.geometry = dpGeometry};
                 dp.vs                  = vsContent->shader;
                 dp.ps                  = psContent->shader;
                 dpGeometry.vertexCount = 3;
@@ -255,7 +255,7 @@ public:
                 constants.samplerIndex = mCtx.samplerIndex.slot;
                 dp.immediates = {reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)};
 
-                auto rast = bindless::Raster::create("cubemap-all-faces", rcp);
+                auto rast = Raster::create("cubemap-all-faces", rcp);
                 if (!rast) return;
                 rast->recordDraw(dp);
                 outPayloads.push_back(rast->seal());
@@ -284,8 +284,8 @@ private:
     SharedCtx                       mCtx;
     AutoRef<Texture>                mCubemap;
     std::array<AutoRef<Texture>, 6> mFaceTextures; // source images loaded from disk, one per face
-    std::array<bindless::DescriptorHeap::DescriptorIndex, 6> mFaceTextureIndices;
-    bindless::DescriptorHeap::DescriptorIndex mCubemapIndex;
+    std::array<DescriptorHeap::DescriptorIndex, 6> mFaceTextureIndices;
+    DescriptorHeap::DescriptorIndex mCubemapIndex;
     ArtifactPtr                     mCubemapReady;
     ArtifactPtr                     mFaceVsArtifact, mFacePsArtifact, mAllFacesPsArtifact;
     TokenPtr                        mFaceVsReady, mFacePsReady, mAllFacesPsReady;
@@ -359,8 +359,8 @@ public:
 
     // Adds the per-frame draw-cube node. outPayload is filled when the node executes.
     // Returns the node handle to wait on.
-    NodePtr addFrameNode(const TokenPtr & cubemapToken, const AutoRef<fx2::bindless::SharedShaderConstants::UniformState> & sscState,
-                         bindless::DescriptorHeap::DescriptorIndex cubemapIndex, float elapsed, AutoRef<GpuPayload> & outPayload) {
+    NodePtr addFrameNode(const TokenPtr & cubemapToken, const AutoRef<fx2::SharedShaderConstants::UniformState> & sscState,
+                         DescriptorHeap::DescriptorIndex cubemapIndex, float elapsed, AutoRef<GpuPayload> & outPayload) {
         return mCtx.graph->addNode(
             NodeDesc("draw cube",
                      [this, sscState, cubemapIndex, elapsed, &outPayload]() mutable {
@@ -373,12 +373,12 @@ public:
 
                          glm::mat4 model = glm::rotate(glm::mat4(1.f), elapsed * 0.5f, glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f)));
 
-                         bindless::Raster::CreateParameters rcp;
+                         Raster::CreateParameters rcp;
                          rcp.gpu = mCtx.gpu;
                          rcp.target = &mRenderTarget;
                          rcp.heap = mCtx.heap;
                          rcp.maxImmediateSize = sizeof(CubeDrawConstants);
-                         rcp.passResources = fx2::bindless::sharedUniformResources(sscState);
+                         rcp.passResources = fx2::sharedUniformResources(sscState);
 
                          RasterGeometry geom;
                          geom.format.attributes.push_back(
@@ -389,7 +389,7 @@ public:
                          geom.indices    = RasterGeometry::GeometryBuffer {.buffer = mIb, .offset = 0, .stride = sizeof(uint16_t)};
                          geom.indexCount = kIndexCount;
 
-                         bindless::Raster::DrawParameters dp {.geometry = geom};
+                         Raster::DrawParameters dp {.geometry = geom};
                          dp.vs = vsContent->shader;
                          dp.ps = psContent->shader;
 
@@ -397,7 +397,7 @@ public:
                          CubeDrawConstants constants {.model = model, .cubemapIndex = cubemapIndex.slot, .samplerIndex = mCtx.samplerIndex.slot};
                          dp.immediates = {reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)};
 
-                         auto rast = bindless::Raster::create("cube-display", rcp);
+                         auto rast = Raster::create("cube-display", rcp);
                          if (!rast) return;
                          rast->retainResource(std::move(sscState));
                          rast->recordDraw(dp);
@@ -546,7 +546,7 @@ int main(int argc, const char ** argv) {
     auto graph = Graph::create();
     if (!graph) return -1;
 
-    auto heap = bindless::DescriptorHeap::create("cube-render-heap", {.gpu = gpuContext, .capacity = 8});
+    auto heap = DescriptorHeap::create("cube-render-heap", {.gpu = gpuContext, .capacity = 8});
     if (!heap) return -1;
     using Filter  = Sampler::Descriptor::Filter;
     using Address = Sampler::Descriptor::Address;
@@ -559,10 +559,10 @@ int main(int argc, const char ** argv) {
                                                                            .addressW = Address::CLAMP_TO_EDGE,
                                                                            .maxLod = 16}});
     if (!sampler) return -1;
-    const auto samplerIndex = heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sampler});
-    if (samplerIndex == bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return -1;
+    const auto samplerIndex = heap->allocate(DescriptorHeap::SAMPLER, GpuResourceView {sampler});
+    if (samplerIndex == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return -1;
 
-    auto ssc = fx2::bindless::SharedShaderConstants::create({.gpu = gpuContext, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    auto ssc = fx2::SharedShaderConstants::create({.gpu = gpuContext, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!ssc) return -1;
 
     SharedCtx ctx {.graph = graph, .gpu = gpuContext, .heap = heap, .samplerIndex = samplerIndex, .ssc = ssc, .width = windowWidth, .height = windowHeight};
@@ -599,7 +599,7 @@ int main(int argc, const char ** argv) {
         // Camera: fixed at +Z looking at origin; upload one bindless SSC uniform version for this frame.
         cubeDraw.rasterTarget().setColorTarget(0, frame.view);
         const auto rasterSize = cubeDraw.rasterTarget().calcRasterSizeInPixel();
-        fx2::bindless::SharedUniforms uniforms;
+        fx2::SharedUniforms uniforms;
         uniforms.frameCounter = static_cast<uint32_t>(frameCounter);
         uniforms.cameraPosition = {0, 0, 3, 1};
         uniforms.renderTargetSize = {static_cast<float>(rasterSize.x), static_cast<float>(rasterSize.y)};
@@ -609,7 +609,7 @@ int main(int argc, const char ** argv) {
         uniforms.projMatrix = glm::perspectiveRH_ZO(glm::radians(45.0f), float(rasterSize.x) / float(rasterSize.y), uniforms.nearPlane, uniforms.farPlane);
         uniforms.projMatrix[1][1] *= -1.0f;
         uniforms.projViewMatrix = uniforms.projMatrix * uniforms.viewMatrix;
-        auto sscUpload = bindless::CnC::create("cube-render-ssc", {.gpu = gpuContext});
+        auto sscUpload = CnC::create("cube-render-ssc", {.gpu = gpuContext});
         if (!sscUpload) return -1;
         auto sscState = ssc->recordUniformUpdate(*sscUpload, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
         if (!sscState) return -1;

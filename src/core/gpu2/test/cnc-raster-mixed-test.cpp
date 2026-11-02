@@ -48,24 +48,24 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
         }
     }
 
-    auto heap = bindless::DescriptorHeap::create("mixed-heap", {.gpu = gpu, .capacity = 16});
+    auto heap = DescriptorHeap::create("mixed-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
     auto sampler = Sampler::create("mixed-sampler", {.context = gpu});
     REQUIRE(sampler);
-    REQUIRE(heap->allocate(bindless::DescriptorHeap::SAMPLER, GpuResourceView {sampler}).slot == 0);
-    const auto sampledSourceIndex = heap->allocate(bindless::DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {sourceTex});
-    REQUIRE(sampledSourceIndex != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+    REQUIRE(heap->allocate(DescriptorHeap::SAMPLER, GpuResourceView {sampler}).slot == 0);
+    const auto sampledSourceIndex = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {sourceTex});
+    REQUIRE(sampledSourceIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     // ── Payload 1: heap-free bindless CnC upload staging → sourceTex ────
-    bindless::CnC::Region region;
+    CnC::Region region;
     region.imageOffset = {0, 0, 0};
     region.imageExtent = {W, H, 1};
 
-    auto cnc1 = bindless::CnC::create("mixed-upload", {.gpu = gpu});
+    auto cnc1 = CnC::create("mixed-upload", {.gpu = gpu});
     REQUIRE(cnc1);
     {
         auto mapped = staging->map();
-        cnc1->recordUploadImage(sourceTex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const bindless::CnC::Region>(&region, 1));
+        cnc1->recordUploadImage(sourceTex, {(const uint8_t *) mapped.data(), mapped.size()}, ArrayView<const CnC::Region>(&region, 1));
     }
     AutoRef<GpuPayload> p1 = cnc1->seal();
 
@@ -82,7 +82,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     rt.colorTargets.append(RasterTarget::ColorTarget(rtView));
     rt.setClearColor(0.0f, 0.0f, 0.0f);
 
-    auto raster = bindless::Raster::create("cnc-raster", {.gpu = gpu, .target = &rt, .heap = heap});
+    auto raster = Raster::create("cnc-raster", {.gpu = gpu, .target = &rt, .heap = heap});
     REQUIRE(raster);
 
     RasterGeometry dpGeometry;
@@ -105,10 +105,10 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     outputView.resource = outputTex;
     outputView.setImageViewType(GpuResourceView::ImageView::STORAGE);
 
-    const auto inputIndex  = heap->allocate(bindless::DescriptorHeap::STORAGE_TEXTURE, inputView);
-    const auto outputIndex = heap->allocate(bindless::DescriptorHeap::STORAGE_TEXTURE, outputView);
-    REQUIRE(inputIndex != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
-    REQUIRE(outputIndex != bindless::DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+    const auto inputIndex  = heap->allocate(DescriptorHeap::STORAGE_TEXTURE, inputView);
+    const auto outputIndex = heap->allocate(DescriptorHeap::STORAGE_TEXTURE, outputView);
+    REQUIRE(inputIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+    REQUIRE(outputIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     // Set 1 pass resources declare storage-image hazards to the state tracker. The shader accesses
     // these same images through descriptor indices in the bindless heap at set 0.
@@ -118,7 +118,7 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     computeResources[1][0].append(inputView);
     computeResources[1][1].append(outputView);
 
-    auto cnc2 = bindless::CnC::create("mixed-compute", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = computeResources});
+    auto cnc2 = CnC::create("mixed-compute", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = computeResources});
     REQUIRE(cnc2);
     struct ComputeIndices {
         uint32_t input;

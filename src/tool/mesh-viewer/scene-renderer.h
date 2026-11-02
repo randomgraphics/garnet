@@ -10,9 +10,9 @@ namespace GN::viewer {
 struct RenderModel {
     struct Material {
         Shading                                    shading = Shading::PBR;
-        AutoRef<fx2::bindless::PbrMaterial>        pbr;
-        AutoRef<fx2::bindless::LambertianMaterial> lambertian;
-        AutoRef<fx2::bindless::UnlitMaterial>      unlit;
+        AutoRef<fx2::PbrMaterial>        pbr;
+        AutoRef<fx2::LambertianMaterial> lambertian;
+        AutoRef<fx2::UnlitMaterial>      unlit;
         bool                                       doubleSided = false;
     };
 
@@ -25,8 +25,8 @@ struct RenderModel {
     DynaArray<Material> materials;
     DynaArray<Instance> instances;
 
-    bool prepare(AutoRef<gpu2::GpuContext> gpu, gpu2::bindless::CnC & geometryUploads, gpu2::bindless::CnC & materialUploads, AutoRef<fx2::bindless::PbrKernel> pbr,
-                 AutoRef<fx2::bindless::LambertianKernel> lambertian, AutoRef<fx2::bindless::UnlitKernel> unlit, const ModelScene & scene, Shading shading,
+    bool prepare(AutoRef<gpu2::GpuContext> gpu, gpu2::CnC & geometryUploads, gpu2::CnC & materialUploads, AutoRef<fx2::PbrKernel> pbr,
+                 AutoRef<fx2::LambertianKernel> lambertian, AutoRef<fx2::UnlitKernel> unlit, const ModelScene & scene, Shading shading,
                  const glm::mat4 & modelTransform);
 };
 
@@ -35,13 +35,13 @@ struct RenderModel {
 /// Cel shading has no bindless kernel yet: `--surface cel` is rejected by the option parser and
 /// imported cel materials fall back to PBR. Add a bindless cel kernel field here when it lands.
 struct SceneRenderer {
-    AutoRef<gpu2::bindless::DescriptorHeap>       heap;
-    AutoRef<fx2::bindless::SharedShaderConstants> ssc;
-    AutoRef<fx2::bindless::PbrKernel>             pbr;
-    AutoRef<fx2::bindless::LambertianKernel>      lambertian;
-    AutoRef<fx2::bindless::UnlitKernel>           unlit;
-    AutoRef<fx2::bindless::SkyKernel>             sky;
-    AutoRef<fx2::bindless::SkyMaterial>           skyMaterial;
+    AutoRef<gpu2::DescriptorHeap>       heap;
+    AutoRef<fx2::SharedShaderConstants> ssc;
+    AutoRef<fx2::PbrKernel>             pbr;
+    AutoRef<fx2::LambertianKernel>      lambertian;
+    AutoRef<fx2::UnlitKernel>           unlit;
+    AutoRef<fx2::SkyKernel>             sky;
+    AutoRef<fx2::SkyMaterial>           skyMaterial;
     RenderModel                                   model, bounds, axes;
 
     /// One frame's camera, viewport, and exposure inputs for the shared uniform block.
@@ -63,17 +63,17 @@ struct SceneRenderer {
 
     /// Pack one frame's shared uniforms and record their upload on \p uploads. Submit the sealed
     /// recorder before every consuming payload; each consumer retains the returned state.
-    AutoRef<fx2::bindless::SharedShaderConstants::UniformState> updateUniforms(gpu2::bindless::CnC & uploads, const FrameParameters & frame);
+    AutoRef<fx2::SharedShaderConstants::UniformState> updateUniforms(gpu2::CnC & uploads, const FrameParameters & frame);
 
     /// Draws record() appends for the given debug toggles, for raster preallocation.
     size_t drawCount(bool showBounds, bool showAxes) const;
 
-    bool record(gpu2::bindless::Raster & raster, const AutoRef<fx2::bindless::SharedShaderConstants::UniformState> & state, bool showBounds,
+    bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds,
                 bool showAxes) const;
 
 private:
-    bool recordModel(const RenderModel & source, gpu2::bindless::Raster & raster,
-                     const AutoRef<fx2::bindless::SharedShaderConstants::UniformState> & state) const;
+    bool recordModel(const RenderModel & source, gpu2::Raster & raster,
+                     const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;
 };
 
 } // namespace GN::viewer

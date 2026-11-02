@@ -3,7 +3,7 @@
     #error "Include <garnet/GNfx2.h> instead."
 #endif
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 
 /// Immutable sky / environment material retaining its kernel, stable values, and heap allocations.
 struct SkyMaterial : RCRT64 {
@@ -31,7 +31,7 @@ struct SkyMaterial : RCRT64 {
 
     /// Draw inputs for skybox rendering.
     struct DrawParameters {
-        gpu2::bindless::Raster &                     raster;
+        ::GN::gpu2::Raster &                     raster;
         AutoRef<SharedShaderConstants::UniformState> ssc;
         const gpu2::RasterState *                    states = nullptr;
     };
@@ -48,12 +48,12 @@ struct SkyKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     virtual SkyMaterial::Parameters defaultMaterialParameters() const                                                           = 0;
-    virtual AutoRef<SkyMaterial>    createMaterial(gpu2::bindless::CnC & initialization, const SkyMaterial::Parameters &) const = 0;
+    virtual AutoRef<SkyMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const SkyMaterial::Parameters &) const = 0;
 
-    GN_API static AutoRef<SkyKernel> create(gpu2::bindless::DescriptorHeap & heap, gpu2::bindless::CnC & initialization);
+    GN_API static AutoRef<SkyKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 
 protected:
     using RCRT64::RCRT64;
 };
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

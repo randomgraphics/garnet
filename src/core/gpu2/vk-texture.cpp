@@ -89,17 +89,17 @@ gfx::img::Image TextureVulkanBase::readback() const {
     extent.set(d.width, d.height, d.depth);
     const auto                planeDesc = gfx::img::PlaneDesc::make(d.format, extent);
     gfx::img::Image           image(gfx::img::ImageDesc::make(planeDesc, 1, d.faces, d.levels));
-    DynaArray<bindless::CnC::Region> regions;
+    DynaArray<CnC::Region> regions;
     for (uint32_t face = 0; face < d.faces; ++face) {
         for (uint32_t level = 0; level < d.levels; ++level) {
-            bindless::CnC::Region region;
+            CnC::Region region;
             region.face        = face;
             region.mip         = level;
             region.imageExtent = {std::max(1u, d.width >> level), std::max(1u, d.height >> level), std::max(1u, d.depth >> level)};
             regions.append(region);
         }
     }
-    auto cnc = bindless::CnC::create(name + "/readback", {.gpu = mGpu});
+    auto cnc = CnC::create(name + "/readback", {.gpu = mGpu});
     if (!cnc) return {};
     auto future  = cnc->recordDownloadImage(AutoRef<Texture>(const_cast<TextureVulkanBase *>(this)), regions);
     auto payload = cnc->seal();
@@ -131,7 +131,7 @@ bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
         GN_ERROR(sLogger, "TextureVulkanBase::setContent: incompatible image, name='{}'", name);
         return false;
     }
-    auto cnc = bindless::CnC::create(name + "/set-content", {.gpu = mGpu});
+    auto cnc = CnC::create(name + "/set-content", {.gpu = mGpu});
     if (!cnc) return false;
     cnc->recordUploadImage(AutoRef<Texture>(this), image);
     auto payload = cnc->seal();
