@@ -6,7 +6,7 @@ own build folder, keeping the instrumentation cost off the daily debug build. Th
 drives the whole cycle: build, clear stale counters, run the CIT test set, then turn the
 resulting .gcda files into HTML, JSON and a function-level markdown report.
 
-Reports land in <build-dir>/coverage, which the /build*/ gitignore rule already covers.
+Reports land in <build-dir>/output/coverage, which the /build*/ gitignore rule already covers.
 """
 
 import argparse, datetime, importlib, json, os, pathlib, platform, shutil, subprocess, sys
@@ -130,7 +130,7 @@ def git_describe():
 def percent(covered, total):
     return 0.0 if not total else 100.0 * covered / total
 
-def write_function_report(out_dir):
+def write_function_report(out_dir, build_dir):
     """Turn gcovr's full JSON into the function-level markdown report.
 
     coverage.json carries one record per function with its demangled name, defining line
@@ -167,7 +167,7 @@ def write_function_report(out_dir):
     lines.append("")
     lines.append(f"- Generated (UTC): {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"- Revision: {git_describe()}")
-    lines.append(f"- Source: {out_dir.parent.name} (`build.py c`, gcov, -O0)")
+    lines.append(f"- Source: {build_dir.name} (`build.py c`, gcov, -O0)")
     lines.append("")
     lines.append("## Totals")
     lines.append("")
@@ -219,7 +219,7 @@ def main(argv = None):
     ap.add_argument("--no-build", action = "store_true", help="Skip the build step and report on the existing coverage build.")
     ap.add_argument("--clang", action = "store_true", help="Use the clang coverage build instead of gcc.")
     ap.add_argument("-b", dest = "build_dir", default = os.environ.get("GARNET_BUILD_DIR", "build"), help="Build output folder.")
-    ap.add_argument("-o", dest = "output", default = None, help="Report output folder. Defaults to <coverage build dir>/coverage.")
+    ap.add_argument("-o", dest = "output", default = None, help="Report output folder. Defaults to <coverage build dir>/output/coverage.")
     ap.add_argument("--fail-under", type = float, default = None, metavar = "PERCENT", help="Exit non-zero when function coverage falls below this percentage.")
     ap.add_argument("test_args", nargs = "*", help="Extra arguments forwarded to the test binaries.")
     args = ap.parse_args(argv)
@@ -228,7 +228,7 @@ def main(argv = None):
         utils.rip(f"code coverage is only supported on Linux. Detected: {platform.system()}.")
 
     build_dir = coverage_build_dir(args.build_dir, args.clang)
-    out_dir = pathlib.Path(args.output) if args.output else build_dir / "coverage"
+    out_dir = pathlib.Path(args.output) if args.output else build_dir / "output" / "coverage"
     if not out_dir.is_absolute(): out_dir = ROOT_FOLDER / out_dir
 
     if not args.no_build:
@@ -243,7 +243,7 @@ def main(argv = None):
         utils.loge(f"a test binary failed: {failure}. Reporting coverage from the tests that did run.")
 
     run_gcovr(build_dir, out_dir, args.clang)
-    function_percent = write_function_report(out_dir)
+    function_percent = write_function_report(out_dir, build_dir)
 
     print()
     utils.logi(f"HTML report      : {out_dir / 'index.html'}")

@@ -1,13 +1,17 @@
 ---
 name: garnet-rdg-gpu2
-description: RDG2 and gpu2 module guidance. Use when editing src/core/rdg2, src/inc/garnet/rdg2, src/core/gpu2, or src/inc/garnet/gpu2.
+description: gpu2 guidance and early-prototype RDG2 guidance. Use when editing src/core/rdg2, src/inc/garnet/rdg2, src/core/gpu2, or src/inc/garnet/gpu2. Do not treat current RDG2 structure as stable architecture.
 ---
 
 # RDG2 and gpu2
 
-RDG2 is the active rendering abstraction. gpu2 is the lower-level GPU layer
-used by RDG2. (RDG v1 has been removed from the tree; its concepts survive only
-in design docs.)
+RDG2 is in early prototyping; its current structure and API are not stable
+architecture references. gpu2 is the lower-level GPU layer used by the current
+RDG2 prototype. (RDG v1 has been removed from the tree; its concepts survive
+only in design docs.)
+
+For current public entrypoints, module boundaries, and evidence limits, see
+[`agent/knowledge/module-map.md`](../../knowledge/module-map.md).
 
 ## RDG2
 
@@ -30,7 +34,7 @@ RDG2 is a playground for graph designs with two generations:
   `OOO()` means the next publish. This is now reference material.
 - Render graph take 2 (`closed-graph.h`): the active design — `Quest`, `Plan`,
   `Execution` over versioned `Artifact`/`Relic` data. Design and status live in
-  `src/core/rdg2/README.md`; `agent/` holds concrete work assignments.
+  `src/core/rdg2/README.md`; concrete work assignments live under `agent/workspace/<task>/`.
 
 ## gpu2
 

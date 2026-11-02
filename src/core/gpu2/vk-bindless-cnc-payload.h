@@ -19,7 +19,7 @@ public:
     struct ConstructParameters {
         std::unique_ptr<CncUploadStorage>  uploadStorage;
         AutoRef<GpuContextVulkan2>         gpu;
-        AutoRef<bindless::DescriptorHeap>  heap;
+        AutoRef<DescriptorHeap>            heap;
         uint32_t                           heapSetIndex = 0;
         vk::PipelineLayout                 pipelineLayout {};
         std::vector<StoredBindlessCncOp>   ops;
@@ -39,7 +39,7 @@ public:
 private:
     std::unique_ptr<CncUploadStorage>  mUploadStorage;
     AutoRef<GpuContextVulkan2>         mGpu;
-    AutoRef<bindless::DescriptorHeap>  mHeap;
+    AutoRef<DescriptorHeap>            mHeap;
     uint32_t                           mHeapSetIndex = 0;
     vk::PipelineLayout                 mPipelineLayout {};
     std::vector<StoredBindlessCncOp>   mOps;

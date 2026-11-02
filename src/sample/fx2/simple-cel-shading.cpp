@@ -8,8 +8,8 @@
 
 using namespace GN;
 using namespace GN::gpu2;
-namespace fxBindless  = GN::fx2::bindless;
-namespace gpuBindless = GN::gpu2::bindless;
+namespace fx  = GN::fx2;
+namespace gpu = GN::gpu2;
 
 namespace {
 struct Host {
@@ -50,13 +50,13 @@ int main(int argc, const char * argv[]) {
     scDesc.setSurface(host.surface);
     host.swapchain = Swapchain::create(scDesc);
 
-    auto heap = gpuBindless::DescriptorHeap::create("cel.heap", {.gpu = host.gpu, .capacity = 32});
+    auto heap = gpu::DescriptorHeap::create("cel.heap", {.gpu = host.gpu, .capacity = 32});
     if (!heap) return 1;
-    auto upload = gpuBindless::CnC::create("cel.initialization", {.gpu = host.gpu, .heap = heap});
+    auto upload = gpu::CnC::create("cel.initialization", {.gpu = host.gpu, .heap = heap});
     if (!upload) return 1;
 
-    auto cel       = fxBindless::CelKernel::create(*heap, *upload);
-    auto constants = fxBindless::SharedShaderConstants::create({.gpu = host.gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    auto cel       = fx::CelKernel::create(*heap, *upload);
+    auto constants = fx::SharedShaderConstants::create({.gpu = host.gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!host.swapchain || !heap || !cel || !constants) return 1;
 
     // Depth buffer
@@ -117,7 +117,7 @@ int main(int argc, const char * argv[]) {
         constexpr float radius = 2.8f;
         const glm::vec3 eye {radius * std::sin(angle), 0.8f, radius * std::cos(angle)};
 
-        fxBindless::SharedUniforms uniforms {};
+        fx::SharedUniforms uniforms {};
         uniforms.frameCounter     = static_cast<uint32_t>(frameIdx);
         uniforms.renderTargetSize = {float(width), float(height)};
         uniforms.cameraPosition   = {eye.x, eye.y, eye.z, 1.0f};
@@ -129,22 +129,22 @@ int main(int argc, const char * argv[]) {
 
         // Directional sun light
         uniforms.numLights               = 1;
-        uniforms.lights[0].positionOrDir = {0.6f, 0.8f, 0.5f, float(fxBindless::DirectLightUniform::DIRECTIONAL)};
+        uniforms.lights[0].positionOrDir = {0.6f, 0.8f, 0.5f, float(fx::DirectLightUniform::DIRECTIONAL)};
         uniforms.lights[0].colorAndRange = {1.8f, 1.75f, 1.6f, 0.0f};
 
-        auto frameProducer = gpuBindless::CnC::create("cel.uniform", {.gpu = host.gpu, .heap = heap});
+        auto frameProducer = gpu::CnC::create("cel.uniform", {.gpu = host.gpu, .heap = heap});
         if (!frameProducer) return 1;
         auto state = constants->recordUniformUpdate(*frameProducer, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
         if (!state) return 1;
         auto uniformWork = frameProducer->seal();
         if (!uniformWork) return 1;
 
-        auto raster = gpuBindless::Raster::create(
+        auto raster = gpu::Raster::create(
             "cel.raster",
             {.gpu = host.gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 2});
         if (!raster) return 1;
 
-        fxBindless::CelMaterial::DrawParameters draw {{*raster, state, sphereGeometry, &target.states}};
+        fx::CelMaterial::DrawParameters draw {{*raster, state, sphereGeometry, &target.states}};
         draw.object2WorldTransform = glm::mat4(1.0f);
         draw.renderOutline         = true;
         if (!material->record(draw)) return 1;

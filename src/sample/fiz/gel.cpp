@@ -47,7 +47,7 @@ struct GelVertex {
     glm::vec4 color = glm::vec4(1);
 };
 
-static RasterGeometry gelGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, const AutoRef<GelMesh> & mesh) {
+static RasterGeometry gelGeometry(AutoRef<GpuContext> gpu, gpu2::CnC & uploads, const AutoRef<GelMesh> & mesh) {
     RasterGeometry result;
     if (!mesh) return result;
     DynaArray<uint32_t> indices;
@@ -63,11 +63,10 @@ static RasterGeometry gelGeometry(AutoRef<GpuContext> gpu, GpuCnC & uploads, con
     result.vertices.push_back({.buffer = nullptr, .offset = 0, .stride = sizeof(GelVertex)});
     using F = RasterGeometry::AttributeFormat;
     result.format.attributes.push_back(
-        {.location = fx2::bindless::PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = offsetof(GelVertex, position), .format = F::F32_3});
+        {.location = fx2::PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = offsetof(GelVertex, position), .format = F::F32_3});
     result.format.attributes.push_back(
-        {.location = fx2::bindless::PbrMaterial::NORMAL_LOCATION, .binding = 0, .offset = offsetof(GelVertex, normal), .format = F::F32_3});
-    result.format.attributes.push_back(
-        {.location = fx2::bindless::PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = offsetof(GelVertex, uv), .format = F::F32_2});
+        {.location = fx2::PbrMaterial::NORMAL_LOCATION, .binding = 0, .offset = offsetof(GelVertex, normal), .format = F::F32_3});
+    result.format.attributes.push_back({.location = fx2::PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = offsetof(GelVertex, uv), .format = F::F32_2});
     return result;
 }
 
@@ -108,13 +107,13 @@ public:
     AutoRef<GelMesh> meshCube;
     AutoRef<GelMesh> meshSphere;
 
-    RasterGeometry                      gelTemplateGeometries[TEMPLATE_COUNT];
-    AutoRef<fx2::bindless::PbrMaterial> gelMaterials[TEMPLATE_COUNT];
+    RasterGeometry            gelTemplateGeometries[TEMPLATE_COUNT];
+    AutoRef<fx2::PbrMaterial> gelMaterials[TEMPLATE_COUNT];
 
-    RasterGeometry                      rigidGeometries[RIGID_COUNT];
-    AutoRef<fx2::bindless::PbrMaterial> rigidMaterials[RIGID_COUNT];
+    RasterGeometry            rigidGeometries[RIGID_COUNT];
+    AutoRef<fx2::PbrMaterial> rigidMaterials[RIGID_COUNT];
 
-    bool initMeshesAndAssets(AutoRef<GpuContext> gpu, GpuCnC & uploads, AutoRef<fx2::bindless::PbrKernel> pbr, gpu2::bindless::CnC & matUploads) {
+    bool initMeshesAndAssets(AutoRef<GpuContext> gpu, gpu2::CnC & uploads, AutoRef<fx2::PbrKernel> pbr, gpu2::CnC & matUploads) {
         // Soft body meshes
         meshCube   = GelMesh::createCube(4, 1.4f);
         meshSphere = GelMesh::createSphere(2.0f, 20, 14); // Single big bouncy ball (radius 2.0m)
@@ -277,9 +276,8 @@ private:
     }
 };
 
-static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2::bindless::DescriptorHeap> heap,
-                         AutoRef<fx2::bindless::SharedShaderConstants> ssc, AutoRef<fx2::bindless::SkyMaterial> skyMaterial, AutoRef<Swapchain> swapchain,
-                         RasterTarget & rasterTarget, const uint32_t hwThreads) {
+static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2::DescriptorHeap> heap, AutoRef<fx2::SharedShaderConstants> ssc,
+                         AutoRef<fx2::SkyMaterial> skyMaterial, AutoRef<Swapchain> swapchain, RasterTarget & rasterTarget, const uint32_t hwThreads) {
     GN_INFO(sLogger, "================================================================================");
     GN_INFO(sLogger, "  GNfiz Gel XPBD Soft-Body Dynamics & GPU Rendering Benchmark");
     GN_INFO(sLogger, "  Configuration: Profile Build (RelWithDebInfo) | Hardware Cores: {}", hwThreads);
@@ -359,7 +357,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2
 
             // 3. GPU Buffer Streaming
             auto tU0 = std::chrono::high_resolution_clock::now();
-            auto cnc = GpuCnC::create({.gpu = gpu});
+            auto cnc = gpu2::CnC::create("fiz-gel-benchmark-streaming", {.gpu = gpu});
             for (auto & g : arena.gels) {
                 if (!g.gel) continue;
                 const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);
@@ -373,18 +371,18 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2
             Swapchain::Frame frame = swapchain->prepare();
             rasterTarget.setColorTarget(0, frame.view);
 
-            auto uploadCnc    = gpu2::bindless::CnC::create(StrA::format("bench-frame-{}-uploads", f), {.gpu = gpu, .heap = heap});
+            auto uploadCnc    = gpu2::CnC::create(StrA::format("bench-frame-{}-uploads", f), {.gpu = gpu, .heap = heap});
             auto uniformState = updateUniforms(ssc, *uploadCnc, rasterTarget, glm::vec3(0, 10, 25), glm::vec3(0, 3, 0), f);
             auto uniformWork  = uploadCnc ? uploadCnc->seal() : AutoRef<GpuPayload> {};
 
-            gpu2::bindless::Raster::CreateParameters rcp;
+            gpu2::Raster::CreateParameters rcp;
             rcp.gpu               = gpu;
             rcp.target            = &rasterTarget;
             rcp.heap              = heap;
             rcp.heapSetIndex      = 0;
-            rcp.passResources     = fx2::bindless::sharedUniformResources(uniformState);
+            rcp.passResources     = fx2::sharedUniformResources(uniformState);
             rcp.numberOfDrawsHint = 100;
-            auto r                = gpu2::bindless::Raster::create("bench-raster", rcp);
+            auto r                = gpu2::Raster::create("bench-raster", rcp);
             if (r) {
                 for (const auto & g : arena.gels) {
                     if (!g.gel) continue;
@@ -393,7 +391,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2
                     geom.vertices[0].buffer = g.dynamicVb[bufIdx];
                     geom.vertices[0].stride = sizeof(GelVertex);
                     geom.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
-                    fx2::bindless::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, glm::mat4(1.0f), skyMaterial};
+                    fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, glm::mat4(1.0f), skyMaterial};
                     arena.gelMaterials[g.templateKind]->record(draw);
                 }
             }
@@ -497,18 +495,18 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
-    auto heap = gpu2::bindless::DescriptorHeap::create("fiz-gel-heap", {.gpu = gpuContext, .capacity = 256, .materialCapacity = 1024 * 1024});
+    auto heap = gpu2::DescriptorHeap::create("fiz-gel-heap", {.gpu = gpuContext, .capacity = 256, .materialCapacity = 1024 * 1024});
     if (!heap) return -1;
 
-    auto ssc = fx2::bindless::SharedShaderConstants::create({.gpu = gpuContext, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    auto ssc = fx2::SharedShaderConstants::create({.gpu = gpuContext, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!ssc) return -1;
 
-    auto initialization = gpu2::bindless::CnC::create("fiz-gel-init", {.gpu = gpuContext, .heap = heap});
-    auto geomUploads    = GpuCnC::create({.gpu = gpuContext});
+    auto initialization = gpu2::CnC::create("fiz-gel-init", {.gpu = gpuContext, .heap = heap});
+    auto geomUploads    = gpu2::CnC::create("fiz-gel-geometry-uploads", {.gpu = gpuContext});
     if (!initialization || !geomUploads) return -1;
 
-    auto pbr = fx2::bindless::PbrKernel::create(*heap, *initialization);
-    auto sky = fx2::bindless::SkyKernel::create(*heap, *initialization);
+    auto pbr = fx2::PbrKernel::create(*heap, *initialization);
+    auto sky = fx2::SkyKernel::create(*heap, *initialization);
     if (!pbr || !sky) return -1;
 
     auto skyMaterial = createSkyMaterial(gpuContext, sky, *initialization, 3000.f);
@@ -805,7 +803,7 @@ int main(int argc, const char ** argv) {
 
         rasterTarget.setColorTarget(0, frame.view);
 
-        auto uploadCnc = gpu2::bindless::CnC::create(StrA::format("fiz-gel-frame-{}-uploads", frameIdx), {.gpu = gpuContext, .heap = heap});
+        auto uploadCnc = gpu2::CnC::create(StrA::format("fiz-gel-frame-{}-uploads", frameIdx), {.gpu = gpuContext, .heap = heap});
         if (!uploadCnc) return -1;
 
         glm::vec3 eye(cameraDist * std::sin(orbitAngle), cameraHeight, cameraDist * std::cos(orbitAngle));
@@ -850,7 +848,7 @@ int main(int argc, const char ** argv) {
 
         // 2. GPU Dynamic streaming upload into vertex buffer
         auto tUpload0 = std::chrono::high_resolution_clock::now();
-        auto cnc      = GpuCnC::create({.gpu = gpuContext});
+        auto cnc      = gpu2::CnC::create("fiz-gel-frame-streaming", {.gpu = gpuContext});
         for (auto & g : arena.gels) {
             if (!g.gel) continue;
             const uint64_t vbBytes = g.cpuVertices.size() * sizeof(GelVertex);
@@ -862,15 +860,15 @@ int main(int argc, const char ** argv) {
         float uploadMs      = std::chrono::duration<float, std::milli>(tUpload1 - tUpload0).count();
         avgUploadMs         = (avgUploadMs == 0.0f) ? uploadMs : (avgUploadMs * 0.95f + uploadMs * 0.05f);
 
-        auto                                     tRaster0 = std::chrono::high_resolution_clock::now();
-        gpu2::bindless::Raster::CreateParameters rcp;
+        auto                           tRaster0 = std::chrono::high_resolution_clock::now();
+        gpu2::Raster::CreateParameters rcp;
         rcp.gpu               = gpuContext;
         rcp.target            = &rasterTarget;
         rcp.heap              = heap;
         rcp.heapSetIndex      = 0;
-        rcp.passResources     = fx2::bindless::sharedUniformResources(uniformState);
+        rcp.passResources     = fx2::sharedUniformResources(uniformState);
         rcp.numberOfDrawsHint = 200;
-        auto r                = gpu2::bindless::Raster::create("fiz-gel-raster", rcp);
+        auto r                = gpu2::Raster::create("fiz-gel-raster", rcp);
         if (r) {
             // Draw rigid solids
             for (const auto & e : arena.solids) {
@@ -881,7 +879,7 @@ int main(int argc, const char ** argv) {
                 Transform t              = e.solid->transform();
                 glm::mat4 worldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
                                            glm::mat4_cast(glm::quat(t.orientation.w, t.orientation.v.x, t.orientation.v.y, t.orientation.v.z));
-                fx2::bindless::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, worldTransform, skyMaterial};
+                fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, worldTransform, skyMaterial};
                 if (!arena.rigidMaterials[e.kind]->record(draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
             }
 
@@ -896,13 +894,13 @@ int main(int argc, const char ** argv) {
                 geom.vertices[0].stride = sizeof(GelVertex);
                 geom.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
 
-                fx2::bindless::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, glm::mat4(1.0f), skyMaterial};
+                fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, glm::mat4(1.0f), skyMaterial};
                 if (!arena.gelMaterials[g.templateKind]->record(draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
             }
 
             // Skybox
             if (skyMaterial) {
-                fx2::bindless::SkyMaterial::DrawParameters skyDraw {*r, uniformState};
+                fx2::SkyMaterial::DrawParameters skyDraw {*r, uniformState};
                 skyMaterial->record(skyDraw);
             }
         }

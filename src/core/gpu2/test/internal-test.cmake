@@ -1,9 +1,9 @@
 target_sources(${GN_INTERNAL_TEST_TARGET} PRIVATE
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-buffer-test.cpp
-    ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-async-test.cpp
-    ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-raster-test.cpp
-    ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-test.cpp
-    ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-raster-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/cnc-buffer-async-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/cnc-raster-mixed-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/cnc-buffer-test.cpp
+    ${GN_INTERNAL_TEST_SOURCE_DIR}/raster-target-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/cnc-image-transfer-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-texture-test.cpp
     ${GN_INTERNAL_TEST_SOURCE_DIR}/raster-aspect-test.cpp
@@ -24,12 +24,10 @@ if (VULKAN_FOUND)
 
     GN_compile_glsl_shaders(_shader_hdrs
         SOURCES ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-fullscreen.vert
-                ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-fullscreen.frag
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-mrt.frag
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/mixed-cnc-raster.comp
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-test.vert
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-test.frag
-                ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-bound-test.frag
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-material.comp
             ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-types.comp
                 ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-cnc-test.comp
@@ -40,7 +38,7 @@ if (VULKAN_FOUND)
     add_dependencies(${GN_INTERNAL_TEST_TARGET} gpu2-test-shaders)
 
     set_source_files_properties(
-        ${GN_INTERNAL_TEST_SOURCE_DIR}/gpu-cnc-raster-test.cpp
+        ${GN_INTERNAL_TEST_SOURCE_DIR}/cnc-raster-mixed-test.cpp
         ${GN_INTERNAL_TEST_SOURCE_DIR}/rtt-test.cpp
         ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-raster-test.cpp
         ${GN_INTERNAL_TEST_SOURCE_DIR}/bindless-cnc-test.cpp

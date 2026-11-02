@@ -8,9 +8,9 @@
 
 namespace GN::gpu2 {
 
-class VkBindlessDescriptorHeap final : public bindless::DescriptorHeap {
+class VkBindlessDescriptorHeap final : public DescriptorHeap {
 public:
-    GN_REGISTER_RUNTIME_TYPE(bindless::DescriptorHeap);
+    GN_REGISTER_RUNTIME_TYPE(DescriptorHeap);
     VkBindlessDescriptorHeap(const StrA &, const CreateParameters &);
     ~VkBindlessDescriptorHeap() override;
     DescriptorIndex         allocate(DescriptorType, const GpuResourceView &) override;
@@ -59,6 +59,6 @@ private:
     std::vector<Slot>                      mSlots;
 };
 
-AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA &, const bindless::DescriptorHeap::CreateParameters &);
+AutoRef<DescriptorHeap> createVkBindlessDescriptorHeap(const StrA &, const DescriptorHeap::CreateParameters &);
 
 } // namespace GN::gpu2
