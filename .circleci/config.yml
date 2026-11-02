@@ -179,9 +179,9 @@ jobs:
           # store_artifacts is unconditional but only the coverage variant produces a
           # report, so the directory has to exist for the other variants too. They upload
           # an empty folder rather than failing the step.
-          command: mkdir -p build/linux.gcc.c/coverage
+          command: mkdir -p build/linux.gcc.c/output/coverage
       - store_artifacts:
-          path: build/linux.gcc.c/coverage
+          path: build/linux.gcc.c/output/coverage
           destination: coverage
 
   build-linux-clang:

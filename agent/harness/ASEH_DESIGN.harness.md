@@ -80,6 +80,17 @@ parallel executor may claim several independent nodes and use isolated worktrees
 or branches. Both use the same dependencies, completion rules, and integration
 gates.
 
+### Independent assignment state and write ownership
+
+Each concurrently executing agent owns a separate assignment record under the
+task workspace. That file carries the agent's bounded context, status, progress,
+evidence, blockers, and handoff so the agent can resume without reconstructing
+its work from a sibling's notes. Agents update only their own assignment
+records; the coordinator owns task-wide summaries and integration state. This
+write-ownership rule keeps progress independently readable and reduces
+version-control conflicts during parallel work. See
+[`task-workspace.harness.md`](task-workspace.harness.md) for the file contract.
+
 ### Hierarchical decomposition and bounded context
 
 A long engineering task may exceed the useful context of any one agent
@@ -349,14 +360,20 @@ diagnosis and repair work in the graph. Report unsupported environments and
 unverified claims explicitly; do not mark them passed.
 
 Every code-changing phase has a mandatory review gate before it can be marked
-complete. The reviewer checks implementation against its comments and relevant
-documentation, including affected references, for stale, contradictory,
-duplicated, or missing information. Record the reviewed revision and scope,
-the audit result and evidence in a review assignment. Findings create repair
-and re-review nodes; keep the phase open until they are resolved or explicitly
-accepted as a documented limitation by the task owner. This gate applies at
-each phase boundary, not only during final integration, and does not prevent
-the task graph or phase plan from evolving as evidence changes.
+complete. The reviewer checks implementation against requirements, contracts,
+comments, relevant documentation and applicable host-specific quality
+standards. Record the reviewed revision and scope, audit result, evidence, and
+required follow-up in a review assignment. Findings create repair and re-review
+nodes; keep the phase open until they are resolved or explicitly accepted as a
+documented limitation by the task owner. For platform or environment gaps,
+record the limitation and create a linked future-work node with observable
+completion evidence. A gap that only prevents validation on another platform
+does not by itself block integration on the current platform. Apply the host
+repository's skills and curated knowledge for concrete tests, metrics,
+thresholds, exclusions and platform-specific acceptance rules; the generic
+harness defines no code metric or universal pass threshold. This gate applies
+at each phase boundary and does not prevent the task graph or phase plan from
+evolving as evidence changes.
 
 ## Execution modes
 
@@ -415,8 +432,12 @@ ${TASK_WORKSPACE_ROOT}/<task>/
 `TASK.md` is the shared task charter. Each agent invocation reads that charter
 plus only its own assignment file, its role playbook, and linked evidence.
 Assignment files keep role-specific scope, instructions, context, progress, and
-handoff separate; do not copy the whole task charter into each one. This is a
-suggested organization, not a requirement to create empty files. See
+handoff separate; use one file per subagent so it can independently read and
+resume its work. Each agent updates only its own assignment file to reduce
+write conflicts; the coordinator keeps task-wide status in `TASK.md`. Do not
+copy the whole task charter into each
+assignment. This is a suggested organization, not a requirement to create
+empty files. See
 [`task-workspace.harness.md`](task-workspace.harness.md) for the file contract.
 Define and validate machine-readable files with schemas under
 `${HARNESS_ROOT}/`. A parent task workspace owns its whole task graph. Keep child

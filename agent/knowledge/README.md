@@ -25,6 +25,8 @@ retrieval, provenance, and freshness design.
   relationships.
 - `build-and-platforms.md` — configured build, test, CI, coverage, and platform
   paths, with their evidence limits.
+- `code-quality-assessment.md` — current coverage/complexity tooling facts and
+  evidence limits for review-time quality assessment.
 - `ASEH_WORKLOAD_EXAMPLES.md` — Garnet-specific examples of refining ambiguous
   long-horizon engineering requests.
 - `*.harness.md` beside source — module-specific explanations, invariants, and

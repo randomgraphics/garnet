@@ -8,6 +8,9 @@ description: Generate function-level test coverage reports with the dedicated co
 Coverage lives in its own build variant so the instrumentation cost never lands on the
 `d`/`p`/`r` builds used for daily work.
 
+For code-review test adequacy, complexity hotspots, and acceptance criteria, use the
+[`garnet-code-quality-assessment` skill](../garnet-code-quality-assessment/SKILL.md).
+
 The repository-wide build, CIT and CI configuration is summarized in
 [`agent/knowledge/build-and-platforms.md`](../../knowledge/build-and-platforms.md).
 
@@ -20,11 +23,14 @@ env/bin/code-coverage.py --no-build   # reuse an existing coverage build
 env/bin/cit.py -c                     # the same flow through CIT
 ```
 
-Linux only. `build.py c` fails with an explicit message on other platforms rather than
-producing an uninstrumented build that would report 0%.
+The Garnet gcov/gcovr `build.py c` workflow is Linux-only. It fails with an explicit
+message on other platforms rather than producing an uninstrumented build that would
+report 0%. For a separate native MSVC coverage method on Windows, see the
+[`garnet-code-quality-assessment` skill](../garnet-code-quality-assessment/SKILL.md).
 
-Reports land in `build/linux.gcc.c/coverage/`, already covered by the `/build*/` gitignore
-rule:
+Reports land in `build/linux.gcc.c/output/coverage/`, under the matching build
+variant and covered by the `/build*/` gitignore rule. Each build variant and
+build root gets an independent report directory:
 
 | file | content |
 | --- | --- |
@@ -109,6 +115,6 @@ the variant there would only prove that it compiles.
 
 `build-linux-gcc` branches its test step: the coverage variant runs
 `env/bin/code-coverage.py --no-build`, everything else runs `env/bin/cit.py -t`. A step
-before `store_artifacts` creates the report directory, because that step is unconditional and
-only the coverage variant produces a report; the other variants upload an empty folder rather
-than failing.
+before `store_artifacts` creates `build/linux.gcc.c/output/coverage`, because that step is
+unconditional and only the coverage variant produces a report; the other variants upload an
+empty folder rather than failing.

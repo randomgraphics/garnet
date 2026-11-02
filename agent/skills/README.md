@@ -34,6 +34,7 @@ claims grounded in the current worktree.
 
 - `garnet-build-test`: build, test, lint, and format through project wrappers.
 - `garnet-code-coverage`: coverage builds and function-level reports.
+- `garnet-code-quality-assessment`: code-review metrics, test adequacy, review bands, and platform-gap acceptance.
 - `garnet-android-docker`: Android build verification via Docker.
 - `garnet-vulkan-verification`: Vulkan app, sample, and test verification under validation layers.
 - `garnet-line-endings`: match new files to the hosting OS line endings.

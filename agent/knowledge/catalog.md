@@ -9,6 +9,10 @@ The initial repository-wide inventory and first-pass module coverage are recorde
 in [`coverage.md`](coverage.md), with implementation depth stated per area. The
 build, test, CI and platform map is in [`build-and-platforms.md`](build-and-platforms.md).
 Module/API relationships are summarized in [`module-map.md`](module-map.md).
+Review quality tooling and known metric gaps are in
+[`code-quality-assessment.md`](code-quality-assessment.md); use the
+[`garnet-code-quality-assessment` skill](../skills/garnet-code-quality-assessment/SKILL.md)
+for review procedure and acceptance bands.
 
 The cited files were checked in `agent-harness` on branch `wip/agent-harness`,
 commit `27d39c986`, on 2026-11-01 (client date). Recheck source and build files
@@ -52,6 +56,8 @@ See the coverage matrix for inspection depth and known gaps.
   includes, CMake composition and implementation call paths.
 - **Build, test or platform support:** start at [`build-and-platforms.md`](build-and-platforms.md),
   then inspect current CMake, scripts, CI and platform guards.
+- **Review-time coverage or complexity:** start at [`code-quality-assessment.md`](code-quality-assessment.md)
+  and follow its linked skill for the current review procedure.
 - **Design/history conflict:** current implementation establishes behavior;
   module README may define intended design, and archived task docs explain history.
   Record a conflict instead of treating plans as implemented behavior.

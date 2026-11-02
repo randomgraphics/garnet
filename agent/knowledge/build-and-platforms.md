@@ -44,13 +44,26 @@ current `--help` if using a less common option.
 
 ## Coverage
 
-Coverage is Linux-only and uses a dedicated Debug/`--coverage` build directory.
+The Garnet gcov/gcovr coverage workflow is Linux-only and uses a dedicated
+Debug/`--coverage` build directory. Windows MSVC can collect native C++ line
+coverage separately with Visual Studio's `Microsoft.CodeCoverage.Console`, but
+that collector is not wired into Garnet's build/CIT/CI workflow; see
+[`code-quality-assessment.md`](code-quality-assessment.md) and the
+[`garnet-code-quality-assessment` skill](../skills/garnet-code-quality-assessment/SKILL.md).
 `env/bin/code-coverage.py` supports GCC and a clang path using `llvm-cov gcov`;
 the CircleCI matrix runs coverage only in Linux GCC and uses `coverage` instead
 of its debug variant. Coverage instrumentation is scoped to core, sample, tool,
 and test CMake directories so vendored libraries are excluded. See
 [`garnet-code-coverage`](../skills/garnet-code-coverage/SKILL.md) for report files,
 optimization rationale, and gcda pitfalls.
+
+Coverage reports default to `<build-variant>/output/coverage/`; quality
+assessment joins default to `<build-variant>/output/quality/`; build-specific
+settings belong in `<build-variant>/output/config/`; run logs and exit-status
+files belong in `<build-variant>/output/logs/`. The `/build*/`
+ignore rule keeps these generated files out of Git, and each build directory
+keeps its own outputs so platform/compiler/configuration results do not
+overwrite one another.
 
 ## Configured CI matrix
 

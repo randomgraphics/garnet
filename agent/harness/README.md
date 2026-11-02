@@ -43,7 +43,10 @@ integration guide.
 
 Every dispatched agent task is a bounded assignment that should fit one
 invocation's effective context window. Store shared task context in `TASK.md`
-and each bounded assignment in its own Markdown file under `assignments/`. See
+and each subagent's bounded context, instructions, status, and progress in its
+own Markdown file under `assignments/`. Each worker resumes from `TASK.md` plus
+its own assignment file, without depending on sibling working notes. Each
+subagent updates only its own progress file to reduce write conflicts. See
 [`task-workspace.harness.md`](task-workspace.harness.md) for the full contract.
 At minimum, `TASK.md` should contain:
 
