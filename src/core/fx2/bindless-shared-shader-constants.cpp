@@ -4,7 +4,7 @@
 #include <mutex>
 #include <atomic>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 namespace {
 
 std::atomic<SharedShaderConstants::StreamingId> gNextStreamingId {1};
@@ -95,7 +95,7 @@ public:
 
     bool valid() const { return mUniformBuffer && mStreamBuffer && !mStreamMapping.empty(); }
 
-    AutoRef<UniformState> recordUniformUpdate(gpu2::bindless::CnC & producer, ArrayView<const uint8_t> bytes) override {
+    AutoRef<UniformState> recordUniformUpdate(::GN::gpu2::CnC & producer, ArrayView<const uint8_t> bytes) override {
         constexpr uint64_t kUniformAlignment = 256;
         constexpr uint64_t kMaxUniformRange  = 16384; // Vulkan guarantees at least this much uniform-buffer range.
         if (bytes.empty() || bytes.size() > kMaxUniformRange || bytes.size() > mUniformCapacity) return {};
@@ -165,4 +165,4 @@ GN_API gpu2::GpuResourceTable sharedUniformResources(const AutoRef<SharedShaderC
     return resources;
 }
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

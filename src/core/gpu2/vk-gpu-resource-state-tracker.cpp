@@ -364,30 +364,38 @@ bool GpuResourceStateTrackerVulkan::addRasterGeometry(const RasterGeometry & geo
 }
 
 bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
-    bool ok = true;
-    for (size_t i = 0; i < rt.colorTargets.size(); ++i) {
-        const auto &          ct   = rt.colorTargets[i];
-        const GpuResourceView view = ct.view();
-        if (!view.texture()) continue;
-        auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
-        if (tex && !addColorTarget(tex, view)) {
-            GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: render target hazard on color target slot {}; aborting render pass", i);
-            ok = false;
-        }
-    }
-    const GpuResourceView depthStencilView = rt.depthStencilTarget.view();
-    if (depthStencilView.isTexture() && depthStencilView.texture()) {
-        auto * tex = RuntimeType::cast<TextureVulkanBase>(depthStencilView.texture().get());
-        if (tex) {
-            // Render targets are cleared upon pass begin (loadOp = eClear) which is an attachment write;
-            // depth-stencil target must be in attachment-optimal layout during rendering.
-            if (!addDepthStencilTarget(tex, depthStencilView, /*readOnly=*/false)) {
-                GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: render target hazard on depth-stencil target; aborting render pass");
+    auto registerTargets = [&](GpuResourceStateTrackerVulkan & tracker) {
+        bool ok = true;
+        for (size_t i = 0; i < rt.colorTargets.size(); ++i) {
+            const auto &          ct   = rt.colorTargets[i];
+            const GpuResourceView view = ct.view();
+            if (!view.texture()) continue;
+            auto * tex = RuntimeType::cast<TextureVulkanBase>(view.texture().get());
+            if (tex && !tracker.addColorTarget(tex, view)) {
+                GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: render target hazard on color target slot {}; aborting render pass", i);
                 ok = false;
             }
         }
-    }
-    return ok;
+        const GpuResourceView depthStencilView = rt.depthStencilTarget.view();
+        if (depthStencilView.isTexture() && depthStencilView.texture()) {
+            auto * tex = RuntimeType::cast<TextureVulkanBase>(depthStencilView.texture().get());
+            if (tex) {
+                // Render targets are cleared upon pass begin (loadOp = eClear) which is an attachment write;
+                // depth-stencil target must be in attachment-optimal layout during rendering.
+                if (!tracker.addDepthStencilTarget(tex, depthStencilView, /*readOnly=*/false)) {
+                    GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: render target hazard on depth-stencil target; aborting render pass");
+                    ok = false;
+                }
+            }
+        }
+        return ok;
+    };
+
+    // Validate attachment overlap separately so a rejected pass cannot leave partial state
+    // registrations in the shared batch tracker.
+    GpuResourceStateTrackerVulkan validationTracker;
+    if (!registerTargets(validationTracker)) return false;
+    return registerTargets(*this);
 }
 
 void GpuResourceStateTrackerVulkan::upgradeForDrawRasterState(const RasterState & drawState) {

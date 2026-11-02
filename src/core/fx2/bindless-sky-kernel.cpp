@@ -4,9 +4,9 @@
 #include "bindless-sky-material-impl.h"
 #include <cmath>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 namespace {
-using Heap    = gpu2::bindless::DescriptorHeap;
+using Heap    = ::GN::gpu2::DescriptorHeap;
 auto * logger = getLogger("GN.fx2.bindless.sky");
 
 struct SkyMaterialData {
@@ -107,11 +107,11 @@ public:
                samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX && lutSamplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
 
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         const uint8_t skyBlue[6 * 4] = {
             135, 206, 235, 255, 135, 206, 235, 255, 135, 206, 235, 255, 135, 206, 235, 255, 135, 206, 235, 255, 135, 206, 235, 255,
         };
-        gpu2::bindless::CnC::Region cubeRegions[6];
+        ::GN::gpu2::CnC::Region cubeRegions[6];
         for (uint32_t f = 0; f < 6; ++f) {
             cubeRegions[f].face        = f;
             cubeRegions[f].dataOffset  = f * 4;
@@ -119,8 +119,8 @@ public:
         }
         producer.recordUploadImage(cubemap.texture(), {skyBlue, sizeof(skyBlue)}, {cubeRegions, 6});
 
-        const uint8_t               white[4] = {255, 255, 255, 255};
-        gpu2::bindless::CnC::Region lutRegion;
+        const uint8_t           white[4] = {255, 255, 255, 255};
+        ::GN::gpu2::CnC::Region lutRegion;
         lutRegion.imageExtent = {1, 1, 1};
         producer.recordUploadImage(brdfLut.texture(), {white, sizeof(white)}, {&lutRegion, 1});
     }
@@ -193,7 +193,7 @@ public:
         return true;
     }
 
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         producer.recordUploadBuffer(mView.buffer(), mView.bufferView.offset, {reinterpret_cast<const uint8_t *>(&mData), sizeof(mData)});
     }
 
@@ -212,7 +212,7 @@ public:
         : SkyMaterial(TYPE_INFO(), "bindless.sky.material"), mKernel(std::move(kernel)), mShaders(shaders), mStorage(std::move(heap)) {}
 
     bool initialize(const Parameters & p, const Fallbacks & defaults) { return mStorage.initialize(p, defaults); }
-    void upload(gpu2::bindless::CnC & producer) const { mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
 
     bool record(const SkyMaterial::DrawParameters & input) const override {
         if (!input.ssc || !validUniform(input.ssc->view())) {
@@ -222,7 +222,7 @@ public:
         const SkyDrawConstants values {glm::uvec4(mStorage.index(), 0, 0, 0)};
         gpu2::RasterGeometry   geometry;
         geometry.vertexCount = 3;
-        gpu2::bindless::Raster::DrawParameters draw {.geometry = geometry};
+        ::GN::gpu2::Raster::DrawParameters draw {.geometry = geometry};
         draw.vs = mShaders.vertex;
         draw.ps = mShaders.fragment;
         if (input.states) {
@@ -258,7 +258,7 @@ public:
                mDefaults.initialize(std::move(heap));
     }
 
-    void uploadDefaults(gpu2::bindless::CnC & producer) const { mDefaults.upload(producer); }
+    void uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
 
     SkyMaterial::Parameters defaultMaterialParameters() const override {
         SkyMaterial::Parameters p;
@@ -269,7 +269,7 @@ public:
         return p;
     }
 
-    AutoRef<SkyMaterial> createMaterial(gpu2::bindless::CnC & producer, const SkyMaterial::Parameters & p) const override {
+    AutoRef<SkyMaterial> createMaterial(::GN::gpu2::CnC & producer, const SkyMaterial::Parameters & p) const override {
         bool valid = std::isfinite(p.luminanceScale) && p.luminanceScale >= 0.0f && std::isfinite(p.ambientFloor) && p.ambientFloor >= 0.0f &&
                      validCubeMap(p.skyboxMap) && validCubeMap(p.irradianceMap) && validCubeMap(p.prefilteredMap) && valid2DMap(p.brdfLut);
         if (!valid) return {};
@@ -290,7 +290,7 @@ uint32_t getSkyMaterialIndex(const SkyMaterial * material) {
     return impl ? impl->index() : uint32_t(-1);
 }
 
-AutoRef<SkyKernel> SkyKernel::create(gpu2::bindless::DescriptorHeap & heap, gpu2::bindless::CnC & initialization) {
+AutoRef<SkyKernel> SkyKernel::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<SkyImpl>(new SkyImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
@@ -298,4 +298,4 @@ AutoRef<SkyKernel> SkyKernel::create(gpu2::bindless::DescriptorHeap & heap, gpu2
     return impl;
 }
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

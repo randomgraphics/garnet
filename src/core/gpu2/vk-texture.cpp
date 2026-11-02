@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "vk-texture.h"
-#include "vk-gpu-cnc.h"
 #include "vk-cnc-common.h"
 #include "vk-format-utils.h"
 
@@ -88,19 +87,19 @@ gfx::img::Image TextureVulkanBase::readback() const {
     const auto &       d = mDescriptor;
     gfx::img::Extent3D extent;
     extent.set(d.width, d.height, d.depth);
-    const auto                planeDesc = gfx::img::PlaneDesc::make(d.format, extent);
-    gfx::img::Image           image(gfx::img::ImageDesc::make(planeDesc, 1, d.faces, d.levels));
-    DynaArray<GpuCnC::Region> regions;
+    const auto             planeDesc = gfx::img::PlaneDesc::make(d.format, extent);
+    gfx::img::Image        image(gfx::img::ImageDesc::make(planeDesc, 1, d.faces, d.levels));
+    DynaArray<CnC::Region> regions;
     for (uint32_t face = 0; face < d.faces; ++face) {
         for (uint32_t level = 0; level < d.levels; ++level) {
-            GpuCnC::Region region;
+            CnC::Region region;
             region.face        = face;
             region.mip         = level;
             region.imageExtent = {std::max(1u, d.width >> level), std::max(1u, d.height >> level), std::max(1u, d.depth >> level)};
             regions.append(region);
         }
     }
-    auto cnc = GpuCnC::create({.gpu = mGpu});
+    auto cnc = CnC::create(name + "/readback", {.gpu = mGpu});
     if (!cnc) return {};
     auto future  = cnc->recordDownloadImage(AutoRef<Texture>(const_cast<TextureVulkanBase *>(this)), regions);
     auto payload = cnc->seal();
@@ -132,7 +131,10 @@ bool TextureVulkanBase::setContent(const gfx::img::Image & image) {
         GN_ERROR(sLogger, "TextureVulkanBase::setContent: incompatible image, name='{}'", name);
         return false;
     }
-    auto payload = createCncImageUploadPayload(mGpu, AutoRef<Texture>(this), image);
+    auto cnc = CnC::create(name + "/set-content", {.gpu = mGpu});
+    if (!cnc) return false;
+    cnc->recordUploadImage(AutoRef<Texture>(this), image);
+    auto payload = cnc->seal();
     if (!payload) return false;
     // The CNC payload restores the tracked shader-readable invariant before signaling completion.
     mGpu->submit(GpuContext::SubmitParameters(name + "/set-content").appendWork(payload));

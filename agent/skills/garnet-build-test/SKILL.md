@@ -60,3 +60,6 @@ env/bin/format-all-sources.py -d    # format changed files
 env/bin/format-all-sources.py       # format all tracked project sources
 ```
 
+For current target discovery, test collection, CI variants, and platform limits,
+see [`agent/knowledge/build-and-platforms.md`](../../knowledge/build-and-platforms.md).
+

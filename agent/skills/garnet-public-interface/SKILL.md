@@ -9,6 +9,9 @@ A public header is a contract for callers in other modules that cannot see this
 module's implementation. This includes each monolithic `GNXXX.h` and every
 subheader it includes, even when a declaration is private or protected in C++.
 
+See [`agent/knowledge/module-map.md`](../../knowledge/module-map.md) for the
+current umbrella headers and module ownership map.
+
 ## Decide what belongs in the contract
 
 For each type, function, or data member, identify the external module that needs

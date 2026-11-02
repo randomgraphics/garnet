@@ -8,9 +8,9 @@
 #include <glm/mat3x3.hpp>
 #include <cmath>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 namespace {
-using Heap    = gpu2::bindless::DescriptorHeap;
+using Heap    = ::GN::gpu2::DescriptorHeap;
 auto * logger = getLogger("GN.fx2.bindless.cel");
 
 // 176-byte std430 packing matching bindless-cel-material.h
@@ -132,10 +132,10 @@ public:
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
 
-    void upload(gpu2::bindless::CnC & producer) const {
-        const uint8_t               white[] = {255, 255, 255, 255};
-        const uint8_t               flat[]  = {128, 128, 255, 255};
-        gpu2::bindless::CnC::Region region;
+    void upload(::GN::gpu2::CnC & producer) const {
+        const uint8_t           white[] = {255, 255, 255, 255};
+        const uint8_t           flat[]  = {128, 128, 255, 255};
+        ::GN::gpu2::CnC::Region region;
         region.imageExtent = {1, 1, 1};
         producer.recordUploadImage(color.texture(), {white, sizeof(white)}, {&region, 1});
         producer.recordUploadImage(normal.texture(), {flat, sizeof(flat)}, {&region, 1});
@@ -186,7 +186,7 @@ public:
         return true;
     }
 
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         producer.recordUploadBuffer(mView.buffer(), mView.bufferView.offset, {reinterpret_cast<const uint8_t *>(&mData), sizeof(mData)});
     }
 
@@ -222,7 +222,7 @@ public:
         return mStorage.initialize(data, mParameters.colorMap, mParameters.normalMap, mParameters.sampler, defaults);
     }
 
-    void upload(gpu2::bindless::CnC & producer) const { mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
 
     bool record(const CelMaterial::DrawParameters & inputs) const override {
         auto & raster = inputs.raster;
@@ -232,8 +232,8 @@ public:
                 return false;
             }
 
-        const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
-        gpu2::bindless::Raster::DrawParameters draw {.geometry = inputs.geometry};
+        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
+        ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
         draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
         draw.ps = mShaders.fragment;
         if (inputs.states) draw.states = *inputs.states;
@@ -243,7 +243,7 @@ public:
         raster.recordDraw(draw);
 
         if (inputs.renderOutline && mParameters.outlineWidth > 0.0f) {
-            gpu2::bindless::Raster::DrawParameters outlineDraw {.geometry = inputs.geometry};
+            ::GN::gpu2::Raster::DrawParameters outlineDraw {.geometry = inputs.geometry};
             outlineDraw.vs = mStorage.textured() ? mShaders.texturedOutlineVertex : mShaders.outlineVertex;
             outlineDraw.ps = mShaders.outlineFragment;
             if (inputs.states) outlineDraw.states = *inputs.states;
@@ -276,7 +276,7 @@ public:
                mDefaults.initialize(std::move(heap));
     }
 
-    void uploadDefaults(gpu2::bindless::CnC & producer) const { mDefaults.upload(producer); }
+    void uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
 
     CelMaterial::Parameters defaultMaterialParameters() const override {
         CelMaterial::Parameters p;
@@ -286,7 +286,7 @@ public:
         return p;
     }
 
-    AutoRef<CelMaterial> createMaterial(gpu2::bindless::CnC & producer, const CelMaterial::Parameters & p) const override {
+    AutoRef<CelMaterial> createMaterial(::GN::gpu2::CnC & producer, const CelMaterial::Parameters & p) const override {
         if (!validMap(p.colorMap) || !validMap(p.normalMap)) return {};
         for (int i = 0; i < 4; ++i) {
             if (!std::isfinite(p.color[i]) || !std::isfinite(p.outlineColor[i])) return {};
@@ -311,7 +311,7 @@ public:
 
 } // namespace
 
-AutoRef<CelKernel> CelKernel::create(Heap & heap, gpu2::bindless::CnC & initialization) {
+AutoRef<CelKernel> CelKernel::create(Heap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<CelImpl>(new CelImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
@@ -319,4 +319,4 @@ AutoRef<CelKernel> CelKernel::create(Heap & heap, gpu2::bindless::CnC & initiali
     return impl;
 }
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

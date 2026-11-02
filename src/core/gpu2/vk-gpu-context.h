@@ -47,7 +47,6 @@
 
 namespace GN::gpu2 {
 
-class RasterPsoFactory;              // defined in vk-raster-pso-factory.h
 class VkBindlessPipelineLayoutCache; // defined in vk-bindless-pipeline-layout.h
 class VkBindlessPsoCache;            // defined in vk-bindless-pso-cache.h
 class VkBindlessComputePsoCache;     // defined in vk-bindless-compute-pso-cache.h
@@ -69,12 +68,6 @@ public:
     const rv::Device & vulkanDevice() const {
         GN_ASSERT(ready());
         return mDevice.value();
-    }
-
-    /// PSO cache for raster pipelines. Only valid when ready().
-    RasterPsoFactory & psoFactory() const {
-        GN_ASSERT(mPsoFactory);
-        return *mPsoFactory;
     }
 
     /// Pipeline layout cache for bindless passes. Only valid when ready().
@@ -127,7 +120,6 @@ private:
     GpuContext::Caps            mCaps;
 
     // mutable factories and pools: may change even on logically const paths.
-    mutable std::unique_ptr<RasterPsoFactory>              mPsoFactory; // incomplete type; can't use std::optional
     mutable std::unique_ptr<VkBindlessPipelineLayoutCache> mBindlessPipelineLayoutCache;
     mutable std::unique_ptr<VkBindlessPsoCache>            mBindlessPsoCache;
     mutable std::unique_ptr<VkBindlessComputePsoCache>     mBindlessComputePsoCache;

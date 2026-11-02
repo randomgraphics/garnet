@@ -24,14 +24,13 @@ struct StoredBindlessCompute {
 using StoredBindlessCncOp = std::variant<StoredBindlessCompute, StoredBufferToBuffer, StoredBufferToImage, StoredImageToImage, StoredUploadBuffer,
                                          StoredDownloadBuffer, StoredDownloadImage>;
 
-/// Vulkan implementation of bindless::CnC recorder.
-class VkBindlessCnC final : public bindless::CnC {
+/// Vulkan implementation of CnC recorder.
+class VkBindlessCnC final : public CnC {
 public:
-    GN_REGISTER_RUNTIME_TYPE(bindless::CnC);
+    GN_REGISTER_RUNTIME_TYPE(CnC);
 
-    VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<bindless::DescriptorHeap> heap, uint32_t heapSetIndex,
-                  vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, GpuResourceTable passResources,
-                  size_t opCountHint);
+    VkBindlessCnC(const StrA & name, AutoRef<GpuContextVulkan2> gpu, AutoRef<DescriptorHeap> heap, uint32_t heapSetIndex, vk::PipelineLayout pipelineLayout,
+                  vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets, GpuResourceTable passResources, size_t opCountHint);
 
     ~VkBindlessCnC() override;
 
@@ -49,13 +48,13 @@ public:
     AutoRef<GpuPayload> seal() override;
 
 private:
-    AutoRef<GpuContextVulkan2>        mGpu;
-    AutoRef<bindless::DescriptorHeap> mHeap;
-    uint32_t                          mHeapSetIndex = 0;
-    vk::PipelineLayout                mPipelineLayout {};
-    vk::DescriptorPool                mPassDescriptorPool {};
-    std::vector<vk::DescriptorSet>    mPassDescriptorSets;
-    GpuResourceTable                  mPassResources;
+    AutoRef<GpuContextVulkan2>     mGpu;
+    AutoRef<DescriptorHeap>        mHeap;
+    uint32_t                       mHeapSetIndex = 0;
+    vk::PipelineLayout             mPipelineLayout {};
+    vk::DescriptorPool             mPassDescriptorPool {};
+    std::vector<vk::DescriptorSet> mPassDescriptorSets;
+    GpuResourceTable               mPassResources;
 
     std::vector<StoredBindlessCncOp>   mOps;
     std::vector<uint8_t>               mImmediateData;
@@ -64,6 +63,6 @@ private:
     bool                               mSealed        = false;
 };
 
-AutoRef<bindless::CnC> createVkBindlessCnc(const StrA & name, const bindless::CnC::CreateParameters & cp);
+AutoRef<CnC> createVkBindlessCnc(const StrA & name, const CnC::CreateParameters & cp);
 
 } // namespace GN::gpu2

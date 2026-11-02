@@ -145,7 +145,7 @@ inline Json parseValue(const char *& p) {
 }
 
 /// Load the first mesh primitive from a .gltf file on disk into gpu2::RasterGeometry.
-inline GN::gpu2::RasterGeometry loadGltfGeometry(const std::string & gltfPath, GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::bindless::CnC & uploads) {
+inline GN::gpu2::RasterGeometry loadGltfGeometry(const std::string & gltfPath, GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::CnC & uploads) {
     std::ifstream jf(gltfPath);
     if (!jf) return {};
 
