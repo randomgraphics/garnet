@@ -8,6 +8,9 @@ description: Generate function-level test coverage reports with the dedicated co
 Coverage lives in its own build variant so the instrumentation cost never lands on the
 `d`/`p`/`r` builds used for daily work.
 
+The repository-wide build, CIT and CI configuration is summarized in
+[`agent/knowledge/build-and-platforms.md`](../../knowledge/build-and-platforms.md).
+
 ## Workflow
 
 ```bash

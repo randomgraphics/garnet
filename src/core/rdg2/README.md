@@ -1,14 +1,19 @@
 # Garnet RDG2 (`GN::rdg2`)
 
-RDG2 is Garnet's experimental render-dependency-graph module. It sits above
-`gpu2` and below engine rendering code. Its job is to represent declared work,
+RDG2 is Garnet's experimental render-dependency-graph module. The current
+prototype places it above `gpu2` and below engine rendering code. Its current
+design is to represent declared work,
 order that work through shared data, gather GPU payloads, and coordinate
 submission and presentation without learning what a camera, material, light, or
 scene means.
 
-This README is the canonical RDG2 design and status document. Design changes
-belong here once a real client requires them. Files under `agent/harness/` track only
-concrete implementation assignments and their verification steps.
+**Status: early prototyping.** This README tracks the current RDG2 prototype's
+design and status; it is not a stable architecture or API baseline. Use it to
+understand the prototype only, and reconfirm requirements before depending on or
+extending its structure.
+
+Files under `agent/harness/` track only concrete implementation assignments and
+their verification steps.
 
 ## First Validated Client: E2 Visual Rendering
 

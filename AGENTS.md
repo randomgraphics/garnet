@@ -15,11 +15,15 @@ Important directories:
 
 - `src/inc/garnet/`: public monolithic headers.
 - `src/core/`: core implementation.
-- `src/core/rdg2/`: RDG2, the active render graph module.
+- `src/core/rdg2/`: RDG2, an early-prototyping render-graph module; do not treat
+  its current structure as a stable architecture reference.
 - `src/core/fx2/`: FX2, graph-agnostic effects built on gpu2.
-- `src/core/gpu2/`: gpu2 abstraction layer used by FX2 and RDG2.
-- `src/core/e2/`: engine2 (`GN::e2`), spatial/engine layer; public include
-  `GNengine2.h`.
+- `src/core/gpu2/`: gpu2 abstraction layer used by FX2; the current RDG2
+  prototype also uses it, but that relationship is not a stable architecture
+  commitment.
+- `src/core/e2/`: early-prototyping engine2 (`GN::e2`) spatial/engine layer;
+  do not treat its current structure as a stable architecture reference; public
+  include `GNengine2.h`.
 - `src/sample/`: sample applications.
 - `src/core/<module>/test/`: module-local tests, auto-picked up by
   `GNtest-internal`; `src/test/`: older shared tests.
@@ -199,10 +203,12 @@ and a reference for how existing code came to be. See
 
 ## RDG2 Module
 
-RDG2 (`GN::rdg2`) is the primary active rendering abstraction. Public include
-`GNrdg2.h`, implementation `src/core/rdg2/`, public headers
-`src/inc/garnet/rdg2/`. RDG2 may consume FX2 through graph-specific adapters;
-FX2 must not depend on RDG2. RDG v1 has been removed from the tree.
+**Status: early prototyping.** RDG2 (`GN::rdg2`) is an experimental render-graph
+prototype, not a stable architecture or API reference. Use its code and docs to
+understand the current prototype only; do not generalize its structure or
+contracts to stable Garnet modules. Reconfirm requirements before extending or
+depending on it. Public include `GNrdg2.h`, implementation `src/core/rdg2/`,
+public headers `src/inc/garnet/rdg2/`. RDG v1 has been removed from the tree.
 
 RDG2 is a playground for graph designs with two generations:
 
@@ -222,7 +228,12 @@ binding paths, indexed draw coverage, and file-path shader loading.
 
 ## E2 World Runtime
 
-The canonical design and implementation notes are in `src/core/e2/README.md`;
+**Status: early prototyping.** E2 is an experimental world-runtime prototype,
+not a stable architecture or API reference. Its current code and design notes
+are useful for understanding the prototype only; do not treat their structure,
+contracts, or policy decisions as stable Garnet conventions. Reconfirm
+requirements before extending or depending on them. Design and implementation
+notes for the prototype are in `src/core/e2/README.md`;
 historical task details are archived in
 `agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt`.
 SimpleWorld and mesh-viewer are out of
@@ -298,8 +309,8 @@ and must not include or reference RDG2 or E2.
 
 ## gpu2 Module
 
-gpu2 is `GN::gpu2`, used by RDG2. Vulkan is active; D3D12 and Metal factories
-are stubs.
+gpu2 is `GN::gpu2`. The current RDG2 prototype uses it. Vulkan is active;
+D3D12 and Metal factories are stubs.
 
 Key conventions:
 

@@ -1,10 +1,17 @@
 # Engine2 (`GN::e2`): World Runtime
 
-This is the canonical approved design for the data-driven World Runtime. The
-implementation assignment and historical verification records live in
-[`agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt`](../../../agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt). The object-oriented runtime described below is implemented. The earlier
-plain-value/schema-ID prototype has been replaced and the replacement has been
-built and checked; see the validation section and active assignment for results.
+> **Status: early prototyping.** This document contains design and
+> implementation notes for an experimental prototype. Its structure, API, and
+> policy decisions are not stable Garnet architecture references. Use it to
+> understand the prototype only; reconfirm requirements before depending on or
+> extending it.
+
+This records a previously approved design iteration for the data-driven World
+Runtime. The implementation assignment and historical verification records live in
+[`agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt`](../../../agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt).
+The statements below that describe the object-oriented runtime as implemented
+and checked refer to that earlier prototype revision; they do not establish a
+stable structure or API contract.
 
 SimpleWorld and mesh-viewer, including their dependent tests and samples, are
 outside this refactor. Their separate removal work must not constrain this design.

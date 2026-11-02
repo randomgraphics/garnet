@@ -9,6 +9,12 @@ The root `AGENTS.md` provides project-wide guidance. The generic task contract
 is in `agent/harness/README.md`; this repository's path mapping is in
 `agent/README.md`.
 
+Skills describe reusable procedures. For current codebase facts and their source
+evidence, start with [`agent/knowledge/catalog.md`](../knowledge/catalog.md),
+[`module-map.md`](../knowledge/module-map.md), and
+[`build-and-platforms.md`](../knowledge/build-and-platforms.md). Keep implementation
+claims grounded in the current worktree.
+
 ## Planning and task management
 
 - `garnet-feature-workflow`: lifecycle for feature work.

@@ -5,7 +5,8 @@ description: Garnet submodule rules. Use when adding, updating, or reviewing git
 
 # Garnet Submodules
 
-All submodules must be shallow shadow copies.
+All submodules must use shallow Git clones. Configure this in the parent
+repository's `.gitmodules`; it does not create a separate "shadow copy".
 
 When adding a submodule, update `.gitmodules` immediately:
 
@@ -23,4 +24,7 @@ Rules:
 - Owned or actively modified submodules should be developed on their own
   `wip/<topic>` branch.
 - `garnet master` must only reference submodule `main`/`master` commits.
+
+See [`agent/knowledge/coverage.md`](../../knowledge/coverage.md) for scan
+scope and [`.gitmodules`](../../../.gitmodules) for the current submodule list.
 

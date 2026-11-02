@@ -1,57 +1,65 @@
 # Garnet Codebase Catalog
 
-This is the initial, intentionally shallow map for routing code-analysis
-queries. It points to authoritative project docs and likely code locations; it
-is not proof that a particular API or backend is implemented. Verify every
-important fact in the current worktree before using it in a design or review.
+This catalog routes codebase questions to verified repository evidence. It is a
+curated summary, not a substitute for checking source in the current worktree.
 
-## Bootstrap status
+## Bootstrap status and freshness
 
-This catalog is a seed assembled from existing repository guidance, not the
-result of the full initialization procedure. The module-by-module coverage
-analysis, dependency map, and initial skill validation still need to be
-completed and recorded by the configured bootstrap task. Treat unreviewed areas
-as unknown rather than assuming that this catalog is exhaustive.
+The initial repository-wide inventory and first-pass module coverage are recorded
+in [`coverage.md`](coverage.md), with implementation depth stated per area. The
+build, test, CI and platform map is in [`build-and-platforms.md`](build-and-platforms.md).
+Module/API relationships are summarized in [`module-map.md`](module-map.md).
+
+The cited files were checked in `agent-harness` on branch `wip/agent-harness`,
+commit `27d39c986`, on 2026-11-01 (client date). Recheck source and build files
+after switching branches or updating the worktree. Submodule contents were not
+used as first-party evidence.
 
 ## Repository-wide entrypoints
 
-| Area | Starting point | Notes |
+| Need | Start here | Evidence / limit |
 |---|---|---|
-| Project rules and module map | [`AGENTS.md`](../../AGENTS.md) | Primary Codex-facing repository guide; check it before implementation work. |
-| Public module headers | `src/inc/garnet/` | Garnet exposes monolithic public includes such as `GNrdg2.h`, `GNgpu2.h`, and `GNengine2.h`. |
-| Core implementation | `src/core/` | Module implementation roots are organized by subsystem. |
-| Build | `env/bin/build.py` | Use the project wrapper and its configured variants; see `AGENTS.md`. |
-| Tests and CI | `env/bin/cit.py`, `src/test/`, `src/core/<module>/test/` | Module-local tests and shared tests use project-specific discovery. |
-| Samples and tools | `src/sample/`, `src/tool/` | Useful for end-to-end behavior and manual validation. |
+| Repository rules and active architecture notes | [`AGENTS.md`](../../AGENTS.md) | Codex-facing guide; verify implementation claims against current code. |
+| Public API | `src/inc/garnet/GN*.h` and included subheaders | Monolithic public entrypoints; subheaders often reject direct inclusion. |
+| Implementation/build composition | [`src/core/CMakeLists.txt`](../../src/core/CMakeLists.txt) | Source globs and explicit module CMake includes define the current compiled core. |
+| Build and CIT | [`env/bin/build.py`](../../env/bin/build.py), [`env/bin/cit.py`](../../env/bin/cit.py) | Use wrappers; command details and limits are in build/platform knowledge. |
+| CI | [`.circleci/config.yml`](../../.circleci/config.yml) | Configured jobs are not proof that every job passed for this worktree. |
+| Reusable procedures | [`../skills/README.md`](../skills/README.md) | Skill triggers and procedures; use only relevant skills. |
+| Historical design/task records | `agent/completed/` | Historical evidence, not a current API contract. |
 
-## Known module map
+## Module routing
 
-| Module | Public / implementation roots | Authoritative design notes |
+| Area | Public / source roots | Authoritative starting point |
 |---|---|---|
-| gpu2 | `src/inc/garnet/gpu2/`, `src/core/gpu2/` | [`AGENTS.md` gpu2 guidance](../../AGENTS.md); inspect backend factories and implementations for current support. |
-| RDG2 | `src/inc/garnet/rdg2/`, `src/core/rdg2/` | [`src/core/rdg2/README.md`](../../src/core/rdg2/README.md) |
+| base | `src/inc/garnet/base/`, `src/core/base/` | [`module-map.md`](module-map.md); build composition in `src/core/CMakeLists.txt` |
+| win | `src/inc/garnet/win/`, `src/core/win/` | [`module-map.md`](module-map.md); platform conditions in root/core CMake |
+| gpu2 | `src/inc/garnet/gpu2/`, `src/core/gpu2/` | [`src/core/gpu2/README.md`](../../src/core/gpu2/README.md) |
 | FX2 | `src/inc/garnet/fx2/`, `src/core/fx2/` | [`src/core/fx2/README.md`](../../src/core/fx2/README.md) |
-| E2 | `src/inc/garnet/e2/`, `src/core/e2/` | [`src/core/e2/README.md`](../../src/core/e2/README.md) |
+| RDG2 — early prototype | `src/inc/garnet/rdg2/`, `src/core/rdg2/` | [`src/core/rdg2/README.md`](../../src/core/rdg2/README.md); exploratory reference only, not a stable architecture/API baseline |
+| E2 — early prototype | `src/inc/garnet/e2/`, `src/core/e2/` | [`src/core/e2/README.md`](../../src/core/e2/README.md); exploratory reference only, not a stable architecture/API baseline |
 | FIZ | `src/inc/garnet/fiz/`, `src/core/fiz/` | [`src/core/fiz/README.md`](../../src/core/fiz/README.md) |
+| Test infrastructure | `src/test/`, `src/core/*/test/`, `src/tool/*/test/` | [`build-and-platforms.md`](build-and-platforms.md); `src/test/internal/CMakeLists.txt` |
+| Samples and tools | `src/sample/`, `src/tool/` | [`coverage.md`](coverage.md) and their CMake files; target availability is conditional |
 
-The directory list is a navigation hint, not a complete module inventory. Use
-the public include, build definitions, implementation, tests, and callers to
-confirm module boundaries and actual dependencies.
+The table is a routing map, not a claim that each API or backend is complete.
+See the coverage matrix for inspection depth and known gaps.
 
-## Suggested query paths
+## Query paths
 
-- **Find an API implementation:** search the public symbol, then inspect its
-  declarations, backend implementations, factory dispatch, and tests.
-- **Understand a subsystem:** read its module README, public headers, source
-  tree, nearby `*.harness.md` notes, and current task records.
-- **Check behavior or coverage:** locate module tests, shared tests, sample
-  callers, and the build target that runs them.
-- **Check platform support:** inspect compile-time guards, backend factory
-  selection, CI/build matrix, and platform-specific tests. Treat prose summaries
-  as stale until confirmed.
-- **Trace a dependency:** use symbol references and includes first; supplement
-  with build graph and module documentation.
+- **API behavior:** inspect the monolithic public header, declaration, implementation,
+  factory/backend dispatch, external callers and focused tests.
+- **Module relationship:** start at [`module-map.md`](module-map.md), then verify
+  includes, CMake composition and implementation call paths.
+- **Build, test or platform support:** start at [`build-and-platforms.md`](build-and-platforms.md),
+  then inspect current CMake, scripts, CI and platform guards.
+- **Design/history conflict:** current implementation establishes behavior;
+  module README may define intended design, and archived task docs explain history.
+  Record a conflict instead of treating plans as implemented behavior.
 
-When a repeated query reveals a missing map or a non-obvious invariant, add a
-short sourced entry to this catalog or a side-by-side module note. Keep
-task-specific exploration in the task workspace until verified.
+## Provenance convention
+
+Entries in this directory are curated. Their source links identify direct evidence;
+statements explicitly marked as inference or partial inspection must not be promoted
+to confirmed API facts without checking implementation and callers. Build outputs,
+symbol/reference indexes and semantic caches are derived and remain outside curated
+Markdown unless a repository workflow explicitly requires them.

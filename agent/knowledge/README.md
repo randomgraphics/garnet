@@ -18,8 +18,13 @@ retrieval, provenance, and freshness design.
 
 ## Contents and ownership
 
-- `catalog.md` — concise, curated map of Garnet modules, public interfaces,
-  build/test entrypoints, and authoritative docs.
+- `catalog.md` — navigation index for modules, APIs, workflows, and evidence.
+- `coverage.md` — scan scope, first-party inventory, module coverage depth, and
+  unresolved areas.
+- `module-map.md` — public entrypoints, build ownership, and evidenced module
+  relationships.
+- `build-and-platforms.md` — configured build, test, CI, coverage, and platform
+  paths, with their evidence limits.
 - `ASEH_WORKLOAD_EXAMPLES.md` — Garnet-specific examples of refining ambiguous
   long-horizon engineering requests.
 - `*.harness.md` beside source — module-specific explanations, invariants, and
@@ -29,6 +34,9 @@ retrieval, provenance, and freshness design.
 - `.cache/agent-knowledge/` — suggested ignored location for generated symbol,
   reference, dependency, and semantic indexes. Rebuild from the current
   worktree; do not treat cache content as authoritative or commit it by default.
+- `.codegraph/` — CodeGraph-managed structural index. It is derived, ignored
+  project data; record its version/status and known query limits in
+  [`coverage.md`](coverage.md), and verify graph findings against current source.
 
 Keep reusable facts and evidence-backed relationships here or beside their
 owning code. Keep temporary findings and unverified hypotheses in
@@ -48,7 +56,9 @@ For curated entries, include enough provenance for another maintainer to
 recheck the claim: source path and symbol/section, evidence type, last checked
 commit or content version where useful, and whether the entry is confirmed,
 provisional, or stale. Humans may override an entry, but changes should remain
-traceable through Git history. Derived indexes and caches are managed
+traceable through Git history. Repo-wide claims use explicit scan-depth and gap
+statements rather than implying that every implementation path was read.
+Derived indexes and caches are managed
 separately and must never overwrite curated Markdown or JSON.
 
 ## Query contract
