@@ -201,25 +201,25 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
-    auto heap = gpu2::bindless::DescriptorHeap::create("fiz.heap", {.gpu = gpuContext, .capacity = 256, .materialCapacity = 1024 * 1024});
+    auto heap = gpu2::DescriptorHeap::create("fiz.heap", {.gpu = gpuContext, .capacity = 256, .materialCapacity = 1024 * 1024});
     if (!heap) return -1;
 
-    auto ssc = fx2::bindless::SharedShaderConstants::create({.gpu = gpuContext, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    auto ssc = fx2::SharedShaderConstants::create({.gpu = gpuContext, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!ssc) return -1;
 
-    auto initialization = gpu2::bindless::CnC::create("fiz.initialization", {.gpu = gpuContext, .heap = heap});
-    auto geomUploads    = GpuCnC::create({.gpu = gpuContext});
+    auto initialization = gpu2::CnC::create("fiz.initialization", {.gpu = gpuContext, .heap = heap});
+    auto geomUploads    = gpu2::CnC::create("fiz-solids-geometry-uploads", {.gpu = gpuContext});
     if (!initialization || !geomUploads) return -1;
 
-    auto pbr = fx2::bindless::PbrKernel::create(*heap, *initialization);
-    auto sky = fx2::bindless::SkyKernel::create(*heap, *initialization);
+    auto pbr = fx2::PbrKernel::create(*heap, *initialization);
+    auto sky = fx2::SkyKernel::create(*heap, *initialization);
     if (!pbr || !sky) return -1;
 
     auto skyMaterial = createSkyMaterial(gpuContext, sky, *initialization, 3000.f);
 
     // Build procedural 3D model assets: Floor, Box, Sphere, Projectile, Wall
-    gpu2::RasterGeometry                modelGeometries[MODEL_COUNT];
-    AutoRef<fx2::bindless::PbrMaterial> modelMaterials[MODEL_COUNT];
+    gpu2::RasterGeometry      modelGeometries[MODEL_COUNT];
+    AutoRef<fx2::PbrMaterial> modelMaterials[MODEL_COUNT];
 
     modelGeometries[MODEL_FLOOR] = boxGeometry(gpuContext, *geomUploads, {40.0f, 1.0f, 40.0f});
     modelMaterials[MODEL_FLOOR]  = createPbrMaterial(pbr, *initialization, {0.25f, 0.28f, 0.32f, 1.0f}, 0.1f, 0.8f);
@@ -482,7 +482,7 @@ int main(int argc, const char ** argv) {
 
         rasterTarget.setColorTarget(0, frame.view);
 
-        auto uploadCnc = gpu2::bindless::CnC::create(StrA::format("fiz-frame-{}-uploads", frameIdx), {.gpu = gpuContext, .heap = heap});
+        auto uploadCnc = gpu2::CnC::create(StrA::format("fiz-frame-{}-uploads", frameIdx), {.gpu = gpuContext, .heap = heap});
         if (!uploadCnc) return -1;
 
         glm::vec3 eye(cameraDist * std::sin(orbitAngle), cameraHeight, cameraDist * std::cos(orbitAngle));
@@ -491,15 +491,15 @@ int main(int argc, const char ** argv) {
 
         auto uniformWork = uploadCnc->seal();
 
-        auto                                     tRaster0 = std::chrono::high_resolution_clock::now();
-        gpu2::bindless::Raster::CreateParameters rcp;
+        auto                           tRaster0 = std::chrono::high_resolution_clock::now();
+        gpu2::Raster::CreateParameters rcp;
         rcp.gpu               = gpuContext;
         rcp.target            = &rasterTarget;
         rcp.heap              = heap;
         rcp.heapSetIndex      = 0;
-        rcp.passResources     = fx2::bindless::sharedUniformResources(uniformState);
+        rcp.passResources     = fx2::sharedUniformResources(uniformState);
         rcp.numberOfDrawsHint = 2000;
-        auto r                = gpu2::bindless::Raster::create("fiz-solids-raster", rcp);
+        auto r                = gpu2::Raster::create("fiz-solids-raster", rcp);
         if (r) {
             for (int k = 0; k < MODEL_COUNT; ++k) modelTransforms[k].clear();
 
@@ -523,14 +523,14 @@ int main(int argc, const char ** argv) {
             for (int k = 0; k < MODEL_COUNT; ++k) {
                 if (modelTransforms[k].empty()) continue;
                 for (const auto & transform : modelTransforms[k]) {
-                    fx2::bindless::PbrMaterial::DrawParameters draw {{*r, uniformState, modelGeometries[k]}, transform, skyMaterial};
+                    fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, modelGeometries[k]}, transform, skyMaterial};
                     if (!modelMaterials[k]->record(draw)) { GN_ERROR(sLogger, "Failed to record PBR draw for model {}", k); }
                 }
             }
 
             // Skybox
             if (skyMaterial) {
-                fx2::bindless::SkyMaterial::DrawParameters skyDraw {*r, uniformState};
+                fx2::SkyMaterial::DrawParameters skyDraw {*r, uniformState};
                 skyMaterial->record(skyDraw);
             }
         }

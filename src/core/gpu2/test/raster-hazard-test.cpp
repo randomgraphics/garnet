@@ -9,6 +9,12 @@ using namespace GN::gpu2;
 
 namespace {
 
+AutoRef<Raster> createRaster(const AutoRef<GpuContext> & gpu, const StrA & name, const RasterTarget * target) {
+    auto heap = DescriptorHeap::create("hazard-test-heap", {.gpu = gpu, .capacity = 16});
+    if (!heap) return {};
+    return Raster::create(name, {.gpu = gpu, .target = target, .heap = heap});
+}
+
 // Submit a payload and spin-pump until the GPU signals completion.
 void submitAndWait(const AutoRef<GpuContext> & gpu, const AutoRef<GpuPayload> & payload) {
     std::atomic<bool> done = false;
@@ -24,7 +30,7 @@ bool clearToColor(const AutoRef<GpuContext> & gpu, const AutoRef<Texture> & tex,
     RasterTarget rt;
     rt.colorTargets.append(RasterTarget::ColorTarget(view));
     rt.setClearColor(r, g, b);
-    auto raster = GpuRaster::create("clear-target", {.gpu = gpu, .target = &rt});
+    auto raster = createRaster(gpu, "clear-target", &rt);
     if (!raster) return false;
     auto payload = raster->seal();
     if (!payload) return false;
@@ -69,7 +75,7 @@ TEST_CASE("GPU2: render target hazard — same texture on two color slots aborts
     rt.colorTargets.append(RasterTarget::ColorTarget(view));
     rt.colorTargets.append(RasterTarget::ColorTarget(view));
     rt.setClearColor(0.0f, 0.0f, 1.0f);
-    auto raster = GpuRaster::create("hazard-two-color-slots", {.gpu = gpu, .target = &rt});
+    auto raster = createRaster(gpu, "hazard-two-color-slots", &rt);
     REQUIRE(raster);
     submitAndWait(gpu, raster->seal());
 
@@ -116,7 +122,7 @@ TEST_CASE("GPU2: render target no hazard — distinct cubemap faces on separate 
     rt.colorTargets.append(RasterTarget::ColorTarget(faceView(1)));
     rt.setClearColor(0.0f, 0.0f, 1.0f);
 
-    auto raster = GpuRaster::create("cubemap-faces-target", {.gpu = gpu, .target = &rt});
+    auto raster = createRaster(gpu, "cubemap-faces-target", &rt);
     REQUIRE(raster);
 
     // The render pass should execute (no hazard). Submission must complete without error.
@@ -158,7 +164,7 @@ TEST_CASE("GPU2: render target hazard — same texture as both color and depth-s
     rt.setDepthStencilTarget(depthView);                          // also as depth: hazard
     rt.setClearColor(0.0f, 0.0f, 1.0f);
 
-    auto raster = GpuRaster::create("color-depth-hazard-target", {.gpu = gpu, .target = &rt});
+    auto raster = createRaster(gpu, "color-depth-hazard-target", &rt);
     REQUIRE(raster);
     submitAndWait(gpu, raster->seal());
 

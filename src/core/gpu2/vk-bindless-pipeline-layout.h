@@ -42,10 +42,10 @@ public:
     VkBindlessPipelineLayoutCache & operator=(const VkBindlessPipelineLayoutCache &) = delete;
 
     /// Get or create a VkPipelineLayout matching the given bindless raster configuration.
-    vk::PipelineLayout getOrCreate(const bindless::Raster::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap);
+    vk::PipelineLayout getOrCreate(const Raster::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap);
 
     /// Get or create a VkPipelineLayout matching the given bindless compute (CnC) configuration.
-    vk::PipelineLayout getOrCreateCompute(const bindless::CnC::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap);
+    vk::PipelineLayout getOrCreateCompute(const CnC::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap);
 
     /// Get or create a VkPipelineLayout with explicit heap index, max immediate size, and pass/draw resources.
     vk::PipelineLayout getOrCreate(uint32_t heapSetIndex, uint32_t maxImmediateSize, const GpuResourceTable & resources, VkBindlessDescriptorHeap * vkHeap,

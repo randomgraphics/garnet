@@ -1,7 +1,6 @@
 #include "pch.h"
 #define RAPID_VULKAN_IMPLEMENTATION
 #include "vk-gpu-context.h"
-#include "vk-raster-pso-factory.h"
 #include "vk-bindless-pipeline-layout.h"
 #include "vk-bindless-pso-cache.h"
 #include "vk-bindless-compute-pso-cache.h"
@@ -176,7 +175,6 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     }
 
     // Create sub objects
-    mPsoFactory                  = std::make_unique<RasterPsoFactory>(*this);
     mBindlessPipelineLayoutCache = std::make_unique<VkBindlessPipelineLayoutCache>(*this);
     mBindlessPsoCache            = std::make_unique<VkBindlessPsoCache>(*this);
     mBindlessComputePsoCache     = std::make_unique<VkBindlessComputePsoCache>(*this);
@@ -193,7 +191,6 @@ GpuContextVulkan2::~GpuContextVulkan2() {
     mBindlessComputePsoCache.reset();
     mBindlessPsoCache.reset();
     mBindlessPipelineLayoutCache.reset();
-    mPsoFactory.reset();
     mFencePool.reset();
     GN_INFO(sLoggerVk, "Destroying Vulkan GPU context");
 }

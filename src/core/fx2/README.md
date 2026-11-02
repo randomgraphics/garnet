@@ -7,19 +7,19 @@ and textures, prepare uploads, and control submission/presentation.
 
 ## Bindless Kernels Architecture
 
-FX2 rendering kernels are built exclusively on `GN::gpu2::bindless`. Effects are declared
-in `garnet/fx2/bindless/` and operate against a persistent `DescriptorHeap` and `bindless::Raster` / `bindless::CnC`.
+FX2 rendering kernels are built exclusively on `GN::gpu2`. Effects are declared
+in `garnet/fx2/bindless/` and operate against a persistent `DescriptorHeap` and `Raster` / `CnC`.
 
 | Kernel | Header | Recording operation |
 | --- | --- | --- |
-| `fx2::bindless::UnlitKernel` | `fx2/bindless/unlit.h` | Draws unlit geometry using bindless material records |
-| `fx2::bindless::LambertianKernel` | `fx2/bindless/lambertian.h` | Diffuse lighting with up to 16 direct lights |
-| `fx2::bindless::CelKernel` | `fx2/bindless/cel.h` | Anime NPR cel shading with multi-band shadow ramps and inverted-hull outline |
-| `fx2::bindless::PbrKernel` | `fx2/bindless/pbr.h` | Metallic/roughness PBR with direct lights and tone mapping |
-| `fx2::bindless::SkyKernel` | `fx2/bindless/sky.h` | Procedural sky and background rendering |
+| `fx2::UnlitKernel` | `fx2/bindless/unlit.h` | Draws unlit geometry using bindless material records |
+| `fx2::LambertianKernel` | `fx2/bindless/lambertian.h` | Diffuse lighting with up to 16 direct lights |
+| `fx2::CelKernel` | `fx2/bindless/cel.h` | Anime NPR cel shading with multi-band shadow ramps and inverted-hull outline |
+| `fx2::PbrKernel` | `fx2/bindless/pbr.h` | Metallic/roughness PBR with direct lights and tone mapping |
+| `fx2::SkyKernel` | `fx2/bindless/sky.h` | Procedural sky and background rendering |
 
 Callers create a kernel with a persistent `DescriptorHeap`, create immutable materials with
-caller parameters, and append draws directly to `bindless::Raster` passes.
+caller parameters, and append draws directly to `Raster` passes.
 Draws carry zero per-draw descriptor allocation or tracking overhead.
 
 Position uses vertex location 0, normal location 1, and UV location 2.
@@ -27,36 +27,27 @@ Readers follow gpu2's read-ready invariant and add no per-draw resource tracking
 
 ## Shared shader constants
 
-SSC retains one scene/camera GPU buffer pair per instance. A snapshot captures
-CPU values into upload work; it does not allocate an independent GPU version.
-
-```text
-upload A -> every consumer of A -> upload B -> every consumer of B
-```
-
-Uploading A and B first and then drawing both makes both draws observe B. An
-upload cannot occur between draws inside one physical raster pass: use pass
-boundaries or separate SSC instances for distinct views. Preserve initialization
-payloads when discarding a snapshot; SSC transfers pending initialization work
-once and does not automatically return it again. Mutations of public `set0` and
-snapshot creation must be caller-synchronized.
-
-Set 0 is shared across effects: binding 0 scene/frame/lights, binding 1 camera,
-and bindings 2–5 skybox/irradiance/prefiltered environment/BRDF lookup. Set 1 holds
-kernel-private data. CPU parameters are packed into the shader ABI internally;
-callers should not include private packing headers. SSC owns shared data and
-environment preparation; `SkyKernel` owns background rendering.
+`fx2::SharedShaderConstants` owns versioned uniform storage shared by
+bindless kernels. Callers create an SSC with fixed uniform and streaming budgets,
+fill the public `SharedUniforms` schema, and record each version through
+the caller's bindless CnC. Every update has an independent GPU range, so producers
+can be submitted before consumers without snapshots aliasing later CPU updates.
+See the versioned uniform store section below for ownership and ordering details.
 
 ## ImGui backend
 
-`fx2::ImGuiBackend` owns a Dear ImGui context and records into the caller's
-`gpu2::GpuRaster`. The caller owns the native event loop. Call `newFrame()`, build
+`fx2::ImGuiBackend` owns a Dear ImGui context and records into a caller-owned
+`gpu2::Raster`. Supply the same `DescriptorHeap` and heap set index to
+the backend and each raster. The backend allocates sampled-texture indices for
+the font atlas and registered textures, then writes those indices into each draw's
+immediate data. The caller owns the native event loop. Call `newFrame()`, build
 widgets, `render()`, then `record(raster, uploads)`. Submit returned uploads before
 the raster. On recording failure, discard the raster. Callers select target alpha
 blending; the backend sets UI depth/culling/scissor state per draw.
 
 Record before starting the next ImGui frame or modifying registered textures.
-Payloads retain their buffers/textures until completion. The backend disables
+Raster payloads retain each texture descriptor lease until completion, so
+unregistered slots are not recycled while recorded work can still use them. The backend disables
 `imgui.ini` persistence by default. An E2 application can wrap it in a
 `VisualOverlay`; standalone tools use it directly without E2.
 
@@ -64,18 +55,6 @@ Payloads retain their buffers/textures until completion. The backend disables
 headless run). The mesh viewer uses public typed effects and owns import,
 navigation, GPU resource preparation, and frame submission. No tool should
 include FX2's private shader headers or recreate effect parameter packing.
-
-## Bindless design: separate `fx2::bindless` implementation
-
-The second implementation attempt adds new classes in `GN::fx2::bindless`.
-Existing `GN::fx2` classes, shader contracts, and callers remain intact. The first
-attempt is retained in a stash as reference; it is not the implementation baseline.
-The resumable plan is [FX2_BINDLESS_DEVICE.txt](../../../agent/FX2_BINDLESS_DEVICE.txt).
-
-Implement one small, verifiable step at a time. New bindless classes use the existing
-`gpu2::bindless::DescriptorHeap`, `Raster`, and `CnC` facilities. Applications opt
-into the new path explicitly; wholesale caller migration and legacy API removal
-are outside this attempt. Keep `gpu2::GpuContext` named as-is.
 
 ### GPU resource layout
 
@@ -112,9 +91,9 @@ and the SSC uniform records only which chunk is selected.
 
 ### SSC-owned storage
 
-A long-lived `fx2::bindless::SharedShaderConstants` (SSC) owns the uniform and
+A long-lived `fx2::SharedShaderConstants` (SSC) owns the uniform and
 streaming stores shared by new kernels. There is no separate
-`fx2::bindless::Device` class. SSC is created with a GPU context and has no
+`fx2::Device` class. SSC is created with a GPU context and has no
 descriptor-heap dependency.
 
 | Store | Set / binding | Entry lifetime | Transfer mechanism |
@@ -150,8 +129,7 @@ upload A -> upload B -> consumers B -> consumers A
 ```
 
 Range offsets and sizes must obey GPU uniform buffer alignment and range limits.
-Multiple passes share one state without duplicating producer work. The existing
-`fx2::SharedShaderConstants` and its snapshot API are unchanged.
+Multiple passes share one state without duplicating producer work.
 
 #### Streaming pool
 
@@ -244,13 +222,13 @@ results are historical evidence, not verification of the second attempt.
 
 ### Bindless metallic/roughness PBR
 
-`fx2::bindless::PbrKernel` and `PbrMaterial` are declared in `fx2/bindless/pbr.h` and use a PBR-specific material record. Parameters include base color, emissive, metallic, roughness, normal scale, occlusion strength, opacity, and optional base-color/normal/emissive/occlusion/metal-roughness maps. The Vulkan shader evaluates GGX distribution, Schlick Fresnel, Smith geometry, direct point and directional lights, and Reinhard tone mapping with SSC exposure. Metal/roughness maps use G for roughness and B for metallic; normal maps use a derivative-built tangent frame. This kernel has no image based lighting path. `GNsample-fx2-pbr` demonstrates two materials with contrasting metallic and roughness values through the public bindless API.
+`fx2::PbrKernel` and `PbrMaterial` are declared in `fx2/bindless/pbr.h` and use a PBR-specific material record. Parameters include base color, emissive, metallic, roughness, normal scale, occlusion strength, opacity, and optional base-color/normal/emissive/occlusion/metal-roughness maps. The Vulkan shader evaluates GGX distribution, Schlick Fresnel, Smith geometry, direct point and directional lights, and Reinhard tone mapping with SSC exposure. Metal/roughness maps use G for roughness and B for metallic; normal maps use a derivative-built tangent frame. This kernel has no image based lighting path. `GNsample-fx2-pbr` demonstrates two materials with contrasting metallic and roughness values through the public bindless API.
 
 ### Bindless cel shading
 
-`fx2::bindless::CelKernel` and `CelMaterial` are declared in `fx2/bindless/cel.h`. The effect provides stylized anime/cartoon NPR rendering with multi-band quantized diffuse shadow ramps (cool/warm shadow tints), sharp stepped Blinn-Phong specular highlights, stylized Fresnel rim lighting with light-direction bias, and an inverted-hull silhouette outline pass with clip-space aspect-ratio-corrected normal extrusion. `GNsample-fx2-cel-shading` demonstrates the effect over a procedural sphere using the public bindless API.
+`fx2::CelKernel` and `CelMaterial` are declared in `fx2/bindless/cel.h`. The effect provides stylized anime/cartoon NPR rendering with multi-band quantized diffuse shadow ramps (cool/warm shadow tints), sharp stepped Blinn-Phong specular highlights, stylized Fresnel rim lighting with light-direction bias, and an inverted-hull silhouette outline pass with clip-space aspect-ratio-corrected normal extrusion. `GNsample-fx2-cel-shading` demonstrates the effect over a procedural sphere using the public bindless API.
 
-`fx2::bindless::UnlitKernel` and `LambertianKernel` use only SSC's public
+`fx2::UnlitKernel` and `LambertianKernel` use only SSC's public
 `UniformState` contract and the standard `SharedUniforms` schema in the SSC
 header. Upload the bytes with `recordUniformUpdate()`, then use
 `sharedUniformResources(state)` as the caller-owned Raster's pass resources.

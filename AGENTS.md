@@ -2,7 +2,7 @@
 
 This is the Codex-facing repo guide. It consolidates the consumed guidance from
 `CLAUDE.md`, `.claude/rules/*`, `.claude/context.md`, `.cursor/rules/*`,
-`.cursor/skills/*`, `agent/README.md`, and the project docs. Prefer this file
+`.cursor/skills/*`, `agent/harness/README.md`, and the project docs. Prefer this file
 first, then use the focused skill notes under `agent/skills/`.
 
 ## Project
@@ -15,17 +15,27 @@ Important directories:
 
 - `src/inc/garnet/`: public monolithic headers.
 - `src/core/`: core implementation.
-- `src/core/rdg2/`: RDG2, the active render graph module.
+- `src/core/rdg2/`: RDG2, an early-prototyping render-graph module; do not treat
+  its current structure as a stable architecture reference.
 - `src/core/fx2/`: FX2, graph-agnostic effects built on gpu2.
-- `src/core/gpu2/`: gpu2 abstraction layer used by FX2 and RDG2.
-- `src/core/e2/`: engine2 (`GN::e2`), spatial/engine layer; public include
-  `GNengine2.h`.
+- `src/core/gpu2/`: gpu2 abstraction layer used by FX2; the current RDG2
+  prototype also uses it, but that relationship is not a stable architecture
+  commitment.
+- `src/core/e2/`: early-prototyping engine2 (`GN::e2`) spatial/engine layer;
+  do not treat its current structure as a stable architecture reference; public
+  include `GNengine2.h`.
 - `src/sample/`: sample applications.
 - `src/core/<module>/test/`: module-local tests, auto-picked up by
   `GNtest-internal`; `src/test/`: older shared tests.
 - `env/bin/`: build, CIT, formatting, shader, and utility scripts.
-- `agent/`: AI assignment notes, skill files, and the archive of finished
-  agent docs (`agent/completed/`).
+- `agent/harness/`: codebase-independent ASEH framework and initialization
+  procedures.
+- `agent/skills/`: Garnet-specific reusable skills, maintained primarily by
+  agents and also editable by humans.
+- `agent/knowledge/`: curated codebase catalog and query guidance; authoritative
+  facts remain in source, build files, tests, and module documentation.
+- `agent/workspace/`: active task state; `agent/completed/`: signed-off task
+  archives. `agent/README.md` documents this repository's host configuration.
 
 ## Build, Test, Format
 
@@ -128,7 +138,7 @@ data can only be decoded by `llvm-cov`, not GNU `gcov`.
   valid values and caller usage as applicable. Avoid restating self-explanatory names.
 
 - Keep changes small and local. If a task wants large diffs across many files,
-  split it into verifiable steps and track it in `agent/`.
+  split it into verifiable steps and track it in `agent/workspace/<task>/`.
 - Prefer existing project patterns and helper APIs over new abstractions.
 - Warnings are errors. Keep code portable across MSVC, GCC, and Clang.
 - Public headers expose only contracts needed by other modules. Keep implementation-only
@@ -174,8 +184,8 @@ data can only be decoded by `llvm-cov`, not GNU `gcov`.
 
 ## Assignment Files
 
-Use `agent/<SCREAMING_SNAKE_TITLE>.txt` for multi-step work that must be
-resumable. Follow the format described in `agent/README.md`.
+Use `agent/workspace/<task>/TASK.md` for multi-step work
+that must be resumable. Follow the format described in `agent/harness/README.md`.
 
 Every assignment task should be verifiable with build/test/sample output or a
 clear manual check. Each non-future task needs `Verify:` and `Commit:` lines.
@@ -185,18 +195,20 @@ Keep agent task files active until the user explicitly signs off the work or
 explicitly requests archival. Completion, verification, merging, supersession,
 or abandonment alone do not authorize archival. While awaiting sign-off, record
 that status in the task file. After user sign-off or an explicit archive request,
-move the doc to `agent/completed/`, prefixing its filename with the current
-UTC timestamp as `yyyy-mm-dd-hhmmss-` (always UTC, never local time).
+move the entire task directory to `agent/completed/<task>-<yyyy-MM-dd-HHmmss>/`.
+The timestamp is UTC and is part of the directory name.
 That folder is the archive of past work
 and a reference for how existing code came to be. See
 `agent/skills/garnet-agent-doc-archive/SKILL.md`.
 
 ## RDG2 Module
 
-RDG2 (`GN::rdg2`) is the primary active rendering abstraction. Public include
-`GNrdg2.h`, implementation `src/core/rdg2/`, public headers
-`src/inc/garnet/rdg2/`. RDG2 may consume FX2 through graph-specific adapters;
-FX2 must not depend on RDG2. RDG v1 has been removed from the tree.
+**Status: early prototyping.** RDG2 (`GN::rdg2`) is an experimental render-graph
+prototype, not a stable architecture or API reference. Use its code and docs to
+understand the current prototype only; do not generalize its structure or
+contracts to stable Garnet modules. Reconfirm requirements before extending or
+depending on it. Public include `GNrdg2.h`, implementation `src/core/rdg2/`,
+public headers `src/inc/garnet/rdg2/`. RDG v1 has been removed from the tree.
 
 RDG2 is a playground for graph designs with two generations:
 
@@ -208,16 +220,23 @@ RDG2 is a playground for graph designs with two generations:
   128-bit counter; `OOO()` means the next published version.
 - Render graph take 2 (`closed-graph.h`) is the active design: `Quest`, `Plan`,
   and `Execution` over versioned `Artifact`/`Relic` data. The canonical design
-  and status document is `src/core/rdg2/README.md`; `agent/` holds only
-  concrete implementation assignments.
+  and status document is `src/core/rdg2/README.md`; active implementation
+  assignments live under `agent/workspace/<task>/TASK.md`.
 
 Known open-graph gaps include multi-worker execution, descriptor/resource
 binding paths, indexed draw coverage, and file-path shader loading.
 
 ## E2 World Runtime
 
-The canonical approved design is `src/core/e2/README.md`; implementation progress
-is tracked in `agent/E2_WORLD_RUNTIME.txt`. SimpleWorld and mesh-viewer are out of
+**Status: early prototyping.** E2 is an experimental world-runtime prototype,
+not a stable architecture or API reference. Its current code and design notes
+are useful for understanding the prototype only; do not treat their structure,
+contracts, or policy decisions as stable Garnet conventions. Reconfirm
+requirements before extending or depending on them. Design and implementation
+notes for the prototype are in `src/core/e2/README.md`;
+historical task details are archived in
+`agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt`.
+SimpleWorld and mesh-viewer are out of
 scope and must not constrain this refactor.
 
 - Form, Law, Intent and Event are extensible Being-derived objects. Facet and
@@ -290,8 +309,8 @@ and must not include or reference RDG2 or E2.
 
 ## gpu2 Module
 
-gpu2 is `GN::gpu2`, used by RDG2. Vulkan is active; D3D12 and Metal factories
-are stubs.
+gpu2 is `GN::gpu2`. The current RDG2 prototype uses it. Vulkan is active;
+D3D12 and Metal factories are stubs.
 
 Key conventions:
 

@@ -46,11 +46,11 @@ VkBindlessPipelineLayoutCache::~VkBindlessPipelineLayoutCache() {
     }
 }
 
-vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const bindless::Raster::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap) {
+vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreate(const Raster::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap) {
     return getOrCreateInternal(cp.heapSetIndex, cp.maxImmediateSize, cp.passResources, vkHeap, vk::ShaderStageFlagBits::eAllGraphics);
 }
 
-vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreateCompute(const bindless::CnC::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap) {
+vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreateCompute(const CnC::CreateParameters & cp, VkBindlessDescriptorHeap * vkHeap) {
     return getOrCreateInternal(cp.heapSetIndex, cp.maxImmediateSize, cp.passResources, vkHeap, vk::ShaderStageFlagBits::eCompute);
 }
 

@@ -1,4 +1,4 @@
-/// simple-compute: demonstrates GpuCnC compute dispatch.
+/// simple-compute: demonstrates bindless CnC compute dispatch.
 ///
 /// Fills a GPU storage buffer with the values [0, 1, 2, ..., N-1], dispatches
 /// a compute shader that adds 10.0 to each element, then reads back the buffer
@@ -19,6 +19,7 @@ using namespace GN::gpu2;
 struct PushConstants {
     uint32_t count;
     float    increment;
+    uint32_t dataIndex;
 };
 
 static bool submitAndWait(GpuContext * gpu, AutoRef<GpuPayload> payload) {
@@ -62,27 +63,37 @@ int main() {
         return -1;
     }
 
-    // Bind the storage buffer at set=0, binding=0.
+    // The shader resolves this storage buffer through the descriptor heap.
+    auto heap = DescriptorHeap::create("simple-compute-heap", {.gpu = gpu, .capacity = 1});
+    if (!heap) {
+        std::fprintf(stderr, "Failed to create bindless descriptor heap\n");
+        return -1;
+    }
+    const auto bufferView = GpuResourceView {buf}.setBufferViewType(GpuResourceView::BufferView::STORAGE);
+    const auto dataIndex  = heap->allocate(DescriptorHeap::STORAGE_BUFFER, bufferView);
+    if (dataIndex == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
+        std::fprintf(stderr, "Failed to allocate storage-buffer descriptor\n");
+        return -1;
+    }
+
+    // Declare the writable resource for pass-level hazard tracking (set 1).
     GpuResourceTable resources;
-    resources.resize(1);    // 1 descriptor set
-    resources[0].resize(1); // 1 binding
-    resources[0][0].resize(1);
-    resources[0][0][0].resource   = buf;
-    resources[0][0][0].bufferView = {GpuResourceView::BufferView::STORAGE, 0, 0};
+    resources.resize(2);
+    resources[1].resize(1);
+    resources[1][0].append(bufferView);
 
     // Dispatch: one thread per element, in groups of 64.
     constexpr uint32_t GROUPS = (COUNT + 63) / 64;
 
-    PushConstants pc {(uint32_t) COUNT, INCREMENT};
+    PushConstants pc {(uint32_t) COUNT, INCREMENT, dataIndex.slot};
 
-    auto cnc = GpuCnC::create({.gpu = gpu});
+    auto cnc = CnC::create("simple-compute", {.gpu = gpu, .heap = heap, .passResources = resources});
     if (!cnc) {
-        std::fprintf(stderr, "Failed to create GpuCnC\n");
+        std::fprintf(stderr, "Failed to create bindless CnC\n");
         return -1;
     }
-    GpuCnC::ComputeParameters cp;
+    CnC::ComputeParameters cp;
     cp.cs         = cs;
-    cp.resources  = resources;
     cp.immediates = {reinterpret_cast<const uint8_t *>(&pc), sizeof(pc)};
     cp.x          = GROUPS;
     cnc->recordCompute(cp);

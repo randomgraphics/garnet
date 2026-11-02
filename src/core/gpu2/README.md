@@ -8,25 +8,23 @@
 
 
 ### The Single Currency: `GpuPayload`
-To the caller, all unsubmitted GPU work—regardless of whether it represents rasterization, compute, memory copy, bound rendering, or bindless rendering—is represented by an opaque `AutoRef<GpuPayload>`.
+To the caller, all unsubmitted GPU work—whether rasterization, compute, or memory copy—is represented by an opaque `AutoRef<GpuPayload>`.
 - The caller records work into a recorder object and calls `seal()`.
 - `seal()` returns an `AutoRef<GpuPayload>`, finalizing the recording and sealing internal state.
 - The caller submits the payload to the GPU via `GpuContext::submit(SubmitParameters("...").appendWork(payload))` or simply drops it if no longer needed.
 - Under the hood, `GpuPayload` subclasses manage native command buffers and keep all dependent resources (geometry, textures, constant buffers, transient memory) alive until GPU execution completes (`onGpuComplete()`).
 
-### Coexistence of Rendering Paradigms
-GPU2 provides two distinct raster paths tailored for different workloads:
-1. **`GN::gpu2::GpuRaster`**: The traditional bound-rendering path. Safe, convenient, handles per-draw `GpuResourceTable` binding and hazard tracking automatically.
-2. **`GN::gpu2::bindless::Raster`**: The high-performance bindless rendering path. Completely bypasses descriptor set thrashing and per-draw table scanning, enabling tens of thousands of unique draws at maximum hardware throughput.
+### Bindless Raster Passes
+GPU2 raster work is recorded through `GN::gpu2::Raster`. Draws access heap resources by descriptor index; pass-wide descriptors use `CreateParameters::passResources`. There is no per-draw resource table binding path.
 
 ---
 
-## 2. Bindless Rendering Architecture (`GN::gpu2::bindless`)
+## 2. Bindless Rendering Architecture (`GN::gpu2`)
 
-The bindless subsystem lives entirely within `namespace GN::gpu2::bindless` and is declared in `<garnet/gpu2/bindless.h>` (included via `<garnet/GNgpu2.h>`).
+The bindless subsystem lives entirely within `namespace GN::gpu2` and is declared in `<garnet/gpu2/bindless.h>` (included via `<garnet/GNgpu2.h>`).
 
 ### A. The "Read-Ready" Invariant (Zero Per-Draw Barrier Overhead)
-In traditional rendering, recorders recursively scan and hash every draw's resource table to discover layout transitions and hazards. This causes heavy CPU overhead on large scenes.
+Bindless raster draws avoid scanning per-draw resource tables. Resources that need state tracking across a pass are declared through pass resources, while sampled heap resources are expected to be in read-ready layouts.
 
 The bindless subsystem eliminates per-draw scanning by establishing a universal invariant:
 - **Default State**: All textures in the bindless heap reside in `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`, and all buffers reside in "read-ready" state.
@@ -40,7 +38,7 @@ Layout and barrier management is completely automated and invisible to the user.
 
 ---
 
-### B. Persistent Global Descriptor Heap (`bindless::DescriptorHeap`)
+### B. Persistent Global Descriptor Heap (`DescriptorHeap`)
 
 The heap owns one persistent descriptor set containing a material SSBO followed
 by five typed resource arrays.
@@ -82,7 +80,7 @@ must still be declared through the recorder's existing pass resources.
 ### B.1. Built-in Material Buffer
 
 The first implementation of this extension is a fixed-capacity mini heap inside
-`bindless::DescriptorHeap`. The growth design below is a subsequent step. The heap will own both its existing descriptor arrays and a material buffer.
+`DescriptorHeap`. The growth design below is a subsequent step. The heap will own both its existing descriptor arrays and a material buffer.
 The buffer is a generic store for relatively long-lived, read-only, non-uniform
 GPU records. "Material" names its common use; gpu2 does not know the contents of
 any record, shader schema, FX2 kernel type, or descriptor indices packed inside.
@@ -155,13 +153,13 @@ verify consumption of heap-owned records, not another allocation implementation.
 
 ---
 
-### C. Bindless Raster Recorder (`bindless::Raster`)
+### C. Bindless Raster Recorder (`Raster`)
 
 #### Plain POD Configuration
 Callers describe their pass requirements using a plain POD `CreateParameters` struct without touching native pipeline layout objects:
 
 ```cpp
-namespace GN::gpu2::bindless {
+namespace GN::gpu2 {
 
 struct Raster::CreateParameters {
     AutoRef<GpuContext>     gpu;
@@ -187,7 +185,7 @@ Draws do not carry a `GpuResourceTable`. They specify only:
 - Push constants (`immediates`: transforms, material BDA addresses, bindless texture IDs)
 
 #### Parameter Buffer Retention
-`bindless::Raster::retainResource(AutoRef<RCRT64> resource)` allows higher-level modules (`fx2`) to attach dynamic per-draw parameter buffers, material buffers, or textures to the recorder. The sealed `GpuPayload` holds these references until GPU execution completes.
+`Raster::retainResource(AutoRef<RCRT64> resource)` allows higher-level modules (`fx2`) to attach dynamic per-draw parameter buffers, material buffers, or textures to the recorder. The sealed `GpuPayload` holds these references until GPU execution completes.
 
 #### Direct Vulkan Recording & Dynamic Rendering
 Bypasses `rv::Drawable` and descriptor pools entirely:
@@ -198,18 +196,8 @@ Bypasses `rv::Drawable` and descriptor pools entirely:
 - Per draw: Emits direct `vkCmdPushConstants`, `vkCmdBindVertexBuffers`, `vkCmdBindIndexBuffer`, and `vkCmdDrawIndexed` with consecutive state deduplication.
 - At pass end: `ctx.batchTracker->restoreAttachmentToShaderReadOnly()` transitions attachments to `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` with write-to-read barrier execution and synchronization with CPU tracker state.
 
-#### Interleaved Bind-Based Draws in `bindless::Raster` (`recordBindBasedDraw`)
-`bindless::Raster` supports occasional bind-based draws within the same render pass via:
-```cpp
-virtual void recordBindBasedDraw(const DrawParameters & params, const GpuResourceTable & drawResources) = 0;
-```
-This allows incorporating overlays (such as Dear ImGui UI rendering via `fx2::ImGuiBackend`) directly into the main bindless scene pass without closing the pass or performing expensive backbuffer reloads.
-
-- **Fast-Path Preservation**: Pure bindless draws (`recordDraw`) retain their zero-overhead fast path with zero descriptor compilation, zero hazard scanning, and compiler branch hints (`GN_UNLIKELY`) that bypass bound draw switching.
-- **Dedicated Method & Usage Guidance**: Intended strictly for occasional use (e.g. issuing a small number of UI draws at the end of a bindless pass). Bound draws compile descriptor sets, track resource hazards, and switch pipeline layouts; abusing this method will degrade bindless render pass performance.
-- **Descriptor Heap Set Conflict Check**: `drawResources` must not define bindings in the same descriptor set as `heapSetIndex`. If a conflict occurs, the draw fails and is rejected immediately.
-- **Dynamic Descriptor Sets & Pipeline Layout Switching**: Unique bound resource tables are compiled into descriptor sets at `seal()` time. During submit, `VkBindlessPayload` switches pipeline layouts and non-heap descriptor sets on demand, restoring the baseline pass layout for subsequent pure bindless draws.
-- **Hazard & Lifetime Tracking**: Bound resource tables are registered with `GpuResourceStateTrackerVulkan` for automated barrier generation, and all referenced resources are retained for the lifetime of the sealed payload and GPU execution.
+#### Pass Resource Binding
+All shader resources used by raster passes are addressed through the persistent descriptor heap or declared as pass-wide resources. An overlay that needs a separate shader/resource layout is recorded in a separate raster pass, with attachment load policy set on its `RasterTarget`.
 
 ---
 
@@ -227,7 +215,7 @@ This allows incorporating overlays (such as Dear ImGui UI rendering via `fx2::Im
 
 ---
 
-### E. Future Extensibility to Copy and Compute (`bindless::CnC`)
+### E. Future Extensibility to Copy and Compute (`CnC`)
 The bindless model extends naturally to compute and memory operations:
 - `DescriptorHeap` allocates storage image (UAV) and storage buffer indices via `GpuResourceView`.
 - Compute dispatches take push constants (BDA addresses, storage indices) without a `GpuResourceTable`.

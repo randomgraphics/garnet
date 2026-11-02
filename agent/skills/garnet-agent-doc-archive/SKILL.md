@@ -1,45 +1,43 @@
 ---
 name: garnet-agent-doc-archive
-description: Archive finished agent docs (assignments, specs, plans, tasks) into agent/completed/. Use when agent-tracked work finishes, when cleaning up agent/, or when researching how existing code or a feature came to be.
+description: Archive completed Garnet task workspaces into agent/completed/<task>-<date-time>/. Use when a task has completed and received user sign-off or explicit archival authorization, or when researching historical work.
 ---
 
-# Garnet Agent Doc Archive
+# Garnet Task Archive
 
-`agent/` holds AI agent working documents. Keep ongoing work and work awaiting
-manual user sign-off in place. Move a document to `agent/completed/` only after
-the user explicitly signs off the work or explicitly requests its archival.
+Active task state lives in `agent/workspace/<task>/`. Keep the task directory
+there while work is active or awaiting user sign-off. Do not archive a task just
+because implementation or verification is complete; require explicit user
+sign-off or an explicit archive request.
 
-## The archive
+## Archive procedure
 
-`agent/completed/` is the archive of past finished work. Its main purpose is
-reference: when you need to understand how certain code or a feature came into
-place, look for its assignment/spec/plan there before reverse-engineering the
-code. When work carries subfolder structure (e.g. `agent/superpower/specs/`),
-preserve that structure under `agent/completed/`.
+1. Confirm the task's final status, summary, changed-code references, and
+   verification evidence are recorded in its `TASK.md` and supporting files.
+2. Generate a UTC timestamp in `yyyy-MM-dd-HHmmss` format.
+3. Move the entire workspace with `git mv` to
+   `agent/completed/<task>-<yyyy-MM-dd-HHmmss>/`.
+4. Preserve filenames and the internal directory structure. Update live links
+   to the moved task; do not rewrite historical records merely to refresh old
+   paths inside them.
 
-## When to archive
+For example, `agent/workspace/d3d12-gpu2/` becomes
+`agent/completed/d3d12-gpu2-2026-10-31-231500/`. In PowerShell, generate the
+timestamp with:
 
-Implementation completion, passing checks, merges, supersession, abandonment, and
-git history do not authorize archival. After finishing the authorized work,
-record its verification and mark it as awaiting manual user sign-off. Keep the
-document in its active location until that sign-off or an explicit archive
-request arrives.
+```powershell
+[DateTime]::UtcNow.ToString('yyyy-MM-dd-HHmmss', [Globalization.CultureInfo]::InvariantCulture)
+```
 
-## Rules
+In Bash, use `date -u +%Y-%m-%d-%H%M%S`.
 
-- Move with `git mv`; do not copy.
-- Always prefix the filename with the current UTC timestamp at archival time,
-  in `yyyy-mm-dd-hhmmss` format, followed by a hyphen and the original filename:
-  `agent/completed/2026-09-07-163045-MY_ASSIGNMENT.txt`. Use a 24-hour clock
-  and standard UTC, never local time or a daylight-saving offset. Preserve any
-  subfolder structure; the prefix belongs on the filename.
-  In PowerShell, generate it with
-  `[DateTime]::UtcNow.ToString('yyyy-MM-dd-HHmmss', [Globalization.CultureInfo]::InvariantCulture)`;
-  in Bash, use `date -u +%Y-%m-%d-%H%M%S`.
-- Existing archived filenames remain unchanged; apply the prefix when moving
-  a document into the archive.
-- Archived docs are historical records. Do not rewrite them; stale paths and
-  old naming inside them document what was true at the time.
-- Update any live references to the doc's old path (grep before moving).
-- Ongoing docs that reference a newly archived doc should be updated to the
-  archived path or have the reference removed.
+## Historical imports
+
+When reorganizing legacy archive documents that have no archival timestamp in
+their names, use the UTC timestamp of the commit that last archived or updated
+the record when available. Keep the original document unchanged and record this
+timestamp convention in `agent/completed/README.md`; treat the timestamp as an
+archive record date, not necessarily the date implementation finished.
+
+Archived task work is reference material. Do not rewrite it or delete it as
+part of routine cleanup. Update live references when an archive path changes.

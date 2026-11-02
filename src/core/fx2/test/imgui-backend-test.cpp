@@ -2,9 +2,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <garnet/GNfx2.h>
-#if 0 // Only needed by the suspended Simple-world integration case below.
-    #include <garnet/GNengine2.h>
-#endif
 
 namespace {
 
@@ -29,41 +26,16 @@ struct TestWindow final : GN::win::WindowInput {
     bool                  runUntilNoNewEvents(bool) override { return true; }
 };
 
-#if 0 // Suspended with E2 Simple world; standalone FX2 coverage remains active.
-// E2 integration is an explicit client adapter; the backend itself only knows gpu2.
-struct ImGuiOverlay final : GN::e2::VisualOverlay {
-    GN_REGISTER_RUNTIME_TYPE(GN::e2::VisualOverlay);
-    GN::AutoRef<GN::fx2::ImGuiBackend> backend;
-    explicit ImGuiOverlay(GN::AutoRef<GN::fx2::ImGuiBackend> value): VisualOverlay(TYPE_INFO(), "imgui-test-overlay"), backend(std::move(value)) {}
-    int32_t zOrder() const override { return z; }
-    void    setZOrder(int32_t value) override { z = value; }
-    bool    record(RenderContext & context) const override {
-        GN::AutoRef<GN::gpu2::GpuPayload> upload;
-        if (!backend->record(context.raster(), upload)) return false;
-        if (upload) context.upload(upload);
-        return true;
-    }
-    int32_t z = 0;
-};
-
-#endif
-
 } // namespace
 
 TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[fx2][imgui][gpu]") {
     using namespace GN;
     auto gpu = gpu2::GpuContext::create("imgui-test", {});
     if (!gpu) SKIP("No Vulkan GPU context is available");
-#if 0 // Retain the old Simple-world setup with its disabled integration case.
-    e2::Universe universe;
-    auto         visual = e2::VisualDomain::create({.universe = universe, .os = {}});
-    if (!visual) SKIP("No headless Vulkan visual domain is available");
-    const auto gpu = visual->gpu();
-
-#endif
-
     TestWindow window;
-    auto       backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window});
+    auto       heap = ::GN::gpu2::DescriptorHeap::create("imgui-smoke-heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+    auto backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window, .heap = heap});
     REQUIRE(backend);
     window.updateMousePosition(20, 20);
     window.notifyKeyPress(win::KeyCode::A, true);
@@ -94,7 +66,7 @@ TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[
     auto & blend   = target.colorTargets[0].blendState;
     blend.colorSrc = gpu2::RasterTarget::BlendState::SRC_ALPHA;
     blend.colorDst = gpu2::RasterTarget::BlendState::INV_SRC_ALPHA;
-    auto raster    = gpu2::GpuRaster::create("imgui-test-raster", {.gpu = gpu, .target = &target});
+    auto raster    = ::GN::gpu2::Raster::create("imgui-test-raster", {.gpu = gpu, .target = &target, .heap = heap});
     REQUIRE(raster);
 
     AutoRef<gpu2::GpuPayload> upload;
@@ -118,47 +90,34 @@ TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[
     CHECK(r == 255);
     CHECK(g == 255);
     CHECK(b == 255);
-
-#if 0 // Simple-world integration is not a prerequisite for FX2 rendering.
-    backend->newFrame(1.0f / 60.0f);
-    ImGui::Begin("E2 overlay smoke");
-    ImGui::TextUnformatted("overlay draw appended after world geometry");
-    ImGui::End();
-    backend->render();
-
-    auto world      = e2::Simple::createWorld(universe, e2::PhysicalScale::METER());
-    auto meters     = [&](float value) { return world->scale.fromMeters(value); };
-    auto coordinate = [&](float value) { return e2::spatial::toWorld(meters(value)); };
-    auto box        = e2::Simple::createBox(universe, {coordinate(0), coordinate(0), coordinate(0)}, {meters(1), meters(1), meters(1)});
-    auto camera     = e2::Camera::create({.domain = visual});
-    REQUIRE(world);
-    REQUIRE(box);
-    REQUIRE(camera);
-    e2::Ref<e2::Form> forms[] = {box};
-    world->populate({forms, 1});
-    camera->desc.position         = {coordinate(0), coordinate(0), coordinate(4)};
-    camera->desc.nearPlane        = meters(0.1f);
-    camera->desc.farPlane         = meters(100.0f);
-    e2::Ref<e2::Camera> cameras[] = {camera};
-    auto                moment    = world->snapshot({.domain = visual, .cameras = {cameras, 1}});
-    REQUIRE(moment);
-    moment->add(referenceTo(new ImGuiOverlay(backend)));
-    visual->renderFrame({.tableau = moment});
-    REQUIRE(!visual->readbackFrame().empty());
-#endif
 }
 
-TEST_CASE("fx2 ImGui backend records into bindless::Raster with configurable resourceSetIndex", "[fx2][imgui][gpu][bindless]") {
+TEST_CASE("fx2 ImGui backend samples registered textures through bindless indices", "[fx2][imgui][gpu][bindless]") {
     using namespace GN;
     auto gpu = gpu2::GpuContext::create("imgui-bindless-test", {});
     if (!gpu) SKIP("No Vulkan GPU context is available");
 
     TestWindow window;
-    auto       backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window, .resourceSetIndex = 2});
+    auto       heap = ::GN::gpu2::DescriptorHeap::create("imgui-test-heap", {.gpu = gpu, .capacity = 16});
+    REQUIRE(heap);
+    auto backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window, .heap = heap, .heapSetIndex = 2});
     REQUIRE(backend);
 
     backend->newFrame(1.0f / 60.0f);
     ImGui::GetBackgroundDrawList()->AddRectFilled({0, 0}, {320, 240}, IM_COL32(0, 255, 0, 255));
+    auto sampledTexture = gpu2::Texture::create(
+        "imgui-sampled-test-texture",
+        {.context = gpu, .descriptor = gpu2::Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_8_8_8_8_UNORM()).setDimensions(1, 1).setLevels(1)});
+    REQUIRE(sampledTexture);
+    gfx::img::Extent3D textureExtent;
+    textureExtent.set(1, 1, 1);
+    const uint8_t   redPixel[4]  = {255, 0, 0, 255};
+    const auto      texturePlane = gfx::img::PlaneDesc::make(gfx::img::PixelFormat::RGBA8(), textureExtent);
+    gfx::img::Image textureImage(gfx::img::ImageDesc::make(texturePlane, 1, 1, 1), redPixel, sizeof(redPixel));
+    REQUIRE(sampledTexture->setContent(textureImage));
+    const ImTextureID sampledId = backend->registerTexture(sampledTexture);
+    REQUIRE(sampledId != ImTextureID_Invalid);
+    ImGui::GetBackgroundDrawList()->AddImage(sampledId, {0, 0}, {40, 40});
     backend->render();
     REQUIRE(ImGui::GetDrawData());
     REQUIRE(ImGui::GetDrawData()->TotalVtxCount > 0);
@@ -178,15 +137,12 @@ TEST_CASE("fx2 ImGui backend records into bindless::Raster with configurable res
     blend.colorSrc = gpu2::RasterTarget::BlendState::SRC_ALPHA;
     blend.colorDst = gpu2::RasterTarget::BlendState::INV_SRC_ALPHA;
 
-    auto heap = gpu2::bindless::DescriptorHeap::create("imgui-test-heap", {.gpu = gpu, .capacity = 16});
-    REQUIRE(heap);
-
-    auto raster = gpu2::bindless::Raster::create("imgui-bindless-raster", {
-                                                                              .gpu          = gpu,
-                                                                              .target       = &target,
-                                                                              .heap         = heap,
-                                                                              .heapSetIndex = 0,
-                                                                          });
+    auto raster = ::GN::gpu2::Raster::create("imgui-bindless-raster", {
+                                                                          .gpu          = gpu,
+                                                                          .target       = &target,
+                                                                          .heap         = heap,
+                                                                          .heapSetIndex = 2,
+                                                                      });
     REQUIRE(raster);
 
     AutoRef<gpu2::GpuPayload> upload;
@@ -202,12 +158,14 @@ TEST_CASE("fx2 ImGui backend records into bindless::Raster with configurable res
 
     auto image = targetTexture->readback();
     REQUIRE(!image.empty());
-    const auto * pixels      = reinterpret_cast<const uint32_t *>(image.data());
-    uint32_t     centerPixel = pixels[120 * 320 + 160];
-    uint8_t      r           = centerPixel & 0xFF;
-    uint8_t      g           = (centerPixel >> 8) & 0xFF;
-    uint8_t      b           = (centerPixel >> 16) & 0xFF;
-    CHECK(r == 0);
-    CHECK(g == 255);
-    CHECK(b == 0);
+    const auto *   pixels      = reinterpret_cast<const uint32_t *>(image.data());
+    const uint32_t centerPixel = pixels[120 * 320 + 160];
+    CHECK((centerPixel & 0xFF) == 0);
+    CHECK(((centerPixel >> 8) & 0xFF) == 255);
+    CHECK(((centerPixel >> 16) & 0xFF) == 0);
+    const uint32_t imagePixel = pixels[20 * 320 + 20];
+    CHECK((imagePixel & 0xFF) == 255);
+    CHECK(((imagePixel >> 8) & 0xFF) == 0);
+    CHECK(((imagePixel >> 16) & 0xFF) == 0);
+    backend->unregisterTexture(sampledId);
 }

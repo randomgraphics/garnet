@@ -1,19 +1,23 @@
 ---
 name: garnet-assignment-tracking
-description: Create and maintain Garnet assignment files in agent/. Use for multi-step work, resumable tasks, progress tracking, or assignment-style commits.
+description: Create and maintain Garnet task records in agent/workspace/<task>/. Use for multi-step work, resumable tasks, progress tracking, or assignment-style commits.
 ---
 
 # Garnet Assignment Tracking
 
-Use `agent/<SCREAMING_SNAKE_TITLE>.txt` for complex, multi-step, resumable
-work. Follow the format described in `agent/README.md` exactly.
+Use `agent/workspace/<task>/TASK.md` as the shared task charter for complex,
+multi-step, resumable work. Create one `assignments/<assignment-id>.md` per
+bounded agent invocation for its role-specific instructions, context, progress,
+and handoff. Keep shared decisions in `TASK.md` and link evidence rather than
+duplicating task context. Follow the generic contract in
+`agent/harness/task-workspace.harness.md` and Garnet-specific conventions here.
 
 ## Required Sections
 
 In order:
 
 ```text
-# Assignment: <title>
+# Task: <title>
 ---
 ## Goals
 ---
@@ -55,10 +59,10 @@ Rules:
   line.
 - For assignment work, prefer one verified task per commit and push when the
   assignment workflow calls for shared progress.
-- Keep the assignment file synchronized with the actual code state.
+- Keep `TASK.md` synchronized with shared task state and each assignment file
+  synchronized with its agent's actual scope, progress, and evidence.
 - Keep finished assignments active and marked as awaiting manual user sign-off.
 - Only after explicit user sign-off or an explicit archive request, move the
-  assignment to `agent/completed/` with a
-  current UTC `yyyy-mm-dd-hhmmss-` filename prefix per
+  entire task directory to `agent/completed/<task>-<yyyy-MM-dd-HHmmss>/` per
   `garnet-agent-doc-archive`.
 
