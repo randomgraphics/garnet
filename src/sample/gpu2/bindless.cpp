@@ -535,10 +535,10 @@ int main(int argc, const char ** argv) {
     }
 
     // 4. Create 256 distinct procedural textures and batch allocate into heap
-    constexpr uint32_t                                     NUM_TEXTURES = 256;
-    constexpr uint32_t                                     TEX_SIZE     = 128;
-    std::vector<AutoRef<Texture>>                          textures(NUM_TEXTURES);
-    std::vector<GpuResourceView>                           textureViews(NUM_TEXTURES);
+    constexpr uint32_t                           NUM_TEXTURES = 256;
+    constexpr uint32_t                           TEX_SIZE     = 128;
+    std::vector<AutoRef<Texture>>                textures(NUM_TEXTURES);
+    std::vector<GpuResourceView>                 textureViews(NUM_TEXTURES);
     std::vector<DescriptorHeap::DescriptorIndex> textureSlots(NUM_TEXTURES);
 
     for (uint32_t i = 0; i < NUM_TEXTURES; ++i) {

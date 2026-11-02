@@ -9,11 +9,11 @@ namespace GN::viewer {
 /// Application-owned materials and imported geometry shared by scene instances.
 struct RenderModel {
     struct Material {
-        Shading                                    shading = Shading::PBR;
+        Shading                          shading = Shading::PBR;
         AutoRef<fx2::PbrMaterial>        pbr;
         AutoRef<fx2::LambertianMaterial> lambertian;
         AutoRef<fx2::UnlitMaterial>      unlit;
-        bool                                       doubleSided = false;
+        bool                             doubleSided = false;
     };
 
     struct Instance {
@@ -42,7 +42,7 @@ struct SceneRenderer {
     AutoRef<fx2::UnlitKernel>           unlit;
     AutoRef<fx2::SkyKernel>             sky;
     AutoRef<fx2::SkyMaterial>           skyMaterial;
-    RenderModel                                   model, bounds, axes;
+    RenderModel                         model, bounds, axes;
 
     /// One frame's camera, viewport, and exposure inputs for the shared uniform block.
     struct FrameParameters {
@@ -68,12 +68,10 @@ struct SceneRenderer {
     /// Draws record() appends for the given debug toggles, for raster preallocation.
     size_t drawCount(bool showBounds, bool showAxes) const;
 
-    bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds,
-                bool showAxes) const;
+    bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const;
 
 private:
-    bool recordModel(const RenderModel & source, gpu2::Raster & raster,
-                     const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;
+    bool recordModel(const RenderModel & source, gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;
 };
 
 } // namespace GN::viewer

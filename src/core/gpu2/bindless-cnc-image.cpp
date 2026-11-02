@@ -8,14 +8,14 @@ template<typename Recorder>
 void uploadImage(Recorder & recorder, AutoRef<Texture> dst, const gfx::img::Image & image) {
     if (!dst || image.empty()) return;
     DynaArray<CnC::Region> regions;
-    const auto                format = image.format();
-    const uint32_t            bytes  = format.bytesPerBlock();
+    const auto             format = image.format();
+    const uint32_t         bytes  = format.bytesPerBlock();
     if (!bytes) return;
     for (uint32_t face = 0; face < image.desc().faces; ++face) {
         for (uint32_t level = 0; level < image.desc().levels; ++level) {
             const gfx::img::PlaneCoord coord {0, face, level};
             const auto &               plane = image.plane(coord);
-            CnC::Region     region;
+            CnC::Region                region;
             region.face        = face;
             region.mip         = level;
             region.imageExtent = {(uint32_t) plane.extent.w, (uint32_t) plane.extent.h, (uint32_t) plane.extent.d};

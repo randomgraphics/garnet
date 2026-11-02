@@ -9,7 +9,7 @@ namespace GN::fx2 {
 
 /// Common raster draw inputs shared by bindless raster materials.
 struct CommonDrawParameters {
-    ::GN::gpu2::Raster &                     raster;
+    ::GN::gpu2::Raster &                         raster;
     AutoRef<SharedShaderConstants::UniformState> ssc;
     const gpu2::RasterGeometry &                 geometry;
     const gpu2::RasterState *                    states = nullptr;
@@ -48,7 +48,7 @@ protected:
 struct UnlitKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual UnlitMaterial::Parameters defaultMaterialParameters() const                                                             = 0;
+    virtual UnlitMaterial::Parameters defaultMaterialParameters() const                                                         = 0;
     virtual AutoRef<UnlitMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const UnlitMaterial::Parameters &) const = 0;
 
     GN_API static AutoRef<UnlitKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);

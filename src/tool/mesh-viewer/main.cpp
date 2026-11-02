@@ -393,10 +393,10 @@ int main(int argc, const char * argv[]) {
         blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
 
         auto raster = Raster::create("viewer.frame", {.gpu               = host.gpu,
-                                                                .target            = &target,
-                                                                .heap              = renderer.heap,
-                                                                .passResources     = fx2::sharedUniformResources(uniforms),
-                                                                .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
+                                                      .target            = &target,
+                                                      .heap              = renderer.heap,
+                                                      .passResources     = fx2::sharedUniformResources(uniforms),
+                                                      .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
         if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes)) return EXIT_FAILURE;
 
         AutoRef<GpuPayload> uiUpload;

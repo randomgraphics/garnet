@@ -87,7 +87,7 @@ int main(int argc, const char ** argv) {
         // Empty raster pass: no draw calls, just clears the backbuffer to pure blue.
         // seal() is called immediately so it acts as a clear-only pass.
         rt.setColorTarget(0, frame.view);
-        auto                raster        = Raster::create("hello-world", {.gpu = gpu, .target = &rt, .heap = heap});
+        auto raster = Raster::create("hello-world", {.gpu = gpu, .target = &rt, .heap = heap});
         if (!raster) {
             std::fprintf(stderr, "Failed to create raster\n");
             return -1;

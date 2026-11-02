@@ -12,9 +12,7 @@
 using namespace GN;
 using namespace GN::gpu2;
 
-static AutoRef<CnC> makeCnc(const AutoRef<GpuContext> & gpu) {
-    return CnC::create("gpu2-cnc-async-test", {.gpu = gpu});
-}
+static AutoRef<CnC> makeCnc(const AutoRef<GpuContext> & gpu) { return CnC::create("gpu2-cnc-async-test", {.gpu = gpu}); }
 
 // ── uploadBuffer ──────────────────────────────────────────────────────────────────────
 
@@ -273,12 +271,12 @@ TEST_CASE("GPU2/CnC async: dropping payload without submit resolves downloadImag
 
     REQUIRE(future.valid());
     CnC::TextureContent content = future.get(); // signaled, never throws
-    CHECK(!content.blob);                          // canceled => empty blob
-    CHECK(content.regions.empty());                // ... and empty regions
+    CHECK(!content.blob);                       // canceled => empty blob
+    CHECK(content.regions.empty());             // ... and empty regions
 }
 
 TEST_CASE("GPU2/CnC async: tearing down the GpuContext resolves a pending download future to empty", "[gpu2][cnc][async][gpu]") {
-    std::future<AutoRef<const Blob>>    bufFuture;
+    std::future<AutoRef<const Blob>> bufFuture;
     std::future<CnC::TextureContent> imgFuture;
     {
         auto gpu = makeGpu();

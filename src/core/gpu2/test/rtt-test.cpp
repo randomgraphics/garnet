@@ -24,9 +24,7 @@ static ArrayView<const uint8_t> makePushConstants(const T & value) {
     return {(const uint8_t *) &value, sizeof(value)};
 }
 
-static AutoRef<DescriptorHeap> makeRasterHeap(const AutoRef<GpuContext> & gpu) {
-    return DescriptorHeap::create("rtt-test-heap", {.gpu = gpu, .capacity = 16});
-}
+static AutoRef<DescriptorHeap> makeRasterHeap(const AutoRef<GpuContext> & gpu) { return DescriptorHeap::create("rtt-test-heap", {.gpu = gpu, .capacity = 16}); }
 
 static bool addSharedSampler(const AutoRef<GpuContext> & gpu, const AutoRef<DescriptorHeap> & heap) {
     auto sampler = Sampler::create("rtt-test-sampler", {.context = gpu});
@@ -151,7 +149,7 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     rt2.setClearColor(0.0f, 0.0f, 0.0f);
     auto raster2 = Raster::create("rtt-green-backbuffer", {.gpu = gpu, .target = &rt2, .heap = heap});
 
-    RasterGeometry            dpGeometry;
+    RasterGeometry dpGeometry;
     dpGeometry.vertexCount = 3;
     raster2->recordDraw({.vs = vs, .ps = ps, .geometry = dpGeometry, .immediates = makePushConstants(textureIndex.slot)});
     AutoRef<GpuPayload> p2 = raster2->seal();
@@ -206,8 +204,8 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     RasterGeometry dpGeometry;
     dpGeometry.vertexCount = 3;
     Raster::DrawParameters dp {.geometry = dpGeometry};
-    dp.vs                  = vs;
-    dp.ps                  = ps;
+    dp.vs = vs;
+    dp.ps = ps;
     raster->recordDraw(dp);
     AutoRef<GpuPayload> p = raster->seal();
 
@@ -263,7 +261,7 @@ TEST_CASE("GPU2 RTT: borrowed draw inputs are snapshotted before returning", "[g
         auto heap = makeRasterHeap(gpu);
         REQUIRE(heap);
         REQUIRE(addSharedSampler(gpu, heap));
-        const auto redIndex = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, redView);
+        const auto redIndex   = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, redView);
         const auto greenIndex = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, greenView);
         REQUIRE(redIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
         REQUIRE(greenIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
@@ -284,11 +282,11 @@ TEST_CASE("GPU2 RTT: borrowed draw inputs are snapshotted before returning", "[g
         REQUIRE(draw.ps);
         draw.states.cullMode    = RasterState::CULL_NONE;
         draw.states.scissorRect = RasterState::ScissorRect {0, 0, 4, 4};
-        uint32_t textureIndex = redIndex.slot;
-        draw.immediates = makePushConstants(textureIndex);
+        uint32_t textureIndex   = redIndex.slot;
+        draw.immediates         = makePushConstants(textureIndex);
         raster->recordDraw(draw);
-        textureIndex = greenIndex.slot;
-        draw.immediates = makePushConstants(textureIndex);
+        textureIndex            = greenIndex.slot;
+        draw.immediates         = makePushConstants(textureIndex);
         geometry.vertexCount    = 0;
         draw.states.scissorRect = RasterState::ScissorRect {4, 0, 4, 4};
         raster->recordDraw(draw);
@@ -296,7 +294,7 @@ TEST_CASE("GPU2 RTT: borrowed draw inputs are snapshotted before returning", "[g
         draw.states.scissorRect = RasterState::ScissorRect {8, 0, 4, 4};
         raster->recordDraw(draw);
         geometry.vertexCount = 0;
-        payload = raster->seal();
+        payload              = raster->seal();
     }
     REQUIRE(payload);
     submitAndWait(gpu, "snapshot-render", payload);

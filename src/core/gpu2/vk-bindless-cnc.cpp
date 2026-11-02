@@ -317,7 +317,7 @@ void VkBindlessCnC::recordCopyImage(const ImageToImage & p) {
 
 std::future<CnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<Texture> src, ArrayView<const Region> regions) {
     DownloadResult<CnC::TextureContent> result;
-    auto                                          future = result.future();
+    auto                                future = result.future();
 
     auto * srcVk = RuntimeType::cast<TextureVulkanBase>(src.get());
     if (mSealed || !srcVk || regions.empty()) GN_UNLIKELY {
@@ -355,7 +355,7 @@ std::future<CnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<Text
     const uint64_t align = lcm4(bb);
 
     DynaArray<Region> packed;
-    uint64_t                  cursor = 0;
+    uint64_t          cursor = 0;
     for (const auto & r : regions) {
         const uint32_t w        = r.imageExtent.x ? r.imageExtent.x : 1;
         const uint32_t h        = r.imageExtent.y ? r.imageExtent.y : 1;
@@ -366,7 +366,7 @@ std::future<CnC::TextureContent> VkBindlessCnC::recordDownloadImage(AutoRef<Text
 
         cursor = ((cursor + align - 1) / align) * align;
 
-        Region         pr  = r;
+        Region pr          = r;
         pr.dataOffset      = cursor;
         pr.rowPitchBytes   = blocksX * bb;
         pr.slicePitchBytes = blocksX * blocksY * bb;
@@ -441,12 +441,12 @@ AutoRef<CnC> createVkBindlessCnc(const StrA & name, const CnC::CreateParameters 
             return {};
         }
 
-    auto *             vkHeap = cp.heap ? RuntimeType::cast<VkBindlessDescriptorHeap>(cp.heap.get()) : nullptr;
+    auto * vkHeap = cp.heap ? RuntimeType::cast<VkBindlessDescriptorHeap>(cp.heap.get()) : nullptr;
     if (cp.heap && !vkHeap) GN_UNLIKELY {
             GN_ERROR(sLogger, "createVkBindlessCnc: DescriptorHeap is not a Vulkan heap");
             return {};
         }
-    vk::PipelineLayout pl     = vkGpu->bindlessPipelineLayoutCache().getOrCreateCompute(cp, vkHeap);
+    vk::PipelineLayout pl = vkGpu->bindlessPipelineLayoutCache().getOrCreateCompute(cp, vkHeap);
     if (!pl) GN_UNLIKELY {
             GN_ERROR(sLogger, "createVkBindlessCnc: failed to obtain VkPipelineLayout for compute");
             return {};

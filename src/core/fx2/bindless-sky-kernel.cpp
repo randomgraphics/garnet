@@ -119,7 +119,7 @@ public:
         }
         producer.recordUploadImage(cubemap.texture(), {skyBlue, sizeof(skyBlue)}, {cubeRegions, 6});
 
-        const uint8_t               white[4] = {255, 255, 255, 255};
+        const uint8_t           white[4] = {255, 255, 255, 255};
         ::GN::gpu2::CnC::Region lutRegion;
         lutRegion.imageExtent = {1, 1, 1};
         producer.recordUploadImage(brdfLut.texture(), {white, sizeof(white)}, {&lutRegion, 1});

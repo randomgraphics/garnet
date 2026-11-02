@@ -110,8 +110,8 @@ public:
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && normalIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
     void upload(::GN::gpu2::CnC & producer) const {
-        const uint8_t               white[] = {255, 255, 255, 255};
-        const uint8_t               flat[]  = {128, 128, 255, 255};
+        const uint8_t           white[] = {255, 255, 255, 255};
+        const uint8_t           flat[]  = {128, 128, 255, 255};
         ::GN::gpu2::CnC::Region region;
         region.imageExtent = {1, 1, 1};
         producer.recordUploadImage(color.texture(), {white, sizeof(white)}, {&region, 1});
@@ -186,8 +186,8 @@ public:
             GN_ERROR(logger, "PbrMaterial: invalid uniform state, geometry, UVs, or transform");
             return false;
         }
-        const uint32_t                         skyIndex = getSkyMaterialIndex(input.skyMaterial.get());
-        const DrawConstants                    values {input.object2WorldTransform, glm::uvec4(mStorage.index(), skyIndex, 0, 0)};
+        const uint32_t                     skyIndex = getSkyMaterialIndex(input.skyMaterial.get());
+        const DrawConstants                values {input.object2WorldTransform, glm::uvec4(mStorage.index(), skyIndex, 0, 0)};
         ::GN::gpu2::Raster::DrawParameters draw {.geometry = input.geometry};
         draw.vs = mShaders.vertex;
         draw.ps = mShaders.fragment;

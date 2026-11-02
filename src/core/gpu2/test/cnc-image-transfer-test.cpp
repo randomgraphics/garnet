@@ -66,7 +66,7 @@ TEST_CASE("CNC image uploads snapshot CPU data and image copies preserve regions
         recorder->recordUploadImage(source, pixels, {&upload, 1});
         std::fill(pixels.begin(), pixels.end(), uint8_t(99));
         std::vector<uint8_t> zeros(8 * 8 * 4, 0);
-        CnC::Region whole;
+        CnC::Region          whole;
         whole.imageExtent = {8, 8, 1};
         recorder->recordUploadImage(destination, zeros, {&whole, 1});
         CnC::ImageCopyRegion copy;

@@ -101,10 +101,8 @@ int main(int argc, const char * argv[]) {
     geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 5 * sizeof(float)});
     geometry.format.attributes.push_back(
         {.location = fx::UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-    geometry.format.attributes.push_back({.location = fx::UnlitMaterial::TEXCOORD_LOCATION,
-                                          .binding  = 0,
-                                          .offset   = 3 * sizeof(float),
-                                          .format   = RasterGeometry::AttributeFormat::F32_2});
+    geometry.format.attributes.push_back(
+        {.location = fx::UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
     geometry.vertexCount = 3;
 
     for (int frame = 0; !headless || frame < 3; ++frame) {
@@ -123,12 +121,12 @@ int main(int argc, const char * argv[]) {
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return 1;
         auto raster = gpu::Raster::create("unlit.two-invocations", {.gpu           = host.gpu,
-                                                                            .target        = &target,
-                                                                            .heap          = heap,
-                                                                            .heapSetIndex  = 0,
-                                                                            .passResources = fx::sharedUniformResources(state),
+                                                                    .target        = &target,
+                                                                    .heap          = heap,
+                                                                    .heapSetIndex  = 0,
+                                                                    .passResources = fx::sharedUniformResources(state),
 
-                                                                            .numberOfDrawsHint = 2});
+                                                                    .numberOfDrawsHint = 2});
         if (!raster) return 1;
         const fx::UnlitMaterial::DrawParameters leftDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(-0.7f, 0, 0))};
         const fx::UnlitMaterial::DrawParameters rightDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(0.7f, 0, 0))};

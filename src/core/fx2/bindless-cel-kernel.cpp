@@ -133,8 +133,8 @@ public:
     }
 
     void upload(::GN::gpu2::CnC & producer) const {
-        const uint8_t               white[] = {255, 255, 255, 255};
-        const uint8_t               flat[]  = {128, 128, 255, 255};
+        const uint8_t           white[] = {255, 255, 255, 255};
+        const uint8_t           flat[]  = {128, 128, 255, 255};
         ::GN::gpu2::CnC::Region region;
         region.imageExtent = {1, 1, 1};
         producer.recordUploadImage(color.texture(), {white, sizeof(white)}, {&region, 1});
@@ -232,7 +232,7 @@ public:
                 return false;
             }
 
-        const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
+        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
         ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
         draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
         draw.ps = mShaders.fragment;

@@ -47,7 +47,7 @@ protected:
 /// Metallic/roughness PBR raster kernel with direct lights and typed materials.
 struct PbrKernel : RCRT64 {
     GN_API                           GN_REGISTER_RUNTIME_TYPE(RCRT64);
-    virtual PbrMaterial::Parameters  defaultMaterialParameters() const                                                                      = 0;
+    virtual PbrMaterial::Parameters  defaultMaterialParameters() const                                                                  = 0;
     virtual AutoRef<PbrMaterial>     createMaterial(::GN::gpu2::CnC & initialization, const PbrMaterial::Parameters & parameters) const = 0;
     GN_API static AutoRef<PbrKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 

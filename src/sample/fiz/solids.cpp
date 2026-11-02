@@ -218,7 +218,7 @@ int main(int argc, const char ** argv) {
     auto skyMaterial = createSkyMaterial(gpuContext, sky, *initialization, 3000.f);
 
     // Build procedural 3D model assets: Floor, Box, Sphere, Projectile, Wall
-    gpu2::RasterGeometry                modelGeometries[MODEL_COUNT];
+    gpu2::RasterGeometry      modelGeometries[MODEL_COUNT];
     AutoRef<fx2::PbrMaterial> modelMaterials[MODEL_COUNT];
 
     modelGeometries[MODEL_FLOOR] = boxGeometry(gpuContext, *geomUploads, {40.0f, 1.0f, 40.0f});
@@ -491,7 +491,7 @@ int main(int argc, const char ** argv) {
 
         auto uniformWork = uploadCnc->seal();
 
-        auto                                     tRaster0 = std::chrono::high_resolution_clock::now();
+        auto                           tRaster0 = std::chrono::high_resolution_clock::now();
         gpu2::Raster::CreateParameters rcp;
         rcp.gpu               = gpuContext;
         rcp.target            = &rasterTarget;

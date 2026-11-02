@@ -23,11 +23,12 @@ static bool validateRasterTarget(const RasterTarget & target) {
     return true;
 }
 
-VkBindlessRaster::VkBindlessRaster(const StrA & name, AutoRef<GpuContextVulkan2> gpu, RasterTarget target, AutoRef<DescriptorHeap> heap,
-                                   uint32_t heapSetIndex, vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool,
-                                   std::vector<vk::DescriptorSet> passSets, size_t numberOfDrawsHint, uint32_t maxImmediateSize)
+VkBindlessRaster::VkBindlessRaster(const StrA & name, AutoRef<GpuContextVulkan2> gpu, RasterTarget target, AutoRef<DescriptorHeap> heap, uint32_t heapSetIndex,
+                                   vk::PipelineLayout pipelineLayout, vk::DescriptorPool passPool, std::vector<vk::DescriptorSet> passSets,
+                                   size_t numberOfDrawsHint, uint32_t maxImmediateSize)
     : Raster(TYPE_INFO(), name), mGpu(std::move(gpu)), mRenderTarget(std::move(target)), mHeap(std::move(heap)), mHeapSetIndex(heapSetIndex),
-      mPipelineLayout(pipelineLayout), mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)), mStorage(std::make_unique<BindlessDrawStorage>(numberOfDrawsHint)) {
+      mPipelineLayout(pipelineLayout), mPassDescriptorPool(passPool), mPassDescriptorSets(std::move(passSets)),
+      mStorage(std::make_unique<BindlessDrawStorage>(numberOfDrawsHint)) {
     if (maxImmediateSize && numberOfDrawsHint > mImmediateData.max_size() / maxImmediateSize)
         throw std::length_error("Bindless immediate storage size overflow");
     mImmediateData.reserve(numberOfDrawsHint * maxImmediateSize);
@@ -76,17 +77,17 @@ AutoRef<GpuPayload> VkBindlessRaster::seal() {
     mSealed = true;
 
     VkBindlessPayload::ConstructParameters cp;
-    cp.gpu                 = mGpu;
-    cp.target              = std::move(mRenderTarget);
-    cp.heap                = std::move(mHeap);
-    cp.heapSetIndex        = mHeapSetIndex;
-    cp.pipelineLayout      = mPipelineLayout;
-    cp.storage             = std::move(mStorage);
-    cp.immediateData       = std::move(mImmediateData);
-    cp.retainedCleanups    = std::move(mRetainedCleanups);
-    cp.passDescriptorPool  = mPassDescriptorPool;
-    cp.passDescriptorSets  = std::move(mPassDescriptorSets);
-    mPassDescriptorPool    = vk::DescriptorPool {};
+    cp.gpu                = mGpu;
+    cp.target             = std::move(mRenderTarget);
+    cp.heap               = std::move(mHeap);
+    cp.heapSetIndex       = mHeapSetIndex;
+    cp.pipelineLayout     = mPipelineLayout;
+    cp.storage            = std::move(mStorage);
+    cp.immediateData      = std::move(mImmediateData);
+    cp.retainedCleanups   = std::move(mRetainedCleanups);
+    cp.passDescriptorPool = mPassDescriptorPool;
+    cp.passDescriptorSets = std::move(mPassDescriptorSets);
+    mPassDescriptorPool   = vk::DescriptorPool {};
 
     return AutoRef<GpuPayload>(new VkBindlessPayload(name, std::move(cp)));
 }
@@ -126,8 +127,8 @@ AutoRef<Raster> createVkBindlessRaster(const StrA & name, const Raster::CreatePa
         return {};
     }
 
-    return AutoRef<Raster>(new VkBindlessRaster(name, vkGpu, *cp.target, cp.heap, cp.heapSetIndex, pl, passPool, passSets,
-                                                          cp.numberOfDrawsHint, cp.maxImmediateSize));
+    return AutoRef<Raster>(
+        new VkBindlessRaster(name, vkGpu, *cp.target, cp.heap, cp.heapSetIndex, pl, passPool, passSets, cp.numberOfDrawsHint, cp.maxImmediateSize));
 }
 
 } // namespace GN::gpu2

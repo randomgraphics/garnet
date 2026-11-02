@@ -11,7 +11,7 @@ class Window;
 namespace GN::gpu2 {
 class DescriptorHeap;
 class Raster;
-}
+} // namespace GN::gpu2
 
 namespace GN::fx2 {
 
@@ -21,10 +21,10 @@ struct ImGuiBackend : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
     struct CreateParameters {
-        AutoRef<gpu2::GpuContext> gpu;
-        win::Window &             window;
-        AutoRef<::GN::gpu2::DescriptorHeap> heap; ///< Must be the heap used by the Raster passed to record().
-        uint32_t heapSetIndex = 0;                    ///< Descriptor set index occupied by heap (default 0).
+        AutoRef<gpu2::GpuContext>           gpu;
+        win::Window &                       window;
+        AutoRef<::GN::gpu2::DescriptorHeap> heap;             ///< Must be the heap used by the Raster passed to record().
+        uint32_t                            heapSetIndex = 0; ///< Descriptor set index occupied by heap (default 0).
     };
 
     /// Create a backend and a dedicated Dear ImGui context. Only one backend may be current

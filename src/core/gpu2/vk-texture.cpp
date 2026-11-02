@@ -87,8 +87,8 @@ gfx::img::Image TextureVulkanBase::readback() const {
     const auto &       d = mDescriptor;
     gfx::img::Extent3D extent;
     extent.set(d.width, d.height, d.depth);
-    const auto                planeDesc = gfx::img::PlaneDesc::make(d.format, extent);
-    gfx::img::Image           image(gfx::img::ImageDesc::make(planeDesc, 1, d.faces, d.levels));
+    const auto             planeDesc = gfx::img::PlaneDesc::make(d.format, extent);
+    gfx::img::Image        image(gfx::img::ImageDesc::make(planeDesc, 1, d.faces, d.levels));
     DynaArray<CnC::Region> regions;
     for (uint32_t face = 0; face < d.faces; ++face) {
         for (uint32_t level = 0; level < d.levels; ++level) {

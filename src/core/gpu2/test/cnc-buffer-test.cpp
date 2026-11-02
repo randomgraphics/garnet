@@ -20,9 +20,7 @@ static void submitAndWait(GpuContext * gpu, AutoRef<GpuPayload> payload) {
     while (!done) gpu->pump();
 }
 
-static AutoRef<CnC> makeCnc(const AutoRef<GpuContext> & gpu) {
-    return CnC::create("gpu2-cnc-test", {.gpu = gpu});
-}
+static AutoRef<CnC> makeCnc(const AutoRef<GpuContext> & gpu) { return CnC::create("gpu2-cnc-test", {.gpu = gpu}); }
 
 // ── CnC creation ───────────────────────────────────────────────────────────
 

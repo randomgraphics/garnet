@@ -4,7 +4,10 @@
 layout(set = 0, binding = 1) uniform texture2D heapTextures[];
 layout(set = 0, binding = 5) uniform sampler heapSamplers[];
 
-layout(push_constant, std430) uniform FaceDraw { uint textureIndex; uint samplerIndex; }
+layout(push_constant, std430) uniform FaceDraw {
+    uint textureIndex;
+    uint samplerIndex;
+}
 draw;
 
 layout(location = 0) in vec2 inUV;

@@ -78,12 +78,12 @@ static constexpr uint32_t kCubemapSize = 512;
 //
 // Resources common to all renderer classes, passed by const reference.
 struct SharedCtx {
-    GraphPtr                                  graph;
-    AutoRef<GpuContext>                       gpu;
-    AutoRef<DescriptorHeap>         heap;
-    DescriptorHeap::DescriptorIndex samplerIndex;
+    GraphPtr                            graph;
+    AutoRef<GpuContext>                 gpu;
+    AutoRef<DescriptorHeap>             heap;
+    DescriptorHeap::DescriptorIndex     samplerIndex;
     AutoRef<fx2::SharedShaderConstants> ssc;
-    uint32_t                                  width, height;
+    uint32_t                            width, height;
 };
 
 // Build a view that addresses exactly one face (one mip, one array layer).
@@ -114,8 +114,8 @@ public:
                 GN_ERROR(sLogger, "CubemapRenderer: failed to load face texture '{}'", kFaceImagePaths[i]);
                 return {};
             }
-            r.mFaceTextureIndices[i] = ctx.heap->allocate(
-                DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mFaceTextures[i]}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
+            r.mFaceTextureIndices[i] =
+                ctx.heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mFaceTextures[i]}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
             if (r.mFaceTextureIndices[i] == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
                 GN_ERROR(sLogger, "CubemapRenderer: failed to allocate descriptor for face texture {}", i);
                 return {};
@@ -133,8 +133,8 @@ public:
             GN_ERROR(sLogger, "CubemapRenderer: failed to create cubemap texture");
             return {};
         }
-        r.mCubemapIndex = ctx.heap->allocate(
-            DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mCubemap}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
+        r.mCubemapIndex =
+            ctx.heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {r.mCubemap}.setImageViewType(GpuResourceView::ImageView::SAMPLED));
         if (r.mCubemapIndex == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) {
             GN_ERROR(sLogger, "CubemapRenderer: failed to allocate descriptor for output cubemap");
             return {};
@@ -203,12 +203,12 @@ public:
                     rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
                     Raster::CreateParameters rcp;
-                    rcp.gpu = mCtx.gpu;
-                    rcp.target = &rt;
-                    rcp.heap = mCtx.heap;
+                    rcp.gpu              = mCtx.gpu;
+                    rcp.target           = &rt;
+                    rcp.heap             = mCtx.heap;
                     rcp.maxImmediateSize = sizeof(FaceDrawConstants);
 
-                    RasterGeometry            dpGeometry;
+                    RasterGeometry         dpGeometry;
                     Raster::DrawParameters dp {.geometry = dpGeometry};
                     dp.vs                  = vsContent->shader;
                     dp.ps                  = psContent->shader;
@@ -237,15 +237,15 @@ public:
                 }
 
                 Raster::CreateParameters rcp;
-                rcp.gpu = mCtx.gpu;
-                rcp.heap = mCtx.heap;
+                rcp.gpu              = mCtx.gpu;
+                rcp.heap             = mCtx.heap;
                 rcp.maxImmediateSize = sizeof(AllFacesDrawConstants);
                 RasterTarget rt;
                 for (uint32_t f = 0; f < 6; ++f) { rt.colorTargets.append(RasterTarget::ColorTarget(makeFaceView(mCubemap, f))); }
                 rt.setClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                 rcp.target = &rt;
 
-                RasterGeometry                   dpGeometry;
+                RasterGeometry         dpGeometry;
                 Raster::DrawParameters dp {.geometry = dpGeometry};
                 dp.vs                  = vsContent->shader;
                 dp.ps                  = psContent->shader;
@@ -253,7 +253,7 @@ public:
                 AllFacesDrawConstants constants;
                 for (size_t f = 0; f < mFaceTextureIndices.size(); ++f) constants.textureIndices[f] = mFaceTextureIndices[f].slot;
                 constants.samplerIndex = mCtx.samplerIndex.slot;
-                dp.immediates = {reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)};
+                dp.immediates          = {reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)};
 
                 auto rast = Raster::create("cubemap-all-faces", rcp);
                 if (!rast) return;
@@ -281,15 +281,15 @@ private:
         uint32_t samplerIndex;
     };
 
-    SharedCtx                       mCtx;
-    AutoRef<Texture>                mCubemap;
-    std::array<AutoRef<Texture>, 6> mFaceTextures; // source images loaded from disk, one per face
+    SharedCtx                                      mCtx;
+    AutoRef<Texture>                               mCubemap;
+    std::array<AutoRef<Texture>, 6>                mFaceTextures; // source images loaded from disk, one per face
     std::array<DescriptorHeap::DescriptorIndex, 6> mFaceTextureIndices;
-    DescriptorHeap::DescriptorIndex mCubemapIndex;
-    ArtifactPtr                     mCubemapReady;
-    ArtifactPtr                     mFaceVsArtifact, mFacePsArtifact, mAllFacesPsArtifact;
-    TokenPtr                        mFaceVsReady, mFacePsReady, mAllFacesPsReady;
-    int                             mImpl = 1;
+    DescriptorHeap::DescriptorIndex                mCubemapIndex;
+    ArtifactPtr                                    mCubemapReady;
+    ArtifactPtr                                    mFaceVsArtifact, mFacePsArtifact, mAllFacesPsArtifact;
+    TokenPtr                                       mFaceVsReady, mFacePsReady, mAllFacesPsReady;
+    int                                            mImpl = 1;
 };
 
 // ─── CubeDraw ─────────────────────────────────────────────────────────────────
@@ -374,11 +374,11 @@ public:
                          glm::mat4 model = glm::rotate(glm::mat4(1.f), elapsed * 0.5f, glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f)));
 
                          Raster::CreateParameters rcp;
-                         rcp.gpu = mCtx.gpu;
-                         rcp.target = &mRenderTarget;
-                         rcp.heap = mCtx.heap;
+                         rcp.gpu              = mCtx.gpu;
+                         rcp.target           = &mRenderTarget;
+                         rcp.heap             = mCtx.heap;
                          rcp.maxImmediateSize = sizeof(CubeDrawConstants);
-                         rcp.passResources = fx2::sharedUniformResources(sscState);
+                         rcp.passResources    = fx2::sharedUniformResources(sscState);
 
                          RasterGeometry geom;
                          geom.format.attributes.push_back(
@@ -411,9 +411,9 @@ public:
 private:
     struct CubeDrawConstants {
         glm::mat4 model;
-        uint32_t   cubemapIndex;
-        uint32_t   samplerIndex;
-        uint32_t   padding[2] = {};
+        uint32_t  cubemapIndex;
+        uint32_t  samplerIndex;
+        uint32_t  padding[2] = {};
     };
 
     struct CubeVertex {
@@ -550,14 +550,14 @@ int main(int argc, const char ** argv) {
     if (!heap) return -1;
     using Filter  = Sampler::Descriptor::Filter;
     using Address = Sampler::Descriptor::Address;
-    auto sampler = Sampler::create("cube-render-sampler", {.context = gpuContext,
+    auto sampler  = Sampler::create("cube-render-sampler", {.context    = gpuContext,
                                                             .descriptor = {.minFilter = Filter::LINEAR,
                                                                            .magFilter = Filter::LINEAR,
                                                                            .mipFilter = Filter::LINEAR,
-                                                                           .addressU = Address::CLAMP_TO_EDGE,
-                                                                           .addressV = Address::CLAMP_TO_EDGE,
-                                                                           .addressW = Address::CLAMP_TO_EDGE,
-                                                                           .maxLod = 16}});
+                                                                           .addressU  = Address::CLAMP_TO_EDGE,
+                                                                           .addressV  = Address::CLAMP_TO_EDGE,
+                                                                           .addressW  = Address::CLAMP_TO_EDGE,
+                                                                           .maxLod    = 16}});
     if (!sampler) return -1;
     const auto samplerIndex = heap->allocate(DescriptorHeap::SAMPLER, GpuResourceView {sampler});
     if (samplerIndex == DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return -1;
@@ -598,18 +598,18 @@ int main(int argc, const char ** argv) {
 
         // Camera: fixed at +Z looking at origin; upload one bindless SSC uniform version for this frame.
         cubeDraw.rasterTarget().setColorTarget(0, frame.view);
-        const auto rasterSize = cubeDraw.rasterTarget().calcRasterSizeInPixel();
+        const auto          rasterSize = cubeDraw.rasterTarget().calcRasterSizeInPixel();
         fx2::SharedUniforms uniforms;
-        uniforms.frameCounter = static_cast<uint32_t>(frameCounter);
-        uniforms.cameraPosition = {0, 0, 3, 1};
+        uniforms.frameCounter     = static_cast<uint32_t>(frameCounter);
+        uniforms.cameraPosition   = {0, 0, 3, 1};
         uniforms.renderTargetSize = {static_cast<float>(rasterSize.x), static_cast<float>(rasterSize.y)};
-        uniforms.nearPlane = 0.1f;
-        uniforms.farPlane = 100.0f;
-        uniforms.viewMatrix = glm::lookAtRH(glm::vec3(uniforms.cameraPosition), glm::vec3(0), glm::vec3(0, 1, 0));
+        uniforms.nearPlane        = 0.1f;
+        uniforms.farPlane         = 100.0f;
+        uniforms.viewMatrix       = glm::lookAtRH(glm::vec3(uniforms.cameraPosition), glm::vec3(0), glm::vec3(0, 1, 0));
         uniforms.projMatrix = glm::perspectiveRH_ZO(glm::radians(45.0f), float(rasterSize.x) / float(rasterSize.y), uniforms.nearPlane, uniforms.farPlane);
         uniforms.projMatrix[1][1] *= -1.0f;
         uniforms.projViewMatrix = uniforms.projMatrix * uniforms.viewMatrix;
-        auto sscUpload = CnC::create("cube-render-ssc", {.gpu = gpuContext});
+        auto sscUpload          = CnC::create("cube-render-ssc", {.gpu = gpuContext});
         if (!sscUpload) return -1;
         auto sscState = ssc->recordUniformUpdate(*sscUpload, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
         if (!sscState) return -1;

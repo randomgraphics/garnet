@@ -147,11 +147,11 @@ int main(int argc, const char ** argv) {
             if (!vsContent || !psContent || !vsContent->shader || !psContent->shader) return;
 
             Raster::CreateParameters rcp;
-            rcp.gpu = gpuContext;
+            rcp.gpu    = gpuContext;
             rcp.target = &rasterTarget;
-            rcp.heap = heap;
+            rcp.heap   = heap;
 
-            RasterGeometry                   drawParamsGeometry;
+            RasterGeometry         drawParamsGeometry;
             Raster::DrawParameters drawParams {.geometry = drawParamsGeometry};
             drawParams.vs                  = vsContent->shader;
             drawParams.ps                  = psContent->shader;

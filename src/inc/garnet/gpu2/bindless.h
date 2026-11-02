@@ -208,7 +208,7 @@ public:
     /// gpu2 automatically manages, hashes, and caches the native pipeline layout.
     struct CreateParameters {
         AutoRef<GpuContext>     gpu;
-        AutoRef<DescriptorHeap> heap;                   ///< Persistent global descriptor heap; required for compute, optional for transfer-only recording.
+        AutoRef<DescriptorHeap> heap             = {};  ///< Persistent global descriptor heap; required for compute, optional for transfer-only recording.
         uint32_t                heapSetIndex     = 0;   ///< Descriptor set index for the bindless heap (default 0).
         GpuResourceTable        passResources    = {};  ///< Optional pass-wide resources (e.g. Set 1 storage buffers/UBOs).
         uint32_t                maxImmediateSize = 128; ///< Maximum immediate data size in bytes (default 128).

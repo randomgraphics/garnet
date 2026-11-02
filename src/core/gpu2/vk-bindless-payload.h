@@ -55,7 +55,7 @@ public:
     struct ConstructParameters {
         AutoRef<GpuContextVulkan2>           gpu;
         RasterTarget                         target;
-        AutoRef<DescriptorHeap>    heap;
+        AutoRef<DescriptorHeap>              heap;
         uint32_t                             heapSetIndex = 0;
         vk::PipelineLayout                   pipelineLayout {};
         std::unique_ptr<BindlessDrawStorage> storage;
@@ -74,7 +74,7 @@ public:
 private:
     AutoRef<GpuContextVulkan2>           mGpu;
     RasterTarget                         mRenderTarget;
-    AutoRef<DescriptorHeap>    mHeap;
+    AutoRef<DescriptorHeap>              mHeap;
     uint32_t                             mHeapSetIndex = 0;
     vk::PipelineLayout                   mPipelineLayout {};
     std::unique_ptr<BindlessDrawStorage> mStorage;

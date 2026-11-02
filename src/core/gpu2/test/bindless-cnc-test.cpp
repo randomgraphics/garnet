@@ -95,10 +95,10 @@ TEST_CASE("CnC: transfer-only recording without descriptor heap", "[gpu2][bindle
     auto gpu = makeGpu();
     if (!gpu) SKIP("No GPU context available");
 
-    constexpr size_t bufferSize = 16;
+    constexpr size_t bufferSize        = 16;
     const uint8_t    input[bufferSize] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    auto             src = Buffer::create("transfer-only-src", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
-    auto             dst = Buffer::create("transfer-only-dst", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
+    auto             src               = Buffer::create("transfer-only-src", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
+    auto             dst               = Buffer::create("transfer-only-dst", Buffer::CreateParameters {.context = gpu, .size = bufferSize});
     REQUIRE(src);
     REQUIRE(dst);
 
@@ -486,8 +486,7 @@ TEST_CASE("CnC: copyBufferToImage transitions to writable and restores to SRV fo
         submitAndWait(gpu, "pass1-copy-blue", payload1);
 
         // 2. Sample in a subsequent compute pass
-        auto cnc2 =
-            CnC::create("cnc-sample-blue", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
+        auto cnc2 = CnC::create("cnc-sample-blue", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
         REQUIRE(cnc2);
         PushConstantData pc {slot.slot, 1.0f};
         cnc2->recordCompute({.cs = cs, .x = 1, .y = 1, .z = 1, .immediates = makePushConstants(pc)});
@@ -528,8 +527,7 @@ TEST_CASE("CnC: copyBufferToImage transitions to writable and restores to SRV fo
         region.imageOffset = {0, 0, 0};
         region.imageExtent = {W, H, 1};
 
-        auto cnc3 =
-            CnC::create("cnc-interleaved", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
+        auto cnc3 = CnC::create("cnc-interleaved", {.gpu = gpu, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .maxImmediateSize = 128});
         REQUIRE(cnc3);
         // Interleave: copy buffer to image, then immediately sample in compute within the SAME pass
         {

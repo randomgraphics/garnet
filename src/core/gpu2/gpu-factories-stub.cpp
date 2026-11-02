@@ -192,10 +192,6 @@ AutoRef<CnC> CnC::create(const StrA & name, const CreateParameters & cp) {
         GN_ERROR(sLogger, "CnC::create: GpuContext is null");
         return {};
     }
-    if (!cp.heap) {
-        GN_ERROR(sLogger, "CnC::create: DescriptorHeap is null");
-        return {};
-    }
     AutoRef<GpuContextCommon2> common = cp.gpu.staticCastTo<GpuContextCommon2>();
     if (!common) {
         GN_ERROR(sLogger, "CnC::create: GpuContext is not GpuContextCommon2");

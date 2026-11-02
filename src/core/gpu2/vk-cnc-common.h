@@ -47,14 +47,14 @@ struct StoredBufferToBuffer {
 };
 
 struct StoredBufferToImage {
-    AutoRef<Buffer>           src;
-    AutoRef<Texture>          dst;
+    AutoRef<Buffer>        src;
+    AutoRef<Texture>       dst;
     DynaArray<CnC::Region> regions;
 };
 
 struct StoredImageToImage {
-    AutoRef<Texture>                   src;
-    AutoRef<Texture>                   dst;
+    AutoRef<Texture>                src;
+    AutoRef<Texture>                dst;
     DynaArray<CnC::ImageCopyRegion> regions;
 };
 
@@ -201,9 +201,9 @@ struct StoredDownloadBuffer {
 };
 
 struct StoredDownloadImage {
-    AutoRef<Texture>                       src;
-    AutoRef<Buffer>                        staging;
-    DynaArray<CnC::Region>         regions;
+    AutoRef<Texture>                    src;
+    AutoRef<Buffer>                     staging;
+    DynaArray<CnC::Region>              regions;
     DownloadResult<CnC::TextureContent> result;
 };
 

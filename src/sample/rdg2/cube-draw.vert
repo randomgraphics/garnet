@@ -2,20 +2,27 @@
 #extension GL_EXT_nonuniform_qualifier : require
 
 layout(std140, set = 1, binding = 1) uniform SharedUniforms {
-    uint frameCounter;
+    uint  frameCounter;
     float frameDurationMs;
-    vec2 framePadding;
-    mat4 viewMatrix;
-    mat4 projMatrix;
-    mat4 projViewMatrix;
-    vec4 cameraPosition;
-    vec2 renderTargetSize;
+    vec2  framePadding;
+    mat4  viewMatrix;
+    mat4  projMatrix;
+    mat4  projViewMatrix;
+    vec4  cameraPosition;
+    vec2  renderTargetSize;
     float nearPlane;
     float farPlane;
     float exposure;
-} ssc;
+}
+ssc;
 
-layout(push_constant, std430) uniform CubeDraw { mat4 model; uint cubemapIndex; uint samplerIndex; uint padding0; uint padding1; }
+layout(push_constant, std430) uniform CubeDraw {
+    mat4 model;
+    uint cubemapIndex;
+    uint samplerIndex;
+    uint padding0;
+    uint padding1;
+}
 pc;
 
 layout(location = 0) in vec3 inPosition;

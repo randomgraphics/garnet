@@ -33,7 +33,7 @@ TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[
     auto gpu = gpu2::GpuContext::create("imgui-test", {});
     if (!gpu) SKIP("No Vulkan GPU context is available");
     TestWindow window;
-    auto heap = ::GN::gpu2::DescriptorHeap::create("imgui-smoke-heap", {.gpu = gpu, .capacity = 16});
+    auto       heap = ::GN::gpu2::DescriptorHeap::create("imgui-smoke-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
     auto backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window, .heap = heap});
     REQUIRE(backend);
@@ -66,7 +66,7 @@ TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[
     auto & blend   = target.colorTargets[0].blendState;
     blend.colorSrc = gpu2::RasterTarget::BlendState::SRC_ALPHA;
     blend.colorDst = gpu2::RasterTarget::BlendState::INV_SRC_ALPHA;
-    auto raster = ::GN::gpu2::Raster::create("imgui-test-raster", {.gpu = gpu, .target = &target, .heap = heap});
+    auto raster    = ::GN::gpu2::Raster::create("imgui-test-raster", {.gpu = gpu, .target = &target, .heap = heap});
     REQUIRE(raster);
 
     AutoRef<gpu2::GpuPayload> upload;
@@ -90,7 +90,6 @@ TEST_CASE("fx2 ImGui backend translates window input and records gpu2 draws", "[
     CHECK(r == 255);
     CHECK(g == 255);
     CHECK(b == 255);
-
 }
 
 TEST_CASE("fx2 ImGui backend samples registered textures through bindless indices", "[fx2][imgui][gpu][bindless]") {
@@ -99,7 +98,7 @@ TEST_CASE("fx2 ImGui backend samples registered textures through bindless indice
     if (!gpu) SKIP("No Vulkan GPU context is available");
 
     TestWindow window;
-    auto heap = ::GN::gpu2::DescriptorHeap::create("imgui-test-heap", {.gpu = gpu, .capacity = 16});
+    auto       heap = ::GN::gpu2::DescriptorHeap::create("imgui-test-heap", {.gpu = gpu, .capacity = 16});
     REQUIRE(heap);
     auto backend = fx2::ImGuiBackend::create({.gpu = gpu, .window = window, .heap = heap, .heapSetIndex = 2});
     REQUIRE(backend);
@@ -112,9 +111,9 @@ TEST_CASE("fx2 ImGui backend samples registered textures through bindless indice
     REQUIRE(sampledTexture);
     gfx::img::Extent3D textureExtent;
     textureExtent.set(1, 1, 1);
-    const uint8_t          redPixel[4] = {255, 0, 0, 255};
-    const auto             texturePlane = gfx::img::PlaneDesc::make(gfx::img::PixelFormat::RGBA8(), textureExtent);
-    gfx::img::Image        textureImage(gfx::img::ImageDesc::make(texturePlane, 1, 1, 1), redPixel, sizeof(redPixel));
+    const uint8_t   redPixel[4]  = {255, 0, 0, 255};
+    const auto      texturePlane = gfx::img::PlaneDesc::make(gfx::img::PixelFormat::RGBA8(), textureExtent);
+    gfx::img::Image textureImage(gfx::img::ImageDesc::make(texturePlane, 1, 1, 1), redPixel, sizeof(redPixel));
     REQUIRE(sampledTexture->setContent(textureImage));
     const ImTextureID sampledId = backend->registerTexture(sampledTexture);
     REQUIRE(sampledId != ImTextureID_Invalid);
@@ -139,11 +138,11 @@ TEST_CASE("fx2 ImGui backend samples registered textures through bindless indice
     blend.colorDst = gpu2::RasterTarget::BlendState::INV_SRC_ALPHA;
 
     auto raster = ::GN::gpu2::Raster::create("imgui-bindless-raster", {
-                                                                              .gpu          = gpu,
-                                                                              .target       = &target,
-                                                                              .heap         = heap,
-                                                                              .heapSetIndex = 2,
-                                                                          });
+                                                                          .gpu          = gpu,
+                                                                          .target       = &target,
+                                                                          .heap         = heap,
+                                                                          .heapSetIndex = 2,
+                                                                      });
     REQUIRE(raster);
 
     AutoRef<gpu2::GpuPayload> upload;
@@ -159,7 +158,7 @@ TEST_CASE("fx2 ImGui backend samples registered textures through bindless indice
 
     auto image = targetTexture->readback();
     REQUIRE(!image.empty());
-    const auto * pixels      = reinterpret_cast<const uint32_t *>(image.data());
+    const auto *   pixels      = reinterpret_cast<const uint32_t *>(image.data());
     const uint32_t centerPixel = pixels[120 * 320 + 160];
     CHECK((centerPixel & 0xFF) == 0);
     CHECK(((centerPixel >> 8) & 0xFF) == 255);

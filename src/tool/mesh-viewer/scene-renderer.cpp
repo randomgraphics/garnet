@@ -44,8 +44,8 @@ AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, CnC & uploads, const Model
 } // namespace
 
 bool RenderModel::prepare(AutoRef<GpuContext> gpu, CnC & geometryUploads, CnC & materialUploads, AutoRef<fx2::PbrKernel> pbrKernel,
-                          AutoRef<fx2::LambertianKernel> lambertianKernel, AutoRef<fx2::UnlitKernel> unlitKernel, const ModelScene & scene,
-                          Shading choice, const glm::mat4 & modelTransform) {
+                          AutoRef<fx2::LambertianKernel> lambertianKernel, AutoRef<fx2::UnlitKernel> unlitKernel, const ModelScene & scene, Shading choice,
+                          const glm::mat4 & modelTransform) {
     DynaArray<ModelInstance> collected;
     if (!collectModelInstances(scene, collected)) return false;
 
@@ -214,8 +214,8 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
 
 AutoRef<fx2::SharedShaderConstants::UniformState> SceneRenderer::updateUniforms(CnC & uploads, const FrameParameters & frame) {
     fx2::SharedUniforms uniforms;
-    const auto                    cameraToWorld = glm::translate(glm::mat4(1), frame.eye) * glm::mat4_cast(frame.orientation);
-    uniforms.viewMatrix                         = glm::inverse(cameraToWorld);
+    const auto          cameraToWorld = glm::translate(glm::mat4(1), frame.eye) * glm::mat4_cast(frame.orientation);
+    uniforms.viewMatrix               = glm::inverse(cameraToWorld);
     uniforms.projMatrix =
         glm::perspectiveRH_ZO(glm::radians(frame.fovDegrees), static_cast<float>(frame.width) / std::max(1u, frame.height), frame.nearPlane, frame.farPlane);
     uniforms.projMatrix[1][1] *= -1; // Vulkan clip space
@@ -234,8 +234,7 @@ size_t SceneRenderer::drawCount(bool showBounds, bool showAxes) const {
     return model.instances.size() + (showBounds ? bounds.instances.size() : 0) + (showAxes ? axes.instances.size() : 0) + 1;
 }
 
-bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster,
-                                const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
+bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
     for (const auto & instance : source.instances) {
         const auto & material = source.materials[instance.material];
         RasterState  states;
@@ -266,8 +265,7 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster,
     return true;
 }
 
-bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds,
-                           bool showAxes) const {
+bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const {
     if (!recordModel(model, raster, state)) return false;
     if (showBounds && !recordModel(bounds, raster, state)) return false;
     if (showAxes && !recordModel(axes, raster, state)) return false;

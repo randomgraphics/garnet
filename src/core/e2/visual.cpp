@@ -233,23 +233,23 @@ private:
         return mSsc->recordUniformUpdate(uploads, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
     }
 
-    Universe &                                    mUniverse;
-    AutoRef<Texture>                              mLastFrameTexture;
-    bool                                          mFrameSucceeded = false;
-    Ref<Platform>                                 mOs;
-    AutoRef<GpuContext>                           mGpu;
-    intptr_t                                      mSurface = 0;
-    AutoRef<Swapchain>                            mSwapchain;
-    AutoRef<Texture>                              mDepth;
+    Universe &                          mUniverse;
+    AutoRef<Texture>                    mLastFrameTexture;
+    bool                                mFrameSucceeded = false;
+    Ref<Platform>                       mOs;
+    AutoRef<GpuContext>                 mGpu;
+    intptr_t                            mSurface = 0;
+    AutoRef<Swapchain>                  mSwapchain;
+    AutoRef<Texture>                    mDepth;
     AutoRef<gpu2::DescriptorHeap>       mHeap;
     AutoRef<fx2::SharedShaderConstants> mSsc;
-    Ref<Assets>                                   mAssets;
+    Ref<Assets>                         mAssets;
     AutoRef<fx2::LambertianKernel>      mLambert;
     AutoRef<fx2::LambertianMaterial>    mWhiteMaterial;
-    RasterTarget                                  mRenderTarget;
-    uint32_t                                      mFrameCounter = 0;
-    uint32_t                                      mWidth        = 1280;
-    uint32_t                                      mHeight       = 720;
+    RasterTarget                        mRenderTarget;
+    uint32_t                            mFrameCounter = 0;
+    uint32_t                            mWidth        = 1280;
+    uint32_t                            mHeight       = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN

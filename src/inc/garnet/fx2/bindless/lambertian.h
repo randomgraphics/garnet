@@ -41,7 +41,7 @@ protected:
 struct LambertianKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual LambertianMaterial::Parameters defaultMaterialParameters() const                                                                  = 0;
+    virtual LambertianMaterial::Parameters defaultMaterialParameters() const                                                              = 0;
     virtual AutoRef<LambertianMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const LambertianMaterial::Parameters &) const = 0;
 
     GN_API static AutoRef<LambertianKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);

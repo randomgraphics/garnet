@@ -86,10 +86,11 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
     REQUIRE(raster);
 
     RasterGeometry dpGeometry;
-    dpGeometry.vertexCount = 3;
+    dpGeometry.vertexCount           = 3;
     const uint32_t sampledSourceSlot = sampledSourceIndex.slot;
 
-    raster->recordDraw({.vs = vs, .ps = ps, .geometry = dpGeometry, .immediates = {reinterpret_cast<const uint8_t *>(&sampledSourceSlot), sizeof(sampledSourceSlot)}});
+    raster->recordDraw(
+        {.vs = vs, .ps = ps, .geometry = dpGeometry, .immediates = {reinterpret_cast<const uint8_t *>(&sampledSourceSlot), sizeof(sampledSourceSlot)}});
     AutoRef<GpuPayload> p2 = raster->seal();
 
     // ── Payload 3: bindless CnC compute — copy renderTarget → outputTex ─
@@ -125,10 +126,10 @@ TEST_CASE("GPU2/CnC+Raster: upload->render->compute copy->readback", "[gpu2][cnc
         uint32_t output;
     } indices {inputIndex.slot, outputIndex.slot};
     cnc2->recordCompute({
-        .cs         = cs,
+        .cs = cs,
         // Dispatch enough groups to cover W×H pixels with 8×8 local size
-        .x = (W + 7) / 8,
-        .y = (H + 7) / 8,
+        .x          = (W + 7) / 8,
+        .y          = (H + 7) / 8,
         .immediates = {reinterpret_cast<const uint8_t *>(&indices), sizeof(indices)},
     });
     AutoRef<GpuPayload> p3 = cnc2->seal();

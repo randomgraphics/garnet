@@ -22,13 +22,13 @@ struct UiVertex {
 struct UiConstants {
     glm::vec2 scale;
     glm::vec2 translate;
-    uint32_t textureIndex;
-    uint32_t samplerIndex;
+    uint32_t  textureIndex;
+    uint32_t  samplerIndex;
 };
 
 struct UiTextureSlot {
-    AutoRef<::GN::gpu2::DescriptorHeap> heap;
-    AutoRef<gpu2::Texture> texture;
+    AutoRef<::GN::gpu2::DescriptorHeap>         heap;
+    AutoRef<gpu2::Texture>                      texture;
     ::GN::gpu2::DescriptorHeap::DescriptorIndex index = ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
 
     ~UiTextureSlot() {
@@ -37,8 +37,8 @@ struct UiTextureSlot {
 };
 
 struct UiSamplerSlot {
-    AutoRef<::GN::gpu2::DescriptorHeap> heap;
-    AutoRef<gpu2::Sampler> sampler;
+    AutoRef<::GN::gpu2::DescriptorHeap>         heap;
+    AutoRef<gpu2::Sampler>                      sampler;
     ::GN::gpu2::DescriptorHeap::DescriptorIndex index = ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX;
 
     ~UiSamplerSlot() {
@@ -208,20 +208,20 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         // Font creation is one-shot initialization; the blocking helper avoids retaining atlas
         // staging resources across the first application frame.
         if (!mFontTexture->setContent(fontImage)) return false;
-        auto font = std::make_shared<UiTextureSlot>();
-        font->heap = mHeap;
+        auto font     = std::make_shared<UiTextureSlot>();
+        font->heap    = mHeap;
         font->texture = mFontTexture;
-        font->index = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {mFontTexture});
+        font->index   = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {mFontTexture});
         if (font->index == ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
         mTextures.emplace(1, std::move(font));
         io.Fonts->SetTexID(1);
 
         auto sampler = gpu2::Sampler::create("imgui-sampler", {.context = mGpu});
         if (!sampler) return false;
-        mSamplerSlot = std::make_shared<UiSamplerSlot>();
-        mSamplerSlot->heap = mHeap;
+        mSamplerSlot          = std::make_shared<UiSamplerSlot>();
+        mSamplerSlot->heap    = mHeap;
         mSamplerSlot->sampler = sampler;
-        mSamplerSlot->index = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLER, gpu2::GpuResourceView {sampler});
+        mSamplerSlot->index   = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLER, gpu2::GpuResourceView {sampler});
         if (mSamplerSlot->index == ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return false;
 
         mVs = gpu2::GpuShader::create({.context = mGpu, .name = "imgui.vert", .binary = kImguiVertSpv, .size = sizeof(kImguiVertSpv)});
@@ -235,8 +235,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 if (length == 0) break;
                 if (opcode == 71 && length >= 4) {
                     if (fragSpv[i + 2] == 34) fragSpv[i + 3] = mHeapSetIndex;
-                    if (fragSpv[i + 2] == 33 && (fragSpv[i + 3] == 1 || fragSpv[i + 3] == 5))
-                        fragSpv[i + 3] += mHeap->bindingIndex();
+                    if (fragSpv[i + 2] == 33 && (fragSpv[i + 3] == 1 || fragSpv[i + 3] == 5)) fragSpv[i + 3] += mHeap->bindingIndex();
                 }
                 i += length;
             }
@@ -270,10 +269,10 @@ struct ImGuiBackendImpl final : ImGuiBackend {
 
     ImTextureID registerTexture(AutoRef<gpu2::Texture> texture) override {
         if (!texture) return ImTextureID_Invalid;
-        auto slot = std::make_shared<UiTextureSlot>();
-        slot->heap = mHeap;
+        auto slot     = std::make_shared<UiTextureSlot>();
+        slot->heap    = mHeap;
         slot->texture = std::move(texture);
-        slot->index = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {slot->texture});
+        slot->index   = mHeap->allocate(::GN::gpu2::DescriptorHeap::SAMPLED_TEXTURE, gpu2::GpuResourceView {slot->texture});
         if (slot->index == ::GN::gpu2::DescriptorHeap::INVALID_DESCRIPTOR_INDEX) return ImTextureID_Invalid;
         const ImTextureID tid = ++mNextTextureId;
         mTextures.emplace(tid, std::move(slot));
@@ -343,6 +342,8 @@ struct ImGuiBackendImpl final : ImGuiBackend {
         frame.constants = {
             {2.0f / mDrawData->DisplaySize.x, 2.0f / mDrawData->DisplaySize.y},
             {-1.0f - mDrawData->DisplayPos.x * (2.0f / mDrawData->DisplaySize.x), -1.0f - mDrawData->DisplayPos.y * (2.0f / mDrawData->DisplaySize.y)},
+            0,
+            0,
         };
 
         frame.uploads = cnc->seal();
@@ -376,7 +377,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                 const auto texture = mTextures.find(command.GetTexID());
                 if (texture == mTextures.end()) continue;
 
-                gpu2::RasterGeometry                   drawGeometry;
+                gpu2::RasterGeometry               drawGeometry;
                 ::GN::gpu2::Raster::DrawParameters draw {.geometry = drawGeometry};
                 draw.vs = mVs;
                 draw.ps = mPs;
@@ -399,7 +400,7 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                     gpu2::RasterState::ScissorRect {.x = x, .y = y, .width = static_cast<uint32_t>(clipZ - x), .height = static_cast<uint32_t>(clipW - y)};
                 frame.constants.textureIndex = texture->second->index.slot;
                 frame.constants.samplerIndex = mSamplerSlot->index.slot;
-                draw.immediates = {reinterpret_cast<const uint8_t *>(&frame.constants), sizeof(frame.constants)};
+                draw.immediates              = {reinterpret_cast<const uint8_t *>(&frame.constants), sizeof(frame.constants)};
                 raster.retainResource(texture->second);
                 raster.retainResource(mSamplerSlot);
                 raster.recordDraw(draw);
@@ -437,20 +438,20 @@ struct ImGuiBackendImpl final : ImGuiBackend {
                                           axis == win::Axis::MOUSE_WHEEL_0 ? static_cast<float>(delta) / 120.0f : 0.0f);
     }
 
-    AutoRef<gpu2::GpuContext>                               mGpu;
-    win::Window &                                           mWindow;
-    AutoRef<::GN::gpu2::DescriptorHeap>                 mHeap;
-    uint32_t                                                mHeapSetIndex = 0;
-    ImGuiContext *                                          mContext          = nullptr;
-    ImDrawData *                                            mDrawData         = nullptr;
-    AutoRef<gpu2::GpuShader>                                mVs, mPs;
-    AutoRef<gpu2::Texture>                                  mFontTexture;
-    std::shared_ptr<UiSamplerSlot>                          mSamplerSlot;
-    ImTextureID                                             mNextTextureId = 1;
+    AutoRef<gpu2::GpuContext>                                       mGpu;
+    win::Window &                                                   mWindow;
+    AutoRef<::GN::gpu2::DescriptorHeap>                             mHeap;
+    uint32_t                                                        mHeapSetIndex = 0;
+    ImGuiContext *                                                  mContext      = nullptr;
+    ImDrawData *                                                    mDrawData     = nullptr;
+    AutoRef<gpu2::GpuShader>                                        mVs, mPs;
+    AutoRef<gpu2::Texture>                                          mFontTexture;
+    std::shared_ptr<UiSamplerSlot>                                  mSamplerSlot;
+    ImTextureID                                                     mNextTextureId = 1;
     std::unordered_map<ImTextureID, std::shared_ptr<UiTextureSlot>> mTextures;
-    Tether                                                  mKeyTether;
-    Tether                                                  mCharTether;
-    Tether                                                  mAxisTether;
+    Tether                                                          mKeyTether;
+    Tether                                                          mCharTether;
+    Tether                                                          mAxisTether;
 };
 
 } // namespace

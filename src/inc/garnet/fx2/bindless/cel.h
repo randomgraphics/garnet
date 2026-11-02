@@ -60,7 +60,7 @@ protected:
 struct CelKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual CelMaterial::Parameters defaultMaterialParameters() const                                                           = 0;
+    virtual CelMaterial::Parameters defaultMaterialParameters() const                                                       = 0;
     virtual AutoRef<CelMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const CelMaterial::Parameters &) const = 0;
 
     GN_API static AutoRef<CelKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);

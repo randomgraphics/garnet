@@ -31,7 +31,7 @@ struct SkyMaterial : RCRT64 {
 
     /// Draw inputs for skybox rendering.
     struct DrawParameters {
-        ::GN::gpu2::Raster &                     raster;
+        ::GN::gpu2::Raster &                         raster;
         AutoRef<SharedShaderConstants::UniformState> ssc;
         const gpu2::RasterState *                    states = nullptr;
     };
@@ -47,7 +47,7 @@ protected:
 struct SkyKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual SkyMaterial::Parameters defaultMaterialParameters() const                                                           = 0;
+    virtual SkyMaterial::Parameters defaultMaterialParameters() const                                                       = 0;
     virtual AutoRef<SkyMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const SkyMaterial::Parameters &) const = 0;
 
     GN_API static AutoRef<SkyKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);

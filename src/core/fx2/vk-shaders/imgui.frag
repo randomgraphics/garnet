@@ -7,7 +7,8 @@ layout(set = 0, binding = 5) uniform sampler heapSamplers[];
 layout(push_constant) uniform UiPushConstants {
     layout(offset = 16) uint textureIndex;
     layout(offset = 20) uint samplerIndex;
-} pc;
+}
+pc;
 
 layout(location = 0) in vec2 inTexCoord;
 layout(location = 1) in vec4 inColor;

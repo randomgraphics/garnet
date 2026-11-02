@@ -105,7 +105,7 @@ public:
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
     void upload(::GN::gpu2::CnC & producer) const {
-        const uint8_t               white[] = {255, 255, 255, 255};
+        const uint8_t           white[] = {255, 255, 255, 255};
         ::GN::gpu2::CnC::Region region;
         region.imageExtent = {1, 1, 1};
         producer.recordUploadImage(color.texture(), {white, sizeof(white)}, {&region, 1});
@@ -176,7 +176,7 @@ public:
                 GN_ERROR(logger, "UnlitMaterial: invalid uniform state, geometry, or transform");
                 return false;
             }
-        const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
+        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
         ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
         draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
         draw.ps = mShaders.fragment;

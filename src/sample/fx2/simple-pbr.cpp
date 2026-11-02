@@ -87,14 +87,10 @@ int main(int argc, const char * argv[]) {
         helmetGeometry.vertices.push_back({.buffer = fallbackVb, .offset = 0, .stride = 8 * sizeof(float)});
         helmetGeometry.format.attributes.push_back(
             {.location = fx::PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-        helmetGeometry.format.attributes.push_back({.location = fx::PbrMaterial::NORMAL_LOCATION,
-                                                    .binding  = 0,
-                                                    .offset   = 3 * sizeof(float),
-                                                    .format   = RasterGeometry::AttributeFormat::F32_3});
-        helmetGeometry.format.attributes.push_back({.location = fx::PbrMaterial::TEXCOORD_LOCATION,
-                                                    .binding  = 0,
-                                                    .offset   = 6 * sizeof(float),
-                                                    .format   = RasterGeometry::AttributeFormat::F32_2});
+        helmetGeometry.format.attributes.push_back(
+            {.location = fx::PbrMaterial::NORMAL_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_3});
+        helmetGeometry.format.attributes.push_back(
+            {.location = fx::PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 6 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
         helmetGeometry.vertexCount = 3;
     }
 
@@ -140,16 +136,16 @@ int main(int argc, const char * argv[]) {
         if (!uniformUploads) return 1;
 
         fx::SharedUniforms uniforms;
-        const float                camAngle = static_cast<float>(frame) * 0.01f;
-        constexpr float            camDist  = 2.6f;
-        uniforms.cameraPosition             = {camDist * std::sin(camAngle), 0.5f, camDist * std::cos(camAngle), 1};
-        uniforms.numLights                  = 1;
-        uniforms.lights[0].positionOrDir    = {0.5f, 1.0f, 0.5f, float(fx::DirectLightUniform::DIRECTIONAL)};
-        uniforms.lights[0].colorAndRange    = {2.5f, 2.5f, 2.5f, 0.0f};
-        uniforms.exposure                   = 1.0f;
-        uniforms.renderTargetSize           = {width, height};
-        uniforms.viewMatrix                 = glm::lookAtRH(glm::vec3(uniforms.cameraPosition), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-        uniforms.projMatrix                 = glm::perspectiveRH_ZO(glm::radians(60.f), float(width) / height, uniforms.nearPlane, uniforms.farPlane);
+        const float        camAngle      = static_cast<float>(frame) * 0.01f;
+        constexpr float    camDist       = 2.6f;
+        uniforms.cameraPosition          = {camDist * std::sin(camAngle), 0.5f, camDist * std::cos(camAngle), 1};
+        uniforms.numLights               = 1;
+        uniforms.lights[0].positionOrDir = {0.5f, 1.0f, 0.5f, float(fx::DirectLightUniform::DIRECTIONAL)};
+        uniforms.lights[0].colorAndRange = {2.5f, 2.5f, 2.5f, 0.0f};
+        uniforms.exposure                = 1.0f;
+        uniforms.renderTargetSize        = {width, height};
+        uniforms.viewMatrix              = glm::lookAtRH(glm::vec3(uniforms.cameraPosition), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        uniforms.projMatrix              = glm::perspectiveRH_ZO(glm::radians(60.f), float(width) / height, uniforms.nearPlane, uniforms.farPlane);
         uniforms.projMatrix[1][1] *= -1; // Vulkan clip space
         uniforms.projViewMatrix = uniforms.projMatrix * uniforms.viewMatrix;
         uniforms.frameCounter   = static_cast<uint32_t>(frame);
@@ -159,12 +155,9 @@ int main(int argc, const char * argv[]) {
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return 1;
 
-        auto raster = gpu::Raster::create("pbr.render", {.gpu               = host.gpu,
-                                                                 .target            = &target,
-                                                                 .heap              = heap,
-                                                                 .heapSetIndex      = 0,
-                                                                 .passResources     = fx::sharedUniformResources(state),
-                                                                 .numberOfDrawsHint = 2});
+        auto raster = gpu::Raster::create(
+            "pbr.render",
+            {.gpu = host.gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = fx::sharedUniformResources(state), .numberOfDrawsHint = 2});
         if (!raster) return 1;
 
         // 1. Draw skybox
@@ -172,7 +165,7 @@ int main(int argc, const char * argv[]) {
         if (!skyMaterial->record(skyDraw)) return 1;
 
         // 2. Draw helmet oriented upright
-        const glm::mat4                         helmetRotation = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(1, 0, 0));
+        const glm::mat4                 helmetRotation = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(1, 0, 0));
         fx::PbrMaterial::DrawParameters helmetDraw {{*raster, state, helmetGeometry, &helmetState}, helmetRotation, skyMaterial};
         if (!helmetMaterial->record(helmetDraw)) return 1;
 

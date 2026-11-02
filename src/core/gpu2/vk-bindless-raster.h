@@ -24,13 +24,13 @@ public:
     AutoRef<GpuPayload> seal() override;
 
 private:
-    AutoRef<GpuContextVulkan2>        mGpu;
-    RasterTarget                      mRenderTarget;
-    AutoRef<DescriptorHeap> mHeap;
-    uint32_t                          mHeapSetIndex = 0;
-    vk::PipelineLayout                mPipelineLayout {};
-    vk::DescriptorPool                mPassDescriptorPool {};
-    std::vector<vk::DescriptorSet>    mPassDescriptorSets;
+    AutoRef<GpuContextVulkan2>     mGpu;
+    RasterTarget                   mRenderTarget;
+    AutoRef<DescriptorHeap>        mHeap;
+    uint32_t                       mHeapSetIndex = 0;
+    vk::PipelineLayout             mPipelineLayout {};
+    vk::DescriptorPool             mPassDescriptorPool {};
+    std::vector<vk::DescriptorSet> mPassDescriptorSets;
 
     std::unique_ptr<BindlessDrawStorage> mStorage;
     std::vector<uint8_t>                 mImmediateData;

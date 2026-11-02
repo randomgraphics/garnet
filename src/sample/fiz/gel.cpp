@@ -66,8 +66,7 @@ static RasterGeometry gelGeometry(AutoRef<GpuContext> gpu, gpu2::CnC & uploads, 
         {.location = fx2::PbrMaterial::POSITION_LOCATION, .binding = 0, .offset = offsetof(GelVertex, position), .format = F::F32_3});
     result.format.attributes.push_back(
         {.location = fx2::PbrMaterial::NORMAL_LOCATION, .binding = 0, .offset = offsetof(GelVertex, normal), .format = F::F32_3});
-    result.format.attributes.push_back(
-        {.location = fx2::PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = offsetof(GelVertex, uv), .format = F::F32_2});
+    result.format.attributes.push_back({.location = fx2::PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = offsetof(GelVertex, uv), .format = F::F32_2});
     return result;
 }
 
@@ -108,10 +107,10 @@ public:
     AutoRef<GelMesh> meshCube;
     AutoRef<GelMesh> meshSphere;
 
-    RasterGeometry                      gelTemplateGeometries[TEMPLATE_COUNT];
+    RasterGeometry            gelTemplateGeometries[TEMPLATE_COUNT];
     AutoRef<fx2::PbrMaterial> gelMaterials[TEMPLATE_COUNT];
 
-    RasterGeometry                      rigidGeometries[RIGID_COUNT];
+    RasterGeometry            rigidGeometries[RIGID_COUNT];
     AutoRef<fx2::PbrMaterial> rigidMaterials[RIGID_COUNT];
 
     bool initMeshesAndAssets(AutoRef<GpuContext> gpu, gpu2::CnC & uploads, AutoRef<fx2::PbrKernel> pbr, gpu2::CnC & matUploads) {
@@ -277,9 +276,8 @@ private:
     }
 };
 
-static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2::DescriptorHeap> heap,
-                         AutoRef<fx2::SharedShaderConstants> ssc, AutoRef<fx2::SkyMaterial> skyMaterial, AutoRef<Swapchain> swapchain,
-                         RasterTarget & rasterTarget, const uint32_t hwThreads) {
+static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2::DescriptorHeap> heap, AutoRef<fx2::SharedShaderConstants> ssc,
+                         AutoRef<fx2::SkyMaterial> skyMaterial, AutoRef<Swapchain> swapchain, RasterTarget & rasterTarget, const uint32_t hwThreads) {
     GN_INFO(sLogger, "================================================================================");
     GN_INFO(sLogger, "  GNfiz Gel XPBD Soft-Body Dynamics & GPU Rendering Benchmark");
     GN_INFO(sLogger, "  Configuration: Profile Build (RelWithDebInfo) | Hardware Cores: {}", hwThreads);
@@ -862,7 +860,7 @@ int main(int argc, const char ** argv) {
         float uploadMs      = std::chrono::duration<float, std::milli>(tUpload1 - tUpload0).count();
         avgUploadMs         = (avgUploadMs == 0.0f) ? uploadMs : (avgUploadMs * 0.95f + uploadMs * 0.05f);
 
-        auto                                     tRaster0 = std::chrono::high_resolution_clock::now();
+        auto                           tRaster0 = std::chrono::high_resolution_clock::now();
         gpu2::Raster::CreateParameters rcp;
         rcp.gpu               = gpuContext;
         rcp.target            = &rasterTarget;
