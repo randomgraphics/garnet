@@ -254,3 +254,10 @@ python.exe env\bin\cit.py -l
 
 Relevant coverage is in `src/core/rdg2/test/closed-graph-test.cpp`,
 `src/core/e2/test/visual-graph-test.cpp`, and the E2 and RDG2 samples.
+
+The RDG2 sample smoke runs were also checked on Windows Debug: the open-graph
+hello-world exits successfully; `closed-graph-hello-world t` verifies the clear
+color; `open-graph-simple-triangle t` verifies the blue background and red
+center pixel; and `open-graph-render-to-cube t --impl 1` plus `--impl 2`
+complete cubemap readback. The triangle and cubemap samples include generated
+SPIR-V headers, so both depend on the `rdg-sample-shaders` CMake target.
