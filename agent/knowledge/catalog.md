@@ -27,6 +27,7 @@ used as first-party evidence.
 | Public API | `src/inc/garnet/GN*.h` and included subheaders | Monolithic public entrypoints; subheaders often reject direct inclusion. |
 | Implementation/build composition | [`src/core/CMakeLists.txt`](../../src/core/CMakeLists.txt) | Source globs and explicit module CMake includes define the current compiled core. |
 | Build and CIT | [`env/bin/build.py`](../../env/bin/build.py), [`env/bin/cit.py`](../../env/bin/cit.py) | Use wrappers; command details and limits are in build/platform knowledge. |
+| Windows agent build failures | [Windows sandbox build limitation](build-and-platforms.md#windows-sandbox-build-limitation) | Currently run Windows builds outside the agent sandbox in the normal user environment; confirmed runtime evidence dated 2026-11-02. |
 | CI | [`.circleci/config.yml`](../../.circleci/config.yml) | Configured jobs are not proof that every job passed for this worktree. |
 | Reusable procedures | [`../skills/README.md`](../skills/README.md) | Skill triggers and procedures; use only relevant skills. |
 | Historical design/task records | `agent/completed/` | Historical evidence, not a current API contract. |
