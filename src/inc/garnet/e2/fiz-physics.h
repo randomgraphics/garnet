@@ -8,7 +8,7 @@ namespace GN::e2 {
 /// Transformed box/convex hulls and static triangle meshes are baked through the full affine path.
 /// Smooth primitives under non-uniform affine transforms need an explicit proxy hull.
 struct GN_API PhysicsFacet : Facet {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Facet);
+    GN_REGISTER_RUNTIME_TYPE(Facet);
 
     struct Value : FacetValue {
         GN_API GN_REGISTER_RUNTIME_TYPE(FacetValue);
@@ -28,7 +28,7 @@ struct GN_API PhysicsFacet : Facet {
     };
 
     explicit PhysicsFacet(const RuntimeType::TypeInfo & type = TYPE_INFO()): Facet(type) {}
-    GN_API bool                   validate(const PrimeView &, FormId, const FacetValue &) const override;
+    bool                          validate(const PrimeView &, FormId, const FacetValue &) const override;
     const RuntimeType::TypeInfo & valueType() const override { return Value::TYPE_INFO(); }
     Ref<Facet>                    clone() const override {
         if (typeInfo().id != TYPE_INFO().id) return {};

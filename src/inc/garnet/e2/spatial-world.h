@@ -7,7 +7,7 @@ namespace GN::e2 {
 /// Spatial hierarchy capability. Root positions are world-space; child positions are parent-local.
 /// Attach Value through a Mold and call resolveWorldTransform() for derived world poses.
 struct GN_API TransformFacet : Facet {
-    GN_API GN_REGISTER_RUNTIME_TYPE(Facet);
+    GN_REGISTER_RUNTIME_TYPE(Facet);
 
     /// Versioned local pose payload; uniform scale remains the common compact case.
     struct Value : FacetValue {
@@ -26,7 +26,7 @@ struct GN_API TransformFacet : Facet {
     };
 
     explicit TransformFacet(const RuntimeType::TypeInfo & type = TYPE_INFO()): Facet(type) {}
-    GN_API bool                   validate(const PrimeView &, FormId, const FacetValue &) const override;
+    bool                          validate(const PrimeView &, FormId, const FacetValue &) const override;
     const RuntimeType::TypeInfo & valueType() const override { return Value::TYPE_INFO(); }
     Ref<Facet>                    clone() const override {
         if (typeInfo().id != TYPE_INFO().id) return {};
