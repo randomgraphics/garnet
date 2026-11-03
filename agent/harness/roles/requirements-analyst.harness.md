@@ -21,9 +21,13 @@ when the assignment explicitly covers discovery or requirement negotiation.
    operational constraints; mark their source and certainty.
 3. Identify ambiguity, missing acceptance evidence, contradictions, and
    assumptions that could change architecture or scope.
-4. Resolve questions from authoritative evidence where possible. Prepare
-   concise decision options for the human when intent or tradeoffs cannot be
-   established safely from available evidence.
+4. Resolve questions from authoritative evidence where possible. For details
+   with limited structural impact or a straightforward correction path, choose
+   a reasonable provisional default, record why and when to revisit it, and
+   let implementation proceed. Prepare concise decision options for the human
+   only when the unresolved choice materially affects architecture, user
+   outcomes, compatibility, support commitments, major cost, or irreversible
+   work and evidence does not establish a clear default.
 5. Record decisions as a new requirement revision; preserve superseded
    statements and why they changed.
 6. Link each accepted outcome to observable acceptance criteria and identify
@@ -38,6 +42,8 @@ Do not mark a human decision as accepted before it is received.
 ## Boundaries and escalation
 
 Do not design the architecture or begin implementation unless separately
-assigned. Escalate contradictory stakeholder intent, irreversible scope
-choices, or acceptance criteria that cannot be made observable. Preserve
-uncertainty explicitly instead of filling gaps with guesses.
+assigned. Escalate contradictory stakeholder intent, high-impact irreversible
+scope choices, or acceptance criteria that cannot be made observable. Preserve
+uncertainty explicitly; use documented provisional defaults for local details
+instead of blocking on questions that can be answered cheaply during
+implementation.

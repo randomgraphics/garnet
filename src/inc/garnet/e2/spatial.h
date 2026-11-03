@@ -364,8 +364,22 @@ struct spatial {
         WorldCoordinate d = to - from;
         // Locality contract: the delta fits a signed 64-bit integer iff the high half is pure
         // sign extension of the low half.
-        GN_ASSERT(d.hi() == ((int64_t) d.lo() < 0 ? -1 : 0));
+        GN_ASSERT(d.hi() == ((int64_t) d.lo() < 0 ? -1 : 0),
+                  std::string("World-coordinate delta outside LocalCoordinate range: from=(") + std::to_string(from.hi()) + "," + std::to_string(from.lo()) + "), to=(" +
+                      std::to_string(to.hi()) + "," + std::to_string(to.lo()) + "), delta=(" + std::to_string(d.hi()) + "," + std::to_string(d.lo()) + ")");
         return LocalCoordinate((int64_t) d.lo());
+    }
+    static bool tryToLocal(WorldCoordinate from, WorldCoordinate to, LocalCoordinate & result) {
+        WorldCoordinate d = to - from;
+        if (d.hi() != ((int64_t) d.lo() < 0 ? -1 : 0)) return false;
+        result = LocalCoordinate((int64_t) d.lo());
+        return true;
+    }
+    static bool tryToLocal(const WorldVector3 & from, const WorldVector3 & to, LocalVector3 & result) {
+        LocalVector3 candidate;
+        if (!tryToLocal(from.x, to.x, candidate.x) || !tryToLocal(from.y, to.y, candidate.y) || !tryToLocal(from.z, to.z, candidate.z)) return false;
+        result = candidate;
+        return true;
     }
     static LocalVector2 toLocal(const WorldVector2 & from, const WorldVector2 & to) { return {toLocal(from.x, to.x), toLocal(from.y, to.y)}; }
     static LocalVector3 toLocal(const WorldVector3 & from, const WorldVector3 & to) {
@@ -401,6 +415,18 @@ struct spatial {
         return {row(m[0][0], m[1][0], m[2][0]), row(m[0][1], m[1][1], m[2][1]), row(m[0][2], m[1][2], m[2][2])};
     }
 
+    /// Apply a linear transform to a world-unit offset without converting its potentially large
+    /// integer components to floating point. Coefficients use 32.32 fixed point; this supports
+    /// the ordinary spatial range while preserving the large-coordinate precision contract.
+    static bool tryTransformBy(const glm::dmat3 & m, const WorldVector3 & v, WorldVector3 & result) {
+        for (int c = 0; c < 3; ++c)
+            for (int r = 0; r < 3; ++r)
+                if (!std::isfinite(m[c][r]) || std::abs(m[c][r]) >= 2147483647.0) return false;
+        auto row = [&](double c0, double c1, double c2) { return fxToUnits(fxCoefficient(c0) * v.x + fxCoefficient(c1) * v.y + fxCoefficient(c2) * v.z); };
+        result = {row(m[0][0], m[1][0], m[2][0]), row(m[0][1], m[1][1], m[2][1]), row(m[0][2], m[1][2], m[2][2])};
+        return true;
+    }
+
     /// 2D counterpart: rotate \p v counterclockwise by \p radians, in integer space.
     static WorldVector2 rotatedBy(double radians, const WorldVector2 & v) {
         const double c = std::cos(radians), s = std::sin(radians);
@@ -424,8 +450,8 @@ private:
     // 32.32 fixed-point scale used to carry rotation coefficients into integer space.
     static constexpr int64_t kFxOne = int64_t(1) << 32;
 
-    // Quantize a rotation coefficient (always within [-1, 1], so the scaled value fits an int64)
-    // to 32.32 fixed point.
+    // Quantize a finite linear coefficient to 32.32 fixed point. Values outside the signed
+    // coefficient range are an explicit unsupported range and must be rejected by callers.
     static WorldCoordinate fxCoefficient(double c) { return toWorld(LocalCoordinate((int64_t) std::llround(c * (double) kFxOne))); }
 
     // Round a fixed-point sum back to whole units, halves away from zero (sign-directed half bias

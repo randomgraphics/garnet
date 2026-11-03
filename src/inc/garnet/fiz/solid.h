@@ -28,7 +28,16 @@ struct SolidDesc {
     Scalar         massOverride    = 0.0f; ///< If 0.0, mass is computed as volume * temper.density.
     bool           allowSleep      = true;
     bool           ccd             = false; ///< Continuous collision detection for high-speed tunneling prevention.
-    uint64_t       entityId        = 0;     ///< Entity ID used for deterministic contact and island sorting.
+    uint64_t       entityId        = 0;     ///< Stable unique nonzero ID enables deterministic contact output and island sorting.
+};
+
+/// Canonically ordered body-pair contact captured during the most recent engine step.
+/// The representative point and normal are selected in stable lexicographic order when a pair has multiple manifolds.
+struct ContactPair {
+    uint64_t entityA = 0;
+    uint64_t entityB = 0;
+    Vector3  position {0.0f, 0.0f, 0.0f}; ///< World-space position in the engine's caller-selected physical units.
+    Vector3  normal {0.0f, 1.0f, 0.0f}; ///< Points from entityA toward entityB.
 };
 
 /// Rigid body instance governed by 6-DOF Newtonian mechanics and contact constraints.
@@ -63,7 +72,15 @@ public:
     virtual void           setTemper(const Temper & temper) = 0;
 
     virtual const Hull * hull() const = 0;
-    virtual Box          aabb() const = 0;
+
+    /// Replace the collision geometry between simulation steps. For dynamic bodies, recompute
+    /// mass/inertia by default, keeping an explicit SolidDesc::massOverride when supplied;
+    /// otherwise derive mass from the new hull volume and current density. Set the flag false
+    /// to preserve the body's existing mass properties. Returns false and logs the hull/physics
+    /// reason if the hull cannot be built or the requested mass properties cannot be derived.
+    virtual bool setHull(const AutoRef<Hull> & hull, bool updateMassProperties = true) = 0;
+
+    virtual Box aabb() const = 0;
 
     virtual bool isActive() const = 0;
     virtual void activate()       = 0;
@@ -104,6 +121,11 @@ public:
     virtual Vector3 gravity() const                     = 0;
 
     virtual bool raycast(const Vector3 & origin, const Vector3 & direction, Scalar maxDistance, RaycastHit & outHit) const = 0;
+
+    /// Copy contacts observed during the most recent nonzero step, sorted by entity ID.
+    /// A body pair appears once even when Jolt produces multiple subshape manifolds.
+    /// Contact output requires unique nonzero SolidDesc::entityId values for both bodies.
+    virtual DynaArray<ContactPair> contactPairs() const = 0;
 
     virtual size_t bodyCount() const       = 0;
     virtual size_t activeBodyCount() const = 0;

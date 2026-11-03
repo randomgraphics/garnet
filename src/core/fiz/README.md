@@ -20,7 +20,7 @@ Include the monolithic header; the subheaders reject direct inclusion:
 | `common.h` | `UnitOfTime`, `Scalar`, math types, `Transform`, motion/collision enums and `SimulationMode`. |
 | `temper.h` | Density, restitution, friction, damping and compliance data, plus material presets. |
 | `hull.h` | `Hull::createBox`, `createSphere`, `createCapsule`, `createCylinder`, `createConvex` and `createMesh`; typed shape inspection interfaces. |
-| `solid.h` | `SolidEngine`, `SolidDesc`, rigid-body state/control and raycasts. |
+| `solid.h` | `SolidEngine`, `SolidDesc`, rigid-body state/control, live Hull replacement, raycasts and sorted contact snapshots. |
 | `gel.h` | `GelMesh`, `GelDesc`, `Gel`, `GelSolver`, soft-body surface extraction and rigid bodies in the same solver. |
 
 Factories return owning `AutoRef` objects. `SolidEngine` owns its simulated solids;
@@ -38,6 +38,10 @@ while using its bodies, particularly Gel objects and solids owned by GelSolver.
 - Position/orientation, linear/angular velocity, force/torque, impulses, sleep
   control, AABB queries and runtime material updates through `Solid`.
 - Gravity, body counts and nearest raycast queries through `SolidEngine`.
+- `Solid::setHull()` replaces geometry between steps; dynamic mass/inertia are
+  recomputed from the new hull unless the caller requests preserved properties.
+- `SolidEngine::contactPairs()` returns one canonically sorted pair per body pair
+  observed in the most recent step. Both bodies need unique nonzero `entityId`s.
 - Optional CCD through `SolidDesc::ccd = true`, mapped to Jolt's `LinearCast`
   motion quality. The default is discrete collision detection.
 
@@ -115,22 +119,21 @@ compares final positions, orientations and velocities bit-for-bit for 16 bodies
 and 60 steps across ten additional single-worker runs. A separate 1/2/4-worker
 check compares one body's final height within 0.01 units. The gel test compares
 surface positions/normals across two single-worker runs. These checks do not
-establish universal cross-platform or cross-thread-count bit identity.
-`entityId` is exposed as caller metadata; the adapter does not implement its own
-entity-ID-sorted contact/reduction pipeline.
+establish universal cross-platform or cross-thread-count bit identity. The E2
+headless World sample separately matched canonical Prime and CollisionEvent
+fingerprints across repeated one-worker runs and a four-worker run on Windows;
+cross-OS/compiler equality remains unverified. Contact snapshots are sorted by stable `entityId`; their representative point is selected
+lexicographically so callback scheduling does not select a different manifold.
 
 ## E2 boundary
 
-The [E2 World runtime](../e2/README.md) shares the time type but its active
-`DynamicsLaw` still uses a local AABB box solver. It does not invoke `SolidEngine`
-or `GelSolver`. In particular, E2's demo has no CCD even though GNfiz rigid
-bodies can enable it.
-
-A future adapter must read tick-start Prime, rebase E2 coordinates into a suitable
-local physical frame, solve and write final FacetValues through Slate. Mutable
-Jolt continuation state needs explicit ownership and failure handling; retaining
-a PrimeView does not version or roll back a live Jolt solver. E2 currently halts
-on tick failure and does not promise automatic backend recovery.
+The [E2 World runtime](../e2/README.md) includes an optional `GNfizLaw`. It rebases
+large E2 coordinates around a configurable origin, reconciles bodies by FormId,
+and stages transforms, motion and contact partners through Prime/Slate. The AABB
+`DynamicsLaw` remains an alternative demonstration policy. The GNfiz adapter owns
+a live Jolt engine; a failed World tick halts advancement because Prime cannot
+roll the backend solver back. Deterministic replay from arbitrary mid-run Prime
+snapshots is not supported because Jolt continuation state has no checkpoint API.
 
 ## Standalone rigid-body example
 

@@ -641,6 +641,7 @@ public:
     }
 
     AutoRef<Gel> createGel(const GelDesc & desc) override {
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
         if (!desc.mesh || desc.mesh->vertices().empty()) return {};
 
         auto sharedSettings = new JPH::SoftBodySharedSettings();
@@ -728,6 +729,7 @@ public:
 
     void removeGel(Gel * gel) override {
         if (!gel) return;
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
         auto *      gImpl = static_cast<GelImpl *>(gel);
         JPH::BodyID bId   = gImpl->bodyId();
         if (!bId.IsInvalid()) {
@@ -741,6 +743,7 @@ public:
     }
 
     AutoRef<Solid> createSolid(const SolidDesc & desc) override {
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
         JPH::ShapeRefC shape = createJoltShape(desc.hull.get());
         if (!shape) return {};
 
@@ -780,7 +783,7 @@ public:
         JPH::Body * body = bi.CreateBody(settings);
         if (!body) return {};
 
-        auto solid = AutoRef<SolidImpl>(new SolidImpl(&bi, desc, body->GetID(), mass));
+        auto solid = AutoRef<SolidImpl>(new SolidImpl(&bi, &mPhysicsSystem->GetBodyLockInterface(), &mMutationMutex, desc, body->GetID(), mass));
         body->SetUserData(reinterpret_cast<uint64_t>(solid.get()));
 
         bi.AddBody(body->GetID(), desc.motionType == MotionType::DYNAMIC ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
@@ -796,6 +799,7 @@ public:
 
     void removeSolid(Solid * solid) override {
         if (!solid) return;
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
         auto *      sImpl = static_cast<SolidImpl *>(solid);
         JPH::BodyID bId   = sImpl->bodyId();
         if (!bId.IsInvalid()) {
@@ -811,6 +815,7 @@ public:
     void step(UnitOfTime dt) override {
         int64_t ns = dt.count();
         if (ns == 0) return;
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
 
         if (ns > 0) {
             float seconds = static_cast<float>(ns) * 1e-9f;
@@ -836,6 +841,7 @@ public:
     const JPH::BodyLockInterface & bodyLockInterface() const { return mPhysicsSystem->GetBodyLockInterface(); }
 
 private:
+    std::mutex                          mMutationMutex;
     Vector3                             mGravity;
     SimulationMode                      mSimulationMode;
     BPLayerInterfaceImpl                mBPLayerInterface;

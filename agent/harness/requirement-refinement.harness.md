@@ -55,7 +55,11 @@ repository evidence, experiments, and human decisions.
 6. **Ask selectively.** Ask the human controller only when a decision changes
    product direction, public compatibility, supported platforms, major cost,
    irreversible state, or a value judgment that repository evidence cannot
-   resolve. Bundle related questions into one concise decision request.
+   resolve, and no clear, low-cost reversible path exists. Before asking,
+   assess both structural impact and how easily a choice can be corrected later.
+   If impact is limited or correction is straightforward, choose a reasonable
+   default, record the rationale and revisit trigger, and proceed. Bundle
+   related high-impact questions into one concise decision request.
 7. **Replan.** Incorporate new evidence or human direction into a new
    requirements version, update the work graph and acceptance checks, and
    preserve the prior version for auditability.
@@ -63,15 +67,26 @@ repository evidence, experiments, and human decisions.
    constraints, including decisions made after implementation began. Reopen a
    requirement when new evidence invalidates its premise.
 
-When a decision is pending, continue independent research, prototypes, and
-reversible work. Do not cross the decision boundary by making a high-impact
-choice on the user's behalf. If the human is unavailable, the harness may
-continue with a clearly marked provisional choice only when the choice is
-reversible and does not foreclose other options.
+Do not let an unresolved detail block useful implementation unless it is a real
+dependency. Prefer a small, reviewable slice behind a reversible boundary over
+waiting for a complex, supposedly perfect design. When a decision is pending,
+continue independent research, prototypes, and reversible work. Do not cross
+the decision boundary by making a high-impact choice on the user's behalf. If
+the human is unavailable, continue with a clearly marked provisional choice
+only when the choice is reversible and does not foreclose other options.
+
+If an unresolved feature is isolated to a path that may not be exercised yet,
+keep that uncertainty local: place a specific TODO and an explicit capability
+check at the relevant code boundary, log the feature/configuration context when
+the path is reached, and fail safely (error result, exception, or assertion as
+appropriate) rather than silently pretending support. Continue unrelated
+paths. Track the TODO's resolution in the task graph; remove it when the
+capability is implemented or the requirement is explicitly dropped.
 
 ## Interaction policy
 
-For each unresolved high-impact item, provide the human with:
+For each unresolved item that passes the escalation threshold, provide the
+human with:
 
 - the exact decision to make;
 - repository or experiment evidence;

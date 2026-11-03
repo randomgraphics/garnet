@@ -19,7 +19,11 @@
 #include "e2/basis/visual.h"
 #include "e2/world.h"
 #include "e2/universe.h"
+#include "e2/spatial-world.h"
+#include "e2/presentation.h"
+#include "e2/collision.h"
 #include "e2/dynamics.h"
+#include "e2/fiz-physics.h"
 // Simple world is suspended; it is not part of the active engine2 API.
 // #include "e2/simple.h"
 #undef __GN_INSIDE_ENGINE2_H__
