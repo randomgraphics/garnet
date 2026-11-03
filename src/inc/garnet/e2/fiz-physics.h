@@ -7,7 +7,7 @@ namespace GN::e2 {
 /// Optional GNfiz collider capability. The collider is independent of VisualFacet geometry.
 /// Transformed box/convex hulls and static triangle meshes are baked through the full affine path.
 /// Smooth primitives under non-uniform affine transforms need an explicit proxy hull.
-struct PhysicsFacet : Facet {
+struct GN_API PhysicsFacet : Facet {
     GN_API GN_REGISTER_RUNTIME_TYPE(Facet);
 
     struct Value : FacetValue {
