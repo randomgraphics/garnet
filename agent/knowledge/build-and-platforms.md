@@ -1,8 +1,9 @@
 # Build, Test, CI, and Platform Map
 
 This entry summarizes configured workflows inspected at baseline `27d39c986` on
-`wip/agent-harness`. It records repository configuration, not the result of running
-those workflows. See [`coverage.md`](coverage.md) for scan scope and limitations.
+`wip/agent-harness`. It records repository configuration; later runtime observations
+are dated separately below. See [`coverage.md`](coverage.md) for scan scope and
+limitations.
 
 ## Build system
 
@@ -20,6 +21,43 @@ those workflows. See [`coverage.md`](coverage.md) for scan scope and limitations
   platform features. Core CMake sets legacy DirectX feature flags on Windows and
   Vulkan from `VULKAN_FOUND`. These flags indicate configured availability, not
   that every module has an implemented backend.
+
+## Windows sandbox build limitation
+
+**Current requirement: run Windows builds outside the agent sandbox, in the normal
+user environment.** For agent execution, use the tool's approved unsandboxed
+execution mechanism. From the repository root, use the repository's Python virtual
+environment and normal build wrapper:
+
+```powershell
+.\.pyvenv\Scripts\python.exe env\bin\build.py d
+```
+
+Confirmed by runtime investigation on 2026-11-02 with MSBuild 18.10.1 and MSVC/PDB
+components 14.51.36260.0:
+
+- Sandboxed `/m:8` builds failed after ten 30-second attempts to connect to MSBuild
+  worker named pipes. `ZERO_CHECK` completed; the failure was in
+  `ResolveProjectReferences`, before C++ compilation.
+- `/m:1` bypassed that failure but compilation still reported C1902. A minimal
+  single-file `/Zi /FS` compile reproduced it; the PDB RPC API returned
+  `EC_RPC (23): unable to connect: timeout waiting for mspdbsrv.exe (0x800705B4)`.
+  Matching tool versions and fresh PDB files did not resolve the sandbox failure.
+- The same existing build directory and toolchain built successfully outside the
+  sandbox with `cmake --build build/windows.vc.d -j8 --config Debug --verbose`
+  (exit code 0). This raw CMake invocation was a diagnostic comparison; ordinary
+  builds should continue to use `env/bin/build.py`.
+
+`Start-Process` inside the sandbox does not move its child process into the normal
+user execution environment. A matching `whoami` result does not establish equivalent
+sandbox permissions or IPC access. Changing only the launcher or using `/m:1` is
+therefore not a complete workaround.
+
+Evidence: local, Git-ignored logs under `build/windows.vc.d/` include
+`msbuild-node-diagnostics/MSBuild_CommTrace_PID_67764.txt`,
+`pdb-sandbox-diagnostics/api-rpc-sandbox.log`, and `cmake-user-context.log`.
+These are observations of the tested Windows agent environment, not a claim about
+every Windows sandbox implementation. Recheck after sandbox or toolchain updates.
 
 ## Test and lint entrypoints
 
