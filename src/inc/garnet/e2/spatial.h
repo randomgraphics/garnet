@@ -364,9 +364,10 @@ struct spatial {
         WorldCoordinate d = to - from;
         // Locality contract: the delta fits a signed 64-bit integer iff the high half is pure
         // sign extension of the low half.
-        GN_ASSERT(d.hi() == ((int64_t) d.lo() < 0 ? -1 : 0),
-                  std::string("World-coordinate delta outside LocalCoordinate range: from=(") + std::to_string(from.hi()) + "," + std::to_string(from.lo()) + "), to=(" +
-                      std::to_string(to.hi()) + "," + std::to_string(to.lo()) + "), delta=(" + std::to_string(d.hi()) + "," + std::to_string(d.lo()) + ")");
+        GN_ASSERT(d.hi() == ((int64_t) d.lo() < 0 ? -1 : 0), std::string("World-coordinate delta outside LocalCoordinate range: from=(") +
+                                                                 std::to_string(from.hi()) + "," + std::to_string(from.lo()) + "), to=(" +
+                                                                 std::to_string(to.hi()) + "," + std::to_string(to.lo()) + "), delta=(" +
+                                                                 std::to_string(d.hi()) + "," + std::to_string(d.lo()) + ")");
         return LocalCoordinate((int64_t) d.lo());
     }
     static bool tryToLocal(WorldCoordinate from, WorldCoordinate to, LocalCoordinate & result) {
@@ -423,7 +424,7 @@ struct spatial {
             for (int r = 0; r < 3; ++r)
                 if (!std::isfinite(m[c][r]) || std::abs(m[c][r]) >= 2147483647.0) return false;
         auto row = [&](double c0, double c1, double c2) { return fxToUnits(fxCoefficient(c0) * v.x + fxCoefficient(c1) * v.y + fxCoefficient(c2) * v.z); };
-        result = {row(m[0][0], m[1][0], m[2][0]), row(m[0][1], m[1][1], m[2][1]), row(m[0][2], m[1][2], m[2][2])};
+        result   = {row(m[0][0], m[1][0], m[2][0]), row(m[0][1], m[1][1], m[2][1]), row(m[0][2], m[1][2], m[2][2])};
         return true;
     }
 

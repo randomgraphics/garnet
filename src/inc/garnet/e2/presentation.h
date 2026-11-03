@@ -17,12 +17,12 @@ struct VisualFacet : Facet {
             return Ref<FacetValue>(new Value(*this));
         }
         basis::Assets::MeshId meshId {nullptr};
-        glm::vec3 scale {0.25f}; ///< Local mesh scale, independent from the collision shape.
+        glm::vec3             scale {0.25f}; ///< Local mesh scale, independent from the collision shape.
     };
 
     explicit VisualFacet(const RuntimeType::TypeInfo & type = TYPE_INFO()): Facet(type) {}
     const RuntimeType::TypeInfo & valueType() const override { return Value::TYPE_INFO(); }
-    Ref<Facet> clone() const override {
+    Ref<Facet>                    clone() const override {
         if (typeInfo().id != TYPE_INFO().id) return {};
         return Ref<Facet>(new VisualFacet(*this));
     }

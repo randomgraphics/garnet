@@ -730,8 +730,8 @@ public:
     void removeGel(Gel * gel) override {
         if (!gel) return;
         std::lock_guard<std::mutex> engineLock(mMutationMutex);
-        auto *      gImpl = static_cast<GelImpl *>(gel);
-        JPH::BodyID bId   = gImpl->bodyId();
+        auto *                      gImpl = static_cast<GelImpl *>(gel);
+        JPH::BodyID                 bId   = gImpl->bodyId();
         if (!bId.IsInvalid()) {
             auto & bi = mPhysicsSystem->GetBodyInterface();
             bi.RemoveBody(bId);
@@ -744,7 +744,7 @@ public:
 
     AutoRef<Solid> createSolid(const SolidDesc & desc) override {
         std::lock_guard<std::mutex> engineLock(mMutationMutex);
-        JPH::ShapeRefC shape = createJoltShape(desc.hull.get());
+        JPH::ShapeRefC              shape = createJoltShape(desc.hull.get());
         if (!shape) return {};
 
         JPH::EMotionType jmt = JPH::EMotionType::Dynamic;
@@ -800,8 +800,8 @@ public:
     void removeSolid(Solid * solid) override {
         if (!solid) return;
         std::lock_guard<std::mutex> engineLock(mMutationMutex);
-        auto *      sImpl = static_cast<SolidImpl *>(solid);
-        JPH::BodyID bId   = sImpl->bodyId();
+        auto *                      sImpl = static_cast<SolidImpl *>(solid);
+        JPH::BodyID                 bId   = sImpl->bodyId();
         if (!bId.IsInvalid()) {
             auto & bi = mPhysicsSystem->GetBodyInterface();
             bi.RemoveBody(bId);

@@ -110,8 +110,8 @@ public:
     void removeSolid(Solid * solid) override {
         if (!solid) return;
         std::lock_guard<std::mutex> engineLock(mMutationMutex);
-        auto *      sImpl = static_cast<SolidImpl *>(solid);
-        JPH::BodyID bId   = sImpl->bodyId();
+        auto *                      sImpl = static_cast<SolidImpl *>(solid);
+        JPH::BodyID                 bId   = sImpl->bodyId();
         if (!bId.IsInvalid()) {
             auto & bi = mPhysicsSystem->GetBodyInterface();
             bi.RemoveBody(bId);
@@ -235,15 +235,15 @@ private:
         const auto * solidA = reinterpret_cast<const SolidImpl *>(bodyA.GetUserData());
         const auto * solidB = reinterpret_cast<const SolidImpl *>(bodyB.GetUserData());
         if (!solidA || !solidB || solidA->entityId() == 0 || solidB->entityId() == 0 || solidA->entityId() == solidB->entityId()) return;
-        auto pointA = manifold.GetWorldSpaceContactPointOn1(0);
-        auto pointB = manifold.GetWorldSpaceContactPointOn2(0);
+        auto        pointA = manifold.GetWorldSpaceContactPointOn1(0);
+        auto        pointB = manifold.GetWorldSpaceContactPointOn2(0);
         ContactPair candidate;
-        candidate.entityA = solidA->entityId();
-        candidate.entityB = solidB->entityId();
+        candidate.entityA  = solidA->entityId();
+        candidate.entityB  = solidB->entityId();
         candidate.position = Vector3(static_cast<float>((pointA.GetX() + pointB.GetX()) * 0.5), static_cast<float>((pointA.GetY() + pointB.GetY()) * 0.5),
                                      static_cast<float>((pointA.GetZ() + pointB.GetZ()) * 0.5));
-        JPH::Vec3 normal = manifold.mWorldSpaceNormal;
-        candidate.normal = Vector3(normal.GetX(), normal.GetY(), normal.GetZ());
+        JPH::Vec3 normal   = manifold.mWorldSpaceNormal;
+        candidate.normal   = Vector3(normal.GetX(), normal.GetY(), normal.GetZ());
         if (candidate.entityA > candidate.entityB) {
             std::swap(candidate.entityA, candidate.entityB);
             candidate.normal = -candidate.normal;

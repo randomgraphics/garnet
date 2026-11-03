@@ -11,16 +11,14 @@ bool validRotation(const Rotation & q) {
     return std::isfinite(q.w) && std::isfinite(q.x) && std::isfinite(q.y) && std::isfinite(q.z) && std::abs(glm::dot(q, q) - 1.0f) <= 0.0001f;
 }
 
-bool validScale(const glm::vec3 & s) {
-    return std::isfinite(s.x) && std::isfinite(s.y) && std::isfinite(s.z) && s.x != 0 && s.y != 0 && s.z != 0;
-}
+bool validScale(const glm::vec3 & s) { return std::isfinite(s.x) && std::isfinite(s.y) && std::isfinite(s.z) && s.x != 0 && s.y != 0 && s.z != 0; }
 
 bool uniformScale(const glm::vec3 & s) { return s.x == s.y && s.y == s.z; }
 
 glm::dmat3 localLinear(const TransformFacet::Value & value) {
-    return value.affineOverride ? value.affineLinear
-                                : glm::mat3_cast(glm::dquat(glm::normalize(value.orientation))) *
-                                      glm::dmat3(value.scale.x, 0, 0, 0, value.scale.y, 0, 0, 0, value.scale.z);
+    return value.affineOverride
+               ? value.affineLinear
+               : glm::mat3_cast(glm::dquat(glm::normalize(value.orientation))) * glm::dmat3(value.scale.x, 0, 0, 0, value.scale.y, 0, 0, 0, value.scale.z);
 }
 } // namespace
 
@@ -58,17 +56,18 @@ bool resolveWorldTransform(const PrimeView & prime, FormId id, WorldTransform & 
     for (size_t i = chain.size(); i > 0; --i) {
         const auto * transform = chain[i - 1];
         if (transform->parent == 0) {
-            out.position = transform->position;
+            out.position    = transform->position;
             out.orientation = glm::normalize(transform->orientation);
             if (transform->affineOverride) {
-                out.affineLinear = transform->affineLinear;
+                out.affineLinear   = transform->affineLinear;
                 out.affineFallback = true;
                 if (!supportedAffineCoefficients(out.affineLinear) || std::abs(glm::determinant(out.affineLinear)) < 1e-20) return false;
             } else if (uniformScale(transform->scale)) {
                 out.uniformScale = transform->scale.x;
                 if (!std::isfinite(out.uniformScale) || std::abs(out.uniformScale) >= 2147483647.0f) return false;
             } else {
-                out.affineLinear = glm::mat3_cast(glm::dquat(out.orientation)) * glm::dmat3(transform->scale.x, 0, 0, 0, transform->scale.y, 0, 0, 0, transform->scale.z);
+                out.affineLinear =
+                    glm::mat3_cast(glm::dquat(out.orientation)) * glm::dmat3(transform->scale.x, 0, 0, 0, transform->scale.y, 0, 0, 0, transform->scale.z);
                 out.affineFallback = true;
                 if (!supportedAffineCoefficients(out.affineLinear)) return false;
             }
@@ -78,7 +77,7 @@ bool resolveWorldTransform(const PrimeView & prime, FormId id, WorldTransform & 
                 if (out.uniformScale == 1.f) {
                     out.position = out.position + spatial::rotatedBy(out.orientation, transform->position);
                 } else {
-                    auto parentLinear = glm::mat3_cast(glm::dquat(out.orientation)) * (double) out.uniformScale;
+                    auto         parentLinear = glm::mat3_cast(glm::dquat(out.orientation)) * (double) out.uniformScale;
                     WorldVector3 offset;
                     if (!spatial::tryTransformBy(parentLinear, transform->position, offset)) return false;
                     out.position = out.position + offset;
@@ -88,14 +87,14 @@ bool resolveWorldTransform(const PrimeView & prime, FormId id, WorldTransform & 
                 if (!std::isfinite(out.uniformScale) || std::abs(out.uniformScale) >= 2147483647.0f) return false;
             } else {
                 const glm::dmat3 localMatrix = localLinear(*transform);
-                const glm::dmat3 composed = affineLinear(out) * localMatrix;
+                const glm::dmat3 composed    = affineLinear(out) * localMatrix;
                 if (!supportedAffineCoefficients(composed)) return false;
                 WorldVector3 offset;
                 if (!spatial::tryTransformBy(affineLinear(out), transform->position, offset)) return false;
-                out.position = out.position + offset;
-                out.affineLinear = composed;
+                out.position       = out.position + offset;
+                out.affineLinear   = composed;
                 out.affineFallback = true;
-                out.orientation = glm::normalize(out.orientation * localRotation);
+                out.orientation    = glm::normalize(out.orientation * localRotation);
             }
         }
     }
@@ -126,7 +125,8 @@ bool TransformFacet::validate(const PrimeView & prime, FormId id, const FacetVal
         if (!visited.insert(parent).second) return false;
         auto ancestor = prime.get<TransformFacet>(parent);
         if (!ancestor || !validRotation(ancestor->orientation) || !validScale(ancestor->scale) ||
-            (ancestor->affineOverride && (!detail::supportedAffineCoefficients(ancestor->affineLinear) || std::abs(glm::determinant(ancestor->affineLinear)) < 1e-20)))
+            (ancestor->affineOverride &&
+             (!detail::supportedAffineCoefficients(ancestor->affineLinear) || std::abs(glm::determinant(ancestor->affineLinear)) < 1e-20)))
             return false;
         parent = ancestor->parent;
     }

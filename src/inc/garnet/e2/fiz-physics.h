@@ -17,20 +17,20 @@ struct PhysicsFacet : Facet {
             if (typeInfo().id != TYPE_INFO().id) return {};
             return Ref<FacetValue>(new Value(*this));
         }
-        AutoRef<fiz::Hull> collider;
-        fiz::MotionType   motionType = fiz::MotionType::STATIC;
-        fiz::Temper       temper;
-        fiz::CollisionLayer layer = fiz::CollisionLayer::NON_MOVING;
-        fiz::Scalar        massOverride = 0;
-        bool               allowSleep = true;
-        bool               ccd = false;
-        DynaArray<FormId>  touching; ///< Sorted body partners from the most recent GNfiz step.
+        AutoRef<fiz::Hull>  collider;
+        fiz::MotionType     motionType = fiz::MotionType::STATIC;
+        fiz::Temper         temper;
+        fiz::CollisionLayer layer        = fiz::CollisionLayer::NON_MOVING;
+        fiz::Scalar         massOverride = 0;
+        bool                allowSleep   = true;
+        bool                ccd          = false;
+        DynaArray<FormId>   touching; ///< Sorted body partners from the most recent GNfiz step.
     };
 
     explicit PhysicsFacet(const RuntimeType::TypeInfo & type = TYPE_INFO()): Facet(type) {}
-    GN_API bool validate(const PrimeView &, FormId, const FacetValue &) const override;
+    GN_API bool                   validate(const PrimeView &, FormId, const FacetValue &) const override;
     const RuntimeType::TypeInfo & valueType() const override { return Value::TYPE_INFO(); }
-    Ref<Facet> clone() const override {
+    Ref<Facet>                    clone() const override {
         if (typeInfo().id != TYPE_INFO().id) return {};
         return Ref<Facet>(new PhysicsFacet(*this));
     }
@@ -39,9 +39,9 @@ struct PhysicsFacet : Facet {
 
 struct GNfizLawOptions {
     PhysicalScale scale = PhysicalScale::NANOMETER();
-    WorldVector3 origin {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()};
-    glm::dvec3 gravity {0, -9.81, 0};
-    uint32_t workerThreads = 1; ///< Fixes solver scheduling; E2 sample 1/4-worker replay matched on Windows, cross-platform equality is unverified.
+    WorldVector3  origin {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()};
+    glm::dvec3    gravity {0, -9.81, 0};
+    uint32_t      workerThreads = 1; ///< Fixes solver scheduling; E2 sample 1/4-worker replay matched on Windows, cross-platform equality is unverified.
 };
 
 /// Register the optional GNfiz collider capability.

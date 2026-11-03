@@ -195,7 +195,7 @@ struct LifetimeOptions {
     double        maximumHorizontalSpeed = 0.5;     ///< Initial XZ speed is sampled uniformly from zero to this value in metres per second.
     glm::dvec3    spawnMinimum {-4.2, 4, -4.2};     ///< Lower spawn-region corner in metres relative to origin.
     glm::dvec3    spawnMaximum {4.2, 8, 4.2};       ///< Upper spawn-region corner; each component must be at least the corresponding minimum.
-    bool          includeGNfizCollider = false; ///< Attach PhysicsFacet to generated boxes for the optional GNfiz Law.
+    bool          includeGNfizCollider = false;     ///< Attach PhysicsFacet to generated boxes for the optional GNfiz Law.
 };
 
 /// Register capability types and the contact-deletion cleanup. Call before adding the dynamics/lifetime Laws.
@@ -212,8 +212,8 @@ GN_API Ref<Law> createLifetimeLaw(Universe &, const LifetimeOptions & = {});
 
 /// Ground box centered half a metre below origin, with a finite eight-metre square top at y=0.
 GN_API Ref<Mold> createGroundMold(Universe &, PhysicalScale = PhysicalScale::NANOMETER(),
-                                  const WorldVector3 & origin = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()},
-                                  bool includeGNfizCollider = false);
+                                  const WorldVector3 & origin               = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()},
+                                  bool                 includeGNfizCollider = false);
 
 /// Complete dynamic box template. The current AABB solver permits arbitrary Transform orientation/scale
 /// as a conservative proxy and requires zero angular velocity.

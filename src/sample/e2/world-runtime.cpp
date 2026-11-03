@@ -31,8 +31,8 @@ uint64_t worldStateFingerprint(const PrimeView & prime) {
             hashWord(hash, static_cast<uint64_t>(coordinate.hi()));
             hashWord(hash, coordinate.lo());
         }
-        for (float component : {value->orientation.w, value->orientation.x, value->orientation.y, value->orientation.z,
-                                value->scale.x, value->scale.y, value->scale.z})
+        for (float component :
+             {value->orientation.w, value->orientation.x, value->orientation.y, value->orientation.z, value->scale.x, value->scale.y, value->scale.z})
             hashWord(hash, std::bit_cast<uint32_t>(component));
         hashWord(hash, value->affineOverride ? 1 : 0);
         if (value->affineOverride)
@@ -42,8 +42,8 @@ uint64_t worldStateFingerprint(const PrimeView & prime) {
     for (auto id : prime.query<MotionFacet>()) {
         const auto * value = prime.get<MotionFacet>(id);
         hashWord(hash, id);
-        for (double component : {value->linearVelocity.x, value->linearVelocity.y, value->linearVelocity.z,
-                                 value->angularVelocity.x, value->angularVelocity.y, value->angularVelocity.z})
+        for (double component : {value->linearVelocity.x, value->linearVelocity.y, value->linearVelocity.z, value->angularVelocity.x, value->angularVelocity.y,
+                                 value->angularVelocity.z})
             hashWord(hash, std::bit_cast<uint64_t>(component));
     }
     for (auto id : prime.query<PhysicsFacet>()) {
@@ -62,7 +62,7 @@ uint64_t worldStateFingerprint(const PrimeView & prime) {
 
 int main(int argc, const char * argv[]) {
     bool         headless = false, testMode = false, affineProbe = false;
-    const char * snapshotPath = nullptr;
+    const char * snapshotPath  = nullptr;
     uint32_t     workerThreads = 1;
     for (int i = 1; i < argc; ++i) {
         const std::string_view argument(argv[i]);
@@ -104,17 +104,17 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
     const WorldVector3 worldOrigin {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()};
-    auto ground = createGroundMold(universe, scale, worldOrigin, true);
+    auto               ground = createGroundMold(universe, scale, worldOrigin, true);
     if (!ground || !world->createForm(*ground) || !world->initializeState(LifetimeState {})) {
         std::cerr << "Failed to create initial world state\n";
         return 1;
     }
-    FormId  affineProbeId = 0;
+    FormId   affineProbeId = 0;
     Rotation initialProbeOrientation {1, 0, 0, 0};
     if (affineProbe) {
         TransformFacet::Value parentTransform;
         parentTransform.position = positionFromMeters({0, 3, 0}, scale, worldOrigin);
-        parentTransform.scale = {1.4f, 0.8f, 1.1f};
+        parentTransform.scale    = {1.4f, 0.8f, 1.1f};
         VisualFacet::Value parentVisual;
         parentVisual.scale = glm::vec3(0.65f);
         DynaArray<FacetBinding> parentFacets {
@@ -126,21 +126,21 @@ int main(int argc, const char * argv[]) {
             std::cerr << "Failed to create affine probe parent\n";
             return 1;
         }
-        const FormId parentId = world->createForm(*parentMold);
+        const FormId          parentId = world->createForm(*parentMold);
         TransformFacet::Value childTransform;
-        childTransform.parent = parentId;
-        childTransform.position = positionFromMeters({0, 1, 0}, scale, worldOrigin);
+        childTransform.parent      = parentId;
+        childTransform.position    = positionFromMeters({0, 1, 0}, scale, worldOrigin);
         childTransform.orientation = glm::angleAxis(0.45f, glm::vec3(0, 0, 1));
-        childTransform.scale = glm::vec3(0.8f);
-        initialProbeOrientation = glm::normalize(parentTransform.orientation * childTransform.orientation);
+        childTransform.scale       = glm::vec3(0.8f);
+        initialProbeOrientation    = glm::normalize(parentTransform.orientation * childTransform.orientation);
         MotionFacet::Value probeMotion;
         probeMotion.angularVelocity = {0.1, 0.2, 0.05};
         VisualFacet::Value probeVisual;
         probeVisual.scale = glm::vec3(0.35f);
         PhysicsFacet::Value probePhysics;
-        probePhysics.collider = fiz::Hull::createBox({0.25f, 0.25f, 0.25f});
+        probePhysics.collider   = fiz::Hull::createBox({0.25f, 0.25f, 0.25f});
         probePhysics.motionType = fiz::MotionType::DYNAMIC;
-        probePhysics.layer = fiz::CollisionLayer::MOVING;
+        probePhysics.layer      = fiz::CollisionLayer::MOVING;
         DynaArray<FacetBinding> probeFacets {
             {Ref<const Facet>(new TransformFacet), childTransform.clone()},
             {Ref<const Facet>(new MotionFacet), probeMotion.clone()},
@@ -250,16 +250,16 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
     if (affineProbe) {
-        const auto finalPrime = world->primeSnapshot();
-        const auto * value = finalPrime->get<TransformFacet>(affineProbeId);
-        const auto * physics = finalPrime->get<PhysicsFacet>(affineProbeId);
+        const auto     finalPrime = world->primeSnapshot();
+        const auto *   value      = finalPrime->get<TransformFacet>(affineProbeId);
+        const auto *   physics    = finalPrime->get<PhysicsFacet>(affineProbeId);
         WorldTransform finalPose;
-        const bool resolved = value && resolveWorldTransform(*finalPrime, affineProbeId, finalPose);
-        const float orientationDot = resolved ? std::abs(glm::dot(initialProbeOrientation, finalPose.orientation)) : 1.f;
+        const bool     resolved       = value && resolveWorldTransform(*finalPrime, affineProbeId, finalPose);
+        const float    orientationDot = resolved ? std::abs(glm::dot(initialProbeOrientation, finalPose.orientation)) : 1.f;
         if (!resolved || !value->affineOverride || !physics || physics->touching.empty() || orientationDot > 0.9999f) {
-            std::cerr << "Affine collider probe failed: form-present=" << (value != nullptr)
-                      << " affine-override=" << (value ? value->affineOverride : false) << " world-pose-resolved=" << resolved
-                      << " touching=" << (physics ? physics->touching.size() : 0) << " initial-final-orientation-dot=" << orientationDot << '\n';
+            std::cerr << "Affine collider probe failed: form-present=" << (value != nullptr) << " affine-override=" << (value ? value->affineOverride : false)
+                      << " world-pose-resolved=" << resolved << " touching=" << (physics ? physics->touching.size() : 0)
+                      << " initial-final-orientation-dot=" << orientationDot << '\n';
             return 1;
         }
         std::cout << "affine-probe: non-uniform parent, rotated child and dynamic angular motion passed\n";
@@ -289,6 +289,7 @@ int main(int argc, const char * argv[]) {
         std::cout << "headless: white-model-pixels=" << whitePixels << '\n';
     }
     std::cout << "world-runtime: ticks=" << lastTick << " frames=" << frames << " observed-events=" << eventCount << " worker-threads=" << workerThreads
-              << " prime-fingerprint=" << std::hex << worldStateFingerprint(*world->primeSnapshot()) << " event-fingerprint=" << eventFingerprint << std::dec << '\n';
+              << " prime-fingerprint=" << std::hex << worldStateFingerprint(*world->primeSnapshot()) << " event-fingerprint=" << eventFingerprint << std::dec
+              << '\n';
     return testMode && (lastTick != 600 || !eventCount) ? 1 : 0;
 }

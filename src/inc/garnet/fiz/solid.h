@@ -37,7 +37,7 @@ struct ContactPair {
     uint64_t entityA = 0;
     uint64_t entityB = 0;
     Vector3  position {0.0f, 0.0f, 0.0f}; ///< World-space position in the engine's caller-selected physical units.
-    Vector3  normal {0.0f, 1.0f, 0.0f}; ///< Points from entityA toward entityB.
+    Vector3  normal {0.0f, 1.0f, 0.0f};   ///< Points from entityA toward entityB.
 };
 
 /// Rigid body instance governed by 6-DOF Newtonian mechanics and contact constraints.

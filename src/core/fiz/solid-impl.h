@@ -9,8 +9,8 @@ class SolidImpl : public Solid {
     using Solid::Solid;
 
 public:
-    SolidImpl(JPH::BodyInterface * bi, const JPH::BodyLockInterface * bodyLocks, std::mutex * mutationMutex, const SolidDesc & desc,
-              JPH::BodyID bodyId, Scalar mass)
+    SolidImpl(JPH::BodyInterface * bi, const JPH::BodyLockInterface * bodyLocks, std::mutex * mutationMutex, const SolidDesc & desc, JPH::BodyID bodyId,
+              Scalar mass)
         : Solid(TYPE_INFO(), "Solid"), mBodyInterface(bi), mBodyLocks(bodyLocks), mMutationMutex(mutationMutex), mHull(desc.hull), mTemper(desc.temper),
           mBodyId(bodyId), mEntityId(desc.entityId), mMassOverride(desc.massOverride), mMass(mass) {}
 
@@ -146,8 +146,8 @@ public:
         std::lock_guard<std::mutex> engineLock(*mMutationMutex);
         if (mBodyId.IsInvalid()) return false;
 
-        const bool isDynamic = motionType() == MotionType::DYNAMIC;
-        Scalar    nextMass  = mMass;
+        const bool          isDynamic = motionType() == MotionType::DYNAMIC;
+        Scalar              nextMass  = mMass;
         JPH::MassProperties massProperties;
         if (isDynamic && updateMassProperties) {
             const Scalar volume = hull->calculateVolume();
@@ -172,7 +172,8 @@ public:
         if (isDynamic && updateMassProperties) {
             JPH::BodyLockWrite bodyLock(*mBodyLocks, mBodyId);
             if (!bodyLock.Succeeded()) {
-                GN_ERROR(getLogger("GN.fiz.Solid"), "Solid::setHull: Jolt body lock failed after shape replacement (body id {}).", mBodyId.GetIndexAndSequenceNumber());
+                GN_ERROR(getLogger("GN.fiz.Solid"), "Solid::setHull: Jolt body lock failed after shape replacement (body id {}).",
+                         mBodyId.GetIndexAndSequenceNumber());
                 return false;
             }
             auto * motion = bodyLock.GetBody().GetMotionProperties();
@@ -215,15 +216,15 @@ public:
     void        invalidateBody() { mBodyId = JPH::BodyID(); }
 
 private:
-    JPH::BodyInterface * mBodyInterface = nullptr;
-    const JPH::BodyLockInterface * mBodyLocks = nullptr;
-    std::mutex * mMutationMutex = nullptr;
-    AutoRef<Hull>        mHull;
-    Temper               mTemper;
-    JPH::BodyID          mBodyId;
-    uint64_t             mEntityId = 0;
-    Scalar               mMassOverride = 0;
-    Scalar               mMass     = 1.0f;
+    JPH::BodyInterface *           mBodyInterface = nullptr;
+    const JPH::BodyLockInterface * mBodyLocks     = nullptr;
+    std::mutex *                   mMutationMutex = nullptr;
+    AutoRef<Hull>                  mHull;
+    Temper                         mTemper;
+    JPH::BodyID                    mBodyId;
+    uint64_t                       mEntityId     = 0;
+    Scalar                         mMassOverride = 0;
+    Scalar                         mMass         = 1.0f;
 };
 
 } // namespace GN::fiz

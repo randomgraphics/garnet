@@ -88,8 +88,7 @@ public:
             if (motion && (!finite(motion->linearVelocity) || motion->angularVelocity != glm::dvec3(0)))
                 throw std::runtime_error("AABB dynamics Law supports translation only; angular velocity requires another collision Law");
             const auto linear = detail::affineLinear(worldTransform);
-            auto extent = glm::abs(linear[0]) * body->halfExtent.x + glm::abs(linear[1]) * body->halfExtent.y +
-                          glm::abs(linear[2]) * body->halfExtent.z;
+            auto       extent = glm::abs(linear[0]) * body->halfExtent.x + glm::abs(linear[1]) * body->halfExtent.y + glm::abs(linear[2]) * body->halfExtent.z;
             if (!finite(extent)) throw std::runtime_error("AABB dynamics Law received an out-of-range affine collider bound");
             bodies.append({formId, transform, motion ? cloneValue(*motion) : Ref<MotionFacet::Value>(new MotionFacet::Value), body, extent,
                            positionToMeters(worldTransform.position, options.scale, options.origin), motion ? 1 / body->mass : 0,
@@ -173,7 +172,8 @@ public:
                     WorldTransform parent;
                     if (!detail::resolveWorldTransform(c.prime, b.transform->parent, parent, &solved)) throw std::runtime_error("Invalid final parent pose");
                     auto inverseLinear = glm::inverse(detail::affineLinear(parent));
-                    if (!detail::supportedAffineCoefficients(inverseLinear)) throw std::runtime_error("Dynamic child under singular or out-of-range affine parent is unsupported");
+                    if (!detail::supportedAffineCoefficients(inverseLinear))
+                        throw std::runtime_error("Dynamic child under singular or out-of-range affine parent is unsupported");
                     WorldVector3 localOffset;
                     if (!spatial::tryTransformBy(inverseLinear, pose.position - parent.position, localOffset))
                         throw std::runtime_error("Dynamic child affine offset is outside the supported fixed-point range");
@@ -230,16 +230,16 @@ public:
             // Use a fixed direction table instead of libm sin/cos so replay does not depend on
             // platform math-library implementations. The eight deterministic compass directions
             // are sufficient for the sample generator; applications provide their own Laws.
-            constexpr double diagonal = 0.7071067811865475244;
-            constexpr std::array<glm::dvec2, 8> directions {{{1, 0}, {diagonal, diagonal}, {0, 1}, {-diagonal, diagonal},
-                                                            {-1, 0}, {-diagonal, -diagonal}, {0, -1}, {diagonal, -diagonal}}};
-            const auto direction = directions[static_cast<size_t>(randomUnit(state->random) * directions.size())];
+            constexpr double                    diagonal = 0.7071067811865475244;
+            constexpr std::array<glm::dvec2, 8> directions {
+                {{1, 0}, {diagonal, diagonal}, {0, 1}, {-diagonal, diagonal}, {-1, 0}, {-diagonal, -diagonal}, {0, -1}, {diagonal, -diagonal}}};
+            const auto            direction = directions[static_cast<size_t>(randomUnit(state->random) * directions.size())];
             TransformFacet::Value transform;
             transform.position = positionFromMeters(p, options.scale, options.origin);
             MotionFacet::Value motion;
             motion.linearVelocity = {direction.x * speed, 0, direction.y * speed};
             VisualFacet::Value visual;
-            auto mold    = createBoxMold(universe, transform, motion, {}, visual, options.includeGNfizCollider);
+            auto               mold = createBoxMold(universe, transform, motion, {}, visual, options.includeGNfizCollider);
             if (!mold) throw std::runtime_error("Failed to construct spawn mold");
             c.slate.create(*mold);
             ++population;
@@ -299,10 +299,10 @@ Ref<Mold> createGroundMold(Universe & universe, PhysicalScale scale, const World
     DynaArray<FacetBinding> facets {binding<TransformFacet>(transform), binding<VisualFacet>(visual)};
     if (includeGNfizCollider) {
         PhysicsFacet::Value physics;
-        physics.collider = fiz::Hull::createBox({static_cast<float>(body.halfExtent.x), static_cast<float>(body.halfExtent.y),
-                                                 static_cast<float>(body.halfExtent.z)});
+        physics.collider =
+            fiz::Hull::createBox({static_cast<float>(body.halfExtent.x), static_cast<float>(body.halfExtent.y), static_cast<float>(body.halfExtent.z)});
         physics.motionType = fiz::MotionType::STATIC;
-        physics.layer = fiz::CollisionLayer::NON_MOVING;
+        physics.layer      = fiz::CollisionLayer::NON_MOVING;
         facets.append(binding<PhysicsFacet>(physics));
     } else {
         facets.append(binding<BodyFacet>(body));
@@ -312,16 +312,15 @@ Ref<Mold> createGroundMold(Universe & universe, PhysicalScale scale, const World
 }
 Ref<Mold> createBoxMold(Universe & universe, const TransformFacet::Value & transform, const MotionFacet::Value & motion, const BodyFacet::Value & body,
                         const VisualFacet::Value & visual, bool includeGNfizCollider) {
-    DynaArray<FacetBinding> facets {binding<TransformFacet>(transform), binding<MotionFacet>(motion), binding<VisualFacet>(visual),
-                                    binding<LifetimeFacet>()};
+    DynaArray<FacetBinding> facets {binding<TransformFacet>(transform), binding<MotionFacet>(motion), binding<VisualFacet>(visual), binding<LifetimeFacet>()};
     if (includeGNfizCollider) {
         PhysicsFacet::Value physics;
-        physics.collider = fiz::Hull::createBox({static_cast<float>(body.halfExtent.x), static_cast<float>(body.halfExtent.y),
-                                                 static_cast<float>(body.halfExtent.z)});
-        physics.motionType = fiz::MotionType::DYNAMIC;
-        physics.layer = fiz::CollisionLayer::MOVING;
-        physics.massOverride = static_cast<fiz::Scalar>(body.mass);
-        physics.temper.friction = static_cast<fiz::Scalar>(body.friction);
+        physics.collider =
+            fiz::Hull::createBox({static_cast<float>(body.halfExtent.x), static_cast<float>(body.halfExtent.y), static_cast<float>(body.halfExtent.z)});
+        physics.motionType         = fiz::MotionType::DYNAMIC;
+        physics.layer              = fiz::CollisionLayer::MOVING;
+        physics.massOverride       = static_cast<fiz::Scalar>(body.mass);
+        physics.temper.friction    = static_cast<fiz::Scalar>(body.friction);
         physics.temper.restitution = static_cast<fiz::Scalar>(body.restitution);
         facets.append(binding<PhysicsFacet>(physics));
     } else {
