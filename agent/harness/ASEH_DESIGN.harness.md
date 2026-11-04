@@ -477,7 +477,19 @@ reversible, low-impact defaults autonomously, label them provisional, and
 continue independent work while a decision is pending. It asks the human
 controller when evidence cannot resolve a decision that materially changes
 product direction, public compatibility, supported platforms, major cost,
-irreversible state, or another user-value tradeoff.
+irreversible state, or another user-value tradeoff, and no clear reversible
+path is available. Assess both the decision's structural impact and the cost
+of revising it later: if impact is small or revision is straightforward, choose
+a reasonable default, record the rationale and revisit trigger, and keep
+implementing. Do not wait for a complex, perfect plan when a useful bounded
+implementation can clarify the design.
+
+When unresolved behavior is confined to a feature path that is not currently
+needed, keep it behind a local capability check and a specific TODO. If that
+path is exercised, emit enough diagnostic context to identify the unsupported
+feature and relevant inputs, then fail explicitly when continuing would be
+incorrect. Other paths should remain usable. Link the TODO to a tracked graph
+node so it is resolved when the feature becomes necessary.
 
 Each request for a decision should state the unresolved choice, evidence,
 feasible options, consequences, a recommendation with confidence, and work that

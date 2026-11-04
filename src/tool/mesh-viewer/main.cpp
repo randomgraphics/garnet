@@ -38,7 +38,7 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
     for (int i = 1; i < argc; ++i) {
         const StrA argument = argv[i];
         if (argument == "--box" || argument == "--sphere") {
-            options.path = argument;
+            options.path = argv[i];
         } else if (argument == "--surface" && i + 1 < argc) {
             const StrA choice = argv[++i];
             if (choice == "pbr")

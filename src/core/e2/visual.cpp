@@ -187,9 +187,10 @@ struct VisualImpl : Visual {
         for (const auto & object : tableau.objects) {
             auto mesh = mAssets->findMesh(object.meshId ? object.meshId : Assets::MESH_BOX);
             if (!mesh) continue;
-            auto      position = tableau.scale.toMeters(spatial::toLocal(tableau.camera.position, object.transform.position));
-            glm::mat4 object2WorldTransform =
-                glm::translate(glm::mat4(1.f), position) * glm::mat4_cast(object.transform.orientation) * glm::scale(glm::mat4(1.f), object.transform.scale);
+            auto            position = tableau.scale.toMeters(spatial::toLocal(tableau.camera.position, object.transform.position));
+            const glm::mat4 linearTransform =
+                object.transform.affineFallback ? glm::mat4(object.transform.affineLinear) : glm::mat4_cast(object.transform.orientation);
+            glm::mat4 object2WorldTransform = glm::translate(glm::mat4(1.f), position) * linearTransform * glm::scale(glm::mat4(1.f), object.transform.scale);
             fx2::LambertianMaterial::DrawParameters draw {
                 {*raster, uniformState, mesh->geometry(), &mRenderTarget.states},
                 object2WorldTransform,

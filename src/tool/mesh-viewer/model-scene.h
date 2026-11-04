@@ -102,6 +102,13 @@ struct ModelScene : RCRT64 {
         glm::mat4           transform = glm::mat4(1);
         DynaArray<uint32_t> primitives;
         Bounds              bounds;
+
+        Node() = default;
+
+        GN_DEFAULT_COPY(Node);
+
+        Node(Node && other);
+        Node & operator=(Node && other);
     };
 
     /// Parameters for synchronous CPU import. GPU resources are deliberately not created here.

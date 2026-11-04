@@ -36,6 +36,8 @@ struct Visual : Being {
         WorldVector3 position    = {WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO()};
         Rotation     orientation = {1.f, 0.f, 0.f, 0.f};
         glm::vec3    scale       = {1.f, 1.f, 1.f};
+        glm::mat3    affineLinear {1.f}; ///< Full world linear transform when affineFallback is set.
+        bool         affineFallback = false;
     };
 
     /// Mesh instance rendered with fixed white-model lighting.
