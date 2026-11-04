@@ -278,7 +278,9 @@ public:
             if (record.affine || old->parent != 0) {
                 WorldTransform parent;
                 glm::dmat3     parentLinear(1.0);
-                WorldVector3   parentPosition;
+                WorldVector3 parentPosition = {
+                    WorldCoordinate::ZERO(), WorldCoordinate::ZERO(), WorldCoordinate::ZERO(),
+                };
                 if (old->parent != 0) {
                     if (!detail::resolveWorldTransform(c.prime, old->parent, parent, &solved))
                         throw std::runtime_error("GNfizLaw: invalid parent transform after physics step");
