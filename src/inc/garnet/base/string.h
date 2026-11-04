@@ -240,7 +240,8 @@ public:
 #if defined(__GNUC__) || defined(__clang__)
     __attribute__((noinline))
 #endif
-    Str(Str && s): mPtr(s.mPtr) {
+    Str(Str && s)
+        : mPtr(s.mPtr) {
         if (&s != this) s.mPtr = sEmptyPtr();
     }
 
