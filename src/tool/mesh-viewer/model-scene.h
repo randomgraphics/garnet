@@ -104,6 +104,8 @@ struct ModelScene : RCRT64 {
         DynaArray<uint32_t> primitives;
         Bounds              bounds;
 
+        Node() = default;
+
         GN_DEFAULT_COPY(Node);
 
         Node(Node && other):
