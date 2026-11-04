@@ -16,6 +16,22 @@ static GN::Logger * sLogger = GN::getLogger("GN.viewer.model");
 
 namespace GN::viewer {
 
+ModelScene::Node::Node(Node && other):
+    name(std::move(other.name)),
+    parent(other.parent),
+    transform(other.transform),
+    primitives(std::move(other.primitives)),
+    bounds(other.bounds) {}
+
+ModelScene::Node & ModelScene::Node::operator=(Node && other) {
+    name       = std::move(other.name);
+    parent     = other.parent;
+    transform  = other.transform;
+    primitives = std::move(other.primitives);
+    bounds     = other.bounds;
+    return *this;
+}
+
 namespace {
 
 using Bounds = ModelScene::Bounds;

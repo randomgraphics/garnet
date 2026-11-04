@@ -4,7 +4,6 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
-#include <utility>
 
 namespace GN::viewer {
 
@@ -108,21 +107,8 @@ struct ModelScene : RCRT64 {
 
         GN_DEFAULT_COPY(Node);
 
-        Node(Node && other):
-            name(std::move(other.name)),
-            parent(other.parent),
-            transform(other.transform),
-            primitives(std::move(other.primitives)),
-            bounds(other.bounds) {}
-
-        Node & operator=(Node && other) {
-            name       = std::move(other.name);
-            parent     = other.parent;
-            transform  = other.transform;
-            primitives = std::move(other.primitives);
-            bounds     = other.bounds;
-            return *this;
-        }
+        Node(Node && other);
+        Node & operator=(Node && other);
     };
 
     /// Parameters for synchronous CPU import. GPU resources are deliberately not created here.
