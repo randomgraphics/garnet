@@ -922,7 +922,7 @@ int main(int argc, const char ** argv) {
                              activeDrawCount, heap->size(), avgRecordMs, avgFrameMs, avgFps, streamingEnabled ? "ON" : "OFF")
                     .data();
 
-#if GN_BUILD_HAS_MSW
+#if GN_MSWIN
             ::SetWindowTextA(reinterpret_cast<HWND>(window->getWindowHandle()), title.c_str());
 #endif
 

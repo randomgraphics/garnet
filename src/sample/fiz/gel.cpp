@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#if GN_BUILD_HAS_MSW
+#if GN_MSWIN
     #ifndef WIN32_LEAN_AND_MEAN
         #define WIN32_LEAN_AND_MEAN
     #endif
@@ -790,7 +790,7 @@ int main(int argc, const char ** argv) {
                     squashPct, volErrPct, avgStepMs, avgFps, timeScale)
                     .data();
 
-#if GN_BUILD_HAS_MSW
+#if GN_MSWIN
             ::SetWindowTextA((HWND) window->getWindowHandle(), title.c_str());
 #endif
 
