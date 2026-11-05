@@ -283,7 +283,7 @@ int main(int argc, const char ** argv) {
     }
 
     if (headless) {
-#if GN_BUILD_HAS_MSW
+#if GN_MSWIN
         _putenv_s("DISPLAY", "");
 #else
         // Vulkan platform probing may try to connect to a stale X11 DISPLAY even for offscreen work.
