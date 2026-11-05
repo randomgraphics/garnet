@@ -1,76 +1,13 @@
 #include <garnet/GNengine2.h>
+#include "spatial-private.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <set>
 #include <map>
 #include <stdexcept>
 
 namespace GN::e2 {
-WorldVector3 positionFromMeters(const glm::dvec3 & p, PhysicalScale scale, const WorldVector3 & origin) {
-    return spatial::toWorld(origin, LocalVector3(scale.fromMeters(p.x), scale.fromMeters(p.y), scale.fromMeters(p.z)));
-}
-glm::dvec3 positionToMeters(const WorldVector3 & p, PhysicalScale scale, const WorldVector3 & origin) {
-    auto local = spatial::toLocal(origin, p);
-    return {scale.toMeters<double>(local.x), scale.toMeters<double>(local.y), scale.toMeters<double>(local.z)};
-}
-
-namespace {
-bool validRotation(const Rotation & q) {
-    return std::isfinite(q.w) && std::isfinite(q.x) && std::isfinite(q.y) && std::isfinite(q.z) && std::abs(glm::dot(q, q) - 1.0f) <= 0.0001f;
-}
-bool resolvePose(const PrimeView & prime, FormId id, WorldTransform & out, const std::map<FormId, WorldTransform> * solved = nullptr) {
-    std::set<FormId>                         visited;
-    DynaArray<const TransformFacet::Value *> chain;
-    out = WorldTransform {};
-    while (id != 0) {
-        if (!visited.insert(id).second) return false;
-        if (solved) {
-            auto it = solved->find(id);
-            if (it != solved->end()) {
-                out = it->second;
-                break;
-            }
-        }
-        auto transform = prime.get<TransformFacet>(id);
-        if (!transform || !validRotation(transform->orientation)) return false;
-        chain.append(transform);
-        id = transform->parent;
-    }
-    for (size_t i = chain.size(); i > 0; --i) {
-        const auto * transform = chain[i - 1];
-        // Root translation can span all 128 bits; fixed-point rotation is only for local offsets.
-        if (transform->parent == 0) {
-            out.position    = transform->position;
-            out.orientation = glm::normalize(transform->orientation);
-        } else {
-            out.position    = out.position + spatial::rotatedBy(out.orientation, transform->position);
-            out.orientation = glm::normalize(out.orientation * transform->orientation);
-        }
-    }
-    return true;
-}
-} // namespace
-bool              resolveWorldTransform(const PrimeView & prime, FormId id, WorldTransform & out) { return id != 0 && resolvePose(prime, id, out); }
-DynaArray<FormId> transformChildren(const PrimeView & prime, FormId parent) {
-    DynaArray<FormId> children;
-    for (auto id : prime.query<>()) {
-        auto transform = prime.get<TransformFacet>(id);
-        if (transform && transform->parent == parent) children.append(id);
-    }
-    return children;
-}
-bool TransformFacet::validate(const PrimeView & prime, FormId id, const FacetValue & payload) const {
-    auto value = RuntimeType::cast<const Value>(&payload);
-    if (!value || !validRotation(value->orientation)) return false;
-    std::set<FormId> visited {id};
-    for (auto parent = value->parent; parent != 0;) {
-        if (!visited.insert(parent).second) return false;
-        auto ancestor = prime.get<TransformFacet>(parent);
-        if (!ancestor || !validRotation(ancestor->orientation)) return false;
-        parent = ancestor->parent;
-    }
-    return true;
-}
 namespace {
 template<typename V>
 Ref<V> cloneValue(const V & value) {
@@ -85,6 +22,7 @@ struct Participant {
     Ref<TransformFacet::Value> transform;
     Ref<MotionFacet::Value>    motion;
     const BodyFacet::Value *   body;
+    glm::dvec3                 halfExtent;
     glm::dvec3                 position;
     double                     inverseMass;
     Ref<ContactFacet::Value>   contact;
@@ -96,8 +34,8 @@ DynaArray<std::pair<size_t, size_t>> pairs(const DynaArray<Participant> & bodies
     DynaArray<size_t> order;
     for (size_t i = 0; i < bodies.size(); ++i) order.append(i);
     std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
-        double x = bodies[a].position.x - bodies[a].body->halfExtent.x;
-        double y = bodies[b].position.x - bodies[b].body->halfExtent.x;
+        double x = bodies[a].position.x - bodies[a].halfExtent.x;
+        double y = bodies[b].position.x - bodies[b].halfExtent.x;
         return x == y ? bodies[a].id < bodies[b].id : x < y;
     });
     DynaArray<std::pair<size_t, size_t>> result;
@@ -105,10 +43,10 @@ DynaArray<std::pair<size_t, size_t>> pairs(const DynaArray<Participant> & bodies
         auto a = order[i];
         for (size_t j = i + 1; j < order.size(); ++j) {
             auto b = order[j];
-            if (bodies[b].position.x - bodies[b].body->halfExtent.x > bodies[a].position.x + bodies[a].body->halfExtent.x + tolerance) break;
+            if (bodies[b].position.x - bodies[b].halfExtent.x > bodies[a].position.x + bodies[a].halfExtent.x + tolerance) break;
             if (bodies[a].inverseMass + bodies[b].inverseMass == 0) continue;
             auto delta  = glm::abs(bodies[b].position - bodies[a].position);
-            auto extent = bodies[a].body->halfExtent + bodies[b].body->halfExtent + glm::dvec3(tolerance);
+            auto extent = bodies[a].halfExtent + bodies[b].halfExtent + glm::dvec3(tolerance);
             if (delta.y <= extent.y && delta.z <= extent.z) result.append({std::min(a, b), std::max(a, b)});
         }
     }
@@ -147,10 +85,12 @@ public:
                     if (c.prime.get<MotionFacet>(parent)) throw std::runtime_error("Static collider beneath moving parent is unsupported by MVP");
                     parent = c.prime.get<TransformFacet>(parent)->parent;
                 }
-            if (glm::length(glm::vec3(worldTransform.orientation.x, worldTransform.orientation.y, worldTransform.orientation.z)) > 0.00001f ||
-                (motion && (!finite(motion->linearVelocity) || motion->angularVelocity != glm::dvec3(0))))
-                throw std::runtime_error("MVP solver supports axis-aligned boxes with zero spin only");
-            bodies.append({formId, transform, motion ? cloneValue(*motion) : Ref<MotionFacet::Value>(new MotionFacet::Value), body,
+            if (motion && (!finite(motion->linearVelocity) || motion->angularVelocity != glm::dvec3(0)))
+                throw std::runtime_error("AABB dynamics Law supports translation only; angular velocity requires another collision Law");
+            const auto linear = detail::affineLinear(worldTransform);
+            auto       extent = glm::abs(linear[0]) * body->halfExtent.x + glm::abs(linear[1]) * body->halfExtent.y + glm::abs(linear[2]) * body->halfExtent.z;
+            if (!finite(extent)) throw std::runtime_error("AABB dynamics Law received an out-of-range affine collider bound");
+            bodies.append({formId, transform, motion ? cloneValue(*motion) : Ref<MotionFacet::Value>(new MotionFacet::Value), body, extent,
                            positionToMeters(worldTransform.position, options.scale, options.origin), motion ? 1 / body->mass : 0,
                            cloneValue(*c.prime.get<ContactFacet>(formId))});
             if (!bodies.back().contact->touching.empty()) bodies.back().contact->touching.clear();
@@ -171,7 +111,7 @@ public:
                     auto & a       = bodies[indices.first];
                     auto & b       = bodies[indices.second];
                     auto   delta   = b.position - a.position;
-                    auto   overlap = a.body->halfExtent + b.body->halfExtent - glm::abs(delta);
+                    auto   overlap = a.halfExtent + b.halfExtent - glm::abs(delta);
                     if (glm::any(glm::lessThan(overlap, glm::dvec3(0)))) continue;
                     int axis = overlap.x < overlap.y ? 0 : 1;
                     if (overlap.z < overlap[axis]) axis = 2;
@@ -227,14 +167,17 @@ public:
             if (b.inverseMass > 0) {
                 auto pose = solved.at(b.id);
                 if (b.transform->parent == 0) {
-                    b.transform->position    = pose.position;
-                    b.transform->orientation = pose.orientation;
+                    b.transform->position = pose.position;
                 } else {
                     WorldTransform parent;
-                    if (!resolvePose(c.prime, b.transform->parent, parent, &solved)) throw std::runtime_error("Invalid final parent pose");
-                    auto inverse             = glm::conjugate(parent.orientation);
-                    b.transform->position    = spatial::rotatedBy(inverse, pose.position - parent.position);
-                    b.transform->orientation = glm::normalize(inverse * pose.orientation);
+                    if (!detail::resolveWorldTransform(c.prime, b.transform->parent, parent, &solved)) throw std::runtime_error("Invalid final parent pose");
+                    auto inverseLinear = glm::inverse(detail::affineLinear(parent));
+                    if (!detail::supportedAffineCoefficients(inverseLinear))
+                        throw std::runtime_error("Dynamic child under singular or out-of-range affine parent is unsupported");
+                    WorldVector3 localOffset;
+                    if (!spatial::tryTransformBy(inverseLinear, pose.position - parent.position, localOffset))
+                        throw std::runtime_error("Dynamic child affine offset is outside the supported fixed-point range");
+                    b.transform->position = localOffset;
                 }
                 c.slate.set<TransformFacet>(b.id, *b.transform);
                 c.slate.set<MotionFacet>(b.id, *b.motion);
@@ -283,16 +226,20 @@ public:
             glm::dvec3 p;
             for (int axis = 0; axis < 3; ++axis)
                 p[axis] = options.spawnMinimum[axis] + randomUnit(state->random) * (options.spawnMaximum[axis] - options.spawnMinimum[axis]);
-            double                speed = randomUnit(state->random) * options.maximumHorizontalSpeed;
-            double                angle = randomUnit(state->random) * 6.2831853071795864769;
+            const double speed = randomUnit(state->random) * options.maximumHorizontalSpeed;
+            // Use a fixed direction table instead of libm sin/cos so replay does not depend on
+            // platform math-library implementations. The eight deterministic compass directions
+            // are sufficient for the sample generator; applications provide their own Laws.
+            constexpr double                    diagonal = 0.7071067811865475244;
+            constexpr std::array<glm::dvec2, 8> directions {
+                {{1, 0}, {diagonal, diagonal}, {0, 1}, {-diagonal, diagonal}, {-1, 0}, {-diagonal, -diagonal}, {0, -1}, {diagonal, -diagonal}}};
+            const auto            direction = directions[static_cast<size_t>(randomUnit(state->random) * directions.size())];
             TransformFacet::Value transform;
             transform.position = positionFromMeters(p, options.scale, options.origin);
             MotionFacet::Value motion;
-            motion.linearVelocity = {std::cos(angle) * speed, 0, std::sin(angle) * speed};
+            motion.linearVelocity = {direction.x * speed, 0, direction.y * speed};
             VisualFacet::Value visual;
-            visual.color = {static_cast<float>(0.3 + 0.6 * randomUnit(state->random)), static_cast<float>(0.3 + 0.6 * randomUnit(state->random)),
-                            static_cast<float>(0.3 + 0.6 * randomUnit(state->random)), 1};
-            auto mold    = createBoxMold(universe, transform, motion, {}, visual);
+            auto               mold = createBoxMold(universe, transform, motion, {}, visual, options.includeGNfizCollider);
             if (!mold) throw std::runtime_error("Failed to construct spawn mold");
             c.slate.create(*mold);
             ++population;
@@ -342,40 +289,46 @@ Ref<Law> createLifetimeLaw(Universe & universe, const LifetimeOptions & options)
         return {};
     return Ref<Law>(new LifetimeLawImpl(universe, options));
 }
-Ref<Mold> createGroundMold(Universe & universe, PhysicalScale scale, const WorldVector3 & origin) {
+Ref<Mold> createGroundMold(Universe & universe, PhysicalScale scale, const WorldVector3 & origin, bool includeGNfizCollider) {
     TransformFacet::Value transform;
     transform.position = positionFromMeters({0, -0.5, 0}, scale, origin);
     BodyFacet::Value body;
     body.halfExtent = {4, 0.5, 4};
     VisualFacet::Value visual;
-    visual.halfExtent = {4, 0.5f, 4};
-    visual.color      = {0.35f, 0.4f, 0.35f, 1};
-    return Mold::create(universe, "ground",
-                        {binding<TransformFacet>(transform), binding<BodyFacet>(body), binding<ContactFacet>(), binding<VisualFacet>(visual)});
+    visual.scale = {4, 0.5f, 4};
+    DynaArray<FacetBinding> facets {binding<TransformFacet>(transform), binding<VisualFacet>(visual)};
+    if (includeGNfizCollider) {
+        PhysicsFacet::Value physics;
+        physics.collider =
+            fiz::Hull::createBox({static_cast<float>(body.halfExtent.x), static_cast<float>(body.halfExtent.y), static_cast<float>(body.halfExtent.z)});
+        physics.motionType = fiz::MotionType::STATIC;
+        physics.layer      = fiz::CollisionLayer::NON_MOVING;
+        facets.append(binding<PhysicsFacet>(physics));
+    } else {
+        facets.append(binding<BodyFacet>(body));
+        facets.append(binding<ContactFacet>());
+    }
+    return Mold::create(universe, "ground", std::move(facets));
 }
 Ref<Mold> createBoxMold(Universe & universe, const TransformFacet::Value & transform, const MotionFacet::Value & motion, const BodyFacet::Value & body,
-                        const VisualFacet::Value & visual) {
-    return Mold::create(universe, "box",
-                        {binding<TransformFacet>(transform), binding<MotionFacet>(motion), binding<BodyFacet>(body), binding<ContactFacet>(),
-                         binding<CollisionStatsFacet>(), binding<VisualFacet>(visual), binding<LifetimeFacet>()});
-}
-
-basis::Visual::Tableau extractTableau(const PrimeView & prime, const basis::Visual::Camera & camera, PhysicalScale scale) {
-    basis::Visual::Tableau tableau;
-    tableau.camera = camera;
-    tableau.scale  = scale;
-    for (auto id : prime.query<TransformFacet, VisualFacet>()) {
-        WorldTransform transform;
-        if (!resolveWorldTransform(prime, id, transform)) continue;
-        const auto &          visual = *prime.get<VisualFacet>(id);
-        basis::Visual::Object obj;
-        obj.meshId                = visual.meshId;
-        obj.transform.position    = transform.position;
-        obj.transform.orientation = transform.orientation;
-        obj.transform.scale       = visual.halfExtent;
-        tableau.objects.append(obj);
+                        const VisualFacet::Value & visual, bool includeGNfizCollider) {
+    DynaArray<FacetBinding> facets {binding<TransformFacet>(transform), binding<MotionFacet>(motion), binding<VisualFacet>(visual), binding<LifetimeFacet>()};
+    if (includeGNfizCollider) {
+        PhysicsFacet::Value physics;
+        physics.collider =
+            fiz::Hull::createBox({static_cast<float>(body.halfExtent.x), static_cast<float>(body.halfExtent.y), static_cast<float>(body.halfExtent.z)});
+        physics.motionType         = fiz::MotionType::DYNAMIC;
+        physics.layer              = fiz::CollisionLayer::MOVING;
+        physics.massOverride       = static_cast<fiz::Scalar>(body.mass);
+        physics.temper.friction    = static_cast<fiz::Scalar>(body.friction);
+        physics.temper.restitution = static_cast<fiz::Scalar>(body.restitution);
+        facets.append(binding<PhysicsFacet>(physics));
+    } else {
+        facets.append(binding<BodyFacet>(body));
+        facets.append(binding<ContactFacet>());
+        facets.append(binding<CollisionStatsFacet>());
     }
-    return tableau;
+    return Mold::create(universe, "box", std::move(facets));
 }
 
 } // namespace GN::e2

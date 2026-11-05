@@ -5,9 +5,9 @@
 #include <glm/mat3x3.hpp>
 #include <cmath>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 namespace {
-using Heap    = gpu2::bindless::DescriptorHeap;
+using Heap    = ::GN::gpu2::DescriptorHeap;
 auto * logger = getLogger("GN.fx2.bindless.unlit");
 
 // 64-byte std430 packing matching bindless-unlit-material.h
@@ -104,9 +104,9 @@ public:
         samplerIndex = mHeap->allocate(Heap::SAMPLER, gpu2::GpuResourceView {sampler});
         return colorIndex != Heap::INVALID_DESCRIPTOR_INDEX && samplerIndex != Heap::INVALID_DESCRIPTOR_INDEX;
     }
-    void upload(gpu2::bindless::CnC & producer) const {
-        const uint8_t               white[] = {255, 255, 255, 255};
-        gpu2::bindless::CnC::Region region;
+    void upload(::GN::gpu2::CnC & producer) const {
+        const uint8_t           white[] = {255, 255, 255, 255};
+        ::GN::gpu2::CnC::Region region;
         region.imageExtent = {1, 1, 1};
         producer.recordUploadImage(color.texture(), {white, sizeof(white)}, {&region, 1});
     }
@@ -148,7 +148,7 @@ public:
         mData               = data;
         return true;
     }
-    void upload(gpu2::bindless::CnC & producer) const {
+    void upload(::GN::gpu2::CnC & producer) const {
         producer.recordUploadBuffer(mView.buffer(), mView.bufferView.offset, {reinterpret_cast<const uint8_t *>(&mData), sizeof(mData)});
     }
     uint32_t index() const { return mIndex; }
@@ -168,7 +168,7 @@ public:
     bool initialize(const Fallbacks & defaults) {
         return mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), {}, {}}, mParameters.colorMap, mParameters.sampler, defaults);
     }
-    void upload(gpu2::bindless::CnC & producer) const { mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
     bool record(const UnlitMaterial::DrawParameters & inputs) const override {
         auto & raster = inputs.raster;
         auto   state  = inputs.ssc;
@@ -176,8 +176,8 @@ public:
                 GN_ERROR(logger, "UnlitMaterial: invalid uniform state, geometry, or transform");
                 return false;
             }
-        const DrawConstants                    values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
-        gpu2::bindless::Raster::DrawParameters draw {.geometry = inputs.geometry};
+        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
+        ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
         draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
         draw.ps = mShaders.fragment;
         if (inputs.states) draw.states = *inputs.states;
@@ -203,14 +203,14 @@ public:
                                    kBindlessUnlitTextureVertSpv, sizeof(kBindlessUnlitTextureVertSpv)) &&
                mDefaults.initialize(std::move(heap));
     }
-    void                      uploadDefaults(gpu2::bindless::CnC & producer) const { mDefaults.upload(producer); }
+    void                      uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
     UnlitMaterial::Parameters defaultMaterialParameters() const override {
         UnlitMaterial::Parameters p;
         p.colorMap = mDefaults.color;
         p.sampler  = mDefaults.sampler;
         return p;
     }
-    AutoRef<UnlitMaterial> createMaterial(gpu2::bindless::CnC & producer, const UnlitMaterial::Parameters & p) const override {
+    AutoRef<UnlitMaterial> createMaterial(::GN::gpu2::CnC & producer, const UnlitMaterial::Parameters & p) const override {
         if (!validMap(p.colorMap)) return {};
         for (int i = 0; i < 4; ++i)
             if (!std::isfinite(p.color[i])) return {};
@@ -226,7 +226,7 @@ public:
 
 } // namespace
 
-AutoRef<UnlitKernel> UnlitKernel::create(Heap & heap, gpu2::bindless::CnC & initialization) {
+AutoRef<UnlitKernel> UnlitKernel::create(Heap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<UnlitImpl>(new UnlitImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
@@ -234,4 +234,4 @@ AutoRef<UnlitKernel> UnlitKernel::create(Heap & heap, gpu2::bindless::CnC & init
     return impl;
 }
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

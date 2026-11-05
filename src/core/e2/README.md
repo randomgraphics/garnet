@@ -1,18 +1,32 @@
 # Engine2 (`GN::e2`): World Runtime
 
-This is the canonical approved design for the data-driven World Runtime. The
-implementation assignment and historical verification records live in
-[`agent/E2_WORLD_RUNTIME.txt`](../../../agent/E2_WORLD_RUNTIME.txt). The object-oriented runtime described below is implemented. The earlier
-plain-value/schema-ID prototype has been replaced and the replacement has been
-built and checked; see the validation section and active assignment for results.
+> **Status: early prototyping.** This document contains design and
+> implementation notes for an experimental prototype. Its structure, API, and
+> policy decisions are not stable Garnet architecture references. Use it to
+> understand the prototype only; reconfirm requirements before depending on or
+> extending it.
+
+This records a previously approved design iteration for the data-driven World
+Runtime. The implementation assignment and historical verification records live in
+[`agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt`](../../../agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt).
+The statements below that describe the object-oriented runtime as implemented
+and checked refer to that earlier prototype revision; they do not establish a
+stable structure or API contract.
+
+Current follow-up implementation status (2026-11-02) is tracked in
+[`agent/workspace/e2-world-runtime/TASK.md`](../../../agent/workspace/e2-world-runtime/TASK.md).
+Spatial, data-only Presentation and GNfiz physics are now optional public E2
+extensions; the active sample uses them without placing their policies in the
+generic World core.
 
 SimpleWorld and mesh-viewer, including their dependent tests and samples, are
 outside this refactor. Their separate removal work must not constrain this design.
 
-## High-Priority TODO: Built-in Facet & Law Decoupling / Cleanup
+## Boundary established by the current follow-up
 
-> [!IMPORTANT]
-> **HIGH PRIORITY TODO**: Review and clean up all built-in Facets, Laws, and configuration options to ensure the core `e2` module does not define or impose restrictions on what the world looks like or how it functions.
+> The following checklist describes the boundary established by the current
+> follow-up. It records why domain-specific capabilities are optional and does
+> not mean that all listed behavior belongs in the generic World core.
 >
 > 1. **Core Runtime vs. World/Simulation Policy**: The core `e2` module must strictly be an unopinionated, data-driven world runtime infrastructure (Universe, World, Form, Facet, Prime, Slate, Law dispatch, Intent and Event routing). It should have zero definition or restriction on what the world looks like, its topology, scene layout, or gameplay/simulation rules.
 > 2. **Review and Cleanup of Built-in Facets**: Thoroughly audit all built-in facets (such as `TransformFacet`, `MotionFacet`, `BodyFacet`, `ContactFacet`, `CollisionStatsFacet`, `VisualFacet`). Ensure that any facets provided by the core engine represent truly common and universal functions needed across any game world. Any domain-specific, sample-specific, or physics/demo-specific facets must be extracted out of core into application space or optional extension modules.
@@ -132,12 +146,18 @@ The public helpers are:
 struct WorldTransform {
     WorldVector3 position;
     Rotation orientation;
+    float uniformScale;
+    glm::dmat3 affineLinear;
+    bool affineFallback;
 };
 bool resolveWorldTransform(const PrimeView &, FormId, WorldTransform &);
 DynaArray<FormId> transformChildren(const PrimeView &, FormId parent);
 ```
 
-Resolution composes parent rotation and translation, with no inherited scale.
+Resolution uses translation/rotation when scale is identity, a quaternion plus one
+scalar for uniform scale, and a full affine linear transform when non-uniform
+scale or hierarchy composition produces shear. This common-case split keeps
+general affine work out of ordinary rigid hierarchies.
 `transformChildren(view, 0)` returns roots; other IDs select direct children.
 Both helpers operate on one PrimeView, including all ancestors. Retaining an old
 view preserves its entire transform chain. Position composition preserves integer
@@ -173,11 +193,12 @@ the previous Prime and following the normal failure policy. The same applies to
 removing a parent's Transform while children still reference it. The core must not
 automatically detach children or choose replacement local poses.
 
-Dynamics resolves all participant starting poses into a common world frame for
-solving. Motion velocities remain world-space. It builds final solved world poses
-and converts child outputs to local poses using each final parent transform before
-writing Values; root outputs remain world-space. This avoids applying parent
-movement twice or interpreting world-space solver outputs as local positions.
+The legacy demo Dynamics Law resolves participant starting poses into a common
+world frame for solving. Motion velocities remain world-space. It builds final
+solved world poses and converts child outputs to local poses using each final
+parent transform before writing Values; root outputs remain world-space. This
+avoids applying parent movement twice or interpreting world-space solver outputs
+as local positions. Other Laws select their own shape and transform policies.
 
 The local AABB solver requires resolved Body orientations to be identity (either
 quaternion sign) and angular velocity to be zero. It explicitly rejects a static
@@ -318,19 +339,18 @@ version commits. A bounded stream with tick/sequence and consumer cursors avoids
 replaying an event when rendering one Prime multiple times. Slow consumers may
 lose old events on overflow in the MVP; they must not receive uncommitted events.
 
-## MVP: multiple bodies, two Laws
+## Legacy demo: multiple bodies, two Laws
 
-The scene contains one finite static ground and multiple falling dynamic boxes.
-The architecture permits spheres later; high-quality general physics is not the
-MVP goal. Its target is runtime ownership, data access, multi-body solving,
-structural changes, routing and independent presentation.
+The original sample contains one finite static ground and multiple falling dynamic
+boxes. It demonstrates Law ownership, structural changes, routing and independent
+presentation; its AABB solver is one replaceable policy and does not constrain
+other Laws to boxes.
 
 > [!NOTE]
-> The built-in facets and demo laws detailed in this section (`BodyFacet`, `ContactFacet`,
-> `CollisionStatsFacet`, `LifetimeLaw`, and associated options) are part of this initial MVP.
-> Per the [High-Priority TODO](#high-priority-todo-built-in-facet--law-decoupling--cleanup),
-> all built-in facets and laws will be audited and cleaned up so that demo-specific assumptions
-> and non-universal facets are moved out of the core `e2` module.
+> These declarations describe the legacy AABB demo extension. They are not required by
+> generic `World` storage and are not used by the active GNfiz sample. They remain exposed
+> as an alternate demo policy while compatibility and eventual sample-code placement are
+> reviewed.
 
 
 | Facet | Its versioned Value |
@@ -340,10 +360,12 @@ structural changes, routing and independent presentation.
 | BodyFacet | Axis-aligned box half-extents in metres, mass, friction and restitution. |
 | ContactFacet | Set of Forms touching at the end of the tick. |
 | CollisionStatsFacet | Cumulative number of contact beginnings. |
-| VisualFacet | Mesh handle, box half-extents and color metadata; the current white-model renderer ignores color. |
+| VisualFacet | Mesh handle and local mesh scale; visual geometry is independent from the collider. |
+| PhysicsFacet | GNfiz Hull, rigid-body options and sorted contact partners; optional GNfiz Law input/output. |
 
-Ground: Transform + Body + Contact + Visual.
-Dynamic box: Transform + Motion + Body + Contact + CollisionStats + Visual.
+Legacy AABB ground: Transform + Body + Contact + Visual.
+Legacy AABB dynamic box: Transform + Motion + Body + Contact + CollisionStats + Visual.
+Active GNfiz ground: Transform + Physics + Visual. Generated GNfiz bodies add Motion + Lifetime.
 
 For this demo only, Transform + Body selects collision participants, and adding
 Motion selects bodies integrated by DynamicsLaw. This composition rule is not a
@@ -477,7 +499,7 @@ where applicable. Public interfaces expose contracts, not concrete world storage
 
 ## Validation and implementation status
 
-### Current refactor status (2026-10-05)
+### Runtime baseline and current extensions
 
 The ECS-style World runtime is a working MVP. It preserves extensible objects:
 Form is the entity, Facet supplies immutable component configuration and typed
@@ -491,8 +513,8 @@ RuntimeType protocol.
 | Tick publication | All Laws read the same Prime; Slate is write-only; candidate validation precedes whole-tick publication; retained views preserve older versions. |
 | Requests and observations | Receiver-defined Intents support same-tick or next-tick routing; Events become observable only after publication. |
 | Live additions | Forms, Facets and Laws may be added while running; late Laws activate after their initialization publishes. |
-| Spatial state | Transform Values own parent references and local poses; candidate validation rejects cycles and missing parents; Form has no hierarchy. |
-| Simulation and presentation | DynamicsLaw runs before LifetimeLaw; an independent presentation thread renders committed snapshots through Platform, Assets and Visual. |
+| Spatial state | Optional TransformFacet Values own parent references and local poses; candidate validation rejects cycles and missing parents. Form itself has no hierarchy API. |
+| Simulation and presentation | Optional GNfizLaw or demo DynamicsLaw runs before LifetimeLaw; independent data-only presentation samples committed snapshots and adapts them through Platform, Assets and Visual. |
 
 The implementation is not yet a packed ECS storage engine. Private storage uses
 maps grouped by concrete type and polymorphic values; a tick copies candidate
@@ -502,25 +524,28 @@ execute serially in explicit order.
 
 ### Physics readiness and GNfiz integration
 
-The active World sample already runs gravity, multiple-box collision response,
-persistent symmetric contacts, contact-begin statistics/events, bounded spawning
-and out-of-bounds deletion. Its DynamicsLaw uses E2's local axis-aligned-box
-solver; it does not invoke a GNfiz solver backend. Integrating GNfiz rigid-body or
-soft-body solving requires a Law adapter with explicit ownership of backend
-continuation state and a failure protocol consistent with Prime/Slate publication.
-The earlier independent PhysicalSnapshot/Form::live integration is superseded.
+The active World sample uses `GNfizLaw` for gravity and rigid-body collision,
+alongside `LifetimeLaw` for bounded creation/deletion. The legacy AABB `DynamicsLaw`
+remains a replaceable demonstration policy, not a World-core requirement. The GNfiz
+adapter owns its backend engine, reconciles bodies by stable FormId, and stages
+resulting transforms/velocities and sorted contact partners through Prime/Slate.
+It emits CollisionEvents for newly touching pairs. Failed Law execution halts the
+World, so the advanced backend cannot continue behind an unpublished Prime.
 
 E2 already shares `GN::fiz::UnitOfTime` (`std::chrono::nanoseconds`).
 `World::tick()` and `LawContext::dt` use positive integer nanosecond durations;
 numerical Laws convert to floating-point seconds locally for integration.
 Sharing this type does not constitute solver integration.
 
-The demo DynamicsLaw accepts positive steps up to one second and subdivides
+The demo AABB DynamicsLaw accepts positive steps up to one second and subdivides
 them to at most 1/240 s, with eight contact iterations per substep. It has no
 continuous collision detection (CCD): it does not test the swept motion between
 sampled positions, so sufficiently fast bodies can tunnel through thin obstacles.
-Rotation/spin response, arbitrary collision shapes and general compound/kinematic
-support are also outside this MVP. Acceleration fields remain deferred.
+Angular velocity response, shape-specific collision fidelity and general compound/kinematic
+support remain outside the AABB demo. The GNfiz Law supports uniform scale directly through
+cooked hulls and exact affine baking for boxes, convex hulls and static triangle meshes. Dynamic
+concave meshes and non-uniformly transformed smooth primitives require an explicit proxy hull and
+fail with a diagnostic until supplied. Acceleration fields remain deferred.
 
 Failed ticks preserve the previous Prime, discard unpublished state/events and
 halt advancement. Reliable Intent delivery, automatic retry, backend checkpoint
@@ -535,6 +560,7 @@ source env/garnet.rc
 build.py d --target GNtest-internal GNsample-e2-world-runtime
 env/bin/cit.py -i '[e2],E2 spatial*'
 DISPLAY= build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless
+DISPLAY= build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless --affine-probe --workers 4
 build/linux.gcc.d/bin/GNsample-e2-world-runtime --window-test
 ```
 
@@ -544,7 +570,25 @@ and exits after 600 ticks; no arguments selects an interactive run. See the
 
 ### Latest verification
 
-Validated on 2026-10-05 on `feature/phys/main`, after integrating the runtime
+2026-11-02 on `wip/e2/world-runtime`:
+
+- Garnet Debug `GNsample-e2-world-runtime` built and linked outside the sandbox
+  with `. env\\garnet.ps1` and `.pyvenv\\Scripts\\python.exe env\\bin\\build.py`.
+  The user confirmed Garnet's build system is incompatible with the sandbox.
+- The 600-tick headless Vulkan sample completed with 67,413 lit white-model
+  pixels and 3,152 observed events. It also checks retained initial-Prime
+  immutability, population bounds and event delivery.
+- Canonical Prime and ordered CollisionEvent fingerprints matched across two
+  one-worker and one four-worker run of the standard scenario
+  (`cd7bc7b6f6deef69`, `91ab6e4a218e90ba`), and across one-worker/four-worker
+  affine/shear probe runs (`131d521e2f159359`, `a608b32402ec7aaa`). This
+  establishes repeatability for these configurations on this host, not
+  cross-OS/compiler equivalence.
+- `git diff --check` passed. Affine collider baking beyond the sample's uniform
+  box path remains source/build-verified; unsupported Hull combinations fail
+  with an explicit diagnostic.
+
+Historical baseline verification on 2026-10-05 on `feature/phys/main`, after integrating the runtime
 as `43a5ac98f` and applying the master-preparation cleanup:
 
 - Full Linux GCC debug build passed through `build.py d --parallel 2`.
@@ -565,7 +609,7 @@ Xvfb verifies a virtual-display path; physical-window interaction, Windows and
 Android were not checked in this run. SimpleWorld and its dependent samples/tests
 remain suspended; migration of all legacy consumers is not complete. Master has
 not been merged. See
-[`agent/E2_MASTER_PREPARATION.txt`](../../../agent/E2_MASTER_PREPARATION.txt)
+[`agent/completed/e2-master-preparation-2026-10-05-215844/2026-10-05-215844-E2_MASTER_PREPARATION.txt`](../../../agent/completed/e2-master-preparation-2026-10-05-215844/2026-10-05-215844-E2_MASTER_PREPARATION.txt)
 for the integration/verification record. Earlier assignment counts describe their
 original checkpoints; assignments remain active pending user sign-off.
 

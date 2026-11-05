@@ -7,7 +7,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-namespace GN::fx2::bindless {
+namespace GN::fx2 {
 
 /// Immutable Cel (anime/NPR) material retaining its kernel, stable values, and heap allocations.
 struct CelMaterial : RCRT64 {
@@ -60,13 +60,13 @@ protected:
 struct CelKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual CelMaterial::Parameters defaultMaterialParameters() const                                                           = 0;
-    virtual AutoRef<CelMaterial>    createMaterial(gpu2::bindless::CnC & initialization, const CelMaterial::Parameters &) const = 0;
+    virtual CelMaterial::Parameters defaultMaterialParameters() const                                                       = 0;
+    virtual AutoRef<CelMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const CelMaterial::Parameters &) const = 0;
 
-    GN_API static AutoRef<CelKernel> create(gpu2::bindless::DescriptorHeap & heap, gpu2::bindless::CnC & initialization);
+    GN_API static AutoRef<CelKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 
 protected:
     using RCRT64::RCRT64;
 };
 
-} // namespace GN::fx2::bindless
+} // namespace GN::fx2

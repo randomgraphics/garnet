@@ -9,8 +9,10 @@ class SolidImpl : public Solid {
     using Solid::Solid;
 
 public:
-    SolidImpl(JPH::BodyInterface * bi, const SolidDesc & desc, JPH::BodyID bodyId, Scalar mass)
-        : Solid(TYPE_INFO(), "Solid"), mBodyInterface(bi), mHull(desc.hull), mTemper(desc.temper), mBodyId(bodyId), mEntityId(desc.entityId), mMass(mass) {}
+    SolidImpl(JPH::BodyInterface * bi, const JPH::BodyLockInterface * bodyLocks, std::mutex * mutationMutex, const SolidDesc & desc, JPH::BodyID bodyId,
+              Scalar mass)
+        : Solid(TYPE_INFO(), "Solid"), mBodyInterface(bi), mBodyLocks(bodyLocks), mMutationMutex(mutationMutex), mHull(desc.hull), mTemper(desc.temper),
+          mBodyId(bodyId), mEntityId(desc.entityId), mMassOverride(desc.massOverride), mMass(mass) {}
 
     ~SolidImpl() override = default;
 
@@ -126,6 +128,68 @@ public:
 
     const Hull * hull() const override { return mHull.get(); }
 
+    bool setHull(const AutoRef<Hull> & hull, bool updateMassProperties = true) override {
+        if (!hull) {
+            GN_ERROR(getLogger("GN.fiz.Solid"), "Solid::setHull: null Hull supplied; current collision shape is unchanged.");
+            return false;
+        }
+        if (!mBodyInterface || !mBodyLocks || !mMutationMutex || mBodyId.IsInvalid()) {
+            GN_ERROR(getLogger("GN.fiz.Solid"), "Solid::setHull: physics owner is detached or body {} is invalid; current collision shape is unchanged.",
+                     mBodyId.GetIndexAndSequenceNumber());
+            return false;
+        }
+
+        JPH::ShapeRefC shape = createJoltShape(hull.get());
+        if (!shape) return false;
+
+        // Serialize structural shape changes against simulation and other create/remove operations.
+        std::lock_guard<std::mutex> engineLock(*mMutationMutex);
+        if (mBodyId.IsInvalid()) return false;
+
+        const bool          isDynamic = motionType() == MotionType::DYNAMIC;
+        Scalar              nextMass  = mMass;
+        JPH::MassProperties massProperties;
+        if (isDynamic && updateMassProperties) {
+            const Scalar volume = hull->calculateVolume();
+            nextMass            = mMassOverride > 0 ? mMassOverride : volume * mTemper.density;
+            if (!(nextMass > 0) || !std::isfinite(nextMass)) {
+                GN_ERROR(getLogger("GN.fiz.Solid"),
+                         "Solid::setHull: cannot derive positive mass for dynamic hull type {} (volume={}, density={}, massOverride={}).",
+                         static_cast<uint32_t>(hull->type()), volume, mTemper.density, mMassOverride);
+                return false;
+            }
+            massProperties = shape->GetMassProperties();
+            if (!(massProperties.mMass > 0) || !std::isfinite(massProperties.mMass)) {
+                GN_ERROR(getLogger("GN.fiz.Solid"), "Solid::setHull: Jolt hull type {} does not provide usable mass properties.",
+                         static_cast<uint32_t>(hull->type()));
+                return false;
+            }
+            massProperties.ScaleToMass(nextMass);
+        }
+
+        mBodyInterface->SetShape(mBodyId, shape.GetPtr(), false, JPH::EActivation::Activate);
+
+        if (isDynamic && updateMassProperties) {
+            JPH::BodyLockWrite bodyLock(*mBodyLocks, mBodyId);
+            if (!bodyLock.Succeeded()) {
+                GN_ERROR(getLogger("GN.fiz.Solid"), "Solid::setHull: Jolt body lock failed after shape replacement (body id {}).",
+                         mBodyId.GetIndexAndSequenceNumber());
+                return false;
+            }
+            auto * motion = bodyLock.GetBody().GetMotionProperties();
+            if (!motion) {
+                GN_ERROR(getLogger("GN.fiz.Solid"), "Solid::setHull: dynamic Jolt body has no MotionProperties after shape replacement (body id {}).",
+                         mBodyId.GetIndexAndSequenceNumber());
+                return false;
+            }
+            motion->SetMassProperties(motion->GetAllowedDOFs(), massProperties);
+            mMass = nextMass;
+        }
+
+        mHull = hull;
+        return true;
+    }
+
     Box aabb() const override {
         if (mBodyId.IsInvalid() || !mBodyInterface) return {};
         JPH::AABox b = mBodyInterface->GetTransformedShape(mBodyId).GetWorldSpaceBounds();
@@ -152,12 +216,15 @@ public:
     void        invalidateBody() { mBodyId = JPH::BodyID(); }
 
 private:
-    JPH::BodyInterface * mBodyInterface = nullptr;
-    AutoRef<Hull>        mHull;
-    Temper               mTemper;
-    JPH::BodyID          mBodyId;
-    uint64_t             mEntityId = 0;
-    Scalar               mMass     = 1.0f;
+    JPH::BodyInterface *           mBodyInterface = nullptr;
+    const JPH::BodyLockInterface * mBodyLocks     = nullptr;
+    std::mutex *                   mMutationMutex = nullptr;
+    AutoRef<Hull>                  mHull;
+    Temper                         mTemper;
+    JPH::BodyID                    mBodyId;
+    uint64_t                       mEntityId     = 0;
+    Scalar                         mMassOverride = 0;
+    Scalar                         mMass         = 1.0f;
 };
 
 } // namespace GN::fiz

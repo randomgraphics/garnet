@@ -6,8 +6,8 @@
 
 using namespace GN;
 using namespace GN::gpu2;
-namespace fxBindless  = GN::fx2::bindless;
-namespace gpuBindless = GN::gpu2::bindless;
+namespace fx  = GN::fx2;
+namespace gpu = GN::gpu2;
 
 namespace {
 // Drain before destroying the native surface, including early failure returns.
@@ -40,15 +40,15 @@ int main(int argc, const char * argv[]) {
     Swapchain::CreateDesc swapchain {.gpu = host.gpu, .width = width, .height = height};
     swapchain.setSurface(host.surface);
     host.swapchain = Swapchain::create(swapchain);
-    auto heap      = gpuBindless::DescriptorHeap::create("unlit.heap", {.gpu = host.gpu, .capacity = 16});
+    auto heap      = gpu::DescriptorHeap::create("unlit.heap", {.gpu = host.gpu, .capacity = 16});
     if (!heap) return 1;
-    auto upload = gpuBindless::CnC::create("unlit.initialization", {.gpu = host.gpu, .heap = heap});
+    auto upload = gpu::CnC::create("unlit.initialization", {.gpu = host.gpu, .heap = heap});
     if (!upload) return 1;
-    auto unlit     = fxBindless::UnlitKernel::create(*heap, *upload);
-    auto constants = fxBindless::SharedShaderConstants::create({.gpu = host.gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+    auto unlit     = fx::UnlitKernel::create(*heap, *upload);
+    auto constants = fx::SharedShaderConstants::create({.gpu = host.gpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
     if (!host.swapchain || !heap || !unlit || !constants) return 1;
 
-    fxBindless::SharedUniforms uniforms;
+    fx::SharedUniforms uniforms;
     uniforms.cameraPosition   = {0, 0, 3, 1};
     uniforms.renderTargetSize = {width, height};
     uniforms.viewMatrix       = glm::lookAtRH(glm::vec3(uniforms.cameraPosition), glm::vec3(0), glm::vec3(0, 1, 0));
@@ -84,7 +84,7 @@ int main(int argc, const char * argv[]) {
                                                                      .addressW  = Address::CLAMP_TO_EDGE,
                                                                      .maxLod    = 0}});
     if (!checker || !nearest) return 1;
-    gpuBindless::CnC::Region region;
+    gpu::CnC::Region region;
     region.imageExtent = {4, 4, 1};
     upload->recordUploadImage(checker, {pixels, sizeof(pixels)}, {&region, 1});
     auto materialParameters     = unlit->defaultMaterialParameters();
@@ -100,11 +100,9 @@ int main(int argc, const char * argv[]) {
     RasterGeometry geometry;
     geometry.vertices.push_back({.buffer = vertices, .offset = 0, .stride = 5 * sizeof(float)});
     geometry.format.attributes.push_back(
-        {.location = fxBindless::UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-    geometry.format.attributes.push_back({.location = fxBindless::UnlitMaterial::TEXCOORD_LOCATION,
-                                          .binding  = 0,
-                                          .offset   = 3 * sizeof(float),
-                                          .format   = RasterGeometry::AttributeFormat::F32_2});
+        {.location = fx::UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    geometry.format.attributes.push_back(
+        {.location = fx::UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
     geometry.vertexCount = 3;
 
     for (int frame = 0; !headless || frame < 3; ++frame) {
@@ -114,7 +112,7 @@ int main(int argc, const char * argv[]) {
         RasterTarget target;
         target.setColorTarget(0, acquired.view).setClearColor(0.02f, 0.03f, 0.05f, 1);
         target.states.cullMode = RasterState::CULL_NONE;
-        auto uniformUploads    = gpuBindless::CnC::create("unlit.uniform-upload", {.gpu = host.gpu, .heap = heap});
+        auto uniformUploads    = gpu::CnC::create("unlit.uniform-upload", {.gpu = host.gpu, .heap = heap});
         if (!uniformUploads) return 1;
         uniforms.frameCounter = static_cast<uint32_t>(frame);
         auto state            = constants->recordUniformUpdate(*uniformUploads, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
@@ -122,16 +120,16 @@ int main(int argc, const char * argv[]) {
         if (!state) return 1;
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return 1;
-        auto raster = gpuBindless::Raster::create("unlit.two-invocations", {.gpu           = host.gpu,
-                                                                            .target        = &target,
-                                                                            .heap          = heap,
-                                                                            .heapSetIndex  = 0,
-                                                                            .passResources = fxBindless::sharedUniformResources(state),
+        auto raster = gpu::Raster::create("unlit.two-invocations", {.gpu           = host.gpu,
+                                                                    .target        = &target,
+                                                                    .heap          = heap,
+                                                                    .heapSetIndex  = 0,
+                                                                    .passResources = fx::sharedUniformResources(state),
 
-                                                                            .numberOfDrawsHint = 2});
+                                                                    .numberOfDrawsHint = 2});
         if (!raster) return 1;
-        const fxBindless::UnlitMaterial::DrawParameters leftDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(-0.7f, 0, 0))};
-        const fxBindless::UnlitMaterial::DrawParameters rightDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(0.7f, 0, 0))};
+        const fx::UnlitMaterial::DrawParameters leftDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(-0.7f, 0, 0))};
+        const fx::UnlitMaterial::DrawParameters rightDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(0.7f, 0, 0))};
         if (!leftMaterial->record(leftDraw)) return 1;
         if (!rightMaterial->record(rightDraw)) return 1;
         auto draws = raster->seal();

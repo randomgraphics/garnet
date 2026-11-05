@@ -49,6 +49,7 @@ struct VisualImpl : Visual {
     gpu2::GpuContext & gpu() const override { return *mGpu; }
 
     bool init(const CreateParameters & cp) {
+        GN_INFO(sLogger, "Initializing Visual (platform={}, supplied assets={}).", bool(cp.platform), bool(cp.assets));
         mOs = cp.platform;
 
         mGpu = GpuContext::create("e2-gpu", GpuContext::CreateParameters {});
@@ -102,13 +103,13 @@ struct VisualImpl : Visual {
         mRenderTarget.states.setCullMode(RasterState::CULL_BACK);
         mRenderTarget.states.setDepthState(RasterState::DepthState {.func = RasterState::Compare::LESS, .write = true});
 
-        mHeap = gpu2::bindless::DescriptorHeap::create("e2-heap", {.gpu = mGpu, .capacity = 256, .materialCapacity = 1024 * 1024});
+        mHeap = gpu2::DescriptorHeap::create("e2-heap", {.gpu = mGpu, .capacity = 256, .materialCapacity = 1024 * 1024});
         if (!mHeap) {
             GN_ERROR(sLogger, "Failed to create bindless descriptor heap.");
             return false;
         }
 
-        mSsc = fx2::bindless::SharedShaderConstants::create({.gpu = mGpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
+        mSsc = fx2::SharedShaderConstants::create({.gpu = mGpu, .uniformCapacity = 64 * 1024, .streamingCapacity = 64 * 1024});
         if (!mSsc) {
             GN_ERROR(sLogger, "Failed to create bindless shared shader constants.");
             return false;
@@ -119,21 +120,37 @@ struct VisualImpl : Visual {
         } else {
             mAssets = Assets::create({.universe = mUniverse, .gpu = mGpu});
         }
-        if (!mAssets) return false;
+        if (!mAssets) {
+            GN_ERROR(sLogger, "Visual initialization failed: Assets::create returned null.");
+            return false;
+        }
 
-        auto initialization = gpu2::bindless::CnC::create("e2-init-uploads", {.gpu = mGpu, .heap = mHeap});
-        if (!initialization) return false;
-        mLambert = fx2::bindless::LambertianKernel::create(*mHeap, *initialization);
-        if (!mLambert) return false;
+        GN_INFO(sLogger, "Creating initialization CnC (gpu={}, descriptor heap={}).", bool(mGpu), bool(mHeap));
+        auto initialization = gpu2::CnC::create("e2-init-uploads", {.gpu = mGpu, .heap = mHeap});
+        if (!initialization) {
+            GN_ERROR(sLogger, "Visual initialization failed: CnC::create returned null (gpu={}, descriptor heap={}).", bool(mGpu), bool(mHeap));
+            return false;
+        }
+        mLambert = fx2::LambertianKernel::create(*mHeap, *initialization);
+        if (!mLambert) {
+            GN_ERROR(sLogger, "Visual initialization failed: LambertianKernel::create returned null.");
+            return false;
+        }
 
         auto matParams = mLambert->defaultMaterialParameters();
         // A small uniform fill keeps unlit faces readable in this white-model preview.
         matParams.emissive = glm::vec3(50.f / 3.14159265359f);
         mWhiteMaterial     = mLambert->createMaterial(*initialization, matParams);
-        if (!mWhiteMaterial) return false;
+        if (!mWhiteMaterial) {
+            GN_ERROR(sLogger, "Visual initialization failed: Lambertian material creation returned null.");
+            return false;
+        }
 
         auto payload = initialization->seal();
-        if (!payload) return false;
+        if (!payload) {
+            GN_ERROR(sLogger, "Visual initialization failed: sealing initialization uploads returned null.");
+            return false;
+        }
         mGpu->submit(GpuContext::SubmitParameters("e2-visual-init").appendWork(payload));
         mGpu->waitForIdle();
         return true;
@@ -150,30 +167,31 @@ struct VisualImpl : Visual {
         if (frame.view.empty()) return;
         mRenderTarget.setColorTarget(0, frame.view);
 
-        auto uploadCnc = gpu2::bindless::CnC::create(StrA::format("e2-frame-{}-uploads", mFrameCounter), {.gpu = mGpu, .heap = mHeap});
+        auto uploadCnc = gpu2::CnC::create(StrA::format("e2-frame-{}-uploads", mFrameCounter), {.gpu = mGpu, .heap = mHeap});
         if (!uploadCnc) return;
 
         ++mFrameCounter;
         auto uniformState = updateUniforms(*uploadCnc, tableau);
         if (!uniformState) return;
 
-        gpu2::bindless::Raster::CreateParameters rcp;
+        gpu2::Raster::CreateParameters rcp;
         rcp.gpu               = mGpu;
         rcp.target            = &mRenderTarget;
         rcp.heap              = mHeap;
         rcp.heapSetIndex      = 0;
-        rcp.passResources     = fx2::bindless::sharedUniformResources(uniformState);
+        rcp.passResources     = fx2::sharedUniformResources(uniformState);
         rcp.numberOfDrawsHint = tableau.objects.size();
-        auto raster           = gpu2::bindless::Raster::create("e2-white-model", rcp);
+        auto raster           = gpu2::Raster::create("e2-white-model", rcp);
         if (!raster) return;
 
         for (const auto & object : tableau.objects) {
             auto mesh = mAssets->findMesh(object.meshId ? object.meshId : Assets::MESH_BOX);
             if (!mesh) continue;
-            auto      position = tableau.scale.toMeters(spatial::toLocal(tableau.camera.position, object.transform.position));
-            glm::mat4 object2WorldTransform =
-                glm::translate(glm::mat4(1.f), position) * glm::mat4_cast(object.transform.orientation) * glm::scale(glm::mat4(1.f), object.transform.scale);
-            fx2::bindless::LambertianMaterial::DrawParameters draw {
+            auto            position = tableau.scale.toMeters(spatial::toLocal(tableau.camera.position, object.transform.position));
+            const glm::mat4 linearTransform =
+                object.transform.affineFallback ? glm::mat4(object.transform.affineLinear) : glm::mat4_cast(object.transform.orientation);
+            glm::mat4 object2WorldTransform = glm::translate(glm::mat4(1.f), position) * linearTransform * glm::scale(glm::mat4(1.f), object.transform.scale);
+            fx2::LambertianMaterial::DrawParameters draw {
                 {*raster, uniformState, mesh->geometry(), &mRenderTarget.states},
                 object2WorldTransform,
             };
@@ -201,8 +219,8 @@ struct VisualImpl : Visual {
     }
 
 private:
-    AutoRef<fx2::bindless::SharedShaderConstants::UniformState> updateUniforms(gpu2::bindless::CnC & uploads, const Tableau & tableau) {
-        fx2::bindless::SharedUniforms uniforms {};
+    AutoRef<fx2::SharedShaderConstants::UniformState> updateUniforms(gpu2::CnC & uploads, const Tableau & tableau) {
+        fx2::SharedUniforms uniforms {};
         uniforms.frameCounter = mFrameCounter;
 
         const auto & cam = tableau.camera;
@@ -227,29 +245,29 @@ private:
         // Fixed directional light matching the white-model preview illumination.
         glm::vec3 dir                    = glm::mat3_cast(glm::quat(glm::vec3(0.6f, 0.8f, 0.f))) * glm::vec3(0.f, 0.f, -1.f);
         uniforms.numLights               = 1;
-        uniforms.lights[0].positionOrDir = glm::vec4(dir, float(fx2::bindless::DirectLightUniform::DIRECTIONAL));
+        uniforms.lights[0].positionOrDir = glm::vec4(dir, float(fx2::DirectLightUniform::DIRECTIONAL));
         uniforms.lights[0].colorAndRange = glm::vec4(1500.f, 1500.f, 1500.f, 0.f);
 
         return mSsc->recordUniformUpdate(uploads, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
     }
 
-    Universe &                                    mUniverse;
-    AutoRef<Texture>                              mLastFrameTexture;
-    bool                                          mFrameSucceeded = false;
-    Ref<Platform>                                 mOs;
-    AutoRef<GpuContext>                           mGpu;
-    intptr_t                                      mSurface = 0;
-    AutoRef<Swapchain>                            mSwapchain;
-    AutoRef<Texture>                              mDepth;
-    AutoRef<gpu2::bindless::DescriptorHeap>       mHeap;
-    AutoRef<fx2::bindless::SharedShaderConstants> mSsc;
-    Ref<Assets>                                   mAssets;
-    AutoRef<fx2::bindless::LambertianKernel>      mLambert;
-    AutoRef<fx2::bindless::LambertianMaterial>    mWhiteMaterial;
-    RasterTarget                                  mRenderTarget;
-    uint32_t                                      mFrameCounter = 0;
-    uint32_t                                      mWidth        = 1280;
-    uint32_t                                      mHeight       = 720;
+    Universe &                          mUniverse;
+    AutoRef<Texture>                    mLastFrameTexture;
+    bool                                mFrameSucceeded = false;
+    Ref<Platform>                       mOs;
+    AutoRef<GpuContext>                 mGpu;
+    intptr_t                            mSurface = 0;
+    AutoRef<Swapchain>                  mSwapchain;
+    AutoRef<Texture>                    mDepth;
+    AutoRef<gpu2::DescriptorHeap>       mHeap;
+    AutoRef<fx2::SharedShaderConstants> mSsc;
+    Ref<Assets>                         mAssets;
+    AutoRef<fx2::LambertianKernel>      mLambert;
+    AutoRef<fx2::LambertianMaterial>    mWhiteMaterial;
+    RasterTarget                        mRenderTarget;
+    uint32_t                            mFrameCounter = 0;
+    uint32_t                            mWidth        = 1280;
+    uint32_t                            mHeight       = 720;
 };
 
 #endif // GN_BUILD_HAS_VULKAN
@@ -260,12 +278,16 @@ namespace GN::e2::basis {
 
 Ref<Visual> Visual::create(const CreateParameters & cp) {
 #if GN_BUILD_HAS_VULKAN
+    GN_INFO(GN::getLogger("GN.e2.visual"), "Visual::create called (Vulkan enabled).");
     auto d = referenceTo(new VisualImpl(cp.universe));
-    if (!d->init(cp)) return {};
+    if (!d->init(cp)) {
+        GN_ERROR(GN::getLogger("GN.e2.visual"), "Visual::create returning null because VisualImpl::init failed.");
+        return {};
+    }
     return d;
 #else
     (void) cp;
-    GN_ERROR(GN::getLogger("GN.e2.visual"), "Visual requires a Vulkan-enabled build.");
+    GN_ERROR(GN::getLogger("GN.e2.visual"), "Visual::create returning null: this build has no Vulkan support.");
     return {};
 #endif
 }

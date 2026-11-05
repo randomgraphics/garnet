@@ -7,8 +7,8 @@
     // Generated SPIR-V headers are produced by the CMake custom command in
     // src/test/internal/CMakeLists.txt and land in the binary dir on the include path.
     #include "rtt-fullscreen-vert.spv.h"
-    #include "rtt-fullscreen-frag.spv.h"
     #include "rtt-mrt-frag.spv.h"
+    #include "bindless-test-frag.spv.h"
 
     #include <catch2/catch_test_macros.hpp>
     #include <garnet/GNgpu2.h>
@@ -19,11 +19,24 @@ using namespace GN::gpu2;
 
     #include "gpu2-test-helpers.h"
 
+template<typename T>
+static ArrayView<const uint8_t> makePushConstants(const T & value) {
+    return {(const uint8_t *) &value, sizeof(value)};
+}
+
+static AutoRef<DescriptorHeap> makeRasterHeap(const AutoRef<GpuContext> & gpu) { return DescriptorHeap::create("rtt-test-heap", {.gpu = gpu, .capacity = 16}); }
+
+static bool addSharedSampler(const AutoRef<GpuContext> & gpu, const AutoRef<DescriptorHeap> & heap) {
+    auto sampler = Sampler::create("rtt-test-sampler", {.context = gpu});
+    if (!sampler) return false;
+    return heap->allocate(DescriptorHeap::SAMPLER, GpuResourceView {sampler}).slot == 0;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-// Pass 1: clear a small offscreen texture to solid red via GpuRaster (no draw calls — clear only).
+// Pass 1: clear a small offscreen texture to solid red via Raster (no draw calls — clear only).
 // Pass 2: sample that texture with a fullscreen triangle shader and write the result to a second
 //         offscreen texture ("backbuffer").
 // Both passes submitted in one GpuContext::submit() call so the cross-payload state tracker
@@ -38,6 +51,11 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
     auto rtt        = makeRgba8Tex(gpu, "rtt", W, H);
     auto backbuffer = makeRgba8Tex(gpu, "backbuffer", W, H);
     if (!rtt || !backbuffer) SKIP("RGBA8 textures unavailable");
+    auto heap = makeRasterHeap(gpu);
+    REQUIRE(heap);
+    REQUIRE(addSharedSampler(gpu, heap));
+    const auto textureIndex = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {rtt});
+    REQUIRE(textureIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     // --- Pass 1: clear rtt to solid red ---
     GpuResourceView rttView;
@@ -45,13 +63,13 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
     RasterTarget rt1;
     rt1.colorTargets.append(RasterTarget::ColorTarget(rttView));
     rt1.setClearColor(1.0f, 0.0f, 0.0f); // red
-    auto raster1 = GpuRaster::create("rtt-source", {.gpu = gpu, .target = &rt1});
+    auto raster1 = Raster::create("rtt-source", {.gpu = gpu, .target = &rt1, .heap = heap});
     REQUIRE(raster1);
     AutoRef<GpuPayload> p1 = raster1->seal();
 
     // --- Pass 2: sample rtt into backbuffer via fullscreen shader ---
     auto vs = makeShader(gpu, "rtt-vert", kRttFullscreenVertSpv, sizeof(kRttFullscreenVertSpv));
-    auto ps = makeShader(gpu, "rtt-frag", kRttFullscreenFragSpv, sizeof(kRttFullscreenFragSpv));
+    auto ps = makeShader(gpu, "rtt-frag", kBindlessTestFragSpv, sizeof(kBindlessTestFragSpv));
     REQUIRE(vs);
     REQUIRE(ps);
 
@@ -60,23 +78,13 @@ TEST_CASE("GPU2 RTT: render solid color to texture then sample to backbuffer", "
     RasterTarget rt2;
     rt2.colorTargets.append(RasterTarget::ColorTarget(bbView));
     rt2.setClearColor(0.0f, 0.0f, 0.0f); // black clear, overwritten by the sample draw
-    auto raster2 = GpuRaster::create("rtt-backbuffer", {.gpu = gpu, .target = &rt2});
+    auto raster2 = Raster::create("rtt-backbuffer", {.gpu = gpu, .target = &rt2, .heap = heap});
     REQUIRE(raster2);
 
-    // Bind rtt at set=0, binding=0 — matches the fragment shader's sampler2D declaration.
-    GpuResourceTable resources;
-    resources.resize(1);
-    resources[0].resize(1);
-    resources[0][0].resize(1);
-    resources[0][0][0] = rttView;
-
-    RasterGeometry            dpGeometry;
-    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = resources};
-    dp.vs                  = vs;
-    dp.ps                  = ps;
+    RasterGeometry dpGeometry;
     dpGeometry.vertexCount = 3; // fullscreen triangle from gl_VertexIndex, no vertex buffer
 
-    raster2->recordDraw(dp);
+    raster2->recordDraw({.vs = vs, .ps = ps, .geometry = dpGeometry, .immediates = makePushConstants(textureIndex.slot)});
     AutoRef<GpuPayload> p2 = raster2->seal();
 
     // Submit both passes as one batch. The batch tracker transitions rtt from
@@ -112,6 +120,11 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     auto rtt        = makeRgba8Tex(gpu, "rtt-g", W, H);
     auto backbuffer = makeRgba8Tex(gpu, "bb-g", W, H);
     if (!rtt || !backbuffer) SKIP("RGBA8 textures unavailable");
+    auto heap = makeRasterHeap(gpu);
+    REQUIRE(heap);
+    REQUIRE(addSharedSampler(gpu, heap));
+    const auto textureIndex = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, GpuResourceView {rtt});
+    REQUIRE(textureIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
 
     GpuResourceView rttView;
     rttView.resource = rtt;
@@ -120,12 +133,12 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     RasterTarget rt1;
     rt1.colorTargets.append(RasterTarget::ColorTarget(rttView));
     rt1.setClearColor(0.0f, 1.0f, 0.0f);
-    auto                raster1 = GpuRaster::create("rtt-green-source", {.gpu = gpu, .target = &rt1});
+    auto                raster1 = Raster::create("rtt-green-source", {.gpu = gpu, .target = &rt1, .heap = heap});
     AutoRef<GpuPayload> p1      = raster1->seal();
 
     // Pass 2: sample rtt into backbuffer.
     auto vs = makeShader(gpu, "rtt-vert", kRttFullscreenVertSpv, sizeof(kRttFullscreenVertSpv));
-    auto ps = makeShader(gpu, "rtt-frag", kRttFullscreenFragSpv, sizeof(kRttFullscreenFragSpv));
+    auto ps = makeShader(gpu, "rtt-frag", kBindlessTestFragSpv, sizeof(kBindlessTestFragSpv));
     REQUIRE(vs);
     REQUIRE(ps);
 
@@ -134,21 +147,11 @@ TEST_CASE("GPU2 RTT: green render color propagates through texture sample", "[gp
     RasterTarget rt2;
     rt2.colorTargets.append(RasterTarget::ColorTarget(bbView));
     rt2.setClearColor(0.0f, 0.0f, 0.0f);
-    auto raster2 = GpuRaster::create("rtt-green-backbuffer", {.gpu = gpu, .target = &rt2});
+    auto raster2 = Raster::create("rtt-green-backbuffer", {.gpu = gpu, .target = &rt2, .heap = heap});
 
-    GpuResourceTable resources;
-    resources.resize(1);
-    resources[0].resize(1);
-    resources[0][0].resize(1);
-    resources[0][0][0] = rttView;
-
-    RasterGeometry            dpGeometry;
-    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = resources};
-    dp.vs                  = vs;
-    dp.ps                  = ps;
+    RasterGeometry dpGeometry;
     dpGeometry.vertexCount = 3;
-
-    raster2->recordDraw(dp);
+    raster2->recordDraw({.vs = vs, .ps = ps, .geometry = dpGeometry, .immediates = makePushConstants(textureIndex.slot)});
     AutoRef<GpuPayload> p2 = raster2->seal();
 
     submitAndWait(gpu, "rtt-test", p1, p2);
@@ -193,15 +196,16 @@ TEST_CASE("GPU2 RTT: MRT — render blue and red to two color targets simultaneo
     rt.colorTargets.append(RasterTarget::ColorTarget(view1)); // location 1 → red
     rt.setClearColor(0.0f, 0.0f, 0.0f);
 
-    auto raster = GpuRaster::create("rtt-mrt", {.gpu = gpu, .target = &rt});
+    auto heap = makeRasterHeap(gpu);
+    REQUIRE(heap);
+    auto raster = Raster::create("rtt-mrt", {.gpu = gpu, .target = &rt, .heap = heap});
     REQUIRE(raster);
 
-    RasterGeometry            dpGeometry;
-    GpuResourceTable          dpResources;
-    GpuRaster::DrawParameters dp {.geometry = dpGeometry, .resources = dpResources};
-    dp.vs                  = vs;
-    dp.ps                  = ps;
+    RasterGeometry dpGeometry;
     dpGeometry.vertexCount = 3;
+    Raster::DrawParameters dp {.geometry = dpGeometry};
+    dp.vs = vs;
+    dp.ps = ps;
     raster->recordDraw(dp);
     AutoRef<GpuPayload> p = raster->seal();
 
@@ -254,29 +258,35 @@ TEST_CASE("GPU2 RTT: borrowed draw inputs are snapshotted before returning", "[g
         RasterTarget redTarget, greenTarget, target;
         redTarget.setColorTarget(0, redView).setClearColor(1, 0, 0, 1);
         greenTarget.setColorTarget(0, greenView).setClearColor(0, 1, 0, 1);
-        auto clearRed   = GpuRaster::create("snapshot-clear-red", {.gpu = gpu, .target = &redTarget});
-        auto clearGreen = GpuRaster::create("snapshot-clear-green", {.gpu = gpu, .target = &greenTarget});
+        auto heap = makeRasterHeap(gpu);
+        REQUIRE(heap);
+        REQUIRE(addSharedSampler(gpu, heap));
+        const auto redIndex   = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, redView);
+        const auto greenIndex = heap->allocate(DescriptorHeap::SAMPLED_TEXTURE, greenView);
+        REQUIRE(redIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+        REQUIRE(greenIndex != DescriptorHeap::INVALID_DESCRIPTOR_INDEX);
+        auto clearRed   = Raster::create("snapshot-clear-red", {.gpu = gpu, .target = &redTarget, .heap = heap});
+        auto clearGreen = Raster::create("snapshot-clear-green", {.gpu = gpu, .target = &greenTarget, .heap = heap});
         REQUIRE(clearRed);
         REQUIRE(clearGreen);
         submitAndWait(gpu, "snapshot-init", clearRed->seal(), clearGreen->seal());
         target.setColorTarget(0, outputView).setClearColor(0, 0, 0, 1);
-        auto raster = GpuRaster::create("snapshot-draws", {.gpu = gpu, .target = &target});
+        auto raster = Raster::create("snapshot-draws", {.gpu = gpu, .target = &target, .heap = heap});
         REQUIRE(raster);
         RasterGeometry geometry;
         geometry.vertexCount = 3;
-        GpuResourceTable resources;
-        resources.resize(1);
-        resources[0].resize(1);
-        resources[0][0].append(redView);
-        GpuRaster::DrawParameters draw {.geometry = geometry, .resources = resources};
+        Raster::DrawParameters draw {.geometry = geometry};
         draw.vs = makeShader(gpu, "snapshot-vs", kRttFullscreenVertSpv, sizeof(kRttFullscreenVertSpv));
-        draw.ps = makeShader(gpu, "snapshot-ps", kRttFullscreenFragSpv, sizeof(kRttFullscreenFragSpv));
+        draw.ps = makeShader(gpu, "snapshot-ps", kBindlessTestFragSpv, sizeof(kBindlessTestFragSpv));
         REQUIRE(draw.vs);
         REQUIRE(draw.ps);
         draw.states.cullMode    = RasterState::CULL_NONE;
         draw.states.scissorRect = RasterState::ScissorRect {0, 0, 4, 4};
+        uint32_t textureIndex   = redIndex.slot;
+        draw.immediates         = makePushConstants(textureIndex);
         raster->recordDraw(draw);
-        resources[0][0][0]      = greenView;
+        textureIndex            = greenIndex.slot;
+        draw.immediates         = makePushConstants(textureIndex);
         geometry.vertexCount    = 0;
         draw.states.scissorRect = RasterState::ScissorRect {4, 0, 4, 4};
         raster->recordDraw(draw);
@@ -284,8 +294,7 @@ TEST_CASE("GPU2 RTT: borrowed draw inputs are snapshotted before returning", "[g
         draw.states.scissorRect = RasterState::ScissorRect {8, 0, 4, 4};
         raster->recordDraw(draw);
         geometry.vertexCount = 0;
-        resources.clear();
-        payload = raster->seal();
+        payload              = raster->seal();
     }
     REQUIRE(payload);
     submitAndWait(gpu, "snapshot-render", payload);

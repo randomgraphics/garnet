@@ -1,6 +1,10 @@
 # Overview
 
-Garnet 3D is lightweight crossplatform 3D rendering library. It supports Windows, Linux and Android, with the following graphcis APIs: D3D11 and OpenGL/ES. The Vulkan and D3D12 support is in developing.
+Garnet 3D is a cross-platform C++ graphics library. The repository contains
+legacy D3D11 and OpenGL/ES paths alongside the newer gpu2 rendering layer, whose
+README describes Vulkan as its active backend. Backend availability depends on
+the module, platform, and detected SDK; see `src/core/gpu2/README.md` and the
+module CMake files rather than treating this overview as a support matrix.
 
 # Repository Structure
 

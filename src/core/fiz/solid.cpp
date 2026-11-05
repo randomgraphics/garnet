@@ -5,12 +5,13 @@
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
+#include <Jolt/Physics/Collision/ContactListener.h>
 
 #include "solid-impl.h"
 
 namespace GN::fiz {
 
-class SolidEngineImpl : public SolidEngine {
+class SolidEngineImpl : public SolidEngine, public JPH::ContactListener {
     GN_REGISTER_RUNTIME_TYPE(SolidEngine);
     using SolidEngine::SolidEngine;
 
@@ -26,6 +27,7 @@ public:
         mPhysicsSystem = std::make_unique<JPH::PhysicsSystem>();
         mPhysicsSystem->Init(desc.maxBodies, 0, desc.maxBodyPairs, desc.maxContactConstraints, mBPLayerInterface, mObjectVsBroadPhaseFilter,
                              mObjectLayerPairFilter);
+        mPhysicsSystem->SetContactListener(this);
 
         mPhysicsSystem->SetGravity(JPH::Vec3(mGravity.x, mGravity.y, mGravity.z));
     }
@@ -44,6 +46,8 @@ public:
     }
 
     AutoRef<Solid> createSolid(const SolidDesc & desc) override {
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
+
         JPH::ShapeRefC shape = createJoltShape(desc.hull.get());
         if (!shape) return {};
 
@@ -87,7 +91,7 @@ public:
         JPH::Body * body = bi.CreateBody(settings);
         if (!body) return {};
 
-        auto solid = AutoRef<SolidImpl>(new SolidImpl(&bi, desc, body->GetID(), mass));
+        auto solid = AutoRef<SolidImpl>(new SolidImpl(&bi, &mPhysicsSystem->GetBodyLockInterface(), &mMutationMutex, desc, body->GetID(), mass));
         body->SetUserData(reinterpret_cast<uint64_t>(solid.get()));
 
         bi.AddBody(body->GetID(), desc.motionType == MotionType::DYNAMIC ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
@@ -105,8 +109,9 @@ public:
 
     void removeSolid(Solid * solid) override {
         if (!solid) return;
-        auto *      sImpl = static_cast<SolidImpl *>(solid);
-        JPH::BodyID bId   = sImpl->bodyId();
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
+        auto *                      sImpl = static_cast<SolidImpl *>(solid);
+        JPH::BodyID                 bId   = sImpl->bodyId();
         if (!bId.IsInvalid()) {
             auto & bi = mPhysicsSystem->GetBodyInterface();
             bi.RemoveBody(bId);
@@ -121,6 +126,11 @@ public:
     void step(UnitOfTime dt) override {
         int64_t ns = dt.count();
         if (ns == 0) return;
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
+        {
+            std::lock_guard<std::mutex> contactLock(mContactMutex);
+            mContactCandidates.clear();
+        }
 
         if (ns > 0) {
             float seconds = static_cast<float>(ns) * 1e-9f;
@@ -158,6 +168,7 @@ public:
                 }
             }
         }
+        canonicalizeContacts();
     }
 
     void setGravity(const Vector3 & gravity) override {
@@ -194,6 +205,20 @@ public:
         return false;
     }
 
+    DynaArray<ContactPair> contactPairs() const override {
+        std::lock_guard<std::mutex> engineLock(mMutationMutex);
+        std::lock_guard<std::mutex> contactLock(mContactMutex);
+        return mContactPairs;
+    }
+
+    void OnContactAdded(const JPH::Body & bodyA, const JPH::Body & bodyB, const JPH::ContactManifold & manifold, JPH::ContactSettings &) override {
+        captureContact(bodyA, bodyB, manifold);
+    }
+
+    void OnContactPersisted(const JPH::Body & bodyA, const JPH::Body & bodyB, const JPH::ContactManifold & manifold, JPH::ContactSettings &) override {
+        captureContact(bodyA, bodyB, manifold);
+    }
+
     size_t bodyCount() const override { return mSolids.size(); }
 
     size_t activeBodyCount() const override { return mPhysicsSystem->GetNumActiveBodies(JPH::EBodyType::RigidBody); }
@@ -205,8 +230,55 @@ public:
     JPH::BodyInterface & bodyInterface() { return mPhysicsSystem->GetBodyInterface(); }
 
 private:
+    void captureContact(const JPH::Body & bodyA, const JPH::Body & bodyB, const JPH::ContactManifold & manifold) {
+        if (manifold.mRelativeContactPointsOn1.empty() || manifold.mRelativeContactPointsOn2.empty()) return;
+        const auto * solidA = reinterpret_cast<const SolidImpl *>(bodyA.GetUserData());
+        const auto * solidB = reinterpret_cast<const SolidImpl *>(bodyB.GetUserData());
+        if (!solidA || !solidB || solidA->entityId() == 0 || solidB->entityId() == 0 || solidA->entityId() == solidB->entityId()) return;
+        auto        pointA = manifold.GetWorldSpaceContactPointOn1(0);
+        auto        pointB = manifold.GetWorldSpaceContactPointOn2(0);
+        ContactPair candidate;
+        candidate.entityA  = solidA->entityId();
+        candidate.entityB  = solidB->entityId();
+        candidate.position = Vector3(static_cast<float>((pointA.GetX() + pointB.GetX()) * 0.5), static_cast<float>((pointA.GetY() + pointB.GetY()) * 0.5),
+                                     static_cast<float>((pointA.GetZ() + pointB.GetZ()) * 0.5));
+        JPH::Vec3 normal   = manifold.mWorldSpaceNormal;
+        candidate.normal   = Vector3(normal.GetX(), normal.GetY(), normal.GetZ());
+        if (candidate.entityA > candidate.entityB) {
+            std::swap(candidate.entityA, candidate.entityB);
+            candidate.normal = -candidate.normal;
+        }
+        if (!std::isfinite(candidate.position.x) || !std::isfinite(candidate.position.y) || !std::isfinite(candidate.position.z) ||
+            !std::isfinite(candidate.normal.x) || !std::isfinite(candidate.normal.y) || !std::isfinite(candidate.normal.z))
+            return;
+        std::lock_guard<std::mutex> contactLock(mContactMutex);
+        mContactCandidates.push_back(candidate);
+    }
+
+    void canonicalizeContacts() {
+        std::lock_guard<std::mutex> contactLock(mContactMutex);
+        std::sort(mContactCandidates.begin(), mContactCandidates.end(), [](const ContactPair & a, const ContactPair & b) {
+            if (a.entityA != b.entityA) return a.entityA < b.entityA;
+            if (a.entityB != b.entityB) return a.entityB < b.entityB;
+            if (a.position.x != b.position.x) return a.position.x < b.position.x;
+            if (a.position.y != b.position.y) return a.position.y < b.position.y;
+            if (a.position.z != b.position.z) return a.position.z < b.position.z;
+            if (a.normal.x != b.normal.x) return a.normal.x < b.normal.x;
+            if (a.normal.y != b.normal.y) return a.normal.y < b.normal.y;
+            return a.normal.z < b.normal.z;
+        });
+        mContactPairs.clear();
+        for (const auto & candidate : mContactCandidates)
+            if (mContactPairs.empty() || mContactPairs.back().entityA != candidate.entityA || mContactPairs.back().entityB != candidate.entityB)
+                mContactPairs.append(candidate);
+    }
+
     Vector3                                   mGravity;
     SimulationMode                            mSimulationMode;
+    mutable std::mutex                        mMutationMutex;
+    mutable std::mutex                        mContactMutex;
+    std::vector<ContactPair>                  mContactCandidates;
+    mutable DynaArray<ContactPair>            mContactPairs;
     BPLayerInterfaceImpl                      mBPLayerInterface;
     ObjectVsBroadPhaseLayerFilterImpl         mObjectVsBroadPhaseFilter;
     ObjectLayerPairFilterImpl                 mObjectLayerPairFilter;

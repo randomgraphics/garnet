@@ -14,11 +14,10 @@ namespace GN::gpu2 {
 // -----------------------------
 // All fields are std::optional<>. Two construction modes:
 //   RasterState{}            — default ctor, all fields empty (used by draw parameters: absent = inherit from RasterTarget)
-//   RasterState{WithDefaults} — sets every field to its logical default (used by RasterTarget::renderState)
+//   RasterState{WithDefaults} — sets every field to its logical default (used by RasterTarget)
 //
-// Draw-level overrides are persistent within a render pass: if a draw sets viewport, all subsequent
-// draws in the same GpuRaster are affected until overridden again. Changes do not propagate outside
-// the pass; each GpuRaster owns its RasterTarget which carries the full default baseline.
+// Draw-level overrides apply only to that draw. Recording snapshots the RasterTarget baseline
+// merged with the draw overrides, so later draws start from the baseline again.
 
 struct RasterState {
     // ---- nested types ----
@@ -475,54 +474,6 @@ struct RasterGeometry {
     /// Allocator-extended copy: duplicates \p other into storage owned by \p r.
     RasterGeometry(const RasterGeometry & other, std::pmr::memory_resource * r)
         : format(other.format, r), vertices(other.vertices, r), vertexCount(other.vertexCount), indices(other.indices), indexCount(other.indexCount) {}
-};
-
-// -----------------------------
-// Raster
-// -----------------------------
-
-/// One-shot recorder for a graphical raster pass. seal() finalizes its GPU payload;
-/// no further recording or sealing is allowed afterward.
-/// This class is not thread-safe. All calls on one instance must be single-threaded
-/// or externally serialized; use separate instances for parallel recording.
-///
-/// Note: For high-draw-call workloads and best performance, GN::gpu2::bindless::Raster
-/// is recommended to avoid per-draw descriptor compilation and resource table scanning.
-class GpuRaster : public RCRT64 {
-public:
-    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
-
-    struct CreateParameters {
-        AutoRef<GpuContext>  gpu;
-        const RasterTarget * target = nullptr; ///< borrowed for creation only; GpuRaster stores its own copy
-
-        //< optional hint for expected number of draw calls, used to minimize internal allocations. The number of draws can exceed this hint.
-        size_t numberOfDrawsHint = 100;
-    };
-    GN_API static AutoRef<GpuRaster> create(const StrA & name, const CreateParameters &);
-
-    struct DrawParameters {
-        AutoRef<GpuShader> vs = {}, hs = {}, ds = {}, gs = {}, ps = {};
-        RasterState states = {}; ///< raster state overrides. overrides are transient and only affect the current draw call. empty fields are inherited from the
-                                 ///< RasterTarget's baseline state.
-        const RasterGeometry &   geometry;        ///< Borrowed; must remain valid through each recordDraw() call.
-        const GpuResourceTable & resources;       ///< Borrowed; edits between calls affect only subsequent draws.
-        AutoRef<const Blob>      immediates = {}; ///< reference counted immediate constants.
-    };
-    /// Record a draw without executing it; snapshot descriptions and retain GPU resources before returning.
-    /// Later edits or destruction of inputs do not affect recorded draws or the sealed payload.
-    /// GPU contents are not copied. Concurrent recording requires separate recorders and immutable shared inputs.
-    virtual void recordDraw(const DrawParameters &) = 0;
-
-    /// Get the immutable render target retained by this recorder.
-    virtual const RasterTarget & target() const = 0;
-
-    /// Finalize the render pass. Returns a payload to pass to GpuContext::submit().
-    /// After this call the GpuRaster is unusable and safe to release.
-    virtual AutoRef<GpuPayload> seal() = 0;
-
-protected:
-    using RCRT64::RCRT64;
 };
 
 } // namespace GN::gpu2

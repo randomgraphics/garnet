@@ -38,7 +38,7 @@ struct GN_API TransformFacet : Facet {
     const Value * read(const Form & form, const PrimeView & view) const { return view.get<TransformFacet>(form.formId()); }
 };
 
-/// Actual world-space metric motion, independent of Transform parent frames. The MVP solver requires zero spin.
+/// Actual world-space metric motion, independent of Transform parent frames. The current AABB solver requires zero angular velocity.
 /// Attach alongside TransformFacet and BodyFacet to opt a demo body into DynamicsLaw integration.
 struct MotionFacet : Facet {
     GN_API GN_REGISTER_RUNTIME_TYPE(Facet);

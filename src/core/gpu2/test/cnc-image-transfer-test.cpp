@@ -59,17 +59,17 @@ TEST_CASE("CNC image uploads snapshot CPU data and image copies preserve regions
                 pixels[offset + 1] = (uint8_t) y;
                 pixels[offset + 3] = 255;
             }
-        GpuCnC::Region upload;
+        CnC::Region upload;
         upload.dataOffset    = 16;
         upload.rowPitchBytes = 40;
         upload.imageExtent   = {8, 8, 1};
         recorder->recordUploadImage(source, pixels, {&upload, 1});
         std::fill(pixels.begin(), pixels.end(), uint8_t(99));
         std::vector<uint8_t> zeros(8 * 8 * 4, 0);
-        GpuCnC::Region       whole;
+        CnC::Region          whole;
         whole.imageExtent = {8, 8, 1};
         recorder->recordUploadImage(destination, zeros, {&whole, 1});
-        GpuCnC::ImageCopyRegion copy;
+        CnC::ImageCopyRegion copy;
         copy.srcOffset = {2, 1, 0};
         copy.dstOffset = {1, 2, 0};
         copy.extent    = {4, 3, 1};
@@ -101,12 +101,7 @@ TEST_CASE("CNC image uploads snapshot CPU data and image copies preserve regions
         REQUIRE_FALSE(readback.empty());
         CHECK(((const uint8_t *) readback.data())[(2 * 8 + 1) * 4] == 2);
     };
-    SECTION("ordinary CNC") { exercise(GpuCnC::create({.gpu = gpu})); }
-    SECTION("bindless CNC") {
-        auto heap = bindless::DescriptorHeap::create("image.heap", {.gpu = gpu, .capacity = 16});
-        REQUIRE(heap);
-        exercise(bindless::CnC::create("image.cnc", {.gpu = gpu, .heap = heap, .opCountHint = 40}));
-    }
+    exercise(CnC::create("image.cnc", {.gpu = gpu, .opCountHint = 40}));
 }
 
 TEST_CASE("CNC CPU-image upload and synchronous transfers preserve all faces and mips", "[gpu2][cnc][image][invariant]") {
@@ -125,7 +120,7 @@ TEST_CASE("CNC CPU-image upload and synchronous transfers preserve all faces and
     auto desc    = Texture::Descriptor {}.setFormat(image.format()).setDimensions(8, 8).setFaces(2).setLevels(2);
     auto texture = Texture::create("image.multi", {.context = gpu, .descriptor = desc});
     REQUIRE(texture);
-    auto recorder = GpuCnC::create({.gpu = gpu});
+    auto recorder = CnC::create("image-multi-upload", {.gpu = gpu});
     REQUIRE(recorder);
     recorder->recordUploadImage(texture, image);
     submitAndWait(gpu, "upload.cpu-image", recorder->seal());
@@ -143,12 +138,12 @@ TEST_CASE("CNC CPU-image upload and synchronous transfers preserve all faces and
     auto destination = Texture::create("image.copy-multi", {.context = gpu, .descriptor = desc});
     REQUIRE(destination);
     REQUIRE(texture->setContent(first));
-    auto copier = GpuCnC::create({.gpu = gpu});
+    auto copier = CnC::create("image-multi-copy", {.gpu = gpu});
     REQUIRE(copier);
-    DynaArray<GpuCnC::ImageCopyRegion> copies;
+    DynaArray<CnC::ImageCopyRegion> copies;
     for (uint32_t face = 0; face < 2; ++face)
         for (uint32_t mip = 0; mip < 2; ++mip) {
-            GpuCnC::ImageCopyRegion region;
+            CnC::ImageCopyRegion region;
             region.srcFace = region.dstFace = face;
             region.srcMip = region.dstMip = mip;
             region.extent                 = {8u >> mip, 8u >> mip, 1};
@@ -173,7 +168,7 @@ TEST_CASE("CNC repacks padded RGB8 block rows and depth slices directly into upl
             p[1]     = (uint8_t) z;
             p[2]     = 77;
         }
-    GpuCnC::Region region;
+    CnC::Region region;
     region.imageExtent     = {1, 10, 2};
     region.dataOffset      = 1;
     region.rowPitchBytes   = 4;
@@ -212,7 +207,7 @@ TEST_CASE("CNC compressed uploads accept arbitrary padding and image copies reac
         std::vector<uint8_t> pixels(1 + 27 * 2 + 24, 200);
         for (uint32_t y = 0; y < 3; ++y)
             for (uint32_t x = 0; x < 24; ++x) pixels[1 + y * 27 + x] = (uint8_t) (y * 24 + x);
-        GpuCnC::Region region;
+        CnC::Region region;
         region.imageExtent   = {10, 9, 1};
         region.dataOffset    = 1;
         region.rowPitchBytes = 27;
@@ -221,7 +216,7 @@ TEST_CASE("CNC compressed uploads accept arbitrary padding and image copies reac
         region.dataOffset    = 0;
         region.rowPitchBytes = 0;
         recorder->recordUploadImage(destination, zero, {&region, 1});
-        GpuCnC::ImageCopyRegion copy;
+        CnC::ImageCopyRegion copy;
         copy.srcOffset = {4, 4, 0};
         copy.dstOffset = {4, 4, 0};
         copy.extent    = {6, 5, 1};
@@ -240,12 +235,7 @@ TEST_CASE("CNC compressed uploads accept arbitrary padding and image copies reac
         REQUIRE_FALSE(image.empty());
         CHECK(image.format() == format);
     };
-    SECTION("ordinary CNC") { exercise(GpuCnC::create({.gpu = gpu})); }
-    SECTION("bindless CNC") {
-        auto heap = bindless::DescriptorHeap::create("compressed.heap", {.gpu = gpu, .capacity = 16});
-        REQUIRE(heap);
-        exercise(bindless::CnC::create("compressed.cnc", {.gpu = gpu, .heap = heap}));
-    }
+    exercise(CnC::create("compressed.cnc", {.gpu = gpu}));
 }
 
 TEST_CASE("Synchronous depth uploads and readbacks retain the shader-readable invariant", "[gpu2][cnc][image][invariant]") {
@@ -271,9 +261,9 @@ TEST_CASE("Synchronous depth uploads and readbacks retain the shader-readable in
     auto read = source->readback();
     REQUIRE(read.size() == image.size());
     CHECK(std::memcmp(read.data(), image.data(), image.size()) == 0);
-    auto recorder = GpuCnC::create({.gpu = gpu});
+    auto recorder = CnC::create("depth-copy", {.gpu = gpu});
     REQUIRE(recorder);
-    GpuCnC::ImageCopyRegion region;
+    CnC::ImageCopyRegion region;
     region.extent = {4, 4, 1};
     recorder->recordCopyImage({.src = source, .dst = destination, .regions = {&region, 1}});
     submitAndWait(gpu, "copy.depth", recorder->seal());

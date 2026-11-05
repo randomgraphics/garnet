@@ -21,7 +21,7 @@ as needed:
 - Create a work branch for substantial RDG/gpu2 work:
   `wip/gpu2/<topic>` or `wip/rdg2/<topic>`.
 - For complex or resumable work, create or update
-  `agent/<SCREAMING_SNAKE_TITLE>.txt` before implementation.
+  `agent/workspace/<task>/TASK.md` before implementation.
 
 ## Plan
 

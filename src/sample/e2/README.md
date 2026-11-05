@@ -1,7 +1,7 @@
 # E2 World Runtime sample
 
 `GNsample-e2-world-runtime` renders immutable Prime snapshots while a separate
-simulation thread runs DynamicsLaw followed by LifetimeLaw. Presentation uses
+simulation thread runs the optional GNfiz rigid-body Law followed by LifetimeLaw. Presentation uses
 `basis::Platform` for window/events and `basis::Visual` for
 rendering. It resolves the built-in box through `visual->assets()`, extracts a
 pure-data `Visual::Tableau` from each PrimeView, and passes that data to Visual.
@@ -16,31 +16,41 @@ source env/garnet.rc
 build.py d --target GNsample-e2-world-runtime GNtest-internal
 build/linux.gcc.d/bin/GNsample-e2-world-runtime
 build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless  # 600 ticks; t is an alias
+build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless --affine-probe
+build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless --workers 4
 build/linux.gcc.d/bin/GNsample-e2-world-runtime --headless --snapshot /tmp/e2-world.png
 build/linux.gcc.d/bin/GNsample-e2-world-runtime --window-test  # windowed, exits after 600 ticks
 ```
 
 The simulation uses a 10 ms timestep, up to 100 spawns/second and 256 generated
-bodies. Boxes fall onto a finite ground, collide with one another, and are removed
-below -15 m. Random initial horizontal speed is 0..0.5 m/s, vertical speed zero.
+bodies. Boxes fall onto a finite ground, collide with one another, and the host
+requests deletion below -15 m. Random initial horizontal speed is 0..0.5 m/s,
+vertical speed zero.
+The generator selects one of eight fixed horizontal directions to avoid platform
+libm trigonometric differences in replay.
 The generator and its random state are committed World state. Headless mode advances
 without wall-clock pacing; the renderer samples independently and checks retained
 initial-state immutability, population bounds, and event output. The final output
-reports ticks, rendered frames and observed events.
+reports ticks, rendered frames, observed events, worker count, a canonical Prime
+fingerprint and an ordered CollisionEvent fingerprint. Compare fingerprints across repeated runs to check exact state/output replay;
+frame counts vary with scheduling. `--workers` accepts 1 through 64 for GNfiz.
+`--affine-probe` adds a non-uniformly scaled parent with a rotated, spinning child;
+the headless run checks that affine state, angular orientation and collision contact
+survive the simulation.
 
-The local solver supports axis-aligned boxes without spin, uses substeps and
-iterative contact resolution, and is not production physics or CCD. Final-tick
-contact sets drive contact-begin counts, so within-tick transient impacts are not
-part of that statistic. Presentation owns the camera and GPU resources. No renderer
-code can mutate a Prime snapshot.
+The sample creates independent visual meshes and GNfiz box colliders. GNfiz contact
+pairs are sorted and published to Prime; new contact pairs emit World CollisionEvents.
+Presentation owns the camera
+and GPU resources. No renderer code can mutate a Prime snapshot.
 
 See [the canonical design](../../core/e2/README.md) and
-[the active assignment](../../../agent/E2_WORLD_RUNTIME.txt) for runtime contracts,
+[the historical task record](../../../agent/completed/e2-world-runtime-2026-10-05-215844/2026-10-05-215844-E2_WORLD_RUNTIME.txt) for runtime contracts,
 implementation status and verification limitations.
 
 Capabilities derive from `Facet` with nested `FacetValue` subclasses. Both use
 `RuntimeType` and `RefCounter` without per-instance IDs or names; Forms and Laws
 remain extensible `Being` subclasses.
 `MotionFacet` requires `TransformFacet`; the runtime checks that requirement
-before publishing a composition. TransformFacet parent links and local poses are versioned in Prime. Rendering
-resolves world poses through the spatial ancestor chain; Form has no hierarchy.
+before publishing a composition. TransformFacet parent links and local poses are
+versioned in Prime. Rendering resolves world poses through this optional spatial
+ancestor chain; the generic Form contract itself has no hierarchy API.

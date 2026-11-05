@@ -23,9 +23,7 @@ target_include_directories(GNsample-rdg2-open-graph-simple-triangle PRIVATE ${CM
 target_link_libraries(GNsample-rdg2-open-graph-simple-triangle GNcore)
 add_dependencies(GNsample-rdg2-open-graph-simple-triangle rdg-sample-shaders)
 
-add_custom_target(rdg2-open-graph-render-to-cube-shaders DEPENDS ${_rdg_sample_shader_hdrs})
-
 add_executable(GNsample-rdg2-open-graph-render-to-cube open-graph-render-to-cube.cpp)
 target_include_directories(GNsample-rdg2-open-graph-render-to-cube PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(GNsample-rdg2-open-graph-render-to-cube GNcore)
-add_dependencies(GNsample-rdg2-open-graph-render-to-cube rdg2-open-graph-render-to-cube-shaders)
+add_dependencies(GNsample-rdg2-open-graph-render-to-cube rdg-sample-shaders)

@@ -47,15 +47,15 @@ struct StoredBufferToBuffer {
 };
 
 struct StoredBufferToImage {
-    AutoRef<Buffer>           src;
-    AutoRef<Texture>          dst;
-    DynaArray<GpuCnC::Region> regions;
+    AutoRef<Buffer>        src;
+    AutoRef<Texture>       dst;
+    DynaArray<CnC::Region> regions;
 };
 
 struct StoredImageToImage {
-    AutoRef<Texture>                   src;
-    AutoRef<Texture>                   dst;
-    DynaArray<GpuCnC::ImageCopyRegion> regions;
+    AutoRef<Texture>                src;
+    AutoRef<Texture>                dst;
+    DynaArray<CnC::ImageCopyRegion> regions;
 };
 
 inline bool validImageRegion(const Texture::Descriptor & desc, uint32_t mip, uint32_t face, const Vector3<uint32_t> & offset,
@@ -74,7 +74,7 @@ struct CncImageLayout {
     uint64_t rowBytes = 0, rows = 0, rowPitch = 0, slicePitch = 0, size = 0;
 };
 
-inline bool imageCpuLayout(const Texture::Descriptor & desc, const GpuCnC::Region & r, CncImageLayout & layout) {
+inline bool imageCpuLayout(const Texture::Descriptor & desc, const CnC::Region & r, CncImageLayout & layout) {
     if (!validImageRegion(desc, r.mip, r.face, r.imageOffset, r.imageExtent)) return false;
     const auto     format = desc.format.layoutDesc();
     const uint64_t bw = std::max(1u, (uint32_t) format.blockWidth), bh = std::max(1u, (uint32_t) format.blockHeight);
@@ -97,7 +97,7 @@ inline bool singleCopyAspect(const Texture::Descriptor & desc) {
     return mask && !(mask & (mask - 1));
 }
 
-inline bool validImageUpload(Texture * dst, ArrayView<const uint8_t> content, ArrayView<const GpuCnC::Region> regions) {
+inline bool validImageUpload(Texture * dst, ArrayView<const uint8_t> content, ArrayView<const CnC::Region> regions) {
     if (!RuntimeType::cast<TextureVulkanBase>(dst) || !content.data() || content.empty() || regions.empty()) return false;
     const auto & desc = dst->descriptor();
     if (desc.samples != 1 || !singleCopyAspect(desc)) return false;
@@ -112,7 +112,7 @@ inline bool validImageUpload(Texture * dst, ArrayView<const uint8_t> content, Ar
     return true;
 }
 
-inline bool validImageCopy(const GpuCnC::ImageToImage & p) {
+inline bool validImageCopy(const CnC::ImageToImage & p) {
     auto * src = RuntimeType::cast<TextureVulkanBase>(p.src.get());
     auto * dst = RuntimeType::cast<TextureVulkanBase>(p.dst.get());
     if (!src || !dst || src == dst || p.regions.empty()) return false;
@@ -156,7 +156,7 @@ public:
         return slice;
     }
     Slice copyImage(AutoRef<GpuContext> gpu, const StrA & name, ArrayView<const uint8_t> content, const Texture::Descriptor & desc,
-                    const GpuCnC::Region & region) {
+                    const CnC::Region & region) {
         CncImageLayout layout;
         if (!imageCpuLayout(desc, region, layout)) return {};
         // GPU copy offsets obey block-byte alignment; arbitrary CPU pitches/offsets never escape into Vulkan.
@@ -201,10 +201,10 @@ struct StoredDownloadBuffer {
 };
 
 struct StoredDownloadImage {
-    AutoRef<Texture>                       src;
-    AutoRef<Buffer>                        staging;
-    DynaArray<GpuCnC::Region>              regions;
-    DownloadResult<GpuCnC::TextureContent> result;
+    AutoRef<Texture>                    src;
+    AutoRef<Buffer>                     staging;
+    DynaArray<CnC::Region>              regions;
+    DownloadResult<CnC::TextureContent> result;
 };
 
 inline void emitBufferCopy(BufferVulkan * srcVk, BufferVulkan * dstVk, uint64_t srcOffset, uint64_t dstOffset, uint64_t size, vk::CommandBuffer cb,
@@ -345,7 +345,7 @@ inline void resolveDownloadBuffer(StoredDownloadBuffer & op) {
 }
 
 inline void resolveDownloadImage(StoredDownloadImage & op) {
-    GpuCnC::TextureContent content;
+    CnC::TextureContent content;
     if (op.staging && !op.regions.empty()) {
         auto m = op.staging->map();
         if (m.data()) {

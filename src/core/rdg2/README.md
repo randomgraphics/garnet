@@ -1,14 +1,19 @@
 # Garnet RDG2 (`GN::rdg2`)
 
-RDG2 is Garnet's experimental render-dependency-graph module. It sits above
-`gpu2` and below engine rendering code. Its job is to represent declared work,
+RDG2 is Garnet's experimental render-dependency-graph module. The current
+prototype places it above `gpu2` and below engine rendering code. Its current
+design is to represent declared work,
 order that work through shared data, gather GPU payloads, and coordinate
 submission and presentation without learning what a camera, material, light, or
 scene means.
 
-This README is the canonical RDG2 design and status document. Design changes
-belong here once a real client requires them. Files under `agent/` track only
-concrete implementation assignments and their verification steps.
+**Status: early prototyping.** This README tracks the current RDG2 prototype's
+design and status; it is not a stable architecture or API baseline. Use it to
+understand the prototype only, and reconfirm requirements before depending on or
+extending its structure.
+
+Files under `agent/harness/` track only concrete implementation assignments and
+their verification steps.
 
 ## First Validated Client: E2 Visual Rendering
 
@@ -49,7 +54,7 @@ This integration requires and verifies that RDG2 can:
   internal topology or content types.
 
 The completed E2 refactor and its verification are recorded in
-`agent/completed/E2_VISUAL_BACKEND.txt`.
+`agent/completed/e2-visual-backend-2026-09-07-155654/E2_VISUAL_BACKEND.txt`.
 
 ## Module Boundary
 
@@ -234,7 +239,7 @@ Implemented and exercised:
 ## Design Change Policy
 
 New RDG2 design work starts with a concrete client requirement and acceptance
-test recorded in an assignment under `agent/`. Once implemented, its settled
+test recorded in an assignment under `agent/workspace/<task>/`. Once implemented, its settled
 contract is documented here.
 
 ## Verification
@@ -249,3 +254,10 @@ python.exe env\bin\cit.py -l
 
 Relevant coverage is in `src/core/rdg2/test/closed-graph-test.cpp`,
 `src/core/e2/test/visual-graph-test.cpp`, and the E2 and RDG2 samples.
+
+The RDG2 sample smoke runs were also checked on Windows Debug: the open-graph
+hello-world exits successfully; `closed-graph-hello-world t` verifies the clear
+color; `open-graph-simple-triangle t` verifies the blue background and red
+center pixel; and `open-graph-render-to-cube t --impl 1` plus `--impl 2`
+complete cubemap readback. The triangle and cubemap samples include generated
+SPIR-V headers, so both depend on the `rdg-sample-shaders` CMake target.

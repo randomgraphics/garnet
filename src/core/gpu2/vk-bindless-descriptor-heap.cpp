@@ -17,7 +17,7 @@ constexpr std::array<vk::DescriptorType, 5> TYPES = {vk::DescriptorType::eSample
 } // namespace
 
 VkBindlessDescriptorHeap::VkBindlessDescriptorHeap(const StrA & name, const CreateParameters & cp)
-    : bindless::DescriptorHeap(TYPE_INFO(), name), mCapacity(cp.capacity), mBindingIndex(cp.bindingIndex) {
+    : DescriptorHeap(TYPE_INFO(), name), mCapacity(cp.capacity), mBindingIndex(cp.bindingIndex) {
     mGpu = RuntimeType::cast<GpuContextVulkan2>(cp.gpu.get());
     if (!mGpu || !mGpu->ready() || !mCapacity || mCapacity > (1u << 28) || mBindingIndex > UINT32_MAX - 5) return;
     auto &         device       = mGpu->vulkanDevice();
@@ -226,9 +226,9 @@ void VkBindlessDescriptorHeap::freeMaterial(MaterialToken token) {
     mMaterialFreeRanges.emplace(range.offset, range.size);
 }
 
-AutoRef<bindless::DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name, const bindless::DescriptorHeap::CreateParameters & cp) {
+AutoRef<DescriptorHeap> createVkBindlessDescriptorHeap(const StrA & name, const DescriptorHeap::CreateParameters & cp) {
     auto heap = referenceTo(new VkBindlessDescriptorHeap(name, cp));
-    return heap->nativeDescriptorSet() ? AutoRef<bindless::DescriptorHeap>(heap) : AutoRef<bindless::DescriptorHeap>();
+    return heap->nativeDescriptorSet() ? AutoRef<DescriptorHeap>(heap) : AutoRef<DescriptorHeap>();
 }
 
 } // namespace GN::gpu2
