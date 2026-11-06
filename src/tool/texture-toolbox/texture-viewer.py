@@ -18,8 +18,8 @@ from texture_viewer.main_window import MainWindow
 
 def main() -> int:
     app = QApplication(sys.argv)
-    app.setApplicationName('Texture Viewer')
-    app.setOrganizationName('garnet')
+    app.setApplicationName("Texture Viewer")
+    app.setOrganizationName("garnet")
 
     file_arg = sys.argv[1] if len(sys.argv) > 1 else None
     win = MainWindow(initial_file=file_arg)
@@ -28,5 +28,5 @@ def main() -> int:
     return app.exec_()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

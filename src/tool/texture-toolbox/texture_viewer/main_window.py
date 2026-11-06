@@ -7,23 +7,41 @@ import numpy as np
 from PyQt5.QtCore import Qt, QSettings, QThread, QTimer, pyqtSignal, QRectF
 from PyQt5.QtGui import QFont, QKeySequence, QPainter, QPen, QColor
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QSplitter, QDockWidget,
-    QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout,
-    QLabel, QPushButton, QComboBox, QSlider, QSpinBox,
-    QDoubleSpinBox, QGroupBox, QFileDialog, QAction,
-    QStatusBar, QButtonGroup, QSizePolicy, QScrollArea,
-    QFrame, QDialog, QProgressBar, QMessageBox,
+    QMainWindow,
+    QWidget,
+    QSplitter,
+    QDockWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QFormLayout,
+    QLabel,
+    QPushButton,
+    QComboBox,
+    QSlider,
+    QSpinBox,
+    QDoubleSpinBox,
+    QGroupBox,
+    QFileDialog,
+    QAction,
+    QStatusBar,
+    QButtonGroup,
+    QSizePolicy,
+    QScrollArea,
+    QFrame,
+    QDialog,
+    QProgressBar,
+    QMessageBox,
 )
 
 from .canvas import ImageCanvas
 from .tone_map import ToneMapper, ToneMode, ChannelMode
 from . import dds as dds_mod
 
-
 # ---------------------------------------------------------------------------
 # Async loading helpers
 # ---------------------------------------------------------------------------
-_LARGE_FILE_BYTES = 5 * 1024 * 1024   # show loading dialog for files > 5 MB
+_LARGE_FILE_BYTES = 5 * 1024 * 1024  # show loading dialog for files > 5 MB
 
 
 class _Spinner(QWidget):
@@ -37,7 +55,7 @@ class _Spinner(QWidget):
         self._timer.timeout.connect(self._tick)
 
     def start(self):
-        self._timer.start(16)   # ~60 fps
+        self._timer.start(16)  # ~60 fps
 
     def stop(self):
         self._timer.stop()
@@ -63,8 +81,8 @@ class _Spinner(QWidget):
         # Spinning arc (270° sweep)
         pen.setColor(QColor(80, 150, 255))
         p.setPen(pen)
-        start_angle = (90 - self._angle) * 16    # Qt angles: 0 = 3 o'clock, CCW
-        span_angle  = -270 * 16
+        start_angle = (90 - self._angle) * 16  # Qt angles: 0 = 3 o'clock, CCW
+        span_angle = -270 * 16
         p.drawArc(rect, start_angle, span_angle)
 
 
@@ -74,10 +92,11 @@ class LoadingDialog(QDialog):
     cancel_requested = pyqtSignal()
 
     def __init__(self, filename: str, parent=None):
-        super().__init__(parent,
-                         Qt.Dialog | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        super().__init__(
+            parent, Qt.Dialog | Qt.WindowTitleHint | Qt.CustomizeWindowHint
+        )
         self.setModal(True)
-        self.setWindowTitle('Loading')
+        self.setWindowTitle("Loading")
         self.setFixedSize(340, 140)
 
         lay = QVBoxLayout(self)
@@ -92,11 +111,11 @@ class LoadingDialog(QDialog):
 
         text_col = QVBoxLayout()
         text_col.setSpacing(3)
-        lbl_loading = QLabel('Loading…')
-        lbl_loading.setStyleSheet('font-weight: bold; font-size: 13px;')
+        lbl_loading = QLabel("Loading…")
+        lbl_loading.setStyleSheet("font-weight: bold; font-size: 13px;")
         text_col.addWidget(lbl_loading)
         lbl_name = QLabel(os.path.basename(filename))
-        lbl_name.setStyleSheet('color: #999; font-size: 11px;')
+        lbl_name.setStyleSheet("color: #999; font-size: 11px;")
         lbl_name.setWordWrap(True)
         text_col.addWidget(lbl_name)
         row.addLayout(text_col, 1)
@@ -116,7 +135,7 @@ class LoadingDialog(QDialog):
         # Cancel button
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        btn = QPushButton('Cancel')
+        btn = QPushButton("Cancel")
         btn.setFixedWidth(80)
         btn.clicked.connect(self._on_cancel)
         btn_row.addWidget(btn)
@@ -138,7 +157,7 @@ class LoadingDialog(QDialog):
 class _LoadWorker(QThread):
     """Loads a DDS or EXR file on a background thread."""
 
-    result_ready   = pyqtSignal(object)   # DdsFile | np.ndarray
+    result_ready = pyqtSignal(object)  # DdsFile | np.ndarray
     error_occurred = pyqtSignal(str)
 
     def __init__(self, path: str, parent=None):
@@ -151,10 +170,10 @@ class _LoadWorker(QThread):
 
     def run(self):
         try:
-            ext = self._path.lower().rsplit('.', 1)[-1]
-            if ext == 'dds':
+            ext = self._path.lower().rsplit(".", 1)[-1]
+            if ext == "dds":
                 result = dds_mod.load(self._path)
-            elif ext in ('exr', 'hdr'):
+            elif ext in ("exr", "hdr"):
                 result = _load_exr(self._path)
             else:
                 result = _load_image(self._path)
@@ -169,22 +188,33 @@ class _LoadWorker(QThread):
 # Common image loader (JPG, PNG, BMP, GIF, TIFF, WebP, TGA, …) via Pillow
 # ---------------------------------------------------------------------------
 _COMMON_IMAGE_EXTS = {
-    'jpg', 'jpeg', 'png', 'bmp', 'gif', 'tiff', 'tif', 'webp', 'tga', 'ico',
+    "jpg",
+    "jpeg",
+    "png",
+    "bmp",
+    "gif",
+    "tiff",
+    "tif",
+    "webp",
+    "tga",
+    "ico",
 }
+
 
 def _load_image(path: str) -> np.ndarray:
     """Load any Pillow-supported image → float32 (H, W, 4) RGBA in [0, 1]."""
     from PIL import Image
+
     img = Image.open(path)
     # Preserve 16-bit grayscale / RGB precision before convert
-    if img.mode in ('I', 'I;16', 'I;16B'):
+    if img.mode in ("I", "I;16", "I;16B"):
         arr = np.array(img, dtype=np.float32) / 65535.0
         rgba = np.stack([arr, arr, arr, np.ones_like(arr)], axis=-1)
         return rgba
-    if img.mode == 'F':          # 32-bit float grayscale
+    if img.mode == "F":  # 32-bit float grayscale
         arr = np.array(img, dtype=np.float32)
         return np.stack([arr, arr, arr, np.ones_like(arr)], axis=-1)
-    img = img.convert('RGBA')
+    img = img.convert("RGBA")
     arr = np.array(img, dtype=np.float32) / 255.0
     return arr
 
@@ -196,20 +226,21 @@ def _load_exr(path: str) -> np.ndarray:
     """Load EXR → float32 (H, W, 4) RGBA."""
     import OpenEXR
     import Imath
+
     exr = OpenEXR.InputFile(path)
     header = exr.header()
-    dw = header['dataWindow']
+    dw = header["dataWindow"]
     w = dw.max.x - dw.min.x + 1
     h = dw.max.y - dw.min.y + 1
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
-    chans = list(header['channels'].keys())
+    chans = list(header["channels"].keys())
 
     def read(c):
         return np.frombuffer(exr.channel(c, pt), dtype=np.float32).reshape(h, w)
 
-    if all(c in chans for c in ('R', 'G', 'B')):
-        r, g, b = read('R'), read('G'), read('B')
-        a_raw = read('A') if 'A' in chans else np.ones((h, w), np.float32)
+    if all(c in chans for c in ("R", "G", "B")):
+        r, g, b = read("R"), read("G"), read("B")
+        a_raw = read("A") if "A" in chans else np.ones((h, w), np.float32)
     else:
         available = chans[:3] + [chans[0]] * max(0, 3 - len(chans))
         r, g, b = (read(c) for c in available[:3])
@@ -242,7 +273,7 @@ def _dspin(min_v, max_v, val, step, dec, width=75) -> QDoubleSpinBox:
 def _label(text: str, mono: bool = False) -> QLabel:
     l = QLabel(text)
     if mono:
-        l.setFont(QFont('Monospace', 9))
+        l.setFont(QFont("Monospace", 9))
     return l
 
 
@@ -259,12 +290,12 @@ def _hline() -> QFrame:
 class MainWindow(QMainWindow):
     def __init__(self, initial_file: str | None = None):
         super().__init__()
-        self.setWindowTitle('Texture Viewer')
+        self.setWindowTitle("Texture Viewer")
         self.resize(1280, 800)
 
         self._dds: dds_mod.DdsFile | None = None
         self._is_exr: bool = False
-        self._exr_data: np.ndarray | None = None   # (H, W, 4) float32
+        self._exr_data: np.ndarray | None = None  # (H, W, 4) float32
         self._tone = ToneMapper()
 
         self._build_ui()
@@ -272,7 +303,7 @@ class MainWindow(QMainWindow):
         self._connect_signals()
         self._apply_dark_theme()
 
-        self._settings = QSettings('garnet', 'tex-viewer')
+        self._settings = QSettings("garnet", "tex-viewer")
 
         if initial_file:
             self._open_file(initial_file)
@@ -294,9 +325,9 @@ class MainWindow(QMainWindow):
 
         self._status = QStatusBar()
         self.setStatusBar(self._status)
-        self._status_label = QLabel('No file loaded')
+        self._status_label = QLabel("No file loaded")
         self._status.addWidget(self._status_label, 1)
-        self._zoom_label = QLabel('100%')
+        self._zoom_label = QLabel("100%")
         self._status.addPermanentWidget(self._zoom_label)
 
     def _build_panel(self) -> QWidget:
@@ -307,65 +338,63 @@ class MainWindow(QMainWindow):
         lay.setSpacing(6)
 
         # --- Texture info ---
-        self._info_group = QGroupBox('Texture Info')
+        self._info_group = QGroupBox("Texture Info")
         info_lay = QFormLayout(self._info_group)
         info_lay.setSpacing(3)
-        self._lbl_file   = _label('—')
-        self._lbl_dims   = _label('—')
-        self._lbl_fmt    = _label('—')
-        self._lbl_type   = _label('—')
-        self._lbl_size   = _label('—')
-        info_lay.addRow('File:',   self._lbl_file)
-        info_lay.addRow('Dims:',   self._lbl_dims)
-        info_lay.addRow('Format:', self._lbl_fmt)
-        info_lay.addRow('Type:',   self._lbl_type)
-        info_lay.addRow('Size:',   self._lbl_size)
+        self._lbl_file = _label("—")
+        self._lbl_dims = _label("—")
+        self._lbl_fmt = _label("—")
+        self._lbl_type = _label("—")
+        self._lbl_size = _label("—")
+        info_lay.addRow("File:", self._lbl_file)
+        info_lay.addRow("Dims:", self._lbl_dims)
+        info_lay.addRow("Format:", self._lbl_fmt)
+        info_lay.addRow("Type:", self._lbl_type)
+        info_lay.addRow("Size:", self._lbl_size)
         lay.addWidget(self._info_group)
 
         # --- Navigation ---
-        nav_group = QGroupBox('Navigation')
+        nav_group = QGroupBox("Navigation")
         nav_lay = QFormLayout(nav_group)
         nav_lay.setSpacing(4)
 
-        self._spin_mip   = _spin(0, 0)
-        self._spin_face  = _spin(0, 0)
+        self._spin_mip = _spin(0, 0)
+        self._spin_face = _spin(0, 0)
         self._spin_depth = _spin(0, 0)
-        self._lbl_face_name = QLabel('')
+        self._lbl_face_name = QLabel("")
 
         face_row = QHBoxLayout()
         face_row.addWidget(self._spin_face)
         face_row.addWidget(self._lbl_face_name)
         face_row.addStretch()
 
-        nav_lay.addRow('Mip:', self._spin_mip)
-        nav_lay.addRow('Face/Layer:', face_row)
-        nav_lay.addRow('Depth Slice:', self._spin_depth)
+        nav_lay.addRow("Mip:", self._spin_mip)
+        nav_lay.addRow("Face/Layer:", face_row)
+        nav_lay.addRow("Depth Slice:", self._spin_depth)
         lay.addWidget(nav_group)
 
         # --- Channels ---
-        chan_group = QGroupBox('Channels')
+        chan_group = QGroupBox("Channels")
         chan_lay = QHBoxLayout(chan_group)
         chan_lay.setSpacing(4)
-        self._btn_rgb = QPushButton('RGB')
-        self._btn_r   = QPushButton('R')
-        self._btn_g   = QPushButton('G')
-        self._btn_b   = QPushButton('B')
-        self._btn_a   = QPushButton('A')
-        for btn in (self._btn_rgb, self._btn_r, self._btn_g,
-                    self._btn_b, self._btn_a):
+        self._btn_rgb = QPushButton("RGB")
+        self._btn_r = QPushButton("R")
+        self._btn_g = QPushButton("G")
+        self._btn_b = QPushButton("B")
+        self._btn_a = QPushButton("A")
+        for btn in (self._btn_rgb, self._btn_r, self._btn_g, self._btn_b, self._btn_a):
             btn.setCheckable(True)
             btn.setFixedWidth(42)
             chan_lay.addWidget(btn)
         self._btn_rgb.setChecked(True)
         self._chan_btns = QButtonGroup()
-        for btn in (self._btn_rgb, self._btn_r, self._btn_g,
-                    self._btn_b, self._btn_a):
+        for btn in (self._btn_rgb, self._btn_r, self._btn_g, self._btn_b, self._btn_a):
             self._chan_btns.addButton(btn)
         self._chan_btns.setExclusive(True)
         lay.addWidget(chan_group)
 
         # --- Tonemapping ---
-        tm_group = QGroupBox('Tonemapping')
+        tm_group = QGroupBox("Tonemapping")
         tm_lay = QFormLayout(tm_group)
         tm_lay.setSpacing(4)
 
@@ -374,13 +403,13 @@ class MainWindow(QMainWindow):
             self._combo_mode.addItem(m.value)
 
         self._spin_exposure = _dspin(-8.0, 8.0, 0.0, 0.25, 2, 80)
-        self._spin_gamma    = _dspin(0.1, 4.0, 2.2, 0.05, 2, 80)
-        self._spin_white    = _dspin(0.1, 20.0, 4.0, 0.5, 1, 80)
-        self._lbl_white = QLabel('White point:')
+        self._spin_gamma = _dspin(0.1, 4.0, 2.2, 0.05, 2, 80)
+        self._spin_white = _dspin(0.1, 20.0, 4.0, 0.5, 1, 80)
+        self._lbl_white = QLabel("White point:")
 
-        tm_lay.addRow('Mode:', self._combo_mode)
-        tm_lay.addRow('Exposure (EV):', self._spin_exposure)
-        tm_lay.addRow('Gamma:', self._spin_gamma)
+        tm_lay.addRow("Mode:", self._combo_mode)
+        tm_lay.addRow("Exposure (EV):", self._spin_exposure)
+        tm_lay.addRow("Gamma:", self._spin_gamma)
         tm_lay.addRow(self._lbl_white, self._spin_white)
         # Hidden until Reinhard Extended is selected
         self._lbl_white.setVisible(False)
@@ -388,32 +417,32 @@ class MainWindow(QMainWindow):
         lay.addWidget(tm_group)
 
         # --- Pixel info ---
-        px_group = QGroupBox('Pixel Info')
+        px_group = QGroupBox("Pixel Info")
         px_lay = QFormLayout(px_group)
         px_lay.setSpacing(3)
-        self._lbl_pos = _label('—', mono=True)
-        self._lbl_r   = _label('—', mono=True)
-        self._lbl_g   = _label('—', mono=True)
-        self._lbl_b   = _label('—', mono=True)
-        self._lbl_a   = _label('—', mono=True)
+        self._lbl_pos = _label("—", mono=True)
+        self._lbl_r = _label("—", mono=True)
+        self._lbl_g = _label("—", mono=True)
+        self._lbl_b = _label("—", mono=True)
+        self._lbl_a = _label("—", mono=True)
         self._px_swatch = QLabel()
         self._px_swatch.setFixedSize(20, 20)
-        self._px_swatch.setStyleSheet('background:#000; border:1px solid #555;')
+        self._px_swatch.setStyleSheet("background:#000; border:1px solid #555;")
         pos_row = QHBoxLayout()
         pos_row.addWidget(self._lbl_pos)
         pos_row.addStretch()
         pos_row.addWidget(self._px_swatch)
-        px_lay.addRow('Pos:', pos_row)
-        px_lay.addRow('R:', self._lbl_r)
-        px_lay.addRow('G:', self._lbl_g)
-        px_lay.addRow('B:', self._lbl_b)
-        px_lay.addRow('A:', self._lbl_a)
+        px_lay.addRow("Pos:", pos_row)
+        px_lay.addRow("R:", self._lbl_r)
+        px_lay.addRow("G:", self._lbl_g)
+        px_lay.addRow("B:", self._lbl_b)
+        px_lay.addRow("A:", self._lbl_a)
         lay.addWidget(px_group)
 
         # --- View controls ---
         view_lay = QHBoxLayout()
-        self._btn_fit = QPushButton('Fit (F)')
-        self._btn_1to1 = QPushButton('1:1 (1)')
+        self._btn_fit = QPushButton("Fit (F)")
+        self._btn_1to1 = QPushButton("1:1 (1)")
         view_lay.addWidget(self._btn_fit)
         view_lay.addWidget(self._btn_1to1)
         lay.addLayout(view_lay)
@@ -423,26 +452,26 @@ class MainWindow(QMainWindow):
 
     def _build_menu(self):
         mb = self.menuBar()
-        file_menu = mb.addMenu('&File')
+        file_menu = mb.addMenu("&File")
 
-        open_act = QAction('&Open…', self)
+        open_act = QAction("&Open…", self)
         open_act.setShortcut(QKeySequence.Open)
         open_act.triggered.connect(self._on_open)
         file_menu.addAction(open_act)
 
         file_menu.addSeparator()
-        quit_act = QAction('&Quit', self)
+        quit_act = QAction("&Quit", self)
         quit_act.setShortcut(QKeySequence.Quit)
         quit_act.triggered.connect(self.close)
         file_menu.addAction(quit_act)
 
-        view_menu = mb.addMenu('&View')
-        fit_act = QAction('Fit to Window', self)
-        fit_act.setShortcut('F')
+        view_menu = mb.addMenu("&View")
+        fit_act = QAction("Fit to Window", self)
+        fit_act.setShortcut("F")
         fit_act.triggered.connect(self._canvas.fit_to_window)
         view_menu.addAction(fit_act)
-        actual_act = QAction('Actual Size (1:1)', self)
-        actual_act.setShortcut('1')
+        actual_act = QAction("Actual Size (1:1)", self)
+        actual_act.setShortcut("1")
         actual_act.triggered.connect(self._canvas.zoom_actual)
         view_menu.addAction(actual_act)
 
@@ -464,7 +493,8 @@ class MainWindow(QMainWindow):
 
         self._canvas.pixel_hovered.connect(self._on_pixel_hovered)
         self._canvas.zoom_changed.connect(
-            lambda z: self._zoom_label.setText(f'{z * 100:.0f}%'))
+            lambda z: self._zoom_label.setText(f"{z * 100:.0f}%")
+        )
         self._btn_fit.clicked.connect(self._canvas.fit_to_window)
         self._btn_1to1.clicked.connect(self._canvas.zoom_actual)
 
@@ -472,14 +502,16 @@ class MainWindow(QMainWindow):
     # File I/O
     # ------------------------------------------------------------------
     def _on_open(self):
-        start_dir = self._settings.value('last_dir', '') or ''
+        start_dir = self._settings.value("last_dir", "") or ""
         path, _ = QFileDialog.getOpenFileName(
-            self, 'Open Texture',
+            self,
+            "Open Texture",
             start_dir,
-            'All Supported (*.dds *.exr *.hdr *.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.tga *.ico);;'
-            'DDS (*.dds);;EXR / HDR (*.exr *.hdr);;'
-            'Images (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.tga *.ico);;'
-            'All (*)')
+            "All Supported (*.dds *.exr *.hdr *.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.tga *.ico);;"
+            "DDS (*.dds);;EXR / HDR (*.exr *.hdr);;"
+            "Images (*.jpg *.jpeg *.png *.bmp *.gif *.tiff *.tif *.webp *.tga *.ico);;"
+            "All (*)",
+        )
         if path:
             self._open_file(path)
 
@@ -487,15 +519,15 @@ class MainWindow(QMainWindow):
         self._open_file(path)
 
     def _open_file(self, path: str):
-        ext = path.lower().rsplit('.', 1)[-1]
-        if ext not in {'dds', 'exr', 'hdr'} | _COMMON_IMAGE_EXTS:
-            self._status_label.setText(f'Unsupported extension: .{ext}')
+        ext = path.lower().rsplit(".", 1)[-1]
+        if ext not in {"dds", "exr", "hdr"} | _COMMON_IMAGE_EXTS:
+            self._status_label.setText(f"Unsupported extension: .{ext}")
             return
 
         try:
             file_size = os.path.getsize(path)
         except OSError as exc:
-            QMessageBox.warning(self, 'Load Error', str(exc))
+            QMessageBox.warning(self, "Load Error", str(exc))
             return
 
         if file_size >= _LARGE_FILE_BYTES:
@@ -507,77 +539,77 @@ class MainWindow(QMainWindow):
 
     def _open_sync(self, path: str, ext: str):
         try:
-            if ext == 'dds':
+            if ext == "dds":
                 self._apply_dds(path, dds_mod.load(path))
-            elif ext in ('exr', 'hdr'):
+            elif ext in ("exr", "hdr"):
                 self._apply_exr(path, _load_exr(path))
             else:
                 self._apply_image(path, _load_image(path), ext)
-            self._settings.setValue('last_file', path)
-            self._settings.setValue('last_dir', os.path.dirname(path))
+            self._settings.setValue("last_file", path)
+            self._settings.setValue("last_dir", os.path.dirname(path))
         except Exception as exc:
-            QMessageBox.warning(self, 'Load Error', str(exc))
-            self._status_label.setText(f'Error: {exc}')
+            QMessageBox.warning(self, "Load Error", str(exc))
+            self._status_label.setText(f"Error: {exc}")
 
     # -- asynchronous path (large files) -----------------------------------
 
     def _open_async(self, path: str, ext: str):
-        dlg    = LoadingDialog(path, self)
+        dlg = LoadingDialog(path, self)
         worker = _LoadWorker(path, self)
 
         def on_result(data):
             dlg.accept()
             try:
-                if ext == 'dds':
+                if ext == "dds":
                     self._apply_dds(path, data)
-                elif ext in ('exr', 'hdr'):
+                elif ext in ("exr", "hdr"):
                     self._apply_exr(path, data)
                 else:
                     self._apply_image(path, data, ext)
-                self._settings.setValue('last_file', path)
-                self._settings.setValue('last_dir', os.path.dirname(path))
+                self._settings.setValue("last_file", path)
+                self._settings.setValue("last_dir", os.path.dirname(path))
             except Exception as exc:
-                QMessageBox.warning(self, 'Load Error', str(exc))
-                self._status_label.setText(f'Error: {exc}')
+                QMessageBox.warning(self, "Load Error", str(exc))
+                self._status_label.setText(f"Error: {exc}")
 
         def on_error(msg):
             dlg.reject()
-            QMessageBox.warning(self, 'Load Error', msg)
-            self._status_label.setText(f'Error: {msg}')
+            QMessageBox.warning(self, "Load Error", msg)
+            self._status_label.setText(f"Error: {msg}")
 
         def on_cancel():
             worker.cancel()
-            self._status_label.setText('Load cancelled.')
+            self._status_label.setText("Load cancelled.")
 
         worker.result_ready.connect(on_result)
         worker.error_occurred.connect(on_error)
         dlg.cancel_requested.connect(on_cancel)
 
-        self._status_label.setText(f'Loading {os.path.basename(path)}…')
+        self._status_label.setText(f"Loading {os.path.basename(path)}…")
         worker.start()
-        dlg.exec_()   # nested event loop — blocks main window; worker runs in bg
+        dlg.exec_()  # nested event loop — blocks main window; worker runs in bg
         worker.wait()
 
     # -- UI-update halves (called from main thread after data is ready) ----
 
     def _apply_dds(self, path: str, d: dds_mod.DdsFile):
-        self._dds     = d
-        self._is_exr  = False
+        self._dds = d
+        self._is_exr = False
         self._exr_data = None
 
         file_kb = os.path.getsize(path) / 1024
         self._lbl_file.setText(os.path.basename(path))
         self._lbl_file.setToolTip(path)
-        self._lbl_dims.setText(f'{d.width} × {d.height} × {d.depth}')
-        self._lbl_fmt.setText(d.fmt_name + (' (sRGB)' if d.is_srgb else ''))
+        self._lbl_dims.setText(f"{d.width} × {d.height} × {d.depth}")
+        self._lbl_fmt.setText(d.fmt_name + (" (sRGB)" if d.is_srgb else ""))
         type_names = {
-            dds_mod.TexType.TEX2D:   '2D Texture',
-            dds_mod.TexType.CUBEMAP: 'Cubemap (6 faces)',
-            dds_mod.TexType.ARRAY:   f'2D Array [{d.array_size}]',
-            dds_mod.TexType.TEX3D:   f'3D / Volume [{d.depth} slices]',
+            dds_mod.TexType.TEX2D: "2D Texture",
+            dds_mod.TexType.CUBEMAP: "Cubemap (6 faces)",
+            dds_mod.TexType.ARRAY: f"2D Array [{d.array_size}]",
+            dds_mod.TexType.TEX3D: f"3D / Volume [{d.depth} slices]",
         }
         self._lbl_type.setText(type_names[d.tex_type])
-        self._lbl_size.setText(f'{file_kb:.1f} KB')
+        self._lbl_size.setText(f"{file_kb:.1f} KB")
 
         self._spin_mip.setRange(0, d.mip_count - 1)
         self._spin_mip.setValue(0)
@@ -594,17 +626,17 @@ class MainWindow(QMainWindow):
 
     def _apply_exr(self, path: str, data: np.ndarray):
         self._exr_data = data
-        self._is_exr   = True
-        self._dds      = None
+        self._is_exr = True
+        self._dds = None
 
         h, w = data.shape[:2]
         file_kb = os.path.getsize(path) / 1024
         self._lbl_file.setText(os.path.basename(path))
         self._lbl_file.setToolTip(path)
-        self._lbl_dims.setText(f'{w} × {h}')
-        self._lbl_fmt.setText('R32G32B32A32_FLOAT')
-        self._lbl_type.setText('2D (EXR)')
-        self._lbl_size.setText(f'{file_kb:.1f} KB')
+        self._lbl_dims.setText(f"{w} × {h}")
+        self._lbl_fmt.setText("R32G32B32A32_FLOAT")
+        self._lbl_type.setText("2D (EXR)")
+        self._lbl_size.setText(f"{file_kb:.1f} KB")
 
         self._spin_mip.setRange(0, 0)
         self._spin_face.setRange(0, 0)
@@ -616,17 +648,17 @@ class MainWindow(QMainWindow):
 
     def _apply_image(self, path: str, data: np.ndarray, ext: str):
         self._exr_data = data
-        self._is_exr   = True   # reuse the same display path as EXR
-        self._dds      = None
+        self._is_exr = True  # reuse the same display path as EXR
+        self._dds = None
 
         h, w = data.shape[:2]
         file_kb = os.path.getsize(path) / 1024
         self._lbl_file.setText(os.path.basename(path))
         self._lbl_file.setToolTip(path)
-        self._lbl_dims.setText(f'{w} × {h}')
-        self._lbl_fmt.setText('RGBA8' if data.max() <= 1.0 else 'Float')
-        self._lbl_type.setText(f'2D ({ext.upper()})')
-        self._lbl_size.setText(f'{file_kb:.1f} KB')
+        self._lbl_dims.setText(f"{w} × {h}")
+        self._lbl_fmt.setText("RGBA8" if data.max() <= 1.0 else "Float")
+        self._lbl_type.setText(f"2D ({ext.upper()})")
+        self._lbl_size.setText(f"{file_kb:.1f} KB")
 
         self._spin_mip.setRange(0, 0)
         self._spin_face.setRange(0, 0)
@@ -639,14 +671,14 @@ class MainWindow(QMainWindow):
     def _reload_subresource(self):
         if self._dds is None:
             return
-        mip   = self._spin_mip.value()
-        face  = self._spin_face.value()
+        mip = self._spin_mip.value()
+        face = self._spin_face.value()
         depth = self._spin_depth.value()
         try:
             rgba = self._dds.get_face(array_idx=face, mip=mip, depth_slice=depth)
             self._canvas.set_image(rgba, self._tone)
         except Exception as exc:
-            self._status_label.setText(f'Decode error: {exc}')
+            self._status_label.setText(f"Decode error: {exc}")
 
     # ------------------------------------------------------------------
     # Slots
@@ -677,23 +709,23 @@ class MainWindow(QMainWindow):
             mode = ToneMode(mode_str)
         except ValueError:
             mode = ToneMode.LINEAR
-        is_reinhard_ext = (mode == ToneMode.REINHARD_EXT)
+        is_reinhard_ext = mode == ToneMode.REINHARD_EXT
         self._lbl_white.setVisible(is_reinhard_ext)
         self._spin_white.setVisible(is_reinhard_ext)
 
-        self._tone.mode        = mode
+        self._tone.mode = mode
         self._tone.exposure_ev = self._spin_exposure.value()
-        self._tone.gamma       = self._spin_gamma.value()
+        self._tone.gamma = self._spin_gamma.value()
         self._tone.white_point = self._spin_white.value()
         self._canvas.set_tone_mapper(self._tone)
 
     def _on_channel_changed(self):
         mapping = {
             self._btn_rgb: ChannelMode.RGB,
-            self._btn_r:   ChannelMode.R,
-            self._btn_g:   ChannelMode.G,
-            self._btn_b:   ChannelMode.B,
-            self._btn_a:   ChannelMode.A,
+            self._btn_r: ChannelMode.R,
+            self._btn_g: ChannelMode.G,
+            self._btn_b: ChannelMode.B,
+            self._btn_a: ChannelMode.A,
         }
         for btn, ch in mapping.items():
             if btn.isChecked():
@@ -701,27 +733,29 @@ class MainWindow(QMainWindow):
                 break
         self._canvas.refresh_tone()
 
-    def _on_pixel_hovered(self, px: int, py: int,
-                           r: float, g: float, b: float, a: float):
-        self._lbl_pos.setText(f'({px}, {py})')
-        self._lbl_r.setText(f'{r:.6f}')
-        self._lbl_g.setText(f'{g:.6f}')
-        self._lbl_b.setText(f'{b:.6f}')
-        self._lbl_a.setText(f'{a:.6f}')
+    def _on_pixel_hovered(
+        self, px: int, py: int, r: float, g: float, b: float, a: float
+    ):
+        self._lbl_pos.setText(f"({px}, {py})")
+        self._lbl_r.setText(f"{r:.6f}")
+        self._lbl_g.setText(f"{g:.6f}")
+        self._lbl_b.setText(f"{b:.6f}")
+        self._lbl_a.setText(f"{a:.6f}")
         # Swatch uses tonemapped display colour (clamp to [0,1] with exposure)
-        sc = min(1.0, max(0.0, (2.0 ** self._tone.exposure_ev)))
+        sc = min(1.0, max(0.0, (2.0**self._tone.exposure_ev)))
         sr = int(min(255, max(0, r * sc * 255)))
         sg = int(min(255, max(0, g * sc * 255)))
         sb = int(min(255, max(0, b * sc * 255)))
         self._px_swatch.setStyleSheet(
-            f'background:rgb({sr},{sg},{sb}); border:1px solid #555;')
+            f"background:rgb({sr},{sg},{sb}); border:1px solid #555;"
+        )
 
     # ------------------------------------------------------------------
     # Misc helpers
     # ------------------------------------------------------------------
     def _update_face_label(self):
         if self._dds is None:
-            self._lbl_face_name.setText('')
+            self._lbl_face_name.setText("")
             return
         idx = self._spin_face.value()
         self._lbl_face_name.setText(self._dds.face_label(idx))
@@ -729,18 +763,20 @@ class MainWindow(QMainWindow):
     def _update_status(self):
         if self._dds:
             d = self._dds
-            mip  = self._spin_mip.value()
+            mip = self._spin_mip.value()
             face = self._spin_face.value()
-            w = max(1, d.width  >> mip)
+            w = max(1, d.width >> mip)
             h = max(1, d.height >> mip)
             label = d.face_label(face)
             self._status_label.setText(
-                f'{os.path.basename(d.path)}  |  '
-                f'{w}×{h}  mip={mip}  face={label}  |  {d.fmt_name}')
+                f"{os.path.basename(d.path)}  |  "
+                f"{w}×{h}  mip={mip}  face={label}  |  {d.fmt_name}"
+            )
         elif self._is_exr and self._exr_data is not None:
             h, w = self._exr_data.shape[:2]
             self._status_label.setText(
-                f'{self._lbl_file.text()}  |  {w}×{h}  |  EXR RGBA32F')
+                f"{self._lbl_file.text()}  |  {w}×{h}  |  EXR RGBA32F"
+            )
 
     def _apply_dark_theme(self):
         self.setStyleSheet("""
