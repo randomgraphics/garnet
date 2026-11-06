@@ -6,7 +6,7 @@ namespace GN::e2 {
 
 /// Spatial hierarchy capability. Root positions are world-space; child positions are parent-local.
 /// Attach Value through a Mold and call resolveWorldTransform() for derived world poses.
-struct TransformFacet : Facet {
+struct GN_API TransformFacet : Facet {
     GN_REGISTER_RUNTIME_TYPE(Facet);
 
     /// Versioned local pose payload; uniform scale remains the common compact case.
