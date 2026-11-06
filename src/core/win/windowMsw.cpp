@@ -239,6 +239,8 @@ void GN::win::WindowMsw::setClientSize(size_t w, size_t h) {
 //
 //
 // -----------------------------------------------------------------------------
+void GN::win::WindowMsw::setCaption(const char * captionUTF8) { GN_GUARD; GN_ASSERT(::IsWindow(mWindow)); GN_MSW_CHECK(::SetWindowTextW(mWindow, mbs2wcs(captionUTF8).c_str())); GN_UNGUARD; }
+
 void GN::win::WindowMsw::run() {
     GN_GUARD_ALWAYS;
 

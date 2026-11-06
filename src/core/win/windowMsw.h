@@ -69,6 +69,7 @@ public:
     void              minimize() { GN_UNIMPL_WARNING(); }
     void              moveTo(int, int);
     void              setClientSize(size_t, size_t);
+    void              setCaption(const char * captionUTF8) override;
     void              run();
     bool              runUntilNoNewEvents(bool blockWhenMinimized);
 

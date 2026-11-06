@@ -20,13 +20,6 @@
 #include <string>
 #include <vector>
 
-#if GN_MSWIN
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-    #include <windows.h>
-#endif
-
 using namespace GN;
 using namespace GN::fiz;
 using namespace GN::fx2;
@@ -469,9 +462,7 @@ int main(int argc, const char ** argv) {
                 title += StrA::format(" | Speedup: {:.1f}x", speedup).data();
             }
 
-#if GN_MSWIN
-            ::SetWindowTextA((HWND) window->getWindowHandle(), title.c_str());
-#endif
+            window->setCaption(title.c_str());
 
             if (frameIdx % 60 == 0) { GN_INFO(sLogger, "{}", title); }
         }
