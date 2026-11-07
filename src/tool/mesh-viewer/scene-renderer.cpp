@@ -182,12 +182,12 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
         return view;
     };
     auto skyParameters      = sky->defaultMaterialParameters();
-    skyParameters.skyboxMap = env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds"}));
+    skyParameters.skyboxMap = env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/skybox-cube.dds"}));
     skyParameters.irradianceMap =
-        env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds"}));
+        env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/irradiance.dds"}));
     skyParameters.prefilteredMap =
-        env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds"}));
-    skyParameters.brdfLut = env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds"}));
+        env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/prefiltered.dds"}));
+    skyParameters.brdfLut = env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/brdf_lut.dds"}));
     skyParameters.luminanceScale = environmentLuminance;
     skyMaterial                  = sky->createMaterial(*initialization, skyParameters);
     if (!skyMaterial) return false;
