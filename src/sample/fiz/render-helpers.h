@@ -118,7 +118,7 @@ inline GN::AutoRef<GN::fx2::PbrMaterial> createPbrMaterial(GN::AutoRef<GN::fx2::
 
 inline GN::AutoRef<GN::fx2::SkyMaterial> createSkyMaterial(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::AutoRef<GN::fx2::SkyKernel> skyKernel,
                                                            GN::gpu2::CnC & uploads, float luminanceScale = 3000.f) {
-    auto skyboxTex      = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds"});
+    auto skyboxTex      = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox.dds"});
     auto irradianceTex  = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds"});
     auto prefilteredTex = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds"});
     auto brdfLutTex     = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds"});

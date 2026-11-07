@@ -167,6 +167,12 @@ default to 512 for the skybox, 32 for irradiance, and 128 for prefiltered
 reflections; the BRDF LUT is 256 square. Override these with `--skybox-size`,
 `--irr-size`, `--prefilter-size`, and `--lut-size`. Sampling quality and runtime
 are controlled by `--irr-samples`, `--prefilter-samples`, and `--lut-samples`.
+Irradiance defaults to 32×32 with 4,096 samples per texel.
+Irradiance generation and prefiltering run in parallel. `--threads` sets their
+shared worker count and defaults to the number of CPU threads. The generator
+reports elapsed time for each generated map, including DDS writing. Irradiance samples use a
+PDF-derived source-mip LOD to filter each sample over its solid-angle footprint,
+which reduces fireflies at lower sample counts.
 Existing output files are replaced.
 
 ### combine-arm-texture.py

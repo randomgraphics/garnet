@@ -25,6 +25,6 @@ These assets download from Hugging Face. Other Garnet LFS files and existing Git
 | Complete font collection | `font/` |
 | Speeder Getaway model | `model/speeder-getaway/speeder-getaway-from-meshy-ai.glb` |
 
-Use paths such as `media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds` and `media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf`. The `font::` filesystem also searches `media::asset-foundry/font`, so existing font names keep working.
+Use paths such as `media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox.dds` and `media::asset-foundry/model/DamagedHelmet/DamagedHelmet.gltf`. The `font::` filesystem also searches `media::asset-foundry/font`, so existing font names keep working.
 
 The dataset's `provenance/migration.json` records source commits, original paths, byte sizes, and SHA-256 hashes. Related resources move as a group so that glTF and material-relative references remain valid. Small unrelated assets remain in this repository.

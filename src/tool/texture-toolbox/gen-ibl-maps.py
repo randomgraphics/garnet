@@ -15,12 +15,29 @@ All output files are DDS (cubemap) or PNG (2D LUT) loadable by Texture::load in 
 """
 
 import argparse
+import concurrent.futures
 import math
+import os
 import pathlib
 import struct
 import sys
+import time
 
 import numpy as np
+
+
+def _hammersley_samples(num_samples: int) -> tuple[np.ndarray, np.ndarray]:
+    """Return a deterministic low-discrepancy Hammersley point set in [0, 1)^2."""
+    indices = np.arange(num_samples, dtype=np.uint32)
+    bits = indices.copy()
+    bits = (bits << 16) | (bits >> 16)
+    bits = ((bits & 0x00FF00FF) << 8) | ((bits & 0xFF00FF00) >> 8)
+    bits = ((bits & 0x0F0F0F0F) << 4) | ((bits & 0xF0F0F0F0) >> 4)
+    bits = ((bits & 0x33333333) << 2) | ((bits & 0xCCCCCCCC) >> 2)
+    bits = ((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >> 1)
+    xi1 = indices.astype(np.float32) / num_samples
+    xi2 = bits.astype(np.float64) * (1.0 / 4294967296.0)
+    return xi1, xi2.astype(np.float32)
 
 # ---------------------------------------------------------------------------
 # EXR / image loading
@@ -90,6 +107,66 @@ def _sample_equirect(panorama: np.ndarray, dirs: np.ndarray) -> np.ndarray:
         + c01 * (1 - fx) * fy
         + c11 * fx * fy
     )
+
+
+def _build_equirect_mips(panorama: np.ndarray) -> list[np.ndarray]:
+    """Build a box-filtered panorama mip chain for PDF-driven sample filtering."""
+    mips = [panorama]
+    while mips[-1].shape[0] > 1 or mips[-1].shape[1] > 1:
+        image = mips[-1]
+        if image.shape[1] % 2:
+            image = np.pad(image, ((0, 0), (0, 1), (0, 0)), mode="wrap")
+        if image.shape[0] % 2:
+            image = np.pad(image, ((0, 1), (0, 0), (0, 0)), mode="edge")
+        downsampled = (
+            image[0::2, 0::2]
+            + image[0::2, 1::2]
+            + image[1::2, 0::2]
+            + image[1::2, 1::2]
+        ) * 0.25
+        mips.append(downsampled)
+    return mips
+
+
+def _sample_equirect_mips(
+    mips: list[np.ndarray], dirs: np.ndarray, lod: np.ndarray
+) -> np.ndarray:
+    """Trilinearly sample an equirectangular mip chain at per-sample LODs."""
+    max_lod = len(mips) - 1
+    lod = np.clip(lod, 0.0, max_lod)
+    lod0 = np.floor(lod).astype(np.int32)
+    lod1 = np.minimum(lod0 + 1, max_lod)
+    blend = (lod - lod0)[:, np.newaxis]
+    result = np.empty((dirs.shape[0], 3), dtype=np.float32)
+
+    def sample_level(image: np.ndarray, sample_dirs: np.ndarray) -> np.ndarray:
+        level_h, level_w = image.shape[:2]
+        phi = np.arctan2(sample_dirs[:, 2], sample_dirs[:, 0])
+        theta = np.arcsin(np.clip(sample_dirs[:, 1], -1.0, 1.0))
+        u = (phi / (2.0 * np.pi) + 0.5) % 1.0
+        v = 0.5 - theta / np.pi
+        px = u * level_w - 0.5
+        py = np.clip(v * level_h - 0.5, 0.0, level_h - 1.0)
+        x0 = np.floor(px).astype(np.int32)
+        x1 = (x0 + 1) % level_w
+        y0 = np.floor(py).astype(np.int32)
+        y1 = np.minimum(y0 + 1, level_h - 1)
+        fx = (px - x0)[:, np.newaxis]
+        fy = (py - y0)[:, np.newaxis]
+        return (
+            image[y0, x0] * (1.0 - fx) * (1.0 - fy)
+            + image[y0, x1] * fx * (1.0 - fy)
+            + image[y1, x0] * (1.0 - fx) * fy
+            + image[y1, x1] * fx * fy
+        )
+
+    for level in np.unique(lod0):
+        mask = lod0 == level
+        result[mask] = sample_level(mips[level], dirs[mask]) * (1.0 - blend[mask])
+    for level in np.unique(lod1):
+        mask = lod1 == level
+        result[mask] += sample_level(mips[level], dirs[mask]) * blend[mask]
+    return result
 
 
 def _face_dirs(face_size: int) -> list:
@@ -199,6 +276,19 @@ def write_dds_cubemap(
                         [face, np.ones((*face.shape[:2], 1), dtype=face.dtype)], axis=-1
                     )
                 )
+                if fmt == "rgba16f":
+                    # Preserve finite DDS samples when HDR sources exceed half-float range.
+                    rgba = np.nan_to_num(
+                        rgba,
+                        nan=0.0,
+                        posinf=np.finfo(np.float16).max,
+                        neginf=-np.finfo(np.float16).max,
+                    )
+                    rgba = np.clip(
+                        rgba,
+                        -np.finfo(np.float16).max,
+                        np.finfo(np.float16).max,
+                    )
                 f.write(rgba.astype(np_dtype).tobytes())
 
     total_mb = sum(f[0].shape[0] * f[0].shape[0] * bpp * 6 for f in faces_per_mip) / (
@@ -210,83 +300,75 @@ def write_dds_cubemap(
 
 
 # ---------------------------------------------------------------------------
-# Irradiance map (Lambertian diffuse, Monte-Carlo importance-sampled)
+# Irradiance map (Lambertian diffuse, cosine-weighted Hammersley samples)
 # ---------------------------------------------------------------------------
 
 
 def generate_irradiance(
-    panorama: np.ndarray, face_size: int, num_samples: int = 2048
+    panorama: np.ndarray,
+    face_size: int,
+    num_samples: int = 4096,
+    num_threads: int | None = None,
 ) -> list:
-    """Convolve panorama with Lambertian BRDF for each face texel's normal direction."""
+    """Convolve panorama cosine-weighted Lambertian hemisphere."""
+    if num_samples <= 0:
+        raise ValueError("Irradiance sample count must be positive")
+    if num_threads is None:
+        num_threads = os.cpu_count() or 1
+    if num_threads <= 0:
+        raise ValueError("Irradiance thread count must be positive")
+
     print(
-        f"  Generating irradiance map ({face_size}px, {num_samples} samples per texel)..."
+        f"Generating irradiance map ({face_size}px, {num_samples} Hammersley "
+        f"samples per texel, {num_threads} threads)..."
     )
+
+    # Low-discrepancy samples isolate sun hits in sparse HDR panoramas.
+    xi1, xi2 = _hammersley_samples(num_samples)
+    # Khronos uses the linear Hammersley coordinate for azimuth and radical inverse for elevation.
+    phi = 2.0 * math.pi * xi1
+    sin_t = np.sqrt(xi2)
+    cos_t = np.sqrt(1.0 - xi2)
+    # Filter each sample by its solid-angle footprint to suppress HDR fireflies.
+    cube_width = max(1, panorama.shape[1] // 4)
+    sample_pdf = np.maximum(cos_t / math.pi, 1e-8)
+    sample_lod = 0.5 * np.log2(
+        (6.0 * cube_width * cube_width) / (num_samples * sample_pdf)
+    )
+    lx = sin_t * np.cos(phi)
+    ly = sin_t * np.sin(phi)
+    lz = cos_t
+
+    env_mips = _build_equirect_mips(panorama)
+
+    def process_normal(normal: np.ndarray) -> np.ndarray:
+        tangent_seed = (
+            np.array([1.0, 0.0, 0.0], np.float32)
+            if abs(normal[0]) < 0.9
+            else np.array([0.0, 1.0, 0.0], np.float32)
+        )
+        bitangent = np.cross(normal, tangent_seed)
+        bitangent /= np.linalg.norm(bitangent)
+        tangent = np.cross(bitangent, normal)
+        world_dirs = (
+            lx[:, np.newaxis] * tangent
+            + ly[:, np.newaxis] * bitangent
+            + lz[:, np.newaxis] * normal
+        )
+        world_dirs /= np.linalg.norm(world_dirs, axis=-1, keepdims=True)
+        return _sample_equirect_mips(env_mips, world_dirs, sample_lod).mean(axis=0)
+
     faces = []
-    for fi, dirs in enumerate(_face_dirs(face_size)):
-        r = np.linalg.norm(dirs, axis=-1, keepdims=True)
-        N = dirs / r  # unit normal for each texel (face_size, face_size, 3)
-        out = np.zeros((face_size, face_size, 3), dtype=np.float32)
-        # Importance sample the hemisphere oriented around N using a uniform distribution.
-        rng = np.random.default_rng(42)
-        xi1 = rng.random(num_samples).astype(np.float32)
-        xi2 = rng.random(num_samples).astype(np.float32)
-        # Cosine-weighted hemisphere samples in tangent space
-        phi = 2.0 * math.pi * xi2
-        cos_t = np.sqrt(xi1)
-        sin_t = np.sqrt(1.0 - xi1)
-        lx = sin_t * np.cos(phi)
-        ly = sin_t * np.sin(phi)
-        lz = cos_t
-        # Rotate samples to world space aligned with each N
-        for n_flat in N.reshape(-1, 3):
-            nx, ny, nz = n_flat
-            # Build TBN: tangent T (arbitrary), bitangent B
-            if abs(nx) < 0.9:
-                t = np.array([1.0, 0.0, 0.0], np.float32)
-            else:
-                t = np.array([0.0, 1.0, 0.0], np.float32)
-            B = np.cross(n_flat, t)
-            B /= np.linalg.norm(B)
-            T = np.cross(B, n_flat)
-            # World-space sample directions: (face_size², num_samples, 3) would be large; vectorise over samples
-            world = (
-                lx[:, np.newaxis] * T
-                + ly[:, np.newaxis] * B
-                + lz[:, np.newaxis] * n_flat
-            )  # (num_samples, 3)
-            world /= np.linalg.norm(world, axis=-1, keepdims=True)
-            samples = _sample_equirect(panorama, world)  # (num_samples, 3)
-            pass
-        # Vectorised: for each face texel, rotate all samples and average.
-        N_flat = N.reshape(-1, 3)  # (face_size², 3)
-        irr = np.zeros((N_flat.shape[0], 3), dtype=np.float32)
-        for nx, ny, nz in [N_flat[0]]:
-            pass  # placeholder — vectorised below
-
-        # Fully vectorised over samples; loop over texels is unavoidable but manageable for small face_size.
-        irr_flat = np.zeros((N_flat.shape[0], 3), dtype=np.float32)
-        for k in range(N_flat.shape[0]):
-            n = N_flat[k]
-            if abs(n[0]) < 0.9:
-                t = np.array([1.0, 0.0, 0.0], np.float32)
-            else:
-                t = np.array([0.0, 1.0, 0.0], np.float32)
-            B_ = np.cross(n, t)
-            B_ /= np.linalg.norm(B_)
-            T_ = np.cross(B_, n)
-            world = (
-                lx[:, np.newaxis] * T_ + ly[:, np.newaxis] * B_ + lz[:, np.newaxis] * n
-            )  # (num_samples, 3)
-            world /= np.linalg.norm(world, axis=-1, keepdims=True)
-            irr_flat[k] = _sample_equirect(panorama, world).mean(axis=0)
-        faces.append(irr_flat.reshape(face_size, face_size, 3))
-        print(f"    face {fi+1}/6 done")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as pool:
+        for face_index, dirs in enumerate(_face_dirs(face_size)):
+            normals = dirs / np.linalg.norm(dirs, axis=-1, keepdims=True)
+            irradiance = np.asarray(
+                list(pool.map(process_normal, normals.reshape(-1, 3))),
+                dtype=np.float32,
+            )
+            faces.append(irradiance.reshape(face_size, face_size, 3))
+            print(f"  face {face_index + 1}/6 done")
     return faces
-
-
-# ---------------------------------------------------------------------------
-# Prefiltered environment map (roughness-based specular IBL)
-# ---------------------------------------------------------------------------
 
 _PREFILTER_MIP_LEVELS = 5  # 128 → 64 → 32 → 16 → 8
 
@@ -304,53 +386,69 @@ def _ggx_importance_sample(xi1: np.ndarray, xi2: np.ndarray, roughness: float):
 
 
 def generate_prefiltered(
-    panorama: np.ndarray, face_size: int, num_samples: int = 512
-) -> list:
-    """Generate mip-chain prefiltered environment map.
-    Returns list of mip levels; each mip is a list of 6 face arrays.
-    """
+    panorama: np.ndarray,
+    face_size: int,
+    num_samples: int = 512,
+    num_threads: int | None = None,
+) -> list[list[np.ndarray]]:
+    """Generate the GGX prefiltered mip chain using parallel texel workers."""
+    if num_samples <= 0:
+        raise ValueError("Prefilter sample count must be positive")
+    if num_threads is None:
+        num_threads = os.cpu_count() or 1
+    if num_threads <= 0:
+        raise ValueError("Prefilter thread count must be positive")
+
     all_mips = []
     rng = np.random.default_rng(42)
     xi1 = rng.random(num_samples).astype(np.float32)
     xi2 = rng.random(num_samples).astype(np.float32)
 
-    for mip in range(_PREFILTER_MIP_LEVELS):
-        mip_size = max(1, face_size >> mip)
-        roughness = mip / max(_PREFILTER_MIP_LEVELS - 1, 1)
-        H_tan = _ggx_importance_sample(
-            xi1, xi2, roughness
-        )  # (num_samples, 3) in tangent space
-        print(f"  Prefiltered mip {mip} ({mip_size}px, roughness={roughness:.2f})...")
-        faces = []
-        for dirs in _face_dirs(mip_size):
-            r = np.linalg.norm(dirs, axis=-1, keepdims=True)
-            V = dirs / r  # view = reflection dir = N for IBL
-            V_flat = V.reshape(-1, 3)
-            out = np.zeros((V_flat.shape[0], 3), dtype=np.float32)
-            for k in range(V_flat.shape[0]):
-                n = V_flat[k]
-                if abs(n[0]) < 0.9:
-                    t = np.array([1.0, 0.0, 0.0], np.float32)
-                else:
-                    t = np.array([0.0, 1.0, 0.0], np.float32)
-                B_ = np.cross(n, t)
-                B_ /= np.linalg.norm(B_)
-                T_ = np.cross(B_, n)
-                # Rotate half-vectors to world space
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as pool:
+        for mip in range(_PREFILTER_MIP_LEVELS):
+            mip_size = max(1, face_size >> mip)
+            roughness = mip / max(_PREFILTER_MIP_LEVELS - 1, 1)
+            H_tan = _ggx_importance_sample(xi1, xi2, roughness)
+            print(
+                f"  Prefiltered mip {mip} ({mip_size}px, "
+                f"roughness={roughness:.2f})..."
+            )
+
+            def process_normal(normal: np.ndarray) -> np.ndarray:
+                tangent_seed = (
+                    np.array([1.0, 0.0, 0.0], np.float32)
+                    if abs(normal[0]) < 0.9
+                    else np.array([0.0, 1.0, 0.0], np.float32)
+                )
+                bitangent = np.cross(normal, tangent_seed)
+                bitangent /= np.linalg.norm(bitangent)
+                tangent = np.cross(bitangent, normal)
                 H_world = (
-                    H_tan[:, 0:1] * T_ + H_tan[:, 1:2] * B_ + H_tan[:, 2:3] * n
-                )  # (num_samples, 3)
+                    H_tan[:, 0:1] * tangent
+                    + H_tan[:, 1:2] * bitangent
+                    + H_tan[:, 2:3] * normal
+                )
                 H_world /= np.linalg.norm(H_world, axis=-1, keepdims=True)
-                # Reflect around H to get L (view = N for IBL prefilter)
-                L_world = 2.0 * (H_world * n).sum(axis=-1, keepdims=True) * H_world - n
-                valid = (L_world * n).sum(axis=-1) > 0.0
+                L_world = (
+                    2.0 * (H_world * normal).sum(axis=-1, keepdims=True) * H_world
+                    - normal
+                )
+                valid = (L_world * normal).sum(axis=-1) > 0.0
                 L_valid = L_world[valid]
                 if L_valid.shape[0] == 0:
-                    out[k] = 0.0
-                else:
-                    out[k] = _sample_equirect(panorama, L_valid).mean(axis=0)
-            faces.append(out.reshape(mip_size, mip_size, 3))
-        all_mips.append(faces)
+                    return np.zeros(3, dtype=np.float32)
+                return _sample_equirect(panorama, L_valid).mean(axis=0)
+
+            faces = []
+            for dirs in _face_dirs(mip_size):
+                normals = dirs / np.linalg.norm(dirs, axis=-1, keepdims=True)
+                out = np.asarray(
+                    list(pool.map(process_normal, normals.reshape(-1, 3))),
+                    dtype=np.float32,
+                )
+                faces.append(out.reshape(mip_size, mip_size, 3))
+            all_mips.append(faces)
+
     return all_mips
 
 
@@ -500,8 +598,14 @@ def main() -> int:
     ap.add_argument(
         "--irr-samples",
         type=int,
-        default=1024,
-        help="Irradiance Monte-Carlo samples per texel (default: 1024)",
+        default=4096,
+        help="Irradiance Hammersley samples per texel (default: 4096)",
+    )
+    ap.add_argument(
+        "--threads",
+        type=int,
+        default=os.cpu_count() or 1,
+        help=f"Worker threads for irradiance and prefilter generation (default: {os.cpu_count() or 1})",
     )
     ap.add_argument(
         "--prefilter-samples",
@@ -529,25 +633,47 @@ def main() -> int:
 
     # Skybox cubemap
     print("Generating skybox cubemap...")
+    generation_start = time.perf_counter()
     skybox_faces = equirect_to_faces(panorama, args.skybox_size)
     write_dds_cubemap([skybox_faces], str(out_dir / "skybox.dds"))
+    print(
+        f"  Skybox generation took "
+        f"{time.perf_counter() - generation_start:.2f} seconds"
+    )
 
     # Irradiance map
     print("Generating irradiance map...")
-    irr_faces = generate_irradiance(panorama, args.irr_size, args.irr_samples)
+    generation_start = time.perf_counter()
+    irr_faces = generate_irradiance(
+        panorama, args.irr_size, args.irr_samples, args.threads
+    )
     write_dds_cubemap([irr_faces], str(out_dir / "irradiance.dds"))
+    print(
+        f"  Irradiance generation took "
+        f"{time.perf_counter() - generation_start:.2f} seconds"
+    )
 
     # Prefiltered environment map (multi-mip)
     print("Generating prefiltered environment map...")
+    generation_start = time.perf_counter()
     prefiltered_mips = generate_prefiltered(
-        panorama, args.prefilter_size, args.prefilter_samples
+        panorama, args.prefilter_size, args.prefilter_samples, args.threads
     )
     write_dds_cubemap(prefiltered_mips, str(out_dir / "prefiltered.dds"))
+    print(
+        f"  Prefiltered environment generation took "
+        f"{time.perf_counter() - generation_start:.2f} seconds"
+    )
 
     # BRDF LUT
     print("Generating BRDF LUT...")
+    generation_start = time.perf_counter()
     lut = generate_brdf_lut(args.lut_size, args.lut_samples)
     write_lut_dds(lut, str(out_dir / "brdf_lut.dds"))
+    print(
+        f"  BRDF LUT generation took "
+        f"{time.perf_counter() - generation_start:.2f} seconds"
+    )
 
     print("Done.")
     return 0

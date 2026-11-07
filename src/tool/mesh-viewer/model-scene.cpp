@@ -280,7 +280,7 @@ AutoRef<ModelScene> ModelScene::load(const LoadParameters & parameters) {
         }
 
     // Flip Assimp's bottom-left UV coordinates. So viewer samples top-left-origin image rows correctly.
-    constexpr unsigned importFlags = aiProcess_Triangulate | aiProcess_ValidateDataStructure | aiProcess_FlipUVs;
+    constexpr unsigned                                         importFlags = aiProcess_Triangulate | aiProcess_ValidateDataStructure | aiProcess_FlipUVs;
     std::unique_ptr<const aiScene, decltype(&aiReleaseImport)> imported(aiImportFile(nativePath.data(), importFlags), &aiReleaseImport);
     if (!imported || !imported->mRootNode || !imported->HasMeshes()) GN_UNLIKELY {
             GN_ERROR(sLogger, "ModelScene::load: Assimp failed to import '{}': {}", parameters.path, aiGetErrorString());

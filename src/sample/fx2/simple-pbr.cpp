@@ -59,7 +59,7 @@ int main(int argc, const char * argv[]) {
     if (!depthBuffer) return 1;
 
     // ─── Environment / Sky material ───────────────────────────────────────────
-    auto skyboxTex      = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox-cube.dds"});
+    auto skyboxTex      = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox.dds"});
     auto irradianceTex  = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds"});
     auto prefilteredTex = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds"});
     auto brdfLutTex     = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds"});
