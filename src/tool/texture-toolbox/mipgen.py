@@ -25,10 +25,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from texture_viewer import dds as dds_mod
 from texture_viewer.dds import DdsFile, Fmt, TexType
 
-
 # ---------------------------------------------------------------------------
 # Output format selection
 # ---------------------------------------------------------------------------
+
 
 def _output_fmt(input_fmt: int) -> Fmt:
     return Fmt.R32G32B32A32_FLOAT if dds_mod.is_hdr(input_fmt) else Fmt.R8G8B8A8_UNORM
@@ -38,15 +38,15 @@ def _output_fmt(input_fmt: int) -> Fmt:
 # Mipmap generation
 # ---------------------------------------------------------------------------
 
+
 def _box_downsample(img: np.ndarray) -> np.ndarray:
     """Halve (H, W, C) using a 2×2 box filter. Handles odd dimensions."""
     h, w = img.shape[:2]
     new_h = max(1, h // 2)
     new_w = max(1, w // 2)
-    h2, w2 = new_h * 2, new_w * 2          # largest even size that fits
-    c = img[:h2, :w2].astype(np.float64)   # promote for accuracy
-    result = (c[0::2, 0::2] + c[0::2, 1::2] +
-              c[1::2, 0::2] + c[1::2, 1::2]) * 0.25
+    h2, w2 = new_h * 2, new_w * 2  # largest even size that fits
+    c = img[:h2, :w2].astype(np.float64)  # promote for accuracy
+    result = (c[0::2, 0::2] + c[0::2, 1::2] + c[1::2, 0::2] + c[1::2, 1::2]) * 0.25
     return result.astype(np.float32)
 
 
@@ -95,20 +95,27 @@ def _build_3d_mips(dds: DdsFile) -> list[list[np.ndarray]]:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description='Generate a complete mipmap chain for a DDS texture.')
-    parser.add_argument('input',  help='Input DDS file')
-    parser.add_argument('output', nargs='?',
-                        help='Output DDS file (omit when using --inplace)')
-    parser.add_argument('--inplace', action='store_true',
-                        help='Write mip chain back to the input file '
-                             '(only supported for uncompressed input)')
+        description="Generate a complete mipmap chain for a DDS texture."
+    )
+    parser.add_argument("input", help="Input DDS file")
+    parser.add_argument(
+        "output", nargs="?", help="Output DDS file (omit when using --inplace)"
+    )
+    parser.add_argument(
+        "--inplace",
+        action="store_true",
+        help="Write mip chain back to the input file "
+        "(only supported for uncompressed input)",
+    )
     args = parser.parse_args()
 
     if args.inplace and args.output:
-        print('ERROR: cannot specify both an output file and --inplace',
-              file=sys.stderr)
+        print(
+            "ERROR: cannot specify both an output file and --inplace", file=sys.stderr
+        )
         return 1
     if not args.inplace and not args.output:
         parser.print_help()
@@ -117,13 +124,13 @@ def main() -> int:
     # ------------------------------------------------------------------
     # Load
     # ------------------------------------------------------------------
-    print(f'Loading : {args.input}')
+    print(f"Loading : {args.input}")
     try:
         dds = dds_mod.load(args.input)
     except Exception as e:
-        print(f'ERROR: {e}', file=sys.stderr)
+        print(f"ERROR: {e}", file=sys.stderr)
         return 1
-    print(f'         {dds}')
+    print(f"         {dds}")
 
     compressed = dds_mod.is_compressed(dds.fmt)
 
@@ -132,25 +139,26 @@ def main() -> int:
     # ------------------------------------------------------------------
     if args.inplace and compressed:
         print(
-            f'ERROR: --inplace is not supported for compressed input '
-            f'({dds.fmt_name}).\n'
-            f'       In-place mip generation for compressed formats will be '
-            f'supported in a future version.',
-            file=sys.stderr)
+            f"ERROR: --inplace is not supported for compressed input "
+            f"({dds.fmt_name}).\n"
+            f"       In-place mip generation for compressed formats will be "
+            f"supported in a future version.",
+            file=sys.stderr,
+        )
         return 1
 
     out_path = args.input if args.inplace else args.output
-    out_fmt  = _output_fmt(dds.fmt)
+    out_fmt = _output_fmt(dds.fmt)
 
     if compressed:
-        print(f'         Compressed input → decompressing to {out_fmt.name}')
+        print(f"         Compressed input → decompressing to {out_fmt.name}")
     elif out_fmt != dds.fmt:
-        print(f'         Converting {dds.fmt_name} → {out_fmt.name}')
+        print(f"         Converting {dds.fmt_name} → {out_fmt.name}")
 
     # ------------------------------------------------------------------
     # Build mip chains
     # ------------------------------------------------------------------
-    print('Building mip chain ...')
+    print("Building mip chain ...")
     try:
         if dds.tex_type == TexType.TEX3D:
             subresources = _build_3d_mips(dds)
@@ -159,32 +167,39 @@ def main() -> int:
             subresources = _build_2d_mips(dds)
             mip_count = len(subresources[0])
     except Exception as e:
-        print(f'ERROR: {e}', file=sys.stderr)
+        print(f"ERROR: {e}", file=sys.stderr)
         return 1
 
-    print(f'         {mip_count} mip levels generated')
+    print(f"         {mip_count} mip levels generated")
 
     # ------------------------------------------------------------------
     # Write
     # ------------------------------------------------------------------
-    print(f'Writing : {out_path}')
+    print(f"Writing : {out_path}")
     try:
-        dds_mod.write(out_path, subresources,
-                      dds.width, dds.height, max(1, dds.depth),
-                      dds.tex_type, dds.array_size, out_fmt)
+        dds_mod.write(
+            out_path,
+            subresources,
+            dds.width,
+            dds.height,
+            max(1, dds.depth),
+            dds.tex_type,
+            dds.array_size,
+            out_fmt,
+        )
     except Exception as e:
-        print(f'ERROR: {e}', file=sys.stderr)
+        print(f"ERROR: {e}", file=sys.stderr)
         return 1
 
     # Quick sanity: re-parse to confirm the file is valid
     try:
         check = dds_mod.load(out_path)
-        print(f'Done    : {check}')
+        print(f"Done    : {check}")
     except Exception as e:
-        print(f'WARNING: output written but re-parse failed: {e}', file=sys.stderr)
+        print(f"WARNING: output written but re-parse failed: {e}", file=sys.stderr)
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

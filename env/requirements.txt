@@ -1,5 +1,6 @@
 # Core utilities
 termcolor>=2.0
+black==26.10.1
 
 # Coverage reporting (env/bin/code-coverage.py, coverage build variant 'c')
 gcovr>=8.0         # gcov front end: HTML, JSON and function-level reports

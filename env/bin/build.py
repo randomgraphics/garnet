@@ -2,7 +2,9 @@
 
 from ctypes import util
 import sys, subprocess, os, platform, pathlib, argparse, shutil, glob, importlib, configparser
+
 utils = importlib.import_module("garnet-utils")
+
 
 def get_cmake_build_info(args):
     # determine build type
@@ -38,74 +40,86 @@ def get_cmake_build_info(args):
         build_dir = utils.get_root_folder() / build_dir
 
     # check for platform and compiler
-    system = utils.BuildSystem(android = args.android_build, use_clang = args.use_clang)
+    system = utils.BuildSystem(android=args.android_build, use_clang=args.use_clang)
 
     # gcov instrumentation is only wired up for Linux desktop builds so far. Failing loudly
     # here avoids silently producing an uninstrumented build whose report reads as 0%.
     if is_coverage and (args.android_build or "Linux" != platform.system()):
-        utils.rip(f"[ERROR] the coverage variant 'c' is only supported on Linux. Detected: "
-                  f"{'Android' if args.android_build else platform.system()}.")
+        utils.rip(
+            f"[ERROR] the coverage variant 'c' is only supported on Linux. Detected: "
+            f"{'Android' if args.android_build else platform.system()}."
+        )
 
     build_dir = build_dir / f"{system.build_dir()}{suffix}"
 
-    #done
+    # done
     return [build_type, build_dir, system.android_abi, is_coverage]
+
 
 # Run cmake command. the args is list of arguments.
 def cmake(build_dir, cmdline):
     if not isinstance(cmdline, list):
         cmdline = str(cmdline).split()
     cmd = ["cmake"] + cmdline
-    print(' '.join(cmd))
+    print(" ".join(cmd))
     try:
         subprocess.check_call(cmd, cwd=build_dir)
     except subprocess.CalledProcessError as err:
         print(f"[ERROR] cmake failed. ErrorCode = {err.returncode}")
         sys.exit(err.returncode)
 
+
 def git(cmdline):
     if not isinstance(cmdline, list):
         cmdline = str(cmdline).split()
     cmd = ["git"] + cmdline
-    print(' '.join(cmd))
+    print(" ".join(cmd))
     try:
         subprocess.check_call(cmd, cwd=sdk_root_dir)
     except:
         print("[ERROR] GIT process exits with non-zero exit code.")
         sys.exit(1)
 
+
 def query_submodules():
     gitmodules_path = sdk_root_dir / ".gitmodules"
     if not gitmodules_path.exists():
         utils.rip(".gitmodules file not found")
-    
+
     config = configparser.ConfigParser()
     config.read(gitmodules_path)
-    
+
     submodules = []
     for section in config.sections():
         if section.startswith("submodule"):
             path = config[section]["path"]
             submodules.append(path)
-    
+
     return submodules
+
 
 def update_submodules():
     submodules = query_submodules()
     for s in submodules:
         dir = sdk_root_dir / s
         if not dir.is_dir():
-            utils.rip(f"{dir} not found. your working directory might be corrupted. Please consider re-cloning.")
+            utils.rip(
+                f"{dir} not found. your working directory might be corrupted. Please consider re-cloning."
+            )
         items = dir.iterdir()
-        if len(list(items)) == 0 :
+        if len(list(items)) == 0:
             git("submodule update --init --recursive")
             break
 
+
 def get_android_path(name):
-    if os.environ.get(name) is None: utils.rip(f"{name} environment variable not found.")
+    if os.environ.get(name) is None:
+        utils.rip(f"{name} environment variable not found.")
     p = pathlib.Path(os.getenv(name))
-    if not p.is_dir(): utils.rip(f"{p} folder not found.")
+    if not p.is_dir():
+        utils.rip(f"{p} folder not found.")
     return p
+
 
 def cmake_config(args, build_dir, build_type, is_coverage):
     update_submodules()
@@ -114,14 +128,17 @@ def cmake_config(args, build_dir, build_type, is_coverage):
     if is_coverage:
         config += " -DGN_BUILD_CODE_COVERAGE=ON"
     if args.android_build:
-        sdk = get_android_path('ANDROID_SDK_ROOT')
-        ndk = get_android_path('ANDROID_NDK_ROOT')
-        get_android_path('JAVA_HOME') # Ensure JAVA_HOME is set.
-        if 'Windows' == platform.system():
+        sdk = get_android_path("ANDROID_SDK_ROOT")
+        ndk = get_android_path("ANDROID_NDK_ROOT")
+        get_android_path("JAVA_HOME")  # Ensure JAVA_HOME is set.
+        if "Windows" == platform.system():
             # look for ninja.exe within sdk folder.
             candidates = list((sdk / "cmake").glob("**/ninja.exe"))
             ninja = candidates[0] if len(candidates) > 0 else None
-            if (ninja is None) or (not ninja.exists()): utils.rip(f"ninja.exe not found. Please install cmake 3.18+ via Android SDK Manager." )
+            if (ninja is None) or (not ninja.exists()):
+                utils.rip(
+                    f"ninja.exe not found. Please install cmake 3.18+ via Android SDK Manager."
+                )
         else:
             ninja = "ninja"
         toolchain = ndk / "build/cmake/android.toolchain.cmake"
@@ -138,8 +155,9 @@ def cmake_config(args, build_dir, build_type, is_coverage):
             -DANDROID_ABI={android_abi} \
             -DCMAKE_ANDROID_ARCH_ABI={android_abi} \
             "
-    elif 'Windows' != platform.system():
-        if not args.use_makefile: config += " -GNinja"
+    elif "Windows" != platform.system():
+        if not args.use_makefile:
+            config += " -GNinja"
         if args.use_clang:
             # Select a matching compiler pair so C and C++ never use different Clang versions.
             if shutil.which("clang-15") and shutil.which("clang++-15"):
@@ -149,8 +167,10 @@ def cmake_config(args, build_dir, build_type, is_coverage):
             config += f" -DCMAKE_C_COMPILER={clang} -DCMAKE_CXX_COMPILER={clangxx}"
     cmake(build_dir, config)
 
+
 def print_compiler_info():
     import os, sys, subprocess
+
     print("======================== Compiler info =========================")
     print("sys.executable =", sys.executable)
     print("PATH =", os.environ.get("PATH"))
@@ -159,6 +179,7 @@ def print_compiler_info():
     print("CPLUS_INCLUDE_PATH =", os.environ.get("CPLUS_INCLUDE_PATH"))
     print("CPPFLAGS =", os.environ.get("CPPFLAGS"))
     print("================================================================")
+
 
 def build_all(args, build_dir, build_type, is_coverage):
     # on MacOS, we sometimes need to explicitly set CPATH=/usr/local/include for CMake to find Vulkan headers.
@@ -170,11 +191,14 @@ def build_all(args, build_dir, build_type, is_coverage):
     if not args.skip_config:
         cmake_config(args, build_dir, build_type, is_coverage)
     if not args.config_only:
-        jobs = ["-j8"] # limit to 8 cores.
-        cmake(build_dir, ["--build", "."] + jobs + ["--config", build_type] + args.extra)
+        jobs = ["-j8"]  # limit to 8 cores.
+        cmake(
+            build_dir, ["--build", "."] + jobs + ["--config", build_type] + args.extra
+        )
         # if args.install_destination_folder:
         #     inst_dir = str(pathlib.Path(args.install_destination_folder).absolute())
         #     cmake(build_dir, ["--install", ".", "--config", build_type, "--prefix", inst_dir] + args.extra)
+
 
 # ==========
 # main
@@ -182,18 +206,50 @@ def build_all(args, build_dir, build_type, is_coverage):
 
 # parse command line arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-a", dest="android_build", action="store_true", help="Build for Android")
-ap.add_argument("-b", dest="build_dir", default=os.environ.get("GARNET_BUILD_DIR", "build"), help="Build output folder.")
-ap.add_argument("-c", dest="config_only", action="store_true", help="Run CMake config only. Skip cmake build.")
-ap.add_argument("-C", dest="skip_config", action="store_true", help="Skip CMake config. Run build process only.")
-ap.add_argument("-m", dest="use_makefile", action="store_true", help="Use OS's default makefile instead of Ninja")
-ap.add_argument("--clang", dest="use_clang", action="store_true", help="Use CLANG instead of GCC as the compiler. This option is only valid on Linux.")
-ap.add_argument("variant", help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(overage, Linux only)/x (clean). "
-                                         "Note the positional 'c' selects the coverage variant while the '-c' flag means configure-only. "
-                                         "Note that all parameters alert this one will be considered \"extra\" and passed to CMake directly.")
-ap.add_argument("extra", nargs=argparse.REMAINDER, help="Extra arguments passing to cmake.")
+ap.add_argument(
+    "-a", dest="android_build", action="store_true", help="Build for Android"
+)
+ap.add_argument(
+    "-b",
+    dest="build_dir",
+    default=os.environ.get("GARNET_BUILD_DIR", "build"),
+    help="Build output folder.",
+)
+ap.add_argument(
+    "-c",
+    dest="config_only",
+    action="store_true",
+    help="Run CMake config only. Skip cmake build.",
+)
+ap.add_argument(
+    "-C",
+    dest="skip_config",
+    action="store_true",
+    help="Skip CMake config. Run build process only.",
+)
+ap.add_argument(
+    "-m",
+    dest="use_makefile",
+    action="store_true",
+    help="Use OS's default makefile instead of Ninja",
+)
+ap.add_argument(
+    "--clang",
+    dest="use_clang",
+    action="store_true",
+    help="Use CLANG instead of GCC as the compiler. This option is only valid on Linux.",
+)
+ap.add_argument(
+    "variant",
+    help="Specify build variant. Acceptable values are: d(ebug)/p(rofile)/r(elease)/c(overage, Linux only)/x (clean). "
+    "Note the positional 'c' selects the coverage variant while the '-c' flag means configure-only. "
+    'Note that all parameters alert this one will be considered "extra" and passed to CMake directly.',
+)
+ap.add_argument(
+    "extra", nargs=argparse.REMAINDER, help="Extra arguments passing to cmake."
+)
 args = ap.parse_args()
-#print(args.extra)
+# print(args.extra)
 
 # get the root directory of the code base
 sdk_root_dir = utils.get_root_folder()
@@ -205,7 +261,7 @@ build_type, build_dir, android_abi, is_coverage = get_cmake_build_info(args)
 # Check if the build type is None. If it is, then we need to clean the build directory.
 if build_type is None:
     if os.name == "nt":
-        os.system('taskkill /f /im java.exe 2>nul')
+        os.system("taskkill /f /im java.exe 2>nul")
     else:
         # TODO: kill java process the Linux way.
         pass

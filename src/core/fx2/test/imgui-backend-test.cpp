@@ -23,6 +23,7 @@ struct TestWindow final : GN::win::WindowInput {
     void                  minimize() override {}
     void                  moveTo(int, int) override {}
     void                  setClientSize(size_t, size_t) override {}
+    void                  setCaption(const char *) override {}
     bool                  runUntilNoNewEvents(bool) override { return true; }
 };
 

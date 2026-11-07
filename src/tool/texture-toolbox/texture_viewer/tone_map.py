@@ -11,28 +11,28 @@ import numpy as np
 
 
 class ToneMode(str, Enum):
-    LINEAR   = 'Linear'
-    REINHARD = 'Reinhard'
-    REINHARD_EXT = 'Reinhard Ext'
-    ACES     = 'ACES'
-    FILMIC   = 'Filmic (UC2)'
+    LINEAR = "Linear"
+    REINHARD = "Reinhard"
+    REINHARD_EXT = "Reinhard Ext"
+    ACES = "ACES"
+    FILMIC = "Filmic (UC2)"
 
 
 class ChannelMode(str, Enum):
-    RGB = 'RGB'
-    R   = 'R'
-    G   = 'G'
-    B   = 'B'
-    A   = 'A'
+    RGB = "RGB"
+    R = "R"
+    G = "G"
+    B = "B"
+    A = "A"
 
 
 @dataclass
 class ToneMapper:
-    mode: ToneMode     = ToneMode.LINEAR
+    mode: ToneMode = ToneMode.LINEAR
     channel: ChannelMode = ChannelMode.RGB
-    exposure_ev: float = 0.0      # EV stops; 0 = no change
-    gamma: float       = 2.2
-    white_point: float = 4.0      # used by Reinhard Extended
+    exposure_ev: float = 0.0  # EV stops; 0 = no change
+    gamma: float = 2.2
+    white_point: float = 4.0  # used by Reinhard Extended
 
     def apply(self, rgba: np.ndarray) -> np.ndarray:
         """rgba: float32 (H, W, 4) → uint8 (H, W, 4) for display."""
@@ -51,7 +51,7 @@ class ToneMapper:
             rgb = np.repeat(alpha, 3, axis=2)
 
         # Exposure
-        rgb = rgb * (2.0 ** self.exposure_ev)
+        rgb = rgb * (2.0**self.exposure_ev)
 
         # Tonemapping
         m = self.mode
@@ -60,7 +60,7 @@ class ToneMapper:
         elif m == ToneMode.REINHARD:
             rgb = rgb / (1.0 + rgb)
         elif m == ToneMode.REINHARD_EXT:
-            w2 = self.white_point ** 2
+            w2 = self.white_point**2
             rgb = rgb * (1.0 + rgb / w2) / (1.0 + rgb)
         elif m == ToneMode.ACES:
             rgb = _aces(rgb)

@@ -141,7 +141,11 @@ jobs:
       - checkout
       - run:
           name: lint
-          command: env/bin/cit.py -l
+          command: |
+            source env/garnet.rc
+            # The interactive environment disables errexit; CI must propagate failures.
+            set -e
+            env/bin/cit.py -l
 
   build-linux-gcc:
     # Only the gcc Linux job runs coverage, in place of debug. The coverage variant is the
