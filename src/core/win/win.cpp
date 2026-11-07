@@ -28,6 +28,7 @@ public:
     intptr_t          createVulkanSurfaceHandle(intptr_t) const { return 0; }
     void              destroyVulkanSurfaceHandle(intptr_t, intptr_t) const {}
     Vector2<uint32_t> getClientSize() const { return Vector2<uint32_t>(640, 480); }
+    void              setCaption(const char *) {}
     void              show() {}
     void              hide() {}
     void              minimize() {}
