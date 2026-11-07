@@ -61,3 +61,10 @@ Phase 3: integrate accepted generator/map fix, independent review, and repeat co
 - Generator: `src/tool/texture-toolbox/gen-ibl-maps.py`
 - Environment: `media/asset-foundry/image/envmap/qwantani_sunset_puresky/`
 - Model: `media/asset-foundry/model/misc/female_head_1.glb`
+
+## Paused asset publication checkpoint
+
+- The sampler `.dds` control is retained at `assets/gltf-ibl-sampler-prefiltered-ggx.dds` with SHA-256 `7E2D5E229C3F503D7B5FC27A9277F44DAB081A7C1A33F4D92360CBFFECF82538`.
+- Pending asset-folder changes were committed on submodule branch `wip/envmap-assets` at `4a82892` and pushed to its Hugging Face remote.
+- User requested removal of both `.ktx2` files; neither is in the published submodule commit. A local backup branch `backup/envmap-assets-pre-ktx2-removal` retains the pre-removal unpublished state only.
+- Parent repo still needs its submodule pointer updated to `4a82892` and then pushed. Task remains paused; next engineering task is assignment 10.
