@@ -403,12 +403,37 @@ def generate_prefiltered(
     rng = np.random.default_rng(42)
     xi1 = rng.random(num_samples).astype(np.float32)
     xi2 = rng.random(num_samples).astype(np.float32)
+    source_mips = _build_equirect_mips(panorama)
+    source_cube_size = max(1, panorama.shape[0] // 2)
+    source_lod_offset = math.log2(panorama.shape[0] / source_cube_size)
+    source_cube_max_lod = min(
+        math.floor(math.log2(source_cube_size)),
+        len(source_mips) - 1 - int(source_lod_offset),
+    )
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as pool:
         for mip in range(_PREFILTER_MIP_LEVELS):
             mip_size = max(1, face_size >> mip)
             roughness = mip / max(_PREFILTER_MIP_LEVELS - 1, 1)
             H_tan = _ggx_importance_sample(xi1, xi2, roughness)
+            if roughness == 0.0:
+                source_lod = np.full(num_samples, source_lod_offset, dtype=np.float32)
+            else:
+                alpha = roughness * roughness
+                n_dot_h = H_tan[:, 2]
+                a = alpha * n_dot_h
+                k = alpha / np.maximum(1.0 - n_dot_h * n_dot_h + a * a, 1e-6)
+                pdf = (k * k / math.pi) * 0.25
+                source_lod_cube = 0.5 * np.log2(
+                    (6.0 * source_cube_size * source_cube_size)
+                    / np.maximum(num_samples * pdf, 1e-12)
+                )
+                source_lod_cube = np.clip(source_lod_cube, 0.0, source_cube_max_lod)
+                source_lod = np.clip(
+                    source_lod_cube + source_lod_offset,
+                    0.0,
+                    len(source_mips) - 1,
+                )
             print(
                 f"  Prefiltered mip {mip} ({mip_size}px, "
                 f"roughness={roughness:.2f})..."
@@ -433,11 +458,16 @@ def generate_prefiltered(
                     2.0 * (H_world * normal).sum(axis=-1, keepdims=True) * H_world
                     - normal
                 )
-                valid = (L_world * normal).sum(axis=-1) > 0.0
+                n_dot_l = (L_world * normal).sum(axis=-1)
+                valid = n_dot_l > 0.0
                 L_valid = L_world[valid]
                 if L_valid.shape[0] == 0:
                     return np.zeros(3, dtype=np.float32)
-                return _sample_equirect(panorama, L_valid).mean(axis=0)
+                sample_weights = n_dot_l[valid]
+                sample_colors = _sample_equirect_mips(
+                    source_mips, L_valid, source_lod[valid]
+                )
+                return np.average(sample_colors, axis=0, weights=sample_weights)
 
             faces = []
             for dirs in _face_dirs(mip_size):
