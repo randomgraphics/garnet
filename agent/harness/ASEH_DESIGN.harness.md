@@ -113,6 +113,45 @@ cross-module contract changes and global requirement changes return to the
 parent coordinator for evaluation. This lets agents specialize without losing
 system-level consistency.
 
+### Recursive task intake and workflow selection
+
+Every agent applies this intake process to every assignment it receives,
+including worker assignments and tasks delegated by another agent. The process
+is recursive: an agent that becomes a control agent for delegated work repeats
+the same analysis for its own scope, while retaining responsibility for that
+scope's outcome and integration.
+
+1. **Define observable completion.** Determine whether the requested outcome
+   has clear, consistent conditions for success and failure, and what evidence
+   will establish them. Refine the criteria or ask the assigner when the
+   outcome cannot yet be evaluated reliably.
+2. **Choose the execution shape.** Decide whether the assignment is within the
+   agent's effective context and can be completed directly. If delegation is
+   useful, split the work into simple, focused, independently completable
+   assignments that one worker can own. Keep coordination at the current
+   control-agent level by default. Add another control-agent layer only when
+   the problem's complexity or number and dependencies of assignments would
+   make the work inefficient to manage at the current level. Delegation should
+   reduce execution or context burden enough to justify its coordination cost.
+3. **Resolve blocking unknowns.** Identify missing information that materially
+   affects the outcome, constraints, or acceptance criteria. Ask the assigner
+   for what is needed before dependent work proceeds. Continue independent
+   investigation or work where possible, and record assumptions that are safe
+   to make provisionally.
+4. **Select and revisit the workflow.** Use a sequential, upfront plan for
+   simple, straightforward work with stable requirements and known
+   implementation. When uncertainty requires exploration, use short iterative
+   cycles: investigate or implement a bounded increment, evaluate its evidence,
+   refine requirements or the task graph, and continue. Reassess the workflow
+   when new evidence materially changes the uncertainty or scope.
+
+This rule applies at every level of the assignment tree. The top-level
+coordinator remains accountable for global acceptance; each nested control
+agent is accountable for its own scope and handoffs. A task does not require
+another hierarchy level merely because it has multiple assignments: create
+focused worker assignments directly under the current coordinator whenever
+that coordinator can manage them efficiently.
+
 Do not send the entire task history to every invocation. Assemble context in
 layers: stable harness rules; project knowledge relevant to the node; the
 current task charter and requirement revision; the module contract; the
