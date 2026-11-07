@@ -561,3 +561,11 @@ Success means the latest agreed outcomes meet their acceptance criteria with
 reproducible evidence, remaining limitations disclosed, and task state
 recoverable by another session. Passing one phase is not the same as completing
 the overall goal.
+
+## Top-level management-agent focus
+
+When a task uses a top-level management agent, keep that agent's assignment and invocation context concise and focused on controlling overall progress. It owns the shared goal and graph, creates and dispatches bounded worker assignments, tracks dependencies and evidence, reconciles handoffs, and selects the next investigation, implementation, review, or verification step. It is not a catch-all technical worker and should not duplicate worker procedures in its own context. Each worker receives the shared contract plus only its own concise assignment, relevant role playbook, and linked evidence; workers return concrete outputs and next-step recommendations to the manager. The manager executes technical work only when explicitly assigned that bounded node. This separation preserves a clear global view while keeping each worker focused on one outcome.
+
+## Kickoff review and human-clarification scan
+
+Before starting task work or dispatching workers, the coordinator reviews the existing task charter and assignments, relevant repository guidance and skills, current repository/worktree state, and linked source/evidence needed to understand the goal. It records what is already known, avoids repeating completed work, and identifies unresolved choices that may require human direction later. Clarification is requested when a decision becomes necessary and materially affects scope, user outcome, risk, or acceptance; independent work continues meanwhile. Do not invent a clarification need when a reversible, evidence-backed default is available, and do not treat elapsed time or silence as approval.
