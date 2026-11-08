@@ -18,7 +18,7 @@ from .tone_map import ToneMapper
 
 class ImageCanvas(QWidget):
     pixel_hovered = pyqtSignal(int, int, float, float, float, float)
-    zoom_changed  = pyqtSignal(float)   # emits zoom factor (1.0 = 100%)
+    zoom_changed = pyqtSignal(float)  # emits zoom factor (1.0 = 100%)
 
     _MIN_ZOOM = 1.0 / 64
     _MAX_ZOOM = 64.0
@@ -30,10 +30,10 @@ class ImageCanvas(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMinimumSize(64, 64)
         self.setFocusPolicy(Qt.StrongFocus)
-        self.setStyleSheet('background-color: #2b2b2b;')
+        self.setStyleSheet("background-color: #2b2b2b;")
 
-        self._raw: np.ndarray | None = None    # float32 (H, W, 4)
-        self._pixmap: QPixmap | None = None    # tonemapped display
+        self._raw: np.ndarray | None = None  # float32 (H, W, 4)
+        self._pixmap: QPixmap | None = None  # tonemapped display
         self._tone: ToneMapper = ToneMapper()
         self._zoom: float = 1.0
         self._pan: QPoint = QPoint(0, 0)
@@ -94,13 +94,13 @@ class ImageCanvas(QWidget):
         painter.setRenderHint(QPainter.SmoothPixmapTransform, self._zoom < 1.0)
         self._draw_checker(painter)
         if self._pixmap:
-            pw = int(self._pixmap.width()  * self._zoom)
+            pw = int(self._pixmap.width() * self._zoom)
             ph = int(self._pixmap.height() * self._zoom)
             dst = QRect(self._pan.x(), self._pan.y(), pw, ph)
             painter.drawPixmap(dst, self._pixmap)
         if self._pixmap is None:
             painter.setPen(QColor(120, 120, 120))
-            painter.drawText(self.rect(), Qt.AlignCenter, 'No image loaded')
+            painter.drawText(self.rect(), Qt.AlignCenter, "No image loaded")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -162,10 +162,9 @@ class ImageCanvas(QWidget):
     def _center_image(self):
         if self._pixmap is None:
             return
-        pw = int(self._pixmap.width()  * self._zoom)
+        pw = int(self._pixmap.width() * self._zoom)
         ph = int(self._pixmap.height() * self._zoom)
-        self._pan = QPoint((self.width()  - pw) // 2,
-                           (self.height() - ph) // 2)
+        self._pan = QPoint((self.width() - pw) // 2, (self.height() - ph) // 2)
 
     def _zoom_at(self, pos: QPoint, factor: float):
         old = self._zoom
@@ -173,8 +172,9 @@ class ImageCanvas(QWidget):
         # Keep the point under the cursor fixed
         img_x = (pos.x() - self._pan.x()) / old
         img_y = (pos.y() - self._pan.y()) / old
-        self._pan = QPoint(int(pos.x() - img_x * self._zoom),
-                           int(pos.y() - img_y * self._zoom))
+        self._pan = QPoint(
+            int(pos.x() - img_x * self._zoom), int(pos.y() - img_y * self._zoom)
+        )
         self.zoom_changed.emit(self._zoom)
         self.update()
 
@@ -194,10 +194,10 @@ class ImageCanvas(QWidget):
 
     def _draw_checker(self, painter: QPainter):
         """Draw a grey checkerboard background (transparency indicator)."""
-        if self._checker_pixmap is None or \
-                self._checker_pixmap.size() != self.size():
+        if self._checker_pixmap is None or self._checker_pixmap.size() != self.size():
             self._checker_pixmap = self._make_checker(
-                self.width(), self.height(), self._CHECKER_SIZE)
+                self.width(), self.height(), self._CHECKER_SIZE
+            )
         painter.drawPixmap(0, 0, self._checker_pixmap)
 
     @staticmethod

@@ -65,6 +65,7 @@ public:
     void              minimize() override;
     void              moveTo(int x, int y) override;
     void              setClientSize(size_t clientWidth, size_t clientHeight) override;
+    void              setCaption(const char * captionUTF8) override;
     bool              runUntilNoNewEvents(bool blockCallerWhenMinimized) override;
 
     // ********************************

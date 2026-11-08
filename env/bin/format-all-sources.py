@@ -76,13 +76,37 @@ if not shutil.which(clang_format):
 lock = threading.Lock()
 
 
+def formatter_executable(command):
+    executable = shutil.which(command)
+    if executable:
+        return str(pathlib.Path(executable).resolve())
+
+    path = pathlib.Path(sys.executable).resolve().parent
+    if platform.system() == "Windows":
+        path /= "Scripts"
+        command += ".exe"
+    return str((path / command).resolve())
+
+
+def run_formatter(cmdline, **kwargs):
+    try:
+        return subprocess.run(cmdline, **kwargs)
+    except OSError as exc:
+        raise RuntimeError(
+            f"Unable to start formatter executable '{cmdline[0]}': {exc}"
+        ) from exc
+
+
 # clang format one file
 def format_one_file_with_clang_format(x):
-    cmdline = [clang_format, ("--dry-run" if args.n else "-i"), x]
+    cmdline = [clang_format, ("--dry-run" if args.n else "-i")]
+    if args.n:
+        cmdline.append("--Werror")
+    cmdline.append(x)
     if not args.q:
         with lock:
             print(" ".join(cmdline))
-    ret = subprocess.run(
+    ret = run_formatter(
         cmdline,
         cwd=root_dir,
         stdout=subprocess.PIPE,
@@ -102,11 +126,14 @@ def format_one_file_with_clang_format(x):
 
 # Black format one file
 def format_one_file_with_black(x):
-    cmdline = ["black", ("--check" if args.n else ""), x]
+    cmdline = [formatter_executable("black")]
+    if args.n:
+        cmdline.append("--check")
+    cmdline.append(x)
     if not args.q:
         with lock:
             print(" ".join(cmdline))
-    ret = subprocess.run(
+    ret = run_formatter(
         cmdline,
         cwd=root_dir,
         stdout=subprocess.PIPE,
@@ -139,4 +166,23 @@ def format_one_file(x):
 # for x in our_sources: format_one_file(x)
 with concurrent.futures.ThreadPoolExecutor() as executor:
     futures = {executor.submit(format_one_file, x): x for x in our_sources}
-    concurrent.futures.wait(futures)
+    failed_files = []
+    for future in concurrent.futures.as_completed(futures):
+        try:
+            future.result()
+        except Exception as exc:
+            file_name = futures[future]
+            failed_files.append(file_name)
+            details = []
+            if isinstance(exc, subprocess.CalledProcessError):
+                for output in (exc.stdout, exc.stderr):
+                    if output:
+                        details.append(output.decode("utf-8", errors="replace").strip())
+            message = f"Formatting failed for {file_name}: {exc}"
+            if details:
+                message += "\n" + "\n".join(details)
+            with lock:
+                print(message, file=sys.stderr)
+
+if failed_files:
+    sys.exit(1)

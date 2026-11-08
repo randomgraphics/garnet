@@ -22,13 +22,6 @@
 #include <string>
 #include <vector>
 
-#if GN_BUILD_HAS_MSW
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-    #include <windows.h>
-#endif
-
 using namespace GN;
 using namespace GN::fiz;
 using namespace GN::fx2;
@@ -790,9 +783,7 @@ int main(int argc, const char ** argv) {
                     squashPct, volErrPct, avgStepMs, avgFps, timeScale)
                     .data();
 
-#if GN_BUILD_HAS_MSW
-            ::SetWindowTextA((HWND) window->getWindowHandle(), title.c_str());
-#endif
+            window->setCaption(title.c_str());
 
             if (frameIdx % 60 == 0) { GN_INFO(sLogger, "{}", title); }
         }
