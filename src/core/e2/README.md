@@ -14,7 +14,7 @@ and checked refer to that earlier prototype revision; they do not establish a
 stable structure or API contract.
 
 Current follow-up implementation status (2026-11-02) is tracked in
-[`agent/workspace/e2-world-runtime/TASK.md`](../../../agent/workspace/e2-world-runtime/TASK.md).
+[`agent/completed/e2-world-runtime-2026-11-09-005436/TASK.md`](../../../agent/completed/e2-world-runtime-2026-11-09-005436/TASK.md).
 Spatial, data-only Presentation and GNfiz physics are now optional public E2
 extensions; the active sample uses them without placing their policies in the
 generic World core.
