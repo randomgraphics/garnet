@@ -13,12 +13,13 @@ import numpy as np
 
 def load_image(path: str) -> np.ndarray:
     """Load an HDR image (EXR, HDR, etc.) and return a float32 (H, W, 3) array."""
-    ext = path.lower().rsplit('.', 1)[-1]
-    if ext == 'exr':
+    ext = path.lower().rsplit(".", 1)[-1]
+    if ext == "exr":
         return _load_exr(path)
     # Fallback: imageio with explicit format
     import imageio
-    img = imageio.v3.imread(path, format_hint=f'.{ext}')
+
+    img = imageio.v3.imread(path, format_hint=f".{ext}")
     if img.dtype != np.float32:
         img = img.astype(np.float32)
     if img.ndim == 2:
@@ -30,17 +31,18 @@ def _load_exr(path: str) -> np.ndarray:
     """Load an OpenEXR file and return float32 (H, W, 3) RGB array."""
     import OpenEXR
     import Imath
+
     exr = OpenEXR.InputFile(path)
     header = exr.header()
-    dw = header['dataWindow']
+    dw = header["dataWindow"]
     w = dw.max.x - dw.min.x + 1
     h = dw.max.y - dw.min.y + 1
 
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
-    channels = header['channels']
+    channels = header["channels"]
     # Prefer RGB; fall back to whatever is present
-    if all(c in channels for c in ('R', 'G', 'B')):
-        r_raw, g_raw, b_raw = exr.channels(['R', 'G', 'B'], pt)
+    if all(c in channels for c in ("R", "G", "B")):
+        r_raw, g_raw, b_raw = exr.channels(["R", "G", "B"], pt)
     else:
         available = list(channels.keys())[:3]
         raw = [exr.channel(c, pt) for c in available]
@@ -86,10 +88,12 @@ def _sample_equirect(panorama: np.ndarray, dirs: np.ndarray) -> np.ndarray:
     c10 = panorama[py0, px1]
     c01 = panorama[py1, px0]
     c11 = panorama[py1, px1]
-    return (c00 * (1 - fx) * (1 - fy) +
-            c10 * fx       * (1 - fy) +
-            c01 * (1 - fx) * fy +
-            c11 * fx       * fy)
+    return (
+        c00 * (1 - fx) * (1 - fy)
+        + c10 * fx * (1 - fy)
+        + c01 * (1 - fx) * fy
+        + c11 * fx * fy
+    )
 
 
 def equirect_to_cubemap_faces(panorama: np.ndarray, face_size: int) -> list:
@@ -98,17 +102,17 @@ def equirect_to_cubemap_faces(panorama: np.ndarray, face_size: int) -> list:
     Coordinate convention: x=right, y=up, z=into-screen (left-handed view).
     """
     a = np.linspace(-1.0, 1.0, face_size, dtype=np.float32)
-    u, v = np.meshgrid(a, a)               # u: horizontal, v: vertical
+    u, v = np.meshgrid(a, a)  # u: horizontal, v: vertical
     ones = np.ones_like(u)
 
     # Each entry: (x, y, z) as functions of u and v
     face_dirs = [
-        np.stack([ ones,    -v,    -u], axis=-1),  # +X: looking right
-        np.stack([-ones,    -v,     u], axis=-1),  # -X: looking left
-        np.stack([    u,  ones,     v], axis=-1),  # +Y: looking up
-        np.stack([    u, -ones,    -v], axis=-1),  # -Y: looking down
-        np.stack([    u,    -v,  ones], axis=-1),  # +Z: looking forward
-        np.stack([   -u,    -v, -ones], axis=-1),  # -Z: looking backward
+        np.stack([ones, -v, -u], axis=-1),  # +X: looking right
+        np.stack([-ones, -v, u], axis=-1),  # -X: looking left
+        np.stack([u, ones, v], axis=-1),  # +Y: looking up
+        np.stack([u, -ones, -v], axis=-1),  # -Y: looking down
+        np.stack([u, -v, ones], axis=-1),  # +Z: looking forward
+        np.stack([-u, -v, -ones], axis=-1),  # -Z: looking backward
     ]
 
     faces = []
@@ -133,7 +137,7 @@ def _ensure_rgba(face: np.ndarray) -> np.ndarray:
     raise ValueError(f"Unexpected channel count: {c}")
 
 
-def write_dds_cubemap(faces: list, output_path: str, fmt: str = 'rgba16f') -> None:
+def write_dds_cubemap(faces: list, output_path: str, fmt: str = "rgba16f") -> None:
     """Write 6 cubemap faces to a DDS file with DX10 extended header.
 
     faces:  list of 6 arrays (H, W, C), any channel count; converted to RGBA.
@@ -148,28 +152,33 @@ def write_dds_cubemap(faces: list, output_path: str, fmt: str = 'rgba16f') -> No
     D3D11_RESOURCE_MISC_TEXTURECUBE = 4
 
     # DDS flags
-    DDSD_CAPS        = 0x000001
-    DDSD_HEIGHT      = 0x000002
-    DDSD_WIDTH       = 0x000004
-    DDSD_PITCH       = 0x000008
+    DDSD_CAPS = 0x000001
+    DDSD_HEIGHT = 0x000002
+    DDSD_WIDTH = 0x000004
+    DDSD_PITCH = 0x000008
     DDSD_PIXELFORMAT = 0x001000
-    DDSCAPS_COMPLEX  = 0x000008
-    DDSCAPS_TEXTURE  = 0x001000
-    DDSCAPS2_CUBEMAP           = 0x000200
+    DDSCAPS_COMPLEX = 0x000008
+    DDSCAPS_TEXTURE = 0x001000
+    DDSCAPS2_CUBEMAP = 0x000200
     DDSCAPS2_CUBEMAP_POSITIVEX = 0x000400
     DDSCAPS2_CUBEMAP_NEGATIVEX = 0x000800
     DDSCAPS2_CUBEMAP_POSITIVEY = 0x001000
     DDSCAPS2_CUBEMAP_NEGATIVEY = 0x002000
     DDSCAPS2_CUBEMAP_POSITIVEZ = 0x004000
     DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x008000
-    DDSCAPS2_CUBEMAP_ALLFACES  = (DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
-                                   DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
-                                   DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ)
+    DDSCAPS2_CUBEMAP_ALLFACES = (
+        DDSCAPS2_CUBEMAP_POSITIVEX
+        | DDSCAPS2_CUBEMAP_NEGATIVEX
+        | DDSCAPS2_CUBEMAP_POSITIVEY
+        | DDSCAPS2_CUBEMAP_NEGATIVEY
+        | DDSCAPS2_CUBEMAP_POSITIVEZ
+        | DDSCAPS2_CUBEMAP_NEGATIVEZ
+    )
     DDPF_FOURCC = 0x4
 
-    if fmt == 'rgba16f':
+    if fmt == "rgba16f":
         dxgi_format = DXGI_FORMAT_R16G16B16A16_FLOAT
-        bytes_per_pixel = 8   # 4 ch × 2 bytes
+        bytes_per_pixel = 8  # 4 ch × 2 bytes
         np_dtype = np.float16
     else:  # rgba32f
         dxgi_format = DXGI_FORMAT_R32G32B32A32_FLOAT
@@ -178,38 +187,38 @@ def write_dds_cubemap(faces: list, output_path: str, fmt: str = 'rgba16f') -> No
 
     pitch = face_size * bytes_per_pixel
 
-    with open(output_path, 'wb') as f:
+    with open(output_path, "wb") as f:
         # ---- Magic ----
-        f.write(b'DDS ')
+        f.write(b"DDS ")
 
         # ---- DDS_HEADER (124 bytes) ----
         hdr_flags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH
-        f.write(struct.pack('<I', 124))           # dwSize
-        f.write(struct.pack('<I', hdr_flags))     # dwFlags
-        f.write(struct.pack('<I', face_size))     # dwHeight
-        f.write(struct.pack('<I', face_size))     # dwWidth
-        f.write(struct.pack('<I', pitch))         # dwPitchOrLinearSize
-        f.write(struct.pack('<I', 0))             # dwDepth
-        f.write(struct.pack('<I', 1))             # dwMipMapCount
-        f.write(b'\x00' * 44)                    # dwReserved1[11]
+        f.write(struct.pack("<I", 124))  # dwSize
+        f.write(struct.pack("<I", hdr_flags))  # dwFlags
+        f.write(struct.pack("<I", face_size))  # dwHeight
+        f.write(struct.pack("<I", face_size))  # dwWidth
+        f.write(struct.pack("<I", pitch))  # dwPitchOrLinearSize
+        f.write(struct.pack("<I", 0))  # dwDepth
+        f.write(struct.pack("<I", 1))  # dwMipMapCount
+        f.write(b"\x00" * 44)  # dwReserved1[11]
 
         # DDS_PIXELFORMAT (32 bytes)
-        f.write(struct.pack('<I', 32))            # dwSize
-        f.write(struct.pack('<I', DDPF_FOURCC))   # dwFlags
-        f.write(b'DX10')                          # dwFourCC
-        f.write(b'\x00' * 20)                    # remaining pixelformat fields
+        f.write(struct.pack("<I", 32))  # dwSize
+        f.write(struct.pack("<I", DDPF_FOURCC))  # dwFlags
+        f.write(b"DX10")  # dwFourCC
+        f.write(b"\x00" * 20)  # remaining pixelformat fields
 
         # dwCaps / dwCaps2 / dwCaps3 / dwCaps4 / dwReserved2
-        f.write(struct.pack('<I', DDSCAPS_COMPLEX | DDSCAPS_TEXTURE))
-        f.write(struct.pack('<I', DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_ALLFACES))
-        f.write(b'\x00' * 12)
+        f.write(struct.pack("<I", DDSCAPS_COMPLEX | DDSCAPS_TEXTURE))
+        f.write(struct.pack("<I", DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_ALLFACES))
+        f.write(b"\x00" * 12)
 
         # ---- DDS_HEADER_DXT10 (20 bytes) ----
-        f.write(struct.pack('<I', dxgi_format))
-        f.write(struct.pack('<I', D3D10_RESOURCE_DIMENSION_TEXTURE2D))
-        f.write(struct.pack('<I', D3D11_RESOURCE_MISC_TEXTURECUBE))
-        f.write(struct.pack('<I', 1))             # arraySize
-        f.write(struct.pack('<I', 0))             # miscFlags2
+        f.write(struct.pack("<I", dxgi_format))
+        f.write(struct.pack("<I", D3D10_RESOURCE_DIMENSION_TEXTURE2D))
+        f.write(struct.pack("<I", D3D11_RESOURCE_MISC_TEXTURECUBE))
+        f.write(struct.pack("<I", 1))  # arraySize
+        f.write(struct.pack("<I", 0))  # miscFlags2
 
         # ---- Face data (6 faces, DDS order: +X -X +Y -Y +Z -Z) ----
         for face in faces:
@@ -217,24 +226,37 @@ def write_dds_cubemap(faces: list, output_path: str, fmt: str = 'rgba16f') -> No
             f.write(rgba.astype(np_dtype).tobytes())
 
     size_mb = (6 * face_size * face_size * bytes_per_pixel) / (1024 * 1024)
-    print(f"Saved: {output_path}  ({face_size}x{face_size} cubemap, {fmt}, {size_mb:.1f} MB)")
+    print(
+        f"Saved: {output_path}  ({face_size}x{face_size} cubemap, {fmt}, {size_mb:.1f} MB)"
+    )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description='Convert equirectangular HDR/EXR panorama to cubemap DDS')
-    parser.add_argument('input',  help='Input EXR/HDR file (equirectangular)')
-    parser.add_argument('output', help='Output DDS cubemap file')
-    parser.add_argument('--size', type=int, default=512,
-                        help='Cubemap face size in pixels (default: 512)')
-    parser.add_argument('--format', choices=['rgba16f', 'rgba32f'], default='rgba16f',
-                        help='Pixel format (default: rgba16f)')
+        description="Convert equirectangular HDR/EXR panorama to cubemap DDS"
+    )
+    parser.add_argument("input", help="Input EXR/HDR file (equirectangular)")
+    parser.add_argument("output", help="Output DDS cubemap file")
+    parser.add_argument(
+        "--size",
+        type=int,
+        default=512,
+        help="Cubemap face size in pixels (default: 512)",
+    )
+    parser.add_argument(
+        "--format",
+        choices=["rgba16f", "rgba32f"],
+        default="rgba16f",
+        help="Pixel format (default: rgba16f)",
+    )
     args = parser.parse_args()
 
     print(f"Loading: {args.input}")
     panorama = load_image(args.input)
-    print(f"  Size: {panorama.shape[1]}×{panorama.shape[0]}, channels: {panorama.shape[2]}, "
-          f"dtype: {panorama.dtype}")
+    print(
+        f"  Size: {panorama.shape[1]}×{panorama.shape[0]}, channels: {panorama.shape[2]}, "
+        f"dtype: {panorama.dtype}"
+    )
 
     print(f"Reprojecting to cubemap (face size: {args.size})...")
     faces = equirect_to_cubemap_faces(panorama, args.size)
@@ -243,5 +265,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

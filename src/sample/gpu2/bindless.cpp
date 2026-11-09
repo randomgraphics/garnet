@@ -922,9 +922,7 @@ int main(int argc, const char ** argv) {
                              activeDrawCount, heap->size(), avgRecordMs, avgFrameMs, avgFps, streamingEnabled ? "ON" : "OFF")
                     .data();
 
-#if GN_BUILD_HAS_MSW
-            ::SetWindowTextA(reinterpret_cast<HWND>(window->getWindowHandle()), title.c_str());
-#endif
+            window->setCaption(title.c_str());
 
             if (frameCounter % 60 == 0) { GN_INFO(sLogger, "{}", title); }
         }

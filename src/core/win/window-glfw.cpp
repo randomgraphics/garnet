@@ -229,6 +229,10 @@ void GN::win::WindowGlfw::setClientSize(size_t w, size_t h) {
     if (mWindow) glfwSetWindowSize(mWindow, (int) w, (int) h);
 }
 
+void GN::win::WindowGlfw::setCaption(const char * captionUTF8) {
+    if (mWindow) glfwSetWindowTitle(mWindow, captionUTF8);
+}
+
 bool GN::win::WindowGlfw::runUntilNoNewEvents(bool blockCallerWhenMinimized) {
     GN_GUARD_SLOW;
     if (!mWindow) return false;
