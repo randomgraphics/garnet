@@ -7,7 +7,7 @@
 
 namespace GN::fx2 {
 
-/// Immutable Lambertian material retaining its kernel, stable values, and heap allocations.
+/// Immutable Lambertian material retaining stable values and heap allocations.
 struct LambertianMaterial : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
@@ -31,7 +31,8 @@ struct LambertianMaterial : RCRT64 {
         glm::mat4 object2WorldTransform = glm::mat4(1);
     };
 
-    virtual bool record(const DrawParameters &) const = 0;
+    /// Create heap-backed material data independent of a rendering kernel.
+    GN_API static AutoRef<LambertianMaterial> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization, const Parameters & parameters);
 
 protected:
     using RCRT64::RCRT64;
@@ -41,8 +42,7 @@ protected:
 struct LambertianKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual LambertianMaterial::Parameters defaultMaterialParameters() const                                                              = 0;
-    virtual AutoRef<LambertianMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const LambertianMaterial::Parameters &) const = 0;
+    virtual bool record(const LambertianMaterial & material, const LambertianMaterial::DrawParameters & parameters) const = 0;
 
     GN_API static AutoRef<LambertianKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 

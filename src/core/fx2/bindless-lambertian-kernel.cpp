@@ -167,47 +167,32 @@ public:
     }
     uint32_t index() const { return mIndex; }
     bool     textured() const { return mNeedsUv; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
 };
 
 class LambertianMaterialImpl : public LambertianMaterial {
-    AutoRef<const LambertianKernel>      mKernel;
     const LambertianMaterial::Parameters mParameters;
-    const Shaders                        mShaders;
+    Fallbacks                            mDefaults;
     LambertianStorage                    mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(LambertianMaterial);
-    LambertianMaterialImpl(AutoRef<const LambertianKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap, const LambertianMaterial::Parameters & p)
-        : LambertianMaterial(TYPE_INFO(), "bindless.lambertian.material"), mKernel(std::move(kernel)), mParameters(p), mShaders(shaders),
-          mStorage(std::move(heap)) {}
-    bool initialize(const Fallbacks & defaults) {
+    LambertianMaterialImpl(AutoRef<Heap> heap, const LambertianMaterial::Parameters & p)
+        : LambertianMaterial(TYPE_INFO(), "bindless.lambertian.material"), mParameters(p), mStorage(std::move(heap)) {}
+    bool initialize(AutoRef<Heap> heap) {
+        if (!mDefaults.initialize(std::move(heap))) return false;
         return mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), glm::vec4(mParameters.diffuseMultiplier, 0, 0, 0), {}},
-                                   mParameters.colorMap, mParameters.normalMap, mParameters.sampler, defaults);
+                                   mParameters.colorMap, mParameters.normalMap, mParameters.sampler, mDefaults);
     }
-    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
-    bool record(const LambertianMaterial::DrawParameters & inputs) const override {
-        auto & raster = inputs.raster;
-        auto   state  = inputs.ssc;
-        if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, mStorage.textured())) GN_UNLIKELY {
-                GN_ERROR(logger, "LambertianMaterial: invalid uniform state, geometry, or transform");
-                return false;
-            }
-        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
-        ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
-        draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
-        draw.ps = mShaders.fragment;
-        if (inputs.states) draw.states = *inputs.states;
-        draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
-        raster.retainResource(std::move(state));
-        raster.retainResource(referenceTo(this));
-        raster.recordDraw(draw);
-        return true;
-    }
+    void upload(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); mStorage.upload(producer); }
+    uint32_t index() const { return mStorage.index(); }
+    bool textured() const { return mStorage.textured(); }
+    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
 };
 
 class LambertianImpl : public LambertianKernel {
-    Shaders   mShaders;
-    Fallbacks mDefaults;
+    Shaders      mShaders;
+    AutoRef<Heap> mHeap;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(LambertianKernel);
@@ -215,29 +200,30 @@ public:
     bool initialize(AutoRef<Heap> heap) {
         if (!heap || heap->bindingIndex() != 0) return false;
         auto gpu = heap->gpu();
-        return mShaders.initialize(gpu, kBindlessLambertianVertSpv, sizeof(kBindlessLambertianVertSpv), kBindlessLambertianFragSpv,
-                                   sizeof(kBindlessLambertianFragSpv), kBindlessLambertianTextureVertSpv, sizeof(kBindlessLambertianTextureVertSpv)) &&
-               mDefaults.initialize(std::move(heap));
+        if (!mShaders.initialize(gpu, kBindlessLambertianVertSpv, sizeof(kBindlessLambertianVertSpv), kBindlessLambertianFragSpv,
+                                 sizeof(kBindlessLambertianFragSpv), kBindlessLambertianTextureVertSpv, sizeof(kBindlessLambertianTextureVertSpv))) return false;
+        mHeap = std::move(heap);
+        return true;
     }
-    void                           uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
-    LambertianMaterial::Parameters defaultMaterialParameters() const override {
-        LambertianMaterial::Parameters p;
-        p.colorMap  = mDefaults.color;
-        p.normalMap = mDefaults.normal;
-        p.sampler   = mDefaults.sampler;
-        return p;
-    }
-    AutoRef<LambertianMaterial> createMaterial(::GN::gpu2::CnC & producer, const LambertianMaterial::Parameters & p) const override {
-        if (!validMap(p.colorMap) || !validMap(p.normalMap) || !std::isfinite(p.diffuseMultiplier) || p.diffuseMultiplier < 0) return {};
-        for (int i = 0; i < 4; ++i)
-            if (!std::isfinite(p.color[i])) return {};
-        for (int i = 0; i < 3; ++i)
-            if (!std::isfinite(p.emissive[i])) return {};
-        auto material = AutoRef<LambertianMaterialImpl>(new LambertianMaterialImpl(referenceTo(this), mShaders, mDefaults.heap(), p));
-        if (!material->initialize(mDefaults)) return {};
-        producer.retainResource(material);
-        material->upload(producer);
-        return material;
+    bool record(const LambertianMaterial & material, const LambertianMaterial::DrawParameters & inputs) const override {
+        auto * impl = RuntimeType::cast<LambertianMaterialImpl>(&material);
+        if (!impl || !impl->usesHeap(mHeap)) return false;
+        auto & raster = inputs.raster;
+        auto   state  = inputs.ssc;
+        if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, impl->textured())) GN_UNLIKELY {
+                GN_ERROR(logger, "LambertianKernel: invalid uniform state, geometry, or transform");
+                return false;
+            }
+        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(impl->index(), 0, 0, 0)};
+        ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
+        draw.vs = impl->textured() ? mShaders.texturedVertex : mShaders.vertex;
+        draw.ps = mShaders.fragment;
+        if (inputs.states) draw.states = *inputs.states;
+        draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
+        raster.retainResource(std::move(state));
+        raster.retainResource(referenceTo(&material));
+        raster.recordDraw(draw);
+        return true;
     }
 };
 
@@ -247,8 +233,20 @@ AutoRef<LambertianKernel> LambertianKernel::create(Heap & heap, ::GN::gpu2::CnC 
     auto impl = AutoRef<LambertianImpl>(new LambertianImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
-    impl->uploadDefaults(initialization);
     return impl;
+}
+
+AutoRef<LambertianMaterial> LambertianMaterial::create(Heap & heap, ::GN::gpu2::CnC & producer, const Parameters & p) {
+    if (heap.bindingIndex() != 0 || !validMap(p.colorMap) || !validMap(p.normalMap) || !std::isfinite(p.diffuseMultiplier) || p.diffuseMultiplier < 0) return {};
+    for (int i = 0; i < 4; ++i)
+        if (!std::isfinite(p.color[i])) return {};
+    for (int i = 0; i < 3; ++i)
+        if (!std::isfinite(p.emissive[i])) return {};
+    auto material = AutoRef<LambertianMaterialImpl>(new LambertianMaterialImpl(referenceTo(&heap), p));
+    if (!material->initialize(referenceTo(&heap))) return {};
+    producer.retainResource(material);
+    material->upload(producer);
+    return material;
 }
 
 } // namespace GN::fx2

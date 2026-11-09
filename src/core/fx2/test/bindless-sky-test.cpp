@@ -154,11 +154,11 @@ TEST_CASE("FX2 bindless PBR renders with sky material environment lighting", "[f
     auto skyMaterial = skyKernel->createMaterial(*initialization, skyKernel->defaultMaterialParameters());
     REQUIRE(skyMaterial);
 
-    auto pbrParams      = pbrKernel->defaultMaterialParameters();
+    auto pbrParams      = PbrMaterial::Parameters {};
     pbrParams.baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
     pbrParams.metallic  = 0.0f;
     pbrParams.roughness = 0.5f;
-    auto pbrMaterial    = pbrKernel->createMaterial(*initialization, pbrParams);
+    auto pbrMaterial    = PbrMaterial::create(*heap, *initialization, pbrParams);
     REQUIRE(pbrMaterial);
 
     // Quad covering center of screen: position, normal, texcoord
@@ -222,7 +222,7 @@ TEST_CASE("FX2 bindless PBR renders with sky material environment lighting", "[f
     geometry.indexCount = 6;
 
     PbrMaterial::DrawParameters drawParams {{*raster, state, geometry}, glm::mat4(1), skyMaterial};
-    REQUIRE(pbrMaterial->record(drawParams));
+    REQUIRE(pbrKernel->record(*pbrMaterial, drawParams));
 
     auto drawWork = raster->seal();
     REQUIRE(drawWork);

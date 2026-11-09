@@ -5,7 +5,7 @@
 
 namespace GN::fx2 {
 
-/// Immutable sky / environment material retaining its kernel, stable values, and heap allocations.
+/// Immutable sky / environment material retaining stable values and heap allocations.
 struct SkyMaterial : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
@@ -36,8 +36,8 @@ struct SkyMaterial : RCRT64 {
         const gpu2::RasterState *                    states = nullptr;
     };
 
-    /// Append a fullscreen skybox draw.
-    virtual bool record(const DrawParameters &) const = 0;
+    /// Create heap-backed environment data independent of a rendering kernel.
+    GN_API static AutoRef<SkyMaterial> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization, const Parameters & parameters);
 
 protected:
     using RCRT64::RCRT64;
@@ -47,8 +47,7 @@ protected:
 struct SkyKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual SkyMaterial::Parameters defaultMaterialParameters() const                                                       = 0;
-    virtual AutoRef<SkyMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const SkyMaterial::Parameters &) const = 0;
+    virtual bool record(const SkyMaterial & material, const SkyMaterial::DrawParameters & parameters) const = 0;
 
     GN_API static AutoRef<SkyKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 

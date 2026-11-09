@@ -25,7 +25,7 @@ struct RenderModel {
     DynaArray<Material> materials;
     DynaArray<Instance> instances;
 
-    bool prepare(AutoRef<gpu2::GpuContext> gpu, gpu2::CnC & geometryUploads, gpu2::CnC & materialUploads, AutoRef<fx2::PbrKernel> pbr,
+    bool prepare(AutoRef<gpu2::GpuContext> gpu, AutoRef<gpu2::DescriptorHeap> materialHeap, gpu2::CnC & geometryUploads, gpu2::CnC & materialUploads, AutoRef<fx2::PbrKernel> pbr,
                  AutoRef<fx2::LambertianKernel> lambertian, AutoRef<fx2::UnlitKernel> unlit, const ModelScene & scene, Shading shading,
                  const glm::mat4 & modelTransform);
 };

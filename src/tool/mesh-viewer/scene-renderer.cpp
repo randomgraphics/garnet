@@ -43,7 +43,7 @@ AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, CnC & uploads, const Model
 
 } // namespace
 
-bool RenderModel::prepare(AutoRef<GpuContext> gpu, CnC & geometryUploads, CnC & materialUploads, AutoRef<fx2::PbrKernel> pbrKernel,
+bool RenderModel::prepare(AutoRef<GpuContext> gpu, AutoRef<DescriptorHeap> materialHeap, CnC & geometryUploads, CnC & materialUploads, AutoRef<fx2::PbrKernel> pbrKernel,
                           AutoRef<fx2::LambertianKernel> lambertianKernel, AutoRef<fx2::UnlitKernel> unlitKernel, const ModelScene & scene, Shading choice,
                           const glm::mat4 & modelTransform) {
     DynaArray<ModelInstance> collected;
@@ -75,7 +75,7 @@ bool RenderModel::prepare(AutoRef<GpuContext> gpu, CnC & geometryUploads, CnC & 
 
         switch (material.shading) {
         case Shading::PBR: {
-            auto parameters          = pbrKernel->defaultMaterialParameters();
+            auto parameters          = fx2::PbrMaterial::Parameters {};
             parameters.baseColor     = source.baseColor;
             parameters.emissive      = source.emissive;
             parameters.metallic      = source.metallic;
@@ -86,26 +86,26 @@ bool RenderModel::prepare(AutoRef<GpuContext> gpu, CnC & geometryUploads, CnC & 
             parameters.emissiveMap   = emissive;
             parameters.occlusionMap  = occlusion;
             parameters.metalRoughMap = metalRough;
-            material.pbr             = pbrKernel->createMaterial(materialUploads, parameters);
+            material.pbr             = fx2::PbrMaterial::create(*materialHeap, materialUploads, parameters);
             if (!material.pbr) return false;
             break;
         }
         case Shading::LAMBERTIAN: {
-            auto parameters      = lambertianKernel->defaultMaterialParameters();
+            auto parameters      = fx2::LambertianMaterial::Parameters {};
             parameters.color     = source.baseColor;
             parameters.emissive  = source.emissive;
             parameters.colorMap  = baseColor;
             parameters.normalMap = normal;
-            material.lambertian  = lambertianKernel->createMaterial(materialUploads, parameters);
+            material.lambertian  = fx2::LambertianMaterial::create(*materialHeap, materialUploads, parameters);
             if (!material.lambertian) return false;
             break;
         }
         case Shading::UNLIT: {
-            auto parameters     = unlitKernel->defaultMaterialParameters();
+            auto parameters     = fx2::UnlitMaterial::Parameters {};
             parameters.color    = source.baseColor;
             parameters.emissive = source.emissive;
             parameters.colorMap = baseColor;
-            material.unlit      = unlitKernel->createMaterial(materialUploads, parameters);
+            material.unlit      = fx2::UnlitMaterial::create(*materialHeap, materialUploads, parameters);
             if (!material.unlit) return false;
             break;
         }
@@ -181,14 +181,14 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
         }
         return view;
     };
-    auto skyParameters          = sky->defaultMaterialParameters();
+    auto skyParameters          = fx2::SkyMaterial::Parameters {};
     skyParameters.skyboxMap     = env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/skybox.dds"}));
     skyParameters.irradianceMap = env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/irradiance.dds"}));
     skyParameters.prefilteredMap =
         env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/prefiltered.dds"}));
     skyParameters.brdfLut        = env(Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/brdf_lut.dds"}));
     skyParameters.luminanceScale = environmentLuminance;
-    skyMaterial                  = sky->createMaterial(*initialization, skyParameters);
+    skyMaterial                  = fx2::SkyMaterial::create(*heap, *initialization, skyParameters);
     if (!skyMaterial) return false;
 
     const auto  center       = (source.bounds.minimum + source.bounds.maximum) * 0.5f;
@@ -196,9 +196,9 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
     const float width        = std::max(glm::length(source.bounds.maximum - source.bounds.minimum) * 0.5f, 0.001f) * 0.004f;
     auto        boundsSource = ModelScene::createDebugVisualization(source.bounds, width, true, false);
     auto        axesSource   = ModelScene::createDebugVisualization(source.bounds, width, false, true);
-    if (!boundsSource || !axesSource || !model.prepare(gpu, *geometryUploads, *initialization, pbr, lambertian, unlit, source, shading, transform) ||
-        !bounds.prepare(gpu, *geometryUploads, *initialization, pbr, lambertian, unlit, *boundsSource, Shading::UNLIT, transform) ||
-        !axes.prepare(gpu, *geometryUploads, *initialization, pbr, lambertian, unlit, *axesSource, Shading::UNLIT, transform))
+    if (!boundsSource || !axesSource || !model.prepare(gpu, heap, *geometryUploads, *initialization, pbr, lambertian, unlit, source, shading, transform) ||
+        !bounds.prepare(gpu, heap, *geometryUploads, *initialization, pbr, lambertian, unlit, *boundsSource, Shading::UNLIT, transform) ||
+        !axes.prepare(gpu, heap, *geometryUploads, *initialization, pbr, lambertian, unlit, *axesSource, Shading::UNLIT, transform))
         return false;
 
     // One-shot initialization may block: nothing is presented until every material and
@@ -243,17 +243,17 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
         switch (material.shading) {
         case Shading::PBR: {
             fx2::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
-            if (!material.pbr->record(draw)) return false;
+            if (!pbr->record(*material.pbr, draw)) return false;
             break;
         }
         case Shading::LAMBERTIAN: {
             fx2::LambertianMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform};
-            if (!material.lambertian->record(draw)) return false;
+            if (!lambertian->record(*material.lambertian, draw)) return false;
             break;
         }
         case Shading::UNLIT: {
             fx2::UnlitMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform};
-            if (!material.unlit->record(draw)) return false;
+            if (!unlit->record(*material.unlit, draw)) return false;
             break;
         }
         case Shading::IMPORTED:
@@ -268,7 +268,7 @@ bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConst
     if (!recordModel(model, raster, state)) return false;
     if (showBounds && !recordModel(bounds, raster, state)) return false;
     if (showAxes && !recordModel(axes, raster, state)) return false;
-    return skyMaterial->record({raster, state});
+    return sky->record(*skyMaterial, {raster, state});
 }
 
 } // namespace GN::viewer

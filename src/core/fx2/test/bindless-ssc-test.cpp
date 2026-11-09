@@ -176,18 +176,18 @@ TEST_CASE("FX2 bindless PBR materials render expected pixels", "[fx2][bindless][
     auto pbr = PbrKernel::create(*heap, *initialization);
     REQUIRE(pbr);
 
-    auto dielectricParams      = pbr->defaultMaterialParameters();
+    auto dielectricParams      = PbrMaterial::Parameters {};
     dielectricParams.baseColor = {0.8f, 0.2f, 0.1f, 1};
     dielectricParams.metallic  = 0.0f;
     dielectricParams.roughness = 0.8f;
-    auto dielectricMaterial    = pbr->createMaterial(*initialization, dielectricParams);
+    auto dielectricMaterial    = PbrMaterial::create(*heap, *initialization, dielectricParams);
     REQUIRE(dielectricMaterial);
 
-    auto metallicParams      = pbr->defaultMaterialParameters();
+    auto metallicParams      = PbrMaterial::Parameters {};
     metallicParams.baseColor = {0.8f, 0.2f, 0.1f, 1};
     metallicParams.metallic  = 1.0f;
     metallicParams.roughness = 0.2f;
-    auto metallicMaterial    = pbr->createMaterial(*initialization, metallicParams);
+    auto metallicMaterial    = PbrMaterial::create(*heap, *initialization, metallicParams);
     REQUIRE(metallicMaterial);
 
     // CCW triangle: (-1, -1), (-1, 3), (3, -1) so gl_FrontFacing is true in Vulkan clip space.

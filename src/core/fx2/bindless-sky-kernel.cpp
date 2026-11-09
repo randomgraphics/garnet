@@ -198,28 +198,45 @@ public:
     }
 
     uint32_t index() const { return mIndex; }
+    bool usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
 };
 
 class SkyMaterialImpl final : public SkyMaterial {
-    AutoRef<const SkyKernel> mKernel;
-    Shaders                  mShaders;
+    Fallbacks                mDefaults;
     SkyStorage               mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(SkyMaterial);
 
-    SkyMaterialImpl(AutoRef<const SkyKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap)
-        : SkyMaterial(TYPE_INFO(), "bindless.sky.material"), mKernel(std::move(kernel)), mShaders(shaders), mStorage(std::move(heap)) {}
+    explicit SkyMaterialImpl(AutoRef<Heap> heap): SkyMaterial(TYPE_INFO(), "bindless.sky.material"), mStorage(std::move(heap)) {}
 
-    bool initialize(const Parameters & p, const Fallbacks & defaults) { return mStorage.initialize(p, defaults); }
-    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
+    bool initialize(const Parameters & p, AutoRef<Heap> heap) { return mDefaults.initialize(heap) && mStorage.initialize(p, mDefaults); }
+    void upload(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); mStorage.upload(producer); }
+    uint32_t index() const { return mStorage.index(); }
+    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+};
 
-    bool record(const SkyMaterial::DrawParameters & input) const override {
+class SkyImpl final : public SkyKernel {
+    Shaders      mShaders;
+    AutoRef<Heap> mHeap;
+
+public:
+    GN_REGISTER_RUNTIME_TYPE(SkyKernel);
+    SkyImpl(): SkyKernel(TYPE_INFO(), "bindless.sky") {}
+    bool initialize(AutoRef<Heap> heap) {
+        if (!heap || heap->bindingIndex() != 0 ||
+            !mShaders.initialize(heap->gpu(), kBindlessSkyVertSpv, sizeof(kBindlessSkyVertSpv), kBindlessSkyFragSpv, sizeof(kBindlessSkyFragSpv))) return false;
+        mHeap = std::move(heap);
+        return true;
+    }
+    bool record(const SkyMaterial & material, const SkyMaterial::DrawParameters & input) const override {
+        auto * impl = RuntimeType::cast<SkyMaterialImpl>(&material);
+        if (!impl || !impl->usesHeap(mHeap)) return false;
         if (!input.ssc || !validUniform(input.ssc->view())) {
-            GN_ERROR(logger, "SkyMaterial: invalid uniform state");
+            GN_ERROR(logger, "SkyKernel: invalid uniform state");
             return false;
         }
-        const SkyDrawConstants values {glm::uvec4(mStorage.index(), 0, 0, 0)};
+        const SkyDrawConstants values {glm::uvec4(impl->index(), 0, 0, 0)};
         gpu2::RasterGeometry   geometry;
         geometry.vertexCount = 3;
         ::GN::gpu2::Raster::DrawParameters draw {.geometry = geometry};
@@ -235,50 +252,9 @@ public:
         }
         draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
         input.raster.retainResource(input.ssc);
-        input.raster.retainResource(referenceTo(this));
+        input.raster.retainResource(referenceTo(&material));
         input.raster.recordDraw(draw);
         return true;
-    }
-
-    uint32_t index() const { return mStorage.index(); }
-};
-
-class SkyImpl final : public SkyKernel {
-    Shaders   mShaders;
-    Fallbacks mDefaults;
-
-public:
-    GN_REGISTER_RUNTIME_TYPE(SkyKernel);
-
-    SkyImpl(): SkyKernel(TYPE_INFO(), "bindless.sky") {}
-
-    bool initialize(AutoRef<Heap> heap) {
-        if (!heap || heap->bindingIndex() != 0) return false;
-        return mShaders.initialize(heap->gpu(), kBindlessSkyVertSpv, sizeof(kBindlessSkyVertSpv), kBindlessSkyFragSpv, sizeof(kBindlessSkyFragSpv)) &&
-               mDefaults.initialize(std::move(heap));
-    }
-
-    void uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
-
-    SkyMaterial::Parameters defaultMaterialParameters() const override {
-        SkyMaterial::Parameters p;
-        p.sampler        = mDefaults.sampler;
-        p.lutSampler     = mDefaults.lutSampler;
-        p.luminanceScale = 1.0f;
-        p.ambientFloor   = 0.0f;
-        return p;
-    }
-
-    AutoRef<SkyMaterial> createMaterial(::GN::gpu2::CnC & producer, const SkyMaterial::Parameters & p) const override {
-        bool valid = std::isfinite(p.luminanceScale) && p.luminanceScale >= 0.0f && std::isfinite(p.ambientFloor) && p.ambientFloor >= 0.0f &&
-                     validCubeMap(p.skyboxMap) && validCubeMap(p.irradianceMap) && validCubeMap(p.prefilteredMap) && valid2DMap(p.brdfLut);
-        if (!valid) return {};
-
-        auto material = AutoRef<SkyMaterialImpl>(new SkyMaterialImpl(referenceTo(this), mShaders, mDefaults.heap()));
-        if (!material->initialize(p, mDefaults)) return {};
-        producer.retainResource(material);
-        material->upload(producer);
-        return material;
     }
 };
 
@@ -294,8 +270,19 @@ AutoRef<SkyKernel> SkyKernel::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gp
     auto impl = AutoRef<SkyImpl>(new SkyImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
-    impl->uploadDefaults(initialization);
     return impl;
+}
+
+AutoRef<SkyMaterial> SkyMaterial::create(Heap & heap, ::GN::gpu2::CnC & producer, const Parameters & p) {
+    bool valid = heap.bindingIndex() == 0 && std::isfinite(p.luminanceScale) && p.luminanceScale >= 0.0f && std::isfinite(p.ambientFloor) &&
+                 p.ambientFloor >= 0.0f && validCubeMap(p.skyboxMap) && validCubeMap(p.irradianceMap) && validCubeMap(p.prefilteredMap) &&
+                 valid2DMap(p.brdfLut);
+    if (!valid) return {};
+    auto material = AutoRef<SkyMaterialImpl>(new SkyMaterialImpl(referenceTo(&heap)));
+    if (!material->initialize(p, referenceTo(&heap))) return {};
+    producer.retainResource(material);
+    material->upload(producer);
+    return material;
 }
 
 } // namespace GN::fx2

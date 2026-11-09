@@ -15,7 +15,7 @@ struct CommonDrawParameters {
     const gpu2::RasterState *                    states = nullptr;
 };
 
-/// Immutable unlit material retaining its kernel, stable values, and heap allocations.
+/// Immutable unlit material retaining stable values and heap allocations.
 struct UnlitMaterial : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
@@ -36,20 +36,18 @@ struct UnlitMaterial : RCRT64 {
         glm::mat4 object2WorldTransform = glm::mat4(1);
     };
 
-    /// Append a draw and retain this material and uniform state until payload cleanup.
-    virtual bool record(const DrawParameters &) const = 0;
+    /// Create heap-backed material data independent of a rendering kernel.
+    GN_API static AutoRef<UnlitMaterial> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization, const Parameters & parameters);
 
 protected:
     using RCRT64::RCRT64;
 };
 
-/// Unlit raster kernel. It owns its heap reference, shared shaders, and fallback resources.
-/// Materials created by this kernel use the same heap and retain the kernel.
+/// Unlit raster kernel that records draws using heap-compatible materials.
 struct UnlitKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual UnlitMaterial::Parameters defaultMaterialParameters() const                                                         = 0;
-    virtual AutoRef<UnlitMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const UnlitMaterial::Parameters &) const = 0;
+    virtual bool record(const UnlitMaterial & material, const UnlitMaterial::DrawParameters & parameters) const = 0;
 
     GN_API static AutoRef<UnlitKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 

@@ -87,12 +87,12 @@ int main(int argc, const char * argv[]) {
     gpu::CnC::Region region;
     region.imageExtent = {4, 4, 1};
     upload->recordUploadImage(checker, {pixels, sizeof(pixels)}, {&region, 1});
-    auto materialParameters     = unlit->defaultMaterialParameters();
+    auto materialParameters     = fx::UnlitMaterial::Parameters {};
     materialParameters.colorMap = GpuResourceView {checker}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     materialParameters.sampler  = nearest;
-    auto leftMaterial           = unlit->createMaterial(*upload, materialParameters);
+    auto leftMaterial           = fx::UnlitMaterial::create(*heap, *upload, materialParameters);
     materialParameters.color    = {0.1f, 0.7f, 1, 1};
-    auto rightMaterial          = unlit->createMaterial(*upload, materialParameters);
+    auto rightMaterial          = fx::UnlitMaterial::create(*heap, *upload, materialParameters);
     if (!leftMaterial || !rightMaterial) return 1;
     auto initialization = upload->seal();
     if (!initialization) return 1;
@@ -130,8 +130,8 @@ int main(int argc, const char * argv[]) {
         if (!raster) return 1;
         const fx::UnlitMaterial::DrawParameters leftDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(-0.7f, 0, 0))};
         const fx::UnlitMaterial::DrawParameters rightDraw {{*raster, state, geometry}, glm::translate(glm::mat4(1), glm::vec3(0.7f, 0, 0))};
-        if (!leftMaterial->record(leftDraw)) return 1;
-        if (!rightMaterial->record(rightDraw)) return 1;
+        if (!unlit->record(*leftMaterial, leftDraw)) return 1;
+        if (!unlit->record(*rightMaterial, rightDraw)) return 1;
         auto draws = raster->seal();
         if (!draws) return 1;
         GpuContext::SubmitParameters submission("unlit.frame");

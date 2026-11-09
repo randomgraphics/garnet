@@ -153,45 +153,32 @@ public:
     }
     uint32_t index() const { return mIndex; }
     bool     textured() const { return mNeedsUv; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
 };
 
 class UnlitMaterialImpl : public UnlitMaterial {
-    AutoRef<const UnlitKernel>      mKernel;
     const UnlitMaterial::Parameters mParameters;
-    const Shaders                   mShaders;
+    Fallbacks                       mDefaults;
     UnlitStorage                    mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(UnlitMaterial);
-    UnlitMaterialImpl(AutoRef<const UnlitKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap, const UnlitMaterial::Parameters & p)
-        : UnlitMaterial(TYPE_INFO(), "bindless.unlit.material"), mKernel(std::move(kernel)), mParameters(p), mShaders(shaders), mStorage(std::move(heap)) {}
-    bool initialize(const Fallbacks & defaults) {
-        return mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), {}, {}}, mParameters.colorMap, mParameters.sampler, defaults);
+    explicit UnlitMaterialImpl(AutoRef<Heap> heap, const UnlitMaterial::Parameters & p)
+        : UnlitMaterial(TYPE_INFO(), "bindless.unlit.material"), mParameters(p), mStorage(std::move(heap)) {}
+    bool initialize(AutoRef<Heap> heap) {
+        return mDefaults.initialize(std::move(heap)) &&
+               mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), {}, {}}, mParameters.colorMap, mParameters.sampler, mDefaults);
     }
-    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
-    bool record(const UnlitMaterial::DrawParameters & inputs) const override {
-        auto & raster = inputs.raster;
-        auto   state  = inputs.ssc;
-        if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, mStorage.textured())) GN_UNLIKELY {
-                GN_ERROR(logger, "UnlitMaterial: invalid uniform state, geometry, or transform");
-                return false;
-            }
-        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
-        ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
-        draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
-        draw.ps = mShaders.fragment;
-        if (inputs.states) draw.states = *inputs.states;
-        draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
-        raster.retainResource(std::move(state));
-        raster.retainResource(referenceTo(this));
-        raster.recordDraw(draw);
-        return true;
-    }
+    void upload(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); mStorage.upload(producer); }
+    uint32_t index() const { return mStorage.index(); }
+    bool textured() const { return mStorage.textured(); }
+    const Parameters & parameters() const { return mParameters; }
+    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
 };
 
 class UnlitImpl : public UnlitKernel {
-    Shaders   mShaders;
-    Fallbacks mDefaults;
+    Shaders      mShaders;
+    AutoRef<Heap> mHeap;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(UnlitKernel);
@@ -199,28 +186,30 @@ public:
     bool initialize(AutoRef<Heap> heap) {
         if (!heap || heap->bindingIndex() != 0) return false;
         auto gpu = heap->gpu();
-        return mShaders.initialize(gpu, kBindlessUnlitVertSpv, sizeof(kBindlessUnlitVertSpv), kBindlessUnlitFragSpv, sizeof(kBindlessUnlitFragSpv),
-                                   kBindlessUnlitTextureVertSpv, sizeof(kBindlessUnlitTextureVertSpv)) &&
-               mDefaults.initialize(std::move(heap));
+        if (!mShaders.initialize(gpu, kBindlessUnlitVertSpv, sizeof(kBindlessUnlitVertSpv), kBindlessUnlitFragSpv, sizeof(kBindlessUnlitFragSpv),
+                                 kBindlessUnlitTextureVertSpv, sizeof(kBindlessUnlitTextureVertSpv))) return false;
+        mHeap = std::move(heap);
+        return true;
     }
-    void                      uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
-    UnlitMaterial::Parameters defaultMaterialParameters() const override {
-        UnlitMaterial::Parameters p;
-        p.colorMap = mDefaults.color;
-        p.sampler  = mDefaults.sampler;
-        return p;
-    }
-    AutoRef<UnlitMaterial> createMaterial(::GN::gpu2::CnC & producer, const UnlitMaterial::Parameters & p) const override {
-        if (!validMap(p.colorMap)) return {};
-        for (int i = 0; i < 4; ++i)
-            if (!std::isfinite(p.color[i])) return {};
-        for (int i = 0; i < 3; ++i)
-            if (!std::isfinite(p.emissive[i])) return {};
-        auto material = AutoRef<UnlitMaterialImpl>(new UnlitMaterialImpl(referenceTo(this), mShaders, mDefaults.heap(), p));
-        if (!material->initialize(mDefaults)) return {};
-        producer.retainResource(material);
-        material->upload(producer);
-        return material;
+    bool record(const UnlitMaterial & material, const UnlitMaterial::DrawParameters & inputs) const override {
+        auto * impl = RuntimeType::cast<UnlitMaterialImpl>(&material);
+        if (!impl || !impl->usesHeap(mHeap)) return false;
+        auto & raster = inputs.raster;
+        auto   state  = inputs.ssc;
+        if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, impl->textured())) GN_UNLIKELY {
+                GN_ERROR(logger, "UnlitKernel: invalid uniform state, geometry, or transform");
+                return false;
+            }
+        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(impl->index(), 0, 0, 0)};
+        ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
+        draw.vs = impl->textured() ? mShaders.texturedVertex : mShaders.vertex;
+        draw.ps = mShaders.fragment;
+        if (inputs.states) draw.states = *inputs.states;
+        draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
+        raster.retainResource(std::move(state));
+        raster.retainResource(referenceTo(&material));
+        raster.recordDraw(draw);
+        return true;
     }
 };
 
@@ -230,8 +219,20 @@ AutoRef<UnlitKernel> UnlitKernel::create(Heap & heap, ::GN::gpu2::CnC & initiali
     auto impl = AutoRef<UnlitImpl>(new UnlitImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
-    impl->uploadDefaults(initialization);
     return impl;
+}
+
+AutoRef<UnlitMaterial> UnlitMaterial::create(Heap & heap, ::GN::gpu2::CnC & initialization, const Parameters & p) {
+    if (heap.bindingIndex() != 0 || !validMap(p.colorMap)) return {};
+    for (int i = 0; i < 4; ++i)
+        if (!std::isfinite(p.color[i])) return {};
+    for (int i = 0; i < 3; ++i)
+        if (!std::isfinite(p.emissive[i])) return {};
+    auto material = AutoRef<UnlitMaterialImpl>(new UnlitMaterialImpl(referenceTo(&heap), p));
+    if (!material->initialize(referenceTo(&heap))) return {};
+    initialization.retainResource(material);
+    material->upload(initialization);
+    return material;
 }
 
 } // namespace GN::fx2
