@@ -25,7 +25,7 @@ Separate FX2 material creation and data lifetime from rendering kernels. Materia
 ## Verify and commit
 
 - Verify: `git diff --check` passed. Build/tests were not run at the user's direction; this is a partial handoff and may need API call-site migration before compiling.
-- Commit: pending commit and push on `wip/ray-tracing`.
+- Commit: `3c203ba65` (`Decouple FX2 materials from kernels`), pushed to `origin/wip/ray-tracing`.
 
 ## Next actions
 
