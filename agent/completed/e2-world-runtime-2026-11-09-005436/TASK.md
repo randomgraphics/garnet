@@ -3,9 +3,9 @@
 ## Overview
 
 - Branch: `wip/e2/world-runtime` in `garnet/1`.
-- Status: implementation and local runtime/replay verification complete; the supported cross-platform matrix remains unverified.
+- Status: complete; user signed off for archival on 2026-11-09 UTC.
 - Completed: recovered and reorganized the legacy assignment, audited current E2/physics/rendering boundaries, recorded user principles R0–R7.
-- Current step: record final API/runtime review, evidence and remaining portability boundary.
+- Final step: implementation and local runtime/replay verification complete; archived on user sign-off.
 - Completed in this continuation: extracted public Spatial and data-driven Presentation; added optional GNfiz PhysicsFacet/Law; integrated GNfiz into the active sample; added uniform fast-path hull reuse, exact transformed box/convex/static-mesh baking, child affine output, sorted contact snapshots and World CollisionEvents, plus explicit unsupported-shape diagnostics.
 - Remaining: run other operating systems/architectures/compilers to validate portable bitwise replay; static mesh/terrain fidelity remains dependent on caller-provided Hull data and acceptance tolerance.
 - Latest verification: out-of-sandbox Debug build and headless Vulkan runs passed. Standard scenario Prime/event fingerprints `cd7bc7b6f6deef69` / `91ab6e4a218e90ba` matched two one-worker runs and one four-worker run. Affine/shear probe fingerprints `131d521e2f159359` / `a608b32402ec7aaa` matched one-worker and four-worker runs; it also checked persistent contact and angular orientation output. `git diff --check` passed.
@@ -325,4 +325,4 @@ Affine probe: non-uniformly scaled parent, rotated child, dynamic angular motion
 ---
 ## Archive state
 
-Active. Do not archive until explicit user sign-off or archive request under the host policy.
+Archived on 2026-11-09 UTC following explicit user sign-off. Cross-operating-system replay remains an unverified portability boundary, not an implementation blocker for this task.

@@ -27,14 +27,14 @@ REFERENCE
     main_window.py   MainWindow + EXR loader
   Requirements:      env/requirements.txt
   Test assets:
-    media/env/bad-salzbrunn-walking-hall/skybox-cube.dds   1024² cubemap RGBA16F
+    media/env/bad-salzbrunn-walking-hall/skybox.dds   1024² cubemap RGBA16F
     media/env/bad-salzbrunn-walking-hall/160_hdrmaps_com_free_4K.exr  4K EXR
 
 BUILD / RUN
   Run (Linux):   env/bin/tv [file]
   Run (Windows): env\bin\tv.cmd [file]
   Direct:        python3 src/tool/texture-viewer/tex-viewer.py [file]
-  Test:          env/bin/tv media/env/bad-salzbrunn-walking-hall/skybox-cube.dds
+  Test:          env/bin/tv media/env/bad-salzbrunn-walking-hall/skybox.dds
 
 WORKFLOW
   - One task per commit; message = "tex-viewer <Phase.Task>: <short description>"
@@ -237,7 +237,7 @@ Phase 4: UX Polish
 Task 4.1: Update window title on file open
   Set self.setWindowTitle(f'{basename} — Texture Viewer') after open.
   VERIFY:
-    Open skybox-cube.dds → title bar shows "skybox-cube.dds — Texture Viewer".
+    Open skybox.dds → title bar shows "skybox.dds — Texture Viewer".
   COMMIT: "tex-viewer 4.1: window title shows current filename"
 
 Task 4.2: Drag-and-drop file open

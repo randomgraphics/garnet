@@ -1,4 +1,4 @@
-# ASEH: Autonomous Software Engineering Harness
+﻿# ASEH: Autonomous Software Engineering Harness
 
 ## Purpose
 
@@ -112,6 +112,45 @@ their results. A child may propose new subtasks or changes to its scope, but
 cross-module contract changes and global requirement changes return to the
 parent coordinator for evaluation. This lets agents specialize without losing
 system-level consistency.
+
+### Recursive task intake and workflow selection
+
+Every agent applies this intake process to every assignment it receives,
+including worker assignments and tasks delegated by another agent. The process
+is recursive: an agent that becomes a control agent for delegated work repeats
+the same analysis for its own scope, while retaining responsibility for that
+scope's outcome and integration.
+
+1. **Define observable completion.** Determine whether the requested outcome
+   has clear, consistent conditions for success and failure, and what evidence
+   will establish them. Refine the criteria or ask the assigner when the
+   outcome cannot yet be evaluated reliably.
+2. **Choose the execution shape.** Decide whether the assignment is within the
+   agent's effective context and can be completed directly. If delegation is
+   useful, split the work into simple, focused, independently completable
+   assignments that one worker can own. Keep coordination at the current
+   control-agent level by default. Add another control-agent layer only when
+   the problem's complexity or number and dependencies of assignments would
+   make the work inefficient to manage at the current level. Delegation should
+   reduce execution or context burden enough to justify its coordination cost.
+3. **Resolve blocking unknowns.** Identify missing information that materially
+   affects the outcome, constraints, or acceptance criteria. Ask the assigner
+   for what is needed before dependent work proceeds. Continue independent
+   investigation or work where possible, and record assumptions that are safe
+   to make provisionally.
+4. **Select and revisit the workflow.** Use a sequential, upfront plan for
+   simple, straightforward work with stable requirements and known
+   implementation. When uncertainty requires exploration, use short iterative
+   cycles: investigate or implement a bounded increment, evaluate its evidence,
+   refine requirements or the task graph, and continue. Reassess the workflow
+   when new evidence materially changes the uncertainty or scope.
+
+This rule applies at every level of the assignment tree. The top-level
+coordinator remains accountable for global acceptance; each nested control
+agent is accountable for its own scope and handoffs. A task does not require
+another hierarchy level merely because it has multiple assignments: create
+focused worker assignments directly under the current coordinator whenever
+that coordinator can manage them efficiently.
 
 Do not send the entire task history to every invocation. Assemble context in
 layers: stable harness rules; project knowledge relevant to the node; the
@@ -522,3 +561,15 @@ Success means the latest agreed outcomes meet their acceptance criteria with
 reproducible evidence, remaining limitations disclosed, and task state
 recoverable by another session. Passing one phase is not the same as completing
 the overall goal.
+
+## Top-level management-agent focus
+
+When a task uses a top-level management agent, keep that agent's assignment and invocation context concise and focused on controlling overall progress. It owns the shared goal and graph, creates and dispatches bounded worker assignments, tracks dependencies and evidence, reconciles handoffs, and selects the next investigation, implementation, review, or verification step. It is not a catch-all technical worker and should not duplicate worker procedures in its own context. Each worker receives the shared contract plus only its own concise assignment, relevant role playbook, and linked evidence; workers return concrete outputs and next-step recommendations to the manager. The manager executes technical work only when explicitly assigned that bounded node. This separation preserves a clear global view while keeping each worker focused on one outcome.
+
+## Kickoff review and human-clarification scan
+
+Before starting task work or dispatching workers, the coordinator reviews the existing task charter and assignments, relevant repository guidance and skills, current repository/worktree state, and linked source/evidence needed to understand the goal. It records what is already known, avoids repeating completed work, and identifies unresolved choices that may require human direction later. Clarification is requested when a decision becomes necessary and materially affects scope, user outcome, risk, or acceptance; independent work continues meanwhile. Do not invent a clarification need when a reversible, evidence-backed default is available, and do not treat elapsed time or silence as approval.
+
+## Progress monitoring and stalled work
+
+The coordinator actively monitors long-running assignments against expected duration and reported progress; it must not wait indefinitely without checking. When dispatching work, record the expected first checkpoint or completion window where practical, and query status when that checkpoint is due. If a task runs substantially longer than expected without meaningful progress, promptly ask the worker for status and inspect available process, logs, and evidence instead of passively waiting. Give the worker a reasonable bounded opportunity to report or produce a checkpoint, then use judgment to continue, narrow or optimize the task, interrupt and restart it, or replan with a different approach. A high-CPU or otherwise active process is evidence of activity, not proof its approach is productive; weigh elapsed time, completed milestones, evidence quality, and expected remaining work. Before stopping or restarting, preserve useful partial results and record the reason, disposition, and next action in the assignment. When the user pauses work, stop active workers and child processes promptly, then leave the graph in a resumable state.
