@@ -1,4 +1,4 @@
-# ASEH: Autonomous Software Engineering Harness
+﻿# ASEH: Autonomous Software Engineering Harness
 
 ## Purpose
 
@@ -569,3 +569,7 @@ When a task uses a top-level management agent, keep that agent's assignment and 
 ## Kickoff review and human-clarification scan
 
 Before starting task work or dispatching workers, the coordinator reviews the existing task charter and assignments, relevant repository guidance and skills, current repository/worktree state, and linked source/evidence needed to understand the goal. It records what is already known, avoids repeating completed work, and identifies unresolved choices that may require human direction later. Clarification is requested when a decision becomes necessary and materially affects scope, user outcome, risk, or acceptance; independent work continues meanwhile. Do not invent a clarification need when a reversible, evidence-backed default is available, and do not treat elapsed time or silence as approval.
+
+## Progress monitoring and stalled work
+
+The coordinator actively monitors long-running assignments against expected duration and reported progress; it must not wait indefinitely without checking. When dispatching work, record the expected first checkpoint or completion window where practical, and query status when that checkpoint is due. If a task runs substantially longer than expected without meaningful progress, promptly ask the worker for status and inspect available process, logs, and evidence instead of passively waiting. Give the worker a reasonable bounded opportunity to report or produce a checkpoint, then use judgment to continue, narrow or optimize the task, interrupt and restart it, or replan with a different approach. A high-CPU or otherwise active process is evidence of activity, not proof its approach is productive; weigh elapsed time, completed milestones, evidence quality, and expected remaining work. Before stopping or restarting, preserve useful partial results and record the reason, disposition, and next action in the assignment. When the user pauses work, stop active workers and child processes promptly, then leave the graph in a resumable state.

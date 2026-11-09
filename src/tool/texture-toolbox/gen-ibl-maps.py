@@ -1,17 +1,18 @@
-#!/usr/bin/env python3
-"""Generate IBL maps from an equirectangular HDR/EXR panorama.
+﻿#!/usr/bin/env python3
+"""Generate DDS image-based lighting textures from an HDR/EXR panorama.
 
-Outputs (into --out-dir, defaulting to the source file's directory):
-    skybox.dds          — 512px rgba16f cubemap (raw environment, same as input)
-    irradiance.dds      — 32px rgba16f cubemap (Lambertian diffuse IBL, preconvolved)
-    prefiltered.dds     — 128px rgba16f cubemap DDS with mip chain (roughness-based specular IBL)
-    brdf_lut.png        — 256x256 RG16F (or RG32F) split-sum BRDF LUT
+Outputs, written beside the source image unless ``--out-dir`` is provided:
+    skybox.dds      512-face RGBA16F cubemap with a 10-level mip chain
+    irradiance.dds  32-face RGBA16F Lambertian cubemap with a 6-level mip chain
+    prefiltered.dds 128-face RGBA16F GGX cubemap with five roughness mips
+    brdf_lut.dds    256x256 RG16F split-sum BRDF lookup texture
 
 Usage:
-    gen-ibl-maps.py panorama.exr [--out-dir DIR] [--skybox-size N] [--irr-size N]
-                    [--prefilter-size N] [--lut-size N] [--prefilter-samples N]
+    gen-ibl-maps.py panorama.exr [--out-dir DIR] [--skybox-size N]
+                    [--irr-size N] [--prefilter-size N] [--lut-size N]
+                    [--prefilter-samples N]
 
-All output files are DDS (cubemap) or PNG (2D LUT) loadable by Texture::load in garnet.
+All outputs are DDS textures loadable by ``Texture::load`` in Garnet.
 """
 
 import argparse
@@ -38,6 +39,7 @@ def _hammersley_samples(num_samples: int) -> tuple[np.ndarray, np.ndarray]:
     xi1 = indices.astype(np.float32) / num_samples
     xi2 = bits.astype(np.float64) * (1.0 / 4294967296.0)
     return xi1, xi2.astype(np.float32)
+
 
 # ---------------------------------------------------------------------------
 # EXR / image loading
@@ -171,7 +173,7 @@ def _sample_equirect_mips(
 
 def _face_dirs(face_size: int) -> list:
     """Return 6 (face_size, face_size, 3) direction arrays in DDS face order (+X -X +Y -Y +Z -Z)."""
-    a = np.linspace(-1.0, 1.0, face_size, dtype=np.float32)
+    a = -1.0 + 2.0 * (np.arange(face_size, dtype=np.float32) + 0.5) / face_size
     u, v = np.meshgrid(a, a)
     ones = np.ones_like(u)
     return [
@@ -191,6 +193,177 @@ def equirect_to_faces(panorama: np.ndarray, face_size: int) -> list:
         r = np.linalg.norm(dirs, axis=-1, keepdims=True)
         faces.append(_sample_equirect(panorama, dirs / r))
     return faces
+
+
+def _build_cubemap_mips(base_faces: list[np.ndarray]) -> list[np.ndarray]:
+    """Build a face-local 2x2 box-filter mip chain from projected cube faces."""
+    if len(base_faces) != 6:
+        raise ValueError("Cubemap mip generation requires exactly six faces")
+    if any(face.ndim != 3 or face.shape[2] != 3 for face in base_faces):
+        raise ValueError("Cubemap faces must be HxWx3 RGB arrays")
+    base_shape = base_faces[0].shape
+    if any(face.shape != base_shape for face in base_faces):
+        raise ValueError("Cubemap faces must have identical shapes")
+    height, width, _ = base_shape
+    if height <= 0 or width <= 0 or height != width:
+        raise ValueError("Cubemap faces must be non-empty square arrays")
+    if width & (width - 1):
+        raise ValueError("Cubemap face dimensions must be a power of two")
+    mips = [np.stack(base_faces, axis=0)]
+    while mips[-1][0].shape[0] > 1:
+        previous = mips[-1]
+        downsampled = (
+            previous[:, 0::2, 0::2]
+            + previous[:, 0::2, 1::2]
+            + previous[:, 1::2, 0::2]
+            + previous[:, 1::2, 1::2]
+        ) * 0.25
+        mips.append(downsampled)
+    return mips
+
+
+def _cube_direction_to_face_uv(
+    dirs: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Map directions to the face/UV layout returned by _face_dirs()."""
+    x, y, z = dirs[:, 0], dirs[:, 1], dirs[:, 2]
+    absolute = np.abs(dirs)
+    major_axis = np.argmax(absolute, axis=1)
+    face = np.empty(dirs.shape[0], dtype=np.int32)
+    u = np.empty(dirs.shape[0], dtype=np.float32)
+    v = np.empty(dirs.shape[0], dtype=np.float32)
+
+    mask = major_axis == 0
+    positive = x[mask] >= 0.0
+    major = absolute[mask, 0]
+    face[mask] = np.where(positive, 0, 1)
+    u[mask] = np.where(positive, -z[mask], z[mask]) / major
+    v[mask] = -y[mask] / major
+
+    mask = major_axis == 1
+    positive = y[mask] >= 0.0
+    major = absolute[mask, 1]
+    face[mask] = np.where(positive, 2, 3)
+    u[mask] = x[mask] / major
+    v[mask] = np.where(positive, z[mask], -z[mask]) / major
+
+    mask = major_axis == 2
+    positive = z[mask] >= 0.0
+    major = absolute[mask, 2]
+    face[mask] = np.where(positive, 4, 5)
+    u[mask] = np.where(positive, x[mask], -x[mask]) / major
+    v[mask] = -y[mask] / major
+    return face, (u + 1.0) * 0.5, (v + 1.0) * 0.5
+
+
+def _cube_face_uv_to_directions(
+    face: np.ndarray, u: np.ndarray, v: np.ndarray
+) -> np.ndarray:
+    """Invert _cube_direction_to_face_uv() for face-local coordinates."""
+    dirs = np.empty((face.shape[0], 3), dtype=np.float32)
+    for index in range(6):
+        mask = face == index
+        if not np.any(mask):
+            continue
+        face_u = u[mask] * 2.0 - 1.0
+        face_v = v[mask] * 2.0 - 1.0
+        ones = np.ones_like(face_u)
+        if index == 0:
+            dirs[mask] = np.stack([ones, -face_v, -face_u], axis=-1)
+        elif index == 1:
+            dirs[mask] = np.stack([-ones, -face_v, face_u], axis=-1)
+        elif index == 2:
+            dirs[mask] = np.stack([face_u, ones, face_v], axis=-1)
+        elif index == 3:
+            dirs[mask] = np.stack([face_u, -ones, -face_v], axis=-1)
+        elif index == 4:
+            dirs[mask] = np.stack([face_u, -face_v, ones], axis=-1)
+        else:
+            dirs[mask] = np.stack([-face_u, -face_v, -ones], axis=-1)
+    return dirs
+
+
+def _sample_cubemap_level(faces: np.ndarray, dirs: np.ndarray) -> np.ndarray:
+    """Bilinearly sample a source cubemap, remapping edge taps across faces."""
+    face, u, v = _cube_direction_to_face_uv(dirs)
+    size = faces[0].shape[0]
+    px = u * size - 0.5
+    py = v * size - 0.5
+    x0 = np.floor(px).astype(np.int32)
+    y0 = np.floor(py).astype(np.int32)
+    x1 = x0 + 1
+    y1 = y0 + 1
+    fx = (px - x0)[:, np.newaxis]
+    fy = (py - y0)[:, np.newaxis]
+
+    def fetch(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        values = np.empty((dirs.shape[0], 3), dtype=np.float32)
+        inside = (x >= 0) & (x < size) & (y >= 0) & (y < size)
+        values[inside] = faces[face[inside], y[inside], x[inside]]
+
+        outside = ~inside
+        if np.any(outside):
+            tap_u = 2.0 * (x[outside].astype(np.float32) + 0.5) / size - 1.0
+            tap_v = 2.0 * (y[outside].astype(np.float32) + 0.5) / size - 1.0
+            tap_dirs = _cube_face_uv_to_directions(
+                face[outside], (tap_u + 1.0) * 0.5, (tap_v + 1.0) * 0.5
+            )
+            tap_face, tap_s, tap_t = _cube_direction_to_face_uv(tap_dirs)
+            tap_px = tap_s * size - 0.5
+            tap_py = tap_t * size - 0.5
+            tap_x0 = np.floor(tap_px).astype(np.int32)
+            tap_y0 = np.floor(tap_py).astype(np.int32)
+            tap_fx = (tap_px - tap_x0)[:, np.newaxis]
+            tap_fy = (tap_py - tap_y0)[:, np.newaxis]
+            tap_x1 = tap_x0 + 1
+            tap_y1 = tap_y0 + 1
+            tap_x0 = np.clip(tap_x0, 0, size - 1)
+            tap_x1 = np.clip(tap_x1, 0, size - 1)
+            tap_y0 = np.clip(tap_y0, 0, size - 1)
+            tap_y1 = np.clip(tap_y1, 0, size - 1)
+            c00 = faces[tap_face, tap_y0, tap_x0]
+            c10 = faces[tap_face, tap_y0, tap_x1]
+            c01 = faces[tap_face, tap_y1, tap_x0]
+            c11 = faces[tap_face, tap_y1, tap_x1]
+            values[outside] = (
+                c00 * (1.0 - tap_fx) * (1.0 - tap_fy)
+                + c10 * tap_fx * (1.0 - tap_fy)
+                + c01 * (1.0 - tap_fx) * tap_fy
+                + c11 * tap_fx * tap_fy
+            )
+        return values
+
+    c00 = fetch(x0, y0)
+    c10 = fetch(x1, y0)
+    c01 = fetch(x0, y1)
+    c11 = fetch(x1, y1)
+    return (
+        c00 * (1.0 - fx) * (1.0 - fy)
+        + c10 * fx * (1.0 - fy)
+        + c01 * (1.0 - fx) * fy
+        + c11 * fx * fy
+    )
+
+
+def _sample_cubemap_mips(
+    mips: list[np.ndarray], dirs: np.ndarray, lod: np.ndarray
+) -> np.ndarray:
+    """Trilinearly sample a cubemap mip chain at per-sample LODs."""
+    max_lod = len(mips) - 1
+    lod = np.clip(lod, 0.0, max_lod)
+    lod0 = np.floor(lod).astype(np.int32)
+    lod1 = np.minimum(lod0 + 1, max_lod)
+    blend = (lod - lod0)[:, np.newaxis]
+    result = np.empty((dirs.shape[0], 3), dtype=np.float32)
+    for level in np.unique(lod0):
+        mask = lod0 == level
+        result[mask] = _sample_cubemap_level(mips[level], dirs[mask]) * (
+            1.0 - blend[mask]
+        )
+    for level in np.unique(lod1):
+        mask = lod1 == level
+        result[mask] += _sample_cubemap_level(mips[level], dirs[mask]) * blend[mask]
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -370,6 +543,7 @@ def generate_irradiance(
             print(f"  face {face_index + 1}/6 done")
     return faces
 
+
 _PREFILTER_MIP_LEVELS = 5  # 128 → 64 → 32 → 16 → 8
 
 
@@ -388,101 +562,99 @@ def _ggx_importance_sample(xi1: np.ndarray, xi2: np.ndarray, roughness: float):
 def generate_prefiltered(
     panorama: np.ndarray,
     face_size: int,
-    num_samples: int = 512,
-    num_threads: int | None = None,
+    num_samples: int = 1024,
 ) -> list[list[np.ndarray]]:
-    """Generate the GGX prefiltered mip chain using parallel texel workers."""
+    """Generate GGX prefiltered mips in bounded batches of output normals."""
     if num_samples <= 0:
         raise ValueError("Prefilter sample count must be positive")
-    if num_threads is None:
-        num_threads = os.cpu_count() or 1
-    if num_threads <= 0:
-        raise ValueError("Prefilter thread count must be positive")
-
     all_mips = []
-    rng = np.random.default_rng(42)
-    xi1 = rng.random(num_samples).astype(np.float32)
-    xi2 = rng.random(num_samples).astype(np.float32)
-    source_mips = _build_equirect_mips(panorama)
-    source_cube_size = max(1, panorama.shape[0] // 2)
-    source_lod_offset = math.log2(panorama.shape[0] / source_cube_size)
-    source_cube_max_lod = min(
-        math.floor(math.log2(source_cube_size)),
-        len(source_mips) - 1 - int(source_lod_offset),
-    )
+    xi1, xi2 = _hammersley_samples(num_samples)
+    source_cube_size = face_size
+    source_mips = _build_cubemap_mips(equirect_to_faces(panorama, source_cube_size))
+    source_cube_max_lod = len(source_mips) - 1
+    batch_size = 64  # 8x8 output-normal tiles, bounded to about 32k samples.
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as pool:
-        for mip in range(_PREFILTER_MIP_LEVELS):
-            mip_size = max(1, face_size >> mip)
-            roughness = mip / max(_PREFILTER_MIP_LEVELS - 1, 1)
-            H_tan = _ggx_importance_sample(xi1, xi2, roughness)
-            if roughness == 0.0:
-                source_lod = np.full(num_samples, source_lod_offset, dtype=np.float32)
-            else:
-                alpha = roughness * roughness
-                n_dot_h = H_tan[:, 2]
-                a = alpha * n_dot_h
-                k = alpha / np.maximum(1.0 - n_dot_h * n_dot_h + a * a, 1e-6)
-                pdf = (k * k / math.pi) * 0.25
-                source_lod_cube = 0.5 * np.log2(
-                    (6.0 * source_cube_size * source_cube_size)
-                    / np.maximum(num_samples * pdf, 1e-12)
-                )
-                source_lod_cube = np.clip(source_lod_cube, 0.0, source_cube_max_lod)
-                source_lod = np.clip(
-                    source_lod_cube + source_lod_offset,
-                    0.0,
-                    len(source_mips) - 1,
-                )
-            print(
-                f"  Prefiltered mip {mip} ({mip_size}px, "
-                f"roughness={roughness:.2f})..."
+    for mip in range(_PREFILTER_MIP_LEVELS):
+        mip_start = time.perf_counter()
+        mip_size = max(1, face_size >> mip)
+        roughness = mip / max(_PREFILTER_MIP_LEVELS - 1, 1)
+        H_tan = _ggx_importance_sample(xi2, xi1, roughness)
+        if roughness == 0.0:
+            source_lod = np.zeros(num_samples, dtype=np.float32)
+        else:
+            alpha = roughness * roughness
+            n_dot_h = H_tan[:, 2]
+            a = alpha * n_dot_h
+            k = alpha / np.maximum(1.0 - n_dot_h * n_dot_h + a * a, 1e-6)
+            pdf = (k * k / math.pi) * 0.25
+            lod = 0.5 * np.log2(
+                (6.0 * source_cube_size * source_cube_size)
+                / np.maximum(num_samples * pdf, 1e-12)
             )
+            source_lod = np.clip(lod - 0.5, 0.0, source_cube_max_lod)
 
-            def process_normal(normal: np.ndarray) -> np.ndarray:
-                tangent_seed = (
-                    np.array([1.0, 0.0, 0.0], np.float32)
-                    if abs(normal[0]) < 0.9
-                    else np.array([0.0, 1.0, 0.0], np.float32)
-                )
-                bitangent = np.cross(normal, tangent_seed)
-                bitangent /= np.linalg.norm(bitangent)
-                tangent = np.cross(bitangent, normal)
+        faces = []
+        for face_index, dirs in enumerate(_face_dirs(mip_size)):
+            normals = dirs / np.linalg.norm(dirs, axis=-1, keepdims=True)
+            flat_normals = normals.reshape(-1, 3)
+            out = np.empty((len(flat_normals), 3), dtype=np.float32)
+            for first in range(0, len(flat_normals), batch_size):
+                batch = flat_normals[first : first + batch_size]
+                bitangent_seed = np.zeros_like(batch)
+                bitangent_seed[:, 1] = 1.0
+                n_dot_up = batch[:, 1]
+                pole = (1.0 - np.abs(n_dot_up)) <= 1e-7
+                bitangent_seed[pole & (n_dot_up > 0.0)] = (0.0, 0.0, 1.0)
+                bitangent_seed[pole & (n_dot_up < 0.0)] = (0.0, 0.0, -1.0)
+                tangent = np.cross(bitangent_seed, batch)
+                tangent /= np.linalg.norm(tangent, axis=-1, keepdims=True)
+                bitangent = np.cross(batch, tangent)
                 H_world = (
-                    H_tan[:, 0:1] * tangent
-                    + H_tan[:, 1:2] * bitangent
-                    + H_tan[:, 2:3] * normal
+                    H_tan[None, :, 0:1] * tangent[:, None, :]
+                    + H_tan[None, :, 1:2] * bitangent[:, None, :]
+                    + H_tan[None, :, 2:3] * batch[:, None, :]
                 )
                 H_world /= np.linalg.norm(H_world, axis=-1, keepdims=True)
                 L_world = (
-                    2.0 * (H_world * normal).sum(axis=-1, keepdims=True) * H_world
-                    - normal
+                    2.0
+                    * np.sum(H_world * batch[:, None, :], axis=-1, keepdims=True)
+                    * H_world
+                    - batch[:, None, :]
                 )
-                n_dot_l = (L_world * normal).sum(axis=-1)
-                valid = n_dot_l > 0.0
-                L_valid = L_world[valid]
-                if L_valid.shape[0] == 0:
-                    return np.zeros(3, dtype=np.float32)
-                sample_weights = n_dot_l[valid]
-                sample_colors = _sample_equirect_mips(
-                    source_mips, L_valid, source_lod[valid]
+                n_dot_l = np.sum(L_world * batch[:, None, :], axis=-1)
+                rows, samples = np.nonzero(n_dot_l > 0.0)
+                sums = np.zeros((len(batch), 3), dtype=np.float32)
+                weights_sum = np.zeros(len(batch), dtype=np.float32)
+                if len(rows):
+                    weights = n_dot_l[rows, samples]
+                    colors = _sample_cubemap_mips(
+                        source_mips, L_world[rows, samples], source_lod[samples]
+                    )
+                    np.add.at(sums, rows, colors * weights[:, None])
+                    np.add.at(weights_sum, rows, weights)
+                out_slice = out[first : first + len(batch)]
+                np.divide(
+                    sums,
+                    weights_sum[:, None],
+                    out=out_slice,
+                    where=weights_sum[:, None] > 0.0,
                 )
-                return np.average(sample_colors, axis=0, weights=sample_weights)
-
-            faces = []
-            for dirs in _face_dirs(mip_size):
-                normals = dirs / np.linalg.norm(dirs, axis=-1, keepdims=True)
-                out = np.asarray(
-                    list(pool.map(process_normal, normals.reshape(-1, 3))),
-                    dtype=np.float32,
-                )
-                faces.append(out.reshape(mip_size, mip_size, 3))
-            all_mips.append(faces)
-
+                out_slice[weights_sum == 0.0] = 0.0
+            faces.append(out.reshape(mip_size, mip_size, 3))
+            print(
+                f"  Prefilter mip {mip + 1}/{_PREFILTER_MIP_LEVELS}, "
+                f"face {face_index + 1}/6 complete",
+                flush=True,
+            )
+        all_mips.append(faces)
+        print(
+            f"  Prefilter mip {mip + 1}/{_PREFILTER_MIP_LEVELS} "
+            f"finished in {time.perf_counter() - mip_start:.1f}s",
+            flush=True,
+        )
     return all_mips
 
 
-# ---------------------------------------------------------------------------
 # BRDF LUT (split-sum, NdotV × roughness → scale, bias)
 # ---------------------------------------------------------------------------
 
@@ -533,7 +705,7 @@ def generate_brdf_lut(lut_size: int = 256, num_samples: int = 1024) -> np.ndarra
 
 
 # ---------------------------------------------------------------------------
-# PNG writer (2-channel float → 16-bit grayscale pair via PIL or raw)
+# DDS writer for the 2D BRDF LUT
 # ---------------------------------------------------------------------------
 
 
@@ -635,13 +807,13 @@ def main() -> int:
         "--threads",
         type=int,
         default=os.cpu_count() or 1,
-        help=f"Worker threads for irradiance and prefilter generation (default: {os.cpu_count() or 1})",
+        help=f"Worker threads for irradiance generation (default: {os.cpu_count() or 1})",
     )
     ap.add_argument(
         "--prefilter-samples",
         type=int,
-        default=512,
-        help="Prefilter GGX samples per texel (default: 512)",
+        default=1024,
+        help="Prefilter GGX samples per texel (default: 1024)",
     )
     ap.add_argument(
         "--lut-samples",
@@ -665,7 +837,11 @@ def main() -> int:
     print("Generating skybox cubemap...")
     generation_start = time.perf_counter()
     skybox_faces = equirect_to_faces(panorama, args.skybox_size)
-    write_dds_cubemap([skybox_faces], str(out_dir / "skybox.dds"))
+    skybox_mips = _build_cubemap_mips(skybox_faces)
+    write_dds_cubemap(
+        [[face for face in mip] for mip in skybox_mips],
+        str(out_dir / "skybox.dds"),
+    )
     print(
         f"  Skybox generation took "
         f"{time.perf_counter() - generation_start:.2f} seconds"
@@ -677,7 +853,11 @@ def main() -> int:
     irr_faces = generate_irradiance(
         panorama, args.irr_size, args.irr_samples, args.threads
     )
-    write_dds_cubemap([irr_faces], str(out_dir / "irradiance.dds"))
+    irr_mips = _build_cubemap_mips(irr_faces)
+    write_dds_cubemap(
+        [[face for face in mip] for mip in irr_mips],
+        str(out_dir / "irradiance.dds"),
+    )
     print(
         f"  Irradiance generation took "
         f"{time.perf_counter() - generation_start:.2f} seconds"
@@ -687,7 +867,7 @@ def main() -> int:
     print("Generating prefiltered environment map...")
     generation_start = time.perf_counter()
     prefiltered_mips = generate_prefiltered(
-        panorama, args.prefilter_size, args.prefilter_samples, args.threads
+        panorama, args.prefilter_size, args.prefilter_samples
     )
     write_dds_cubemap(prefiltered_mips, str(out_dir / "prefiltered.dds"))
     print(
