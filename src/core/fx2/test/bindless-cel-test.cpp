@@ -20,31 +20,31 @@ TEST_CASE("FX2 bindless cel kernel validates parameters and manages material sto
     auto cel = CelKernel::create(*heap, *initialization);
     REQUIRE(cel);
 
-    auto params = cel->defaultMaterialParameters();
+    auto params = CelMaterial::Parameters {};
     CHECK(params.shadowThreshold == 0.5f);
     CHECK(params.outlineWidth == 0.003f);
 
     // Reject non-finite parameters
     auto invalidParams    = params;
     invalidParams.color.x = NAN;
-    CHECK_FALSE(cel->createMaterial(*initialization, invalidParams));
+    CHECK_FALSE(CelMaterial::create(*heap, *initialization, invalidParams));
 
     invalidParams                 = params;
     invalidParams.shadowThreshold = INFINITY;
-    CHECK_FALSE(cel->createMaterial(*initialization, invalidParams));
+    CHECK_FALSE(CelMaterial::create(*heap, *initialization, invalidParams));
 
     invalidParams              = params;
     invalidParams.outlineWidth = NAN;
-    CHECK_FALSE(cel->createMaterial(*initialization, invalidParams));
+    CHECK_FALSE(CelMaterial::create(*heap, *initialization, invalidParams));
 
     // Valid materials
-    auto mat1 = cel->createMaterial(*initialization, params);
+    auto mat1 = CelMaterial::create(*heap, *initialization, params);
     REQUIRE(mat1);
 
     auto customParams         = params;
     customParams.color        = {0.2f, 0.7f, 0.9f, 1.0f};
     customParams.outlineWidth = 0.01f;
-    auto mat2                 = cel->createMaterial(*initialization, customParams);
+    auto mat2                 = CelMaterial::create(*heap, *initialization, customParams);
     REQUIRE(mat2);
 }
 
@@ -61,12 +61,12 @@ TEST_CASE("FX2 bindless cel material renders cartoon steps and outline", "[fx2][
     auto cel = CelKernel::create(*heap, *initialization);
     REQUIRE(cel);
 
-    auto matParams         = cel->defaultMaterialParameters();
+    auto matParams         = CelMaterial::Parameters {};
     matParams.color        = {1.0f, 0.5f, 0.2f, 1.0f};
     matParams.shadowTint   = {0.2f, 0.1f, 0.3f};
     matParams.outlineWidth = 0.05f;
     matParams.outlineColor = {0.0f, 0.0f, 0.0f, 1.0f};
-    auto material          = cel->createMaterial(*initialization, matParams);
+    auto material          = CelMaterial::create(*heap, *initialization, matParams);
     REQUIRE(material);
 
     // CCW triangle in front facing orientation
@@ -129,7 +129,7 @@ TEST_CASE("FX2 bindless cel material renders cartoon steps and outline", "[fx2][
 
     CelMaterial::DrawParameters draw {{*raster, state, geometry}};
     draw.renderOutline = true;
-    REQUIRE(material->record(draw));
+    REQUIRE(cel->record(*material, draw));
 
     auto draws = raster->seal();
     REQUIRE(draws);

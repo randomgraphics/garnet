@@ -184,14 +184,17 @@ public:
         return mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), glm::vec4(mParameters.diffuseMultiplier, 0, 0, 0), {}},
                                    mParameters.colorMap, mParameters.normalMap, mParameters.sampler, mDefaults);
     }
-    void upload(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const {
+        mDefaults.upload(producer);
+        mStorage.upload(producer);
+    }
     uint32_t index() const { return mStorage.index(); }
-    bool textured() const { return mStorage.textured(); }
-    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+    bool     textured() const { return mStorage.textured(); }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
 };
 
 class LambertianImpl : public LambertianKernel {
-    Shaders      mShaders;
+    Shaders       mShaders;
     AutoRef<Heap> mHeap;
 
 public:
@@ -201,7 +204,8 @@ public:
         if (!heap || heap->bindingIndex() != 0) return false;
         auto gpu = heap->gpu();
         if (!mShaders.initialize(gpu, kBindlessLambertianVertSpv, sizeof(kBindlessLambertianVertSpv), kBindlessLambertianFragSpv,
-                                 sizeof(kBindlessLambertianFragSpv), kBindlessLambertianTextureVertSpv, sizeof(kBindlessLambertianTextureVertSpv))) return false;
+                                 sizeof(kBindlessLambertianFragSpv), kBindlessLambertianTextureVertSpv, sizeof(kBindlessLambertianTextureVertSpv)))
+            return false;
         mHeap = std::move(heap);
         return true;
     }
@@ -237,7 +241,8 @@ AutoRef<LambertianKernel> LambertianKernel::create(Heap & heap, ::GN::gpu2::CnC 
 }
 
 AutoRef<LambertianMaterial> LambertianMaterial::create(Heap & heap, ::GN::gpu2::CnC & producer, const Parameters & p) {
-    if (heap.bindingIndex() != 0 || !validMap(p.colorMap) || !validMap(p.normalMap) || !std::isfinite(p.diffuseMultiplier) || p.diffuseMultiplier < 0) return {};
+    if (heap.bindingIndex() != 0 || !validMap(p.colorMap) || !validMap(p.normalMap) || !std::isfinite(p.diffuseMultiplier) || p.diffuseMultiplier < 0)
+        return {};
     for (int i = 0; i < 4; ++i)
         if (!std::isfinite(p.color[i])) return {};
     for (int i = 0; i < 3; ++i)

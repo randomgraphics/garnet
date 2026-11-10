@@ -107,29 +107,29 @@ inline GN::gpu2::RasterGeometry sphereGeometry(GN::AutoRef<GN::gpu2::GpuContext>
     return makeGeometry(gpu, uploads, verts, indices);
 }
 
-inline GN::AutoRef<GN::fx2::PbrMaterial> createPbrMaterial(GN::AutoRef<GN::fx2::PbrKernel> kernel, GN::gpu2::CnC & uploads, glm::vec4 color, float metallic,
+inline GN::AutoRef<GN::fx2::PbrMaterial> createPbrMaterial(GN::gpu2::DescriptorHeap & heap, GN::gpu2::CnC & uploads, glm::vec4 color, float metallic,
                                                            float roughness) {
-    auto p      = kernel->defaultMaterialParameters();
+    auto p      = GN::fx2::PbrMaterial::Parameters {};
     p.baseColor = color;
     p.metallic  = metallic;
     p.roughness = roughness;
-    return kernel->createMaterial(uploads, p);
+    return GN::fx2::PbrMaterial::create(heap, uploads, p);
 }
 
-inline GN::AutoRef<GN::fx2::SkyMaterial> createSkyMaterial(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::AutoRef<GN::fx2::SkyKernel> skyKernel,
-                                                           GN::gpu2::CnC & uploads, float luminanceScale = 3000.f) {
+inline GN::AutoRef<GN::fx2::SkyMaterial> createSkyMaterial(GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::DescriptorHeap & heap, GN::gpu2::CnC & uploads,
+                                                           float luminanceScale = 3000.f) {
     auto skyboxTex      = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/skybox.dds"});
     auto irradianceTex  = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/irradiance.dds"});
     auto prefilteredTex = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds"});
     auto brdfLutTex     = GN::gpu2::Texture::load({.context = gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds"});
 
-    auto skyParams = skyKernel->defaultMaterialParameters();
+    auto skyParams = GN::fx2::SkyMaterial::Parameters {};
     if (skyboxTex) skyParams.skyboxMap = GN::gpu2::GpuResourceView {skyboxTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
     if (irradianceTex) skyParams.irradianceMap = GN::gpu2::GpuResourceView {irradianceTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
     if (prefilteredTex) skyParams.prefilteredMap = GN::gpu2::GpuResourceView {prefilteredTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
     if (brdfLutTex) skyParams.brdfLut = GN::gpu2::GpuResourceView {brdfLutTex}.setImageViewType(GN::gpu2::GpuResourceView::ImageView::SAMPLED);
     skyParams.luminanceScale = luminanceScale;
-    return skyKernel->createMaterial(uploads, skyParams);
+    return GN::fx2::SkyMaterial::create(heap, uploads, skyParams);
 }
 
 inline GN::AutoRef<GN::fx2::SharedShaderConstants::UniformState> updateUniforms(GN::AutoRef<GN::fx2::SharedShaderConstants> ssc, GN::gpu2::CnC & uploads,

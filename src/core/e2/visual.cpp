@@ -137,10 +137,10 @@ struct VisualImpl : Visual {
             return false;
         }
 
-        auto matParams = mLambert->defaultMaterialParameters();
+        auto matParams = fx2::LambertianMaterial::Parameters {};
         // A small uniform fill keeps unlit faces readable in this white-model preview.
         matParams.emissive = glm::vec3(50.f / 3.14159265359f);
-        mWhiteMaterial     = mLambert->createMaterial(*initialization, matParams);
+        mWhiteMaterial     = fx2::LambertianMaterial::create(*mHeap, *initialization, matParams);
         if (!mWhiteMaterial) {
             GN_ERROR(sLogger, "Visual initialization failed: Lambertian material creation returned null.");
             return false;
@@ -195,7 +195,7 @@ struct VisualImpl : Visual {
                 {*raster, uniformState, mesh->geometry(), &mRenderTarget.states},
                 object2WorldTransform,
             };
-            if (!mWhiteMaterial->record(draw)) return;
+            if (!mLambert->record(*mWhiteMaterial, draw)) return;
         }
 
         auto uniformWork = uploadCnc->seal();

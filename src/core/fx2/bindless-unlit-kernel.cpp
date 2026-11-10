@@ -169,15 +169,18 @@ public:
         return mDefaults.initialize(std::move(heap)) &&
                mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), {}, {}}, mParameters.colorMap, mParameters.sampler, mDefaults);
     }
-    void upload(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); mStorage.upload(producer); }
-    uint32_t index() const { return mStorage.index(); }
-    bool textured() const { return mStorage.textured(); }
+    void upload(::GN::gpu2::CnC & producer) const {
+        mDefaults.upload(producer);
+        mStorage.upload(producer);
+    }
+    uint32_t           index() const { return mStorage.index(); }
+    bool               textured() const { return mStorage.textured(); }
     const Parameters & parameters() const { return mParameters; }
-    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+    bool               usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
 };
 
 class UnlitImpl : public UnlitKernel {
-    Shaders      mShaders;
+    Shaders       mShaders;
     AutoRef<Heap> mHeap;
 
 public:
@@ -187,7 +190,8 @@ public:
         if (!heap || heap->bindingIndex() != 0) return false;
         auto gpu = heap->gpu();
         if (!mShaders.initialize(gpu, kBindlessUnlitVertSpv, sizeof(kBindlessUnlitVertSpv), kBindlessUnlitFragSpv, sizeof(kBindlessUnlitFragSpv),
-                                 kBindlessUnlitTextureVertSpv, sizeof(kBindlessUnlitTextureVertSpv))) return false;
+                                 kBindlessUnlitTextureVertSpv, sizeof(kBindlessUnlitTextureVertSpv)))
+            return false;
         mHeap = std::move(heap);
         return true;
     }

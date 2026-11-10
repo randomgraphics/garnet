@@ -43,9 +43,8 @@ AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, CnC & uploads, const Model
 
 } // namespace
 
-bool RenderModel::prepare(AutoRef<GpuContext> gpu, AutoRef<DescriptorHeap> materialHeap, CnC & geometryUploads, CnC & materialUploads, AutoRef<fx2::PbrKernel> pbrKernel,
-                          AutoRef<fx2::LambertianKernel> lambertianKernel, AutoRef<fx2::UnlitKernel> unlitKernel, const ModelScene & scene, Shading choice,
-                          const glm::mat4 & modelTransform) {
+bool RenderModel::prepare(AutoRef<GpuContext> gpu, AutoRef<DescriptorHeap> materialHeap, CnC & geometryUploads, CnC & materialUploads, const ModelScene & scene,
+                          Shading choice, const glm::mat4 & modelTransform) {
     DynaArray<ModelInstance> collected;
     if (!collectModelInstances(scene, collected)) return false;
 
@@ -196,9 +195,9 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
     const float width        = std::max(glm::length(source.bounds.maximum - source.bounds.minimum) * 0.5f, 0.001f) * 0.004f;
     auto        boundsSource = ModelScene::createDebugVisualization(source.bounds, width, true, false);
     auto        axesSource   = ModelScene::createDebugVisualization(source.bounds, width, false, true);
-    if (!boundsSource || !axesSource || !model.prepare(gpu, heap, *geometryUploads, *initialization, pbr, lambertian, unlit, source, shading, transform) ||
-        !bounds.prepare(gpu, heap, *geometryUploads, *initialization, pbr, lambertian, unlit, *boundsSource, Shading::UNLIT, transform) ||
-        !axes.prepare(gpu, heap, *geometryUploads, *initialization, pbr, lambertian, unlit, *axesSource, Shading::UNLIT, transform))
+    if (!boundsSource || !axesSource || !model.prepare(gpu, heap, *geometryUploads, *initialization, source, shading, transform) ||
+        !bounds.prepare(gpu, heap, *geometryUploads, *initialization, *boundsSource, Shading::UNLIT, transform) ||
+        !axes.prepare(gpu, heap, *geometryUploads, *initialization, *axesSource, Shading::UNLIT, transform))
         return false;
 
     // One-shot initialization may block: nothing is presented until every material and

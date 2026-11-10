@@ -1,35 +1,69 @@
-# FX2 Material and Kernel Decoupling
+# Task: FX2 Material and Kernel Decoupling
+---
+## Goals
 
-Status: paused for handoff; user requested the current partial change be committed and pushed.
+Separate FX2 material creation and lifetime from raster kernels so the same PBR material can support future ray tracing kernels. Complete repository caller migration from checkpoint `04ffcbac`, fix build/runtime failures, and verify the new interface.
 
-## Goal
+## Design
 
-Separate FX2 material creation and data lifetime from rendering kernels. Materials expose independent creation from a descriptor heap and initialization `CnC`; kernels record work using compatible materials. This enables one PBR material to be consumed by raster and future ray tracing kernels.
+- Materials use `Material::Parameters {}` and `Material::create(heap, initialization, parameters)` independently of a kernel.
+- Kernels use `Kernel::record(material, drawParameters)` and require compatible material implementations and descriptor heaps.
+- Shader packing stays private. Default textures/samplers currently belong to individual materials; sharing fallbacks per heap remains a future optimization.
+- This continuation completes interface migration, not ray tracing implementation.
 
-## Current progress
+--- PROGRESS (resume from "Last completed" / "In progress") ---
+Last completed: migrated FX2 tests, E2 Visual, physics samples/helpers, and mesh-viewer setup; Windows debug build and validation smoke checks pass.
+In progress: paused at user request for handoff to another machine/session; migration and verification complete. User authorized committing and pushing all changes.
+Phase 1: checkpoint `3c203ba65` decoupled materials and kernels; `04ffcbac` recorded the handoff.
+Phase 2: all remaining callers migrated; obsolete mesh-viewer kernel parameters removed; descriptor lifetime assertions updated for material-owned fallbacks.
+Phase 3: PBR pixel test verifies material creation before kernels and consumption by a second compatible kernel; build and runtime verification completed as listed below.
+--- END PROGRESS ---
+--- REFERENCE ---
 
-- PBR, Unlit, Lambertian, Cel, and Sky public APIs and implementations have been moved toward `Material::create(...)` plus `Kernel::record(material, drawParameters)`.
-- Implementations no longer retain their creating kernel. A kernel checks material implementation type and shared heap compatibility at record time.
-- Existing PBR, common samples, and mesh viewer call sites were migrated where already touched.
-- Caller migration is intentionally incomplete per user direction. Resume by finding stale `defaultMaterialParameters()`, `createMaterial()`, and material `record()` call sites.
-- Default texture/sampler resources currently belong to each material, which duplicates fallbacks. A shared per-heap fallback owner is a follow-up design item.
-- Ray tracing gpu2/FX2 support and shared private access to PBR material storage remain future work.
+- Branch: `wip/ray-tracing`.
+- Earlier commits: `3c203ba65` and `04ffcbac`.
+- User authorized build/runtime fixes in this continuation; the earlier checkpoint's no-test restriction no longer applies.
+- Ray tracing gpu2/FX2 implementation and shared private PBR storage access remain future work.
 
-## Scope and constraints
+--- BUILD / CI ---
 
-- Keep this work in FX2 and preserve private shader packing.
-- Do not expand into ray tracing implementation in this task.
-- Preserve user changes; do not archive this workspace until user sign-off or explicit archive request.
-- User explicitly requested no build or tests for this checkpoint.
+Windows/MSVC debug with NVIDIA GeForce RTX 4070 Laptop GPU and Vulkan SDK 1.4.363.1. Environment initialized with `env/garnet.ps1`.
 
-## Verify and commit
+- `python.exe env/bin/build.py d` discovered unused mesh-viewer parameters treated as errors; removed them. `python.exe env/bin/build.py -C d` subsequently passed.
+- `python.exe env/bin/format-all-sources.py -d` applied formatting, including formatting omissions in the previous commit. CIT style check passed.
+- CIT exited 0: 202 unit tests and 198 internal tests (29,612 assertions) passed; RDG2 triangle, gpu2 copy and compute smoke checks passed.
+- Vulkan validation (`VK_LAYER_KHRONOS_validation`) enabled for all GPU runs. Negative-test diagnostics are expected in CIT; sample logs contain no errors, warnings, VUIDs, or validation diagnostics.
+- Headless samples passed: FX2 unlit/PBR/cel, fiz solids/gel, E2 world runtime.
+- Mesh viewer passed headless PBR sphere, Lambertian box, unlit box; finite windowed sphere also passed.
+- E2 `--window-test` and fiz solids finite windowed run passed.
+- Evidence logs are under ignored `build/`: `fx2-rebuild.log`, `fx2-cit-final.log`, `*-smoke.log`, `viewer-*.log`, `e2-window.log`, `solids-window.log`.
+- Initial verification briefly overlapped linking and execution, causing Windows file locks and stale test assertions; subsequent build/test runs were sequential. No remaining source build failures.
+- Linux, Android, and other build variants have not been verified in this continuation.
 
-- Verify: `git diff --check` passed. Build/tests were not run at the user's direction; this is a partial handoff and may need API call-site migration before compiling.
-- Commit: `3c203ba65` (`Decouple FX2 materials from kernels`), pushed to `origin/wip/ray-tracing`.
+--- WORKFLOW / CONVENTIONS ---
 
-## Next actions
+Keep this task active pending explicit user sign-off. Do not archive, commit, or push without authorization. Preserve public monolithic includes and private material storage.
 
-1. Resume caller migration for remaining FX2 tests and any other external call sites.
-2. Review fallback ownership/capacity and decide whether a per-heap shared owner is needed before broad use.
-3. Build and run FX2 tests after the user authorizes verification.
-4. Continue ray tracing kernel work after gpu2 capability investigation and private PBR material access are designed.
+--- TASK BREAKDOWN ---
+
+Phase 2: Complete caller migration
+  Task 2.1: Migrate remaining FX2 callers and remove obsolete helper dependencies.
+    Verify: full Windows debug build and repository search for removed API calls.
+    Commit: "Complete FX2 interface migration and verification" (included in this handoff commit).
+
+Phase 3: Verify behavior
+  Task 3.1: Verify material reuse, lifetimes, rendered pixels, and sample presentation.
+    Verify: CIT plus headless/windowed smoke checks with Vulkan validation enabled.
+    Commit: "Complete FX2 interface migration and verification" (included in this handoff commit).
+
+--- SUMMARY OF FILES TO TOUCH ---
+
+- FX2 tests and formatting of checkpoint FX2 implementation/public declarations.
+- E2 Visual and fiz sample material creation/recording callers.
+- Mesh-viewer RenderModel preparation interface and callers.
+
+--- HANDOFF / RESUME ---
+
+Paused at the user's explicit request on 2026-11-09. All current source and task-record changes are included in the handoff commit on `wip/ray-tracing`, to be pushed to `origin/wip/ray-tracing`. No implementation or verification work is running.
+
+Resume from the latest branch tip. The FX2 interface migration is complete and verified on Windows debug. The next ray tracing work still requires gpu2 capability investigation and a design for shared private PBR material access. Per-material fallback duplication remains a follow-up optimization; other platforms/configurations remain unverified. Existing build logs are local ignored artifacts; the verification results above are the portable record. Keep this workspace active; pause does not authorize archival.

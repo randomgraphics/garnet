@@ -168,36 +168,35 @@ public:
         producer.recordUploadBuffer(mView.buffer(), mView.bufferView.offset, {reinterpret_cast<const uint8_t *>(&mData), sizeof(mData)});
     }
     uint32_t index() const { return mIndex; }
-    bool usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
 };
 
 class PbrMaterialImpl final : public PbrMaterial {
-    Fallbacks                mDefaults;
-    PbrStorage               mStorage;
+    Fallbacks  mDefaults;
+    PbrStorage mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(PbrMaterial);
     explicit PbrMaterialImpl(AutoRef<Heap> heap): PbrMaterial(TYPE_INFO(), "bindless.pbr.material"), mStorage(std::move(heap)) {}
-    bool initialize(const Parameters & p, AutoRef<Heap> heap) {
-        return mDefaults.initialize(std::move(heap)) && mStorage.initialize(p, mDefaults);
-    }
+    bool initialize(const Parameters & p, AutoRef<Heap> heap) { return mDefaults.initialize(std::move(heap)) && mStorage.initialize(p, mDefaults); }
     void upload(::GN::gpu2::CnC & producer) const {
         mDefaults.upload(producer);
         mStorage.upload(producer);
     }
     uint32_t index() const { return mStorage.index(); }
-    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
 };
 
 class PbrImpl final : public PbrKernel {
-    Shaders   mShaders;
+    Shaders       mShaders;
     AutoRef<Heap> mHeap;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(PbrKernel);
     PbrImpl(): PbrKernel(TYPE_INFO(), "bindless.pbr") {}
     bool initialize(AutoRef<Heap> heap) {
-        if (!heap || heap->bindingIndex() != 0 || !mShaders.initialize(heap->gpu(), kBindlessPbrVertSpv, sizeof(kBindlessPbrVertSpv), kBindlessPbrFragSpv, sizeof(kBindlessPbrFragSpv)))
+        if (!heap || heap->bindingIndex() != 0 ||
+            !mShaders.initialize(heap->gpu(), kBindlessPbrVertSpv, sizeof(kBindlessPbrVertSpv), kBindlessPbrFragSpv, sizeof(kBindlessPbrFragSpv)))
             return false;
         mHeap = std::move(heap);
         return true;

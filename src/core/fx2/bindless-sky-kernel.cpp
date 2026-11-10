@@ -198,12 +198,12 @@ public:
     }
 
     uint32_t index() const { return mIndex; }
-    bool usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
 };
 
 class SkyMaterialImpl final : public SkyMaterial {
-    Fallbacks                mDefaults;
-    SkyStorage               mStorage;
+    Fallbacks  mDefaults;
+    SkyStorage mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(SkyMaterial);
@@ -211,13 +211,16 @@ public:
     explicit SkyMaterialImpl(AutoRef<Heap> heap): SkyMaterial(TYPE_INFO(), "bindless.sky.material"), mStorage(std::move(heap)) {}
 
     bool initialize(const Parameters & p, AutoRef<Heap> heap) { return mDefaults.initialize(heap) && mStorage.initialize(p, mDefaults); }
-    void upload(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const {
+        mDefaults.upload(producer);
+        mStorage.upload(producer);
+    }
     uint32_t index() const { return mStorage.index(); }
-    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
 };
 
 class SkyImpl final : public SkyKernel {
-    Shaders      mShaders;
+    Shaders       mShaders;
     AutoRef<Heap> mHeap;
 
 public:
@@ -225,7 +228,8 @@ public:
     SkyImpl(): SkyKernel(TYPE_INFO(), "bindless.sky") {}
     bool initialize(AutoRef<Heap> heap) {
         if (!heap || heap->bindingIndex() != 0 ||
-            !mShaders.initialize(heap->gpu(), kBindlessSkyVertSpv, sizeof(kBindlessSkyVertSpv), kBindlessSkyFragSpv, sizeof(kBindlessSkyFragSpv))) return false;
+            !mShaders.initialize(heap->gpu(), kBindlessSkyVertSpv, sizeof(kBindlessSkyVertSpv), kBindlessSkyFragSpv, sizeof(kBindlessSkyFragSpv)))
+            return false;
         mHeap = std::move(heap);
         return true;
     }

@@ -223,15 +223,18 @@ public:
         return mStorage.initialize(data, mParameters.colorMap, mParameters.normalMap, mParameters.sampler, mDefaults);
     }
 
-    void upload(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const {
+        mDefaults.upload(producer);
+        mStorage.upload(producer);
+    }
     uint32_t index() const { return mStorage.index(); }
-    bool textured() const { return mStorage.textured(); }
-    float outlineWidth() const { return mParameters.outlineWidth; }
-    bool usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+    bool     textured() const { return mStorage.textured(); }
+    float    outlineWidth() const { return mParameters.outlineWidth; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
 };
 
 class CelImpl : public CelKernel {
-    Shaders      mShaders;
+    Shaders       mShaders;
     AutoRef<Heap> mHeap;
 
 public:
@@ -241,9 +244,10 @@ public:
         if (!heap || heap->bindingIndex() != 0) return false;
         auto gpu = heap->gpu();
         if (!mShaders.initialize(gpu, kBindlessCelVertSpv, sizeof(kBindlessCelVertSpv), kBindlessCelFragSpv, sizeof(kBindlessCelFragSpv),
-                                 kBindlessCelTextureVertSpv, sizeof(kBindlessCelTextureVertSpv), kBindlessCelOutlineVertSpv,
-                                 sizeof(kBindlessCelOutlineVertSpv), kBindlessCelOutlineFragSpv, sizeof(kBindlessCelOutlineFragSpv),
-                                 kBindlessCelOutlineTextureVertSpv, sizeof(kBindlessCelOutlineTextureVertSpv))) return false;
+                                 kBindlessCelTextureVertSpv, sizeof(kBindlessCelTextureVertSpv), kBindlessCelOutlineVertSpv, sizeof(kBindlessCelOutlineVertSpv),
+                                 kBindlessCelOutlineFragSpv, sizeof(kBindlessCelOutlineFragSpv), kBindlessCelOutlineTextureVertSpv,
+                                 sizeof(kBindlessCelOutlineTextureVertSpv)))
+            return false;
         mHeap = std::move(heap);
         return true;
     }
@@ -299,10 +303,10 @@ AutoRef<CelMaterial> CelMaterial::create(Heap & heap, ::GN::gpu2::CnC & producer
     for (int i = 0; i < 3; ++i) {
         if (!std::isfinite(p.emissive[i]) || !std::isfinite(p.shadowTint[i]) || !std::isfinite(p.deepShadowTint[i]) || !std::isfinite(p.rimTint[i])) return {};
     }
-    if (!std::isfinite(p.shadowThreshold) || !std::isfinite(p.shadowFeather) || !std::isfinite(p.deepShadowThreshold) ||
-        !std::isfinite(p.deepShadowFeather) || !std::isfinite(p.specularThreshold) || !std::isfinite(p.specularShininess) ||
-        !std::isfinite(p.specularIntensity) || !std::isfinite(p.rimThreshold) || !std::isfinite(p.rimFeather) || !std::isfinite(p.rimIntensity) ||
-        !std::isfinite(p.outlineWidth)) return {};
+    if (!std::isfinite(p.shadowThreshold) || !std::isfinite(p.shadowFeather) || !std::isfinite(p.deepShadowThreshold) || !std::isfinite(p.deepShadowFeather) ||
+        !std::isfinite(p.specularThreshold) || !std::isfinite(p.specularShininess) || !std::isfinite(p.specularIntensity) || !std::isfinite(p.rimThreshold) ||
+        !std::isfinite(p.rimFeather) || !std::isfinite(p.rimIntensity) || !std::isfinite(p.outlineWidth))
+        return {};
     auto material = AutoRef<CelMaterialImpl>(new CelMaterialImpl(referenceTo(&heap), p));
     if (!material->initialize(referenceTo(&heap))) return {};
     producer.retainResource(material);

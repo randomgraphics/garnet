@@ -78,12 +78,12 @@ TEST_CASE("FX2 bindless unlit and Lambertian materials render expected pixels", 
     REQUIRE(unlit);
     REQUIRE(lambert);
 
-    auto unlitParameters    = unlit->defaultMaterialParameters();
+    auto unlitParameters    = UnlitMaterial::Parameters {};
     unlitParameters.color   = {0.8f, 0.2f, 0.1f, 1};
-    auto unlitMaterial      = unlit->createMaterial(*initialization, unlitParameters);
-    auto lambertParameters  = lambert->defaultMaterialParameters();
+    auto unlitMaterial      = UnlitMaterial::create(*heap, *initialization, unlitParameters);
+    auto lambertParameters  = LambertianMaterial::Parameters {};
     lambertParameters.color = {0.8f, 0.2f, 0.1f, 1};
-    auto lambertMaterial    = lambert->createMaterial(*initialization, lambertParameters);
+    auto lambertMaterial    = LambertianMaterial::create(*heap, *initialization, lambertParameters);
     REQUIRE(unlitMaterial);
     REQUIRE(lambertMaterial);
 
@@ -138,10 +138,10 @@ TEST_CASE("FX2 bindless unlit and Lambertian materials render expected pixels", 
         REQUIRE(raster);
         if (useLambertian) {
             LambertianMaterial::DrawParameters draw {{*raster, state, geometry}};
-            REQUIRE(lambertMaterial->record(draw));
+            REQUIRE(lambert->record(*lambertMaterial, draw));
         } else {
             UnlitMaterial::DrawParameters draw {{*raster, state, geometry}};
-            REQUIRE(unlitMaterial->record(draw));
+            REQUIRE(unlit->record(*unlitMaterial, draw));
         }
         auto draws = raster->seal();
         REQUIRE(draws);
@@ -173,9 +173,6 @@ TEST_CASE("FX2 bindless PBR materials render expected pixels", "[fx2][bindless][
     REQUIRE(heap);
     auto initialization = gpuBindless::CnC::create("bindless-pbr-test.init", {.gpu = gpu, .heap = heap});
     REQUIRE(initialization);
-    auto pbr = PbrKernel::create(*heap, *initialization);
-    REQUIRE(pbr);
-
     auto dielectricParams      = PbrMaterial::Parameters {};
     dielectricParams.baseColor = {0.8f, 0.2f, 0.1f, 1};
     dielectricParams.metallic  = 0.0f;
@@ -189,6 +186,10 @@ TEST_CASE("FX2 bindless PBR materials render expected pixels", "[fx2][bindless][
     metallicParams.roughness = 0.2f;
     auto metallicMaterial    = PbrMaterial::create(*heap, *initialization, metallicParams);
     REQUIRE(metallicMaterial);
+
+    // Materials can be initialized before any rendering kernel exists.
+    auto pbr = PbrKernel::create(*heap, *initialization);
+    REQUIRE(pbr);
 
     // CCW triangle: (-1, -1), (-1, 3), (3, -1) so gl_FrontFacing is true in Vulkan clip space.
     const float vertexData[] = {
@@ -242,7 +243,7 @@ TEST_CASE("FX2 bindless PBR materials render expected pixels", "[fx2][bindless][
             {.gpu = gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
         REQUIRE(raster);
         PbrMaterial::DrawParameters draw {{*raster, state, geometry}};
-        REQUIRE(material->record(draw));
+        REQUIRE(pbr->record(*material, draw));
         auto draws = raster->seal();
         REQUIRE(draws);
         gpu->submit(GpuContext::SubmitParameters("bindless-pbr-test.draw").appendWork(draws));
@@ -251,7 +252,12 @@ TEST_CASE("FX2 bindless PBR materials render expected pixels", "[fx2][bindless][
     };
 
     auto dielectricImage = renderAndRead(dielectricMaterial);
-    auto metallicImage   = renderAndRead(metallicMaterial);
+    // A second kernel on the same heap consumes the existing material without rebuilding it.
+    auto kernelInitialization = gpuBindless::CnC::create("bindless-pbr-test.second-kernel", {.gpu = gpu, .heap = heap});
+    REQUIRE(kernelInitialization);
+    pbr = PbrKernel::create(*heap, *kernelInitialization);
+    REQUIRE(pbr);
+    auto metallicImage = renderAndRead(metallicMaterial);
     REQUIRE_FALSE(dielectricImage.empty());
     REQUIRE_FALSE(metallicImage.empty());
     const auto dielectricPixel = static_cast<const uint8_t *>(dielectricImage.data()) + (extent / 2 * extent + extent / 2) * 4;
@@ -272,6 +278,7 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
     REQUIRE(initialization);
     auto kernel = UnlitKernel::create(*heap, *initialization);
     REQUIRE(kernel);
+    // Material counts include private fallbacks and custom inputs; kernels own no descriptors.
     const uint32_t kernelDescriptorCount = heap->size();
 
     auto sampled = Texture::create(
@@ -285,12 +292,12 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
     region.imageExtent = {1, 1, 1};
     initialization->recordUploadImage(sampled, {texel, sizeof(texel)}, {&region, 1});
 
-    auto parameters     = kernel->defaultMaterialParameters();
+    auto parameters     = UnlitMaterial::Parameters {};
     parameters.colorMap = GpuResourceView {sampled}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     parameters.sampler  = sampler;
-    auto material       = kernel->createMaterial(*initialization, parameters);
+    auto material       = UnlitMaterial::create(*heap, *initialization, parameters);
     REQUIRE(material);
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK(heap->size() == kernelDescriptorCount + 4);
     auto initWork = initialization->seal();
     REQUIRE(initWork);
 
@@ -333,15 +340,15 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
         {.location = UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
     geometry.vertexCount = 3;
     UnlitMaterial::DrawParameters draw {{*raster, state, geometry}};
-    REQUIRE(material->record(draw));
+    REQUIRE(kernel->record(*material, draw));
     auto drawWork = raster->seal();
     REQUIRE(drawWork);
 
     // An unsubmitted contender cannot reuse the sole material chunk while payloads retain the material.
     auto contenderProducer = gpuBindless::CnC::create("bindless-material-lifetime.contender", {.gpu = gpu, .heap = heap});
     REQUIRE(contenderProducer);
-    CHECK_FALSE(kernel->createMaterial(*contenderProducer, parameters));
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK_FALSE(UnlitMaterial::create(*heap, *contenderProducer, parameters));
+    CHECK(heap->size() == kernelDescriptorCount + 4);
     material.clear();
 
     GpuContext::SubmitParameters submit("bindless-material-lifetime.submit");
@@ -357,22 +364,22 @@ TEST_CASE("FX2 bindless material keeps heap allocations until completion or disc
     // Completion released the chunk and custom descriptor slots, so a replacement can allocate them.
     auto replacementProducer = gpuBindless::CnC::create("bindless-material-lifetime.replacement", {.gpu = gpu, .heap = heap});
     REQUIRE(replacementProducer);
-    auto replacement = kernel->createMaterial(*replacementProducer, parameters);
+    auto replacement = UnlitMaterial::create(*heap, *replacementProducer, parameters);
     REQUIRE(replacement);
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK(heap->size() == kernelDescriptorCount + 4);
     auto replacementRaster =
         gpuBindless::Raster::create("bindless-material-lifetime.discard-raster",
                                     {.gpu = gpu, .target = &target, .heap = heap, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
     REQUIRE(replacementRaster);
     UnlitMaterial::DrawParameters replacementDraw {{*replacementRaster, state, geometry}};
-    REQUIRE(replacement->record(replacementDraw));
+    REQUIRE(kernel->record(*replacement, replacementDraw));
     auto discardDrawWork = replacementRaster->seal();
     REQUIRE(discardDrawWork);
     replacement.clear();
     auto replacementWork = replacementProducer->seal();
     REQUIRE(replacementWork);
     replacementWork.clear();
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK(heap->size() == kernelDescriptorCount + 4);
     discardDrawWork.clear();
     CHECK(heap->size() == kernelDescriptorCount);
 }
@@ -387,6 +394,7 @@ TEST_CASE("FX2 bindless PBR material keeps heap allocations until completion or 
     REQUIRE(initialization);
     auto kernel = PbrKernel::create(*heap, *initialization);
     REQUIRE(kernel);
+    // Material counts include private fallbacks and custom inputs; kernels own no descriptors.
     const uint32_t kernelDescriptorCount = heap->size();
 
     auto sampled = Texture::create(
@@ -400,12 +408,12 @@ TEST_CASE("FX2 bindless PBR material keeps heap allocations until completion or 
     region.imageExtent = {1, 1, 1};
     initialization->recordUploadImage(sampled, {texel, sizeof(texel)}, {&region, 1});
 
-    auto parameters         = kernel->defaultMaterialParameters();
+    auto parameters         = PbrMaterial::Parameters {};
     parameters.baseColorMap = GpuResourceView {sampled}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     parameters.sampler      = sampler;
-    auto material           = kernel->createMaterial(*initialization, parameters);
+    auto material           = PbrMaterial::create(*heap, *initialization, parameters);
     REQUIRE(material);
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK(heap->size() == kernelDescriptorCount + 5);
     auto initWork = initialization->seal();
     REQUIRE(initWork);
 
@@ -450,15 +458,15 @@ TEST_CASE("FX2 bindless PBR material keeps heap allocations until completion or 
         {.location = PbrMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 6 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
     geometry.vertexCount = 3;
     PbrMaterial::DrawParameters draw {{*raster, state, geometry}};
-    REQUIRE(material->record(draw));
+    REQUIRE(kernel->record(*material, draw));
     auto drawWork = raster->seal();
     REQUIRE(drawWork);
 
     // An unsubmitted contender cannot reuse the sole material chunk while payloads retain the material.
     auto contenderProducer = gpuBindless::CnC::create("bindless-pbr-lifetime.contender", {.gpu = gpu, .heap = heap});
     REQUIRE(contenderProducer);
-    CHECK_FALSE(kernel->createMaterial(*contenderProducer, parameters));
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK_FALSE(PbrMaterial::create(*heap, *contenderProducer, parameters));
+    CHECK(heap->size() == kernelDescriptorCount + 5);
     material.clear();
 
     GpuContext::SubmitParameters submit("bindless-pbr-lifetime.submit");
@@ -474,22 +482,22 @@ TEST_CASE("FX2 bindless PBR material keeps heap allocations until completion or 
     // Completion released the chunk and custom descriptor slots, so a replacement can allocate them.
     auto replacementProducer = gpuBindless::CnC::create("bindless-pbr-lifetime.replacement", {.gpu = gpu, .heap = heap});
     REQUIRE(replacementProducer);
-    auto replacement = kernel->createMaterial(*replacementProducer, parameters);
+    auto replacement = PbrMaterial::create(*heap, *replacementProducer, parameters);
     REQUIRE(replacement);
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK(heap->size() == kernelDescriptorCount + 5);
     auto replacementRaster =
         gpuBindless::Raster::create("bindless-pbr-lifetime.discard-raster",
                                     {.gpu = gpu, .target = &target, .heap = heap, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
     REQUIRE(replacementRaster);
     PbrMaterial::DrawParameters replacementDraw {{*replacementRaster, state, geometry}};
-    REQUIRE(replacement->record(replacementDraw));
+    REQUIRE(kernel->record(*replacement, replacementDraw));
     auto discardDrawWork = replacementRaster->seal();
     REQUIRE(discardDrawWork);
     replacement.clear();
     auto replacementWork = replacementProducer->seal();
     REQUIRE(replacementWork);
     replacementWork.clear();
-    CHECK(heap->size() == kernelDescriptorCount + 2);
+    CHECK(heap->size() == kernelDescriptorCount + 5);
     discardDrawWork.clear();
     CHECK(heap->size() == kernelDescriptorCount);
 }
