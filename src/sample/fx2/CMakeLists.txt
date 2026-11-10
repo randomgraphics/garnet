@@ -2,6 +2,9 @@
 add_executable(GNsample-fx2-pbr simple-pbr.cpp)
 target_link_libraries(GNsample-fx2-pbr GNcore)
 
+add_executable(GNsample-fx2-raytracing simple-rt.cpp)
+target_link_libraries(GNsample-fx2-raytracing GNcore)
+
 add_executable(GNsample-fx2-unlit simple-unlit.cpp)
 target_link_libraries(GNsample-fx2-unlit GNcore)
 

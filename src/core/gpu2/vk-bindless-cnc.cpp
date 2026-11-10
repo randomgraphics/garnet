@@ -3,6 +3,7 @@
 #include "vk-bindless-cnc-payload.h"
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-bindless-pipeline-layout.h"
+#include "vk-acceleration-structure.h"
 #include "vk-sampler.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless.cnc");
@@ -15,10 +16,11 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
 
     auto vkDev = gpu.vulkanDevice().handle();
 
-    uint32_t numCombinedSamplers = 0;
-    uint32_t numStorageImages    = 0;
-    uint32_t numUniformBuffers   = 0;
-    uint32_t numStorageBuffers   = 0;
+    uint32_t numCombinedSamplers       = 0;
+    uint32_t numStorageImages          = 0;
+    uint32_t numUniformBuffers         = 0;
+    uint32_t numStorageBuffers         = 0;
+    uint32_t numAccelerationStructures = 0;
 
     for (size_t s = 0; s < passResources.size(); ++s) {
         if (s == heapSetIndex || passResources[s].empty()) continue;
@@ -32,6 +34,8 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
                     } else {
                         numCombinedSamplers++;
                     }
+                } else if (v.isAccelerationStructure()) {
+                    numAccelerationStructures++;
                 } else if (v.isBuffer()) {
                     if (v.bufferView.type == GpuResourceView::BufferView::STORAGE) {
                         numStorageBuffers++;
@@ -43,13 +47,16 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
         }
     }
 
-    if (numCombinedSamplers == 0 && numStorageImages == 0 && numUniformBuffers == 0 && numStorageBuffers == 0) { return true; }
+    if (numCombinedSamplers == 0 && numStorageImages == 0 && numUniformBuffers == 0 && numStorageBuffers == 0 && numAccelerationStructures == 0) {
+        return true;
+    }
 
     std::vector<vk::DescriptorPoolSize> poolSizes;
     if (numCombinedSamplers > 0) poolSizes.push_back({vk::DescriptorType::eCombinedImageSampler, numCombinedSamplers});
     if (numStorageImages > 0) poolSizes.push_back({vk::DescriptorType::eStorageImage, numStorageImages});
     if (numUniformBuffers > 0) poolSizes.push_back({vk::DescriptorType::eUniformBuffer, numUniformBuffers});
     if (numStorageBuffers > 0) poolSizes.push_back({vk::DescriptorType::eStorageBuffer, numStorageBuffers});
+    if (numAccelerationStructures > 0) poolSizes.push_back({vk::DescriptorType::eAccelerationStructureKHR, numAccelerationStructures});
 
     vk::DescriptorPoolCreateInfo poolInfo;
     poolInfo.setMaxSets(static_cast<uint32_t>(passResources.size())).setPoolSizes(poolSizes);
@@ -81,6 +88,7 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
                 bind.setDescriptorType(slot[0].bufferView.type == GpuResourceView::BufferView::STORAGE ? vk::DescriptorType::eStorageBuffer
                                                                                                        : vk::DescriptorType::eUniformBuffer);
             }
+            if (slot[0].isAccelerationStructure()) bind.setDescriptorType(vk::DescriptorType::eAccelerationStructureKHR);
             bindings.push_back(bind);
         }
 
@@ -96,9 +104,13 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
         outSets[s]                = descSet;
 
         // Populate writes
-        std::vector<vk::WriteDescriptorSet>                writes;
-        std::vector<std::vector<vk::DescriptorImageInfo>>  imageInfos;
-        std::vector<std::vector<vk::DescriptorBufferInfo>> bufferInfos;
+        std::vector<vk::WriteDescriptorSet>                         writes;
+        std::vector<std::vector<vk::DescriptorImageInfo>>           imageInfos;
+        std::vector<std::vector<vk::DescriptorBufferInfo>>          bufferInfos;
+        std::vector<std::vector<vk::AccelerationStructureKHR>>      accelerationStructureHandles;
+        std::vector<vk::WriteDescriptorSetAccelerationStructureKHR> accelerationStructureInfos;
+        accelerationStructureHandles.reserve(numAccelerationStructures);
+        accelerationStructureInfos.reserve(numAccelerationStructures);
 
         for (size_t b = 0; b < passResources[s].size(); ++b) {
             const auto & slot = passResources[s][b];
@@ -150,6 +162,31 @@ bool buildBindlessPassDescriptorSets(GpuContextVulkan2 & gpu, const GpuResourceT
                     .setBufferInfo(curBufferInfos);
                 writes.push_back(w);
             }
+        }
+
+        for (size_t b = 0; b < passResources[s].size(); ++b) {
+            const auto & slot = passResources[s][b];
+            if (slot.empty() || !slot[0].isAccelerationStructure()) continue;
+            auto & handles = accelerationStructureHandles.emplace_back();
+            handles.reserve(slot.size());
+            for (const auto & view : slot) {
+                auto * resource = RuntimeType::cast<VkAccelerationStructureVulkan>(view.accelerationStructure().get());
+                if (!resource || !resource->nativeHandle()) {
+                    GN_ERROR(sLogger, "Invalid acceleration structure in pass resource set {}, binding {}", s, b);
+                    vkDev.destroyDescriptorSetLayout(setlayout);
+                    return false;
+                }
+                handles.push_back(resource->nativeHandle());
+            }
+            auto & info = accelerationStructureInfos.emplace_back();
+            info.setAccelerationStructures(handles);
+            vk::WriteDescriptorSet write;
+            write.setPNext(&info)
+                .setDstSet(descSet)
+                .setDstBinding(static_cast<uint32_t>(b))
+                .setDescriptorType(vk::DescriptorType::eAccelerationStructureKHR)
+                .setDescriptorCount(static_cast<uint32_t>(handles.size()));
+            writes.push_back(write);
         }
 
         if (!writes.empty()) { vkDev.updateDescriptorSets(writes, {}); }
@@ -204,6 +241,23 @@ void VkBindlessCnC::recordCompute(const ComputeParameters & params) {
     }
 
     mOps.emplace_back(std::move(op));
+}
+
+AutoRef<AccelerationStructure> VkBindlessCnC::recordBuildAccelerationStructure(const StrA &                                   resourceName,
+                                                                               const AccelerationStructure::BuildParameters & params) {
+    if (mSealed) GN_UNLIKELY {
+            GN_ERROR(sLogger, "VkBindlessCnC::recordBuildAccelerationStructure: recorder is sealed");
+            return {};
+        }
+    if (!mGpu || !mGpu->caps().accelerationStructures) {
+        GN_ERROR(sLogger, "Cannot build acceleration structure '{}': device does not support acceleration structures", resourceName);
+        return {};
+    }
+    AutoRef<Buffer>                scratchBuffer;
+    AutoRef<AccelerationStructure> accelerationStructure = createAccelerationStructureVulkan(resourceName, mGpu, params, *this, scratchBuffer);
+    if (!accelerationStructure) return {};
+    mOps.emplace_back(StoredBuildAccelerationStructure {accelerationStructure, std::move(scratchBuffer)});
+    return accelerationStructure;
 }
 
 void VkBindlessCnC::recordCopyBuffer(const BufferToBuffer & p) {

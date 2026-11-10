@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "bindless-pbr-vert.spv.h"
 #include "bindless-pbr-frag.spv.h"
+#include "bindless-pbr-raytrace-comp.spv.h"
 #include "bindless-sky-material-impl.h"
 #include <glm/mat3x3.hpp>
 #include <cmath>
@@ -169,6 +170,7 @@ public:
     }
     uint32_t index() const { return mIndex; }
     bool     usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
+    bool     opaque() const { return mData.extraIndices.w != 0; }
 };
 
 class PbrMaterialImpl final : public PbrMaterial {
@@ -185,6 +187,7 @@ public:
     }
     uint32_t index() const { return mStorage.index(); }
     bool     usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+    bool     opaque() const { return mStorage.opaque(); }
 };
 
 class PbrImpl final : public PbrKernel {
@@ -223,7 +226,210 @@ public:
     }
 };
 
+struct RayTracingGeometryData {
+    uint64_t  vertexAddress  = 0;
+    uint64_t  indexAddress   = 0;
+    uint32_t  vertexStride   = 0;
+    uint32_t  positionOffset = 0;
+    uint32_t  normalOffset   = 0;
+    uint32_t  texcoordOffset = 0;
+    uint32_t  materialIndex  = 0;
+    uint32_t  vertexCount    = 0;
+    uint32_t  indexCount     = 0;
+    uint32_t  indexFormat    = 0;
+    glm::mat4 objectToWorld {1};
+};
+static_assert(offsetof(RayTracingGeometryData, objectToWorld) == 48);
+static_assert(sizeof(RayTracingGeometryData) == 112);
+
+const gpu2::RasterGeometry::VertexAttribute * findAttribute(const gpu2::RasterGeometry & geometry, uint32_t location) {
+    const gpu2::RasterGeometry::VertexAttribute * found = nullptr;
+    for (const auto & attribute : geometry.format.attributes) {
+        if (attribute.location != location) continue;
+        if (found) return nullptr;
+        found = &attribute;
+    }
+    return found;
+}
+
+bool validRayTransform(const glm::mat4 & transform) {
+    for (int c = 0; c < 4; ++c)
+        for (int r = 0; r < 4; ++r)
+            if (!std::isfinite(transform[c][r])) return false;
+    const float determinant = glm::determinant(glm::mat3(transform));
+    return std::isfinite(determinant) && std::abs(determinant) > 1e-20f && transform[0][3] == 0 && transform[1][3] == 0 && transform[2][3] == 0 &&
+           transform[3][3] == 1;
+}
+
+bool packRayGeometry(const PbrRayTracingScene::Mesh & mesh, const PbrMaterialImpl & material, RayTracingGeometryData & data,
+                     gpu2::AccelerationStructure::TriangleGeometry & triangle) {
+    if (!mesh.geometry || !validRayTransform(mesh.objectToWorld)) return false;
+    const auto & geometry = *mesh.geometry;
+    const auto * position = findAttribute(geometry, PbrMaterial::POSITION_LOCATION);
+    const auto * normal   = findAttribute(geometry, PbrMaterial::NORMAL_LOCATION);
+    const auto * texcoord = findAttribute(geometry, PbrMaterial::TEXCOORD_LOCATION);
+    if (!position || !normal || !texcoord || position->format != gpu2::RasterGeometry::AttributeFormat::F32_3 ||
+        normal->format != gpu2::RasterGeometry::AttributeFormat::F32_3 || texcoord->format != gpu2::RasterGeometry::AttributeFormat::F32_2 ||
+        position->binding >= geometry.vertices.size() || normal->binding != position->binding || texcoord->binding != position->binding)
+        return false;
+    const auto & vertex           = geometry.vertices[position->binding];
+    const bool   vertexLayoutFits = vertex.buffer && vertex.buffer->gpuAddress() && vertex.stride && position->offset <= vertex.stride &&
+                                    vertex.stride - position->offset >= 12 && normal->offset <= vertex.stride && vertex.stride - normal->offset >= 12 &&
+                                    texcoord->offset <= vertex.stride && vertex.stride - texcoord->offset >= 8;
+    const bool   indexLayoutFits  = (geometry.indexCount != 0) == bool(geometry.indices.buffer) &&
+                                    (!geometry.indexCount || (geometry.indices.stride == 2 || geometry.indices.stride == 4) && geometry.indexCount % 3 == 0) &&
+                                    (!geometry.indices.buffer || geometry.indices.buffer->gpuAddress());
+    if (!vertexLayoutFits || !indexLayoutFits || !geometry.vertexCount || !material.opaque()) return false;
+
+    data.vertexAddress  = vertex.buffer->gpuAddress() + vertex.offset;
+    data.indexAddress   = geometry.indices.buffer ? geometry.indices.buffer->gpuAddress() + geometry.indices.offset : 0;
+    data.vertexStride   = vertex.stride;
+    data.positionOffset = position->offset;
+    data.normalOffset   = normal->offset;
+    data.texcoordOffset = texcoord->offset;
+    data.materialIndex  = material.index();
+    data.vertexCount    = geometry.vertexCount;
+    data.indexCount     = geometry.indexCount;
+    data.indexFormat    = geometry.indices.stride == 2 ? 1u : (geometry.indices.stride == 4 ? 2u : 0u);
+    data.objectToWorld  = mesh.objectToWorld;
+
+    triangle.vertexBuffer   = vertex.buffer;
+    triangle.vertexOffset   = vertex.offset;
+    triangle.vertexStride   = vertex.stride;
+    triangle.positionOffset = position->offset;
+    triangle.vertexCount    = geometry.vertexCount;
+    triangle.indexBuffer    = geometry.indices.buffer;
+    triangle.indexOffset    = geometry.indices.offset;
+    triangle.indexCount     = geometry.indexCount;
+    triangle.indexFormat    = geometry.indexCount ? (geometry.indices.stride == 2 ? gpu2::AccelerationStructure::IndexFormat::UINT16
+                                                                                  : gpu2::AccelerationStructure::IndexFormat::UINT32)
+                                                  : gpu2::AccelerationStructure::IndexFormat::NONE;
+    for (uint32_t row = 0; row < 4; ++row)
+        triangle.objectToWorld.rows[row] = {mesh.objectToWorld[0][row], mesh.objectToWorld[1][row], mesh.objectToWorld[2][row], mesh.objectToWorld[3][row]};
+    return true;
+}
+
+class PbrRayTracingSceneImpl final : public PbrRayTracingScene {
+    AutoRef<gpu2::AccelerationStructure> mAccelerationStructure;
+    AutoRef<gpu2::Buffer>                mGeometryBuffer;
+    DynaArray<AutoRef<gpu2::Buffer>>     mGeometryBuffers;
+    DynaArray<AutoRef<PbrMaterial>>      mMaterials;
+
+public:
+    GN_REGISTER_RUNTIME_TYPE(PbrRayTracingScene);
+    PbrRayTracingSceneImpl(): PbrRayTracingScene(TYPE_INFO(), "fx2.pbr-ray-tracing-scene") {}
+    bool initialize(gpu2::DescriptorHeap & heap, gpu2::CnC & initialization, ArrayView<const Mesh> meshes) {
+        if (meshes.empty()) return false;
+        DynaArray<RayTracingGeometryData>                        geometryData;
+        DynaArray<gpu2::AccelerationStructure::TriangleGeometry> acsGeometry;
+        geometryData.reserve(meshes.size());
+        acsGeometry.reserve(meshes.size());
+        for (const Mesh & mesh : meshes) {
+            if (!mesh.geometry || !mesh.material) return false;
+            auto * material = RuntimeType::cast<PbrMaterialImpl>(mesh.material);
+            if (!material || !material->usesHeap(referenceTo(&heap))) return false;
+            RayTracingGeometryData                        data;
+            gpu2::AccelerationStructure::TriangleGeometry triangle;
+            if (!packRayGeometry(mesh, *material, data, triangle)) return false;
+            geometryData.append(data);
+            acsGeometry.append(triangle);
+            mGeometryBuffers.append(triangle.vertexBuffer);
+            if (triangle.indexBuffer) mGeometryBuffers.append(triangle.indexBuffer);
+            mMaterials.append(referenceTo(mesh.material));
+        }
+        auto         gpu       = heap.gpu();
+        const size_t tableSize = geometryData.size() * sizeof(RayTracingGeometryData);
+        mGeometryBuffer        = gpu2::Buffer::create("fx2.pbr-ray-tracing-geometry-table", {.context = gpu, .size = tableSize});
+        if (!mGeometryBuffer) return false;
+        mAccelerationStructure = initialization.recordBuildAccelerationStructure("fx2.pbr-ray-tracing-acs", {.geometries = acsGeometry});
+        if (!mAccelerationStructure) return false;
+        initialization.recordUploadBuffer(mGeometryBuffer, 0, {reinterpret_cast<const uint8_t *>(geometryData.data()), tableSize});
+        initialization.retainResource(referenceTo(this));
+        return true;
+    }
+    AutoRef<gpu2::AccelerationStructure> accelerationStructure() const override { return mAccelerationStructure; }
+    gpu2::GpuResourceView                geometryTable() const override {
+        gpu2::GpuResourceView view {mGeometryBuffer};
+        view.setBufferViewType(gpu2::GpuResourceView::BufferView::STORAGE);
+        return view;
+    }
+};
+
+class RayTraceImpl final : public RayTraceKernel {
+    AutoRef<Heap>            mHeap;
+    AutoRef<gpu2::GpuShader> mShader;
+
+public:
+    GN_REGISTER_RUNTIME_TYPE(RayTraceKernel);
+    RayTraceImpl(): RayTraceKernel(TYPE_INFO(), "bindless.pbr-ray-tracing") {}
+    bool initialize(AutoRef<Heap> heap) {
+        if (!heap || heap->bindingIndex() != 0 || !heap->gpu()->caps().rayQueries) return false;
+        mShader = gpu2::GpuShader::create(
+            {.context = heap->gpu(), .name = "bindless-pbr-raytrace.comp", .binary = kBindlessPbrRaytraceCompSpv, .size = sizeof(kBindlessPbrRaytraceCompSpv)});
+        if (!mShader) return false;
+        mHeap = std::move(heap);
+        return true;
+    }
+    bool record(const RecordParameters & p) const override {
+        if (!p.ssc || !p.output || !p.width || !p.height || !p.scene.accelerationStructure() || p.width != p.output->descriptor().width ||
+            p.height != p.output->descriptor().height || p.output->descriptor().format != gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT() ||
+            p.output->descriptor().samples != 1 || !p.ssc->view().buffer() || p.scene.accelerationStructure()->gpu() != mHeap->gpu())
+            return false;
+        uint32_t skyMaterialIndex = uint32_t(-1);
+        if (p.skyMaterial) {
+            if (!skyMaterialUsesHeap(p.skyMaterial.get(), *mHeap)) return false;
+            skyMaterialIndex = getSkyMaterialIndex(p.skyMaterial.get());
+            if (skyMaterialIndex == uint32_t(-1)) return false;
+        }
+        struct Dispatch {
+            uint32_t width, height, skyMaterialIndex, padding;
+        } dispatch {p.width, p.height, skyMaterialIndex, 0};
+        p.recorder.retainResource(referenceTo(&p.scene));
+        if (p.skyMaterial) p.recorder.retainResource(p.skyMaterial);
+        p.recorder.retainResource(p.ssc);
+        p.recorder.retainResource(p.output);
+        p.recorder.recordCompute({.cs         = mShader,
+                                  .x          = (p.width + 7) / 8,
+                                  .y          = (p.height + 7) / 8,
+                                  .z          = 1,
+                                  .immediates = {reinterpret_cast<const uint8_t *>(&dispatch), sizeof(dispatch)}});
+        return true;
+    }
+};
+
 } // namespace
+
+AutoRef<PbrRayTracingScene> PbrRayTracingScene::create(gpu2::DescriptorHeap & heap, gpu2::CnC & initialization, ArrayView<const Mesh> meshes) {
+    auto scene = AutoRef<PbrRayTracingSceneImpl>(new PbrRayTracingSceneImpl());
+    if (!scene->initialize(heap, initialization, meshes)) return {};
+    return scene;
+}
+
+AutoRef<RayTraceKernel> RayTraceKernel::create(gpu2::DescriptorHeap & heap, gpu2::CnC & initialization) {
+    auto kernel = AutoRef<RayTraceImpl>(new RayTraceImpl());
+    if (!kernel->initialize(referenceTo(&heap))) return {};
+    initialization.retainResource(kernel);
+    return kernel;
+}
+
+gpu2::GpuResourceTable RayTraceKernel::createPassResources(PbrRayTracingScene & scene, const AutoRef<SharedShaderConstants::UniformState> & ssc,
+                                                           const AutoRef<gpu2::Texture> & output) {
+    if (!scene.accelerationStructure() || !ssc || !ssc->view().buffer() || !output || output->descriptor().samples != 1 ||
+        output->descriptor().format != gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT())
+        return {};
+    gpu2::GpuResourceTable resources;
+    resources.resize(2);
+    resources[1].resize(4);
+    gpu2::GpuResourceView accelerationStructure;
+    accelerationStructure.setAccelerationStructure(scene.accelerationStructure());
+    resources[1][0].append(std::move(accelerationStructure));
+    resources[1][1].append(ssc->view());
+    resources[1][2].append(scene.geometryTable());
+    gpu2::GpuResourceView outputView {output};
+    outputView.setImageViewType(gpu2::GpuResourceView::ImageView::STORAGE);
+    resources[1][3].append(std::move(outputView));
+    return resources;
+}
 
 AutoRef<PbrKernel> PbrKernel::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<PbrImpl>(new PbrImpl());

@@ -231,6 +231,11 @@ public:
     /// Record a compute dispatch using the bindless descriptor set and pass resources. A recorder created without a heap rejects compute dispatches.
     virtual void recordCompute(const ComputeParameters & params) = 0;
 
+    /// Record construction of a GPU-owned triangle acceleration structure. The returned resource
+    /// can be consumed by a later shader pass when this build payload is submitted first or supplied
+    /// as a GPU dependency. Empty is returned for invalid geometry, unsupported devices or allocation failure.
+    virtual AutoRef<AccelerationStructure> recordBuildAccelerationStructure(const StrA & name, const AccelerationStructure::BuildParameters & params) = 0;
+
     struct BufferToBuffer {
         AutoRef<Buffer> src;
         AutoRef<Buffer> dst;

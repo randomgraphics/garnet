@@ -12,6 +12,8 @@ using namespace gpu2;
 
 namespace {
 
+Logger * sLogger = getLogger("GN.tool.mesh-viewer.scene-renderer");
+
 AutoRef<Texture> loadTexture(AutoRef<GpuContext> gpu, CnC & uploads, const ModelScene::Texture & source) {
     gfx::img::Image image;
     if (!source.path.empty()) {
@@ -112,6 +114,22 @@ bool RenderModel::prepare(AutoRef<GpuContext> gpu, AutoRef<DescriptorHeap> mater
         case Shading::CEL:
             return false;
         }
+
+        if (!material.pbr) {
+            auto parameters          = fx2::PbrMaterial::Parameters {};
+            parameters.baseColor     = source.baseColor;
+            parameters.emissive      = source.emissive;
+            parameters.metallic      = source.metallic;
+            parameters.roughness     = source.roughness;
+            parameters.opaque        = source.alphaMode == ModelScene::AlphaMode::OPAQUE;
+            parameters.baseColorMap  = baseColor;
+            parameters.normalMap     = normal;
+            parameters.emissiveMap   = emissive;
+            parameters.occlusionMap  = occlusion;
+            parameters.metalRoughMap = metalRough;
+            material.pbr             = fx2::PbrMaterial::create(*materialHeap, materialUploads, parameters);
+            if (!material.pbr) return false;
+        }
         materials.append(std::move(material));
     }
 
@@ -126,8 +144,10 @@ bool RenderModel::prepare(AutoRef<GpuContext> gpu, AutoRef<DescriptorHeap> mater
                                      sourceMaterial.occlusionMap >= 0 || sourceMaterial.metalRoughMap >= 0))
             return false;
 
-        auto vb = Buffer::create("viewer.vertices", {.context = gpu, .size = primitive.vertices.size() * sizeof(ModelScene::Vertex)});
-        auto ib = Buffer::create("viewer.indices", {.context = gpu, .size = primitive.indices.size() * sizeof(uint32_t)});
+        auto vb = Buffer::create("viewer.vertices",
+                                 {.context = gpu, .size = primitive.vertices.size() * sizeof(ModelScene::Vertex), .accelerationStructureBuildInput = true});
+        auto ib =
+            Buffer::create("viewer.indices", {.context = gpu, .size = primitive.indices.size() * sizeof(uint32_t), .accelerationStructureBuildInput = true});
         if (!vb || !ib) return false;
         geometryUploads.recordUploadBuffer(
             vb, 0, {reinterpret_cast<const uint8_t *>(primitive.vertices.data()), primitive.vertices.size() * sizeof(ModelScene::Vertex)});
@@ -200,6 +220,28 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
         !axes.prepare(gpu, heap, *geometryUploads, *initialization, *axesSource, Shading::UNLIT, transform))
         return false;
 
+    if (gpu->caps().rayQueries) {
+        bool                                     allPbr = true;
+        DynaArray<fx2::PbrRayTracingScene::Mesh> rayMeshes;
+        rayMeshes.reserve(model.instances.size());
+        for (const auto & instance : model.instances) {
+            const auto & material = model.materials[instance.material];
+            if (!material.pbr) {
+                allPbr = false;
+                break;
+            }
+            rayMeshes.append({&instance.geometry, material.pbr.get(), instance.transform});
+        }
+        if (allPbr && !rayMeshes.empty()) {
+            rayTrace = fx2::RayTraceKernel::create(*heap, *initialization);
+            if (rayTrace) rayScene = fx2::PbrRayTracingScene::create(*heap, *initialization, {rayMeshes.data(), rayMeshes.size()});
+            if (!rayScene) {
+                rayTrace.clear();
+                GN_WARN(sLogger, "Ray tracing is unavailable for this model; use raster PBR instead");
+            }
+        }
+    }
+
     // One-shot initialization may block: nothing is presented until every material and
     // geometry upload has landed, so later frames record draws without a producer payload.
     GpuContext::SubmitParameters submit("viewer.initialize");
@@ -268,6 +310,59 @@ bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConst
     if (showBounds && !recordModel(bounds, raster, state)) return false;
     if (showAxes && !recordModel(axes, raster, state)) return false;
     return sky->record(*skyMaterial, {raster, state});
+}
+
+bool SceneRenderer::prepareRayOutput(uint32_t width, uint32_t height) {
+    if (!rayTracingAvailable() || !width || !height) return false;
+    if (rayOutput && rayOutput->descriptor().width == width && rayOutput->descriptor().height == height) return true;
+    rayOutputMaterial.clear();
+    rayOutput.clear();
+    rayOutputGeometry.vertices.clear();
+    rayOutputGeometry.format.attributes.clear();
+    rayOutputGeometry.vertexCount = 0;
+    rayOutput                     = Texture::create(
+        "viewer.ray-traced-output",
+        {.context = heap->gpu(), .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT()).setDimensions(width, height)});
+    if (!rayOutput) return false;
+    auto sampledView = GpuResourceView {rayOutput};
+    sampledView.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    auto initialization = CnC::create("viewer.ray-output-init", {.gpu = heap->gpu(), .heap = heap});
+    if (!initialization) return false;
+    fx2::UnlitMaterial::Parameters materialParameters;
+    materialParameters.colorMap = sampledView;
+    rayOutputMaterial           = fx2::UnlitMaterial::create(*heap, *initialization, materialParameters);
+    if (!rayOutputMaterial) return false;
+
+    struct Vertex {
+        glm::vec3 position;
+        glm::vec2 uv;
+    };
+    constexpr Vertex vertices[]   = {{{-1, -1, 0.5f}, {0, 0}}, {{1, -1, 0.5f}, {1, 0}}, {{1, 1, 0.5f}, {1, 1}},
+                                     {{-1, -1, 0.5f}, {0, 0}}, {{1, 1, 0.5f}, {1, 1}},  {{-1, 1, 0.5f}, {0, 1}}};
+    auto             vertexBuffer = Buffer::create("viewer.ray-output-quad", {.context = heap->gpu(), .size = sizeof(vertices)});
+    if (!vertexBuffer) return false;
+    initialization->recordUploadBuffer(vertexBuffer, 0, {reinterpret_cast<const uint8_t *>(vertices), sizeof(vertices)});
+    rayOutputGeometry.vertices.push_back({vertexBuffer, 0, sizeof(Vertex)});
+    rayOutputGeometry.vertexCount = 6;
+    rayOutputGeometry.format.attributes.push_back(
+        {.location = fx2::UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    rayOutputGeometry.format.attributes.push_back(
+        {.location = fx2::UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = sizeof(glm::vec3), .format = RasterGeometry::AttributeFormat::F32_2});
+    auto payload = initialization->seal();
+    if (!payload) return false;
+    GpuContext::SubmitParameters submit("viewer.ray-output-init");
+    submit.appendWork(payload);
+    heap->gpu()->submit(submit);
+    heap->gpu()->waitForIdle();
+    return true;
+}
+
+bool SceneRenderer::recordRayOutput(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, const glm::mat4 & clipToWorld) const {
+    if (!rayOutputMaterial || rayOutputGeometry.vertexCount != 6) return false;
+    RasterState states;
+    states.cullMode = RasterState::CULL_NONE;
+    fx2::UnlitMaterial::DrawParameters draw {{raster, state, rayOutputGeometry, &states}, clipToWorld};
+    return unlit->record(*rayOutputMaterial, draw);
 }
 
 } // namespace GN::viewer

@@ -3,6 +3,7 @@
 #include "vk-bindless-descriptor-heap.h"
 #include "vk-bindless-compute-pso-cache.h"
 #include "vk-buffer.h"
+#include "vk-acceleration-structure.h"
 #include "vk-texture.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.bindless.cnc.payload");
@@ -27,12 +28,30 @@ VkBindlessCncPayload::~VkBindlessCncPayload() {
     }
 }
 
+void VkBindlessCncPayload::onSubmitComplete() {
+    for (auto & op : mOps) {
+        std::visit(
+            [&](auto & o) {
+                using T = std::decay_t<decltype(o)>;
+                if constexpr (std::is_same_v<T, StoredBuildAccelerationStructure>) {
+                    if (auto * resource = RuntimeType::cast<VkAccelerationStructureVulkan>(o.accelerationStructure.get())) resource->markBuildSubmitted();
+                }
+            },
+            op);
+    }
+}
+
 void VkBindlessCncPayload::onGpuComplete() {
     for (auto & op : mOps) {
         std::visit(
             [&](auto & o) {
                 using T = std::decay_t<decltype(o)>;
-                if constexpr (std::is_same_v<T, StoredUploadBuffer>) {
+                if constexpr (std::is_same_v<T, StoredBuildAccelerationStructure>) {
+                    if (auto * accelerationStructure = RuntimeType::cast<VkAccelerationStructureVulkan>(o.accelerationStructure.get())) {
+                        accelerationStructure->releaseBuildInputs();
+                    }
+                    o.scratchBuffer.clear();
+                } else if constexpr (std::is_same_v<T, StoredUploadBuffer>) {
                     o.staging.clear();
                 } else if constexpr (std::is_same_v<T, StoredBufferToImage>) {
                     o.src.clear();
@@ -58,6 +77,7 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
     vk::CommandBuffer vkcb = ctx.cmd.handle();
 
     // 1. Register pass resources with state tracker if present
+    bool invalidPassResource = false;
     if (ctx.batchTracker) {
         auto & tracker = *ctx.batchTracker;
         // Uploads to the built-in material SSBO must be visible before compute reads.
@@ -86,12 +106,20 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                         } else {
                             tracker.addUniformBuffer(buf, vk::PipelineStageFlagBits::eComputeShader);
                         }
+                    } else if (view.isAccelerationStructure()) {
+                        auto * resource = RuntimeType::cast<VkAccelerationStructureVulkan>(view.accelerationStructure().get());
+                        if (!tracker.addAccelerationStructure(resource, /*write=*/false, vk::PipelineStageFlagBits::eComputeShader)) {
+                            GN_ERROR(sLogger, "VkBindlessCncPayload: acceleration-structure pass resource hazard");
+                            invalidPassResource = true;
+                        }
                     }
                 }
             }
         }
         tracker.emitPrePassBarriers(vkcb);
     }
+
+    if (invalidPassResource) return;
 
     // 2. Bind descriptor heap once for compute
     if (mHeap && mPipelineLayout) {
@@ -127,11 +155,18 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
         writtenTextures.push_back({t, v});
     };
 
+    bool buildFailure = false;
     for (const auto & op : mOps) {
         std::visit(
             [&](const auto & o) {
                 using T = std::decay_t<decltype(o)>;
-                if constexpr (std::is_same_v<T, StoredBindlessCompute>) {
+                if constexpr (std::is_same_v<T, StoredBuildAccelerationStructure>) {
+                    auto * accelerationStructure = RuntimeType::cast<VkAccelerationStructureVulkan>(o.accelerationStructure.get());
+                    if (!accelerationStructure || !ctx.batchTracker || !accelerationStructure->recordBuild(vkcb, *ctx.batchTracker, o.scratchBuffer)) {
+                        GN_ERROR(sLogger, "VkBindlessCncPayload: failed to record acceleration-structure build");
+                        buildFailure = true;
+                    }
+                } else if constexpr (std::is_same_v<T, StoredBindlessCompute>) {
                     auto * csVk = RuntimeType::cast<GpuShaderVulkan>(o.cs.get());
                     if (!csVk || !csVk->rvShader()) return;
 
@@ -150,7 +185,10 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                     }
 
                     vk::Pipeline pipe = mGpu->bindlessComputePsoCache().getOrCreate(mPipelineLayout, csVk);
-                    if (!pipe) return;
+                    if (!pipe) {
+                        GN_ERROR(sLogger, "VkBindlessCnC: compute pipeline unavailable");
+                        return;
+                    }
 
                     if (pipe != activePipeline) {
                         vkcb.bindPipeline(vk::PipelineBindPoint::eCompute, pipe);
@@ -213,6 +251,7 @@ void VkBindlessCncPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 }
             },
             op);
+        if (buildFailure) return;
     }
 
     // 5. Automated invariant: restore written resources back to fully readable state

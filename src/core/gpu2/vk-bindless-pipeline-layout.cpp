@@ -107,6 +107,8 @@ vk::PipelineLayout VkBindlessPipelineLayoutCache::getOrCreateInternal(uint32_t h
                 } else {
                     bind.setDescriptorType(vk::DescriptorType::eUniformBuffer);
                 }
+            } else if (slot[0].isAccelerationStructure()) {
+                bind.setDescriptorType(vk::DescriptorType::eAccelerationStructureKHR);
             } else {
                 continue;
             }

@@ -60,8 +60,10 @@ struct GpuContext : public RCRT64 {
 
     struct Caps {
         gfx::img::PixelFormat defaultDepthFormat       = gfx::img::PixelFormat::UNKNOWN();
-        uint32_t              maxBindlessSampledImages = 0; ///< Maximum sampled images in a bindless descriptor set.
-        uint32_t              maxImmediateSize         = 0; ///< Maximum immediate data (push constants / root constants) in bytes.
+        uint32_t              maxBindlessSampledImages = 0;     ///< Maximum sampled images in a bindless descriptor set.
+        uint32_t              maxImmediateSize         = 0;     ///< Maximum immediate data (push constants / root constants) in bytes.
+        bool                  accelerationStructures   = false; ///< GPU supports building and reading triangle acceleration structures.
+        bool                  rayQueries               = false; ///< Compute shaders can issue inline ray queries against acceleration structures.
     };
 
     virtual Caps caps() const = 0;
@@ -274,6 +276,10 @@ struct Buffer : public RCRT64 {
         /// CPU mappable buffer is faster for CPU to acess, but slower for GPU to access.
         /// It should be used to store short-lived data that is read or write only once by GPU.
         bool mappable = false;
+
+        /// Set for vertex/index buffers passed to AccelerationStructure build operations.
+        /// The backend adds the required device-address and build-input usage flags.
+        bool accelerationStructureBuildInput = false;
     };
 
     static GN_API AutoRef<Buffer> create(const StrA & name, const CreateParameters & params);
@@ -328,6 +334,9 @@ struct Buffer : public RCRT64 {
     /// Trying to map a un-mappable, or already mapped, buffer returns an empty Mapped object.
     virtual Mapped map() = 0;
 
+    /// Buffer allocation size in bytes.
+    virtual uint64_t size() const = 0;
+
     /// Upload CPU bytes into this buffer at the requested byte offset. Blocks until the GPU transfer completes.
     /// Leaves the buffer read-ready. Returns false if validation or upload fails.
     /// Prefer CNC's recordUploadBuffer() for nonblocking CPU/GPU buffer transfers in production code.
@@ -346,6 +355,54 @@ struct Buffer : public RCRT64 {
 protected:
     virtual void unmap(const Mapped &) = 0;
 
+    using RCRT64::RCRT64;
+};
+
+/// Opaque GPU-owned triangle acceleration structure (ACS). Create one by recording a build through
+/// \c CnC; backend layout, allocation and native handles remain private. Submit the sealed build
+/// payload before any payload that reads the ACS.
+struct AccelerationStructure : public RCRT64 {
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+
+    enum class IndexFormat : uint8_t {
+        NONE,
+        UINT16,
+        UINT32,
+    };
+
+    /// Selects the build-time versus traversal-time optimization; the choices are mutually exclusive.
+    enum class BuildPreference : uint8_t {
+        FAST_TRACE,
+        FAST_BUILD,
+    };
+
+    /// One triangle geometry instance. Position values are three 32-bit floats at
+    /// \p vertexOffset + vertexIndex * \p vertexStride + \p positionOffset. Index data, when
+    /// present, is tightly packed in the selected \p indexFormat. \p objectToWorld is row-major.
+    struct TriangleGeometry {
+        AutoRef<Buffer> vertexBuffer;
+        uint64_t        vertexOffset   = 0;
+        uint32_t        vertexStride   = sizeof(float) * 3;
+        uint32_t        positionOffset = 0;
+        uint32_t        vertexCount    = 0;
+        AutoRef<Buffer> indexBuffer;
+        uint64_t        indexOffset   = 0;
+        uint32_t        indexCount    = 0;
+        IndexFormat     indexFormat   = IndexFormat::NONE;
+        Matrix44f       objectToWorld = Matrix44f::sIdentity();
+    };
+
+    /// Geometry inputs copied when the build is recorded. Buffer references are retained through
+    /// GPU build completion. The implementation chooses its internal ACS organization.
+    struct BuildParameters {
+        ArrayView<const TriangleGeometry> geometries;
+        BuildPreference                   preference = BuildPreference::FAST_TRACE;
+    };
+
+    /// Owning GPU context. Empty only for an invalid backend resource.
+    virtual AutoRef<GpuContext> gpu() const = 0;
+
+protected:
     using RCRT64::RCRT64;
 };
 
@@ -402,6 +459,7 @@ struct GpuResourceView {
     bool isTexture() const { return resource && resource->isKindOf<Texture>(); }
     bool isSampler() const { return resource && resource->isKindOf<Sampler>(); }
     bool isBuffer() const { return resource && resource->isKindOf<Buffer>(); }
+    bool isAccelerationStructure() const { return resource && resource->isKindOf<AccelerationStructure>(); }
 
     auto texture() const -> AutoRef<Texture> {
         auto p = RuntimeType::cast<Texture>(resource.get());
@@ -415,8 +473,16 @@ struct GpuResourceView {
         auto p = RuntimeType::cast<Buffer>(resource.get());
         return p ? GN::referenceTo(p) : AutoRef<Buffer>();
     }
+    auto accelerationStructure() const -> AutoRef<AccelerationStructure> {
+        auto p = RuntimeType::cast<AccelerationStructure>(resource.get());
+        return p ? GN::referenceTo(p) : AutoRef<AccelerationStructure>();
+    }
     GpuResourceView & setResource(AutoRef<RCRT64> & resource_) {
         resource = resource_;
+        return *this;
+    }
+    GpuResourceView & setAccelerationStructure(AutoRef<AccelerationStructure> resource_) {
+        resource = std::move(resource_);
         return *this;
     }
     GpuResourceView & setCombinedTextureSampler(AutoRef<Sampler> sampler_) {

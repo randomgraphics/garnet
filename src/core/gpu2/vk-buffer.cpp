@@ -35,18 +35,26 @@ bool BufferVulkan::init(const Buffer::CreateParameters & params) {
     mSize     = params.size;
     mMappable = params.mappable;
 
+    if (params.accelerationStructureBuildInput && !mGpu->caps().accelerationStructures) {
+        GN_ERROR(sLogger, "BufferVulkan::init: acceleration-structure build inputs are unsupported, name='{}'", name);
+        return false;
+    }
+
     // All buffers get the full usage set so they can serve any role without recreation.
     // Mappable buffers live in host-visible coherent memory; device-local buffers use staging for uploads.
     constexpr vk::BufferUsageFlags kAllUsages = vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst |
                                                 vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eStorageBuffer |
                                                 vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer |
                                                 vk::BufferUsageFlagBits::eShaderDeviceAddress;
+    const vk::BufferUsageFlags     usage =
+        params.accelerationStructureBuildInput ? kAllUsages | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR : kAllUsages;
+    mAccelerationStructureBuildInput = params.accelerationStructureBuildInput;
 
     rv::Buffer::ConstructParameters cp;
     cp.name  = name.c_str();
     cp.gi    = dev.gi();
     cp.size  = params.size;
-    cp.usage = kAllUsages;
+    cp.usage = usage;
     cp.memory =
         params.mappable ? (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) : vk::MemoryPropertyFlagBits::eDeviceLocal;
 
@@ -132,8 +140,9 @@ void BufferVulkan::reset() {
         mIsMapped = false;
     }
     mRvBuffer.clear();
-    mSize     = 0;
-    mMappable = false;
+    mSize                            = 0;
+    mMappable                        = false;
+    mAccelerationStructureBuildInput = false;
     mGpu.clear();
 }
 

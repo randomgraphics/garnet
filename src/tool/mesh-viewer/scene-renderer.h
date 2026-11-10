@@ -41,6 +41,11 @@ struct SceneRenderer {
     AutoRef<fx2::UnlitKernel>           unlit;
     AutoRef<fx2::SkyKernel>             sky;
     AutoRef<fx2::SkyMaterial>           skyMaterial;
+    AutoRef<fx2::RayTraceKernel>        rayTrace;
+    AutoRef<fx2::PbrRayTracingScene>    rayScene;
+    AutoRef<gpu2::Texture>              rayOutput;
+    AutoRef<fx2::UnlitMaterial>         rayOutputMaterial;
+    gpu2::RasterGeometry                rayOutputGeometry;
     RenderModel                         model, bounds, axes;
 
     /// One frame's camera, viewport, and exposure inputs for the shared uniform block.
@@ -68,6 +73,10 @@ struct SceneRenderer {
     size_t drawCount(bool showBounds, bool showAxes) const;
 
     bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const;
+
+    bool rayTracingAvailable() const { return rayTrace && rayScene; }
+    bool prepareRayOutput(uint32_t width, uint32_t height);
+    bool recordRayOutput(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, const glm::mat4 & clipToWorld) const;
 
 private:
     bool recordModel(const RenderModel & source, gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;

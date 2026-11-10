@@ -270,6 +270,11 @@ uint32_t getSkyMaterialIndex(const SkyMaterial * material) {
     return impl ? impl->index() : uint32_t(-1);
 }
 
+bool skyMaterialUsesHeap(const SkyMaterial * material, ::GN::gpu2::DescriptorHeap & heap) {
+    auto * impl = RuntimeType::cast<SkyMaterialImpl>(material);
+    return impl && impl->usesHeap(referenceTo(&heap));
+}
+
 AutoRef<SkyKernel> SkyKernel::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<SkyImpl>(new SkyImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};

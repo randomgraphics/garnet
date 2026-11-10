@@ -7,6 +7,8 @@
 #include "vk-format-utils.h"
 #include "vk-gpu-payload.h"
 
+#include <algorithm>
+#include <cstring>
 #include <functional>
 #include <list>
 #include <mutex>
@@ -47,6 +49,36 @@ static rv::Device::Verbosity getVkDeviceVerbosity(GpuContext::Verbosity verbosit
     default:
         return rv::Device::Verbosity::SILENCE;
     }
+}
+
+static bool hasDeviceExtension(vk::PhysicalDevice device, const char * name) {
+    const auto extensions = rv::enumerateDeviceExtensions(device);
+    return std::any_of(extensions.begin(), extensions.end(),
+                       [name](const vk::ExtensionProperties & extension) { return std::strcmp(extension.extensionName, name) == 0; });
+}
+
+struct RayTracingSupport {
+    bool accelerationStructures = false;
+    bool rayQueries             = false;
+};
+
+static RayTracingSupport queryRayTracingSupport(vk::PhysicalDevice device) {
+    if (!hasDeviceExtension(device, "VK_KHR_acceleration_structure") || !hasDeviceExtension(device, "VK_KHR_deferred_host_operations")) return {};
+
+    const bool                                         hasRayQueryExtension = hasDeviceExtension(device, "VK_KHR_ray_query");
+    vk::PhysicalDeviceRayQueryFeaturesKHR              rayQueryFeatures;
+    vk::PhysicalDevice16BitStorageFeatures             storage16Features;
+    vk::PhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures;
+    accelerationStructureFeatures.pNext = hasRayQueryExtension ? &rayQueryFeatures : nullptr;
+    rayQueryFeatures.pNext              = hasRayQueryExtension ? &storage16Features : nullptr;
+    vk::PhysicalDeviceFeatures2 features;
+    features.pNext = &accelerationStructureFeatures;
+    device.getFeatures2(&features);
+    RayTracingSupport result;
+    result.accelerationStructures = accelerationStructureFeatures.accelerationStructure;
+    result.rayQueries             = result.accelerationStructures && rayQueryFeatures.rayQuery && hasRayQueryExtension && features.features.shaderInt64 &&
+                                    storage16Features.storageBuffer16BitAccess;
+    return result;
 }
 
 // =============================================================================
@@ -131,6 +163,14 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
         return;
     }
 
+    const auto physicalDevices = rv::enumeratePhysicalDevices(mInstance->handle());
+    if (physicalDevices.empty()) {
+        GN_ERROR(sLoggerVk, "GpuContextVulkan2: no Vulkan physical device found, name='{}'", name);
+        return;
+    }
+    const vk::PhysicalDevice selectedPhysicalDevice = rv::selectTheMostPowerfulPhysicalDevice(physicalDevices);
+    const RayTracingSupport  rayTracingSupport      = queryRayTracingSupport(selectedPhysicalDevice);
+
     // Create device
     rv::Device::ConstructParameters dp;
     dp.setPrintVkInfo(ip.printVkInfo);
@@ -154,6 +194,17 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
                       .setDescriptorBindingPartiallyBound(true)
                       .setDescriptorBindingVariableDescriptorCount(true)
                       .setDescriptorBindingSampledImageUpdateAfterBind(true));
+    if (rayTracingSupport.accelerationStructures) {
+        dp.addDeviceExtension("VK_KHR_acceleration_structure");
+        dp.addDeviceExtension("VK_KHR_deferred_host_operations");
+        dp.addFeature(vk::PhysicalDeviceAccelerationStructureFeaturesKHR().setAccelerationStructure(true));
+        if (rayTracingSupport.rayQueries) {
+            dp.addDeviceExtension("VK_KHR_ray_query");
+            dp.addFeature(vk::PhysicalDeviceRayQueryFeaturesKHR().setRayQuery(true));
+            dp.addFeature(vk::PhysicalDevice16BitStorageFeatures().setStorageBuffer16BitAccess(true));
+            dp.features1.shaderInt64 = true;
+        }
+    }
     dp.setInstance(mInstance->handle());
     mDevice.emplace(dp);
     if (!mDevice->handle()) return;
@@ -162,6 +213,8 @@ GpuContextVulkan2::GpuContextVulkan2(const StrA & name, const CreateParameters &
     const auto & props             = mDevice->gi()->physical.getProperties();
     mCaps.maxImmediateSize         = props.limits.maxPushConstantsSize;
     mCaps.maxBindlessSampledImages = props.limits.maxDescriptorSetSampledImages;
+    mCaps.accelerationStructures   = rayTracingSupport.accelerationStructures;
+    mCaps.rayQueries               = rayTracingSupport.rayQueries;
 
     vk::Format depthVk = rv::queryDepthFormat(mDevice->gi()->physical, 1);
     if (depthVk != vk::Format::eUndefined) {

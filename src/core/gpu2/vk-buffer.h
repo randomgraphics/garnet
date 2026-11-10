@@ -1,6 +1,7 @@
 #pragma once
 
 #include <garnet/GNgpu2.h>
+
 #include "vk-gpu-context.h"
 
 namespace GN::gpu2 {
@@ -12,16 +13,17 @@ public:
     explicit BufferVulkan(const StrA & entityName): Buffer(TYPE_INFO(), entityName) {}
     ~BufferVulkan() override;
 
-    bool init(const CreateParameters & params);
-
+    bool                 init(const CreateParameters & params);
     Mapped               map() override;
     bool                 setContent(ArrayView<const uint8_t> data, size_t offset = 0) override;
     std::vector<uint8_t> readContent(size_t offset = 0, size_t size = (size_t) -1) const override;
+    uint64_t             size() const override { return mSize; }
 
     GpuContextVulkan2 * context() const { return mGpu.get(); }
     vk::Buffer          nativeBuffer() const { return mRvBuffer ? mRvBuffer->handle() : vk::Buffer {}; }
     rv::Ref<rv::Buffer> rvBuffer() const { return mRvBuffer; }
     uint64_t            bufferSize() const { return mSize; }
+    bool                isAccelerationStructureBuildInput() const { return mAccelerationStructureBuildInput; }
     uint64_t            gpuAddress() const override { return mDeviceAddress; }
 
 protected:
@@ -30,10 +32,11 @@ protected:
 private:
     AutoRef<GpuContextVulkan2> mGpu;
     rv::Ref<rv::Buffer>        mRvBuffer {};
-    uint64_t                   mSize          = 0;
-    vk::DeviceAddress          mDeviceAddress = 0;
-    bool                       mMappable      = false;
-    bool                       mIsMapped      = false;
+    uint64_t                   mSize                            = 0;
+    vk::DeviceAddress          mDeviceAddress                   = 0;
+    bool                       mMappable                        = false;
+    bool                       mAccelerationStructureBuildInput = false;
+    bool                       mIsMapped                        = false;
 
     void reset();
 };

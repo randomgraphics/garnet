@@ -29,6 +29,7 @@ struct Options {
     bool            headless             = false;
     bool            print                = false;
     bool            finiteFrames         = false;
+    bool            rayTraced            = false;
     int             frames               = 3;
     float           environmentLuminance = 250.f;
     float           exposure             = 0;
@@ -39,6 +40,16 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         const StrA argument = argv[i];
         if (argument == "--box" || argument == "--sphere") {
             options.path = argv[i];
+        } else if (argument == "--rendering" && i + 1 < argc) {
+            const StrA choice = argv[++i];
+            if (choice == "raster")
+                options.rayTraced = false;
+            else if (choice == "ray-traced")
+                options.rayTraced = true;
+            else {
+                GN_ERROR(sLogger, "Unknown rendering mode '{}'; expected raster or ray-traced", choice);
+                return false;
+            }
         } else if (argument == "--surface" && i + 1 < argc) {
             const StrA choice = argv[++i];
             if (choice == "pbr")
@@ -97,8 +108,9 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
     }
     if (options.exposure == 0) options.exposure = 0.002f;
     if (!options.path.empty()) return true;
-    GN_ERROR(sLogger, "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] "
-                      "[--surface pbr|unlit|lambertian] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
+    GN_ERROR(sLogger,
+             "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] "
+             "[--surface pbr|unlit|lambertian] [--rendering raster|ray-traced] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
     return false;
 }
 
@@ -204,6 +216,10 @@ int main(int argc, const char * argv[]) {
     if (!host.initialize(options.headless)) return EXIT_FAILURE;
     SceneRenderer renderer;
     if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
+    if (options.rayTraced && !renderer.rayTracingAvailable()) {
+        GN_ERROR(sLogger, "Ray-traced rendering is unavailable: this device or model does not support the Vulkan ray-query PBR path");
+        return EXIT_FAILURE;
+    }
     AutoRef<fx2::ImGuiBackend> ui;
     if (host.window) {
         ui = fx2::ImGuiBackend::create({.gpu = host.gpu, .window = *host.window, .heap = renderer.heap});
@@ -265,6 +281,14 @@ int main(int argc, const char * argv[]) {
             ImGui::TextUnformatted(model->sourcePath.data());
             ImGui::Text("%zu nodes, %zu primitives", model->nodes.size(), model->primitives.size());
             ImGui::Text("%zu materials, %zu textures", model->materials.size(), model->textures.size());
+            ImGui::SeparatorText("Rendering");
+            int renderMode = options.rayTraced ? 1 : 0;
+            if (ImGui::RadioButton("Standard raster", &renderMode, 0)) options.rayTraced = false;
+            ImGui::SameLine();
+            ImGui::BeginDisabled(!renderer.rayTracingAvailable());
+            if (ImGui::RadioButton("Ray traced", &renderMode, 1)) options.rayTraced = true;
+            ImGui::EndDisabled();
+            if (!renderer.rayTracingAvailable()) ImGui::TextDisabled("Ray tracing needs Vulkan ray-query support and PBR materials.");
             ImGui::SeparatorText("Navigation");
             int mode = navigationMode == NavigationMode::ARCBALL ? 0 : 1;
             if (ImGui::RadioButton("Arcball", &mode, 0)) setNavigationMode(NavigationMode::ARCBALL);
@@ -382,6 +406,26 @@ int main(int argc, const char * argv[]) {
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return EXIT_FAILURE;
 
+        AutoRef<GpuPayload> rayTraceWork;
+        glm::mat4           clipToWorld(1);
+        if (options.rayTraced) {
+            if (!renderer.prepareRayOutput(host.width, host.height)) return EXIT_FAILURE;
+            const glm::vec3 eye           = useArcball ? arcball.eyePosition() : fly.position;
+            const glm::quat orientation   = useArcball ? arcball.orientation : fly.orientation;
+            const glm::mat4 cameraToWorld = glm::translate(glm::mat4(1), eye) * glm::mat4_cast(orientation);
+            glm::mat4       projection =
+                glm::perspectiveRH_ZO(glm::radians(fovDegrees), static_cast<float>(host.width) / std::max(1u, host.height), nearPlane, farPlane);
+            projection[1][1] *= -1;
+            clipToWorld       = glm::inverse(projection * glm::inverse(cameraToWorld));
+            auto rayResources = fx2::RayTraceKernel::createPassResources(*renderer.rayScene, uniforms, renderer.rayOutput);
+            auto rayRecorder  = CnC::create("viewer.ray-trace", {.gpu = host.gpu, .heap = renderer.heap, .passResources = rayResources});
+            if (!rayRecorder ||
+                !renderer.rayTrace->record({*rayRecorder, *renderer.rayScene, renderer.skyMaterial, uniforms, renderer.rayOutput, host.width, host.height}))
+                return EXIT_FAILURE;
+            rayTraceWork = rayRecorder->seal();
+            if (!rayTraceWork) return EXIT_FAILURE;
+        }
+
         RasterTarget    target;
         GpuResourceView depth;
         depth.resource = host.depth;
@@ -397,7 +441,9 @@ int main(int argc, const char * argv[]) {
                                                       .heap              = renderer.heap,
                                                       .passResources     = fx2::sharedUniformResources(uniforms),
                                                       .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
-        if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes)) return EXIT_FAILURE;
+        if (!raster ||
+            (options.rayTraced ? !renderer.recordRayOutput(*raster, uniforms, clipToWorld) : !renderer.record(*raster, uniforms, showBounds, showAxes)))
+            return EXIT_FAILURE;
 
         AutoRef<GpuPayload> uiUpload;
         if (ui && !ui->record(*raster, uiUpload)) return EXIT_FAILURE;
@@ -406,6 +452,7 @@ int main(int argc, const char * argv[]) {
 
         GpuContext::SubmitParameters submit("mesh-viewer.frame");
         submit.appendWork(uniformWork);
+        if (rayTraceWork) submit.appendWork(rayTraceWork);
         if (uiUpload) submit.appendWork(uiUpload);
         submit.appendWork(rendered).waitFor(acquired.ready);
         host.gpu->submit(submit);
