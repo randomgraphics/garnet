@@ -169,7 +169,7 @@ int main(int argc, const char * argv[]) {
         if (!rotationPaused) camAngle += 0.01f;
         constexpr float camDist          = 1.3f;
         uniforms.cameraPosition          = {camDist * std::sin(camAngle), 0.5f, camDist * std::cos(camAngle), 1};
-        uniforms.numLights               = 1;
+        uniforms.numLights               = 0; // turn off direct lighting for now; we'll just use the environment map for lighting
         uniforms.lights[0].positionOrDir = {0.5f, 1.0f, 0.5f, float(fx::DirectLightUniform::DIRECTIONAL)};
         uniforms.lights[0].colorAndRange = {2.5f, 2.5f, 2.5f, 0.0f};
         uniforms.exposure                = 1.0f;

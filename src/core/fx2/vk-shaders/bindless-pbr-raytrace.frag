@@ -245,13 +245,6 @@ vec3 directLighting(Surface surface, vec3 viewDirection) {
     return result * surface.occlusion;
 }
 
-vec3 environmentDiffuse(Surface surface, SkyMaterialData sky) {
-    vec3 irradiance = texture(samplerCube(heapCubemaps[nonuniformEXT(sky.textureIndices.y)],
-                                           heapSamplers[nonuniformEXT(sky.samplerIndices.x)]), surface.normal).rgb * sky.factors.x;
-    irradiance = max(irradiance, vec3(sky.factors.y));
-    return irradiance * surface.albedo.rgb * (1.0 - surface.metallic) * surface.occlusion;
-}
-
 vec3 sampleSky(SkyMaterialData sky, vec3 direction) {
     vec3 skyColor = texture(samplerCube(heapCubemaps[nonuniformEXT(sky.textureIndices.x)],
                                         heapSamplers[nonuniformEXT(sky.samplerIndices.x)]), direction).rgb * sky.factors.x;
@@ -299,7 +292,7 @@ vec3 secondaryPath(Surface primary, SkyMaterialData sky, vec3 viewDirection, ino
         hit.position = origin + direction * distance;
         if (dot(hit.normal, direction) > 0.0) hit.normal = -hit.normal;
         vec3 hitViewDirection = normalize(sscUniforms.cameraPosition.xyz - hit.position);
-        radiance += throughput * (hit.emissive.rgb + directLighting(hit, hitViewDirection) + environmentDiffuse(hit, sky));
+        radiance += throughput * directLighting(hit, hitViewDirection);
 
         vec3 hitF0 = mix(vec3(0.04), max(hit.albedo.rgb, vec3(0.0)), hit.metallic);
         float hitReflectivity = clamp(max(max(hitF0.r, hitF0.g), hitF0.b), 0.05, 0.95);
@@ -326,7 +319,6 @@ void main() {
     uint skyIndex = draw.materialIndex.y;
     if (skyIndex != 0xffffffffu) {
         SkyMaterialData sky = skyMaterialHeap.materials[skyIndex];
-        color += environmentDiffuse(primary, sky);
         uint seed = pixelSeed(uvec2(gl_FragCoord.xy));
         color += secondaryPath(primary, sky, viewDirection, seed);
     }
