@@ -1,6 +1,9 @@
 add_executable(GNsample-gpu2-hello-world gpu-hello-world.cpp)
 target_link_libraries(GNsample-gpu2-hello-world GNcore)
 
+add_executable(GNsample-gpu2-simple-text simple-text.cpp)
+target_link_libraries(GNsample-gpu2-simple-text GNcore)
+
 add_executable(GNsample-gpu2-simple-copy simple-copy.cpp)
 target_link_libraries(GNsample-gpu2-simple-copy GNcore)
 

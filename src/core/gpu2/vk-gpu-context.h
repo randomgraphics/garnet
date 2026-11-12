@@ -50,6 +50,7 @@ namespace GN::gpu2 {
 class VkBindlessPipelineLayoutCache; // defined in vk-bindless-pipeline-layout.h
 class VkBindlessPsoCache;            // defined in vk-bindless-pso-cache.h
 class VkBindlessComputePsoCache;     // defined in vk-bindless-compute-pso-cache.h
+class VkBindlessRaster;              // defined in vk-bindless-raster.h
 
 typedef ResourcePoolVulkan<vk::Fence>   FencePoolVulkan;
 typedef AutoRef<FencePoolVulkan::Entry> PooledFenceVulkan;
@@ -111,6 +112,9 @@ public:
     void endDebugLabel() override;
 
 private:
+    friend class VkBindlessRaster;
+
+    bool getOrCreateTextShaders(AutoRef<GpuShader> & vertex, AutoRef<GpuShader> & pixel);
     void pumpInternal(bool waitForIdle);
 
     // Frequently queried items live directly on the class so their accessors above can be inlined.
@@ -125,6 +129,9 @@ private:
     mutable std::unique_ptr<VkBindlessComputePsoCache>     mBindlessComputePsoCache;
     mutable std::optional<FencePoolVulkan>                 mFencePool;
     mutable rv::Ref<rv::Sampler>                           mDefaultLinearSampler;
+    std::mutex                                             mTextShaderMutex;
+    AutoRef<GpuShader>                                     mTextVertexShader;
+    AutoRef<GpuShader>                                     mTextPixelShader;
 
     // Other internal impl details that we'd like to hide from public context header.
     struct Impl;

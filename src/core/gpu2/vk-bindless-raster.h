@@ -20,6 +20,7 @@ public:
     ~VkBindlessRaster() override;
 
     void                recordDraw(const DrawParameters & params) override;
+    void                recordText(const TextParameters & params) override;
     void                addCleanupCallback(std::function<void()> cleanup) override;
     AutoRef<GpuPayload> seal() override;
 
@@ -31,6 +32,7 @@ private:
     vk::PipelineLayout             mPipelineLayout {};
     vk::DescriptorPool             mPassDescriptorPool {};
     std::vector<vk::DescriptorSet> mPassDescriptorSets;
+    uint32_t                       mMaxImmediateSize = 0;
 
     std::unique_ptr<BindlessDrawStorage> mStorage;
     std::vector<uint8_t>                 mImmediateData;
