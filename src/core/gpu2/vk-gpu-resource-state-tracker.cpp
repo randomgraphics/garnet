@@ -150,7 +150,8 @@ bool GpuResourceStateTrackerVulkan::addColorTarget(TextureVulkanBase * tex, cons
     if (!tex) GN_UNLIKELY return true;
     TexturePlaneStateVulkan state;
     state.layout = vk::ImageLayout::eColorAttachmentOptimal;
-    state.access = vk::AccessFlagBits::eColorAttachmentWrite;
+    // Blending and loadOp=LOAD both read the existing attachment contents.
+    state.access = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
     state.stages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
     state.usage  = "color target";
     return addTexture(tex, view.imageView, state);
@@ -403,6 +404,14 @@ bool GpuResourceStateTrackerVulkan::addRasterGeometry(const RasterGeometry & geo
 }
 
 bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
+    if ((rt.loadDepth || rt.readOnlyDepth) && rt.depthStencilTarget.texture.empty()) {
+        GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: loading depth requires a depth attachment");
+        return false;
+    }
+    if (rt.readOnlyDepth && !rt.loadDepth) {
+        GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: read-only depth requires loadDepth");
+        return false;
+    }
     auto registerTargets = [&](GpuResourceStateTrackerVulkan & tracker) {
         bool ok = true;
         for (size_t i = 0; i < rt.colorTargets.size(); ++i) {
@@ -419,9 +428,8 @@ bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
         if (depthStencilView.isTexture() && depthStencilView.texture()) {
             auto * tex = RuntimeType::cast<TextureVulkanBase>(depthStencilView.texture().get());
             if (tex) {
-                // Render targets are cleared upon pass begin (loadOp = eClear) which is an attachment write;
-                // depth-stencil target must be in attachment-optimal layout during rendering.
-                if (!tracker.addDepthStencilTarget(tex, depthStencilView, /*readOnly=*/false)) {
+                // Read-only depth loads preserve the first sample's visibility results across accumulation passes.
+                if (!tracker.addDepthStencilTarget(tex, depthStencilView, rt.readOnlyDepth)) {
                     GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: render target hazard on depth-stencil target; aborting render pass");
                     ok = false;
                 }

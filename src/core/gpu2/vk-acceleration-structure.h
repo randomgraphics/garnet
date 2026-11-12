@@ -18,38 +18,41 @@ public:
     bool recordBuild(vk::CommandBuffer commandBuffer, GpuResourceStateTrackerVulkan & tracker, const AutoRef<Buffer> & scratchBuffer);
     void releaseBuildInputs();
 
-    AutoRef<GpuContext> gpu() const override;
+    AutoRef<GpuContext>          gpu() const override;
     vk::AccelerationStructureKHR nativeHandle() const { return mTopLevel.handle; }
-    vk::DeviceAddress deviceAddress() const { return mTopLevel.address; }
-    bool buildSubmitted() const { return mBuildSubmitted; }
-    bool buildEncoded() const { return mBuildEncoded; }
-    void markBuildSubmitted() { if (mBuildEncoded) mBuildSubmitted = true; }
+    vk::DeviceAddress            deviceAddress() const { return mTopLevel.address; }
+    bool                         buildSubmitted() const { return mBuildSubmitted; }
+    bool                         buildEncoded() const { return mBuildEncoded; }
+    void                         markBuildSubmitted() {
+        if (mBuildEncoded) mBuildSubmitted = true;
+    }
 
 private:
     struct NativeStructure {
-        rv::Ref<rv::Buffer> storage;
+        rv::Ref<rv::Buffer>          storage;
         vk::AccelerationStructureKHR handle {};
-        vk::DeviceAddress address = 0;
+        vk::DeviceAddress            address = 0;
     };
 
     bool createNativeStructure(vk::AccelerationStructureTypeKHR type, uint64_t size, NativeStructure & out);
     void reset();
 
-    AutoRef<GpuContextVulkan2> mGpu;
-    NativeStructure mBottomLevel;
-    NativeStructure mTopLevel;
+    AutoRef<GpuContextVulkan2>  mGpu;
+    NativeStructure             mBottomLevel;
+    NativeStructure             mTopLevel;
     DynaArray<TriangleGeometry> mGeometries;
-    AutoRef<Buffer> mTransformBuffer;
-    AutoRef<Buffer> mInstanceBuffer;
-    uint64_t mScratchSize = 0;
-    uint64_t mScratchAlignment = 1;
-    bool mPreferFastTrace = true;
-    bool mBuildRecorded = false;
-    bool mBuildEncoded = false;
-    bool mBuildSubmitted = false;
+    AutoRef<Buffer>             mTransformBuffer;
+    AutoRef<Buffer>             mInstanceBuffer;
+    uint64_t                    mScratchSize      = 0;
+    uint64_t                    mScratchAlignment = 1;
+    bool                        mPreferFastTrace  = true;
+    bool                        mBuildRecorded    = false;
+    bool                        mBuildEncoded     = false;
+    bool                        mBuildSubmitted   = false;
 };
 
-AutoRef<AccelerationStructure> createAccelerationStructureVulkan(const StrA & name, AutoRef<GpuContextVulkan2> gpu, const AccelerationStructure::BuildParameters & params,
-                                                                 CnC & recorder, AutoRef<Buffer> & scratchBuffer);
+AutoRef<AccelerationStructure> createAccelerationStructureVulkan(const StrA & name, AutoRef<GpuContextVulkan2> gpu,
+                                                                 const AccelerationStructure::BuildParameters & params, CnC & recorder,
+                                                                 AutoRef<Buffer> & scratchBuffer);
 
 } // namespace GN::gpu2

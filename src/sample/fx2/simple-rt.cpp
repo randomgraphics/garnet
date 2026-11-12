@@ -2,6 +2,7 @@
 #include <garnet/GNfx2.h>
 #include <garnet/GNwin.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <array>
 #include <cstddef>
@@ -70,6 +71,8 @@ int main(int argc, const char * argv[]) {
     const auto depthDesc   = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::D_32_FLOAT()).setDimensions(width, height).setLevels(1);
     auto       depthBuffer = Texture::create("pbr.depth", {.context = host.gpu, .descriptor = depthDesc});
     if (!depthBuffer) return 1;
+    auto accumulationDepthBuffer = Texture::create("pbr.accumulation-depth", {.context = host.gpu, .descriptor = depthDesc});
+    if (!accumulationDepthBuffer) return 1;
 
     // ─── Environment / Sky material ───────────────────────────────────────────
     auto skyboxTex      = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/skybox.dds"});
@@ -126,7 +129,29 @@ int main(int argc, const char * argv[]) {
     auto asc = scene->accelerationStructure();
     if (!asc) return 1;
 
-    auto initialization = upload->seal();
+    // Persistent HDR surface for progressive ray-traced samples; alpha tracks covered model pixels.
+    auto accumulationTexture = Texture::create(
+        "pbr.accumulation",
+        {.context    = host.gpu,
+         .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT()).setDimensions(width, height).setLevels(1)});
+    if (!accumulationTexture) return 1;
+    const GpuResourceView         accumulationView = GpuResourceView {accumulationTexture}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
+    fx::UnlitMaterial::Parameters accumulationMaterialParameters;
+    accumulationMaterialParameters.colorMap = accumulationView;
+    auto accumulationMaterial               = fx::UnlitMaterial::create(*heap, *upload, accumulationMaterialParameters);
+    if (!accumulationMaterial) return 1;
+    const float compositeVertices[]   = {-1, -1, 0.5f, 0, 0, 1, -1, 0.5f, 1, 0, 1, 1, 0.5f, 1, 1, -1, -1, 0.5f, 0, 0, 1, 1, 0.5f, 1, 1, -1, 1, 0.5f, 0, 1};
+    auto        compositeVertexBuffer = Buffer::create("pbr.composite-vertices", {.context = host.gpu, .size = sizeof(compositeVertices)});
+    if (!compositeVertexBuffer) return 1;
+    upload->recordUploadBuffer(compositeVertexBuffer, 0, {reinterpret_cast<const uint8_t *>(compositeVertices), sizeof(compositeVertices)});
+    RasterGeometry compositeGeometry;
+    compositeGeometry.vertices.push_back({.buffer = compositeVertexBuffer, .offset = 0, .stride = 5 * sizeof(float)});
+    compositeGeometry.format.attributes.push_back(
+        {.location = fx::UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
+    compositeGeometry.format.attributes.push_back(
+        {.location = fx::UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = RasterGeometry::AttributeFormat::F32_2});
+    compositeGeometry.vertexCount = 6;
+    auto initialization           = upload->seal();
     if (!initialization) return 1;
 
     RasterState skyState;
@@ -138,12 +163,12 @@ int main(int argc, const char * argv[]) {
     helmetState.frontFace  = RasterState::FRONT_CCW;
     helmetState.depthState = RasterState::DepthState {.func = RasterState::Compare::LESS_EQUAL, .write = true};
 
-    bool  rayTracingEnabled = true;
-    bool  tWasDown          = false;
-    bool  rotationPaused    = false;
-    bool  spaceWasDown      = false;
-    float camAngle          = 0;
-    // Wait before scene and material locals release buffers still referenced by submitted draws.
+    bool           rayTracingEnabled = true;
+    bool           tWasDown = false, rotationPaused = false, spaceWasDown = false;
+    float          camAngle                = 0;
+    uint32_t       accumulationSampleCount = 0;
+    bool           havePreviousCamera      = false;
+    glm::vec3      previousCameraPosition(0);
     WaitForGpuIdle waitForGpuIdle {host.gpu};
     for (int frame = 0; !headless || frame < 3; ++frame) {
         if (host.window && !host.window->runUntilNoNewEvents()) break;
@@ -155,68 +180,105 @@ int main(int argc, const char * argv[]) {
             if (spaceDown && !spaceWasDown) rotationPaused = !rotationPaused;
             spaceWasDown = spaceDown;
         }
-        auto acquired = host.swapchain->prepare();
+        if (!rotationPaused) camAngle += 0.01f;
+        constexpr float camDist = 1.3f;
+        const glm::vec3 cameraPosition(camDist * std::sin(camAngle), 0.5f, camDist * std::cos(camAngle));
+        const glm::vec3 cameraDelta = cameraPosition - previousCameraPosition;
+        const bool      cameraMoved = !havePreviousCamera || glm::dot(cameraDelta, cameraDelta) > 1e-8f;
+        if (cameraMoved || !rayTracingEnabled) accumulationSampleCount = 0;
+        previousCameraPosition = cameraPosition;
+        havePreviousCamera     = true;
+        auto acquired          = host.swapchain->prepare();
         if (acquired.view.empty()) return 1;
-
-        RasterTarget target;
-        target.setColorTarget(0, acquired.view).setClearColor(0.02f, 0.03f, 0.05f, 1);
-        target.setDepthStencilTarget(GpuResourceView {depthBuffer}).setClearDepth(1.0f);
 
         auto uniformUploads = gpu::CnC::create("pbr.uniform-upload", {.gpu = host.gpu, .heap = heap});
         if (!uniformUploads) return 1;
-
         fx::SharedUniforms uniforms;
-        if (!rotationPaused) camAngle += 0.01f;
-        constexpr float camDist          = 1.3f;
-        uniforms.cameraPosition          = {camDist * std::sin(camAngle), 0.5f, camDist * std::cos(camAngle), 1};
-        uniforms.numLights               = 1;
-        uniforms.lights[0].positionOrDir = {0.5f, 1.0f, 0.5f, float(fx::DirectLightUniform::DIRECTIONAL)};
-        uniforms.lights[0].colorAndRange = {2.5f, 2.5f, 2.5f, 0.0f};
-        uniforms.exposure                = 1.0f;
-        uniforms.renderTargetSize        = {width, height};
-        uniforms.viewMatrix              = glm::lookAtRH(glm::vec3(uniforms.cameraPosition), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-        uniforms.projMatrix              = glm::perspectiveRH_ZO(glm::radians(60.f), float(width) / height, uniforms.nearPlane, uniforms.farPlane);
-        uniforms.projMatrix[1][1] *= -1; // Vulkan clip space
+        uniforms.cameraPosition   = glm::vec4(cameraPosition, 1);
+        uniforms.numLights        = 0;
+        uniforms.exposure         = 1.0f;
+        uniforms.renderTargetSize = glm::vec2(width, height);
+        uniforms.viewMatrix       = glm::lookAtRH(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0));
+        uniforms.projMatrix       = glm::perspectiveRH_ZO(glm::radians(60.f), float(width) / float(height), uniforms.nearPlane, uniforms.farPlane);
+        uniforms.projMatrix[1][1] *= -1;
         uniforms.projViewMatrix = uniforms.projMatrix * uniforms.viewMatrix;
-        uniforms.frameCounter   = static_cast<uint32_t>(frame);
-
-        auto state = constants->recordUniformUpdate(*uniformUploads, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
+        uniforms.frameCounter   = accumulationSampleCount;
+        auto state              = constants->recordUniformUpdate(*uniformUploads, {reinterpret_cast<const uint8_t *>(&uniforms), sizeof(uniforms)});
         if (!state) return 1;
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return 1;
 
-        auto passResources = fx::sharedUniformResources(state);
+        AutoRef<gpu::GpuPayload> accumulationDraws;
         if (rayTracingEnabled) {
-            passResources.resize(3);
-            passResources[2].resize(2);
+            RasterTarget accumulationTarget;
+            accumulationTarget.setColorTarget(0, GpuResourceView {accumulationTexture});
+            const bool accumulationContinues = !cameraMoved && accumulationSampleCount > 0;
+            accumulationTarget.loadColor     = accumulationContinues;
+            accumulationTarget.loadDepth     = accumulationContinues;
+            accumulationTarget.readOnlyDepth = accumulationContinues;
+            accumulationTarget.setClearColor(0, 0, 0, 0);
+            accumulationTarget.setDepthStencilTarget(GpuResourceView {accumulationDepthBuffer}).setClearDepth(1.0f);
+            if (accumulationContinues) {
+                auto & accumulationBlend   = accumulationTarget.colorTargets[0].blendState;
+                accumulationBlend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
+                accumulationBlend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+                accumulationBlend.alphaSrc = RasterTarget::BlendState::ONE;
+                accumulationBlend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+            }
+            auto rtResources = fx::sharedUniformResources(state);
+            rtResources.resize(3);
+            rtResources[2].resize(2);
             GpuResourceView accelerationStructure;
             accelerationStructure.setAccelerationStructure(asc);
-            passResources[2][0].append(std::move(accelerationStructure));
-            passResources[2][1].append(scene->geometryTable());
+            rtResources[2][0].append(std::move(accelerationStructure));
+            rtResources[2][1].append(scene->geometryTable());
+            auto accumulationRaster = gpu::Raster::create(
+                "pbr.accumulation",
+                {.gpu = host.gpu, .target = &accumulationTarget, .heap = heap, .heapSetIndex = 0, .passResources = rtResources, .numberOfDrawsHint = 1});
+            if (!accumulationRaster) return 1;
+            RasterState rayTraceState = helmetState;
+            if (accumulationContinues) rayTraceState.depthState = RasterState::DepthState {.func = RasterState::Compare::LESS_EQUAL, .write = false};
+            fx::RayTraceKernel::DrawParameters rtDraw {{*accumulationRaster, state, helmetGeometry, &rayTraceState},
+                                                       asc,
+                                                       helmetRotation,
+                                                       skyMaterial,
+                                                       helmetMaterial.get()};
+            if (!rayTrace->record(rtDraw)) return 1;
+            accumulationDraws = accumulationRaster->seal();
+            if (!accumulationDraws) return 1;
+            ++accumulationSampleCount;
+        }
+
+        RasterTarget target;
+        target.setColorTarget(0, acquired.view).setClearColor(0.02f, 0.03f, 0.05f, 1);
+        target.setDepthStencilTarget(GpuResourceView {depthBuffer}).setClearDepth(1.0f);
+        if (rayTracingEnabled) {
+            auto & blend   = target.colorTargets[0].blendState;
+            blend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
+            blend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+            blend.alphaSrc = RasterTarget::BlendState::ONE;
+            blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
         }
         auto raster = gpu::Raster::create(
-            "pbr.render", {.gpu = host.gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = passResources, .numberOfDrawsHint = 2});
+            "pbr.composite",
+            {.gpu = host.gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = fx::sharedUniformResources(state), .numberOfDrawsHint = 2});
         if (!raster) return 1;
-
-        // 1. Draw skybox
         fx::SkyMaterial::DrawParameters skyDraw {*raster, state, &skyState};
         if (!sky->record(*skyMaterial, skyDraw)) return 1;
-
-        // 2. Draw helmet oriented upright
         if (rayTracingEnabled) {
-            fx::RayTraceKernel::DrawParameters rtDraw {{*raster, state, helmetGeometry, &helmetState}, asc, helmetRotation, skyMaterial, helmetMaterial.get()};
-            if (!rayTrace->record(rtDraw)) return 1;
+            RasterState                       compositeState = skyState;
+            fx::UnlitMaterial::DrawParameters compositeDraw {{*raster, state, compositeGeometry, &compositeState}, glm::inverse(uniforms.projViewMatrix)};
+            if (!unlit->record(*accumulationMaterial, compositeDraw)) return 1;
         } else {
             fx::PbrMaterial::DrawParameters helmetDraw {{*raster, state, helmetGeometry, &helmetState}, helmetRotation, skyMaterial};
             if (!pbr->record(*helmetMaterial, helmetDraw)) return 1;
         }
-
         auto draws = raster->seal();
         if (!draws) return 1;
-
         GpuContext::SubmitParameters submission("pbr.frame");
         if (initialization) submission.appendWork(initialization);
         submission.appendWork(uniformWork);
+        if (accumulationDraws) submission.appendWork(accumulationDraws);
         submission.appendWork(draws).waitFor(acquired.ready);
         host.gpu->submit(submission);
         initialization.clear();

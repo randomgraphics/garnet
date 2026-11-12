@@ -20,7 +20,24 @@ disable_warning(CMAKE_CXX_FLAGS)
 OPTION( ASSIMP_BUILD_TESTS "" OFF)
 OPTION( ASSIMP_INSTALL "" OFF)
 OPTION( ASSIMP_WARNINGS_AS_ERRORS "" OFF)
-add_subdirectory(assimp)
+
+function(GN_add_assimp)
+  if(MSVC AND POLICY CMP0184)
+    # The cached Debug flags include /RTC1, which is incompatible with /O2.
+    string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  endif()
+
+  add_subdirectory(assimp)
+
+  if(MSVC AND POLICY CMP0184)
+    set_property(TARGET assimp PROPERTY MSVC_RUNTIME_CHECKS "")
+    target_compile_options(assimp PRIVATE $<$<CONFIG:Debug>:/O2>)
+  elseif(NOT MSVC)
+    target_compile_options(assimp PRIVATE $<$<CONFIG:Debug>:-O2>)
+  endif()
+endfunction()
+
+GN_add_assimp()
 
 # Build FreeType as static library
 set(BUILD_SHARED_LIBS OFF)
