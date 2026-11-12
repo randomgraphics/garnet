@@ -324,5 +324,8 @@ void main() {
     }
     color = max(color, vec3(0.0)) * max(sscUniforms.exposure, 0.0);
     color = color / (color + vec3(1.0));
-    outColor = vec4(color, primary.opaque ? 1.0 : primary.albedo.a);
+    // Alpha carries the progressive sample weight and primary surface coverage.
+    float sampleWeight = 1.0 / float(sscUniforms.frameCounter + 1u);
+    float coverage = primary.opaque ? 1.0 : primary.albedo.a;
+    outColor = vec4(color, sampleWeight * coverage);
 }
