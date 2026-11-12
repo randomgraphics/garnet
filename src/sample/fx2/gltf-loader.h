@@ -159,7 +159,13 @@ inline GN::gpu2::RasterGeometry loadGltfGeometry(const std::string & gltfPath, G
     std::ifstream bf(binPath, std::ios::binary);
     if (!bf) return {};
 
-    std::vector<uint8_t> bin((std::istreambuf_iterator<char>(bf)), {});
+    bf.seekg(0, std::ios::end);
+    const std::streamoff binarySize = bf.tellg();
+    if (binarySize < 0) return {};
+    bf.seekg(0, std::ios::beg);
+
+    std::vector<uint8_t> bin(static_cast<size_t>(binarySize));
+    if (!bf.read(reinterpret_cast<char *>(bin.data()), static_cast<std::streamsize>(bin.size()))) return {};
 
     struct BV {
         int byteOffset, byteLength, byteStride;
