@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "bindless-pbr-vert.spv.h"
 #include "bindless-pbr-frag.spv.h"
-#include "bindless-pbr-raytrace-comp.spv.h"
+#include "bindless-pbr-raytrace-frag.spv.h"
 #include "bindless-sky-material-impl.h"
 #include <glm/mat3x3.hpp>
 #include <cmath>
@@ -356,43 +356,42 @@ public:
 };
 
 class RayTraceImpl final : public RayTraceKernel {
-    AutoRef<Heap>            mHeap;
-    AutoRef<gpu2::GpuShader> mShader;
+    AutoRef<Heap> mHeap;
+    Shaders       mShaders;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(RayTraceKernel);
+
     RayTraceImpl(): RayTraceKernel(TYPE_INFO(), "bindless.pbr-ray-tracing") {}
+
     bool initialize(AutoRef<Heap> heap) {
         if (!heap || heap->bindingIndex() != 0 || !heap->gpu()->caps().rayQueries) return false;
-        mShader = gpu2::GpuShader::create(
-            {.context = heap->gpu(), .name = "bindless-pbr-raytrace.comp", .binary = kBindlessPbrRaytraceCompSpv, .size = sizeof(kBindlessPbrRaytraceCompSpv)});
-        if (!mShader) return false;
+        if (!mShaders.initialize(heap->gpu(), kBindlessPbrVertSpv, sizeof(kBindlessPbrVertSpv), kBindlessPbrRaytraceFragSpv,
+                                 sizeof(kBindlessPbrRaytraceFragSpv))) {
+            return false;
+        }
         mHeap = std::move(heap);
         return true;
     }
-    bool record(const RecordParameters & p) const override {
-        if (!p.ssc || !p.output || !p.width || !p.height || !p.scene.accelerationStructure() || p.width != p.output->descriptor().width ||
-            p.height != p.output->descriptor().height || p.output->descriptor().format != gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT() ||
-            p.output->descriptor().samples != 1 || !p.ssc->view().buffer() || p.scene.accelerationStructure()->gpu() != mHeap->gpu())
-            return false;
-        uint32_t skyMaterialIndex = uint32_t(-1);
-        if (p.skyMaterial) {
-            if (!skyMaterialUsesHeap(p.skyMaterial.get(), *mHeap)) return false;
-            skyMaterialIndex = getSkyMaterialIndex(p.skyMaterial.get());
-            if (skyMaterialIndex == uint32_t(-1)) return false;
-        }
-        struct Dispatch {
-            uint32_t width, height, skyMaterialIndex, padding;
-        } dispatch {p.width, p.height, skyMaterialIndex, 0};
-        p.recorder.retainResource(referenceTo(&p.scene));
-        if (p.skyMaterial) p.recorder.retainResource(p.skyMaterial);
-        p.recorder.retainResource(p.ssc);
-        p.recorder.retainResource(p.output);
-        p.recorder.recordCompute({.cs         = mShader,
-                                  .x          = (p.width + 7) / 8,
-                                  .y          = (p.height + 7) / 8,
-                                  .z          = 1,
-                                  .immediates = {reinterpret_cast<const uint8_t *>(&dispatch), sizeof(dispatch)}});
+
+    bool record(const DrawParameters & input) const override {
+        auto * material = RuntimeType::cast<PbrMaterialImpl>(input.material);
+        if (!material || !material->usesHeap(mHeap) || !input.acs || input.acs->gpu() != mHeap->gpu()) return false;
+        if (!input.ssc || !validUniform(input.ssc->view()) || !validDraw(input, input.object2WorldTransform)) return false;
+        if (input.skyMaterial && !skyMaterialUsesHeap(input.skyMaterial.get(), *mHeap)) return false;
+        const uint32_t skyMaterialIndex = getSkyMaterialIndex(input.skyMaterial.get());
+        if (input.skyMaterial && skyMaterialIndex == uint32_t(-1)) return false;
+
+        DrawConstants                      constants {input.object2WorldTransform, {material->index(), skyMaterialIndex, 0, 0}};
+        ::GN::gpu2::Raster::DrawParameters draw {.vs = mShaders.vertex, .ps = mShaders.fragment, .geometry = input.geometry};
+        if (input.states) draw.states = *input.states;
+        draw.immediates = {reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)};
+
+        input.raster.retainResource(input.ssc);
+        input.raster.retainResource(referenceTo(input.material));
+        input.raster.retainResource(input.acs);
+        if (input.skyMaterial) input.raster.retainResource(input.skyMaterial);
+        input.raster.recordDraw(draw);
         return true;
     }
 };
@@ -410,25 +409,6 @@ AutoRef<RayTraceKernel> RayTraceKernel::create(gpu2::DescriptorHeap & heap, gpu2
     if (!kernel->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(kernel);
     return kernel;
-}
-
-gpu2::GpuResourceTable RayTraceKernel::createPassResources(PbrRayTracingScene & scene, const AutoRef<SharedShaderConstants::UniformState> & ssc,
-                                                           const AutoRef<gpu2::Texture> & output) {
-    if (!scene.accelerationStructure() || !ssc || !ssc->view().buffer() || !output || output->descriptor().samples != 1 ||
-        output->descriptor().format != gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT())
-        return {};
-    gpu2::GpuResourceTable resources;
-    resources.resize(2);
-    resources[1].resize(4);
-    gpu2::GpuResourceView accelerationStructure;
-    accelerationStructure.setAccelerationStructure(scene.accelerationStructure());
-    resources[1][0].append(std::move(accelerationStructure));
-    resources[1][1].append(ssc->view());
-    resources[1][2].append(scene.geometryTable());
-    gpu2::GpuResourceView outputView {output};
-    outputView.setImageViewType(gpu2::GpuResourceView::ImageView::STORAGE);
-    resources[1][3].append(std::move(outputView));
-    return resources;
 }
 
 AutoRef<PbrKernel> PbrKernel::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization) {

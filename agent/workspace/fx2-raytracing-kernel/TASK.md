@@ -168,3 +168,11 @@ Phase 4: Verification and handoff
 - `src/sample/fx2/`
 - `src/tool/mesh-viewer/`
 - This task file
+
+
+Phase 5: Raster-primary ray tracing kernel redesign
+  Task 5.1: Replace full-screen compute primary-ray dispatch with rasterized primary-hit shading and stochastic secondary ray queries; update sample resources and draw recording to match.
+    Verify: Build GNsample-fx2-raytracing and GNtool-mesh-viewer; manually compare PBR and ray-traced modes; check changed shader formatting.
+    Commit: "feat(fx2): shade rasterized primary hits with ray queries (Phase 5.1)"
+
+Phase 5 status (2026-11-11): Rasterized-primary PBR shading with stochastic secondary ray queries is implemented. GLSL compilation and Windows Debug builds of both targets passed. Manual visual comparison on ray-tracing hardware remains outstanding; task remains active pending user sign-off.

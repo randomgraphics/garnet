@@ -274,7 +274,8 @@ size_t SceneRenderer::drawCount(bool showBounds, bool showAxes) const {
     return model.instances.size() + (showBounds ? bounds.instances.size() : 0) + (showAxes ? axes.instances.size() : 0) + 1;
 }
 
-bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
+bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state,
+                                bool rayTraced) const {
     for (const auto & instance : source.instances) {
         const auto & material = source.materials[instance.material];
         RasterState  states;
@@ -283,8 +284,17 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
         states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
         switch (material.shading) {
         case Shading::PBR: {
-            fx2::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
-            if (!pbr->record(*material.pbr, draw)) return false;
+            if (rayTraced && &source == &model) {
+                fx2::RayTraceKernel::DrawParameters draw {{raster, state, instance.geometry, &states},
+                                                          rayScene->accelerationStructure(),
+                                                          instance.transform,
+                                                          skyMaterial,
+                                                          material.pbr.get()};
+                if (!rayTrace->record(draw)) return false;
+            } else {
+                fx2::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
+                if (!pbr->record(*material.pbr, draw)) return false;
+            }
             break;
         }
         case Shading::LAMBERTIAN: {
@@ -305,64 +315,12 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
     return true;
 }
 
-bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const {
-    if (!recordModel(model, raster, state)) return false;
-    if (showBounds && !recordModel(bounds, raster, state)) return false;
-    if (showAxes && !recordModel(axes, raster, state)) return false;
+bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes,
+                           bool rayTraced) const {
+    if (!recordModel(model, raster, state, rayTraced)) return false;
+    if (showBounds && !recordModel(bounds, raster, state, false)) return false;
+    if (showAxes && !recordModel(axes, raster, state, false)) return false;
     return sky->record(*skyMaterial, {raster, state});
-}
-
-bool SceneRenderer::prepareRayOutput(uint32_t width, uint32_t height) {
-    if (!rayTracingAvailable() || !width || !height) return false;
-    if (rayOutput && rayOutput->descriptor().width == width && rayOutput->descriptor().height == height) return true;
-    rayOutputMaterial.clear();
-    rayOutput.clear();
-    rayOutputGeometry.vertices.clear();
-    rayOutputGeometry.format.attributes.clear();
-    rayOutputGeometry.vertexCount = 0;
-    rayOutput                     = Texture::create(
-        "viewer.ray-traced-output",
-        {.context = heap->gpu(), .descriptor = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT()).setDimensions(width, height)});
-    if (!rayOutput) return false;
-    auto sampledView = GpuResourceView {rayOutput};
-    sampledView.setImageViewType(GpuResourceView::ImageView::SAMPLED);
-    auto initialization = CnC::create("viewer.ray-output-init", {.gpu = heap->gpu(), .heap = heap});
-    if (!initialization) return false;
-    fx2::UnlitMaterial::Parameters materialParameters;
-    materialParameters.colorMap = sampledView;
-    rayOutputMaterial           = fx2::UnlitMaterial::create(*heap, *initialization, materialParameters);
-    if (!rayOutputMaterial) return false;
-
-    struct Vertex {
-        glm::vec3 position;
-        glm::vec2 uv;
-    };
-    constexpr Vertex vertices[]   = {{{-1, -1, 0.5f}, {0, 0}}, {{1, -1, 0.5f}, {1, 0}}, {{1, 1, 0.5f}, {1, 1}},
-                                     {{-1, -1, 0.5f}, {0, 0}}, {{1, 1, 0.5f}, {1, 1}},  {{-1, 1, 0.5f}, {0, 1}}};
-    auto             vertexBuffer = Buffer::create("viewer.ray-output-quad", {.context = heap->gpu(), .size = sizeof(vertices)});
-    if (!vertexBuffer) return false;
-    initialization->recordUploadBuffer(vertexBuffer, 0, {reinterpret_cast<const uint8_t *>(vertices), sizeof(vertices)});
-    rayOutputGeometry.vertices.push_back({vertexBuffer, 0, sizeof(Vertex)});
-    rayOutputGeometry.vertexCount = 6;
-    rayOutputGeometry.format.attributes.push_back(
-        {.location = fx2::UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = RasterGeometry::AttributeFormat::F32_3});
-    rayOutputGeometry.format.attributes.push_back(
-        {.location = fx2::UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = sizeof(glm::vec3), .format = RasterGeometry::AttributeFormat::F32_2});
-    auto payload = initialization->seal();
-    if (!payload) return false;
-    GpuContext::SubmitParameters submit("viewer.ray-output-init");
-    submit.appendWork(payload);
-    heap->gpu()->submit(submit);
-    heap->gpu()->waitForIdle();
-    return true;
-}
-
-bool SceneRenderer::recordRayOutput(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, const glm::mat4 & clipToWorld) const {
-    if (!rayOutputMaterial || rayOutputGeometry.vertexCount != 6) return false;
-    RasterState states;
-    states.cullMode = RasterState::CULL_NONE;
-    fx2::UnlitMaterial::DrawParameters draw {{raster, state, rayOutputGeometry, &states}, clipToWorld};
-    return unlit->record(*rayOutputMaterial, draw);
 }
 
 } // namespace GN::viewer

@@ -406,24 +406,14 @@ int main(int argc, const char * argv[]) {
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return EXIT_FAILURE;
 
-        AutoRef<GpuPayload> rayTraceWork;
-        glm::mat4           clipToWorld(1);
+        auto passResources = fx2::sharedUniformResources(uniforms);
         if (options.rayTraced) {
-            if (!renderer.prepareRayOutput(host.width, host.height)) return EXIT_FAILURE;
-            const glm::vec3 eye           = useArcball ? arcball.eyePosition() : fly.position;
-            const glm::quat orientation   = useArcball ? arcball.orientation : fly.orientation;
-            const glm::mat4 cameraToWorld = glm::translate(glm::mat4(1), eye) * glm::mat4_cast(orientation);
-            glm::mat4       projection =
-                glm::perspectiveRH_ZO(glm::radians(fovDegrees), static_cast<float>(host.width) / std::max(1u, host.height), nearPlane, farPlane);
-            projection[1][1] *= -1;
-            clipToWorld       = glm::inverse(projection * glm::inverse(cameraToWorld));
-            auto rayResources = fx2::RayTraceKernel::createPassResources(*renderer.rayScene, uniforms, renderer.rayOutput);
-            auto rayRecorder  = CnC::create("viewer.ray-trace", {.gpu = host.gpu, .heap = renderer.heap, .passResources = rayResources});
-            if (!rayRecorder ||
-                !renderer.rayTrace->record({*rayRecorder, *renderer.rayScene, renderer.skyMaterial, uniforms, renderer.rayOutput, host.width, host.height}))
-                return EXIT_FAILURE;
-            rayTraceWork = rayRecorder->seal();
-            if (!rayTraceWork) return EXIT_FAILURE;
+            passResources.resize(3);
+            passResources[2].resize(2);
+            GpuResourceView accelerationStructure;
+            accelerationStructure.setAccelerationStructure(renderer.rayScene->accelerationStructure());
+            passResources[2][0].append(std::move(accelerationStructure));
+            passResources[2][1].append(renderer.rayScene->geometryTable());
         }
 
         RasterTarget    target;
@@ -439,11 +429,9 @@ int main(int argc, const char * argv[]) {
         auto raster = Raster::create("viewer.frame", {.gpu               = host.gpu,
                                                       .target            = &target,
                                                       .heap              = renderer.heap,
-                                                      .passResources     = fx2::sharedUniformResources(uniforms),
+                                                      .passResources     = passResources,
                                                       .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
-        if (!raster ||
-            (options.rayTraced ? !renderer.recordRayOutput(*raster, uniforms, clipToWorld) : !renderer.record(*raster, uniforms, showBounds, showAxes)))
-            return EXIT_FAILURE;
+        if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes, options.rayTraced)) return EXIT_FAILURE;
 
         AutoRef<GpuPayload> uiUpload;
         if (ui && !ui->record(*raster, uiUpload)) return EXIT_FAILURE;
@@ -452,7 +440,6 @@ int main(int argc, const char * argv[]) {
 
         GpuContext::SubmitParameters submit("mesh-viewer.frame");
         submit.appendWork(uniformWork);
-        if (rayTraceWork) submit.appendWork(rayTraceWork);
         if (uiUpload) submit.appendWork(uiUpload);
         submit.appendWork(rendered).waitFor(acquired.ready);
         host.gpu->submit(submit);

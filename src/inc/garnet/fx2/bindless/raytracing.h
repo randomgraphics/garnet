@@ -20,9 +20,9 @@ struct PbrRayTracingScene : RCRT64 {
     /// `Buffer::CreateParameters::accelerationStructureBuildInput = true`. Geometry must expose
     /// float32 position, normal, and texcoord attributes using PbrMaterial's fixed locations.
     struct Mesh {
-        const gpu2::RasterGeometry * geometry = nullptr; ///< Borrowed for this call; its buffers are retained by the resulting scene.
-        PbrMaterial * material = nullptr; ///< Borrowed for this call; the resulting scene retains this material.
-        glm::mat4 objectToWorld = glm::mat4(1); ///< Affine transform from object space to world space.
+        const gpu2::RasterGeometry * geometry      = nullptr;      ///< Borrowed for this call; its buffers are retained by the resulting scene.
+        PbrMaterial *                material      = nullptr;      ///< Borrowed for this call; the resulting scene retains this material.
+        glm::mat4                    objectToWorld = glm::mat4(1); ///< Affine transform from object space to world space.
     };
 
     /// Build a scene and append its ACS build to initialization. The descriptor heap must be the
@@ -39,35 +39,27 @@ protected:
     using RCRT64::RCRT64;
 };
 
-/// Compute ray-query kernel for direct and environment-lit PBR rendering with ray-traced shadows.
+/// Raster-primary PBR kernel that traces stochastic secondary rays from visible surfaces.
 ///
-/// The caller creates its CnC with the bindless heap at set 0 and these pass resources at set 1:
-/// ACS (binding 0), SharedUniforms (binding 1), scene geometry table (binding 2), and output
-/// storage image (binding 3). `record()` appends one dispatch and does not submit or present it.
+/// The caller creates the Raster with SharedShaderConstants resources at set 1 and the scene
+/// acceleration structure and geometry table at set 2, bindings 0 and 1. Rasterization supplies
+/// primary hits; the fragment shader shades those surfaces and traces secondary rays. `record()`
+/// appends a draw to the caller's Raster; it does not submit or present it.
 struct RayTraceKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    struct RecordParameters {
-        gpu2::CnC & recorder; ///< Caller-owned pass recorder with the documented set-1 resources.
-        PbrRayTracingScene & scene; ///< Previously built scene whose ACS is bound at set 1, binding 0.
-        AutoRef<SkyMaterial> skyMaterial; ///< Optional same-heap sky used for diffuse environment lighting and soft shadows.
-        AutoRef<SharedShaderConstants::UniformState> ssc; ///< Camera, lighting, and exposure for this dispatch.
-        AutoRef<gpu2::Texture> output; ///< Single-sample RGBA16F storage image, also suitable for later sampling.
-        uint32_t width = 0; ///< Dispatch/output width in pixels; must equal the output image width.
-        uint32_t height = 0; ///< Dispatch/output height in pixels; must equal the output image height.
+    struct DrawParameters : CommonDrawParameters {
+        AutoRef<gpu2::AccelerationStructure> acs; ///< Previously built scene ACS bound at set 2, binding 0.
+        glm::mat4                            object2WorldTransform = glm::mat4(1);
+        AutoRef<SkyMaterial>                 skyMaterial           = {};
+        PbrMaterial *                        material              = nullptr;
     };
 
-    /// Record one ray-generation dispatch into the caller's output texture.
-    virtual bool record(const RecordParameters & parameters) const = 0;
+    /// Record a rasterized primary hit shaded with ray-traced secondary rays.
+    virtual bool record(const DrawParameters & parameters) const = 0;
 
     /// Create a kernel using the supplied PBR descriptor heap.
     GN_API static AutoRef<RayTraceKernel> create(gpu2::DescriptorHeap & heap, gpu2::CnC & initialization);
-
-    /// Build the standard set-1 resource table for a caller-created ray-trace CnC. Pass the result
-    /// as `CnC::CreateParameters::passResources`, then record with the same scene, state, and output.
-    GN_API static gpu2::GpuResourceTable createPassResources(PbrRayTracingScene & scene,
-                                                              const AutoRef<SharedShaderConstants::UniformState> & ssc,
-                                                              const AutoRef<gpu2::Texture> & output);
 
 protected:
     using RCRT64::RCRT64;

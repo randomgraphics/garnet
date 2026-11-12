@@ -145,7 +145,8 @@ inline Json parseValue(const char *& p) {
 }
 
 /// Load the first mesh primitive from a .gltf file on disk into gpu2::RasterGeometry.
-inline GN::gpu2::RasterGeometry loadGltfGeometry(const std::string & gltfPath, GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::CnC & uploads) {
+inline GN::gpu2::RasterGeometry loadGltfGeometry(const std::string & gltfPath, GN::AutoRef<GN::gpu2::GpuContext> gpu, GN::gpu2::CnC & uploads,
+                                                 bool accelerationStructureBuildInput = false) {
     std::ifstream jf(gltfPath);
     if (!jf) return {};
 
@@ -209,18 +210,23 @@ inline GN::gpu2::RasterGeometry loadGltfGeometry(const std::string & gltfPath, G
                     readF32(na, i, 1), readF32(na, i, 2), readF32(ua, i, 0), readF32(ua, i, 1)};
     }
 
-    const Acc &           ia       = accs[idxAcc];
-    const BV &            ibv      = bvs[ia.bv];
-    int                   idxCount = ia.count;
-    std::vector<uint16_t> idxData(idxCount);
-    std::memcpy(idxData.data(), bin.data() + ibv.byteOffset + ia.byteOffset, idxCount * 2u);
+    const Acc &    ia        = accs[idxAcc];
+    const BV &     ibv       = bvs[ia.bv];
+    int            idxCount  = ia.count;
+    const uint32_t indexSize = ia.compType == 5123 ? 2 : ia.compType == 5125 ? 4 : 0;
+    if (indexSize == 0) return {};
+    std::vector<uint8_t> idxData(static_cast<size_t>(idxCount) * indexSize);
+    std::memcpy(idxData.data(), bin.data() + ibv.byteOffset + ia.byteOffset, idxData.size());
 
-    auto vbuf = GN::gpu2::Buffer::create("gltf_vb", {.context = gpu, .size = static_cast<uint64_t>(vertCount * sizeof(Vtx))});
-    auto ibuf = GN::gpu2::Buffer::create("gltf_ib", {.context = gpu, .size = static_cast<uint64_t>(idxCount * 2)});
+    auto vbuf = GN::gpu2::Buffer::create(
+        "gltf_vb",
+        {.context = gpu, .size = static_cast<uint64_t>(vertCount * sizeof(Vtx)), .accelerationStructureBuildInput = accelerationStructureBuildInput});
+    auto ibuf = GN::gpu2::Buffer::create(
+        "gltf_ib", {.context = gpu, .size = static_cast<uint64_t>(idxData.size()), .accelerationStructureBuildInput = accelerationStructureBuildInput});
     if (!vbuf || !ibuf) return {};
 
     uploads.recordUploadBuffer(vbuf, 0, {reinterpret_cast<const uint8_t *>(verts.data()), vertCount * sizeof(Vtx)});
-    uploads.recordUploadBuffer(ibuf, 0, {reinterpret_cast<const uint8_t *>(idxData.data()), idxCount * 2u});
+    uploads.recordUploadBuffer(ibuf, 0, {idxData.data(), idxData.size()});
 
     GN::gpu2::RasterGeometry geom;
     geom.vertices.push_back({.buffer = vbuf, .offset = 0, .stride = sizeof(Vtx)});
@@ -228,7 +234,7 @@ inline GN::gpu2::RasterGeometry loadGltfGeometry(const std::string & gltfPath, G
     geom.format.attributes.push_back({.location = 1, .binding = 0, .offset = 12, .format = GN::gpu2::RasterGeometry::AttributeFormat::F32_3});
     geom.format.attributes.push_back({.location = 2, .binding = 0, .offset = 24, .format = GN::gpu2::RasterGeometry::AttributeFormat::F32_2});
     geom.vertexCount = static_cast<uint32_t>(vertCount);
-    geom.indices     = {.buffer = ibuf, .offset = 0, .stride = 2};
+    geom.indices     = {.buffer = ibuf, .offset = 0, .stride = indexSize};
     geom.indexCount  = static_cast<uint32_t>(idxCount);
     return geom;
 }

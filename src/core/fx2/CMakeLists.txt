@@ -20,7 +20,7 @@ if(VULKAN_FOUND)
                 ${_fx2_shader_dir}/bindless-lambertian.frag
                 ${_fx2_shader_dir}/bindless-pbr.vert
                 ${_fx2_shader_dir}/bindless-pbr.frag
-        ${_fx2_shader_dir}/bindless-pbr-raytrace.comp
+                ${_fx2_shader_dir}/bindless-pbr-raytrace.frag
                 ${_fx2_shader_dir}/bindless-cel.vert
                 ${_fx2_shader_dir}/bindless-cel-texture.vert
                 ${_fx2_shader_dir}/bindless-cel.frag
