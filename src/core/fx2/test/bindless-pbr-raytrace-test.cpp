@@ -175,7 +175,8 @@ TEST_CASE("FX2 ray tracing applies the IBL specular response once", "[fx2][bindl
         gpuBindless::Raster::create("bindless-pbr-raytrace-test.raster",
                                     {.gpu = gpu, .target = &target, .heap = heap, .heapSetIndex = 0, .passResources = resources, .numberOfDrawsHint = 1});
     REQUIRE(raster);
-    RayTraceKernel::DrawParameters draw {{*raster, state, geometry}, scene->accelerationStructure(), glm::mat4(1.0f), skyMaterial, material.get()};
+    CommonDrawParameters commonDraw {*raster, state, geometry};
+    RayTraceKernel::DrawParameters draw {std::move(commonDraw), scene->accelerationStructure(), glm::mat4(1.0f), skyMaterial, material.get()};
     REQUIRE(rayTraceKernel->record(draw));
     auto drawWork = raster->seal();
     REQUIRE(drawWork);
