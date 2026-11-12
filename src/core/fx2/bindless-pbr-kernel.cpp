@@ -276,9 +276,9 @@ bool packRayGeometry(const PbrRayTracingScene::Mesh & mesh, const PbrMaterialImp
     const bool   vertexLayoutFits = vertex.buffer && vertex.buffer->gpuAddress() && vertex.stride && position->offset <= vertex.stride &&
                                     vertex.stride - position->offset >= 12 && normal->offset <= vertex.stride && vertex.stride - normal->offset >= 12 &&
                                     texcoord->offset <= vertex.stride && vertex.stride - texcoord->offset >= 8;
-    const bool   indexLayoutFits  = (geometry.indexCount != 0) == bool(geometry.indices.buffer) &&
-                                    (!geometry.indexCount || ((geometry.indices.stride == 2 || geometry.indices.stride == 4) && geometry.indexCount % 3 == 0)) &&
-                                    (!geometry.indices.buffer || geometry.indices.buffer->gpuAddress());
+    const bool   indexLayoutFits = (geometry.indexCount != 0) == bool(geometry.indices.buffer) &&
+                                   (!geometry.indexCount || ((geometry.indices.stride == 2 || geometry.indices.stride == 4) && geometry.indexCount % 3 == 0)) &&
+                                   (!geometry.indices.buffer || geometry.indices.buffer->gpuAddress());
     if (!vertexLayoutFits || !indexLayoutFits || !geometry.vertexCount || !material.opaque()) return false;
 
     data.vertexAddress  = vertex.buffer->gpuAddress() + vertex.offset;
