@@ -9,38 +9,34 @@ static GN::Logger * sLogger = GN::getLogger("GN.gpu2.vk.acceleration-structure")
 
 namespace GN::gpu2 {
 
-VkAccelerationStructureVulkan::VkAccelerationStructureVulkan(const StrA & entityName, AutoRef<GpuContextVulkan2> gpu):
-    AccelerationStructure(TYPE_INFO(), entityName), mGpu(std::move(gpu)) {}
+VkAccelerationStructureVulkan::VkAccelerationStructureVulkan(const StrA & entityName, AutoRef<GpuContextVulkan2> gpu)
+    : AccelerationStructure(TYPE_INFO(), entityName), mGpu(std::move(gpu)) {}
 
-VkAccelerationStructureVulkan::~VkAccelerationStructureVulkan() {
-    reset();
-}
+VkAccelerationStructureVulkan::~VkAccelerationStructureVulkan() { reset(); }
 
-AutoRef<GpuContext> VkAccelerationStructureVulkan::gpu() const {
-    return mGpu;
-}
+AutoRef<GpuContext> VkAccelerationStructureVulkan::gpu() const { return mGpu; }
 
 bool VkAccelerationStructureVulkan::createNativeStructure(vk::AccelerationStructureTypeKHR type, uint64_t size, NativeStructure & out) {
-    const auto & device = mGpu->vulkanDevice();
+    const auto &                    device = mGpu->vulkanDevice();
     rv::Buffer::ConstructParameters bufferParams;
-    bufferParams.name = name.c_str();
-    bufferParams.gi = device.gi();
-    bufferParams.size = size;
-    bufferParams.usage = vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress;
+    bufferParams.name   = name.c_str();
+    bufferParams.gi     = device.gi();
+    bufferParams.size   = size;
+    bufferParams.usage  = vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress;
     bufferParams.memory = vk::MemoryPropertyFlagBits::eDeviceLocal;
-    out.storage = rv::Ref<rv::Buffer>(new rv::Buffer(bufferParams));
+    out.storage         = rv::Ref<rv::Buffer>(new rv::Buffer(bufferParams));
     if (!out.storage || !out.storage->handle()) return false;
 
     vk::AccelerationStructureCreateInfoKHR createInfo;
     createInfo.buffer = out.storage->handle();
-    createInfo.size = size;
-    createInfo.type = type;
-    out.handle = device.handle().createAccelerationStructureKHR(createInfo);
+    createInfo.size   = size;
+    createInfo.type   = type;
+    out.handle        = device.handle().createAccelerationStructureKHR(createInfo);
     if (!out.handle) return false;
 
     vk::AccelerationStructureDeviceAddressInfoKHR addressInfo;
     addressInfo.accelerationStructure = out.handle;
-    out.address = device.handle().getAccelerationStructureAddressKHR(addressInfo);
+    out.address                       = device.handle().getAccelerationStructureAddressKHR(addressInfo);
     return out.address != 0;
 }
 
@@ -49,17 +45,17 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
     if (!mGpu || !mGpu->ready() || !mGpu->caps().accelerationStructures || params.geometries.empty()) return false;
     mPreferFastTrace = params.preference == BuildPreference::FAST_TRACE;
 
-    auto * physicalDevice = &mGpu->vulkanDevice().gi()->physical;
+    auto *                                               physicalDevice = &mGpu->vulkanDevice().gi()->physical;
     vk::PhysicalDeviceAccelerationStructurePropertiesKHR asProperties;
-    vk::PhysicalDeviceProperties2 properties;
+    vk::PhysicalDeviceProperties2                        properties;
     properties.pNext = &asProperties;
     physicalDevice->getProperties2(&properties);
     mScratchAlignment = std::max<uint64_t>(1, asProperties.minAccelerationStructureScratchOffsetAlignment);
 
-    std::vector<vk::TransformMatrixKHR> transforms;
-    std::vector<vk::AccelerationStructureGeometryKHR> bottomGeometries;
+    std::vector<vk::TransformMatrixKHR>                     transforms;
+    std::vector<vk::AccelerationStructureGeometryKHR>       bottomGeometries;
     std::vector<vk::AccelerationStructureBuildRangeInfoKHR> bottomRanges;
-    std::vector<uint32_t> primitiveCounts;
+    std::vector<uint32_t>                                   primitiveCounts;
     transforms.reserve(params.geometries.size());
     bottomGeometries.reserve(params.geometries.size());
     bottomRanges.reserve(params.geometries.size());
@@ -67,12 +63,12 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
 
     for (const TriangleGeometry & source : params.geometries) {
         auto * vertex = RuntimeType::cast<BufferVulkan>(source.vertexBuffer.get());
-        auto * index = RuntimeType::cast<BufferVulkan>(source.indexBuffer.get());
+        auto * index  = RuntimeType::cast<BufferVulkan>(source.indexBuffer.get());
         if (!vertex || vertex->context() != mGpu.get() || !vertex->isAccelerationStructureBuildInput() || !vertex->gpuAddress() || source.vertexCount < 3 ||
             source.vertexStride < source.positionOffset + sizeof(float) * 3 || source.indexCount % 3 != 0 ||
             (source.indexFormat == IndexFormat::NONE && (source.indexBuffer || source.indexCount != 0)) ||
-            (source.indexFormat != IndexFormat::NONE && (!index || index->context() != mGpu.get() || !index->isAccelerationStructureBuildInput() || !index->gpuAddress() || source.indexCount < 3)))
-        {
+            (source.indexFormat != IndexFormat::NONE &&
+             (!index || index->context() != mGpu.get() || !index->isAccelerationStructureBuildInput() || !index->gpuAddress() || source.indexCount < 3))) {
             GN_ERROR(sLogger, "AccelerationStructure build has invalid or non-build-input geometry, resource='{}'", name);
             reset();
             return false;
@@ -86,9 +82,14 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
         }
         uint64_t indexElementSize = 0;
         switch (source.indexFormat) {
-        case IndexFormat::NONE: break;
-        case IndexFormat::UINT16: indexElementSize = sizeof(uint16_t); break;
-        case IndexFormat::UINT32: indexElementSize = sizeof(uint32_t); break;
+        case IndexFormat::NONE:
+            break;
+        case IndexFormat::UINT16:
+            indexElementSize = sizeof(uint16_t);
+            break;
+        case IndexFormat::UINT32:
+            indexElementSize = sizeof(uint32_t);
+            break;
         }
         if (index && source.indexOffset + uint64_t(source.indexCount) * indexElementSize > index->size()) {
             GN_ERROR(sLogger, "AccelerationStructure index range exceeds buffer, resource='{}'", name);
@@ -98,7 +99,7 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
 
         vk::TransformMatrixKHR transform;
         for (uint32_t row = 0; row < 3; ++row) {
-            const Vector4f & values = source.objectToWorld.rows[row];
+            const Vector4f & values  = source.objectToWorld.rows[row];
             transform.matrix[row][0] = values.x;
             transform.matrix[row][1] = values.y;
             transform.matrix[row][2] = values.z;
@@ -107,21 +108,21 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
         transforms.push_back(transform);
 
         vk::AccelerationStructureGeometryTrianglesDataKHR triangles;
-        triangles.vertexFormat = vk::Format::eR32G32B32Sfloat;
-        triangles.vertexData.deviceAddress = vertex->gpuAddress() + source.vertexOffset + source.positionOffset;
-        triangles.vertexStride = source.vertexStride;
-        triangles.maxVertex = source.vertexCount - 1;
+        triangles.vertexFormat                = vk::Format::eR32G32B32Sfloat;
+        triangles.vertexData.deviceAddress    = vertex->gpuAddress() + source.vertexOffset + source.positionOffset;
+        triangles.vertexStride                = source.vertexStride;
+        triangles.maxVertex                   = source.vertexCount - 1;
         triangles.transformData.deviceAddress = 0;
         if (index) {
             triangles.indexData.deviceAddress = index->gpuAddress() + source.indexOffset;
-            triangles.indexType = source.indexFormat == IndexFormat::UINT16 ? vk::IndexType::eUint16 : vk::IndexType::eUint32;
+            triangles.indexType               = source.indexFormat == IndexFormat::UINT16 ? vk::IndexType::eUint16 : vk::IndexType::eUint32;
         } else {
             triangles.indexType = vk::IndexType::eNoneKHR;
         }
 
         vk::AccelerationStructureGeometryKHR geometry;
-        geometry.geometryType = vk::GeometryTypeKHR::eTriangles;
-        geometry.flags = vk::GeometryFlagBitsKHR::eOpaque;
+        geometry.geometryType       = vk::GeometryTypeKHR::eTriangles;
+        geometry.flags              = vk::GeometryFlagBitsKHR::eOpaque;
         geometry.geometry.triangles = triangles;
         bottomGeometries.push_back(geometry);
         const uint32_t primitiveCount = source.indexFormat == IndexFormat::NONE ? source.vertexCount / 3 : source.indexCount / 3;
@@ -131,39 +132,39 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
     }
 
     const uint64_t transformBytes = transforms.size() * sizeof(vk::TransformMatrixKHR);
-    mTransformBuffer = Buffer::create(name + "/transforms", {.context = mGpu, .size = transformBytes, .accelerationStructureBuildInput = true});
+    mTransformBuffer              = Buffer::create(name + "/transforms", {.context = mGpu, .size = transformBytes, .accelerationStructureBuildInput = true});
     if (!mTransformBuffer || !mTransformBuffer->gpuAddress()) {
         reset();
         return false;
     }
-    recorder.recordUploadBuffer(mTransformBuffer, 0, {reinterpret_cast<const uint8_t *>(transforms.data()), transforms.size() * sizeof(vk::TransformMatrixKHR)});
+    recorder.recordUploadBuffer(mTransformBuffer, 0,
+                                {reinterpret_cast<const uint8_t *>(transforms.data()), transforms.size() * sizeof(vk::TransformMatrixKHR)});
     for (size_t i = 0; i < bottomGeometries.size(); ++i) {
         bottomGeometries[i].geometry.triangles.transformData.deviceAddress = mTransformBuffer->gpuAddress() + i * sizeof(vk::TransformMatrixKHR);
     }
 
-    const bool preferFastTrace = params.preference == BuildPreference::FAST_TRACE;
-    const vk::BuildAccelerationStructureFlagsKHR buildFlags = preferFastTrace ? vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace :
-                                                                                 vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastBuild;
+    const bool                                   preferFastTrace = params.preference == BuildPreference::FAST_TRACE;
+    const vk::BuildAccelerationStructureFlagsKHR buildFlags =
+        preferFastTrace ? vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace : vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastBuild;
     vk::AccelerationStructureBuildGeometryInfoKHR bottomInfo;
-    bottomInfo.type = vk::AccelerationStructureTypeKHR::eBottomLevel;
-    bottomInfo.flags = buildFlags;
-    bottomInfo.mode = vk::BuildAccelerationStructureModeKHR::eBuild;
+    bottomInfo.type          = vk::AccelerationStructureTypeKHR::eBottomLevel;
+    bottomInfo.flags         = buildFlags;
+    bottomInfo.mode          = vk::BuildAccelerationStructureModeKHR::eBuild;
     bottomInfo.geometryCount = static_cast<uint32_t>(bottomGeometries.size());
-    bottomInfo.pGeometries = bottomGeometries.data();
-    const auto bottomSizes = mGpu->vulkanDevice().handle().getAccelerationStructureBuildSizesKHR(vk::AccelerationStructureBuildTypeKHR::eDevice, bottomInfo, primitiveCounts);
+    bottomInfo.pGeometries   = bottomGeometries.data();
+    const auto bottomSizes =
+        mGpu->vulkanDevice().handle().getAccelerationStructureBuildSizesKHR(vk::AccelerationStructureBuildTypeKHR::eDevice, bottomInfo, primitiveCounts);
     if (!createNativeStructure(vk::AccelerationStructureTypeKHR::eBottomLevel, bottomSizes.accelerationStructureSize, mBottomLevel)) {
         reset();
         return false;
     }
     bottomInfo.dstAccelerationStructure = mBottomLevel.handle;
-    mScratchSize = bottomSizes.buildScratchSize;
+    mScratchSize                        = bottomSizes.buildScratchSize;
 
     vk::AccelerationStructureInstanceKHR instance;
-    for (uint32_t row = 0; row < 3; ++row) {
-        instance.transform.matrix[row][row] = 1.0f;
-    }
-    instance.mask = 0xff;
-    instance.flags = static_cast<uint8_t>(vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable);
+    for (uint32_t row = 0; row < 3; ++row) { instance.transform.matrix[row][row] = 1.0f; }
+    instance.mask                           = 0xff;
+    instance.flags                          = static_cast<uint8_t>(vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable);
     instance.accelerationStructureReference = mBottomLevel.address;
     mInstanceBuffer = Buffer::create(name + "/instance", {.context = mGpu, .size = sizeof(instance), .accelerationStructureBuildInput = true});
     if (!mInstanceBuffer || !mInstanceBuffer->gpuAddress()) {
@@ -175,22 +176,23 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
     vk::AccelerationStructureGeometryInstancesDataKHR instances;
     instances.data.deviceAddress = mInstanceBuffer->gpuAddress();
     vk::AccelerationStructureGeometryKHR topGeometry;
-    topGeometry.geometryType = vk::GeometryTypeKHR::eInstances;
+    topGeometry.geometryType       = vk::GeometryTypeKHR::eInstances;
     topGeometry.geometry.instances = instances;
     vk::AccelerationStructureBuildGeometryInfoKHR topInfo;
-    topInfo.type = vk::AccelerationStructureTypeKHR::eTopLevel;
-    topInfo.flags = buildFlags;
-    topInfo.mode = vk::BuildAccelerationStructureModeKHR::eBuild;
-    topInfo.geometryCount = 1;
-    topInfo.pGeometries = &topGeometry;
+    topInfo.type                                     = vk::AccelerationStructureTypeKHR::eTopLevel;
+    topInfo.flags                                    = buildFlags;
+    topInfo.mode                                     = vk::BuildAccelerationStructureModeKHR::eBuild;
+    topInfo.geometryCount                            = 1;
+    topInfo.pGeometries                              = &topGeometry;
     const std::array<uint32_t, 1> topPrimitiveCounts = {1};
-    const auto topSizes = mGpu->vulkanDevice().handle().getAccelerationStructureBuildSizesKHR(vk::AccelerationStructureBuildTypeKHR::eDevice, topInfo, topPrimitiveCounts);
+    const auto                    topSizes =
+        mGpu->vulkanDevice().handle().getAccelerationStructureBuildSizesKHR(vk::AccelerationStructureBuildTypeKHR::eDevice, topInfo, topPrimitiveCounts);
     if (!createNativeStructure(vk::AccelerationStructureTypeKHR::eTopLevel, topSizes.accelerationStructureSize, mTopLevel)) {
         reset();
         return false;
     }
     topInfo.dstAccelerationStructure = mTopLevel.handle;
-    mScratchSize = std::max(mScratchSize, topSizes.buildScratchSize);
+    mScratchSize                     = std::max(mScratchSize, topSizes.buildScratchSize);
 
     if (mScratchSize > std::numeric_limits<uint64_t>::max() - mScratchAlignment) {
         reset();
@@ -205,7 +207,8 @@ bool VkAccelerationStructureVulkan::init(const BuildParameters & params, CnC & r
     return true;
 }
 
-bool VkAccelerationStructureVulkan::recordBuild(vk::CommandBuffer commandBuffer, GpuResourceStateTrackerVulkan & tracker, const AutoRef<Buffer> & scratchBuffer) {
+bool VkAccelerationStructureVulkan::recordBuild(vk::CommandBuffer commandBuffer, GpuResourceStateTrackerVulkan & tracker,
+                                                const AutoRef<Buffer> & scratchBuffer) {
     if (!mBuildRecorded || !commandBuffer || !scratchBuffer) return false;
     if (!tracker.addAccelerationStructure(this, true, vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR)) return false;
     if (!tracker.addAccelerationStructureBuildInput(RuntimeType::cast<BufferVulkan>(mTransformBuffer.get()))) return false;
@@ -216,31 +219,31 @@ bool VkAccelerationStructureVulkan::recordBuild(vk::CommandBuffer commandBuffer,
     }
     tracker.emitPrePassBarriers(commandBuffer);
 
-    std::vector<vk::AccelerationStructureGeometryKHR> bottomGeometries;
+    std::vector<vk::AccelerationStructureGeometryKHR>       bottomGeometries;
     std::vector<vk::AccelerationStructureBuildRangeInfoKHR> ranges;
-    std::vector<uint32_t> primitiveCounts;
+    std::vector<uint32_t>                                   primitiveCounts;
     bottomGeometries.reserve(mGeometries.size());
     ranges.reserve(mGeometries.size());
     primitiveCounts.reserve(mGeometries.size());
     for (size_t i = 0; i < mGeometries.size(); ++i) {
-        const TriangleGeometry & source = mGeometries[i];
-        auto * vertex = RuntimeType::cast<BufferVulkan>(source.vertexBuffer.get());
-        auto * index = RuntimeType::cast<BufferVulkan>(source.indexBuffer.get());
+        const TriangleGeometry &                          source = mGeometries[i];
+        auto *                                            vertex = RuntimeType::cast<BufferVulkan>(source.vertexBuffer.get());
+        auto *                                            index  = RuntimeType::cast<BufferVulkan>(source.indexBuffer.get());
         vk::AccelerationStructureGeometryTrianglesDataKHR triangles;
-        triangles.vertexFormat = vk::Format::eR32G32B32Sfloat;
-        triangles.vertexData.deviceAddress = vertex->gpuAddress() + source.vertexOffset + source.positionOffset;
-        triangles.vertexStride = source.vertexStride;
-        triangles.maxVertex = source.vertexCount - 1;
+        triangles.vertexFormat                = vk::Format::eR32G32B32Sfloat;
+        triangles.vertexData.deviceAddress    = vertex->gpuAddress() + source.vertexOffset + source.positionOffset;
+        triangles.vertexStride                = source.vertexStride;
+        triangles.maxVertex                   = source.vertexCount - 1;
         triangles.transformData.deviceAddress = mTransformBuffer->gpuAddress() + i * sizeof(vk::TransformMatrixKHR);
         if (index) {
             triangles.indexData.deviceAddress = index->gpuAddress() + source.indexOffset;
-            triangles.indexType = source.indexFormat == IndexFormat::UINT16 ? vk::IndexType::eUint16 : vk::IndexType::eUint32;
+            triangles.indexType               = source.indexFormat == IndexFormat::UINT16 ? vk::IndexType::eUint16 : vk::IndexType::eUint32;
         } else {
             triangles.indexType = vk::IndexType::eNoneKHR;
         }
         vk::AccelerationStructureGeometryKHR geometry;
-        geometry.geometryType = vk::GeometryTypeKHR::eTriangles;
-        geometry.flags = vk::GeometryFlagBitsKHR::eOpaque;
+        geometry.geometryType       = vk::GeometryTypeKHR::eTriangles;
+        geometry.flags              = vk::GeometryFlagBitsKHR::eOpaque;
         geometry.geometry.triangles = triangles;
         bottomGeometries.push_back(geometry);
         const uint32_t primitiveCount = source.indexFormat == IndexFormat::NONE ? source.vertexCount / 3 : source.indexCount / 3;
@@ -248,39 +251,41 @@ bool VkAccelerationStructureVulkan::recordBuild(vk::CommandBuffer commandBuffer,
         primitiveCounts.push_back(primitiveCount);
     }
 
-    const uint64_t scratchAddress = scratchBuffer->gpuAddress();
-    const uint64_t alignedScratchAddress = (scratchAddress + mScratchAlignment - 1) / mScratchAlignment * mScratchAlignment;
+    const uint64_t                                scratchAddress        = scratchBuffer->gpuAddress();
+    const uint64_t                                alignedScratchAddress = (scratchAddress + mScratchAlignment - 1) / mScratchAlignment * mScratchAlignment;
     vk::AccelerationStructureBuildGeometryInfoKHR bottomInfo;
     bottomInfo.type = vk::AccelerationStructureTypeKHR::eBottomLevel;
-    bottomInfo.flags = mPreferFastTrace ? vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace : vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastBuild;
-    bottomInfo.mode = vk::BuildAccelerationStructureModeKHR::eBuild;
-    bottomInfo.dstAccelerationStructure = mBottomLevel.handle;
-    bottomInfo.geometryCount = static_cast<uint32_t>(bottomGeometries.size());
-    bottomInfo.pGeometries = bottomGeometries.data();
-    bottomInfo.scratchData.deviceAddress = alignedScratchAddress;
+    bottomInfo.flags =
+        mPreferFastTrace ? vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace : vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastBuild;
+    bottomInfo.mode                                                               = vk::BuildAccelerationStructureModeKHR::eBuild;
+    bottomInfo.dstAccelerationStructure                                           = mBottomLevel.handle;
+    bottomInfo.geometryCount                                                      = static_cast<uint32_t>(bottomGeometries.size());
+    bottomInfo.pGeometries                                                        = bottomGeometries.data();
+    bottomInfo.scratchData.deviceAddress                                          = alignedScratchAddress;
     std::vector<const vk::AccelerationStructureBuildRangeInfoKHR *> rangePointers = {ranges.data()};
     commandBuffer.buildAccelerationStructuresKHR(1, &bottomInfo, rangePointers.data());
 
     vk::MemoryBarrier bottomToTop;
     bottomToTop.srcAccessMask = vk::AccessFlagBits::eAccelerationStructureWriteKHR;
     bottomToTop.dstAccessMask = vk::AccessFlagBits::eAccelerationStructureReadKHR;
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, {}, 1, &bottomToTop,
-                                  0, nullptr, 0, nullptr);
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, {}, 1,
+                                  &bottomToTop, 0, nullptr, 0, nullptr);
 
     vk::AccelerationStructureGeometryInstancesDataKHR instanceData;
     instanceData.data.deviceAddress = mInstanceBuffer->gpuAddress();
     vk::AccelerationStructureGeometryKHR topGeometry;
-    topGeometry.geometryType = vk::GeometryTypeKHR::eInstances;
+    topGeometry.geometryType       = vk::GeometryTypeKHR::eInstances;
     topGeometry.geometry.instances = instanceData;
     vk::AccelerationStructureBuildGeometryInfoKHR topInfo;
     topInfo.type = vk::AccelerationStructureTypeKHR::eTopLevel;
-    topInfo.flags = mPreferFastTrace ? vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace : vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastBuild;
-    topInfo.mode = vk::BuildAccelerationStructureModeKHR::eBuild;
-    topInfo.dstAccelerationStructure = mTopLevel.handle;
-    topInfo.geometryCount = 1;
-    topInfo.pGeometries = &topGeometry;
+    topInfo.flags =
+        mPreferFastTrace ? vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace : vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastBuild;
+    topInfo.mode                      = vk::BuildAccelerationStructureModeKHR::eBuild;
+    topInfo.dstAccelerationStructure  = mTopLevel.handle;
+    topInfo.geometryCount             = 1;
+    topInfo.pGeometries               = &topGeometry;
     topInfo.scratchData.deviceAddress = alignedScratchAddress;
-    const vk::AccelerationStructureBuildRangeInfoKHR topRange {1, 0, 0, 0};
+    const vk::AccelerationStructureBuildRangeInfoKHR   topRange {1, 0, 0, 0};
     const vk::AccelerationStructureBuildRangeInfoKHR * topRangePtr = &topRange;
     commandBuffer.buildAccelerationStructuresKHR(1, &topInfo, &topRangePtr);
     tracker.restoreAccelerationStructureToRead(this, commandBuffer);
@@ -300,13 +305,13 @@ void VkAccelerationStructureVulkan::reset() {
         if (mTopLevel.handle) device.destroyAccelerationStructureKHR(mTopLevel.handle);
         if (mBottomLevel.handle) device.destroyAccelerationStructureKHR(mBottomLevel.handle);
     }
-    mTopLevel = {};
-    mBottomLevel = {};
-    mScratchSize = 0;
+    mTopLevel        = {};
+    mBottomLevel     = {};
+    mScratchSize     = 0;
     mPreferFastTrace = true;
-    mBuildRecorded = false;
-    mBuildEncoded = false;
-    mBuildSubmitted = false;
+    mBuildRecorded   = false;
+    mBuildEncoded    = false;
+    mBuildSubmitted  = false;
     releaseBuildInputs();
 }
 

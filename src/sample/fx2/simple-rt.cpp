@@ -213,19 +213,19 @@ int main(int argc, const char * argv[]) {
             RasterTarget accumulationTarget;
             accumulationTarget.setColorTarget(0, GpuResourceView {accumulationTexture});
             const bool accumulationContinues = !cameraMoved && accumulationSampleCount > 0;
-            accumulationTarget.loadColor = accumulationContinues;
-            accumulationTarget.loadDepth = accumulationContinues;
+            accumulationTarget.loadColor     = accumulationContinues;
+            accumulationTarget.loadDepth     = accumulationContinues;
             accumulationTarget.readOnlyDepth = accumulationContinues;
             accumulationTarget.setClearColor(0, 0, 0, 0);
             accumulationTarget.setDepthStencilTarget(GpuResourceView {accumulationDepthBuffer}).setClearDepth(1.0f);
             if (accumulationContinues) {
-                auto & accumulationBlend = accumulationTarget.colorTargets[0].blendState;
+                auto & accumulationBlend   = accumulationTarget.colorTargets[0].blendState;
                 accumulationBlend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
                 accumulationBlend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
                 accumulationBlend.alphaSrc = RasterTarget::BlendState::ONE;
                 accumulationBlend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
             }
-            auto rtResources           = fx::sharedUniformResources(state);
+            auto rtResources = fx::sharedUniformResources(state);
             rtResources.resize(3);
             rtResources[2].resize(2);
             GpuResourceView accelerationStructure;

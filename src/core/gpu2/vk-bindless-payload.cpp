@@ -331,8 +331,8 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
                 vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
-                                     vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eEarlyFragmentTests |
-                                         vk::PipelineStageFlagBits::eLateFragmentTests,
+                                     vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader |
+                                         vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
                                      {}, 0, nullptr, 0, nullptr, 1, &b);
             }
         }

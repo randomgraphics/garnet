@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.16.3) # 3.16.3 is the default version coming with Ubuntu 20.04
 
+# CMP0184 allows runtime checks to be configured per target, so Assimp can omit
+# /RTC1 for its optimized Debug build without changing Garnet's Debug checks.
+if(POLICY CMP0184)
+  cmake_policy(SET CMP0184 NEW)
+endif()
+
 project(garnet)
 
 # ====================
