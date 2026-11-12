@@ -10,6 +10,8 @@
 
 namespace GN::gpu2 {
 
+class VkAccelerationStructureVulkan;
+
 /// Access and layout state of a single texture plane (aspect of a mip/face subresource).
 struct TexturePlaneStateVulkan {
     vk::ImageLayout        layout = vk::ImageLayout::eUndefined;
@@ -70,6 +72,8 @@ public:
     bool addUniformBuffer(BufferVulkan *         buf,
                           vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader);
     bool addStorageBuffer(BufferVulkan * buf, bool write = false, vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eFragmentShader);
+    bool addAccelerationStructure(VkAccelerationStructureVulkan * resource, bool write, vk::PipelineStageFlags stages);
+    bool addAccelerationStructureBuildInput(BufferVulkan * buf);
     bool addVertexBuffer(BufferVulkan * buf);
     bool addIndexBuffer(BufferVulkan * buf);
     bool addTransferSrcBuffer(BufferVulkan * buf);
@@ -108,6 +112,7 @@ public:
 
     /// Batched variant: restores multiple buffers to read-ready state in a single pipeline barrier.
     void restoreBuffersToReadReady(ArrayView<BufferVulkan * const> bufs, vk::CommandBuffer cb);
+    void restoreAccelerationStructureToRead(VkAccelerationStructureVulkan * resource, vk::CommandBuffer cb);
 
     bool addTexture(TextureVulkanBase * tex, const GpuResourceView::ImageView & view, const TexturePlaneStateVulkan & state);
 
@@ -148,18 +153,32 @@ private:
         bool                   isWrite        = false;
         const char *           usageName      = "<unspecified>";
     };
+    struct TrackedAccelerationStructure {
+        VkAccelerationStructureVulkan * resource            = nullptr;
+        bool                            activeThisPass      = false;
+        bool                            incomingInitialized = false;
+        bool                            incomingWrite       = false;
+        vk::PipelineStageFlags          incomingStages      = vk::PipelineStageFlagBits::eTopOfPipe;
+        bool                            passWrite           = false;
+        vk::PipelineStageFlags          passStages          = vk::PipelineStageFlagBits::eBottomOfPipe;
+    };
+
     bool checkBufferHazard(const TrackedBuffer & incoming) const;
     bool addBuffer(TrackedBuffer b);
+    void emitAccelerationStructureBarriers(vk::CommandBuffer cb);
 
-    std::unordered_map<int64_t, TrackedBuffer> mBuffers;
+    std::unordered_map<int64_t, TrackedBuffer>                mBuffers;
+    std::unordered_map<int64_t, TrackedAccelerationStructure> mAccelerationStructures;
     // unordered_map rehashing preserves element addresses; these lists only visit registrations for the current pass.
-    std::vector<TrackedBuffer *>  mActiveBuffers;
-    std::vector<TrackedTexture *> mActiveTextures;
-    bool                          mHasReadOnlyDepthStencil = false;
+    std::vector<TrackedBuffer *>                mActiveBuffers;
+    std::vector<TrackedTexture *>               mActiveTextures;
+    std::vector<TrackedAccelerationStructure *> mActiveAccelerationStructures;
+    bool                                        mHasReadOnlyDepthStencil = false;
 
     // Barrier emissions within a submit are sequential; retain scratch capacity between passes.
     std::vector<vk::BufferMemoryBarrier> mBufferBarriers;
     std::vector<vk::ImageMemoryBarrier>  mImageBarriers;
+    std::vector<vk::MemoryBarrier>       mAccelerationStructureBarriers;
 };
 
 } // namespace GN::gpu2

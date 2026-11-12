@@ -34,6 +34,7 @@ public:
     ~VkBindlessCncPayload() override;
 
     void recordForVulkanSubmit(const RecordContext & ctx) override;
+    void onSubmitComplete() override;
     void onGpuComplete() override;
 
 private:

@@ -25,9 +25,8 @@ struct RenderModel {
     DynaArray<Material> materials;
     DynaArray<Instance> instances;
 
-    bool prepare(AutoRef<gpu2::GpuContext> gpu, gpu2::CnC & geometryUploads, gpu2::CnC & materialUploads, AutoRef<fx2::PbrKernel> pbr,
-                 AutoRef<fx2::LambertianKernel> lambertian, AutoRef<fx2::UnlitKernel> unlit, const ModelScene & scene, Shading shading,
-                 const glm::mat4 & modelTransform);
+    bool prepare(AutoRef<gpu2::GpuContext> gpu, AutoRef<gpu2::DescriptorHeap> materialHeap, gpu2::CnC & geometryUploads, gpu2::CnC & materialUploads,
+                 const ModelScene & scene, Shading shading, const glm::mat4 & modelTransform);
 };
 
 /// Shared bindless scene renderer for windowed presentation and headless snapshots.
@@ -42,6 +41,8 @@ struct SceneRenderer {
     AutoRef<fx2::UnlitKernel>           unlit;
     AutoRef<fx2::SkyKernel>             sky;
     AutoRef<fx2::SkyMaterial>           skyMaterial;
+    AutoRef<fx2::RayTraceKernel>        rayTrace;
+    AutoRef<fx2::PbrRayTracingScene>    rayScene;
     RenderModel                         model, bounds, axes;
 
     /// One frame's camera, viewport, and exposure inputs for the shared uniform block.
@@ -68,10 +69,12 @@ struct SceneRenderer {
     /// Draws record() appends for the given debug toggles, for raster preallocation.
     size_t drawCount(bool showBounds, bool showAxes) const;
 
-    bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const;
+    bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes, bool rayTraced) const;
+
+    bool rayTracingAvailable() const { return rayTrace && rayScene; }
 
 private:
-    bool recordModel(const RenderModel & source, gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;
+    bool recordModel(const RenderModel & source, gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool rayTraced) const;
 };
 
 } // namespace GN::viewer

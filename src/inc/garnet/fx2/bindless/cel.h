@@ -9,7 +9,7 @@
 
 namespace GN::fx2 {
 
-/// Immutable Cel (anime/NPR) material retaining its kernel, stable values, and heap allocations.
+/// Immutable Cel (anime/NPR) material retaining stable values and heap allocations.
 struct CelMaterial : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
@@ -48,20 +48,18 @@ struct CelMaterial : RCRT64 {
         bool      renderOutline         = true; ///< Record inverted-hull silhouette outline draw when true and outlineWidth > 0.
     };
 
-    /// Append a draw (and optional outline) and retain this material and uniform state until payload cleanup.
-    virtual bool record(const DrawParameters &) const = 0;
+    /// Create heap-backed material data independent of a rendering kernel.
+    GN_API static AutoRef<CelMaterial> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization, const Parameters & parameters);
 
 protected:
     using RCRT64::RCRT64;
 };
 
-/// Cel (NPR) raster kernel. It owns its heap reference, shared shaders, and fallback resources.
-/// Materials created by this kernel use the same heap and retain the kernel.
+/// Cel (NPR) raster kernel that records draws using heap-compatible materials.
 struct CelKernel : RCRT64 {
     GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
 
-    virtual CelMaterial::Parameters defaultMaterialParameters() const                                                       = 0;
-    virtual AutoRef<CelMaterial>    createMaterial(::GN::gpu2::CnC & initialization, const CelMaterial::Parameters &) const = 0;
+    virtual bool record(const CelMaterial & material, const CelMaterial::DrawParameters & parameters) const = 0;
 
     GN_API static AutoRef<CelKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 

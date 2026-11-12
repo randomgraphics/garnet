@@ -106,7 +106,7 @@ public:
     RasterGeometry            rigidGeometries[RIGID_COUNT];
     AutoRef<fx2::PbrMaterial> rigidMaterials[RIGID_COUNT];
 
-    bool initMeshesAndAssets(AutoRef<GpuContext> gpu, gpu2::CnC & uploads, AutoRef<fx2::PbrKernel> pbr, gpu2::CnC & matUploads) {
+    bool initMeshesAndAssets(AutoRef<GpuContext> gpu, gpu2::CnC & uploads, AutoRef<gpu2::DescriptorHeap> heap, gpu2::CnC & matUploads) {
         // Soft body meshes
         meshCube   = GelMesh::createCube(4, 1.4f);
         meshSphere = GelMesh::createSphere(2.0f, 20, 14); // Single big bouncy ball (radius 2.0m)
@@ -116,27 +116,27 @@ public:
         // Gel template visual assets (PBR colored jelly materials)
         // Emerald green cube
         gelTemplateGeometries[TEMPLATE_CUBE_GREEN] = gelGeometry(gpu, uploads, meshCube);
-        gelMaterials[TEMPLATE_CUBE_GREEN]          = createPbrMaterial(pbr, matUploads, {0.15f, 0.85f, 0.40f, 1.0f}, 0.2f, 0.3f);
+        gelMaterials[TEMPLATE_CUBE_GREEN]          = createPbrMaterial(*heap, matUploads, {0.15f, 0.85f, 0.40f, 1.0f}, 0.2f, 0.3f);
         // Sapphire blue cube
         gelTemplateGeometries[TEMPLATE_CUBE_BLUE] = gelGeometry(gpu, uploads, meshCube);
-        gelMaterials[TEMPLATE_CUBE_BLUE]          = createPbrMaterial(pbr, matUploads, {0.20f, 0.50f, 0.95f, 1.0f}, 0.3f, 0.25f);
+        gelMaterials[TEMPLATE_CUBE_BLUE]          = createPbrMaterial(*heap, matUploads, {0.20f, 0.50f, 0.95f, 1.0f}, 0.3f, 0.25f);
         // Ruby red sphere (radiant jelly)
         gelTemplateGeometries[TEMPLATE_SPHERE_RED] = gelGeometry(gpu, uploads, meshSphere);
-        gelMaterials[TEMPLATE_SPHERE_RED]          = createPbrMaterial(pbr, matUploads, {0.95f, 0.20f, 0.35f, 1.0f}, 0.4f, 0.2f);
+        gelMaterials[TEMPLATE_SPHERE_RED]          = createPbrMaterial(*heap, matUploads, {0.95f, 0.20f, 0.35f, 1.0f}, 0.4f, 0.2f);
         // Amber gold sphere
         gelTemplateGeometries[TEMPLATE_SPHERE_AMBER] = gelGeometry(gpu, uploads, meshSphere);
-        gelMaterials[TEMPLATE_SPHERE_AMBER]          = createPbrMaterial(pbr, matUploads, {0.95f, 0.70f, 0.15f, 1.0f}, 0.3f, 0.3f);
+        gelMaterials[TEMPLATE_SPHERE_AMBER]          = createPbrMaterial(*heap, matUploads, {0.95f, 0.70f, 0.15f, 1.0f}, 0.3f, 0.3f);
         // Amethyst purple sphere
         gelTemplateGeometries[TEMPLATE_SPHERE_PURPLE] = gelGeometry(gpu, uploads, meshSphere);
-        gelMaterials[TEMPLATE_SPHERE_PURPLE]          = createPbrMaterial(pbr, matUploads, {0.70f, 0.25f, 0.90f, 1.0f}, 0.35f, 0.25f);
+        gelMaterials[TEMPLATE_SPHERE_PURPLE]          = createPbrMaterial(*heap, matUploads, {0.70f, 0.25f, 0.90f, 1.0f}, 0.35f, 0.25f);
 
         // Rigid body assets
         rigidGeometries[RIGID_FLOOR]      = boxGeometry(gpu, uploads, {30.0f, 1.0f, 30.0f});
-        rigidMaterials[RIGID_FLOOR]       = createPbrMaterial(pbr, matUploads, {0.20f, 0.22f, 0.25f, 1.0f}, 0.1f, 0.8f);
+        rigidMaterials[RIGID_FLOOR]       = createPbrMaterial(*heap, matUploads, {0.20f, 0.22f, 0.25f, 1.0f}, 0.1f, 0.8f);
         rigidGeometries[RIGID_WALL]       = boxGeometry(gpu, uploads, {1.0f, 1.0f, 1.0f});
-        rigidMaterials[RIGID_WALL]        = createPbrMaterial(pbr, matUploads, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f);
+        rigidMaterials[RIGID_WALL]        = createPbrMaterial(*heap, matUploads, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f);
         rigidGeometries[RIGID_PROJECTILE] = sphereGeometry(gpu, uploads, 1.5f, 20, 16);
-        rigidMaterials[RIGID_PROJECTILE]  = createPbrMaterial(pbr, matUploads, {0.95f, 0.15f, 0.10f, 1.0f}, 0.7f, 0.2f);
+        rigidMaterials[RIGID_PROJECTILE]  = createPbrMaterial(*heap, matUploads, {0.95f, 0.15f, 0.10f, 1.0f}, 0.7f, 0.2f);
 
         for (const auto & g : gelTemplateGeometries)
             if (!g.indexCount) return false;
@@ -269,8 +269,9 @@ private:
     }
 };
 
-static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2::DescriptorHeap> heap, AutoRef<fx2::SharedShaderConstants> ssc,
-                         AutoRef<fx2::SkyMaterial> skyMaterial, AutoRef<Swapchain> swapchain, RasterTarget & rasterTarget, const uint32_t hwThreads) {
+static void runBenchmark(AutoRef<fx2::PbrKernel> pbr, GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2::DescriptorHeap> heap,
+                         AutoRef<fx2::SharedShaderConstants> ssc, AutoRef<fx2::SkyMaterial> skyMaterial, AutoRef<Swapchain> swapchain,
+                         RasterTarget & rasterTarget, const uint32_t hwThreads) {
     GN_INFO(sLogger, "================================================================================");
     GN_INFO(sLogger, "  GNfiz Gel XPBD Soft-Body Dynamics & GPU Rendering Benchmark");
     GN_INFO(sLogger, "  Configuration: Profile Build (RelWithDebInfo) | Hardware Cores: {}", hwThreads);
@@ -385,7 +386,7 @@ static void runBenchmark(GelArena & arena, AutoRef<GpuContext> gpu, AutoRef<gpu2
                     geom.vertices[0].stride = sizeof(GelVertex);
                     geom.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
                     fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, glm::mat4(1.0f), skyMaterial};
-                    arena.gelMaterials[g.templateKind]->record(draw);
+                    pbr->record(*arena.gelMaterials[g.templateKind], draw);
                 }
             }
             auto rasterWork = r ? r->seal() : AutoRef<GpuPayload> {};
@@ -502,11 +503,11 @@ int main(int argc, const char ** argv) {
     auto sky = fx2::SkyKernel::create(*heap, *initialization);
     if (!pbr || !sky) return -1;
 
-    auto skyMaterial = createSkyMaterial(gpuContext, sky, *initialization, 3000.f);
+    auto skyMaterial = createSkyMaterial(gpuContext, *heap, *initialization, 3000.f);
 
     // Initialize Gel and Rigid assets
     GelArena arena;
-    if (!arena.initMeshesAndAssets(gpuContext, *geomUploads, pbr, *initialization)) return -1;
+    if (!arena.initMeshesAndAssets(gpuContext, *geomUploads, heap, *initialization)) return -1;
 
     GpuContext::SubmitParameters initSubmit("fiz.init");
     auto                         geomInitWork = geomUploads->seal();
@@ -548,7 +549,7 @@ int main(int argc, const char ** argv) {
     const uint32_t hwThreads = std::max(1u, std::thread::hardware_concurrency());
 
     if (benchmarkMode) {
-        runBenchmark(arena, gpuContext, heap, ssc, skyMaterial, swapchain, rasterTarget, hwThreads);
+        runBenchmark(pbr, arena, gpuContext, heap, ssc, skyMaterial, swapchain, rasterTarget, hwThreads);
         gpuContext->waitForIdle();
         swapchain.clear();
         if (window) window->destroyVulkanSurfaceHandle(gpuContext->getVulkanInstanceHandle(), surface);
@@ -871,7 +872,7 @@ int main(int argc, const char ** argv) {
                 glm::mat4 worldTransform = glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
                                            glm::mat4_cast(glm::quat(t.orientation.w, t.orientation.v.x, t.orientation.v.y, t.orientation.v.z));
                 fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, worldTransform, skyMaterial};
-                if (!arena.rigidMaterials[e.kind]->record(draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
+                if (!pbr->record(*arena.rigidMaterials[e.kind], draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
             }
 
             // Draw deformable soft body gels
@@ -886,13 +887,13 @@ int main(int argc, const char ** argv) {
                 geom.vertexCount        = static_cast<uint32_t>(g.cpuVertices.size());
 
                 fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, geom}, glm::mat4(1.0f), skyMaterial};
-                if (!arena.gelMaterials[g.templateKind]->record(draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
+                if (!pbr->record(*arena.gelMaterials[g.templateKind], draw)) { GN_ERROR(sLogger, "Failed to record PBR draw"); }
             }
 
             // Skybox
             if (skyMaterial) {
                 fx2::SkyMaterial::DrawParameters skyDraw {*r, uniformState};
-                skyMaterial->record(skyDraw);
+                sky->record(*skyMaterial, skyDraw);
             }
         }
 

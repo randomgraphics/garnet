@@ -37,8 +37,8 @@ struct PbrMaterial : RCRT64 {
         AutoRef<SkyMaterial> skyMaterial           = {};
     };
 
-    /// Append this material's draw. Position, normal, and UV attributes are required.
-    virtual bool record(const DrawParameters &) const = 0;
+    /// Create heap-backed material data independent of any rendering kernel.
+    GN_API static AutoRef<PbrMaterial> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization, const Parameters & parameters);
 
 protected:
     using RCRT64::RCRT64;
@@ -46,9 +46,9 @@ protected:
 
 /// Metallic/roughness PBR raster kernel with direct lights and typed materials.
 struct PbrKernel : RCRT64 {
-    GN_API                           GN_REGISTER_RUNTIME_TYPE(RCRT64);
-    virtual PbrMaterial::Parameters  defaultMaterialParameters() const                                                                  = 0;
-    virtual AutoRef<PbrMaterial>     createMaterial(::GN::gpu2::CnC & initialization, const PbrMaterial::Parameters & parameters) const = 0;
+    GN_API GN_REGISTER_RUNTIME_TYPE(RCRT64);
+    /// Append a draw using this kernel and a heap-compatible PBR material.
+    virtual bool                     record(PbrMaterial & material, const PbrMaterial::DrawParameters & parameters) const = 0;
     GN_API static AutoRef<PbrKernel> create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization);
 
 protected:

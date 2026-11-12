@@ -192,21 +192,22 @@ public:
 
     uint32_t index() const { return mIndex; }
     bool     textured() const { return mNeedsUv; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
 };
 
 class CelMaterialImpl : public CelMaterial {
-    AutoRef<const CelKernel>      mKernel;
     const CelMaterial::Parameters mParameters;
-    const Shaders                 mShaders;
+    Fallbacks                     mDefaults;
     CelStorage                    mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(CelMaterial);
 
-    CelMaterialImpl(AutoRef<const CelKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap, const CelMaterial::Parameters & p)
-        : CelMaterial(TYPE_INFO(), "bindless.cel.material"), mKernel(std::move(kernel)), mParameters(p), mShaders(shaders), mStorage(std::move(heap)) {}
+    CelMaterialImpl(AutoRef<Heap> heap, const CelMaterial::Parameters & p)
+        : CelMaterial(TYPE_INFO(), "bindless.cel.material"), mParameters(p), mStorage(std::move(heap)) {}
 
-    bool initialize(const Fallbacks & defaults) {
+    bool initialize(AutoRef<Heap> heap) {
+        if (!mDefaults.initialize(std::move(heap))) return false;
         CelMaterialData data {};
         data.baseColor      = mParameters.color;
         data.emissive       = glm::vec4(mParameters.emissive, 0.0f);
@@ -219,32 +220,60 @@ public:
         data.outlineParams  = glm::vec4(mParameters.outlineWidth, 0.0f, 0.0f, 0.0f);
         data.outlineColor   = mParameters.outlineColor;
 
-        return mStorage.initialize(data, mParameters.colorMap, mParameters.normalMap, mParameters.sampler, defaults);
+        return mStorage.initialize(data, mParameters.colorMap, mParameters.normalMap, mParameters.sampler, mDefaults);
     }
 
-    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
+    void upload(::GN::gpu2::CnC & producer) const {
+        mDefaults.upload(producer);
+        mStorage.upload(producer);
+    }
+    uint32_t index() const { return mStorage.index(); }
+    bool     textured() const { return mStorage.textured(); }
+    float    outlineWidth() const { return mParameters.outlineWidth; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+};
 
-    bool record(const CelMaterial::DrawParameters & inputs) const override {
+class CelImpl : public CelKernel {
+    Shaders       mShaders;
+    AutoRef<Heap> mHeap;
+
+public:
+    GN_REGISTER_RUNTIME_TYPE(CelKernel);
+    CelImpl(): CelKernel(TYPE_INFO(), "bindless.cel") {}
+    bool initialize(AutoRef<Heap> heap) {
+        if (!heap || heap->bindingIndex() != 0) return false;
+        auto gpu = heap->gpu();
+        if (!mShaders.initialize(gpu, kBindlessCelVertSpv, sizeof(kBindlessCelVertSpv), kBindlessCelFragSpv, sizeof(kBindlessCelFragSpv),
+                                 kBindlessCelTextureVertSpv, sizeof(kBindlessCelTextureVertSpv), kBindlessCelOutlineVertSpv, sizeof(kBindlessCelOutlineVertSpv),
+                                 kBindlessCelOutlineFragSpv, sizeof(kBindlessCelOutlineFragSpv), kBindlessCelOutlineTextureVertSpv,
+                                 sizeof(kBindlessCelOutlineTextureVertSpv)))
+            return false;
+        mHeap = std::move(heap);
+        return true;
+    }
+    bool record(const CelMaterial & material, const CelMaterial::DrawParameters & inputs) const override {
+        auto * impl = RuntimeType::cast<CelMaterialImpl>(&material);
+        if (!impl || !impl->usesHeap(mHeap)) return false;
         auto & raster = inputs.raster;
         auto   state  = inputs.ssc;
-        if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, mStorage.textured())) GN_UNLIKELY {
-                GN_ERROR(logger, "CelMaterial: invalid uniform state, geometry, or transform");
+        if (!state || !validUniform(state->view()) || !validDraw(inputs, inputs.object2WorldTransform, impl->textured())) GN_UNLIKELY {
+                GN_ERROR(logger, "CelKernel: invalid uniform state, geometry, or transform");
                 return false;
             }
 
-        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(mStorage.index(), 0, 0, 0)};
+        const DrawConstants                values {inputs.object2WorldTransform, glm::uvec4(impl->index(), 0, 0, 0)};
         ::GN::gpu2::Raster::DrawParameters draw {.geometry = inputs.geometry};
-        draw.vs = mStorage.textured() ? mShaders.texturedVertex : mShaders.vertex;
+        draw.vs = impl->textured() ? mShaders.texturedVertex : mShaders.vertex;
         draw.ps = mShaders.fragment;
         if (inputs.states) draw.states = *inputs.states;
         draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
         raster.retainResource(std::move(state));
-        raster.retainResource(referenceTo(this));
+        raster.retainResource(referenceTo(&material));
         raster.recordDraw(draw);
 
-        if (inputs.renderOutline && mParameters.outlineWidth > 0.0f) {
+        if (inputs.renderOutline && impl->outlineWidth() > 0.0f) {
             ::GN::gpu2::Raster::DrawParameters outlineDraw {.geometry = inputs.geometry};
-            outlineDraw.vs = mStorage.textured() ? mShaders.texturedOutlineVertex : mShaders.outlineVertex;
+            outlineDraw.vs = impl->textured() ? mShaders.texturedOutlineVertex : mShaders.outlineVertex;
             outlineDraw.ps = mShaders.outlineFragment;
             if (inputs.states) outlineDraw.states = *inputs.states;
             outlineDraw.states.cullMode   = gpu2::RasterState::CULL_FRONT;
@@ -257,66 +286,32 @@ public:
     }
 };
 
-class CelImpl : public CelKernel {
-    Shaders   mShaders;
-    Fallbacks mDefaults;
-
-public:
-    GN_REGISTER_RUNTIME_TYPE(CelKernel);
-
-    CelImpl(): CelKernel(TYPE_INFO(), "bindless.cel") {}
-
-    bool initialize(AutoRef<Heap> heap) {
-        if (!heap || heap->bindingIndex() != 0) return false;
-        auto gpu = heap->gpu();
-        return mShaders.initialize(gpu, kBindlessCelVertSpv, sizeof(kBindlessCelVertSpv), kBindlessCelFragSpv, sizeof(kBindlessCelFragSpv),
-                                   kBindlessCelTextureVertSpv, sizeof(kBindlessCelTextureVertSpv), kBindlessCelOutlineVertSpv,
-                                   sizeof(kBindlessCelOutlineVertSpv), kBindlessCelOutlineFragSpv, sizeof(kBindlessCelOutlineFragSpv),
-                                   kBindlessCelOutlineTextureVertSpv, sizeof(kBindlessCelOutlineTextureVertSpv)) &&
-               mDefaults.initialize(std::move(heap));
-    }
-
-    void uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
-
-    CelMaterial::Parameters defaultMaterialParameters() const override {
-        CelMaterial::Parameters p;
-        p.colorMap  = mDefaults.color;
-        p.normalMap = mDefaults.normal;
-        p.sampler   = mDefaults.sampler;
-        return p;
-    }
-
-    AutoRef<CelMaterial> createMaterial(::GN::gpu2::CnC & producer, const CelMaterial::Parameters & p) const override {
-        if (!validMap(p.colorMap) || !validMap(p.normalMap)) return {};
-        for (int i = 0; i < 4; ++i) {
-            if (!std::isfinite(p.color[i]) || !std::isfinite(p.outlineColor[i])) return {};
-        }
-        for (int i = 0; i < 3; ++i) {
-            if (!std::isfinite(p.emissive[i]) || !std::isfinite(p.shadowTint[i]) || !std::isfinite(p.deepShadowTint[i]) || !std::isfinite(p.rimTint[i]))
-                return {};
-        }
-        if (!std::isfinite(p.shadowThreshold) || !std::isfinite(p.shadowFeather) || !std::isfinite(p.deepShadowThreshold) ||
-            !std::isfinite(p.deepShadowFeather) || !std::isfinite(p.specularThreshold) || !std::isfinite(p.specularShininess) ||
-            !std::isfinite(p.specularIntensity) || !std::isfinite(p.rimThreshold) || !std::isfinite(p.rimFeather) || !std::isfinite(p.rimIntensity) ||
-            !std::isfinite(p.outlineWidth))
-            return {};
-
-        auto material = AutoRef<CelMaterialImpl>(new CelMaterialImpl(referenceTo(this), mShaders, mDefaults.heap(), p));
-        if (!material->initialize(mDefaults)) return {};
-        producer.retainResource(material);
-        material->upload(producer);
-        return material;
-    }
-};
-
 } // namespace
 
 AutoRef<CelKernel> CelKernel::create(Heap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<CelImpl>(new CelImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
-    impl->uploadDefaults(initialization);
     return impl;
+}
+
+AutoRef<CelMaterial> CelMaterial::create(Heap & heap, ::GN::gpu2::CnC & producer, const Parameters & p) {
+    if (heap.bindingIndex() != 0 || !validMap(p.colorMap) || !validMap(p.normalMap)) return {};
+    for (int i = 0; i < 4; ++i) {
+        if (!std::isfinite(p.color[i]) || !std::isfinite(p.outlineColor[i])) return {};
+    }
+    for (int i = 0; i < 3; ++i) {
+        if (!std::isfinite(p.emissive[i]) || !std::isfinite(p.shadowTint[i]) || !std::isfinite(p.deepShadowTint[i]) || !std::isfinite(p.rimTint[i])) return {};
+    }
+    if (!std::isfinite(p.shadowThreshold) || !std::isfinite(p.shadowFeather) || !std::isfinite(p.deepShadowThreshold) || !std::isfinite(p.deepShadowFeather) ||
+        !std::isfinite(p.specularThreshold) || !std::isfinite(p.specularShininess) || !std::isfinite(p.specularIntensity) || !std::isfinite(p.rimThreshold) ||
+        !std::isfinite(p.rimFeather) || !std::isfinite(p.rimIntensity) || !std::isfinite(p.outlineWidth))
+        return {};
+    auto material = AutoRef<CelMaterialImpl>(new CelMaterialImpl(referenceTo(&heap), p));
+    if (!material->initialize(referenceTo(&heap))) return {};
+    producer.retainResource(material);
+    material->upload(producer);
+    return material;
 }
 
 } // namespace GN::fx2

@@ -208,26 +208,26 @@ int main(int argc, const char ** argv) {
     auto sky = fx2::SkyKernel::create(*heap, *initialization);
     if (!pbr || !sky) return -1;
 
-    auto skyMaterial = createSkyMaterial(gpuContext, sky, *initialization, 3000.f);
+    auto skyMaterial = createSkyMaterial(gpuContext, *heap, *initialization, 3000.f);
 
     // Build procedural 3D model assets: Floor, Box, Sphere, Projectile, Wall
     gpu2::RasterGeometry      modelGeometries[MODEL_COUNT];
     AutoRef<fx2::PbrMaterial> modelMaterials[MODEL_COUNT];
 
     modelGeometries[MODEL_FLOOR] = boxGeometry(gpuContext, *geomUploads, {40.0f, 1.0f, 40.0f});
-    modelMaterials[MODEL_FLOOR]  = createPbrMaterial(pbr, *initialization, {0.25f, 0.28f, 0.32f, 1.0f}, 0.1f, 0.8f);
+    modelMaterials[MODEL_FLOOR]  = createPbrMaterial(*heap, *initialization, {0.25f, 0.28f, 0.32f, 1.0f}, 0.1f, 0.8f);
 
     modelGeometries[MODEL_BOX] = boxGeometry(gpuContext, *geomUploads, {0.6f, 0.6f, 0.6f});
-    modelMaterials[MODEL_BOX]  = createPbrMaterial(pbr, *initialization, {0.92f, 0.68f, 0.20f, 1.0f}, 0.3f, 0.4f);
+    modelMaterials[MODEL_BOX]  = createPbrMaterial(*heap, *initialization, {0.92f, 0.68f, 0.20f, 1.0f}, 0.3f, 0.4f);
 
     modelGeometries[MODEL_SPHERE] = sphereGeometry(gpuContext, *geomUploads, 0.6f, 16, 12);
-    modelMaterials[MODEL_SPHERE]  = createPbrMaterial(pbr, *initialization, {0.20f, 0.75f, 0.85f, 1.0f}, 0.5f, 0.2f);
+    modelMaterials[MODEL_SPHERE]  = createPbrMaterial(*heap, *initialization, {0.20f, 0.75f, 0.85f, 1.0f}, 0.5f, 0.2f);
 
     modelGeometries[MODEL_PROJECTILE] = sphereGeometry(gpuContext, *geomUploads, 1.8f, 24, 18);
-    modelMaterials[MODEL_PROJECTILE]  = createPbrMaterial(pbr, *initialization, {0.95f, 0.25f, 0.20f, 1.0f}, 0.8f, 0.2f);
+    modelMaterials[MODEL_PROJECTILE]  = createPbrMaterial(*heap, *initialization, {0.95f, 0.25f, 0.20f, 1.0f}, 0.8f, 0.2f);
 
     modelGeometries[MODEL_WALL] = boxGeometry(gpuContext, *geomUploads, {1.0f, 1.0f, 1.0f});
-    modelMaterials[MODEL_WALL]  = createPbrMaterial(pbr, *initialization, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f);
+    modelMaterials[MODEL_WALL]  = createPbrMaterial(*heap, *initialization, {0.18f, 0.20f, 0.22f, 0.8f}, 0.0f, 0.9f);
 
     for (int k = 0; k < MODEL_COUNT; ++k) {
         if (!modelGeometries[k].indexCount || !modelMaterials[k]) {
@@ -515,14 +515,14 @@ int main(int argc, const char ** argv) {
                 if (modelTransforms[k].empty()) continue;
                 for (const auto & transform : modelTransforms[k]) {
                     fx2::PbrMaterial::DrawParameters draw {{*r, uniformState, modelGeometries[k]}, transform, skyMaterial};
-                    if (!modelMaterials[k]->record(draw)) { GN_ERROR(sLogger, "Failed to record PBR draw for model {}", k); }
+                    if (!pbr->record(*modelMaterials[k], draw)) { GN_ERROR(sLogger, "Failed to record PBR draw for model {}", k); }
                 }
             }
 
             // Skybox
             if (skyMaterial) {
                 fx2::SkyMaterial::DrawParameters skyDraw {*r, uniformState};
-                skyMaterial->record(skyDraw);
+                sky->record(*skyMaterial, skyDraw);
             }
         }
         auto  tRaster1 = std::chrono::high_resolution_clock::now();

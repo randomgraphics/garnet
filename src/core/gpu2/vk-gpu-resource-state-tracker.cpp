@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "vk-gpu-resource-state-tracker.h"
 #include "vk-gpu-context.h"
+#include "vk-acceleration-structure.h"
 #include "vk-format-utils.h"
 #include <unordered_set>
 
@@ -149,7 +150,8 @@ bool GpuResourceStateTrackerVulkan::addColorTarget(TextureVulkanBase * tex, cons
     if (!tex) GN_UNLIKELY return true;
     TexturePlaneStateVulkan state;
     state.layout = vk::ImageLayout::eColorAttachmentOptimal;
-    state.access = vk::AccessFlagBits::eColorAttachmentWrite;
+    // Blending and loadOp=LOAD both read the existing attachment contents.
+    state.access = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
     state.stages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
     state.usage  = "color target";
     return addTexture(tex, view.imageView, state);
@@ -258,6 +260,44 @@ bool GpuResourceStateTrackerVulkan::addStorageBuffer(BufferVulkan * buf, bool wr
     return addBuffer(std::move(b));
 }
 
+bool GpuResourceStateTrackerVulkan::addAccelerationStructure(VkAccelerationStructureVulkan * resource, bool write, vk::PipelineStageFlags stages) {
+    if (!resource) GN_UNLIKELY return true;
+    auto [it, inserted] = mAccelerationStructures.try_emplace(resource->id);
+    auto & tracked      = it->second;
+    if (inserted) {
+        tracked.resource            = resource;
+        tracked.incomingInitialized = resource->buildSubmitted();
+    }
+    if (!write && !tracked.incomingInitialized) {
+        GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: acceleration structure '{}' is read before its build is submitted", resource->name);
+        return false;
+    }
+    if (tracked.activeThisPass && (tracked.passWrite || write)) {
+        GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: acceleration-structure read/write hazard on '{}'", resource->name);
+        return false;
+    }
+    if (!tracked.activeThisPass) {
+        tracked.activeThisPass = true;
+        tracked.passWrite      = write;
+        tracked.passStages     = stages;
+        mActiveAccelerationStructures.push_back(&tracked);
+    } else {
+        tracked.passStages |= stages;
+    }
+    return true;
+}
+
+bool GpuResourceStateTrackerVulkan::addAccelerationStructureBuildInput(BufferVulkan * buf) {
+    if (!buf) GN_UNLIKELY return false;
+    TrackedBuffer state;
+    state.buf        = buf;
+    state.passAccess = vk::AccessFlagBits::eAccelerationStructureReadKHR;
+    state.passStages = vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR;
+    state.isWrite    = false;
+    state.usageName  = "acceleration-structure build input";
+    return addBuffer(std::move(state));
+}
+
 bool GpuResourceStateTrackerVulkan::addVertexBuffer(BufferVulkan * buf) {
     if (!buf) GN_UNLIKELY return true;
     TrackedBuffer b;
@@ -364,6 +404,14 @@ bool GpuResourceStateTrackerVulkan::addRasterGeometry(const RasterGeometry & geo
 }
 
 bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
+    if ((rt.loadDepth || rt.readOnlyDepth) && rt.depthStencilTarget.texture.empty()) {
+        GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: loading depth requires a depth attachment");
+        return false;
+    }
+    if (rt.readOnlyDepth && !rt.loadDepth) {
+        GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: read-only depth requires loadDepth");
+        return false;
+    }
     auto registerTargets = [&](GpuResourceStateTrackerVulkan & tracker) {
         bool ok = true;
         for (size_t i = 0; i < rt.colorTargets.size(); ++i) {
@@ -380,9 +428,8 @@ bool GpuResourceStateTrackerVulkan::addRasterTarget(const RasterTarget & rt) {
         if (depthStencilView.isTexture() && depthStencilView.texture()) {
             auto * tex = RuntimeType::cast<TextureVulkanBase>(depthStencilView.texture().get());
             if (tex) {
-                // Render targets are cleared upon pass begin (loadOp = eClear) which is an attachment write;
-                // depth-stencil target must be in attachment-optimal layout during rendering.
-                if (!tracker.addDepthStencilTarget(tex, depthStencilView, /*readOnly=*/false)) {
+                // Read-only depth loads preserve the first sample's visibility results across accumulation passes.
+                if (!tracker.addDepthStencilTarget(tex, depthStencilView, rt.readOnlyDepth)) {
                     GN_ERROR(sLogger, "GpuResourceStateTrackerVulkan: render target hazard on depth-stencil target; aborting render pass");
                     ok = false;
                 }
@@ -592,14 +639,63 @@ void GpuResourceStateTrackerVulkan::emitPrePassBarriers(vk::CommandBuffer cb) {
     mActiveTextures.clear();
     mHasReadOnlyDepthStencil = false;
 
-    if (bufferBarriers.empty() && barriers.empty()) return;
+    if (bufferBarriers.empty() && barriers.empty() && mActiveAccelerationStructures.empty()) return;
 
     if (!srcStages) srcStages = vk::PipelineStageFlagBits::eTopOfPipe;
     if (!dstStages) dstStages = vk::PipelineStageFlagBits::eBottomOfPipe;
 
-    cb.pipelineBarrier(srcStages, dstStages, {}, nullptr,
-                       vk::ArrayProxy<const vk::BufferMemoryBarrier>((uint32_t) bufferBarriers.size(), bufferBarriers.data()),
-                       vk::ArrayProxy<const vk::ImageMemoryBarrier>((uint32_t) barriers.size(), barriers.data()));
+    if (!bufferBarriers.empty() || !barriers.empty()) {
+        cb.pipelineBarrier(srcStages, dstStages, {}, nullptr,
+                           vk::ArrayProxy<const vk::BufferMemoryBarrier>((uint32_t) bufferBarriers.size(), bufferBarriers.data()),
+                           vk::ArrayProxy<const vk::ImageMemoryBarrier>((uint32_t) barriers.size(), barriers.data()));
+    }
+    emitAccelerationStructureBarriers(cb);
+}
+
+void GpuResourceStateTrackerVulkan::emitAccelerationStructureBarriers(vk::CommandBuffer cb) {
+    mAccelerationStructureBarriers.clear();
+    vk::PipelineStageFlags asSrcStages = vk::PipelineStageFlagBits::eTopOfPipe;
+    vk::PipelineStageFlags asDstStages = vk::PipelineStageFlagBits::eBottomOfPipe;
+    for (auto * active : mActiveAccelerationStructures) {
+        auto & tracked         = *active;
+        tracked.activeThisPass = false;
+        if (tracked.incomingInitialized && (tracked.incomingWrite || tracked.passWrite)) {
+            vk::MemoryBarrier barrier;
+            barrier.srcAccessMask =
+                tracked.incomingWrite ? vk::AccessFlagBits::eAccelerationStructureWriteKHR : vk::AccessFlagBits::eAccelerationStructureReadKHR;
+            barrier.dstAccessMask = tracked.passWrite ? vk::AccessFlagBits::eAccelerationStructureWriteKHR : vk::AccessFlagBits::eAccelerationStructureReadKHR;
+            mAccelerationStructureBarriers.push_back(barrier);
+            asSrcStages |= tracked.incomingStages;
+            asDstStages |= tracked.passStages;
+        }
+        tracked.incomingInitialized = true;
+        tracked.incomingWrite       = tracked.passWrite;
+        tracked.incomingStages      = tracked.passStages;
+        tracked.passWrite           = false;
+        tracked.passStages          = vk::PipelineStageFlagBits::eBottomOfPipe;
+    }
+    if (!mAccelerationStructureBarriers.empty()) {
+        cb.pipelineBarrier(asSrcStages, asDstStages, {}, static_cast<uint32_t>(mAccelerationStructureBarriers.size()), mAccelerationStructureBarriers.data(), 0,
+                           nullptr, 0, nullptr);
+    }
+    mActiveAccelerationStructures.clear();
+}
+
+void GpuResourceStateTrackerVulkan::restoreAccelerationStructureToRead(VkAccelerationStructureVulkan * resource, vk::CommandBuffer cb) {
+    if (!resource) GN_UNLIKELY return;
+    auto it = mAccelerationStructures.find(resource->id);
+    if (it == mAccelerationStructures.end()) GN_UNLIKELY return;
+    auto &            tracked = it->second;
+    vk::MemoryBarrier barrier;
+    barrier.srcAccessMask = vk::AccessFlagBits::eAccelerationStructureWriteKHR;
+    barrier.dstAccessMask = vk::AccessFlagBits::eAccelerationStructureReadKHR;
+    cb.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::PipelineStageFlagBits::eComputeShader, {}, 1, &barrier, 0, nullptr, 0,
+                       nullptr);
+    tracked.incomingInitialized = true;
+    tracked.incomingWrite       = false;
+    tracked.incomingStages      = vk::PipelineStageFlagBits::eComputeShader;
+    tracked.passWrite           = false;
+    tracked.passStages          = vk::PipelineStageFlagBits::eBottomOfPipe;
 }
 
 void GpuResourceStateTrackerVulkan::restoreAttachmentToShaderReadOnly(TextureVulkanBase * tex, const GpuResourceView & view, vk::CommandBuffer cb) {

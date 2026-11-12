@@ -21,11 +21,11 @@ TEST_CASE("FX2 bindless skybox renders fallback and custom environment maps", "[
     auto kernel = SkyKernel::create(*heap, *initialization);
     REQUIRE(kernel);
     const uint32_t baseHeapSize = heap->size();
-    CHECK(baseHeapSize > 0);
+    CHECK(baseHeapSize == 0);
 
     // 1. Default sky material using built-in fallback sky-blue cubemap
-    auto defaultParams   = kernel->defaultMaterialParameters();
-    auto defaultMaterial = kernel->createMaterial(*initialization, defaultParams);
+    auto defaultParams   = SkyMaterial::Parameters {};
+    auto defaultMaterial = SkyMaterial::create(*heap, *initialization, defaultParams);
     REQUIRE(defaultMaterial);
     CHECK(getSkyMaterialIndex(defaultMaterial.get()) != uint32_t(-1));
 
@@ -47,7 +47,7 @@ TEST_CASE("FX2 bindless skybox renders fallback and custom environment maps", "[
     customParams.skyboxMap      = GpuResourceView {redCube}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     customParams.luminanceScale = 1.0f;
 
-    auto customMaterial = kernel->createMaterial(*initialization, customParams);
+    auto customMaterial = SkyMaterial::create(*heap, *initialization, customParams);
     REQUIRE(customMaterial);
     CHECK(getSkyMaterialIndex(customMaterial.get()) != uint32_t(-1));
     CHECK(getSkyMaterialIndex(customMaterial.get()) != getSkyMaterialIndex(defaultMaterial.get()));
@@ -89,7 +89,7 @@ TEST_CASE("FX2 bindless skybox renders fallback and custom environment maps", "[
     REQUIRE(raster);
 
     SkyMaterial::DrawParameters drawParams {*raster, state};
-    REQUIRE(customMaterial->record(drawParams));
+    REQUIRE(kernel->record(*customMaterial, drawParams));
 
     auto drawWork = raster->seal();
     REQUIRE(drawWork);
@@ -119,7 +119,7 @@ TEST_CASE("FX2 bindless skybox renders fallback and custom environment maps", "[
         gpuBindless::Raster::create("bindless-sky-test.default-raster",
                                     {.gpu = gpu, .target = &target, .heap = heap, .passResources = sharedUniformResources(state), .numberOfDrawsHint = 1});
     REQUIRE(defaultRaster);
-    REQUIRE(defaultMaterial->record({*defaultRaster, state}));
+    REQUIRE(kernel->record(*defaultMaterial, {*defaultRaster, state}));
     auto defaultDrawWork = defaultRaster->seal();
     REQUIRE(defaultDrawWork);
 
@@ -151,14 +151,14 @@ TEST_CASE("FX2 bindless PBR renders with sky material environment lighting", "[f
     auto pbrKernel = PbrKernel::create(*heap, *initialization);
     REQUIRE(pbrKernel);
 
-    auto skyMaterial = skyKernel->createMaterial(*initialization, skyKernel->defaultMaterialParameters());
+    auto skyMaterial = SkyMaterial::create(*heap, *initialization, SkyMaterial::Parameters {});
     REQUIRE(skyMaterial);
 
-    auto pbrParams      = pbrKernel->defaultMaterialParameters();
+    auto pbrParams      = PbrMaterial::Parameters {};
     pbrParams.baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
     pbrParams.metallic  = 0.0f;
     pbrParams.roughness = 0.5f;
-    auto pbrMaterial    = pbrKernel->createMaterial(*initialization, pbrParams);
+    auto pbrMaterial    = PbrMaterial::create(*heap, *initialization, pbrParams);
     REQUIRE(pbrMaterial);
 
     // Quad covering center of screen: position, normal, texcoord
@@ -222,7 +222,7 @@ TEST_CASE("FX2 bindless PBR renders with sky material environment lighting", "[f
     geometry.indexCount = 6;
 
     PbrMaterial::DrawParameters drawParams {{*raster, state, geometry}, glm::mat4(1), skyMaterial};
-    REQUIRE(pbrMaterial->record(drawParams));
+    REQUIRE(pbrKernel->record(*pbrMaterial, drawParams));
 
     auto drawWork = raster->seal();
     REQUIRE(drawWork);

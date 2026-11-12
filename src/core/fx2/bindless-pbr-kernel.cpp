@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "bindless-pbr-vert.spv.h"
 #include "bindless-pbr-frag.spv.h"
+#include "bindless-pbr-raytrace-frag.spv.h"
 #include "bindless-sky-material-impl.h"
 #include <glm/mat3x3.hpp>
 #include <cmath>
@@ -168,81 +169,268 @@ public:
         producer.recordUploadBuffer(mView.buffer(), mView.bufferView.offset, {reinterpret_cast<const uint8_t *>(&mData), sizeof(mData)});
     }
     uint32_t index() const { return mIndex; }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mHeap == heap; }
+    bool     opaque() const { return mData.extraIndices.w != 0; }
 };
 
 class PbrMaterialImpl final : public PbrMaterial {
-    AutoRef<const PbrKernel> mKernel;
-    Shaders                  mShaders;
-    PbrStorage               mStorage;
+    Fallbacks  mDefaults;
+    PbrStorage mStorage;
 
 public:
     GN_REGISTER_RUNTIME_TYPE(PbrMaterial);
-    PbrMaterialImpl(AutoRef<const PbrKernel> kernel, const Shaders & shaders, AutoRef<Heap> heap)
-        : PbrMaterial(TYPE_INFO(), "bindless.pbr.material"), mKernel(std::move(kernel)), mShaders(shaders), mStorage(std::move(heap)) {}
-    bool initialize(const Parameters & p, const Fallbacks & defaults) { return mStorage.initialize(p, defaults); }
-    void upload(::GN::gpu2::CnC & producer) const { mStorage.upload(producer); }
-    bool record(const PbrMaterial::DrawParameters & input) const override {
+    explicit PbrMaterialImpl(AutoRef<Heap> heap): PbrMaterial(TYPE_INFO(), "bindless.pbr.material"), mStorage(std::move(heap)) {}
+    bool initialize(const Parameters & p, AutoRef<Heap> heap) { return mDefaults.initialize(std::move(heap)) && mStorage.initialize(p, mDefaults); }
+    void upload(::GN::gpu2::CnC & producer) const {
+        mDefaults.upload(producer);
+        mStorage.upload(producer);
+    }
+    uint32_t index() const { return mStorage.index(); }
+    bool     usesHeap(const AutoRef<Heap> & heap) const { return mStorage.usesHeap(heap); }
+    bool     opaque() const { return mStorage.opaque(); }
+};
+
+class PbrImpl final : public PbrKernel {
+    Shaders       mShaders;
+    AutoRef<Heap> mHeap;
+
+public:
+    GN_REGISTER_RUNTIME_TYPE(PbrKernel);
+    PbrImpl(): PbrKernel(TYPE_INFO(), "bindless.pbr") {}
+    bool initialize(AutoRef<Heap> heap) {
+        if (!heap || heap->bindingIndex() != 0 ||
+            !mShaders.initialize(heap->gpu(), kBindlessPbrVertSpv, sizeof(kBindlessPbrVertSpv), kBindlessPbrFragSpv, sizeof(kBindlessPbrFragSpv)))
+            return false;
+        mHeap = std::move(heap);
+        return true;
+    }
+    bool record(PbrMaterial & material, const PbrMaterial::DrawParameters & input) const override {
+        auto * implementation = RuntimeType::cast<PbrMaterialImpl>(&material);
+        if (!implementation || !implementation->usesHeap(mHeap)) return false;
         if (!input.ssc || !validUniform(input.ssc->view()) || !validDraw(input, input.object2WorldTransform)) {
-            GN_ERROR(logger, "PbrMaterial: invalid uniform state, geometry, UVs, or transform");
+            GN_ERROR(logger, "PbrKernel: invalid uniform state, geometry, UVs, or transform");
             return false;
         }
         const uint32_t                     skyIndex = getSkyMaterialIndex(input.skyMaterial.get());
-        const DrawConstants                values {input.object2WorldTransform, glm::uvec4(mStorage.index(), skyIndex, 0, 0)};
+        const DrawConstants                values {input.object2WorldTransform, glm::uvec4(implementation->index(), skyIndex, 0, 0)};
         ::GN::gpu2::Raster::DrawParameters draw {.geometry = input.geometry};
         draw.vs = mShaders.vertex;
         draw.ps = mShaders.fragment;
         if (input.states) draw.states = *input.states;
         draw.immediates = {reinterpret_cast<const uint8_t *>(&values), sizeof(values)};
         input.raster.retainResource(input.ssc);
-        input.raster.retainResource(referenceTo(this));
+        input.raster.retainResource(referenceTo(&material));
         if (input.skyMaterial) input.raster.retainResource(input.skyMaterial);
         input.raster.recordDraw(draw);
         return true;
     }
 };
 
-class PbrImpl final : public PbrKernel {
-    Shaders   mShaders;
-    Fallbacks mDefaults;
+struct RayTracingGeometryData {
+    uint64_t  vertexAddress  = 0;
+    uint64_t  indexAddress   = 0;
+    uint32_t  vertexStride   = 0;
+    uint32_t  positionOffset = 0;
+    uint32_t  normalOffset   = 0;
+    uint32_t  texcoordOffset = 0;
+    uint32_t  materialIndex  = 0;
+    uint32_t  vertexCount    = 0;
+    uint32_t  indexCount     = 0;
+    uint32_t  indexFormat    = 0;
+    glm::mat4 objectToWorld {1};
+};
+static_assert(offsetof(RayTracingGeometryData, objectToWorld) == 48);
+static_assert(sizeof(RayTracingGeometryData) == 112);
+
+const gpu2::RasterGeometry::VertexAttribute * findAttribute(const gpu2::RasterGeometry & geometry, uint32_t location) {
+    const gpu2::RasterGeometry::VertexAttribute * found = nullptr;
+    for (const auto & attribute : geometry.format.attributes) {
+        if (attribute.location != location) continue;
+        if (found) return nullptr;
+        found = &attribute;
+    }
+    return found;
+}
+
+bool validRayTransform(const glm::mat4 & transform) {
+    for (int c = 0; c < 4; ++c)
+        for (int r = 0; r < 4; ++r)
+            if (!std::isfinite(transform[c][r])) return false;
+    const float determinant = glm::determinant(glm::mat3(transform));
+    return std::isfinite(determinant) && std::abs(determinant) > 1e-20f && transform[0][3] == 0 && transform[1][3] == 0 && transform[2][3] == 0 &&
+           transform[3][3] == 1;
+}
+
+bool packRayGeometry(const PbrRayTracingScene::Mesh & mesh, const PbrMaterialImpl & material, RayTracingGeometryData & data,
+                     gpu2::AccelerationStructure::TriangleGeometry & triangle) {
+    if (!mesh.geometry || !validRayTransform(mesh.objectToWorld)) return false;
+    const auto & geometry = *mesh.geometry;
+    const auto * position = findAttribute(geometry, PbrMaterial::POSITION_LOCATION);
+    const auto * normal   = findAttribute(geometry, PbrMaterial::NORMAL_LOCATION);
+    const auto * texcoord = findAttribute(geometry, PbrMaterial::TEXCOORD_LOCATION);
+    if (!position || !normal || !texcoord || position->format != gpu2::RasterGeometry::AttributeFormat::F32_3 ||
+        normal->format != gpu2::RasterGeometry::AttributeFormat::F32_3 || texcoord->format != gpu2::RasterGeometry::AttributeFormat::F32_2 ||
+        position->binding >= geometry.vertices.size() || normal->binding != position->binding || texcoord->binding != position->binding)
+        return false;
+    const auto & vertex           = geometry.vertices[position->binding];
+    const bool   vertexLayoutFits = vertex.buffer && vertex.buffer->gpuAddress() && vertex.stride && position->offset <= vertex.stride &&
+                                    vertex.stride - position->offset >= 12 && normal->offset <= vertex.stride && vertex.stride - normal->offset >= 12 &&
+                                    texcoord->offset <= vertex.stride && vertex.stride - texcoord->offset >= 8;
+    const bool   indexLayoutFits = (geometry.indexCount != 0) == bool(geometry.indices.buffer) &&
+                                   (!geometry.indexCount || ((geometry.indices.stride == 2 || geometry.indices.stride == 4) && geometry.indexCount % 3 == 0)) &&
+                                   (!geometry.indices.buffer || geometry.indices.buffer->gpuAddress());
+    if (!vertexLayoutFits || !indexLayoutFits || !geometry.vertexCount || !material.opaque()) return false;
+
+    data.vertexAddress  = vertex.buffer->gpuAddress() + vertex.offset;
+    data.indexAddress   = geometry.indices.buffer ? geometry.indices.buffer->gpuAddress() + geometry.indices.offset : 0;
+    data.vertexStride   = vertex.stride;
+    data.positionOffset = position->offset;
+    data.normalOffset   = normal->offset;
+    data.texcoordOffset = texcoord->offset;
+    data.materialIndex  = material.index();
+    data.vertexCount    = geometry.vertexCount;
+    data.indexCount     = geometry.indexCount;
+    data.indexFormat    = geometry.indices.stride == 2 ? 1u : (geometry.indices.stride == 4 ? 2u : 0u);
+    data.objectToWorld  = mesh.objectToWorld;
+
+    triangle.vertexBuffer   = vertex.buffer;
+    triangle.vertexOffset   = vertex.offset;
+    triangle.vertexStride   = vertex.stride;
+    triangle.positionOffset = position->offset;
+    triangle.vertexCount    = geometry.vertexCount;
+    triangle.indexBuffer    = geometry.indices.buffer;
+    triangle.indexOffset    = geometry.indices.offset;
+    triangle.indexCount     = geometry.indexCount;
+    triangle.indexFormat    = geometry.indexCount ? (geometry.indices.stride == 2 ? gpu2::AccelerationStructure::IndexFormat::UINT16
+                                                                                  : gpu2::AccelerationStructure::IndexFormat::UINT32)
+                                                  : gpu2::AccelerationStructure::IndexFormat::NONE;
+    for (uint32_t row = 0; row < 4; ++row)
+        triangle.objectToWorld.rows[row] = {mesh.objectToWorld[0][row], mesh.objectToWorld[1][row], mesh.objectToWorld[2][row], mesh.objectToWorld[3][row]};
+    return true;
+}
+
+class PbrRayTracingSceneImpl final : public PbrRayTracingScene {
+    AutoRef<gpu2::AccelerationStructure> mAccelerationStructure;
+    AutoRef<gpu2::Buffer>                mGeometryBuffer;
+    DynaArray<AutoRef<gpu2::Buffer>>     mGeometryBuffers;
+    DynaArray<AutoRef<PbrMaterial>>      mMaterials;
 
 public:
-    GN_REGISTER_RUNTIME_TYPE(PbrKernel);
-    PbrImpl(): PbrKernel(TYPE_INFO(), "bindless.pbr") {}
+    GN_REGISTER_RUNTIME_TYPE(PbrRayTracingScene);
+    PbrRayTracingSceneImpl(): PbrRayTracingScene(TYPE_INFO(), "fx2.pbr-ray-tracing-scene") {}
+    bool initialize(gpu2::DescriptorHeap & heap, gpu2::CnC & initialization, ArrayView<const Mesh> meshes) {
+        if (meshes.empty()) return false;
+        DynaArray<RayTracingGeometryData>                        geometryData;
+        DynaArray<gpu2::AccelerationStructure::TriangleGeometry> acsGeometry;
+        geometryData.reserve(meshes.size());
+        acsGeometry.reserve(meshes.size());
+        for (const Mesh & mesh : meshes) {
+            if (!mesh.geometry || !mesh.material) return false;
+            auto * material = RuntimeType::cast<PbrMaterialImpl>(mesh.material);
+            if (!material || !material->usesHeap(referenceTo(&heap))) return false;
+            RayTracingGeometryData                        data;
+            gpu2::AccelerationStructure::TriangleGeometry triangle;
+            if (!packRayGeometry(mesh, *material, data, triangle)) return false;
+            geometryData.append(data);
+            acsGeometry.append(triangle);
+            mGeometryBuffers.append(triangle.vertexBuffer);
+            if (triangle.indexBuffer) mGeometryBuffers.append(triangle.indexBuffer);
+            mMaterials.append(referenceTo(mesh.material));
+        }
+        auto         gpu       = heap.gpu();
+        const size_t tableSize = geometryData.size() * sizeof(RayTracingGeometryData);
+        mGeometryBuffer        = gpu2::Buffer::create("fx2.pbr-ray-tracing-geometry-table", {.context = gpu, .size = tableSize});
+        if (!mGeometryBuffer) return false;
+        mAccelerationStructure = initialization.recordBuildAccelerationStructure("fx2.pbr-ray-tracing-acs", {.geometries = acsGeometry});
+        if (!mAccelerationStructure) return false;
+        initialization.recordUploadBuffer(mGeometryBuffer, 0, {reinterpret_cast<const uint8_t *>(geometryData.data()), tableSize});
+        initialization.retainResource(referenceTo(this));
+        return true;
+    }
+    AutoRef<gpu2::AccelerationStructure> accelerationStructure() const override { return mAccelerationStructure; }
+    gpu2::GpuResourceView                geometryTable() const override {
+        gpu2::GpuResourceView view {mGeometryBuffer};
+        view.setBufferViewType(gpu2::GpuResourceView::BufferView::STORAGE);
+        return view;
+    }
+};
+
+class RayTraceImpl final : public RayTraceKernel {
+    AutoRef<Heap> mHeap;
+    Shaders       mShaders;
+
+public:
+    GN_REGISTER_RUNTIME_TYPE(RayTraceKernel);
+
+    RayTraceImpl(): RayTraceKernel(TYPE_INFO(), "bindless.pbr-ray-tracing") {}
+
     bool initialize(AutoRef<Heap> heap) {
-        if (!heap || heap->bindingIndex() != 0) return false;
-        return mShaders.initialize(heap->gpu(), kBindlessPbrVertSpv, sizeof(kBindlessPbrVertSpv), kBindlessPbrFragSpv, sizeof(kBindlessPbrFragSpv)) &&
-               mDefaults.initialize(std::move(heap));
+        if (!heap || heap->bindingIndex() != 0 || !heap->gpu()->caps().rayQueries) return false;
+        if (!mShaders.initialize(heap->gpu(), kBindlessPbrVertSpv, sizeof(kBindlessPbrVertSpv), kBindlessPbrRaytraceFragSpv,
+                                 sizeof(kBindlessPbrRaytraceFragSpv))) {
+            return false;
+        }
+        mHeap = std::move(heap);
+        return true;
     }
-    void                    uploadDefaults(::GN::gpu2::CnC & producer) const { mDefaults.upload(producer); }
-    PbrMaterial::Parameters defaultMaterialParameters() const override {
-        PbrMaterial::Parameters p;
-        p.sampler = mDefaults.sampler;
-        return p;
-    }
-    AutoRef<PbrMaterial> createMaterial(::GN::gpu2::CnC & producer, const PbrMaterial::Parameters & p) const override {
-        bool valid = std::isfinite(p.metallic) && p.metallic >= 0 && p.metallic <= 1 && std::isfinite(p.roughness) && p.roughness >= 0 && p.roughness <= 1 &&
-                     std::isfinite(p.normalScale) && std::isfinite(p.occlusionStrength) && p.occlusionStrength >= 0 && p.occlusionStrength <= 1;
-        for (int i = 0; i < 4; ++i) valid &= std::isfinite(p.baseColor[i]);
-        for (int i = 0; i < 3; ++i) valid &= std::isfinite(p.emissive[i]);
-        const gpu2::GpuResourceView maps[] = {p.baseColorMap, p.normalMap, p.emissiveMap, p.occlusionMap, p.metalRoughMap};
-        for (auto & map : maps) valid &= validMap(map);
-        if (!valid) return {};
-        auto material = AutoRef<PbrMaterialImpl>(new PbrMaterialImpl(referenceTo(this), mShaders, mDefaults.heap()));
-        if (!material->initialize(p, mDefaults)) return {};
-        producer.retainResource(material);
-        material->upload(producer);
-        return material;
+
+    bool record(const DrawParameters & input) const override {
+        auto * material = RuntimeType::cast<PbrMaterialImpl>(input.material);
+        if (!material || !material->usesHeap(mHeap) || !input.acs || input.acs->gpu() != mHeap->gpu()) return false;
+        if (!input.ssc || !validUniform(input.ssc->view()) || !validDraw(input, input.object2WorldTransform)) return false;
+        if (input.skyMaterial && !skyMaterialUsesHeap(input.skyMaterial.get(), *mHeap)) return false;
+        const uint32_t skyMaterialIndex = getSkyMaterialIndex(input.skyMaterial.get());
+        if (input.skyMaterial && skyMaterialIndex == uint32_t(-1)) return false;
+
+        DrawConstants                      constants {input.object2WorldTransform, {material->index(), skyMaterialIndex, 0, 0}};
+        ::GN::gpu2::Raster::DrawParameters draw {.vs = mShaders.vertex, .ps = mShaders.fragment, .geometry = input.geometry};
+        if (input.states) draw.states = *input.states;
+        draw.immediates = {reinterpret_cast<const uint8_t *>(&constants), sizeof(constants)};
+
+        input.raster.retainResource(input.ssc);
+        input.raster.retainResource(referenceTo(input.material));
+        input.raster.retainResource(input.acs);
+        if (input.skyMaterial) input.raster.retainResource(input.skyMaterial);
+        input.raster.recordDraw(draw);
+        return true;
     }
 };
 
 } // namespace
 
+AutoRef<PbrRayTracingScene> PbrRayTracingScene::create(gpu2::DescriptorHeap & heap, gpu2::CnC & initialization, ArrayView<const Mesh> meshes) {
+    auto scene = AutoRef<PbrRayTracingSceneImpl>(new PbrRayTracingSceneImpl());
+    if (!scene->initialize(heap, initialization, meshes)) return {};
+    return scene;
+}
+
+AutoRef<RayTraceKernel> RayTraceKernel::create(gpu2::DescriptorHeap & heap, gpu2::CnC & initialization) {
+    auto kernel = AutoRef<RayTraceImpl>(new RayTraceImpl());
+    if (!kernel->initialize(referenceTo(&heap))) return {};
+    initialization.retainResource(kernel);
+    return kernel;
+}
+
 AutoRef<PbrKernel> PbrKernel::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization) {
     auto impl = AutoRef<PbrImpl>(new PbrImpl());
     if (!impl->initialize(referenceTo(&heap))) return {};
     initialization.retainResource(impl);
-    impl->uploadDefaults(initialization);
     return impl;
+}
+
+AutoRef<PbrMaterial> PbrMaterial::create(::GN::gpu2::DescriptorHeap & heap, ::GN::gpu2::CnC & initialization, const Parameters & p) {
+    bool valid = std::isfinite(p.metallic) && p.metallic >= 0 && p.metallic <= 1 && std::isfinite(p.roughness) && p.roughness >= 0 && p.roughness <= 1 &&
+                 std::isfinite(p.normalScale) && std::isfinite(p.occlusionStrength) && p.occlusionStrength >= 0 && p.occlusionStrength <= 1;
+    for (int i = 0; i < 4; ++i) valid &= std::isfinite(p.baseColor[i]);
+    for (int i = 0; i < 3; ++i) valid &= std::isfinite(p.emissive[i]);
+    const gpu2::GpuResourceView maps[] = {p.baseColorMap, p.normalMap, p.emissiveMap, p.occlusionMap, p.metalRoughMap};
+    for (auto & map : maps) valid &= validMap(map);
+    if (!valid || heap.bindingIndex() != 0) return {};
+    auto material = AutoRef<PbrMaterialImpl>(new PbrMaterialImpl(referenceTo(&heap)));
+    if (!material->initialize(p, referenceTo(&heap))) return {};
+    initialization.retainResource(material);
+    material->upload(initialization);
+    return material;
 }
 
 } // namespace GN::fx2

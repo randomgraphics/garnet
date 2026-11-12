@@ -70,7 +70,7 @@ int main(int argc, const char * argv[]) {
     if (!sphereGeometry.indexCount) return 1;
 
     // Stylized anime NPR material tuning
-    auto celParams                = cel->defaultMaterialParameters();
+    auto celParams                = fx::CelMaterial::Parameters {};
     celParams.color               = {0.9f, 0.45f, 0.25f, 1.0f};
     celParams.shadowThreshold     = 0.5f;
     celParams.shadowFeather       = 0.02f;
@@ -88,7 +88,7 @@ int main(int argc, const char * argv[]) {
     celParams.outlineWidth        = 0.008f;
     celParams.outlineColor        = {0.12f, 0.10f, 0.15f, 1.0f};
 
-    auto material = cel->createMaterial(*upload, celParams);
+    auto material = fx::CelMaterial::create(*heap, *upload, celParams);
     if (!material) return 1;
 
     auto initializationWork = upload->seal();
@@ -147,7 +147,7 @@ int main(int argc, const char * argv[]) {
         fx::CelMaterial::DrawParameters draw {{*raster, state, sphereGeometry, &target.states}};
         draw.object2WorldTransform = glm::mat4(1.0f);
         draw.renderOutline         = true;
-        if (!material->record(draw)) return 1;
+        if (!cel->record(*material, draw)) return 1;
 
         auto rasterWork = raster->seal();
         if (!rasterWork) return 1;

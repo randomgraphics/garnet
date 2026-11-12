@@ -64,13 +64,13 @@ int main(int argc, const char * argv[]) {
     auto prefilteredTex = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/prefiltered.dds"});
     auto brdfLutTex     = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/bad-salzbrunn-walking-hall/brdf_lut.dds"});
 
-    auto skyParams = sky->defaultMaterialParameters();
+    auto skyParams = fx::SkyMaterial::Parameters {};
     if (skyboxTex) skyParams.skyboxMap = GpuResourceView {skyboxTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     if (irradianceTex) skyParams.irradianceMap = GpuResourceView {irradianceTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     if (prefilteredTex) skyParams.prefilteredMap = GpuResourceView {prefilteredTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     if (brdfLutTex) skyParams.brdfLut = GpuResourceView {brdfLutTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     skyParams.luminanceScale = 1.0f;
-    auto skyMaterial         = sky->createMaterial(*upload, skyParams);
+    auto skyMaterial         = fx::SkyMaterial::create(*heap, *upload, skyParams);
     if (!skyMaterial) return 1;
 
     // ─── DamagedHelmet model and PBR material ─────────────────────────────────
@@ -100,7 +100,7 @@ int main(int argc, const char * argv[]) {
     auto occlusionTex  = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/model/DamagedHelmet/occlusion_1.jpg"});
     auto metalRoughTex = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/model/DamagedHelmet/metallicRoughness_1.jpg"});
 
-    auto helmetParams = pbr->defaultMaterialParameters();
+    auto helmetParams = fx::PbrMaterial::Parameters {};
     if (baseColorTex) helmetParams.baseColorMap = GpuResourceView {baseColorTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     if (normalTex) helmetParams.normalMap = GpuResourceView {normalTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     if (emissiveTex) helmetParams.emissiveMap = GpuResourceView {emissiveTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
@@ -108,7 +108,7 @@ int main(int argc, const char * argv[]) {
     if (metalRoughTex) helmetParams.metalRoughMap = GpuResourceView {metalRoughTex}.setImageViewType(GpuResourceView::ImageView::SAMPLED);
     helmetParams.metallic  = 1.0f;
     helmetParams.roughness = 1.0f;
-    auto helmetMaterial    = pbr->createMaterial(*upload, helmetParams);
+    auto helmetMaterial    = fx::PbrMaterial::create(*heap, *upload, helmetParams);
     if (!helmetMaterial) return 1;
 
     auto initialization = upload->seal();
@@ -162,12 +162,12 @@ int main(int argc, const char * argv[]) {
 
         // 1. Draw skybox
         fx::SkyMaterial::DrawParameters skyDraw {*raster, state, &skyState};
-        if (!skyMaterial->record(skyDraw)) return 1;
+        if (!sky->record(*skyMaterial, skyDraw)) return 1;
 
         // 2. Draw helmet oriented upright
         const glm::mat4                 helmetRotation = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(1, 0, 0));
         fx::PbrMaterial::DrawParameters helmetDraw {{*raster, state, helmetGeometry, &helmetState}, helmetRotation, skyMaterial};
-        if (!helmetMaterial->record(helmetDraw)) return 1;
+        if (!pbr->record(*helmetMaterial, helmetDraw)) return 1;
 
         auto draws = raster->seal();
         if (!draws) return 1;

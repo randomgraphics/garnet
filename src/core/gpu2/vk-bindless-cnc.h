@@ -21,8 +21,13 @@ struct StoredBindlessCompute {
     uint32_t           immediateSize   = 0;
 };
 
-using StoredBindlessCncOp = std::variant<StoredBindlessCompute, StoredBufferToBuffer, StoredBufferToImage, StoredImageToImage, StoredUploadBuffer,
-                                         StoredDownloadBuffer, StoredDownloadImage>;
+struct StoredBuildAccelerationStructure {
+    AutoRef<AccelerationStructure> accelerationStructure;
+    AutoRef<Buffer>                scratchBuffer;
+};
+
+using StoredBindlessCncOp = std::variant<StoredBindlessCompute, StoredBuildAccelerationStructure, StoredBufferToBuffer, StoredBufferToImage, StoredImageToImage,
+                                         StoredUploadBuffer, StoredDownloadBuffer, StoredDownloadImage>;
 
 /// Vulkan implementation of CnC recorder.
 class VkBindlessCnC final : public CnC {
@@ -34,7 +39,8 @@ public:
 
     ~VkBindlessCnC() override;
 
-    void recordCompute(const ComputeParameters & params) override;
+    void                           recordCompute(const ComputeParameters & params) override;
+    AutoRef<AccelerationStructure> recordBuildAccelerationStructure(const StrA & resourceName, const AccelerationStructure::BuildParameters & params) override;
 
     void                             recordCopyBuffer(const BufferToBuffer & p) override;
     void                             recordUploadBuffer(AutoRef<Buffer> dst, uint64_t offset, ArrayView<const uint8_t> content) override;
