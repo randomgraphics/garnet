@@ -184,6 +184,11 @@ Draws do not carry a `GpuResourceTable`. They specify only:
 - Geometry (`geometry`)
 - Push constants (`immediates`: transforms, material BDA addresses, bindless texture IDs)
 
+#### Built-in ASCII Text
+`Raster::recordText()` draws null-terminated ASCII using embedded bitmap glyphs; it does not load font files. `TextParameters::origin` and `glyphSize` are measured in target pixels. The built-in 5x7 glyphs scale to the requested cell size, line feeds start a new row, carriage returns are ignored, and unmapped bytes render as `?`. The text pointer is consumed during the call. Text recording requires `CreateParameters::maxImmediateSize` to be at least 56 bytes.
+
+The `GNsample-gpu2-simple-text` sample demonstrates the built-in renderer at several cell sizes.
+
 #### Parameter Buffer Retention
 `Raster::retainResource(AutoRef<RCRT64> resource)` allows higher-level modules (`fx2`) to attach dynamic per-draw parameter buffers, material buffers, or textures to the recorder. The sealed `GpuPayload` holds these references until GPU execution completes.
 

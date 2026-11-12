@@ -169,8 +169,20 @@ public:
         ArrayView<const uint8_t> immediates = {}; ///< Inline uniform data (root constants / push constants).
     };
 
+    /// Text rendered with gpu2's built-in bitmap glyphs. Coordinates and cell size are in target pixels.
+    struct TextParameters {
+        const char * text      = "";                       ///< Null-terminated ASCII, read only during recordText(); unmapped bytes render as '?'.
+        Vector2f     origin    = {};                       ///< Top-left of the first cell, in target pixels.
+        Vector2f     glyphSize = {8.0f, 12.0f};            ///< Cell size in target pixels; the bitmap glyph is scaled to fit.
+        Vector4f     color     = {1.0f, 1.0f, 1.0f, 1.0f}; ///< Linear RGBA output color.
+    };
+
     /// Record a draw call. Thread-safe when called on thread-local recorder instances.
     virtual void recordDraw(const DrawParameters & params) = 0;
+
+    /// Record text into this raster pass. Line feeds start a new row; carriage returns are ignored.
+    /// Requires CreateParameters::maxImmediateSize to be at least 56 bytes.
+    virtual void recordText(const TextParameters & params) = 0;
 
     /// Register a cleanup callback invoked once when the payload completes or is destroyed without submission.
     virtual void addCleanupCallback(std::function<void()> cleanup) = 0;

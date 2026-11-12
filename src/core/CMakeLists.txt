@@ -68,7 +68,20 @@ list(APPEND garnet_headers ${BUILD_HEADER_INC}/base/features.h)
 # gather sources
 set(sources)
 GN_add_source_folder(sources base PCH_SOURCE base/pch.cpp)
-GN_add_source_folder(sources gpu2 PCH_SOURCE gpu2/pch.cpp)
+GN_add_source_folder(gpu2_sources gpu2 PCH_SOURCE gpu2/pch.cpp)
+list(APPEND sources ${gpu2_sources})
+set_property(SOURCE ${gpu2_sources} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/gpu2)
+if(VULKAN_FOUND)
+    set(_gpu2_shader_dir ${CMAKE_CURRENT_SOURCE_DIR}/gpu2/vk-shaders)
+    set(_gpu2_shader_out_dir ${CMAKE_CURRENT_BINARY_DIR}/gpu2)
+    GN_compile_glsl_shaders(_gpu2_shader_hdrs
+        SOURCES ${_gpu2_shader_dir}/gpu2-text.vert
+                ${_gpu2_shader_dir}/gpu2-text.frag
+        OUT_DIR ${_gpu2_shader_out_dir}
+        COMMENT "Compiling gpu2 built-in text shaders to SPIR-V"
+    )
+    add_custom_target(GNcore-gpu2-shaders DEPENDS ${_gpu2_shader_hdrs})
+endif()
 include(fx2/CMakeLists.txt)
 GN_add_source_folder(sources win PCH_SOURCE win/pch.cpp)
 
@@ -109,6 +122,9 @@ if(TARGET GNcore-rdg-shaders)
 endif()
 if(TARGET GNcore-fx2-shaders)
     add_dependencies(GNcore-objects GNcore-fx2-shaders)
+endif()
+if(TARGET GNcore-gpu2-shaders)
+    add_dependencies(GNcore-objects GNcore-gpu2-shaders)
 endif()
 
 # =======================
