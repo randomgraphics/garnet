@@ -71,6 +71,8 @@ int main(int argc, const char * argv[]) {
     const auto depthDesc   = Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::D_32_FLOAT()).setDimensions(width, height).setLevels(1);
     auto       depthBuffer = Texture::create("pbr.depth", {.context = host.gpu, .descriptor = depthDesc});
     if (!depthBuffer) return 1;
+    auto accumulationDepthBuffer = Texture::create("pbr.accumulation-depth", {.context = host.gpu, .descriptor = depthDesc});
+    if (!accumulationDepthBuffer) return 1;
 
     // ─── Environment / Sky material ───────────────────────────────────────────
     auto skyboxTex      = Texture::load({.context = host.gpu, .filename = "media::asset-foundry/image/envmap/qwantani_sunset_puresky/skybox.dds"});
@@ -138,7 +140,7 @@ int main(int argc, const char * argv[]) {
     accumulationMaterialParameters.colorMap = accumulationView;
     auto accumulationMaterial               = fx::UnlitMaterial::create(*heap, *upload, accumulationMaterialParameters);
     if (!accumulationMaterial) return 1;
-    const float compositeVertices[]   = {-1, -1, 0.5f, 0, 1, 1, -1, 0.5f, 1, 1, 1, 1, 0.5f, 1, 0, -1, -1, 0.5f, 0, 1, 1, 1, 0.5f, 1, 0, -1, 1, 0.5f, 0, 0};
+    const float compositeVertices[]   = {-1, -1, 0.5f, 0, 0, 1, -1, 0.5f, 1, 0, 1, 1, 0.5f, 1, 1, -1, -1, 0.5f, 0, 0, 1, 1, 0.5f, 1, 1, -1, 1, 0.5f, 0, 1};
     auto        compositeVertexBuffer = Buffer::create("pbr.composite-vertices", {.context = host.gpu, .size = sizeof(compositeVertices)});
     if (!compositeVertexBuffer) return 1;
     upload->recordUploadBuffer(compositeVertexBuffer, 0, {reinterpret_cast<const uint8_t *>(compositeVertices), sizeof(compositeVertices)});
@@ -210,14 +212,19 @@ int main(int argc, const char * argv[]) {
         if (rayTracingEnabled) {
             RasterTarget accumulationTarget;
             accumulationTarget.setColorTarget(0, GpuResourceView {accumulationTexture});
-            accumulationTarget.loadColor = !cameraMoved && accumulationSampleCount > 0;
+            const bool accumulationContinues = !cameraMoved && accumulationSampleCount > 0;
+            accumulationTarget.loadColor = accumulationContinues;
+            accumulationTarget.loadDepth = accumulationContinues;
+            accumulationTarget.readOnlyDepth = accumulationContinues;
             accumulationTarget.setClearColor(0, 0, 0, 0);
-            accumulationTarget.setDepthStencilTarget(GpuResourceView {depthBuffer}).setClearDepth(1.0f);
-            auto & accumulationBlend   = accumulationTarget.colorTargets[0].blendState;
-            accumulationBlend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
-            accumulationBlend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
-            accumulationBlend.alphaSrc = RasterTarget::BlendState::ONE;
-            accumulationBlend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+            accumulationTarget.setDepthStencilTarget(GpuResourceView {accumulationDepthBuffer}).setClearDepth(1.0f);
+            if (accumulationContinues) {
+                auto & accumulationBlend = accumulationTarget.colorTargets[0].blendState;
+                accumulationBlend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
+                accumulationBlend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+                accumulationBlend.alphaSrc = RasterTarget::BlendState::ONE;
+                accumulationBlend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+            }
             auto rtResources           = fx::sharedUniformResources(state);
             rtResources.resize(3);
             rtResources[2].resize(2);
@@ -229,7 +236,9 @@ int main(int argc, const char * argv[]) {
                 "pbr.accumulation",
                 {.gpu = host.gpu, .target = &accumulationTarget, .heap = heap, .heapSetIndex = 0, .passResources = rtResources, .numberOfDrawsHint = 1});
             if (!accumulationRaster) return 1;
-            fx::RayTraceKernel::DrawParameters rtDraw {{*accumulationRaster, state, helmetGeometry, &helmetState},
+            RasterState rayTraceState = helmetState;
+            if (accumulationContinues) rayTraceState.depthState = RasterState::DepthState {.func = RasterState::Compare::LESS_EQUAL, .write = false};
+            fx::RayTraceKernel::DrawParameters rtDraw {{*accumulationRaster, state, helmetGeometry, &rayTraceState},
                                                        asc,
                                                        helmetRotation,
                                                        skyMaterial,

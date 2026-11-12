@@ -285,9 +285,11 @@ struct RasterTarget {
 
     ColorTargetArray colorTargets;
     GenericTarget    depthStencilTarget;
-    bool             loadColor    = false;                      ///< Reuse existing color contents instead of clearing color attachments at pass begin.
-    ClearColorValue  clearColor   = {{0.0f, 0.0f, 0.0f, 1.0f}}; ///< ignored when loadColor is true.
-    float            clearDepth   = 1.0f;
+    bool             loadColor     = false;                      ///< Reuse existing color contents instead of clearing color attachments at pass begin.
+    bool             loadDepth     = false;                      ///< Reuse existing depth contents instead of clearing the depth attachment at pass begin.
+    bool             readOnlyDepth = false;                      ///< Requires loadDepth; draws must disable depth writes.
+    ClearColorValue  clearColor    = {{0.0f, 0.0f, 0.0f, 1.0f}}; ///< ignored when loadColor is true.
+    float            clearDepth    = 1.0f;                        ///< ignored when loadDepth is true.
     uint32_t         clearStencil = 0;
     RasterState      states       = RasterState::WithDefaults {}; ///< full render state baseline; every field has a value
 
@@ -365,6 +367,7 @@ struct RasterTarget {
 
     bool operator==(const RasterTarget & other) const {
         return colorTargets == other.colorTargets && depthStencilTarget == other.depthStencilTarget && loadColor == other.loadColor &&
+               loadDepth == other.loadDepth && readOnlyDepth == other.readOnlyDepth &&
                clearColor.u4[0] == other.clearColor.u4[0] && clearColor.u4[1] == other.clearColor.u4[1] && clearColor.u4[2] == other.clearColor.u4[2] &&
                clearColor.u4[3] == other.clearColor.u4[3] && clearDepth == other.clearDepth && clearStencil == other.clearStencil && states == other.states;
     }

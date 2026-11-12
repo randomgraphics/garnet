@@ -88,12 +88,12 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 auto * tex = RuntimeType::cast<TextureVulkanBase>(ct.target.texture.get());
                 if (tex && tex->nativeImage()) {
                     vk::ImageMemoryBarrier b;
-                    b.setOldLayout(vk::ImageLayout::eUndefined)
+                    b.setOldLayout(mRenderTarget.loadColor ? vk::ImageLayout::eShaderReadOnlyOptimal : vk::ImageLayout::eUndefined)
                         .setNewLayout(vk::ImageLayout::eColorAttachmentOptimal)
                         .setImage(tex->nativeImage())
                         .setSubresourceRange({vk::ImageAspectFlagBits::eColor, ct.target.mip, 1, ct.target.face, 1})
-                        .setSrcAccessMask({})
-                        .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+                        .setSrcAccessMask(mRenderTarget.loadColor ? vk::AccessFlags(vk::AccessFlagBits::eShaderRead) : vk::AccessFlags {})
+                        .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
                         .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                         .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
                     preBarriers.push_back(b);
@@ -104,19 +104,23 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
             auto * dTex = RuntimeType::cast<TextureVulkanBase>(mRenderTarget.depthStencilTarget.texture.get());
             if (dTex && dTex->nativeImage()) {
                 vk::ImageMemoryBarrier b;
-                b.setOldLayout(vk::ImageLayout::eUndefined)
-                    .setNewLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+                b.setOldLayout(mRenderTarget.loadDepth ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eUndefined)
+                    .setNewLayout(mRenderTarget.readOnlyDepth ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eDepthAttachmentOptimal)
                     .setImage(dTex->nativeImage())
                     .setSubresourceRange({vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1, mRenderTarget.depthStencilTarget.face, 1})
-                    .setSrcAccessMask({})
-                    .setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite)
+                    .setSrcAccessMask(mRenderTarget.loadDepth
+                                          ? vk::AccessFlags(vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eDepthStencilAttachmentRead)
+                                          : vk::AccessFlags {})
+                    .setDstAccessMask(mRenderTarget.readOnlyDepth
+                                          ? vk::AccessFlags(vk::AccessFlagBits::eDepthStencilAttachmentRead)
+                                          : vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite)
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
                 preBarriers.push_back(b);
             }
         }
         if (!preBarriers.empty()) {
-            vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+            vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
                                  vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests, {}, 0, nullptr, 0, nullptr,
                                  static_cast<uint32_t>(preBarriers.size()), preBarriers.data());
         }
@@ -169,8 +173,8 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 formats.depth = pixelFormatToVkFormat(dpf);
 
                 depthAtt.setImageView(depthView)
-                    .setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
-                    .setLoadOp(vk::AttachmentLoadOp::eClear)
+                    .setImageLayout(mRenderTarget.readOnlyDepth ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eDepthAttachmentOptimal)
+                    .setLoadOp(mRenderTarget.loadDepth ? vk::AttachmentLoadOp::eLoad : vk::AttachmentLoadOp::eClear)
                     .setStoreOp(vk::AttachmentStoreOp::eStore)
                     .setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(mRenderTarget.clearDepth, mRenderTarget.clearStencil)));
                 ext.width  = std::min(ext.width, depthExtent.width);
@@ -300,7 +304,7 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
                 .setImage(tex->nativeImage())
                 .setSubresourceRange({vk::ImageAspectFlagBits::eColor, ct.target.mip, 1, ct.target.face, 1})
-                .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+                .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
                 .setDstAccessMask(vk::AccessFlagBits::eShaderRead)
                 .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
@@ -316,16 +320,20 @@ void VkBindlessPayload::recordForVulkanSubmit(const RecordContext & ctx) {
                 ctx.batchTracker->restoreAttachmentToShaderReadOnly(dTex, mRenderTarget.depthStencilTarget.view(), vkcb);
             } else {
                 vk::ImageMemoryBarrier b;
-                b.setOldLayout(vk::ImageLayout::eDepthAttachmentOptimal)
-                    .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+                b.setOldLayout(mRenderTarget.readOnlyDepth ? vk::ImageLayout::eDepthStencilReadOnlyOptimal : vk::ImageLayout::eDepthAttachmentOptimal)
+                    .setNewLayout(vk::ImageLayout::eDepthStencilReadOnlyOptimal)
                     .setImage(depthImg)
                     .setSubresourceRange({vk::ImageAspectFlagBits::eDepth, mRenderTarget.depthStencilTarget.mip, 1, mRenderTarget.depthStencilTarget.face, 1})
-                    .setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite)
-                    .setDstAccessMask(vk::AccessFlagBits::eShaderRead)
+                    .setSrcAccessMask(mRenderTarget.readOnlyDepth
+                                          ? vk::AccessFlagBits::eDepthStencilAttachmentRead
+                                          : vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite)
+                    .setDstAccessMask(vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eDepthStencilAttachmentRead)
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-                vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eLateFragmentTests,
-                                     vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, {}, 0, nullptr, 0, nullptr, 1, &b);
+                vkcb.pipelineBarrier(vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
+                                     vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eEarlyFragmentTests |
+                                         vk::PipelineStageFlagBits::eLateFragmentTests,
+                                     {}, 0, nullptr, 0, nullptr, 1, &b);
             }
         }
     }
