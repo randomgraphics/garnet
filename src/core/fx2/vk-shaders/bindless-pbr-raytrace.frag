@@ -249,10 +249,30 @@ vec3 sampleSky(SkyMaterialData sky, vec3 direction) {
     return max(skyColor, vec3(sky.factors.y));
 }
 
+// Reconstruct the split-sum Cook-Torrance environment response. The prefiltered
+// cube map supplies roughness-dependent radiance; the BRDF LUT supplies the
+// integrated GGX/Fresnel response for N dot V and roughness.
+vec3 environmentLighting(SkyMaterialData sky, Surface surface, vec3 viewDirection) {
+    vec3  f0          = mix(vec3(0.04), max(surface.albedo.rgb, vec3(0.0)), surface.metallic);
+    float nv          = max(dot(surface.normal, viewDirection), 0.0);
+    vec3  fresnel     = f0 + (max(vec3(1.0 - surface.roughness), f0) - f0) * pow(clamp(1.0 - nv, 0.0, 1.0), 5.0);
+    vec3  reflected   = reflect(-viewDirection, surface.normal);
+    vec3  prefiltered = textureLod(samplerCube(heapCubemaps[nonuniformEXT(sky.textureIndices.z)], heapSamplers[nonuniformEXT(sky.samplerIndices.x)]), reflected,
+                                   surface.roughness * 4.0)
+                            .rgb;
+    vec2  brdf =
+        texture(sampler2D(heapTextures[nonuniformEXT(sky.textureIndices.w)], heapSamplers[nonuniformEXT(sky.samplerIndices.y)]), vec2(nv, surface.roughness))
+            .rg;
+    prefiltered   = max(prefiltered * sky.factors.x, vec3(sky.factors.y));
+    vec3 specular = prefiltered * (f0 * brdf.x + brdf.y);
+    return specular * surface.occlusion;
+}
+
 vec3 secondaryPath(Surface primary, SkyMaterialData sky, vec3 viewDirection, inout uint seed) {
-    vec3  f0               = mix(vec3(0.04), max(primary.albedo.rgb, vec3(0.0)), primary.metallic);
-    float reflectionWeight = clamp(max(max(f0.r, f0.g), f0.b), 0.05, 0.95);
-    bool  transparent      = !primary.opaque && primary.albedo.a < 0.999;
+    vec3  f0                      = mix(vec3(0.04), max(primary.albedo.rgb, vec3(0.0)), primary.metallic);
+    float reflectionWeight        = clamp(max(max(f0.r, f0.g), f0.b), 0.05, 0.95);
+    bool  transparent             = !primary.opaque && primary.albedo.a < 0.999;
+    bool  environmentSpecularPath = false;
     vec3  direction;
     vec3  throughput;
     if (transparent && randomFloat(seed) > reflectionWeight) {
@@ -260,10 +280,11 @@ vec3 secondaryPath(Surface primary, SkyMaterialData sky, vec3 viewDirection, ino
         if (dot(direction, direction) < 1e-10) direction = reflect(-viewDirection, primary.normal);
         throughput = vec3(1.0 - reflectionWeight);
     } else if (randomFloat(seed) < reflectionWeight || primary.roughness < 0.25 || primary.metallic > 0.5) {
-        direction             = reflect(-viewDirection, primary.normal);
-        vec3 diffuseDirection = cosineHemisphere(primary.normal, seed);
-        direction             = normalize(mix(direction, diffuseDirection, primary.roughness * primary.roughness));
-        throughput            = f0 / max(reflectionWeight, 1e-3);
+        environmentSpecularPath = primary.opaque;
+        direction               = reflect(-viewDirection, primary.normal);
+        vec3 diffuseDirection   = cosineHemisphere(primary.normal, seed);
+        direction               = normalize(mix(direction, diffuseDirection, primary.roughness * primary.roughness));
+        throughput              = f0 / max(reflectionWeight, 1e-3);
     } else {
         direction  = cosineHemisphere(primary.normal, seed);
         throughput = primary.albedo.rgb * (1.0 - primary.metallic) / max(1.0 - reflectionWeight, 1e-3);
@@ -278,7 +299,7 @@ vec3 secondaryPath(Surface primary, SkyMaterialData sky, vec3 viewDirection, ino
                               sscUniforms.farPlane);
         while (rayQueryProceedEXT(query)) {}
         if (rayQueryGetIntersectionTypeEXT(query, true) == gl_RayQueryCommittedIntersectionNoneEXT) {
-            radiance += throughput * sampleSky(sky, direction);
+            if (!environmentSpecularPath) radiance += throughput * sampleSky(sky, direction);
             break;
         }
 
@@ -318,6 +339,7 @@ void main() {
     if (skyIndex != 0xffffffffu) {
         SkyMaterialData sky  = skyMaterialHeap.materials[skyIndex];
         uint            seed = pixelSeed(uvec2(gl_FragCoord.xy));
+        if (primary.opaque) color += environmentLighting(sky, primary, viewDirection);
         color += secondaryPath(primary, sky, viewDirection, seed);
     }
     color = max(color, vec3(0.0)) * max(sscUniforms.exposure, 0.0);
