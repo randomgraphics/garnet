@@ -12,7 +12,9 @@
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
+#include <future>
 #include <string>
+#include <thread>
 
 using namespace GN;
 using namespace GN::gpu2;
@@ -204,16 +206,32 @@ int main(int argc, const char * argv[]) {
         }
     }
 
-    auto model = options.path == "--box" || options.path == "--sphere" ? viewer::ModelScene::createProcedural(options.path == "--sphere")
-                                                                       : viewer::ModelScene::load({.path = options.path});
-    if (!model) return EXIT_FAILURE;
-    if (options.print) {
-        printScene(*model);
-        if (!options.headless) return EXIT_SUCCESS;
+    const bool                       procedural  = options.path == "--box" || options.path == "--sphere";
+    const bool                       asyncImport = !procedural && !options.headless && !options.print;
+    std::future<AutoRef<ModelScene>> modelLoad;
+    AutoRef<ModelScene>              model;
+    if (asyncImport) {
+        // Overlap CPU-heavy Assimp work with window and GPU initialization.
+        modelLoad = std::async(std::launch::async, [path = options.path] { return viewer::ModelScene::load({.path = path}); });
+    } else {
+        model = procedural ? viewer::ModelScene::createProcedural(options.path == "--sphere") : viewer::ModelScene::load({.path = options.path});
+        if (!model) return EXIT_FAILURE;
+        if (options.print) {
+            printScene(*model);
+            if (!options.headless) return EXIT_SUCCESS;
+        }
     }
 
     FrameHost host;
     if (!host.initialize(options.headless)) return EXIT_FAILURE;
+    if (asyncImport) {
+        while (modelLoad.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
+            if (host.window && !host.window->runUntilNoNewEvents()) return EXIT_SUCCESS;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        model = modelLoad.get();
+        if (!model) return EXIT_FAILURE;
+    }
     SceneRenderer renderer;
     if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
     if (options.rayTraced && !renderer.rayTracingAvailable()) {
