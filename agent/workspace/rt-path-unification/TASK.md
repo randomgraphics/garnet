@@ -1,0 +1,40 @@
+# Task: Unify ray-traced PBR environment paths
+
+## Goals
+
+Use the active RT fragment shader's acceleration-structure path for both diffuse and specular environment response. A ray miss samples the skybox; a hit shades the material and continues to the configured bounce limit. Remove the unused compute shader and document the fragment shader workflow.
+
+## Design
+
+- `bindless-pbr-raytrace.frag` evaluates direct and indirect Cook-Torrance terms through a shared BRDF function.
+- Diffuse and specular paths use a shared lobe sampler, mixture PDF, and incoming-radiance trace.
+- Direct lights use AS visibility rays; AO modulates reflected lighting without suppressing emission.
+- This commit keeps exposure and Reinhard mapping in the RT fragment shader before sample accumulation. Tone mapping after accumulation is a separate follow-up change.
+- The README flowchart documents the shader invocation only; viewer accumulation remains outside it.
+
+## PROGRESS (resume "Last completed" / "In progress")
+
+Last completed: User-reviewed shader-only flowchart, unified diffuse/specular ray sampling and tracing, added direct-light visibility checks, removed the unused compute shader, and built the Windows debug configuration successfully.
+
+In progress: Commit and push the RT shader/flowchart changes with per-sample tone mapping. Then move tone mapping after accumulation in a separate commit. Await user sign-off after both changes.
+
+## References
+
+- Active shader: `src/core/fx2/vk-shaders/bindless-pbr-raytrace.frag`
+- README flowchart: `src/core/fx2/README.md`
+- Kernel/build wiring: `src/core/fx2/bindless-pbr-kernel.cpp`, `src/core/fx2/CMakeLists.txt`
+- Task branch: `wip/ray-tracing`
+
+## Task breakdown
+
+### 1. Unify RT environment paths and remove unused compute shader
+
+Verify: Windows debug build via `python env/bin/build.py -C d`; confirm no build or kernel references remain for `bindless-pbr-raytrace.comp`.
+
+Commit: `fix(fx2): unify ray-traced PBR environment paths`
+
+### 2. Apply tone mapping after sample accumulation
+
+Verify: Windows debug build via `python env/bin/build.py -C d`; inspect that the RT accumulation texture remains linear and the composite applies exposure and Reinhard mapping once.
+
+Commit: `fix(mesh-viewer): tone map ray-traced accumulation`

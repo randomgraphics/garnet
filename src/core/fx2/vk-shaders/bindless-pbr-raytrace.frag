@@ -212,84 +212,118 @@ Surface makePrimarySurface() {
     return surface;
 }
 
-vec3 directLighting(Surface surface, vec3 viewDirection) {
-    vec3 f0     = mix(vec3(0.04), max(surface.albedo.rgb, vec3(0.0)), surface.metallic);
-    vec3 result = surface.emissive;
-    vec3 normal = surface.normal;
-    for (uint i = 0u; i < min(sscUniforms.numLights, uint(MAX_SHARED_LIGHTS)); ++i) {
-        DirectLightUniform light           = sscUniforms.lights[i];
-        bool               directional     = int(light.positionOrDir.w + 0.5) == int(SHARED_LIGHT_TYPE_DIRECTIONAL);
-        vec3               delta           = directional ? -light.positionOrDir.xyz : light.positionOrDir.xyz - surface.position;
-        float              distanceToLight = length(delta);
-        vec3               lightDirection  = delta / max(distanceToLight, 1e-20);
-        float              nl              = max(dot(normal, lightDirection), 0.0);
-        if (nl <= 0.0) continue;
-        float attenuation = directional ? 1.0 : 1.0 / max(distanceToLight * distanceToLight, 1e-4);
-        if (!directional && light.colorAndRange.w > 0.0) attenuation *= pow(clamp(1.0 - distanceToLight / light.colorAndRange.w, 0.0, 1.0), 2.0);
-        vec3  halfVector   = normalize(lightDirection + viewDirection);
-        float nv           = max(dot(normal, viewDirection), 1e-4);
-        float nh           = max(dot(normal, halfVector), 0.0);
-        float vh           = max(dot(viewDirection, halfVector), 0.0);
-        float a            = surface.roughness * surface.roughness;
-        float a2           = a * a;
-        float distribution = a2 / max(PI * pow(nh * nh * (a2 - 1.0) + 1.0, 2.0), 1e-6);
-        float k            = (surface.roughness + 1.0) * (surface.roughness + 1.0) / 8.0;
-        float geometryTerm = nv / (nv * (1.0 - k) + k) * nl / (nl * (1.0 - k) + k);
-        vec3  fresnel      = fresnelSchlick(vh, f0);
-        vec3  specular     = distribution * geometryTerm * fresnel / max(4.0 * nv * max(nl, 1e-4), 1e-5);
-        vec3  diffuse      = (1.0 - fresnel) * (1.0 - surface.metallic) * surface.albedo.rgb / PI;
-        result += (diffuse + specular) * max(light.colorAndRange.rgb, vec3(0.0)) * attenuation * nl;
-    }
-    return result * surface.occlusion;
+vec3 evaluatePbrBrdf(Surface surface, vec3 viewDirection, vec3 lightDirection) {
+    float nl = max(dot(surface.normal, lightDirection), 0.0);
+    float nv = max(dot(surface.normal, viewDirection), 1e-4);
+    if (nl <= 0.0) return vec3(0.0);
+
+    vec3 halfVector = normalize(lightDirection + viewDirection);
+    float nh = max(dot(surface.normal, halfVector), 0.0);
+    float vh = max(dot(viewDirection, halfVector), 0.0);
+    float alpha = surface.roughness * surface.roughness;
+    float alpha2 = alpha * alpha;
+    float distribution = alpha2 / max(PI * pow(nh * nh * (alpha2 - 1.0) + 1.0, 2.0), 1e-6);
+    float k = (surface.roughness + 1.0) * (surface.roughness + 1.0) / 8.0;
+    float geometry = nv / (nv * (1.0 - k) + k) * nl / (nl * (1.0 - k) + k);
+    vec3 f0 = mix(vec3(0.04), max(surface.albedo.rgb, vec3(0.0)), surface.metallic);
+    vec3 fresnel = fresnelSchlick(vh, f0);
+    vec3 specular = distribution * geometry * fresnel / max(4.0 * nv * max(nl, 1e-4), 1e-5);
+    vec3 diffuse = (1.0 - fresnel) * (1.0 - surface.metallic) * surface.albedo.rgb / PI;
+    return diffuse + specular;
 }
 
+vec3 sampleGgxHalfVector(vec3 normal, float roughness, inout uint seed) {
+    float alpha = roughness * roughness;
+    float alpha2 = alpha * alpha;
+    float u1 = randomFloat(seed);
+    float u2 = randomFloat(seed);
+    float phi = 2.0 * PI * u1;
+    float cosTheta = sqrt((1.0 - u2) / max(1.0 + (alpha2 - 1.0) * u2, 1e-7));
+    float sinTheta = sqrt(max(1.0 - cosTheta * cosTheta, 0.0));
+    vec3 helper = abs(normal.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent = normalize(cross(helper, normal));
+    vec3 bitangent = cross(normal, tangent);
+    return normalize(tangent * (sinTheta * cos(phi)) + bitangent * (sinTheta * sin(phi)) + normal * cosTheta);
+}
+
+bool samplePbrDirection(Surface surface, vec3 viewDirection, inout uint seed, out vec3 direction, out vec3 throughput) {
+    float opacity = surface.opaque ? 1.0 : clamp(surface.albedo.a, 0.0, 1.0);
+    if (randomFloat(seed) >= opacity) {
+        direction = refract(-viewDirection, surface.normal, 1.0 / 1.5);
+        if (dot(direction, direction) < 1e-10) direction = reflect(-viewDirection, surface.normal);
+        throughput = vec3(1.0);
+        return true;
+    }
+
+    vec3 f0 = mix(vec3(0.04), max(surface.albedo.rgb, vec3(0.0)), surface.metallic);
+    vec3 viewFresnel = fresnelSchlick(max(dot(surface.normal, viewDirection), 0.0), f0);
+    float specularProbability = clamp(max(max(viewFresnel.r, viewFresnel.g), viewFresnel.b), 0.05, 0.95);
+    bool sampleSpecular = randomFloat(seed) < specularProbability;
+    if (sampleSpecular) {
+        vec3 halfVector = sampleGgxHalfVector(surface.normal, surface.roughness, seed);
+        direction = reflect(-viewDirection, halfVector);
+    } else {
+        direction = cosineHemisphere(surface.normal, seed);
+    }
+
+    float nl = max(dot(surface.normal, direction), 0.0);
+    if (nl <= 0.0) {
+        throughput = vec3(0.0);
+        return false;
+    }
+
+    vec3 halfVector = normalize(viewDirection + direction);
+    float nh = max(dot(surface.normal, halfVector), 0.0);
+    float vh = max(dot(viewDirection, halfVector), 0.0);
+    float alpha = surface.roughness * surface.roughness;
+    float alpha2 = alpha * alpha;
+    float distribution = alpha2 / max(PI * pow(nh * nh * (alpha2 - 1.0) + 1.0, 2.0), 1e-6);
+    float pdfSpecular = distribution * nh / max(4.0 * vh, 1e-7);
+    float pdfDiffuse = nl / PI;
+    float mixturePdf = specularProbability * pdfSpecular + (1.0 - specularProbability) * pdfDiffuse;
+    vec3 brdf = evaluatePbrBrdf(surface, viewDirection, direction);
+    // The opacity probability cancels its coverage-scaled BSDF weight; include the lobe PDF.
+    throughput = brdf * nl / max(mixturePdf, 1e-7);
+    return true;
+}
+
+vec3 directLighting(Surface surface, vec3 viewDirection) {
+    vec3 result = vec3(0.0);
+    for (uint i = 0u; i < min(sscUniforms.numLights, uint(MAX_SHARED_LIGHTS)); ++i) {
+        DirectLightUniform light = sscUniforms.lights[i];
+        bool directional = int(light.positionOrDir.w + 0.5) == int(SHARED_LIGHT_TYPE_DIRECTIONAL);
+        vec3 delta = directional ? -light.positionOrDir.xyz : light.positionOrDir.xyz - surface.position;
+        float distanceToLight = length(delta);
+        vec3 lightDirection = delta / max(distanceToLight, 1e-20);
+        float nl = max(dot(surface.normal, lightDirection), 0.0);
+        if (nl <= 0.0) continue;
+
+        rayQueryEXT shadowQuery;
+        float maxDistance = directional ? 1e30 : max(distanceToLight - 0.002, 0.001);
+        rayQueryInitializeEXT(shadowQuery, sceneAccelerationStructure, gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT, 0xff,
+                              surface.position + surface.normal * 0.001, 0.001, lightDirection, maxDistance);
+        while (rayQueryProceedEXT(shadowQuery)) {}
+        if (rayQueryGetIntersectionTypeEXT(shadowQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) continue;
+
+        float attenuation = directional ? 1.0 : 1.0 / max(distanceToLight * distanceToLight, 1e-4);
+        if (!directional && light.colorAndRange.w > 0.0) attenuation *= pow(clamp(1.0 - distanceToLight / light.colorAndRange.w, 0.0, 1.0), 2.0);
+        vec3 brdf = evaluatePbrBrdf(surface, viewDirection, lightDirection);
+        result += brdf * max(light.colorAndRange.rgb, vec3(0.0)) * attenuation * nl;
+    }
+    // Match raster PBR: ambient occlusion modulates reflected light, not emission.
+    return result * surface.occlusion + surface.emissive;
+}
 vec3 sampleSky(SkyMaterialData sky, vec3 direction) {
     vec3 skyColor = texture(samplerCube(heapCubemaps[nonuniformEXT(sky.textureIndices.x)], heapSamplers[nonuniformEXT(sky.samplerIndices.x)]), direction).rgb *
                     sky.factors.x;
     return max(skyColor, vec3(sky.factors.y));
 }
 
-// Reconstruct the split-sum Cook-Torrance environment response. The prefiltered
-// cube map supplies roughness-dependent radiance; the BRDF LUT supplies the
-// integrated GGX/Fresnel response for N dot V and roughness.
-vec3 environmentLighting(SkyMaterialData sky, Surface surface, vec3 viewDirection) {
-    vec3  f0          = mix(vec3(0.04), max(surface.albedo.rgb, vec3(0.0)), surface.metallic);
-    float nv          = max(dot(surface.normal, viewDirection), 0.0);
-    vec3  fresnel     = f0 + (max(vec3(1.0 - surface.roughness), f0) - f0) * pow(clamp(1.0 - nv, 0.0, 1.0), 5.0);
-    vec3  reflected   = reflect(-viewDirection, surface.normal);
-    vec3  prefiltered = textureLod(samplerCube(heapCubemaps[nonuniformEXT(sky.textureIndices.z)], heapSamplers[nonuniformEXT(sky.samplerIndices.x)]), reflected,
-                                   surface.roughness * 4.0)
-                            .rgb;
-    vec2  brdf =
-        texture(sampler2D(heapTextures[nonuniformEXT(sky.textureIndices.w)], heapSamplers[nonuniformEXT(sky.samplerIndices.y)]), vec2(nv, surface.roughness))
-            .rg;
-    prefiltered   = max(prefiltered * sky.factors.x, vec3(sky.factors.y));
-    vec3 specular = prefiltered * (f0 * brdf.x + brdf.y);
-    return specular * surface.occlusion;
-}
-
-vec3 secondaryPath(Surface primary, SkyMaterialData sky, vec3 viewDirection, inout uint seed) {
-    vec3  f0                      = mix(vec3(0.04), max(primary.albedo.rgb, vec3(0.0)), primary.metallic);
-    float reflectionWeight        = clamp(max(max(f0.r, f0.g), f0.b), 0.05, 0.95);
-    bool  transparent             = !primary.opaque && primary.albedo.a < 0.999;
-    bool  environmentSpecularPath = false;
-    vec3  direction;
-    vec3  throughput;
-    if (transparent && randomFloat(seed) > reflectionWeight) {
-        direction = refract(-viewDirection, primary.normal, 1.0 / 1.5);
-        if (dot(direction, direction) < 1e-10) direction = reflect(-viewDirection, primary.normal);
-        throughput = vec3(1.0 - reflectionWeight);
-    } else if (randomFloat(seed) < reflectionWeight || primary.roughness < 0.25 || primary.metallic > 0.5) {
-        environmentSpecularPath = primary.opaque;
-        direction               = reflect(-viewDirection, primary.normal);
-        vec3 diffuseDirection   = cosineHemisphere(primary.normal, seed);
-        direction               = normalize(mix(direction, diffuseDirection, primary.roughness * primary.roughness));
-        throughput              = f0 / max(reflectionWeight, 1e-3);
-    } else {
-        direction  = cosineHemisphere(primary.normal, seed);
-        throughput = primary.albedo.rgb * (1.0 - primary.metallic) / max(1.0 - reflectionWeight, 1e-3);
-    }
-
+// All indirect diffuse/specular rays share this incoming-radiance trace and bounce loop.
+vec3 traceIncomingRadiance(Surface primary, SkyMaterialData sky, vec3 viewDirection, inout uint seed) {
+    vec3 direction;
+    vec3 throughput;
+    if (!samplePbrDirection(primary, viewDirection, seed, direction, throughput)) return vec3(0.0);
     vec3 jitter   = dFdx(primary.position) * (randomFloat(seed) - 0.5) + dFdy(primary.position) * (randomFloat(seed) - 0.5);
     vec3 origin   = primary.position + jitter + primary.normal * 0.001;
     vec3 radiance = vec3(0.0);
@@ -299,7 +333,7 @@ vec3 secondaryPath(Surface primary, SkyMaterialData sky, vec3 viewDirection, ino
                               sscUniforms.farPlane);
         while (rayQueryProceedEXT(query)) {}
         if (rayQueryGetIntersectionTypeEXT(query, true) == gl_RayQueryCommittedIntersectionNoneEXT) {
-            if (!environmentSpecularPath) radiance += throughput * sampleSky(sky, direction);
+            radiance += throughput * sampleSky(sky, direction);
             break;
         }
 
@@ -313,20 +347,12 @@ vec3 secondaryPath(Surface primary, SkyMaterialData sky, vec3 viewDirection, ino
         vec3 hitViewDirection = normalize(sscUniforms.cameraPosition.xyz - hit.position);
         radiance += throughput * directLighting(hit, hitViewDirection);
 
-        vec3  hitF0           = mix(vec3(0.04), max(hit.albedo.rgb, vec3(0.0)), hit.metallic);
-        float hitReflectivity = clamp(max(max(hitF0.r, hitF0.g), hitF0.b), 0.05, 0.95);
-        if (!hit.opaque && hit.albedo.a < 0.999 && randomFloat(seed) > hitReflectivity) {
-            direction = refract(direction, hit.normal, 1.0 / 1.5);
-            throughput *= 1.0 - hitReflectivity;
-        } else if (randomFloat(seed) < hitReflectivity || hit.roughness < 0.25 || hit.metallic > 0.5) {
-            direction = reflect(direction, hit.normal);
-            direction = normalize(mix(direction, cosineHemisphere(hit.normal, seed), hit.roughness * hit.roughness));
-            throughput *= hitF0 / max(hitReflectivity, 1e-3);
-        } else {
-            direction = cosineHemisphere(hit.normal, seed);
-            throughput *= hit.albedo.rgb * (1.0 - hit.metallic) / max(1.0 - hitReflectivity, 1e-3);
-        }
-        origin = hit.position + hit.normal * 0.001;
+        if (bounce + 1u >= MAX_SECONDARY_BOUNCES) break;
+        vec3 nextDirection;
+        vec3 bounceThroughput;
+        if (!samplePbrDirection(hit, hitViewDirection, seed, nextDirection, bounceThroughput)) break;
+        direction = nextDirection;
+        throughput *= bounceThroughput;        origin = hit.position + hit.normal * 0.001;
     }
     return radiance;
 }
@@ -339,8 +365,7 @@ void main() {
     if (skyIndex != 0xffffffffu) {
         SkyMaterialData sky  = skyMaterialHeap.materials[skyIndex];
         uint            seed = pixelSeed(uvec2(gl_FragCoord.xy));
-        if (primary.opaque) color += environmentLighting(sky, primary, viewDirection);
-        color += secondaryPath(primary, sky, viewDirection, seed);
+        color += traceIncomingRadiance(primary, sky, viewDirection, seed);
     }
     color = max(color, vec3(0.0)) * max(sscUniforms.exposure, 0.0);
     color = color / (color + vec3(1.0));
