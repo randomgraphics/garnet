@@ -16,7 +16,7 @@ Use the active RT fragment shader's acceleration-structure path for both diffuse
 
 Last completed: User-reviewed shader-only flowchart, unified diffuse/specular ray sampling and tracing, added direct-light visibility checks, removed the unused compute shader, and built the Windows debug configuration successfully. First change committed and pushed as `89ad895ed`. Tone mapping now runs after accumulation in the composite pass; Windows debug build passed. Both commits are pushed.
 
-In progress: Awaiting user sign-off.
+In progress: Reviewing smooth-metal reflections. Corrected secondary-hit view direction to point back along the incoming path ray, changed lobe selection to estimate diffuse/specular energy weights, and documented the shader's math and sampling workflow. Windows debug build passed. Await user review and sign-off.
 
 ## References
 
