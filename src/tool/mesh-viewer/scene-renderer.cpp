@@ -277,10 +277,10 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
         states.cullMode   = material.doubleSided ? RasterState::CULL_NONE : RasterState::CULL_BACK;
         states.frontFace  = glm::determinant(instance.transform) < 0 ? RasterState::FRONT_CW : RasterState::FRONT_CCW;
         states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
+        if (rayTraced && rayTracing.sampleCount() > 0) states.depthState = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, false};
         switch (material.shading) {
         case Shading::PBR: {
             if (rayTraced && &source == &model) {
-                if (rayTracing.sampleCount() > 0) states.depthState = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, false};
                 if (!rayTracing.record(raster, state, instance.geometry, &states, instance.transform, skyMaterial, material.pbr)) return false;
             } else {
                 fx2::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
@@ -306,14 +306,16 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
     return true;
 }
 
-bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes,
-                           bool rayTraced) const {
-    if (!sky->record(*skyMaterial, {raster, state})) return false;
-    if (rayTraced) return true;
-    if (!recordModel(model, raster, state, rayTraced)) return false;
+bool SceneRenderer::recordRaster(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const {
+    if (!recordModel(model, raster, state, false)) return false;
     if (showBounds && !recordModel(bounds, raster, state, false)) return false;
     if (showAxes && !recordModel(axes, raster, state, false)) return false;
-    return true;
+    // The depth-tested sky pass fills cleared background pixels without covering geometry.
+    return sky->record(*skyMaterial, {raster, state});
+}
+
+bool SceneRenderer::recordEnvironment(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
+    return sky->record(*skyMaterial, {raster, state});
 }
 
 bool SceneRenderer::recordRayTracing(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {

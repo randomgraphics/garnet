@@ -15,9 +15,7 @@ class RayTracingPipeline {
     AutoRef<gpu2::Texture>           mColor;
     AutoRef<fx2::UnlitMaterial>      mCompositeMaterial;
     gpu2::RasterGeometry             mCompositeGeometry;
-    uint32_t                         mWidth = 0, mHeight = 0, mSampleCount = 0;
-
-    static constexpr uint32_t MAX_SAMPLES = 32;
+    uint32_t                         mWidth = 0, mHeight = 0, mSampleCount = 0, mSampleLimit = 256;
 
 public:
     /// Prepare a ray tracing scene from the same PBR objects used by raster rendering.
@@ -39,7 +37,11 @@ public:
     bool configureTarget(gpu2::RasterTarget & target, const AutoRef<gpu2::Texture> & sharedDepth, bool cameraMoved);
 
     /// Whether another sample is needed for the current camera view.
-    bool shouldTrace() const { return available() && mSampleCount < MAX_SAMPLES; }
+    bool shouldTrace() const { return available() && mSampleCount < mSampleLimit; }
+
+    /// Set the maximum accumulated samples for each unchanged view.
+    /// A zero limit disables ray tracing; callers should provide a positive value.
+    void setSampleLimit(uint32_t sampleLimit) { mSampleLimit = sampleLimit; }
 
     /// Number of completed samples for the current camera view.
     uint32_t sampleCount() const { return mSampleCount; }
@@ -48,7 +50,9 @@ public:
     void resetAccumulation() { mSampleCount = 0; }
 
     /// Mark one successfully sealed ray-tracing sample as complete.
-    void finishSample() { if (mSampleCount < MAX_SAMPLES) ++mSampleCount; }
+    void finishSample() {
+        if (mSampleCount < mSampleLimit) ++mSampleCount;
+    }
 
     /// Draw the last ray-traced sample image as a fullscreen surface.
     bool recordComposite(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & uniforms, const glm::mat4 & inverseViewProjection,

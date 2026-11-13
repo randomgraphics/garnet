@@ -18,29 +18,29 @@ bool RayTracingPipeline::resize(AutoRef<gpu2::GpuContext> gpu, gpu2::DescriptorH
     if (!gpu || !width || !height) return false;
     if (mColor && mWidth == width && mHeight == height) return true;
 
-    auto color = gpu2::Texture::create("viewer.rt-color",
-                                       {.context = gpu,
-                                        .descriptor = gpu2::Texture::Descriptor {}
-                                                          .setFormat(gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT())
-                                                          .setDimensions(width, height)
-                                                          .setLevels(1)});
+    auto color = gpu2::Texture::create(
+        "viewer.rt-color",
+        {.context    = gpu,
+         .descriptor = gpu2::Texture::Descriptor {}.setFormat(gfx::img::PixelFormat::RGBA_16_16_16_16_FLOAT()).setDimensions(width, height).setLevels(1)});
     if (!color) return false;
 
     fx2::UnlitMaterial::Parameters parameters;
     parameters.colorMap = gpu2::GpuResourceView {color}.setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
-    auto material = fx2::UnlitMaterial::create(heap, uploads, parameters);
+    auto material       = fx2::UnlitMaterial::create(heap, uploads, parameters);
     if (!material) return false;
 
     if (mCompositeGeometry.vertices.empty()) {
-        const float vertices[] = {-1, -1, 0.5f, 0, 0, 1, -1, 0.5f, 1, 0, 1, 1, 0.5f, 1, 1, -1, -1, 0.5f, 0, 0, 1, 1, 0.5f, 1, 1, -1, 1, 0.5f, 0, 1};
-        auto vertexBuffer = gpu2::Buffer::create("viewer.rt-composite-vertices", {.context = gpu, .size = sizeof(vertices)});
+        const float vertices[]   = {-1, -1, 0.5f, 0, 0, 1, -1, 0.5f, 1, 0, 1, 1, 0.5f, 1, 1, -1, -1, 0.5f, 0, 0, 1, 1, 0.5f, 1, 1, -1, 1, 0.5f, 0, 1};
+        auto        vertexBuffer = gpu2::Buffer::create("viewer.rt-composite-vertices", {.context = gpu, .size = sizeof(vertices)});
         if (!vertexBuffer) return false;
         uploads.recordUploadBuffer(vertexBuffer, 0, {reinterpret_cast<const uint8_t *>(vertices), sizeof(vertices)});
         mCompositeGeometry.vertices.push_back({.buffer = vertexBuffer, .offset = 0, .stride = 5 * sizeof(float)});
         mCompositeGeometry.format.attributes.push_back(
             {.location = fx2::UnlitMaterial::POSITION_LOCATION, .binding = 0, .offset = 0, .format = gpu2::RasterGeometry::AttributeFormat::F32_3});
-        mCompositeGeometry.format.attributes.push_back(
-            {.location = fx2::UnlitMaterial::TEXCOORD_LOCATION, .binding = 0, .offset = 3 * sizeof(float), .format = gpu2::RasterGeometry::AttributeFormat::F32_2});
+        mCompositeGeometry.format.attributes.push_back({.location = fx2::UnlitMaterial::TEXCOORD_LOCATION,
+                                                        .binding  = 0,
+                                                        .offset   = 3 * sizeof(float),
+                                                        .format   = gpu2::RasterGeometry::AttributeFormat::F32_2});
         mCompositeGeometry.vertexCount = 6;
     }
 
@@ -78,9 +78,8 @@ bool RayTracingPipeline::configureTarget(gpu2::RasterTarget & target, const Auto
     target.setDepthStencilTarget(gpu2::GpuResourceView {sharedDepth}).setClearDepth(1.0f).setClearColor(0, 0, 0, 0);
     target.loadColor = continueAccumulation;
     target.loadDepth = continueAccumulation;
-    target.readOnlyDepth = continueAccumulation;
     if (continueAccumulation) {
-        auto & blend = target.colorTargets[0].blendState;
+        auto & blend   = target.colorTargets[0].blendState;
         blend.colorSrc = gpu2::RasterTarget::BlendState::SRC_ALPHA;
         blend.colorDst = gpu2::RasterTarget::BlendState::INV_SRC_ALPHA;
         blend.alphaSrc = gpu2::RasterTarget::BlendState::ONE;
@@ -93,7 +92,7 @@ bool RayTracingPipeline::recordComposite(gpu2::Raster & raster, const AutoRef<fx
                                          const glm::mat4 & inverseViewProjection, fx2::UnlitKernel & kernel) const {
     if (!mCompositeMaterial || mCompositeGeometry.vertexCount == 0) return false;
     gpu2::RasterState state;
-    state.cullMode = gpu2::RasterState::CULL_NONE;
+    state.cullMode   = gpu2::RasterState::CULL_NONE;
     state.depthState = gpu2::RasterState::DepthState {gpu2::RasterState::Compare::ALWAYS, false};
     fx2::UnlitMaterial::DrawParameters draw {{raster, uniforms, mCompositeGeometry, &state}, inverseViewProjection};
     return kernel.record(*mCompositeMaterial, draw);

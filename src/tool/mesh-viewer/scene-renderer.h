@@ -69,7 +69,9 @@ struct SceneRenderer {
     /// Draws record() appends for the given debug toggles, for raster preallocation.
     size_t drawCount(bool showBounds, bool showAxes) const;
 
-    bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes, bool rayTraced) const;
+    bool recordRaster(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const;
+
+    bool recordEnvironment(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;
 
     bool recordRayTracing(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;
     bool recordDebugGeometry(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const;

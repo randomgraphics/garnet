@@ -33,6 +33,7 @@ struct Options {
     bool            finiteFrames         = false;
     bool            rayTraced            = false;
     int             frames               = 3;
+    uint32_t        rayTracingSamples    = 256;
     float           environmentLuminance = 250.f;
     float           exposure             = 0;
 };
@@ -89,6 +90,15 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         } else if (argument == "--frames" && i + 1 < argc) {
             options.frames       = std::max(1, std::atoi(argv[++i]));
             options.finiteFrames = true;
+        } else if (argument == "--rt-samples" && i + 1 < argc) {
+            const char *        text  = argv[++i];
+            char *              end   = nullptr;
+            const unsigned long value = std::strtoul(text, &end, 10);
+            if (end == text || *end != '\0' || value == 0 || value > UINT32_MAX) {
+                GN_ERROR(sLogger, "--rt-samples requires a positive integer no greater than {}", UINT32_MAX);
+                return false;
+            }
+            options.rayTracingSamples = static_cast<uint32_t>(value);
         } else if ((argument == "--env-luminance" || argument == "--environment-luminance") && i + 1 < argc) {
             char *       end             = nullptr;
             const char * text            = argv[++i];
@@ -111,7 +121,7 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
     if (options.exposure == 0) options.exposure = 0.002f;
     if (!options.path.empty()) return true;
     GN_ERROR(sLogger,
-             "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] "
+             "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--rt-samples N] [--environment-luminance <nits>] "
              "[--surface pbr|unlit|lambertian] [--rendering raster|ray-traced] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
     return false;
 }
@@ -234,6 +244,7 @@ int main(int argc, const char * argv[]) {
     }
     SceneRenderer renderer;
     if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
+    renderer.rayTracing.setSampleLimit(options.rayTracingSamples);
     if (options.rayTraced && !renderer.rayTracingAvailable()) {
         GN_ERROR(sLogger, "Ray-traced rendering is unavailable: this device or model does not support the Vulkan ray-query PBR path");
         return EXIT_FAILURE;
@@ -266,7 +277,9 @@ int main(int argc, const char * argv[]) {
     bool                havePreviousCamera = false;
     glm::vec3           previousEye(0);
     glm::quat           previousOrientation(1, 0, 0, 0);
-    float               previousExposure = exposure;
+    float               previousExposure   = exposure;
+    bool                previousShowBounds = showBounds;
+    bool                previousShowAxes   = showAxes;
 
     auto resetToFit = [&] {
         arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, fovDegrees);
@@ -418,10 +431,13 @@ int main(int argc, const char * argv[]) {
         const auto orientation = useArcball ? arcball.orientation : fly.orientation;
         const bool cameraMoved =
             !havePreviousCamera || glm::dot(eye - previousEye, eye - previousEye) > 1e-8f || std::abs(glm::dot(orientation, previousOrientation)) < 0.999999f;
-        const bool accumulationInputsChanged = cameraMoved || std::abs(exposure - previousExposure) > 1e-6f;
+        const bool debugVisibilityChanged    = showBounds != previousShowBounds || showAxes != previousShowAxes;
+        const bool accumulationInputsChanged = cameraMoved || std::abs(exposure - previousExposure) > 1e-6f || debugVisibilityChanged;
         previousEye                          = eye;
         previousOrientation                  = orientation;
         previousExposure                     = exposure;
+        previousShowBounds                   = showBounds;
+        previousShowAxes                     = showAxes;
         havePreviousCamera                   = true;
 
         RasterTarget rayTarget;
@@ -433,17 +449,19 @@ int main(int argc, const char * argv[]) {
         }
         const bool traceSample = options.rayTraced && renderer.rayTracing.shouldTrace();
 
-        const auto uniforms = renderer.updateUniforms(
-            *uniformUploads, {.eye             = eye,
-                              .orientation     = orientation,
-                              .width           = host.width,
-                              .height          = host.height,
-                              .nearPlane       = nearPlane,
-                              .farPlane        = farPlane,
-                              .fovDegrees      = fovDegrees,
-                              .exposure        = exposure,
-                              .frameDurationMs = elapsedSeconds * 1000.f,
-                              .frame = options.rayTraced && !accumulationInputsChanged ? renderer.rayTracing.sampleCount() : static_cast<uint32_t>(frame)});
+        const auto uniforms =
+            renderer.updateUniforms(*uniformUploads, {.eye             = eye,
+                                                      .orientation     = orientation,
+                                                      .width           = host.width,
+                                                      .height          = host.height,
+                                                      .nearPlane       = nearPlane,
+                                                      .farPlane        = farPlane,
+                                                      .fovDegrees      = fovDegrees,
+                                                      .exposure        = exposure,
+                                                      .frameDurationMs = elapsedSeconds * 1000.f,
+                                                      // The ray shader also uses frameCounter for progressive alpha, so its
+                                                      // value must be the per-view sample index, including zero while moving.
+                                                      .frame = options.rayTraced ? renderer.rayTracing.sampleCount() : static_cast<uint32_t>(frame)});
         if (!uniforms) return EXIT_FAILURE;
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return EXIT_FAILURE;
@@ -456,8 +474,9 @@ int main(int argc, const char * argv[]) {
                                                                    .target            = &rayTarget,
                                                                    .heap              = renderer.heap,
                                                                    .passResources     = rayResources,
-                                                                   .numberOfDrawsHint = renderer.model.instances.size()});
-            if (!rayRaster || !renderer.recordRayTracing(*rayRaster, uniforms)) return EXIT_FAILURE;
+                                                                   .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes)});
+            if (!rayRaster || !renderer.recordRayTracing(*rayRaster, uniforms) || !renderer.recordDebugGeometry(*rayRaster, uniforms, showBounds, showAxes))
+                return EXIT_FAILURE;
             rayWork = rayRaster->seal();
             if (!rayWork) return EXIT_FAILURE;
             renderer.rayTracing.finishSample();
@@ -467,28 +486,31 @@ int main(int argc, const char * argv[]) {
         GpuResourceView depth;
         depth.resource = host.depth;
         target.setColorTarget(0, acquired.view).setDepthStencilTarget(depth).setClearDepth(1.f).setClearColor(0.05f, 0.06f, 0.09f, 1.f);
-        target.loadDepth = options.rayTraced;
-        auto & blend     = target.colorTargets[0].blendState;
-        blend.colorSrc   = RasterTarget::BlendState::SRC_ALPHA;
-        blend.colorDst   = RasterTarget::BlendState::INV_SRC_ALPHA;
-        blend.alphaSrc   = RasterTarget::BlendState::ONE;
-        blend.alphaDst   = RasterTarget::BlendState::INV_SRC_ALPHA;
+        target.loadDepth     = options.rayTraced;
+        target.readOnlyDepth = options.rayTraced;
+        auto & blend         = target.colorTargets[0].blendState;
+        blend.colorSrc       = RasterTarget::BlendState::SRC_ALPHA;
+        blend.colorDst       = RasterTarget::BlendState::INV_SRC_ALPHA;
+        blend.alphaSrc       = RasterTarget::BlendState::ONE;
+        blend.alphaDst       = RasterTarget::BlendState::INV_SRC_ALPHA;
 
         auto raster = Raster::create("viewer.frame", {.gpu               = host.gpu,
                                                       .target            = &target,
                                                       .heap              = renderer.heap,
                                                       .passResources     = fx2::sharedUniformResources(uniforms),
                                                       .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
-        if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes, options.rayTraced)) return EXIT_FAILURE;
+        if (!raster) return EXIT_FAILURE;
         if (options.rayTraced) {
             const glm::mat4 cameraToWorld = glm::translate(glm::mat4(1), eye) * glm::mat4_cast(orientation);
             const glm::mat4 view          = glm::inverse(cameraToWorld);
             glm::mat4       projection =
                 glm::perspectiveRH_ZO(glm::radians(fovDegrees), static_cast<float>(host.width) / std::max(1u, host.height), nearPlane, farPlane);
             projection[1][1] *= -1;
-            if (!renderer.rayTracing.recordComposite(*raster, uniforms, glm::inverse(projection * view), *renderer.unlit) ||
-                !renderer.recordDebugGeometry(*raster, uniforms, showBounds, showAxes))
-                return EXIT_FAILURE;
+            if (!renderer.rayTracing.recordComposite(*raster, uniforms, glm::inverse(projection * view), *renderer.unlit)) return EXIT_FAILURE;
+            // Draw the sky after the composite; its depth test only fills uncovered pixels.
+            if (!renderer.recordEnvironment(*raster, uniforms)) return EXIT_FAILURE;
+        } else if (!renderer.recordRaster(*raster, uniforms, showBounds, showAxes)) {
+            return EXIT_FAILURE;
         }
 
         AutoRef<GpuPayload> uiUpload;

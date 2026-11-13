@@ -14,17 +14,54 @@ build/linux.gcc.d/bin/GNtool-mesh-viewer media/boxes/boxes.fbx
 
 Useful noninteractive modes are:
 
-Ray-traced PBR records into a persistent RGBA16F offscreen image owned by `RayTracingPipeline`. The presentation pass draws the sky, samples the traced image, then overlays optional bounds/axes and UI. Camera movement clears the image and renders one fresh sample per frame; a stationary camera accumulates up to 32 samples. Resizing restarts accumulation.
-
-
 ```bash
 GNtool-mesh-viewer --print model.glb
 GNtool-mesh-viewer --snapshot output.png model.glb
 GNtool-mesh-viewer --test --frames 2 model.stl
 GNtool-mesh-viewer --frames 120 model.gltf
+GNtool-mesh-viewer --rendering ray-traced --rt-samples 512 model.gltf
 GNtool-mesh-viewer --surface cel --sphere
 GNtool-mesh-viewer --surface unlit --box --snapshot box.png
 ```
+
+## Target rendering pipeline
+
+The target frame flow has an optional ray-tracing stage followed by the same main scene pass in either mode. `RayTracingPipeline` owns its offscreen RGBA16F image, depth image, scene, and sample count. Its depth image is private and is never attached to the main pass.
+
+```mermaid
+flowchart TD
+    A([Update camera and frame inputs]) --> B{Ray-traced mode selected?}
+    B -->|No| C[Skip ray-tracing work]
+    B -->|Yes| R0
+
+    subgraph RT[RayTracingPipeline internal work]
+        R0[Compare camera, exposure, extent, and accumulation state] --> R1{Reset required?}
+        R1 -->|Yes| R2[Clear RT color and RT depth; set count to zero]
+        R1 -->|No| R3[Keep RT color, depth, and count]
+        R2 --> R4{Count below configured sample limit?}
+        R3 --> R4
+        R4 -->|Fresh view or reset| R5[Trace one sample; replace RT color]
+        R4 -->|Same view| R6[Trace one sample; blend with weight 1 over count plus 1]
+        R5 --> R7[Advance sample count]
+        R6 --> R7
+        R4 -->|At sample limit| R8[Keep completed RT image]
+    end
+
+    R7 --> M0
+    R8 --> M0
+    C --> M0
+    M0[Main pass clears main color and its dedicated depth] --> M1{Render mode}
+    M1 -->|Raster| M2[Draw model geometry with PBR kernel]
+    M1 -->|Ray-traced| M3[Draw same model geometry; fragment shader samples RT image]
+    M2 --> O[Draw bounds and axes with unlit raster kernel]
+    M3 --> O
+    O --> S[Draw skybox last; depth-test against scene]
+    S --> U[Draw UI and present]
+```
+
+When the camera moves, the pipeline resets and traces one fresh sample for that view. When the camera stops, it blends subsequent samples until the configured sample limit, then reuses the completed image. The default limit is 256; `--rt-samples N` sets a different positive limit. Camera, exposure, scene/material, and RT extent changes invalidate accumulated samples. Overlay visibility does not invalidate RT samples because overlays are rendered only by the main pass. The offscreen pass and main pass use matching camera, viewport, and model transforms so the ray-traced image lines up with the real model geometry. The main pass always clears and owns its depth; it never shares the RT pipeline's depth image.
+
+In ray-traced mode, the main pass still rasterizes the model's real geometry. Its special fragment shader fetches the corresponding pixel from the RT offscreen image and outputs that color. This supplies normal model depth for overlay visibility while keeping the traced color. Bounds and axes then render exactly as in raster mode. The skybox is last in both modes; its depth test fills background pixels without covering the model or overlays. UI draws afterward.
 
 `--print` reports hierarchy, primitive/material/texture counts, bounds, and
 import warnings without creating a GPU unless combined with `--test` or `--snapshot`.
