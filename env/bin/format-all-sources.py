@@ -56,7 +56,8 @@ def is_our_source(x):
     return True
 
 
-our_sources = [x for x in all_files if is_our_source(x)]
+# Git lists deleted paths too; only format files still present in the working tree.
+our_sources = [x for x in all_files if is_our_source(x) and (root_dir / x).is_file()]
 
 # Determine clang-format binary
 system = platform.system()
