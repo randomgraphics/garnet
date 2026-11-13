@@ -33,6 +33,7 @@ struct Options {
     bool            finiteFrames         = false;
     bool            rayTraced            = false;
     int             frames               = 3;
+    uint32_t        rayTracingSamples    = 256;
     float           environmentLuminance = 250.f;
     float           exposure             = 0;
 };
@@ -89,6 +90,15 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
         } else if (argument == "--frames" && i + 1 < argc) {
             options.frames       = std::max(1, std::atoi(argv[++i]));
             options.finiteFrames = true;
+        } else if (argument == "--rt-samples" && i + 1 < argc) {
+            const char *        text  = argv[++i];
+            char *              end   = nullptr;
+            const unsigned long value = std::strtoul(text, &end, 10);
+            if (end == text || *end != '\0' || value == 0 || value > UINT32_MAX) {
+                GN_ERROR(sLogger, "--rt-samples requires a positive integer no greater than {}", UINT32_MAX);
+                return false;
+            }
+            options.rayTracingSamples = static_cast<uint32_t>(value);
         } else if ((argument == "--env-luminance" || argument == "--environment-luminance") && i + 1 < argc) {
             char *       end             = nullptr;
             const char * text            = argv[++i];
@@ -111,7 +121,7 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
     if (options.exposure == 0) options.exposure = 0.002f;
     if (!options.path.empty()) return true;
     GN_ERROR(sLogger,
-             "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--environment-luminance <nits>] "
+             "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--rt-samples N] [--environment-luminance <nits>] "
              "[--surface pbr|unlit|lambertian] [--rendering raster|ray-traced] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
     return false;
 }
@@ -234,6 +244,7 @@ int main(int argc, const char * argv[]) {
     }
     SceneRenderer renderer;
     if (!renderer.prepare(host.gpu, *model, options.surface, options.environmentLuminance)) return EXIT_FAILURE;
+    renderer.rayTracing.setSampleLimit(options.rayTracingSamples);
     if (options.rayTraced && !renderer.rayTracingAvailable()) {
         GN_ERROR(sLogger, "Ray-traced rendering is unavailable: this device or model does not support the Vulkan ray-query PBR path");
         return EXIT_FAILURE;
@@ -254,15 +265,21 @@ int main(int argc, const char * argv[]) {
     arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, fovDegrees);
     if (options.headless) arcball.orientation = glm::quat(glm::vec3(glm::radians(-15.0f), glm::radians(25.0f), 0.0f));
     FlyCameraController fly {.position = arcball.eyePosition(), .orientation = arcball.orientation, .movementSpeed = radius};
-    NavigationMode      navigationMode    = NavigationMode::ARCBALL;
-    int                 previousMouseX    = 0;
-    int                 previousMouseY    = 0;
-    int                 previousWheel     = 0;
-    bool                havePointerSample = false;
-    bool                showBounds        = true;
-    bool                showAxes          = true;
-    int                 selectedNode      = model->nodes.empty() ? -1 : 0;
-    auto                previousFrameTime = std::chrono::steady_clock::now();
+    NavigationMode      navigationMode     = NavigationMode::ARCBALL;
+    int                 previousMouseX     = 0;
+    int                 previousMouseY     = 0;
+    int                 previousWheel      = 0;
+    bool                havePointerSample  = false;
+    bool                showBounds         = true;
+    bool                showAxes           = true;
+    int                 selectedNode       = model->nodes.empty() ? -1 : 0;
+    auto                previousFrameTime  = std::chrono::steady_clock::now();
+    bool                havePreviousCamera = false;
+    glm::vec3           previousEye(0);
+    glm::quat           previousOrientation(1, 0, 0, 0);
+    float               previousExposure   = exposure;
+    bool                previousShowBounds = showBounds;
+    bool                previousShowAxes   = showAxes;
 
     auto resetToFit = [&] {
         arcball.resetToFit(model->bounds.minimum - center, model->bounds.maximum - center, fovDegrees);
@@ -409,47 +426,92 @@ int main(int argc, const char * argv[]) {
 
         auto uniformUploads = CnC::create("viewer.uniforms", {.gpu = host.gpu, .heap = renderer.heap});
         if (!uniformUploads) return EXIT_FAILURE;
-        const bool useArcball = navigationMode == NavigationMode::ARCBALL;
-        const auto uniforms   = renderer.updateUniforms(*uniformUploads, {.eye             = useArcball ? arcball.eyePosition() : fly.position,
-                                                                          .orientation     = useArcball ? arcball.orientation : fly.orientation,
-                                                                          .width           = host.width,
-                                                                          .height          = host.height,
-                                                                          .nearPlane       = nearPlane,
-                                                                          .farPlane        = farPlane,
-                                                                          .fovDegrees      = fovDegrees,
-                                                                          .exposure        = exposure,
-                                                                          .frameDurationMs = elapsedSeconds * 1000.f,
-                                                                          .frame           = static_cast<uint32_t>(frame)});
+        const bool useArcball  = navigationMode == NavigationMode::ARCBALL;
+        const auto eye         = useArcball ? arcball.eyePosition() : fly.position;
+        const auto orientation = useArcball ? arcball.orientation : fly.orientation;
+        const bool cameraMoved =
+            !havePreviousCamera || glm::dot(eye - previousEye, eye - previousEye) > 1e-8f || std::abs(glm::dot(orientation, previousOrientation)) < 0.999999f;
+        const bool debugVisibilityChanged    = showBounds != previousShowBounds || showAxes != previousShowAxes;
+        const bool accumulationInputsChanged = cameraMoved || std::abs(exposure - previousExposure) > 1e-6f || debugVisibilityChanged;
+        previousEye                          = eye;
+        previousOrientation                  = orientation;
+        previousExposure                     = exposure;
+        previousShowBounds                   = showBounds;
+        previousShowAxes                     = showAxes;
+        havePreviousCamera                   = true;
+
+        RasterTarget rayTarget;
+        if (options.rayTraced) {
+            if (!renderer.rayTracing.resize(host.gpu, *renderer.heap, *uniformUploads, host.width, host.height)) return EXIT_FAILURE;
+            if (!renderer.rayTracing.configureTarget(rayTarget, host.depth, accumulationInputsChanged)) return EXIT_FAILURE;
+        } else {
+            renderer.rayTracing.resetAccumulation();
+        }
+        const bool traceSample = options.rayTraced && renderer.rayTracing.shouldTrace();
+
+        const auto uniforms =
+            renderer.updateUniforms(*uniformUploads, {.eye             = eye,
+                                                      .orientation     = orientation,
+                                                      .width           = host.width,
+                                                      .height          = host.height,
+                                                      .nearPlane       = nearPlane,
+                                                      .farPlane        = farPlane,
+                                                      .fovDegrees      = fovDegrees,
+                                                      .exposure        = exposure,
+                                                      .frameDurationMs = elapsedSeconds * 1000.f,
+                                                      // The ray shader also uses frameCounter for progressive alpha, so its
+                                                      // value must be the per-view sample index, including zero while moving.
+                                                      .frame = options.rayTraced ? renderer.rayTracing.sampleCount() : static_cast<uint32_t>(frame)});
         if (!uniforms) return EXIT_FAILURE;
         auto uniformWork = uniformUploads->seal();
         if (!uniformWork) return EXIT_FAILURE;
 
-        auto passResources = fx2::sharedUniformResources(uniforms);
-        if (options.rayTraced) {
-            passResources.resize(3);
-            passResources[2].resize(2);
-            GpuResourceView accelerationStructure;
-            accelerationStructure.setAccelerationStructure(renderer.rayScene->accelerationStructure());
-            passResources[2][0].append(std::move(accelerationStructure));
-            passResources[2][1].append(renderer.rayScene->geometryTable());
+        AutoRef<GpuPayload> rayWork;
+        if (traceSample) {
+            auto rayResources = fx2::sharedUniformResources(uniforms);
+            renderer.rayTracing.bindSceneResources(rayResources);
+            auto rayRaster = Raster::create("viewer.ray-tracing", {.gpu               = host.gpu,
+                                                                   .target            = &rayTarget,
+                                                                   .heap              = renderer.heap,
+                                                                   .passResources     = rayResources,
+                                                                   .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes)});
+            if (!rayRaster || !renderer.recordRayTracing(*rayRaster, uniforms) || !renderer.recordDebugGeometry(*rayRaster, uniforms, showBounds, showAxes))
+                return EXIT_FAILURE;
+            rayWork = rayRaster->seal();
+            if (!rayWork) return EXIT_FAILURE;
+            renderer.rayTracing.finishSample();
         }
 
         RasterTarget    target;
         GpuResourceView depth;
         depth.resource = host.depth;
         target.setColorTarget(0, acquired.view).setDepthStencilTarget(depth).setClearDepth(1.f).setClearColor(0.05f, 0.06f, 0.09f, 1.f);
-        auto & blend   = target.colorTargets[0].blendState;
-        blend.colorSrc = RasterTarget::BlendState::SRC_ALPHA;
-        blend.colorDst = RasterTarget::BlendState::INV_SRC_ALPHA;
-        blend.alphaSrc = RasterTarget::BlendState::ONE;
-        blend.alphaDst = RasterTarget::BlendState::INV_SRC_ALPHA;
+        target.loadDepth     = options.rayTraced;
+        target.readOnlyDepth = options.rayTraced;
+        auto & blend         = target.colorTargets[0].blendState;
+        blend.colorSrc       = RasterTarget::BlendState::SRC_ALPHA;
+        blend.colorDst       = RasterTarget::BlendState::INV_SRC_ALPHA;
+        blend.alphaSrc       = RasterTarget::BlendState::ONE;
+        blend.alphaDst       = RasterTarget::BlendState::INV_SRC_ALPHA;
 
         auto raster = Raster::create("viewer.frame", {.gpu               = host.gpu,
                                                       .target            = &target,
                                                       .heap              = renderer.heap,
-                                                      .passResources     = passResources,
+                                                      .passResources     = fx2::sharedUniformResources(uniforms),
                                                       .numberOfDrawsHint = renderer.drawCount(showBounds, showAxes) + (ui ? 32 : 0)});
-        if (!raster || !renderer.record(*raster, uniforms, showBounds, showAxes, options.rayTraced)) return EXIT_FAILURE;
+        if (!raster) return EXIT_FAILURE;
+        if (options.rayTraced) {
+            const glm::mat4 cameraToWorld = glm::translate(glm::mat4(1), eye) * glm::mat4_cast(orientation);
+            const glm::mat4 view          = glm::inverse(cameraToWorld);
+            glm::mat4       projection =
+                glm::perspectiveRH_ZO(glm::radians(fovDegrees), static_cast<float>(host.width) / std::max(1u, host.height), nearPlane, farPlane);
+            projection[1][1] *= -1;
+            if (!renderer.rayTracing.recordComposite(*raster, uniforms, glm::inverse(projection * view), *renderer.unlit)) return EXIT_FAILURE;
+            // Draw the sky after the composite; its depth test only fills uncovered pixels.
+            if (!renderer.recordEnvironment(*raster, uniforms)) return EXIT_FAILURE;
+        } else if (!renderer.recordRaster(*raster, uniforms, showBounds, showAxes)) {
+            return EXIT_FAILURE;
+        }
 
         AutoRef<GpuPayload> uiUpload;
         if (ui && !ui->record(*raster, uiUpload)) return EXIT_FAILURE;
@@ -458,6 +520,7 @@ int main(int argc, const char * argv[]) {
 
         GpuContext::SubmitParameters submit("mesh-viewer.frame");
         submit.appendWork(uniformWork);
+        if (rayWork) submit.appendWork(rayWork);
         if (uiUpload) submit.appendWork(uiUpload);
         submit.appendWork(rendered).waitFor(acquired.ready);
         host.gpu->submit(submit);

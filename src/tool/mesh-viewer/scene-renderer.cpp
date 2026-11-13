@@ -232,13 +232,8 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
             }
             rayMeshes.append({&instance.geometry, material.pbr.get(), instance.transform});
         }
-        if (allPbr && !rayMeshes.empty()) {
-            rayTrace = fx2::RayTraceKernel::create(*heap, *initialization);
-            if (rayTrace) rayScene = fx2::PbrRayTracingScene::create(*heap, *initialization, {rayMeshes.data(), rayMeshes.size()});
-            if (!rayScene) {
-                rayTrace.clear();
-                GN_WARN(sLogger, "Ray tracing is unavailable for this model; use raster PBR instead");
-            }
+        if (allPbr && !rayMeshes.empty() && !rayTracing.prepare(*heap, *initialization, rayMeshes)) {
+            GN_WARN(sLogger, "Ray tracing is unavailable for this model; use raster PBR instead");
         }
     }
 
@@ -282,15 +277,11 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
         states.cullMode   = material.doubleSided ? RasterState::CULL_NONE : RasterState::CULL_BACK;
         states.frontFace  = glm::determinant(instance.transform) < 0 ? RasterState::FRONT_CW : RasterState::FRONT_CCW;
         states.depthState = RasterState::DepthState {RasterState::Compare::LESS, true};
+        if (rayTraced && rayTracing.sampleCount() > 0) states.depthState = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, false};
         switch (material.shading) {
         case Shading::PBR: {
             if (rayTraced && &source == &model) {
-                fx2::RayTraceKernel::DrawParameters draw {{raster, state, instance.geometry, &states},
-                                                          rayScene->accelerationStructure(),
-                                                          instance.transform,
-                                                          skyMaterial,
-                                                          material.pbr.get()};
-                if (!rayTrace->record(draw)) return false;
+                if (!rayTracing.record(raster, state, instance.geometry, &states, instance.transform, skyMaterial, material.pbr)) return false;
             } else {
                 fx2::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
                 if (!pbr->record(*material.pbr, draw)) return false;
@@ -315,12 +306,25 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
     return true;
 }
 
-bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes,
-                           bool rayTraced) const {
-    if (!recordModel(model, raster, state, rayTraced)) return false;
+bool SceneRenderer::recordRaster(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const {
+    if (!recordModel(model, raster, state, false)) return false;
     if (showBounds && !recordModel(bounds, raster, state, false)) return false;
     if (showAxes && !recordModel(axes, raster, state, false)) return false;
+    // The depth-tested sky pass fills cleared background pixels without covering geometry.
     return sky->record(*skyMaterial, {raster, state});
+}
+
+bool SceneRenderer::recordEnvironment(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
+    return sky->record(*skyMaterial, {raster, state});
+}
+
+bool SceneRenderer::recordRayTracing(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
+    return rayTracing.shouldTrace() && recordModel(model, raster, state, true);
+}
+
+bool SceneRenderer::recordDebugGeometry(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds,
+                                        bool showAxes) const {
+    return (!showBounds || recordModel(bounds, raster, state, false)) && (!showAxes || recordModel(axes, raster, state, false));
 }
 
 } // namespace GN::viewer

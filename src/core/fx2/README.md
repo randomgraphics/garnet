@@ -224,6 +224,37 @@ results are historical evidence, not verification of the second attempt.
 
 `fx2::PbrKernel` and `PbrMaterial` are declared in `fx2/bindless/pbr.h` and use a PBR-specific material record. Parameters include base color, emissive, metallic, roughness, normal scale, occlusion strength, opacity, and optional base-color/normal/emissive/occlusion/metal-roughness maps. The Vulkan shader evaluates GGX distribution, Schlick Fresnel, Smith geometry, direct point and directional lights, and Reinhard tone mapping with SSC exposure. Metal/roughness maps use G for roughness and B for metallic; normal maps use a derivative-built tangent frame. This kernel has no image based lighting path. `GNsample-fx2-pbr` demonstrates two materials with contrasting metallic and roughness values through the public bindless API.
 
+### PBR ray-tracing fragment shader workflow
+
+This diagram documents only one invocation of `vk-shaders/bindless-pbr-raytrace.frag`. Viewer-level sample accumulation, blending, and compositing are outside the shader and are intentionally omitted. The shader evaluates primary direct lighting, then optionally traces a stochastic secondary path for indirect lighting. It does not use the raster PBR shader's irradiance map, prefiltered environment map, or BRDF LUT.
+
+```mermaid
+flowchart TD
+    A[Fragment invocation] --> B[Reconstruct primary surface and decode material maps]
+    B --> C[Evaluate primary direct lights]
+    C --> D[For each light, trace AS visibility ray]
+    D --> E{Light ray blocked?}
+    E -->|Yes| F[Skip light contribution]
+    E -->|No| G[Add Cook-Torrance direct light]
+    F --> H{Sky material available?}
+    G --> H
+    H -->|No| O[Combine direct and indirect lighting]
+    H -->|Yes| I[Choose BSDF lobe using its selection probability]
+    I --> J[Sample lobe direction; compute BRDF times cosine over joint PDF throughput]
+    J --> K[Offset ray origin and query scene acceleration structure]
+    K --> L{Ray hit geometry?}
+    L -->|No| M[Sample skybox along ray direction and add weighted radiance]
+    L -->|Yes| P[Reconstruct hit surface and its material maps]
+    P --> Q[Evaluate hit direct lights with AS visibility rays]
+    Q --> R{Bounce limit reached?}
+    R -->|Yes| O
+    R -->|No| S[Choose next BSDF lobe and direction PDF]
+    S --> S2[Update throughput by BRDF times cosine over joint lobe and direction PDF] --> K
+    M --> O
+    O --> T[Write linear radiance and progressive sample alpha]
+```
+
+Primary direct lights and direct lights at secondary hits use Cook-Torrance shading with shadow rays. The indirect path selects a BSDF lobe with a sampling probability, samples that lobe using its direction PDF, and weights throughput by BRDF times cosine divided by the joint PDF. It traces through the acceleration structure, shades geometry hits, and samples the skybox on a miss. The configured bounce limit bounds this loop. The fragment shader writes linear per-sample radiance and a sample weight; the viewer accumulates the samples and applies exposure and Reinhard tone mapping during the later composite.
 ### Bindless cel shading
 
 `fx2::CelKernel` and `CelMaterial` are declared in `fx2/bindless/cel.h`. The effect provides stylized anime/cartoon NPR rendering with multi-band quantized diffuse shadow ramps (cool/warm shadow tints), sharp stepped Blinn-Phong specular highlights, stylized Fresnel rim lighting with light-direction bias, and an inverted-hull silhouette outline pass with clip-space aspect-ratio-corrected normal extrusion. `GNsample-fx2-cel-shading` demonstrates the effect over a procedural sphere using the public bindless API.

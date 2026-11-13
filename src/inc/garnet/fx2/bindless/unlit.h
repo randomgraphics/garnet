@@ -25,8 +25,10 @@ struct UnlitMaterial : RCRT64 {
 
     /// Stable material data; GPU packing is private to the kernel implementation.
     struct Parameters {
-        glm::vec4              color    = glm::vec4(1);
-        glm::vec3              emissive = glm::vec3(0);
+        glm::vec4 color    = glm::vec4(1);
+        glm::vec3 emissive = glm::vec3(0);
+        /// Apply SSC exposure and Reinhard mapping after composition; disabled by default.
+        bool                   toneMapWithExposure = false;
         gpu2::GpuResourceView  colorMap; ///< Optional sampled 2D view; empty uses the built-in white texture.
         AutoRef<gpu2::Sampler> sampler;  ///< Empty uses the built-in sampler.
     };

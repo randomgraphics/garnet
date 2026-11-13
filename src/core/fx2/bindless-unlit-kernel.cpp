@@ -167,7 +167,9 @@ public:
         : UnlitMaterial(TYPE_INFO(), "bindless.unlit.material"), mParameters(p), mStorage(std::move(heap)) {}
     bool initialize(AutoRef<Heap> heap) {
         return mDefaults.initialize(std::move(heap)) &&
-               mStorage.initialize({mParameters.color, glm::vec4(mParameters.emissive, 0), {}, {}}, mParameters.colorMap, mParameters.sampler, mDefaults);
+               mStorage.initialize(
+                   {mParameters.color, glm::vec4(mParameters.emissive, 0), glm::vec4(mParameters.toneMapWithExposure ? 1.0f : 0.0f, 0, 0, 0), {}},
+                   mParameters.colorMap, mParameters.sampler, mDefaults);
     }
     void upload(::GN::gpu2::CnC & producer) const {
         mDefaults.upload(producer);
