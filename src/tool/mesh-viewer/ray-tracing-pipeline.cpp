@@ -26,6 +26,7 @@ bool RayTracingPipeline::resize(AutoRef<gpu2::GpuContext> gpu, gpu2::DescriptorH
 
     fx2::UnlitMaterial::Parameters parameters;
     parameters.colorMap = gpu2::GpuResourceView {color}.setImageViewType(gpu2::GpuResourceView::ImageView::SAMPLED);
+    parameters.toneMapWithExposure = true;
     auto material       = fx2::UnlitMaterial::create(heap, uploads, parameters);
     if (!material) return false;
 

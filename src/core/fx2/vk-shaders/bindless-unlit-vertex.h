@@ -17,7 +17,7 @@ void main() {
     UnlitMaterialData material = materialHeap.materials[draw.materialIndex.x];
     gl_Position                = sscUniforms.projViewMatrix * draw.worldFromObject * vec4(position, 1);
     tint                       = material.color;
-    emissive                   = material.emissive;
+    emissive                   = vec4(material.emissive.rgb, material.unused.x);
     textureIndices             = material.textureIndices;
     uv                         = vec2(0);
 #if USE_TEXTURE

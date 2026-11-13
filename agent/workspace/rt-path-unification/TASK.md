@@ -14,9 +14,9 @@ Use the active RT fragment shader's acceleration-structure path for both diffuse
 
 ## PROGRESS (resume "Last completed" / "In progress")
 
-Last completed: User-reviewed shader-only flowchart, unified diffuse/specular ray sampling and tracing, added direct-light visibility checks, removed the unused compute shader, and built the Windows debug configuration successfully.
+Last completed: User-reviewed shader-only flowchart, unified diffuse/specular ray sampling and tracing, added direct-light visibility checks, removed the unused compute shader, and built the Windows debug configuration successfully. First change committed and pushed as `89ad895ed`. Tone mapping now runs after accumulation in the composite pass; Windows debug build passed. Both commits are pushed.
 
-In progress: Commit and push the RT shader/flowchart changes with per-sample tone mapping. Then move tone mapping after accumulation in a separate commit. Await user sign-off after both changes.
+In progress: Awaiting user sign-off.
 
 ## References
 

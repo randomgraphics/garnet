@@ -251,11 +251,10 @@ flowchart TD
     R -->|No| S[Choose next BSDF lobe and direction PDF]
     S --> S2[Update throughput by BRDF times cosine over joint lobe and direction PDF] --> K
     M --> O
-    O --> T[Apply exposure and Reinhard tone mapping]
-    T --> U[Write pixel color and progressive sample alpha]
+    O --> T[Write linear radiance and progressive sample alpha]
 ```
 
-Primary direct lights and direct lights at secondary hits use Cook-Torrance shading with shadow rays. The indirect path selects a BSDF lobe with a sampling probability, samples that lobe using its direction PDF, and weights throughput by BRDF times cosine divided by the joint PDF. It traces through the acceleration structure, shades geometry hits, and samples the skybox on a miss. The configured bounce limit bounds this loop. The fragment shader applies exposure and Reinhard tone mapping, then writes pixel color and a progressive sample weight; the viewer accumulates those outputs outside the shader.
+Primary direct lights and direct lights at secondary hits use Cook-Torrance shading with shadow rays. The indirect path selects a BSDF lobe with a sampling probability, samples that lobe using its direction PDF, and weights throughput by BRDF times cosine divided by the joint PDF. It traces through the acceleration structure, shades geometry hits, and samples the skybox on a miss. The configured bounce limit bounds this loop. The fragment shader writes linear per-sample radiance and a sample weight; the viewer accumulates the samples and applies exposure and Reinhard tone mapping during the later composite.
 ### Bindless cel shading
 
 `fx2::CelKernel` and `CelMaterial` are declared in `fx2/bindless/cel.h`. The effect provides stylized anime/cartoon NPR rendering with multi-band quantized diffuse shadow ramps (cool/warm shadow tints), sharp stepped Blinn-Phong specular highlights, stylized Fresnel rim lighting with light-direction bias, and an inverted-hull silhouette outline pass with clip-space aspect-ratio-corrected normal extrusion. `GNsample-fx2-cel-shading` demonstrates the effect over a procedural sphere using the public bindless API.

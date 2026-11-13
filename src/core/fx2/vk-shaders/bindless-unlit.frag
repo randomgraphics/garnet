@@ -1,6 +1,7 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_nonuniform_qualifier : require
+#include "bindless-shared-uniforms.h"
 layout(set = 0, binding = 1) uniform texture2D heapTextures[];
 layout(set = 0, binding = 5) uniform sampler heapSamplers[];
 vec4 sampleHeap(uint textureIndex, uint samplerIndex, vec2 uv) { return texture(sampler2D(heapTextures[textureIndex], heapSamplers[samplerIndex]), uv); }
@@ -12,5 +13,10 @@ layout(location = 0) out vec4 outColor;
 void main() {
     vec4 color = tint;
     if ((textureIndices.w & 1u) != 0u) color *= sampleHeap(textureIndices.x, textureIndices.z, uv);
-    outColor = vec4(color.rgb + emissive.rgb, color.a);
+    vec3 radiance = color.rgb + emissive.rgb;
+    if (emissive.a > 0.5) {
+        radiance *= max(sscUniforms.exposure, 0.0);
+        radiance = radiance / (radiance + vec3(1.0));
+    }
+    outColor = vec4(radiance, color.a);
 }
