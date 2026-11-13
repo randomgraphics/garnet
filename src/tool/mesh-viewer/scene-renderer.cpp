@@ -232,13 +232,8 @@ bool SceneRenderer::prepare(AutoRef<GpuContext> gpu, const ModelScene & source, 
             }
             rayMeshes.append({&instance.geometry, material.pbr.get(), instance.transform});
         }
-        if (allPbr && !rayMeshes.empty()) {
-            rayTrace = fx2::RayTraceKernel::create(*heap, *initialization);
-            if (rayTrace) rayScene = fx2::PbrRayTracingScene::create(*heap, *initialization, {rayMeshes.data(), rayMeshes.size()});
-            if (!rayScene) {
-                rayTrace.clear();
-                GN_WARN(sLogger, "Ray tracing is unavailable for this model; use raster PBR instead");
-            }
+        if (allPbr && !rayMeshes.empty() && !rayTracing.prepare(*heap, *initialization, rayMeshes)) {
+            GN_WARN(sLogger, "Ray tracing is unavailable for this model; use raster PBR instead");
         }
     }
 
@@ -285,12 +280,8 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
         switch (material.shading) {
         case Shading::PBR: {
             if (rayTraced && &source == &model) {
-                fx2::RayTraceKernel::DrawParameters draw {{raster, state, instance.geometry, &states},
-                                                          rayScene->accelerationStructure(),
-                                                          instance.transform,
-                                                          skyMaterial,
-                                                          material.pbr.get()};
-                if (!rayTrace->record(draw)) return false;
+                if (rayTracing.sampleCount() > 0) states.depthState = RasterState::DepthState {RasterState::Compare::LESS_EQUAL, false};
+                if (!rayTracing.record(raster, state, instance.geometry, &states, instance.transform, skyMaterial, material.pbr)) return false;
             } else {
                 fx2::PbrMaterial::DrawParameters draw {{raster, state, instance.geometry, &states}, instance.transform, skyMaterial};
                 if (!pbr->record(*material.pbr, draw)) return false;
@@ -317,10 +308,21 @@ bool SceneRenderer::recordModel(const RenderModel & source, Raster & raster, con
 
 bool SceneRenderer::record(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes,
                            bool rayTraced) const {
+    if (!sky->record(*skyMaterial, {raster, state})) return false;
+    if (rayTraced) return true;
     if (!recordModel(model, raster, state, rayTraced)) return false;
     if (showBounds && !recordModel(bounds, raster, state, false)) return false;
     if (showAxes && !recordModel(axes, raster, state, false)) return false;
-    return sky->record(*skyMaterial, {raster, state});
+    return true;
+}
+
+bool SceneRenderer::recordRayTracing(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const {
+    return rayTracing.shouldTrace() && recordModel(model, raster, state, true);
+}
+
+bool SceneRenderer::recordDebugGeometry(Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds,
+                                        bool showAxes) const {
+    return (!showBounds || recordModel(bounds, raster, state, false)) && (!showAxes || recordModel(axes, raster, state, false));
 }
 
 } // namespace GN::viewer

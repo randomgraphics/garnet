@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model-scene.h"
+#include "ray-tracing-pipeline.h"
 #include <garnet/GNfx2.h>
 #include <glm/gtc/quaternion.hpp>
 
@@ -41,8 +42,7 @@ struct SceneRenderer {
     AutoRef<fx2::UnlitKernel>           unlit;
     AutoRef<fx2::SkyKernel>             sky;
     AutoRef<fx2::SkyMaterial>           skyMaterial;
-    AutoRef<fx2::RayTraceKernel>        rayTrace;
-    AutoRef<fx2::PbrRayTracingScene>    rayScene;
+    RayTracingPipeline                  rayTracing;
     RenderModel                         model, bounds, axes;
 
     /// One frame's camera, viewport, and exposure inputs for the shared uniform block.
@@ -71,7 +71,10 @@ struct SceneRenderer {
 
     bool record(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes, bool rayTraced) const;
 
-    bool rayTracingAvailable() const { return rayTrace && rayScene; }
+    bool recordRayTracing(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state) const;
+    bool recordDebugGeometry(gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool showBounds, bool showAxes) const;
+
+    bool rayTracingAvailable() const { return rayTracing.available(); }
 
 private:
     bool recordModel(const RenderModel & source, gpu2::Raster & raster, const AutoRef<fx2::SharedShaderConstants::UniformState> & state, bool rayTraced) const;

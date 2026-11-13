@@ -14,6 +14,9 @@ build/linux.gcc.d/bin/GNtool-mesh-viewer media/boxes/boxes.fbx
 
 Useful noninteractive modes are:
 
+Ray-traced PBR records into a persistent RGBA16F offscreen image owned by `RayTracingPipeline`. The presentation pass draws the sky, samples the traced image, then overlays optional bounds/axes and UI. Camera movement clears the image and renders one fresh sample per frame; a stationary camera accumulates up to 32 samples. Resizing restarts accumulation.
+
+
 ```bash
 GNtool-mesh-viewer --print model.glb
 GNtool-mesh-viewer --snapshot output.png model.glb
