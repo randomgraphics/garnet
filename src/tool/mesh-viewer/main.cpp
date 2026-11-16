@@ -32,6 +32,8 @@ struct Options {
     bool            print                = false;
     bool            finiteFrames         = false;
     bool            rayTraced            = false;
+    bool            showBounds           = true;
+    bool            showAxes             = true;
     int             frames               = 3;
     uint32_t        rayTracingSamples    = 256;
     float           environmentLuminance = 250.f;
@@ -85,6 +87,10 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
             }
             options.snapshot = argv[++i];
             options.headless = true;
+        } else if (argument == "--hide-bounds") {
+            options.showBounds = false;
+        } else if (argument == "--hide-axes") {
+            options.showAxes = false;
         } else if (argument == "--print") {
             options.print = true;
         } else if (argument == "--frames" && i + 1 < argc) {
@@ -122,7 +128,8 @@ bool parseOptions(int argc, const char * const * argv, Options & options) {
     if (!options.path.empty()) return true;
     GN_ERROR(sLogger,
              "Usage: GNtool-mesh-viewer [--print] [--test] [--snapshot <image.png|jpg|bmp>] [--frames N] [--rt-samples N] [--environment-luminance <nits>] "
-             "[--surface pbr|unlit|lambertian] [--rendering raster|ray-traced] [--exposure <positive value>] <model.fbx|gltf|glb|stl|ase|--box|--sphere>");
+             "[--surface pbr|unlit|lambertian] [--rendering raster|ray-traced] [--exposure <positive value>] [--hide-bounds] [--hide-axes] "
+             "<model.fbx|gltf|glb|stl|ase|--box|--sphere>");
     return false;
 }
 
@@ -270,8 +277,8 @@ int main(int argc, const char * argv[]) {
     int                 previousMouseY     = 0;
     int                 previousWheel      = 0;
     bool                havePointerSample  = false;
-    bool                showBounds         = true;
-    bool                showAxes           = true;
+    bool                showBounds         = options.showBounds;
+    bool                showAxes           = options.showAxes;
     int                 selectedNode       = model->nodes.empty() ? -1 : 0;
     auto                previousFrameTime  = std::chrono::steady_clock::now();
     bool                havePreviousCamera = false;
