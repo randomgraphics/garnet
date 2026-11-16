@@ -78,6 +78,8 @@ elevation). By default it renders three frames;
 the parent directory must already exist. Import, render/readback, unsupported
 output format, and file-write failures return a nonzero exit code. `--print`
 can be combined with `--snapshot` to also report the imported scene.
+Use `--hide-bounds` and/or `--hide-axes` to omit those diagnostic overlays from
+a showcase capture.
 
 Use a Debug build to validate snapshots: gpu2 enables the Vulkan validation
 layer and breaks on Vulkan errors by default in Debug builds.
