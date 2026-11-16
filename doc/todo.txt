@@ -1,11 +1,18 @@
-﻿Bucket List
+﻿Open Issues
 ===========
 
 - Integrate with NVIIDA DLSS:
   - need a rendering pipeline that is able to generate depth and motion vector
 
-- A simple text renderer, either in fx2 or in gpu2.h that renders simple ascii text, no external font file dependencies.
-  This is to facillitate simple screen log requirement like FPS and etc.
+- Embbed buffer for short string?
+
+- Add a subsurface scattering (SSS) extension to glTF/GLB, and extend the current ray-tracing and PBR kernels to support SSS.
+
+Dropped Tasks
+=============
+- runtime configuable profilers, like loggers
+  - WHY: profiler has to be light-weight and fast. Logger style configuration
+         is too heavy.
 
 # ============================================================
 # The following are achieved TODO list from long long time ago
@@ -233,18 +240,3 @@ RESOLVE ISSUES
     - One shading language, like Cg, could be compiled into multiple shader models; and vice versa.
     - Shader model enum is used to determine the GPU hardware caps.
     - Shading language enum is used to choose the shader compiler.
-
-OPEN ISSUES
-===========
-
-- Embbed buffer for short string?
-
-- Possible engine module features:
-  - build visual component by combining several existing visual components.
-  - entity embeded in another entity.
-
-DROPPED TASKS
-=============
-- runtime configuable profilers, like loggers
-  - WHY: profiler has to be light-weight and fast. Logger style configuration
-         is too heavy.
